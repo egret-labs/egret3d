@@ -1,0 +1,11 @@
+.wing
+cli
+docs
+egret3d
+example
+libs
+report
+script
+tests*
+.gitignore
+tsconfig.json

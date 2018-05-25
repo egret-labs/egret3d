@@ -1,0 +1,17 @@
+{
+  "name": "@egret/egret3d",
+  "version": "0.8.1",
+  "compilerVersion": "5.3.0",
+  "description": "egret 3d lib",
+  "main": "bin/egret3d.js",
+  "bin": {
+    "egret3d": "cli/lib/index.js"
+  },
+  "scripts": {
+    "build": "egret build && node script/report.js",
+    "build-shader": "node script/shaderCompiler.js"
+  },
+  "author": "egret",
+  "license": "ISC",
+  "devDependencies": {}
+}
