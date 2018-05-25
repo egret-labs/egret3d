@@ -65,7 +65,8 @@ Egret3D 允许 2D / 3D 混合，所以开发者可以在 Egret3D 中添加原有
 
 * 通过 EgretLauncher 安装白鹭引擎5.3.0 版本，5.3.0 版本目前没有内置在 EgretLauncher 中，需要开发者在 https://github.com/egret-labs/egret-core/tree/5.3.x 下载，并通过 EgretLauncher 的安装本地引擎功能进行安装
 
-* 打开一个终端，逐个助兴 ```npm install cnpm -g```, ```cnpm install @egret/paper-cli -g``` 安装命令行工具
+* 打开一个终端，执行 ```npm install cnpm -g``` 和 ```cnpm install @egret/paper-cli -g``` 安装命令行工具
+> 请一定安装 cnpm，这一步不可省略
 
 * 执行 ```paper create helloworld``` 创建一个新项目
 * 执行 ```cd helloworld``` 进入刚创建的文件夹
