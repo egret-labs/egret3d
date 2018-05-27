@@ -106,8 +106,8 @@ Paper-cli 是什么？
 0.9 ( 2018.6.1 )
 --------------------
 
-- [ ] 支持发布到微信小游戏
-- [ ] 支持粒子系统
+- [ ] [支持发布到微信小游戏](https://github.com/egret-labs/egret3d/issues/5)
+- [ ] [支持粒子系统](https://github.com/egret-labs/egret3d/issues/4)
 - [ ] 更详细的教程文档
 
 
@@ -117,6 +117,7 @@ Paper-cli 是什么？
 - [ ] 更完善的材质系统
 - [ ] 更完善的碰撞和物理系统
 - [ ] 向部分开发者提供 Egret3D 编辑器的内测版，代号“Paper”
+- [ ] [重构声音系统](https://github.com/egret-labs/egret3d/issues/3)
 - [ ] 性能优化
 - [ ] 统一 paper 命令行与 egret 命令行
 
