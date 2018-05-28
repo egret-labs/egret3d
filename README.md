@@ -108,6 +108,7 @@ Paper-cli 是什么？
 
 - [ ] [支持发布到微信小游戏](https://github.com/egret-labs/egret3d/issues/5)
 - [ ] [支持粒子系统](https://github.com/egret-labs/egret3d/issues/4)
+- [ ] [通过修改 index.html 中的 data-show-fps 显示和隐藏帧率面板](https://github.com/egret-labs/egret3d/issues/7)
 - [ ] 更详细的教程文档
 
 
