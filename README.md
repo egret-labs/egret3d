@@ -104,12 +104,12 @@ Paper-cli 是什么？
 0.9 ( 2018.6.1 )
 --------------------
 
-- [ ] [支持发布到微信小游戏](https://github.com/egret-labs/egret3d/issues/5)
+- [x] [支持发布到微信小游戏](https://github.com/egret-labs/egret3d/issues/5)
 - [x] [支持粒子系统](https://github.com/egret-labs/egret3d/issues/4)
 - [x] 修复 paper-cli 在特定情况下的 BUG
   - [x] [修复特定情况下无法执行 paper install egret3d 的BUG](https://github.com/egret-labs/egret3d/issues/6)
   - [x] [修复MacOS / Linux 系统上无法执行paper create helloworld 的 BUG](https://github.com/egret-labs/egret3d/issues/8)
-- [ ] 更详细的教程文档
+- [x] 更详细的教程文档
 
 
 
