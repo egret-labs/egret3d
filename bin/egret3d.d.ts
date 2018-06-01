@@ -2119,7 +2119,6 @@ declare namespace paper {
         private static _unscaledDeltaTime;
         static initialize(): void;
         static update(timer?: number): void;
-        static readonly now: number;
         static readonly frameCount: number;
         static readonly time: number;
         static readonly unscaledTime: number;

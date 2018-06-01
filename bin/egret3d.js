@@ -4039,28 +4039,15 @@ var paper;
         function Time() {
         }
         Time.initialize = function () {
-            this._lastTimer = this._beginTimer = this.now;
+            this._lastTimer = this._beginTimer = Date.now() * 0.001;
         };
         Time.update = function (timer) {
-            var now = timer || this.now;
+            var now = timer || Date.now() * 0.001;
             this._frameCount += 1;
             this._unscaledTime = now - this._beginTimer;
             this._unscaledDeltaTime = now - this._lastTimer;
             this._lastTimer = now;
         };
-        Object.defineProperty(Time, "now", {
-            get: function () {
-                if (window.performance) {
-                    return window.performance.now() * 0.001;
-                }
-                else if (Date.now) {
-                    return Date.now() * 0.001;
-                }
-                return new Date().getTime() * 0.001;
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(Time, "frameCount", {
             get: function () {
                 return this._frameCount;
