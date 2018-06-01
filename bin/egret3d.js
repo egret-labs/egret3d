@@ -52,6 +52,78 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var paper;
 (function (paper) {
+    /**
+     *
+     */
+    paper.serializeClassMap = {
+        0: "paper.Scene",
+        1: "paper.GameObject",
+        2: "egret3d.AniPlayer",
+        3: "egret3d.BoxCollider",
+        4: "egret3d.Camera",
+        5: "egret3d.MeshFilter",
+        6: "egret3d.MeshRenderer",
+        7: "egret3d.particle.ParticleComponent",
+        8: "egret3d.particle.ParticleRenderer",
+        9: "egret3d.SkinnedMeshRenderer",
+        10: "egret3d.SphereCollider",
+        11: "egret3d.Transform",
+        12: "egret3d.Shader",
+        13: "egret3d.Mesh",
+        14: "egret3d.Material",
+        15: "egret3d.AnimationClip",
+        16: "egret3d.TPoseInfo",
+        17: "egret3d.PoseBoneMatrix",
+        18: "egret3d.Texture",
+        19: "egret3d.Texture",
+        20: "egret3d.Vector2",
+        21: "egret3d.Vector3",
+        22: "egret3d.Vector4",
+        23: "egret3d.Quaternion",
+        24: "egret3d.Color",
+        25: "egret3d.Gradient",
+        26: "egret3d.Curve",
+        27: "egret3d.Keyframe",
+        28: "egret3d.Rect",
+        29: "egret3d.MainModule",
+        30: "egret3d.EmissionModule",
+        31: "egret3d.ShapeModule",
+        32: "egret3d.VelocityOverLifetimeModule",
+        33: "egret3d.RotationOverLifetimeModule",
+        34: "egret3d.ColorOverLifetimeModule",
+        35: "egret3d.SizeOverLifetimeModule",
+        36: "egret3d.MinMaxCurve",
+        37: "egret3d.MinMaxGradient",
+        38: "egret3d.alphaKey",
+        39: "egret3d.colorKey",
+        40: "egret3d.Animation",
+        41: "egret3d.GLTFAsset",
+    };
+    /**
+     *
+     */
+    function findClassCode(name) {
+        for (var key in paper.serializeClassMap) {
+            if (paper.serializeClassMap[key] === name) {
+                return key;
+            }
+        }
+        return "";
+    }
+    paper.findClassCode = findClassCode;
+    /**
+     *
+     */
+    function findClassCodeFrom(target) {
+        var proto = target.__proto__;
+        var classTypeOrigin = proto.__class__;
+        var classType = paper.findClassCode(classTypeOrigin);
+        return classType;
+    }
+    paper.findClassCodeFrom = findClassCodeFrom;
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
     var _tagA = [];
     var _tagB = [];
     var _tagC = [];
@@ -1105,21 +1177,14 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     egret.RuntimeType = {};
-    // type Required
     /**
      * 引擎启动入口
      */
     function runEgret(options) {
         if (options === void 0) { options = { antialias: false }; }
         //
-        var div = document.getElementsByClassName("egret-player")[0];
-        var requiredOptions = {
-            antialias: options.antialias,
-            contentWidth: parseInt(div.getAttribute("data-content-width")),
-            contentHeight: parseInt(div.getAttribute("data-content-height"))
-        };
-        var canvas = document.createElement("canvas");
-        div.appendChild(canvas);
+        var requiredOptions = getOptions();
+        var canvas = getMainCanvas();
         egret3d.WebGLKit.init(canvas, requiredOptions);
         egret3d.InputManager.init(canvas);
         egret3d.DefaultMeshes.init();
@@ -1129,7 +1194,37 @@ var egret3d;
         paper.Application.init();
     }
     egret3d.runEgret = runEgret;
+    function getMainCanvas() {
+        if (window.canvas) {
+            return window.canvas;
+        }
+        else {
+            var div = document.getElementsByClassName("egret-player")[0];
+            var canvas = document.createElement("canvas");
+            div.appendChild(canvas);
+            return canvas;
+        }
+    }
+    function getOptions() {
+        if (window.canvas) {
+            return {
+                antialias: false,
+                contentWidth: 640,
+                contentHeight: 1136
+            };
+        }
+        else {
+            var div = document.getElementsByClassName("egret-player")[0];
+            return {
+                antialias: false,
+                contentWidth: parseInt(div.getAttribute("data-content-width")),
+                contentHeight: parseInt(div.getAttribute("data-content-height"))
+            };
+        }
+    }
 })(egret3d || (egret3d = {}));
+window.paper = paper;
+window.egret3d = egret3d;
 var paper;
 (function (paper) {
     var editor;
@@ -1243,95 +1338,6 @@ var paper;
         editor.getEditInfo = getEditInfo;
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    var Vector2 = (function () {
-        function Vector2(x, y) {
-            if (x === void 0) { x = 0.0; }
-            if (y === void 0) { y = 0.0; }
-            this.x = x;
-            this.y = y;
-        }
-        Vector2.prototype.serialize = function () {
-            return [this.x, this.y];
-        };
-        Vector2.prototype.deserialize = function (element) {
-            this.x = element[0];
-            this.y = element[1];
-        };
-        Vector2.set = function (x, y, out) {
-            out.x = x;
-            out.y = y;
-            return out;
-        };
-        Vector2.normalize = function (v) {
-            var num = this.getLength(v);
-            if (num > Number.MIN_VALUE) {
-                v.x = v.x / num;
-                v.y = v.y / num;
-            }
-            else {
-                v.x = 0;
-                v.y = 0;
-            }
-            return v;
-        };
-        Vector2.add = function (v1, v2, out) {
-            out.x = v1.x + v2.x;
-            out.y = v1.y + v2.y;
-            return out;
-        };
-        Vector2.subtract = function (v1, v2, out) {
-            out.x = v1.x - v2.x;
-            out.y = v1.y - v2.y;
-            return out;
-        };
-        Vector2.multiply = function (v1, v2, out) {
-            out.x = v1.x * v2.x;
-            out.y = v1.y * v2.y;
-            return out;
-        };
-        Vector2.dot = function (v1, v2) {
-            return v1.x * v2.x + v1.y * v2.y;
-        };
-        Vector2.scale = function (v, scaler) {
-            v.x = v.x * scaler;
-            v.y = v.y * scaler;
-            return v;
-        };
-        Vector2.getLength = function (v) {
-            return Math.sqrt(v.x * v.x + v.y * v.y);
-        };
-        Vector2.getDistance = function (v1, v2) {
-            this.subtract(v1, v2, _helpVector2A);
-            return this.getLength(_helpVector2A);
-        };
-        Vector2.copy = function (v, out) {
-            out.x = v.x;
-            out.y = v.y;
-            return out;
-        };
-        Vector2.equal = function (v1, v2, threshold) {
-            if (threshold === void 0) { threshold = 0.00001; }
-            if (Math.abs(v1.x - v2.x) > threshold) {
-                return false;
-            }
-            if (Math.abs(v1.y - v2.y) > threshold) {
-                return false;
-            }
-            return true;
-        };
-        Vector2.lerp = function (v1, v2, value, out) {
-            out.x = v1.x * (1 - value) + v2.x * value;
-            out.y = v1.y * (1 - value) + v2.y * value;
-            return out;
-        };
-        return Vector2;
-    }());
-    egret3d.Vector2 = Vector2;
-    __reflect(Vector2.prototype, "egret3d.Vector2", ["paper.ISerializable"]);
-    var _helpVector2A = new Vector2();
-})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     var Vector4 = (function () {
@@ -3170,445 +3176,92 @@ var paper;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
-    var helpVec3_1 = new egret3d.Vector3();
-    var helpVec3_2 = new egret3d.Vector3();
-    var helpVec3_3 = new egret3d.Vector3();
-    var helpVec3_4 = new egret3d.Vector3();
-    var helpVec3_5 = new egret3d.Vector3();
-    var helpVec3_6 = new egret3d.Vector3();
-    var helpVec3_7 = new egret3d.Vector3();
-    // const helpVec3_8: Vector3 = new Vector3();
-    var helpMat4_1 = new egret3d.Matrix();
-    var helpMat4_2 = new egret3d.Matrix();
-    var helpMat4_3 = new egret3d.Matrix();
-    var helpMat4_4 = new egret3d.Matrix();
-    var helpMat4_5 = new egret3d.Matrix();
-    var helpMat4_6 = new egret3d.Matrix();
-    /**
-     * Skinned Mesh Renderer Component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 蒙皮网格的渲染组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    var SkinnedMeshRenderer = (function (_super) {
-        __extends(SkinnedMeshRenderer, _super);
-        function SkinnedMeshRenderer() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._materials = [];
-            _this._mesh = null;
-            _this._bones = [];
-            _this.center = new egret3d.Vector3();
-            _this.size = new egret3d.Vector3();
-            /**
-             *
-             */
-            _this._boneDirty = true;
-            _this._maxBoneCount = 0;
-            /**
-             *
-             */
-            _this._retargetBoneNames = null;
-            _this._efficient = true; // 是否高效模式
-            return _this;
+    var Vector2 = (function () {
+        function Vector2(x, y) {
+            if (x === void 0) { x = 0.0; }
+            if (y === void 0) { y = 0.0; }
+            this.x = x;
+            this.y = y;
         }
-        Object.defineProperty(SkinnedMeshRenderer.prototype, "mesh", {
-            /**
-             * mesh instance
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * mesh实例
-             * @version paper 1.0
-             * @platform Web
-             * @language
-             */
-            get: function () {
-                return this._mesh;
-            },
-            set: function (mesh) {
-                if (this._mesh === mesh) {
-                    return;
-                }
-                if (this._mesh) {
-                    this._mesh.dispose();
-                }
-                this._mesh = mesh;
-                paper.EventPool.dispatchEvent("mesh" /* Mesh */, this);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        SkinnedMeshRenderer.prototype._getMatByIndex = function (index, out) {
-            var mesh = this._mesh;
-            if (!mesh) {
-                return null;
-            }
-            var blendIndices = egret3d.helpVector4E;
-            mesh.getAttribute(index, "JOINTS_0" /* JOINTS_0 */, 0, blendIndices);
-            if (blendIndices.x >= this._maxBoneCount || blendIndices.y >= this._maxBoneCount || blendIndices.z >= this._maxBoneCount || blendIndices.w >= this._maxBoneCount) {
-                return null;
-            }
-            var blendWeights = egret3d.helpVector4F;
-            mesh.getAttribute(index, "WEIGHTS_0" /* WEIGHTS_0 */, 0, blendWeights);
-            if (this._efficient) {
-                var vec40r = egret3d.helpVector4A;
-                var vec30p = egret3d.helpVector3A;
-                vec40r.x = this._skeletonMatrixData[8 * blendIndices.x + 0]; // TODO
-                vec40r.y = this._skeletonMatrixData[8 * blendIndices.x + 1];
-                vec40r.z = this._skeletonMatrixData[8 * blendIndices.x + 2];
-                vec40r.w = this._skeletonMatrixData[8 * blendIndices.x + 3];
-                vec30p.x = this._skeletonMatrixData[8 * blendIndices.x + 4];
-                vec30p.y = this._skeletonMatrixData[8 * blendIndices.x + 5];
-                vec30p.z = this._skeletonMatrixData[8 * blendIndices.x + 6];
-                var vec41r = egret3d.helpVector4B;
-                var vec31p = egret3d.helpVector3B;
-                vec41r.x = this._skeletonMatrixData[8 * blendIndices.y + 0];
-                vec41r.y = this._skeletonMatrixData[8 * blendIndices.y + 1];
-                vec41r.z = this._skeletonMatrixData[8 * blendIndices.y + 2];
-                vec41r.w = this._skeletonMatrixData[8 * blendIndices.y + 3];
-                vec31p.x = this._skeletonMatrixData[8 * blendIndices.y + 4];
-                vec31p.y = this._skeletonMatrixData[8 * blendIndices.y + 5];
-                vec31p.z = this._skeletonMatrixData[8 * blendIndices.y + 6];
-                var vec42r = egret3d.helpVector4C;
-                var vec32p = egret3d.helpVector3C;
-                vec42r.x = this._skeletonMatrixData[8 * blendIndices.z + 0];
-                vec42r.y = this._skeletonMatrixData[8 * blendIndices.z + 1];
-                vec42r.z = this._skeletonMatrixData[8 * blendIndices.z + 2];
-                vec42r.w = this._skeletonMatrixData[8 * blendIndices.z + 3];
-                vec32p.x = this._skeletonMatrixData[8 * blendIndices.z + 4];
-                vec32p.y = this._skeletonMatrixData[8 * blendIndices.z + 5];
-                vec32p.z = this._skeletonMatrixData[8 * blendIndices.z + 6];
-                var vec43r = egret3d.helpVector4D;
-                var vec33p = egret3d.helpVector3D;
-                vec43r.x = this._skeletonMatrixData[8 * blendIndices.w + 0];
-                vec43r.y = this._skeletonMatrixData[8 * blendIndices.w + 1];
-                vec43r.z = this._skeletonMatrixData[8 * blendIndices.w + 2];
-                vec43r.w = this._skeletonMatrixData[8 * blendIndices.w + 3];
-                vec33p.x = this._skeletonMatrixData[8 * blendIndices.w + 4];
-                vec33p.y = this._skeletonMatrixData[8 * blendIndices.w + 5];
-                vec33p.z = this._skeletonMatrixData[8 * blendIndices.w + 6];
-                var mat0 = egret3d.helpMatrixA;
-                var mat1 = egret3d.helpMatrixB;
-                var mat2 = egret3d.helpMatrixC;
-                var mat3 = egret3d.helpMatrixD;
-                egret3d.Matrix.fromRTS(vec30p, egret3d.Vector3.ONE, vec40r, mat0);
-                egret3d.Matrix.fromRTS(vec31p, egret3d.Vector3.ONE, vec41r, mat1);
-                egret3d.Matrix.fromRTS(vec32p, egret3d.Vector3.ONE, vec42r, mat2);
-                egret3d.Matrix.fromRTS(vec33p, egret3d.Vector3.ONE, vec43r, mat3);
-                egret3d.Matrix.scale(blendWeights.x, mat0);
-                egret3d.Matrix.scale(blendWeights.y, mat1);
-                egret3d.Matrix.scale(blendWeights.z, mat2);
-                egret3d.Matrix.scale(blendWeights.w, mat3);
-                egret3d.Matrix.add(mat0, mat1, out);
-                egret3d.Matrix.add(out, mat2, out);
-                egret3d.Matrix.add(out, mat3, out);
-            }
-            else {
-                var mat0 = egret3d.helpMatrixA;
-                var mat1 = egret3d.helpMatrixB;
-                var mat2 = egret3d.helpMatrixC;
-                var mat3 = egret3d.helpMatrixD;
-                mat0.rawData = this._skeletonMatrixData.slice(16 * blendIndices.x, 16 * blendIndices.x + 16);
-                mat1.rawData = this._skeletonMatrixData.slice(16 * blendIndices.y, 16 * blendIndices.y + 16);
-                mat2.rawData = this._skeletonMatrixData.slice(16 * blendIndices.z, 16 * blendIndices.z + 16);
-                mat3.rawData = this._skeletonMatrixData.slice(16 * blendIndices.w, 16 * blendIndices.w + 16);
-                egret3d.Matrix.scale(blendWeights.x, mat0);
-                egret3d.Matrix.scale(blendWeights.y, mat1);
-                egret3d.Matrix.scale(blendWeights.z, mat2);
-                egret3d.Matrix.scale(blendWeights.w, mat3);
-                egret3d.Matrix.add(mat0, mat1, out);
-                egret3d.Matrix.add(out, mat2, out);
-                egret3d.Matrix.add(out, mat3, out);
-            }
+        Vector2.prototype.serialize = function () {
+            return [this.x, this.y];
+        };
+        Vector2.prototype.deserialize = function (element) {
+            this.x = element[0];
+            this.y = element[1];
+        };
+        Vector2.set = function (x, y, out) {
+            out.x = x;
+            out.y = y;
             return out;
         };
-        /**
-         * @inheritDoc
-         */
-        SkinnedMeshRenderer.prototype.initialize = function () {
-            _super.prototype.initialize.call(this);
-            this.materials = this._materials;
-            this.mesh = this._mesh;
-            this.bones = this._bones;
-            var shaderType = 0 /* SQT */;
-            if (this._materials.length > 0) {
-                var materialPasses = this._materials[0].getShader().passes["skin"];
-                if (!materialPasses || materialPasses.length === 0) {
-                    shaderType = 1 /* Matrix */;
-                }
+        Vector2.normalize = function (v) {
+            var num = this.getLength(v);
+            if (num > Number.MIN_VALUE) {
+                v.x = v.x / num;
+                v.y = v.y / num;
             }
-            // TODO _bonePoses 应该是动态长度
-            switch (shaderType) {
-                case 1 /* Matrix */:
-                    this._maxBoneCount = 24;
-                    this._skeletonMatrixData = new Float32Array(16 * this._maxBoneCount);
-                    break;
-                case 0 /* SQT */:
-                    this._maxBoneCount = 55;
-                    this._skeletonMatrixData = new Float32Array(8 * this._maxBoneCount);
-                    for (var i = 0; i < this._maxBoneCount; ++i) {
-                        var iA = i * 8;
-                        this._skeletonMatrixData[iA++] = 0.0;
-                        this._skeletonMatrixData[iA++] = 0.0;
-                        this._skeletonMatrixData[iA++] = 0.0;
-                        this._skeletonMatrixData[iA++] = 1.0;
-                        this._skeletonMatrixData[iA++] = 0.0;
-                        this._skeletonMatrixData[iA++] = 0.0;
-                        this._skeletonMatrixData[iA++] = 0.0;
-                        this._skeletonMatrixData[iA++] = 1.0;
-                    }
-                    break;
+            else {
+                v.x = 0;
+                v.y = 0;
             }
-            // TODO 如果layer发生改变，需要重新刷新在renderList中的层级。 可以依赖 event
-            // if (this.materials != null && this.materials.length > 0) {
-            //     let _mat = this.materials[0];
-            //     if (_mat) {
-            //         this.layer = _mat.getLayer();
-            //         if (!this.issetq) {
-            //             this._queue = _mat.getQueue();
-            //         }
-            //     }
-            // }
+            return v;
         };
-        /**
-         * @inheritDoc
-         */
-        SkinnedMeshRenderer.prototype.uninitialize = function () {
-            _super.prototype.uninitialize.call(this);
-            if (this._mesh) {
-                this._mesh.dispose();
-            }
-            this._bones.length = 0;
-            this._mesh = null;
+        Vector2.add = function (v1, v2, out) {
+            out.x = v1.x + v2.x;
+            out.y = v1.y + v2.y;
+            return out;
         };
-        /**
-         * @inheritDoc
-         */
-        SkinnedMeshRenderer.prototype.serialize = function () {
-            var target = _super.prototype.serialize.call(this);
-            target.center = [this.center.x, this.center.y, this.center.z];
-            target.size = [this.size.x, this.size.y, this.size.z];
-            target.rootBone = null;
-            target._bones = [];
-            target._mesh = this._mesh ? this._mesh.serialize() : null;
-            target._materials = [];
-            if (this.rootBone) {
-                target.rootBone = { hashCode: this.rootBone.hashCode };
-            }
-            var materials = this._materials;
-            target._materials.length = materials.length;
-            for (var i = 0, l = materials.length; i < l; i++) {
-                var material = materials[i];
-                target._materials[i] = paper.serializeAsset(material);
-            }
-            var bones = this._bones;
-            target._bones.length = bones.length;
-            for (var i = 0, l = bones.length; i < l; i++) {
-                var bone = bones[i];
-                target._bones[i] = { hashCode: bone.hashCode };
-            }
-            return target;
+        Vector2.subtract = function (v1, v2, out) {
+            out.x = v1.x - v2.x;
+            out.y = v1.y - v2.y;
+            return out;
         };
-        /**
-         * @inheritDoc
-         */
-        SkinnedMeshRenderer.prototype.deserialize = function (element) {
-            this.center.deserialize(element.center);
-            this.size.deserialize(element.size);
-            if (element._mesh) {
-                this._mesh = new egret3d.Mesh(); //
-                this._mesh.deserialize(element._mesh);
-            }
-            if (element.rootBone) {
-                this.rootBone = paper.getDeserializedObject(element.rootBone);
-            }
-            this._materials.length = 0;
-            if (element._materials) {
-                for (var i = 0, l = element._materials.length; i < l; i++) {
-                    this._materials.push(paper.getDeserializedObject(element._materials[i]));
-                }
-            }
-            this._bones.length = 0;
-            if (element._bones) {
-                for (var i = 0, l = element._bones.length; i < l; i++) {
-                    this._bones.push(paper.getDeserializedObject(element._bones[i]));
-                }
-            }
+        Vector2.multiply = function (v1, v2, out) {
+            out.x = v1.x * v2.x;
+            out.y = v1.y * v2.y;
+            return out;
         };
-        /**
-         * ray intersects
-         * @param ray ray
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 射线检测
-         * @param ray 射线
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        SkinnedMeshRenderer.prototype.intersects = function (ray) {
-            var mesh = this._mesh;
-            if (!mesh) {
-                return null;
-            }
-            var mvpmat = this.gameObject.transform.getWorldMatrix();
-            var pickinfo = null;
-            // let data = this.mesh.data;
-            var subMeshIndex = 0;
-            for (var _i = 0, _a = mesh.glTFMesh.primitives; _i < _a.length; _i++) {
-                var primitive = _a[_i];
-                var mat0 = helpMat4_1;
-                var mat1 = helpMat4_2;
-                var mat2 = helpMat4_3;
-                var mat00 = helpMat4_4;
-                var mat11 = helpMat4_5;
-                var mat22 = helpMat4_6;
-                var indices = mesh.getIndices(subMeshIndex);
-                if (indices) {
-                    var t0 = helpVec3_1;
-                    var t1 = helpVec3_2;
-                    var t2 = helpVec3_3;
-                    var vertices = mesh.getVertices(subMeshIndex);
-                    for (var i = 0; i < indices.length; i += 3) {
-                        // TODO
-                        var verindex0 = indices[i];
-                        var verindex1 = indices[i + 1];
-                        var verindex2 = indices[i + 2];
-                        var p0 = helpVec3_4;
-                        var p1 = helpVec3_5;
-                        var p2 = helpVec3_6;
-                        var index = indices[i] * 3;
-                        egret3d.Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p0);
-                        index = indices[i + 1] * 3;
-                        egret3d.Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p1);
-                        index = indices[i + 2] * 3;
-                        egret3d.Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p2);
-                        this._getMatByIndex(verindex0, mat0);
-                        this._getMatByIndex(verindex1, mat1);
-                        this._getMatByIndex(verindex2, mat2);
-                        if (mat0 === null || mat1 === null || mat2 === null)
-                            continue;
-                        egret3d.Matrix.multiply(mvpmat, mat0, mat00);
-                        egret3d.Matrix.multiply(mvpmat, mat1, mat11);
-                        egret3d.Matrix.multiply(mvpmat, mat2, mat22);
-                        egret3d.Matrix.transformVector3(p0, mat00, t0);
-                        egret3d.Matrix.transformVector3(p1, mat11, t1);
-                        egret3d.Matrix.transformVector3(p2, mat22, t2);
-                        var result = ray.intersectsTriangle(t0, t1, t2);
-                        if (result) {
-                            if (result.distance < 0)
-                                continue;
-                            if (!pickinfo || pickinfo.distance > result.distance) {
-                                pickinfo = result;
-                                pickinfo.triangleIndex = i / 3;
-                                pickinfo.subMeshIndex = subMeshIndex;
-                                var tdir = helpVec3_7;
-                                egret3d.Vector3.copy(ray.direction, tdir);
-                                egret3d.Vector3.scale(tdir, result.distance);
-                                egret3d.Vector3.add(ray.origin, tdir, pickinfo.position);
-                            }
-                        }
-                    }
-                }
-                subMeshIndex++;
-            }
-            return pickinfo;
+        Vector2.dot = function (v1, v2) {
+            return v1.x * v2.x + v1.y * v2.y;
         };
-        Object.defineProperty(SkinnedMeshRenderer.prototype, "materials", {
-            /**
-             * material list
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 材质数组
-             * @version paper 1.0
-             * @platform Web
-             * @language
-             */
-            get: function () {
-                return this._materials;
-            },
-            set: function (value) {
-                if (value !== this._materials) {
-                    for (var _i = 0, value_2 = value; _i < value_2.length; _i++) {
-                        var material = value_2[_i];
-                        this._materials.push(material);
-                    }
-                }
-                paper.EventPool.dispatchEvent("materials" /* Materials */, this);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(SkinnedMeshRenderer.prototype, "bones", {
-            /**
-             * 骨骼列表
-             *
-             */
-            get: function () {
-                return this._bones;
-            },
-            set: function (value) {
-                if (value !== this._bones) {
-                    this._bones.length = 0;
-                    for (var _i = 0, value_3 = value; _i < value_3.length; _i++) {
-                        var bone = value_3[_i];
-                        this._bones.push(bone);
-                    }
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(SkinnedMeshRenderer.prototype, "boneBuffer", {
-            /**
-             *
-             */
-            get: function () {
-                return this.cacheData || this._skeletonMatrixData;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         *
-         */
-        SkinnedMeshRenderer.dataCaches = [];
-        __decorate([
-            paper.serializedField
-        ], SkinnedMeshRenderer.prototype, "_materials", void 0);
-        __decorate([
-            paper.serializedField
-        ], SkinnedMeshRenderer.prototype, "_mesh", void 0);
-        __decorate([
-            paper.serializedField
-        ], SkinnedMeshRenderer.prototype, "_bones", void 0);
-        __decorate([
-            paper.serializedField
-        ], SkinnedMeshRenderer.prototype, "rootBone", void 0);
-        __decorate([
-            paper.serializedField
-        ], SkinnedMeshRenderer.prototype, "center", void 0);
-        __decorate([
-            paper.serializedField
-        ], SkinnedMeshRenderer.prototype, "size", void 0);
-        return SkinnedMeshRenderer;
-    }(paper.BaseComponent));
-    egret3d.SkinnedMeshRenderer = SkinnedMeshRenderer;
-    __reflect(SkinnedMeshRenderer.prototype, "egret3d.SkinnedMeshRenderer", ["paper.IRenderer"]);
+        Vector2.scale = function (v, scaler) {
+            v.x = v.x * scaler;
+            v.y = v.y * scaler;
+            return v;
+        };
+        Vector2.getLength = function (v) {
+            return Math.sqrt(v.x * v.x + v.y * v.y);
+        };
+        Vector2.getDistance = function (v1, v2) {
+            this.subtract(v1, v2, _helpVector2A);
+            return this.getLength(_helpVector2A);
+        };
+        Vector2.copy = function (v, out) {
+            out.x = v.x;
+            out.y = v.y;
+            return out;
+        };
+        Vector2.equal = function (v1, v2, threshold) {
+            if (threshold === void 0) { threshold = 0.00001; }
+            if (Math.abs(v1.x - v2.x) > threshold) {
+                return false;
+            }
+            if (Math.abs(v1.y - v2.y) > threshold) {
+                return false;
+            }
+            return true;
+        };
+        Vector2.lerp = function (v1, v2, value, out) {
+            out.x = v1.x * (1 - value) + v2.x * value;
+            out.y = v1.y * (1 - value) + v2.y * value;
+            return out;
+        };
+        return Vector2;
+    }());
+    egret3d.Vector2 = Vector2;
+    __reflect(Vector2.prototype, "egret3d.Vector2", ["paper.ISerializable"]);
+    var _helpVector2A = new Vector2();
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
@@ -4159,8 +3812,8 @@ var paper;
              */
             set: function (value) {
                 this._components.length = 0;
-                for (var _i = 0, value_4 = value; _i < value_4.length; _i++) {
-                    var component = value_4[_i];
+                for (var _i = 0, value_2 = value; _i < value_2.length; _i++) {
+                    var component = value_2[_i];
                     this._components.push(component);
                 }
                 // Transform 必须存在。
@@ -4456,75 +4109,13 @@ var paper;
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    /**
-     *
-     */
-    paper.serializeClassMap = {
-        0: "paper.Scene",
-        1: "paper.GameObject",
-        2: "egret3d.AniPlayer",
-        3: "egret3d.BoxCollider",
-        4: "egret3d.Camera",
-        5: "egret3d.MeshFilter",
-        6: "egret3d.MeshRenderer",
-        7: "egret3d.particle.ParticleComponent",
-        8: "egret3d.particle.ParticleRenderer",
-        9: "egret3d.SkinnedMeshRenderer",
-        10: "egret3d.SphereCollider",
-        11: "egret3d.Transform",
-        12: "egret3d.Shader",
-        13: "egret3d.Mesh",
-        14: "egret3d.Material",
-        15: "egret3d.AnimationClip",
-        16: "egret3d.TPoseInfo",
-        17: "egret3d.PoseBoneMatrix",
-        18: "egret3d.Texture",
-        19: "egret3d.Texture",
-        20: "egret3d.Vector2",
-        21: "egret3d.Vector3",
-        22: "egret3d.Vector4",
-        23: "egret3d.Quaternion",
-        24: "egret3d.Color",
-        25: "egret3d.Gradient",
-        26: "egret3d.Curve",
-        27: "egret3d.Keyframe",
-        28: "egret3d.Rect",
-        29: "egret3d.MainModule",
-        30: "egret3d.EmissionModule",
-        31: "egret3d.ShapeModule",
-        32: "egret3d.VelocityOverLifetimeModule",
-        33: "egret3d.RotationOverLifetimeModule",
-        34: "egret3d.ColorOverLifetimeModule",
-        35: "egret3d.SizeOverLifetimeModule",
-        36: "egret3d.MinMaxCurve",
-        37: "egret3d.MinMaxGradient",
-        38: "egret3d.alphaKey",
-        39: "egret3d.colorKey",
-        40: "egret3d.Animation",
-        41: "egret3d.GLTFAsset",
-    };
-    /**
-     *
-     */
-    function findClassCode(name) {
-        for (var key in paper.serializeClassMap) {
-            if (paper.serializeClassMap[key] === name) {
-                return key;
-            }
-        }
-        return "";
-    }
-    paper.findClassCode = findClassCode;
-    /**
-     *
-     */
-    function findClassCodeFrom(target) {
-        var proto = target.__proto__;
-        var classTypeOrigin = proto.__class__;
-        var classType = paper.findClassCode(classTypeOrigin);
-        return classType;
-    }
-    paper.findClassCodeFrom = findClassCodeFrom;
+    var editor;
+    (function (editor) {
+        editor.icon_frag = "\n        #ifdef GL_ES\n        precision highp float;\n        #endif\n        uniform sampler2D PointTexture;\n        uniform bool hasColor;\n        uniform vec4 iconColor;\n        void main(void) {\n            vec4 tex = texture2D(PointTexture, gl_PointCoord);\n            gl_FragColor = tex;\n            if (hasColor) {\n                if (gl_FragColor.a >= 0.1) {\n                    gl_FragColor = iconColor;\n                } else {\n                    gl_FragColor.a = 0.0;\n                }\n            }\n        }";
+        editor.icon_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        uniform float pointSize;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n            gl_PointSize = pointSize; \n        }";
+        editor.line_frag = "\n        #ifdef GL_ES\n        precision highp float;\n        #endif\n        uniform vec4 lineColor;\n        void main(void) {\n            gl_FragColor = lineColor;\n        }";
+        editor.line_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n        }";
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -8739,8 +8330,8 @@ var egret3d;
                     return;
                 }
                 this._materials.length = 0;
-                for (var _i = 0, value_5 = value; _i < value_5.length; _i++) {
-                    var material = value_5[_i];
+                for (var _i = 0, value_3 = value; _i < value_3.length; _i++) {
+                    var material = value_3[_i];
                     this._materials.push(material);
                 }
                 paper.EventPool.dispatchEvent("materials" /* Materials */, this);
@@ -27226,13 +26817,445 @@ var paper;
         __reflect(GizmoShader.prototype, "paper.editor.GizmoShader");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        editor.icon_frag = "\n        #ifdef GL_ES\n        precision highp float;\n        #endif\n        uniform sampler2D PointTexture;\n        uniform bool hasColor;\n        uniform vec4 iconColor;\n        void main(void) {\n            vec4 tex = texture2D(PointTexture, gl_PointCoord);\n            gl_FragColor = tex;\n            if (hasColor) {\n                if (gl_FragColor.a >= 0.1) {\n                    gl_FragColor = iconColor;\n                } else {\n                    gl_FragColor.a = 0.0;\n                }\n            }\n        }";
-        editor.icon_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        uniform float pointSize;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n            gl_PointSize = pointSize; \n        }";
-        editor.line_frag = "\n        #ifdef GL_ES\n        precision highp float;\n        #endif\n        uniform vec4 lineColor;\n        void main(void) {\n            gl_FragColor = lineColor;\n        }";
-        editor.line_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n        }";
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    var helpVec3_1 = new egret3d.Vector3();
+    var helpVec3_2 = new egret3d.Vector3();
+    var helpVec3_3 = new egret3d.Vector3();
+    var helpVec3_4 = new egret3d.Vector3();
+    var helpVec3_5 = new egret3d.Vector3();
+    var helpVec3_6 = new egret3d.Vector3();
+    var helpVec3_7 = new egret3d.Vector3();
+    // const helpVec3_8: Vector3 = new Vector3();
+    var helpMat4_1 = new egret3d.Matrix();
+    var helpMat4_2 = new egret3d.Matrix();
+    var helpMat4_3 = new egret3d.Matrix();
+    var helpMat4_4 = new egret3d.Matrix();
+    var helpMat4_5 = new egret3d.Matrix();
+    var helpMat4_6 = new egret3d.Matrix();
+    /**
+     * Skinned Mesh Renderer Component
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 蒙皮网格的渲染组件
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    var SkinnedMeshRenderer = (function (_super) {
+        __extends(SkinnedMeshRenderer, _super);
+        function SkinnedMeshRenderer() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._materials = [];
+            _this._mesh = null;
+            _this._bones = [];
+            _this.center = new egret3d.Vector3();
+            _this.size = new egret3d.Vector3();
+            /**
+             *
+             */
+            _this._boneDirty = true;
+            _this._maxBoneCount = 0;
+            /**
+             *
+             */
+            _this._retargetBoneNames = null;
+            _this._efficient = true; // 是否高效模式
+            return _this;
+        }
+        Object.defineProperty(SkinnedMeshRenderer.prototype, "mesh", {
+            /**
+             * mesh instance
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
+             */
+            /**
+             * mesh实例
+             * @version paper 1.0
+             * @platform Web
+             * @language
+             */
+            get: function () {
+                return this._mesh;
+            },
+            set: function (mesh) {
+                if (this._mesh === mesh) {
+                    return;
+                }
+                if (this._mesh) {
+                    this._mesh.dispose();
+                }
+                this._mesh = mesh;
+                paper.EventPool.dispatchEvent("mesh" /* Mesh */, this);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        SkinnedMeshRenderer.prototype._getMatByIndex = function (index, out) {
+            var mesh = this._mesh;
+            if (!mesh) {
+                return null;
+            }
+            var blendIndices = egret3d.helpVector4E;
+            mesh.getAttribute(index, "JOINTS_0" /* JOINTS_0 */, 0, blendIndices);
+            if (blendIndices.x >= this._maxBoneCount || blendIndices.y >= this._maxBoneCount || blendIndices.z >= this._maxBoneCount || blendIndices.w >= this._maxBoneCount) {
+                return null;
+            }
+            var blendWeights = egret3d.helpVector4F;
+            mesh.getAttribute(index, "WEIGHTS_0" /* WEIGHTS_0 */, 0, blendWeights);
+            if (this._efficient) {
+                var vec40r = egret3d.helpVector4A;
+                var vec30p = egret3d.helpVector3A;
+                vec40r.x = this._skeletonMatrixData[8 * blendIndices.x + 0]; // TODO
+                vec40r.y = this._skeletonMatrixData[8 * blendIndices.x + 1];
+                vec40r.z = this._skeletonMatrixData[8 * blendIndices.x + 2];
+                vec40r.w = this._skeletonMatrixData[8 * blendIndices.x + 3];
+                vec30p.x = this._skeletonMatrixData[8 * blendIndices.x + 4];
+                vec30p.y = this._skeletonMatrixData[8 * blendIndices.x + 5];
+                vec30p.z = this._skeletonMatrixData[8 * blendIndices.x + 6];
+                var vec41r = egret3d.helpVector4B;
+                var vec31p = egret3d.helpVector3B;
+                vec41r.x = this._skeletonMatrixData[8 * blendIndices.y + 0];
+                vec41r.y = this._skeletonMatrixData[8 * blendIndices.y + 1];
+                vec41r.z = this._skeletonMatrixData[8 * blendIndices.y + 2];
+                vec41r.w = this._skeletonMatrixData[8 * blendIndices.y + 3];
+                vec31p.x = this._skeletonMatrixData[8 * blendIndices.y + 4];
+                vec31p.y = this._skeletonMatrixData[8 * blendIndices.y + 5];
+                vec31p.z = this._skeletonMatrixData[8 * blendIndices.y + 6];
+                var vec42r = egret3d.helpVector4C;
+                var vec32p = egret3d.helpVector3C;
+                vec42r.x = this._skeletonMatrixData[8 * blendIndices.z + 0];
+                vec42r.y = this._skeletonMatrixData[8 * blendIndices.z + 1];
+                vec42r.z = this._skeletonMatrixData[8 * blendIndices.z + 2];
+                vec42r.w = this._skeletonMatrixData[8 * blendIndices.z + 3];
+                vec32p.x = this._skeletonMatrixData[8 * blendIndices.z + 4];
+                vec32p.y = this._skeletonMatrixData[8 * blendIndices.z + 5];
+                vec32p.z = this._skeletonMatrixData[8 * blendIndices.z + 6];
+                var vec43r = egret3d.helpVector4D;
+                var vec33p = egret3d.helpVector3D;
+                vec43r.x = this._skeletonMatrixData[8 * blendIndices.w + 0];
+                vec43r.y = this._skeletonMatrixData[8 * blendIndices.w + 1];
+                vec43r.z = this._skeletonMatrixData[8 * blendIndices.w + 2];
+                vec43r.w = this._skeletonMatrixData[8 * blendIndices.w + 3];
+                vec33p.x = this._skeletonMatrixData[8 * blendIndices.w + 4];
+                vec33p.y = this._skeletonMatrixData[8 * blendIndices.w + 5];
+                vec33p.z = this._skeletonMatrixData[8 * blendIndices.w + 6];
+                var mat0 = egret3d.helpMatrixA;
+                var mat1 = egret3d.helpMatrixB;
+                var mat2 = egret3d.helpMatrixC;
+                var mat3 = egret3d.helpMatrixD;
+                egret3d.Matrix.fromRTS(vec30p, egret3d.Vector3.ONE, vec40r, mat0);
+                egret3d.Matrix.fromRTS(vec31p, egret3d.Vector3.ONE, vec41r, mat1);
+                egret3d.Matrix.fromRTS(vec32p, egret3d.Vector3.ONE, vec42r, mat2);
+                egret3d.Matrix.fromRTS(vec33p, egret3d.Vector3.ONE, vec43r, mat3);
+                egret3d.Matrix.scale(blendWeights.x, mat0);
+                egret3d.Matrix.scale(blendWeights.y, mat1);
+                egret3d.Matrix.scale(blendWeights.z, mat2);
+                egret3d.Matrix.scale(blendWeights.w, mat3);
+                egret3d.Matrix.add(mat0, mat1, out);
+                egret3d.Matrix.add(out, mat2, out);
+                egret3d.Matrix.add(out, mat3, out);
+            }
+            else {
+                var mat0 = egret3d.helpMatrixA;
+                var mat1 = egret3d.helpMatrixB;
+                var mat2 = egret3d.helpMatrixC;
+                var mat3 = egret3d.helpMatrixD;
+                mat0.rawData = this._skeletonMatrixData.slice(16 * blendIndices.x, 16 * blendIndices.x + 16);
+                mat1.rawData = this._skeletonMatrixData.slice(16 * blendIndices.y, 16 * blendIndices.y + 16);
+                mat2.rawData = this._skeletonMatrixData.slice(16 * blendIndices.z, 16 * blendIndices.z + 16);
+                mat3.rawData = this._skeletonMatrixData.slice(16 * blendIndices.w, 16 * blendIndices.w + 16);
+                egret3d.Matrix.scale(blendWeights.x, mat0);
+                egret3d.Matrix.scale(blendWeights.y, mat1);
+                egret3d.Matrix.scale(blendWeights.z, mat2);
+                egret3d.Matrix.scale(blendWeights.w, mat3);
+                egret3d.Matrix.add(mat0, mat1, out);
+                egret3d.Matrix.add(out, mat2, out);
+                egret3d.Matrix.add(out, mat3, out);
+            }
+            return out;
+        };
+        /**
+         * @inheritDoc
+         */
+        SkinnedMeshRenderer.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
+            this.materials = this._materials;
+            this.mesh = this._mesh;
+            this.bones = this._bones;
+            var shaderType = 0 /* SQT */;
+            if (this._materials.length > 0) {
+                var materialPasses = this._materials[0].getShader().passes["skin"];
+                if (!materialPasses || materialPasses.length === 0) {
+                    shaderType = 1 /* Matrix */;
+                }
+            }
+            // TODO _bonePoses 应该是动态长度
+            switch (shaderType) {
+                case 1 /* Matrix */:
+                    this._maxBoneCount = 24;
+                    this._skeletonMatrixData = new Float32Array(16 * this._maxBoneCount);
+                    break;
+                case 0 /* SQT */:
+                    this._maxBoneCount = 55;
+                    this._skeletonMatrixData = new Float32Array(8 * this._maxBoneCount);
+                    for (var i = 0; i < this._maxBoneCount; ++i) {
+                        var iA = i * 8;
+                        this._skeletonMatrixData[iA++] = 0.0;
+                        this._skeletonMatrixData[iA++] = 0.0;
+                        this._skeletonMatrixData[iA++] = 0.0;
+                        this._skeletonMatrixData[iA++] = 1.0;
+                        this._skeletonMatrixData[iA++] = 0.0;
+                        this._skeletonMatrixData[iA++] = 0.0;
+                        this._skeletonMatrixData[iA++] = 0.0;
+                        this._skeletonMatrixData[iA++] = 1.0;
+                    }
+                    break;
+            }
+            // TODO 如果layer发生改变，需要重新刷新在renderList中的层级。 可以依赖 event
+            // if (this.materials != null && this.materials.length > 0) {
+            //     let _mat = this.materials[0];
+            //     if (_mat) {
+            //         this.layer = _mat.getLayer();
+            //         if (!this.issetq) {
+            //             this._queue = _mat.getQueue();
+            //         }
+            //     }
+            // }
+        };
+        /**
+         * @inheritDoc
+         */
+        SkinnedMeshRenderer.prototype.uninitialize = function () {
+            _super.prototype.uninitialize.call(this);
+            if (this._mesh) {
+                this._mesh.dispose();
+            }
+            this._bones.length = 0;
+            this._mesh = null;
+        };
+        /**
+         * @inheritDoc
+         */
+        SkinnedMeshRenderer.prototype.serialize = function () {
+            var target = _super.prototype.serialize.call(this);
+            target.center = [this.center.x, this.center.y, this.center.z];
+            target.size = [this.size.x, this.size.y, this.size.z];
+            target.rootBone = null;
+            target._bones = [];
+            target._mesh = this._mesh ? this._mesh.serialize() : null;
+            target._materials = [];
+            if (this.rootBone) {
+                target.rootBone = { hashCode: this.rootBone.hashCode };
+            }
+            var materials = this._materials;
+            target._materials.length = materials.length;
+            for (var i = 0, l = materials.length; i < l; i++) {
+                var material = materials[i];
+                target._materials[i] = paper.serializeAsset(material);
+            }
+            var bones = this._bones;
+            target._bones.length = bones.length;
+            for (var i = 0, l = bones.length; i < l; i++) {
+                var bone = bones[i];
+                target._bones[i] = { hashCode: bone.hashCode };
+            }
+            return target;
+        };
+        /**
+         * @inheritDoc
+         */
+        SkinnedMeshRenderer.prototype.deserialize = function (element) {
+            this.center.deserialize(element.center);
+            this.size.deserialize(element.size);
+            if (element._mesh) {
+                this._mesh = new egret3d.Mesh(); //
+                this._mesh.deserialize(element._mesh);
+            }
+            if (element.rootBone) {
+                this.rootBone = paper.getDeserializedObject(element.rootBone);
+            }
+            this._materials.length = 0;
+            if (element._materials) {
+                for (var i = 0, l = element._materials.length; i < l; i++) {
+                    this._materials.push(paper.getDeserializedObject(element._materials[i]));
+                }
+            }
+            this._bones.length = 0;
+            if (element._bones) {
+                for (var i = 0, l = element._bones.length; i < l; i++) {
+                    this._bones.push(paper.getDeserializedObject(element._bones[i]));
+                }
+            }
+        };
+        /**
+         * ray intersects
+         * @param ray ray
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 射线检测
+         * @param ray 射线
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        SkinnedMeshRenderer.prototype.intersects = function (ray) {
+            var mesh = this._mesh;
+            if (!mesh) {
+                return null;
+            }
+            var mvpmat = this.gameObject.transform.getWorldMatrix();
+            var pickinfo = null;
+            // let data = this.mesh.data;
+            var subMeshIndex = 0;
+            for (var _i = 0, _a = mesh.glTFMesh.primitives; _i < _a.length; _i++) {
+                var primitive = _a[_i];
+                var mat0 = helpMat4_1;
+                var mat1 = helpMat4_2;
+                var mat2 = helpMat4_3;
+                var mat00 = helpMat4_4;
+                var mat11 = helpMat4_5;
+                var mat22 = helpMat4_6;
+                var indices = mesh.getIndices(subMeshIndex);
+                if (indices) {
+                    var t0 = helpVec3_1;
+                    var t1 = helpVec3_2;
+                    var t2 = helpVec3_3;
+                    var vertices = mesh.getVertices(subMeshIndex);
+                    for (var i = 0; i < indices.length; i += 3) {
+                        // TODO
+                        var verindex0 = indices[i];
+                        var verindex1 = indices[i + 1];
+                        var verindex2 = indices[i + 2];
+                        var p0 = helpVec3_4;
+                        var p1 = helpVec3_5;
+                        var p2 = helpVec3_6;
+                        var index = indices[i] * 3;
+                        egret3d.Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p0);
+                        index = indices[i + 1] * 3;
+                        egret3d.Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p1);
+                        index = indices[i + 2] * 3;
+                        egret3d.Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p2);
+                        this._getMatByIndex(verindex0, mat0);
+                        this._getMatByIndex(verindex1, mat1);
+                        this._getMatByIndex(verindex2, mat2);
+                        if (mat0 === null || mat1 === null || mat2 === null)
+                            continue;
+                        egret3d.Matrix.multiply(mvpmat, mat0, mat00);
+                        egret3d.Matrix.multiply(mvpmat, mat1, mat11);
+                        egret3d.Matrix.multiply(mvpmat, mat2, mat22);
+                        egret3d.Matrix.transformVector3(p0, mat00, t0);
+                        egret3d.Matrix.transformVector3(p1, mat11, t1);
+                        egret3d.Matrix.transformVector3(p2, mat22, t2);
+                        var result = ray.intersectsTriangle(t0, t1, t2);
+                        if (result) {
+                            if (result.distance < 0)
+                                continue;
+                            if (!pickinfo || pickinfo.distance > result.distance) {
+                                pickinfo = result;
+                                pickinfo.triangleIndex = i / 3;
+                                pickinfo.subMeshIndex = subMeshIndex;
+                                var tdir = helpVec3_7;
+                                egret3d.Vector3.copy(ray.direction, tdir);
+                                egret3d.Vector3.scale(tdir, result.distance);
+                                egret3d.Vector3.add(ray.origin, tdir, pickinfo.position);
+                            }
+                        }
+                    }
+                }
+                subMeshIndex++;
+            }
+            return pickinfo;
+        };
+        Object.defineProperty(SkinnedMeshRenderer.prototype, "materials", {
+            /**
+             * material list
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
+             */
+            /**
+             * 材质数组
+             * @version paper 1.0
+             * @platform Web
+             * @language
+             */
+            get: function () {
+                return this._materials;
+            },
+            set: function (value) {
+                if (value !== this._materials) {
+                    for (var _i = 0, value_4 = value; _i < value_4.length; _i++) {
+                        var material = value_4[_i];
+                        this._materials.push(material);
+                    }
+                }
+                paper.EventPool.dispatchEvent("materials" /* Materials */, this);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SkinnedMeshRenderer.prototype, "bones", {
+            /**
+             * 骨骼列表
+             *
+             */
+            get: function () {
+                return this._bones;
+            },
+            set: function (value) {
+                if (value !== this._bones) {
+                    this._bones.length = 0;
+                    for (var _i = 0, value_5 = value; _i < value_5.length; _i++) {
+                        var bone = value_5[_i];
+                        this._bones.push(bone);
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SkinnedMeshRenderer.prototype, "boneBuffer", {
+            /**
+             *
+             */
+            get: function () {
+                return this.cacheData || this._skeletonMatrixData;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         *
+         */
+        SkinnedMeshRenderer.dataCaches = [];
+        __decorate([
+            paper.serializedField
+        ], SkinnedMeshRenderer.prototype, "_materials", void 0);
+        __decorate([
+            paper.serializedField
+        ], SkinnedMeshRenderer.prototype, "_mesh", void 0);
+        __decorate([
+            paper.serializedField
+        ], SkinnedMeshRenderer.prototype, "_bones", void 0);
+        __decorate([
+            paper.serializedField
+        ], SkinnedMeshRenderer.prototype, "rootBone", void 0);
+        __decorate([
+            paper.serializedField
+        ], SkinnedMeshRenderer.prototype, "center", void 0);
+        __decorate([
+            paper.serializedField
+        ], SkinnedMeshRenderer.prototype, "size", void 0);
+        return SkinnedMeshRenderer;
+    }(paper.BaseComponent));
+    egret3d.SkinnedMeshRenderer = SkinnedMeshRenderer;
+    __reflect(SkinnedMeshRenderer.prototype, "egret3d.SkinnedMeshRenderer", ["paper.IRenderer"]);
+})(egret3d || (egret3d = {}));

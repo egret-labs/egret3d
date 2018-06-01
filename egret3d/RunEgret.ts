@@ -6,22 +6,13 @@ namespace egret3d {
 
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number }
 
-    // type Required
-
     /**
      * 引擎启动入口
      */
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
         //
-        const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
-        const requiredOptions: RequiredRuntimeOptions = {
-            antialias: options.antialias,
-            contentWidth: parseInt(div.getAttribute("data-content-width")),
-            contentHeight: parseInt(div.getAttribute("data-content-height"))
-        }
-
-        const canvas = document.createElement("canvas");
-        div.appendChild(canvas);
+        const requiredOptions = getOptions();
+        const canvas = getMainCanvas();
         WebGLKit.init(canvas, requiredOptions);
         InputManager.init(canvas);
         DefaultMeshes.init();
@@ -31,7 +22,51 @@ namespace egret3d {
         paper.Application.init();
 
     }
+
+    function getMainCanvas() {
+        if (window.canvas) {
+            return window.canvas;
+        }
+        else {
+            const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
+            const canvas = document.createElement("canvas");
+            div.appendChild(canvas);
+            return canvas;
+        }
+    }
+
+    function getOptions(): RequiredRuntimeOptions {
+        if (window.canvas) {
+            return {
+                antialias: false,
+                contentWidth: 640,
+                contentHeight: 1136
+            }
+        }
+        else {
+            const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
+            return {
+                antialias: false,
+                contentWidth: parseInt(div.getAttribute("data-content-width")),
+                contentHeight: parseInt(div.getAttribute("data-content-height"))
+            }
+        }
+    }
 }
+
+
+
+interface Window {
+
+    canvas: HTMLCanvasElement;
+
+    paper: any;
+
+    egret3d: any;
+}
+
+window.paper = paper;
+window.egret3d = egret3d;
 
 
 declare namespace gltf {

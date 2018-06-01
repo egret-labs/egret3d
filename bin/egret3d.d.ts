@@ -1,5 +1,21 @@
 declare namespace paper {
     /**
+     *
+     */
+    const serializeClassMap: {
+        [key: string]: string;
+    };
+    /**
+     *
+     */
+    function findClassCode(name: string): string;
+    /**
+     *
+     */
+    function findClassCodeFrom(target: any): string;
+}
+declare namespace paper {
+    /**
      * 标记序列化分类
      * 如果没有标记序列化分类，序列化后的对象只会收集在objects中
      * 如果被标记了某种序列化分类，序列化后的对象还会被单独收集到一个新的数组中，key即为类名
@@ -313,6 +329,11 @@ declare namespace egret3d {
      * 引擎启动入口
      */
     function runEgret(options?: RunEgretOptions): void;
+}
+interface Window {
+    canvas: HTMLCanvasElement;
+    paper: any;
+    egret3d: any;
 }
 declare namespace gltf {
     /**
@@ -1112,27 +1133,6 @@ declare namespace paper.editor {
     function getEditInfo(classInstance: any): PropertyInfo[];
 }
 declare namespace egret3d {
-    class Vector2 implements paper.ISerializable {
-        x: number;
-        y: number;
-        constructor(x?: number, y?: number);
-        serialize(): number[];
-        deserialize(element: number[]): void;
-        static set(x: number, y: number, out: Vector2): Vector2;
-        static normalize(v: Vector2): Vector2;
-        static add(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static subtract(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static multiply(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static dot(v1: Vector2, v2: Vector2): number;
-        static scale(v: Vector2, scaler: number): Vector2;
-        static getLength(v: Vector2): number;
-        static getDistance(v1: Vector2, v2: Vector2): number;
-        static copy(v: Vector2, out: Vector2): Vector2;
-        static equal(v1: Vector2, v2: Vector2, threshold?: number): boolean;
-        static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2;
-    }
-}
-declare namespace egret3d {
     class Vector4 implements paper.ISerializable {
         x: number;
         y: number;
@@ -1760,124 +1760,24 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
-    const enum SkinnedMeshRendererEventType {
-        Mesh = "mesh",
-        Bones = "bones",
-        Materials = "materials",
-    }
-    /**
-     * Skinned Mesh Renderer Component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 蒙皮网格的渲染组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class SkinnedMeshRenderer extends paper.BaseComponent implements paper.IRenderer {
-        /**
-         *
-         */
-        static dataCaches: {
-            key: string;
-            data: Float32Array;
-        }[];
-        private readonly _materials;
-        private _mesh;
-        /**
-         * mesh instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * mesh实例
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        mesh: Mesh | null;
-        private readonly _bones;
-        /**
-         *
-         * 根骨骼
-         */
-        rootBone: Transform;
-        center: Vector3;
-        size: Vector3;
-        /**
-         *
-         */
-        _boneDirty: boolean;
-        private _maxBoneCount;
-        /**
-         * Local [qX, qY, qZ, qW, tX, tY, tZ, 1.0, ...]
-         *
-         */
-        _skeletonMatrixData: Float32Array;
-        /**
-         *
-         */
-        _retargetBoneNames: string[] | null;
-        private _efficient;
-        private cacheData;
-        private _getMatByIndex(index, out);
-        /**
-         * @inheritDoc
-         */
-        initialize(): void;
-        /**
-         * @inheritDoc
-         */
-        uninitialize(): void;
-        /**
-         * @inheritDoc
-         */
-        serialize(): any;
-        /**
-         * @inheritDoc
-         */
-        deserialize(element: any): void;
-        /**
-         * ray intersects
-         * @param ray ray
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 射线检测
-         * @param ray 射线
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        intersects(ray: Ray): any;
-        /**
-         * material list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 材质数组
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        materials: ReadonlyArray<Material>;
-        /**
-         * 骨骼列表
-         *
-         */
-        bones: ReadonlyArray<Transform>;
-        /**
-         *
-         */
-        readonly boneBuffer: Readonly<Float32Array>;
+    class Vector2 implements paper.ISerializable {
+        x: number;
+        y: number;
+        constructor(x?: number, y?: number);
+        serialize(): number[];
+        deserialize(element: number[]): void;
+        static set(x: number, y: number, out: Vector2): Vector2;
+        static normalize(v: Vector2): Vector2;
+        static add(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static subtract(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static multiply(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static dot(v1: Vector2, v2: Vector2): number;
+        static scale(v: Vector2, scaler: number): Vector2;
+        static getLength(v: Vector2): number;
+        static getDistance(v1: Vector2, v2: Vector2): number;
+        static copy(v: Vector2, out: Vector2): Vector2;
+        static equal(v1: Vector2, v2: Vector2, threshold?: number): boolean;
+        static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2;
     }
 }
 declare namespace paper {
@@ -2227,21 +2127,11 @@ declare namespace paper {
         static readonly unscaledDeltaTime: number;
     }
 }
-declare namespace paper {
-    /**
-     *
-     */
-    const serializeClassMap: {
-        [key: string]: string;
-    };
-    /**
-     *
-     */
-    function findClassCode(name: string): string;
-    /**
-     *
-     */
-    function findClassCodeFrom(target: any): string;
+declare namespace paper.editor {
+    const icon_frag: string;
+    const icon_vert: string;
+    const line_frag: string;
+    const line_vert: string;
 }
 declare namespace paper {
     /**
@@ -8802,9 +8692,124 @@ declare namespace paper.editor {
         setTexture(name: string, value: number): void;
     }
 }
-declare namespace paper.editor {
-    const icon_frag: string;
-    const icon_vert: string;
-    const line_frag: string;
-    const line_vert: string;
+declare namespace egret3d {
+    const enum SkinnedMeshRendererEventType {
+        Mesh = "mesh",
+        Bones = "bones",
+        Materials = "materials",
+    }
+    /**
+     * Skinned Mesh Renderer Component
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 蒙皮网格的渲染组件
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    class SkinnedMeshRenderer extends paper.BaseComponent implements paper.IRenderer {
+        /**
+         *
+         */
+        static dataCaches: {
+            key: string;
+            data: Float32Array;
+        }[];
+        private readonly _materials;
+        private _mesh;
+        /**
+         * mesh instance
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * mesh实例
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        mesh: Mesh | null;
+        private readonly _bones;
+        /**
+         *
+         * 根骨骼
+         */
+        rootBone: Transform;
+        center: Vector3;
+        size: Vector3;
+        /**
+         *
+         */
+        _boneDirty: boolean;
+        private _maxBoneCount;
+        /**
+         * Local [qX, qY, qZ, qW, tX, tY, tZ, 1.0, ...]
+         *
+         */
+        _skeletonMatrixData: Float32Array;
+        /**
+         *
+         */
+        _retargetBoneNames: string[] | null;
+        private _efficient;
+        private cacheData;
+        private _getMatByIndex(index, out);
+        /**
+         * @inheritDoc
+         */
+        initialize(): void;
+        /**
+         * @inheritDoc
+         */
+        uninitialize(): void;
+        /**
+         * @inheritDoc
+         */
+        serialize(): any;
+        /**
+         * @inheritDoc
+         */
+        deserialize(element: any): void;
+        /**
+         * ray intersects
+         * @param ray ray
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 射线检测
+         * @param ray 射线
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        intersects(ray: Ray): any;
+        /**
+         * material list
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 材质数组
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        materials: ReadonlyArray<Material>;
+        /**
+         * 骨骼列表
+         *
+         */
+        bones: ReadonlyArray<Transform>;
+        /**
+         *
+         */
+        readonly boneBuffer: Readonly<Float32Array>;
+    }
 }
