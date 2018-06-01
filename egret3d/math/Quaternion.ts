@@ -7,40 +7,26 @@ namespace egret3d {
     const helpMat4_1: Matrix = new Matrix();
 
     export class Quaternion implements paper.ISerializable {
-        /**
-         * 
-         */
+
         public x: number;
-        /**
-         * 
-         */
+
         public y: number;
-        /**
-         * 
-         */
+
         public z: number;
-        /**
-         * 
-         */
+
         public w: number;
-        /**
-         * 
-         */
+
         constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
             this.x = x;
             this.y = y;
             this.z = z;
             this.w = w;
         }
-        /**
-         * @inheritDoc
-         */
+
         public serialize() {
             return [this.x, this.y, this.z, this.w];
         }
-        /**
-         * @inheritDoc
-         */
+
         public deserialize(element: number[]): void {
             this.x = element[0];
             this.y = element[1];

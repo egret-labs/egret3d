@@ -11,15 +11,6 @@ namespace egret3d {
                 componentClass: TrailRender,
                 listeners: [
                     {
-                        type: paper.EventPool.EventType.Enabled,
-                        listener: (component: TrailRender) => {
-                            const renderer = this._getComponent(component.gameObject, 0);
-                            if (renderer) {
-                                this._drawCallList.updateDrawCalls(component.gameObject, false);
-                            }
-                        }
-                    },
-                    {
                         type: TrailRenderEventType.Meterial,
                         listener: (component: TrailRender) => {
                             const renderer = this._getComponent(component.gameObject, 0);
@@ -37,7 +28,7 @@ namespace egret3d {
         private readonly _createDrawCalls = ((gameObject: paper.GameObject) => {
             const renderer = this._getComponent(gameObject, 0) as TrailRender;
 
-            if (renderer.isActiveAndEnabled && renderer._mesh && renderer._material && renderer.$active) {
+            if (renderer._mesh && renderer._material && renderer.$active) {
                 let subMeshIndex = 0;
                 const drawCalls: DrawCall[] = [];
 
@@ -66,8 +57,8 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        protected _onCreateComponent(component: TrailRender) {
-            if (!super._onCreateComponent(component)) {
+        protected _onAddComponent(component: TrailRender) {
+            if (!super._onAddComponent(component)) {
                 return false;
             }
 
@@ -78,8 +69,8 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        protected _onDestroyComponent(component: TrailRender) {
-            if (!super._onDestroyComponent(component)) {
+        protected _onRemoveComponent(component: TrailRender) {
+            if (!super._onRemoveComponent(component)) {
                 return false;
             }
 

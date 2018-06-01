@@ -51,6 +51,7 @@ namespace paper {
                 egret3d.TrailRenderSystem,
                 egret3d.MeshRendererSystem,
                 egret3d.SkinnedMeshRendererSystem,
+                egret3d.particle.ParticleSystem,
                 egret3d.Egret2DRendererSystem,
                 egret3d.LightSystem,
                 egret3d.CameraSystem,

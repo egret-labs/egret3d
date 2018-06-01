@@ -11,7 +11,6 @@ namespace paper {
          */
         public update() {
             for (const component of this._bufferedComponents) {
-                EventPool.dispatchEvent(paper.EventPool.EventType.Destroy, component);
                 component.uninitialize();
             }
 

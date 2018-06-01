@@ -7,15 +7,14 @@ namespace paper {
          * 
          */
         export const enum EventType {
-            Create = "__create__",
-            Destroy = "__destroy__",
             Enabled = "__enabled__",
+            Disabled = "__disabled__",
         }
 
         /**
          * 事件回调类型
          */
-        export type EventListener<T extends BaseComponent> = (component: T) => void;
+        export type EventListener<T extends BaseComponent> = (component: T, extend?: any) => void;
 
         const _componentListeners: { [componentType: string]: { [eventType: string]: EventListener<any>[] } } = {};
 
@@ -66,15 +65,11 @@ namespace paper {
          * @param type event type:
          * @param component component
          */
-        export function dispatchEvent<T extends BaseComponent>(type: string, component: T) {
+        export function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any) {
             const behaviourType = "paper.Behaviour"; // TODO 字符串依赖需要注意
             let componentType = "";
             if (
-                (
-                    type === EventType.Create ||
-                    type === EventType.Destroy ||
-                    type === EventType.Enabled
-                ) &&
+                (type === EventType.Enabled || type === EventType.Disabled) &&
                 egret.is(component, behaviourType)
             ) { // 如果是组件的添加或删除事件，并且该组件派生自 Behaviour 组件，则需要使用基类的组件类型，这些组件发出的添加或删除事件都能被 BehaviourSystem 收到。 
                 componentType = behaviourType;
@@ -88,7 +83,12 @@ namespace paper {
                 if (type in componentListeners) {
                     const eventListeners = componentListeners[type];
                     for (const listener of eventListeners) {
-                        listener(component); // 监听直接派发，所以监听都应注意 bind 问题。
+                        // 监听直接派发，所以监听都应注意 bind 问题。
+                        if (extend) {
+                            listener(component, extend);
+                        } else {
+                            listener(component);
+                        }
                     }
                 }
             }

@@ -4,9 +4,9 @@ function parseShader(file, path) {
     var buffer = fs.readFileSync(path + file);
     var string = buffer.toString()
         .replace(/\r\n/g, '\n') // for windows
-        .replace(/[ \t]*\/\/.*\n/g, '')
-        .replace(/[ \t]*\/\*[\s\S]*?\*\//g, '')
-        .replace(/\n{2,}/g, '\n');
+        .replace(/\n/g, '\n') // for windows
+        .replace(/\r/g, '\n') // for windows
+        .replace(/\t/g, ' ') // for windows;
 
     return string;
 }

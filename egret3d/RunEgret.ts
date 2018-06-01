@@ -1,6 +1,6 @@
 namespace egret3d {
 
-
+    egret.RuntimeType = {} as any;
     export type RunEgretOptions = { antialias: boolean, defaultScene?: string }
 
 
@@ -90,6 +90,8 @@ declare namespace gltf {
         JOINTS_0 = "JOINTS_0",
         WEIGHTS_0 = "WEIGHTS_0",
     }
+
+    export type MeshAttribute = MeshAttributeType | string;
     /**
      * Indices of those attributes that deviate from their initialization value.
      */

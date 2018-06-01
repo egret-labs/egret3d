@@ -90,10 +90,12 @@ namespace egret3d {
                 const meshFilter = transform.gameObject.getComponent(MeshFilter);
                 if (meshFilter) {
                     const mesh = meshFilter.mesh;
-                    const pickinfo = mesh.intersects(ray, transform.getWorldMatrix());
-                    if (pickinfo) {
-                        pickInfos.push(pickinfo);
-                        pickinfo.transform = transform;
+                    if (mesh) {
+                        const pickinfo = mesh.intersects(ray, transform.getWorldMatrix());
+                        if (pickinfo) {
+                            pickInfos.push(pickinfo);
+                            pickinfo.transform = transform;
+                        }
                     }
                 }
                 else {
@@ -102,7 +104,7 @@ namespace egret3d {
                         let pickinfo = skinmesh.intersects(ray);
                         if (pickinfo) {
                             pickInfos.push(pickinfo);
-                            pickinfo.pickedtran = transform;
+                            pickinfo.transform = transform;
                         }
                     }
                 }

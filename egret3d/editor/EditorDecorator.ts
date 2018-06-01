@@ -1,4 +1,4 @@
-namespace editor {
+namespace paper.editor {
     /**属性信息 */
     export class PropertyInfo {
         /**属性名称 */

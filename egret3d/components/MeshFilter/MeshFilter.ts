@@ -27,7 +27,7 @@ namespace egret3d {
         /**
          * 组件挂载的 mesh 模型
          */
-        @editor.property(editor.EditType.MESH)
+        @paper.editor.property(paper.editor.EditType.MESH)
         public get mesh() {
             return this._mesh;
         }

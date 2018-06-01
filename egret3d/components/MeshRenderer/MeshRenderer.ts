@@ -78,7 +78,7 @@ namespace egret3d {
             this._materials.length = 0;
         }
 
-        @editor.property(editor.EditType.CHECKBOX)
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public get receiveShadows(): boolean {
             return this._receiveShadows;
         }
@@ -91,7 +91,7 @@ namespace egret3d {
             paper.EventPool.dispatchEvent(MeshRendererEventType.ReceiveShadows, this);
         }
 
-        @editor.property(editor.EditType.CHECKBOX)
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public get castShadows(): boolean {
             return this._castShadows;
         }
@@ -104,7 +104,7 @@ namespace egret3d {
             paper.EventPool.dispatchEvent(MeshRendererEventType.CastShadows, this);
         }
 
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public get lightmapIndex(): number {
             return this._lightmapIndex;
         }
@@ -117,7 +117,7 @@ namespace egret3d {
             paper.EventPool.dispatchEvent(MeshRendererEventType.LightmapIndex, this);
         }
 
-        @editor.property(editor.EditType.VECTOR4)
+        @paper.editor.property(paper.editor.EditType.VECTOR4)
         public get lightmapScaleOffset(): Readonly<Vector4> {
             return this._lightmapScaleOffset;
         }
@@ -140,7 +140,7 @@ namespace egret3d {
          * @platform Web
          * @language
          */
-        @editor.property(editor.EditType.MATERIAL_ARRAY)
+        @paper.editor.property(paper.editor.EditType.MATERIAL_ARRAY)
         public get materials(): ReadonlyArray<Material> {
             return this._materials;
         }

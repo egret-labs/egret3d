@@ -1,41 +1,25 @@
 namespace egret3d {
-    /**
-     * 
-     */
+
     export class Vector3 implements paper.ISerializable {
-        /**
-         * 
-         */
+
         public static readonly ONE: Readonly<Vector3> = new Vector3(1.0, 1.0, 1.0);
-        /**
-         * 
-         */
+
         public x: number;
-        /**
-         * 
-         */
+
         public y: number;
-        /**
-         * 
-         */
+
         public z: number;
-        /**
-         * 
-         */
+
         public constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
             this.x = x;
             this.y = y;
             this.z = z;
         }
-        /**
-         * @inheritDoc
-         */
+
         public serialize() {
             return [this.x, this.y, this.z];
         }
-        /**
-         * @inheritDoc
-         */
+
         public deserialize(element: [number, number, number]) {
             this.x = element[0];
             this.y = element[1];
@@ -160,36 +144,20 @@ namespace egret3d {
             return true;
         }
     }
-    /**
-     * 
-     */
+
     export const helpVector3A: Vector3 = new Vector3();
-    /**
-     * 
-     */
+
     export const helpVector3B: Vector3 = new Vector3();
-    /**
-     * 
-     */
+
     export const helpVector3C: Vector3 = new Vector3();
-    /**
-     * 
-     */
+
     export const helpVector3D: Vector3 = new Vector3();
-    /**
-     * 
-     */
+
     export const helpVector3E: Vector3 = new Vector3();
-    /**
-     * 
-     */
+
     export const helpVector3F: Vector3 = new Vector3();
-    /**
-     * 
-     */
+
     export const helpVector3G: Vector3 = new Vector3();
-    /**
-     * 
-     */
+
     export const helpVector3H: Vector3 = new Vector3();
 }

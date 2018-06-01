@@ -160,7 +160,7 @@ namespace egret3d {
         /**
          * 自定义 Mesh 的属性枚举。
          */
-        public static getMeshAttributeType(type: gltf.MeshAttributeType): gltf.AccessorType {
+        public static getMeshAttributeType(type: gltf.MeshAttribute): gltf.AccessorType {
             switch (type) {
                 case gltf.MeshAttributeType.POSITION:
                 case gltf.MeshAttributeType.NORMAL:

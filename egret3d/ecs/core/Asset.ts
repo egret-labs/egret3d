@@ -14,7 +14,6 @@ namespace paper {
      */
     @serializedType("assets")
     export abstract class Asset extends SerializableObject {
-
         private static readonly _assets: { [url: string]: Asset } = {};
 
         /**
@@ -22,7 +21,8 @@ namespace paper {
          * 通过此方法注册后，引擎内部可以通过URL字典访问所有注册的资源
          * 使用外部加载器时，需要在加载完成后注册该资源
          */
-        public static register(asset: Asset) {
+        public static register(asset: Asset, isLoad: boolean = false) {
+            asset._isLoad = isLoad;
             this._assets[asset.url] = asset;
         }
 
@@ -47,6 +47,7 @@ namespace paper {
         public static get assets(): Readonly<{ [url: string]: Asset }> {
             return this._assets;
         }
+
         /**
          * 
          * 资源的原始URL
@@ -68,6 +69,11 @@ namespace paper {
          * @language zh_CN
          */
         public name: string = "";
+
+        /**
+         * @internal
+         */
+        public _isLoad: boolean = false;
         /**
          * 
          */

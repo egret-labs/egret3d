@@ -11,19 +11,11 @@ namespace egret3d {
                 componentClass: MeshRenderer,
                 listeners: [
                     {
-                        type: paper.EventPool.EventType.Enabled,
-                        listener: (component: MeshRenderer) => {
-                            const filter = this._getComponent(component.gameObject, 1);
-                            if (filter) {
-                                this._drawCallList.updateShadowCasters(component.gameObject, component.castShadows);
-                            }
-                        }
-                    },
-                    {
                         type: MeshRendererEventType.CastShadows,
                         listener: (component: MeshRenderer) => {
                             const filter = this._getComponent(component.gameObject, 1);
                             if (filter) {
+                                this._drawCallList.updateDrawCalls(component.gameObject, component.castShadows);
                                 this._drawCallList.updateShadowCasters(component.gameObject, component.castShadows);
                             }
                         }
@@ -77,7 +69,7 @@ namespace egret3d {
             const renderer = this._getComponent(gameObject, 0) as MeshRenderer;
             const filter = this._getComponent(gameObject, 1) as MeshFilter;
 
-            if (filter.isActiveAndEnabled && filter.mesh && renderer.isActiveAndEnabled && renderer.materials.length > 0) {
+            if (filter.mesh && renderer.materials.length > 0) {
                 let subMeshIndex = 0;
                 const drawCalls: DrawCall[] = [];
 
@@ -107,8 +99,8 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        protected _onCreateComponent(component: MeshRenderer | MeshFilter) {
-            if (!super._onCreateComponent(component)) {
+        protected _onAddComponent(component: MeshRenderer | MeshFilter) {
+            if (!super._onAddComponent(component)) {
                 return false;
             }
 
@@ -120,8 +112,8 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        protected _onDestroyComponent(component: MeshRenderer | MeshFilter) {
-            if (!super._onDestroyComponent(component)) {
+        protected _onRemoveComponent(component: MeshRenderer | MeshFilter) {
+            if (!super._onRemoveComponent(component)) {
                 return false;
             }
 

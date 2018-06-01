@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * 
+     * @internal
      */
     export const _executeInEditModeComponents: any[] = [];
     /**
@@ -20,67 +20,80 @@ namespace paper {
          */
         protected readonly _interests = [
             {
-                componentClass: Behaviour as any,
-                listeners: [
-                    {
-                        type: paper.EventPool.EventType.Enabled,
-                        listener: (component: Behaviour) => {
-                            if (component.isActiveAndEnabled) {
-                                // Add to enable list.
-                                if (this._onEnableBehaviours.indexOf(component) < 0) {
-                                    this._onEnableBehaviours.push(component);
-                                }
-                            }
-                            else {
-                                // Add to disable list.
-                                if (this._onDisableBehaviours.indexOf(component) < 0) {
-                                    this._onDisableBehaviours.push(component);
-                                }
-                            }
-                        }
-                    }
-                ]
+                componentClass: Behaviour as any
             }
         ];
 
-        private readonly _onEnableBehaviours: (Behaviour)[] = [];
-        private readonly _resetBehaviours: (Behaviour)[] = [];
-        private readonly _startBehaviours: (Behaviour)[] = [];
-        private readonly _onDisableBehaviours: (Behaviour)[] = [];
+        private readonly _onResetBehaviours: (Behaviour | null)[] = [];
+        private readonly _onEnableBehaviours: (Behaviour | null)[] = [];
+        private readonly _onStartBehaviours: (Behaviour | null)[] = [];
+        private readonly _onDisableBehaviours: (Behaviour | null)[] = [];
         /**
          * @inheritDoc
          */
-        protected _onCreateComponent(component: Behaviour) {
+        protected _onAddComponent(component: Behaviour) {
             // 所有 Behaviour 均被收集，BehaviourSystem 并不是标准的 ecs，仅用来更新 Behaviour 的生命周期。
-            this._gameObjectOffsets[component.gameObject.hashCode] = this._components.length;
-            this._components.push(component);
+            let index = this._components.indexOf(component);
 
-            this._onEnableBehaviours.push(component);
+            if (index < 0) {
+                this._components.push(component);
 
-            if (paper.Application.isEditor && !paper.Application.isPlaying) {
-                this._resetBehaviours.push(component);
+                if (
+                    paper.Application.isEditor &&
+                    !paper.Application.isPlaying &&
+                    !component._isReseted
+                ) {
+                    this._onResetBehaviours.push(component);
+                }
+
+                this._onEnableBehaviours.push(component);
+
+                if (!component._isStarted) {
+                    this._onStartBehaviours.push(component);
+                }
+
+                index = this._onDisableBehaviours.indexOf(component);
+                if (index >= 0) {
+                    this._onDisableBehaviours[index] = null;
+                }
+
+                return true;
             }
 
-            this._startBehaviours.push(component);
-
-            return true;
+            console.debug("Add behaviour error.");
+            return false;
         }
         /**
          * @inheritDoc
          */
-        protected _onDestroyComponent(component: Behaviour) {
+        protected _onRemoveComponent(component: Behaviour) {
             const gameObject = component.gameObject;
+            let index = this._components.indexOf(component);
 
-            for (let i = 0; i < this._components.length; i++) {
-                if (this._components[i] === component) {
-                    this._components.splice(i, 1);
-                    break;
+            if (index >= 0) {
+                this._components[index] = null as any;
+                this._onDisableBehaviours.push(component);
+
+                index = this._onResetBehaviours.indexOf(component);
+                if (index >= 0) {
+                    this._onResetBehaviours[index] = null;
                 }
+
+                index = this._onEnableBehaviours.indexOf(component);
+                if (index >= 0) {
+                    this._onEnableBehaviours[index] = null;
+                }
+
+                index = this._onStartBehaviours.indexOf(component);
+                if (index >= 0) {
+                    this._onStartBehaviours[index] = null;
+                }
+
+                return true;
             }
 
-            delete this._gameObjectOffsets[gameObject.hashCode];
-
-            return true;
+            console.debug("Remove behaviour error.");
+            return false;
         }
         /**
          * @inheritDoc
@@ -90,9 +103,20 @@ namespace paper {
             let l = 0;
 
             if (paper.Application.isEditor && !paper.Application.isPlaying) {
+                if (this._onResetBehaviours.length > 0) {
+                    for (const component of this._onResetBehaviours) {
+                        if (component) {
+                            component._isReseted = true;
+                            component.onReset();
+                        }
+                    }
+
+                    this._onResetBehaviours.length = 0;
+                }
+
                 if (this._onEnableBehaviours.length > 0) {
                     for (const component of this._onEnableBehaviours) {
-                        if (component.isActiveAndEnabled && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                        if (component && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
                             component.onEnable();
                         }
                     }
@@ -100,47 +124,36 @@ namespace paper {
                     this._onEnableBehaviours.length = 0;
                 }
 
-                if (this._resetBehaviours.length > 0) {
-                    for (const component of this._resetBehaviours) {
-                        component.onReset();
-                    }
-
-                    this._resetBehaviours.length = 0;
-                }
-
-                i = this._startBehaviours.length;
-                if (i > 0) {
-                    while (i--) {
-                        const component = this._startBehaviours[i];
-                        if (!component || component.isActiveAndEnabled) {
-                            if (component.isActiveAndEnabled && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
-                                component.onStart();
-                            }
-
-                            this._startBehaviours.splice(i, 1);
+                if (this._onStartBehaviours.length > 0) {
+                    for (const component of this._onStartBehaviours) {
+                        if (component && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                            component._isStarted = true;
+                            component.onStart();
                         }
                     }
+
+                    this._onStartBehaviours.length = 0;
                 }
 
                 l = this._components.length;
 
                 for (i = 0; i < l; ++i) {
                     const component = this._components[i];
-                    if (component.isActiveAndEnabled && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                    if (component && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
                         component.onUpdate(paper.Time.deltaTime);
                     }
                 }
 
                 for (i = 0; i < l; ++i) {
                     const component = this._components[i];
-                    if (component.isActiveAndEnabled && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                    if (component && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
                         component.onLateUpdate(paper.Time.deltaTime);
                     }
                 }
 
                 if (this._onDisableBehaviours.length > 0) {
                     for (const component of this._onDisableBehaviours) {
-                        if (!component.isActiveAndEnabled && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                        if (component && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
                             component.onDisable();
                         }
                     }
@@ -151,7 +164,7 @@ namespace paper {
             else {
                 if (this._onEnableBehaviours.length > 0) {
                     for (const component of this._onEnableBehaviours) {
-                        if (component.isActiveAndEnabled) {
+                        if (component) {
                             component.onEnable();
                         }
                     }
@@ -159,39 +172,36 @@ namespace paper {
                     this._onEnableBehaviours.length = 0;
                 }
 
-                i = this._startBehaviours.length;
-                if (i > 0) {
-                    while (i--) {
-                        const component = this._startBehaviours[i];
-                        if (!component || component.isActiveAndEnabled) {
-                            if (component.isActiveAndEnabled) {
-                                component.onStart();
-                            }
-
-                            this._startBehaviours.splice(i, 1);
+                if (this._onStartBehaviours.length > 0) {
+                    for (const component of this._onStartBehaviours) {
+                        if (component) {
+                            component._isStarted = true;
+                            component.onStart();
                         }
                     }
+
+                    this._onStartBehaviours.length = 0;
                 }
 
                 l = this._components.length;
 
                 for (i = 0; i < l; ++i) {
                     const component = this._components[i];
-                    if (component.isActiveAndEnabled) {
+                    if (component) {
                         component.onUpdate(paper.Time.deltaTime);
                     }
                 }
 
                 for (i = 0; i < l; ++i) {
                     const component = this._components[i];
-                    if (component.isActiveAndEnabled) {
+                    if (component) {
                         component.onLateUpdate(paper.Time.deltaTime);
                     }
                 }
 
                 if (this._onDisableBehaviours.length > 0) {
                     for (const component of this._onDisableBehaviours) {
-                        if (!component.isActiveAndEnabled) {
+                        if (component) {
                             component.onDisable();
                         }
                     }

@@ -60,7 +60,9 @@ namespace paper {
             if (object instanceof GameObject) {
                 for (const component of object.components) {
                     component.initialize();
-                    EventPool.dispatchEvent(EventPool.EventType.Create, component);
+                    if (component.isActiveAndEnabled) {
+                        paper.EventPool.dispatchEvent(paper.EventPool.EventType.Enabled, component);
+                    }
                 }
             }
         }

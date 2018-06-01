@@ -1,32 +1,20 @@
 namespace egret3d {
-    /**
-     * 
-     */
+
     export class Vector2 implements paper.ISerializable {
-        /**
-         * 
-         */
+
         public x: number;
-        /**
-         * 
-         */
+
         public y: number;
-        /**
-         * 
-         */
+
         constructor(x: number = 0.0, y: number = 0.0) {
             this.x = x;
             this.y = y;
         }
-        /**
-         * @inheritDoc
-         */
+
         public serialize() {
             return [this.x, this.y];
         }
-        /**
-         * @inheritDoc
-         */
+
         public deserialize(element: number[]): void {
             this.x = element[0];
             this.y = element[1];
@@ -115,20 +103,5 @@ namespace egret3d {
     }
 
     const _helpVector2A = new Vector2();
-    /**
-     * 
-     */
-    export const helpVector2A = new Vector2();
-    /**
-     * 
-     */
-    export const helpVector2B = new Vector2();
-    /**
-     * 
-     */
-    export const helpVector2C = new Vector2();
-    /**
-     * 
-     */
-    export const helpVector2D = new Vector2();
+
 }

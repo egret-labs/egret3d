@@ -17,6 +17,11 @@ namespace egret3d {
         public static LAMBERT: Shader;
         public static LAMBERT_NORMAL: Shader;
         public static GIZMOS_COLOR: Shader;
+        public static PARTICLE: Shader;
+        public static PARTICLE_ADDITIVE: Shader;
+        public static PARTICLE_ADDITIVE_PREMYLTIPLY: Shader;
+        public static PARTICLE_BLEND: Shader;
+        public static PARTICLE_BLEND_PREMYLTIPLY: Shader;
 
         private static _inited: boolean = false;
 
@@ -61,6 +66,9 @@ namespace egret3d {
 
             const def_distancepackage_vs = Shader.registerVertShader("def_depthpackage", ShaderLib.distancepackage_vert); // linear
             const def_distancepackage_fs = Shader.registerFragShader("def_depthpackage", ShaderLib.distancepackage_frag);
+
+            const def_particlesystem_vs = Shader.registerVertShader("def_particlesystem", "#define DIFFUSEMAP \n#define TINTCOLOR \n" + ShaderLib.particlesystem_vert);
+            const def_particlesystem_fs = Shader.registerFragShader("def_particlesystem", "#define DIFFUSEMAP \n#define TINTCOLOR \n" + ShaderLib.particlesystem_frag);
 
             {
                 const shader = new Shader("shader/lambert");
@@ -532,6 +540,107 @@ namespace egret3d {
                 this.GIZMOS_COLOR = sh;
 
                 paper.Asset.register(sh);
+            }
+            {
+                const shader = new Shader("particles.shader.json");
+                shader.url = "particles.shader.json";
+                shader.renderQueue = RenderQueue.Transparent;
+                shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(0.5, 0.5, 0.5, 0.5) };
+
+                shader.passes["base"] = [];
+                const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
+                renderPass.state_ztest = true;
+                renderPass.state_ztest_method = WebGLKit.LEQUAL;
+                renderPass.state_zwrite = true;
+                renderPass.state_showface = ShowFaceStateEnum.ALL;
+                renderPass.setAlphaBlend(BlendModeEnum.Close);
+                shader.passes["base"].push(renderPass);
+
+                this.PARTICLE = shader;
+
+                paper.Asset.register(shader);
+            }
+            {
+                const shader = new Shader("particles_additive.shader.json");
+                shader.url = "particles_additive.shader.json";
+                shader.renderQueue = RenderQueue.Overlay;
+                shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(0.5, 0.5, 0.5, 0.5) };
+
+                shader.passes["base"] = [];
+                const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
+                renderPass.state_ztest = false;
+                renderPass.state_ztest_method = WebGLKit.LEQUAL;
+                renderPass.state_zwrite = false;
+                renderPass.state_showface = ShowFaceStateEnum.ALL;
+                renderPass.setAlphaBlend(BlendModeEnum.Add);
+                shader.passes["base"].push(renderPass);
+
+                this.PARTICLE_ADDITIVE = shader;
+
+                paper.Asset.register(shader);
+            }
+            {
+                const shader = new Shader("particles_additive_premultiply.shader.json");
+                shader.url = "particles_additive_premultiply.shader.json";
+                shader.renderQueue = RenderQueue.Transparent;
+                shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(0.5, 0.5, 0.5, 0.5) };
+
+                shader.passes["base"] = [];
+                const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
+                renderPass.state_ztest = true;
+                renderPass.state_ztest_method = WebGLKit.LEQUAL;
+                renderPass.state_zwrite = true;
+                renderPass.state_showface = ShowFaceStateEnum.ALL;
+                renderPass.setAlphaBlend(BlendModeEnum.Add_PreMultiply);
+                shader.passes["base"].push(renderPass);
+
+                this.PARTICLE_ADDITIVE_PREMYLTIPLY = shader;
+
+                paper.Asset.register(shader);
+            }
+            {
+                const shader = new Shader("particles_blend.shader.json");
+                shader.url = "particles_blend.shader.json";
+                shader.renderQueue = RenderQueue.Transparent;
+                shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(1.0, 1.0, 1.0, 1.0) };
+
+                shader.passes["base"] = [];
+                const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
+                renderPass.state_ztest = false;
+                renderPass.state_ztest_method = WebGLKit.LEQUAL;
+                renderPass.state_zwrite = false;
+                renderPass.state_showface = ShowFaceStateEnum.ALL;
+                renderPass.setAlphaBlend(BlendModeEnum.Blend);
+                shader.passes["base"].push(renderPass);
+
+                this.PARTICLE_BLEND = shader;
+
+                paper.Asset.register(shader);
+            }
+
+            {
+                const shader = new Shader("particles_blend_premultiply.shader.json");
+                shader.url = "particles_blend_premultiply.shader.json";
+                shader.renderQueue = RenderQueue.Transparent;
+                shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(0.5, 0.5, 0.5, 0.5) };
+
+                shader.passes["base"] = [];
+                const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
+                renderPass.state_ztest = true;
+                renderPass.state_ztest_method = WebGLKit.LEQUAL;
+                renderPass.state_zwrite = true;
+                renderPass.state_showface = ShowFaceStateEnum.ALL;
+                renderPass.setAlphaBlend(BlendModeEnum.Blend_PreMultiply);
+                shader.passes["base"].push(renderPass);
+
+                this.PARTICLE_BLEND_PREMYLTIPLY = shader;
+
+                paper.Asset.register(shader);
             }
         }
     }

@@ -4,7 +4,7 @@ namespace paper {
      */
     export abstract class BaseComponent extends SerializableObject {
         /**
-         * 
+         * @internal
          */
         public static _injectGameObject: GameObject;
 
@@ -52,8 +52,16 @@ namespace paper {
         }
         public set enabled(value: boolean) {
             if (this._enabled !== value) {
+                const prevActiveAndEnabled = this.isActiveAndEnabled;
                 this._enabled = value;
-                paper.EventPool.dispatchEvent(paper.EventPool.EventType.Enabled, this);
+                const currentActiveAndEnabled = this.isActiveAndEnabled;
+
+                if (currentActiveAndEnabled !== prevActiveAndEnabled) {
+                    paper.EventPool.dispatchEvent(
+                        currentActiveAndEnabled ? paper.EventPool.EventType.Enabled : paper.EventPool.EventType.Disabled,
+                        this
+                    );
+                }
             }
         }
 

@@ -11,15 +11,6 @@ namespace egret3d {
                 componentClass: SkinnedMeshRenderer,
                 listeners: [
                     {
-                        type: paper.EventPool.EventType.Enabled,
-                        listener: (component: SkinnedMeshRenderer) => {
-                            const renderer = this._getComponent(component.gameObject, 0);
-                            if (renderer) {
-                                this._updateDrawCalls(component);
-                            }
-                        }
-                    },
-                    {
                         type: SkinnedMeshRendererEventType.Mesh,
                         listener: (component: SkinnedMeshRenderer) => {
                             const renderer = this._getComponent(component.gameObject, 0);
@@ -44,7 +35,7 @@ namespace egret3d {
         private readonly _createDrawCalls = ((gameObject: paper.GameObject) => {
             const renderer = this._getComponent(gameObject, 0) as SkinnedMeshRenderer;
 
-            if (renderer.isActiveAndEnabled && renderer.mesh && renderer.materials.length > 0) {
+            if (renderer.mesh && renderer.materials.length > 0) {
                 let subMeshIndex = 0;
                 const drawCalls: DrawCall[] = [];
 
@@ -86,8 +77,8 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        protected _onCreateComponent(component: SkinnedMeshRenderer) {
-            if (!super._onCreateComponent(component)) {
+        protected _onAddComponent(component: SkinnedMeshRenderer) {
+            if (!super._onAddComponent(component)) {
                 return false;
             }
 
@@ -98,8 +89,8 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        protected _onDestroyComponent(component: SkinnedMeshRenderer) {
-            if (!super._onDestroyComponent(component)) {
+        protected _onRemoveComponent(component: SkinnedMeshRenderer) {
+            if (!super._onRemoveComponent(component)) {
                 return false;
             }
 

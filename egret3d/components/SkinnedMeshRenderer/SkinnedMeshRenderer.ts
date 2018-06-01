@@ -113,15 +113,20 @@ namespace egret3d {
         private cacheData: Float32Array;
 
         private _getMatByIndex(index: number, out: Matrix) {
+            const mesh = this._mesh;
+            if (!mesh) {
+                return null;
+            }
+
             const blendIndices = helpVector4E;
-            this.mesh.getVertexAttribute(index, gltf.MeshAttributeType.JOINTS_0, 0, blendIndices);
+            mesh.getAttribute(index, gltf.MeshAttributeType.JOINTS_0, 0, blendIndices);
 
             if (blendIndices.x >= this._maxBoneCount || blendIndices.y >= this._maxBoneCount || blendIndices.z >= this._maxBoneCount || blendIndices.w >= this._maxBoneCount) {
                 return null;
             }
 
             const blendWeights = helpVector4F;
-            this.mesh.getVertexAttribute(index, gltf.MeshAttributeType.WEIGHTS_0, 0, blendWeights);
+            mesh.getAttribute(index, gltf.MeshAttributeType.WEIGHTS_0, 0, blendWeights);
 
             if (this._efficient) {
                 const vec40r = helpVector4A;
@@ -319,7 +324,7 @@ namespace egret3d {
 
             if (element._mesh) {
                 this._mesh = new (Mesh as any)(); //
-                this._mesh.deserialize(element._mesh);
+                (this._mesh as Mesh).deserialize(element._mesh);
             }
 
             if (element.rootBone) {
@@ -355,66 +360,75 @@ namespace egret3d {
          * @language
          */
         public intersects(ray: Ray) {
+            const mesh = this._mesh;
+            if (!mesh) {
+                return null;
+            }
+
             const mvpmat = this.gameObject.transform.getWorldMatrix();
             let pickinfo = null;
             // let data = this.mesh.data;
             let subMeshIndex = 0;
-            for (const primitive of this._mesh.glTFMesh.primitives) {
+            for (const primitive of mesh.glTFMesh.primitives) {
                 const mat0 = helpMat4_1;
                 const mat1 = helpMat4_2;
                 const mat2 = helpMat4_3;
                 const mat00 = helpMat4_4;
                 const mat11 = helpMat4_5;
                 const mat22 = helpMat4_6;
+                const indices = mesh.getIndices(subMeshIndex);
 
-                const indices = this._mesh.getIndices(subMeshIndex);
-                const indexAccessor = this.mesh.glTFAsset.getAccessor(primitive.indices as number);
-                const indexBufferOffset = this.mesh.glTFAsset.getBufferOffset(indexAccessor); // TODO
-                const t0 = helpVec3_1;
-                const t1 = helpVec3_2;
-                const t2 = helpVec3_3;
+                if (indices) {
+                    const t0 = helpVec3_1;
+                    const t1 = helpVec3_2;
+                    const t2 = helpVec3_3;
+                    const vertices = mesh.getVertices(subMeshIndex);
 
-                for (let i = 0; i < indexAccessor.count; i += 3) {
-                    // TODO
-                    const verindex0 = indices[i];
-                    const verindex1 = indices[i + 1];
-                    const verindex2 = indices[i + 2];
-                    const p0 = helpVec3_4;
-                    const p1 = helpVec3_5;
-                    const p2 = helpVec3_6;
-                    this.mesh.getVertexPosition(verindex0, subMeshIndex, p0);
-                    this.mesh.getVertexPosition(verindex1, subMeshIndex, p1);
-                    this.mesh.getVertexPosition(verindex2, subMeshIndex, p2);
 
-                    this._getMatByIndex(verindex0, mat0);
-                    this._getMatByIndex(verindex1, mat1);
-                    this._getMatByIndex(verindex2, mat2);
-                    if (mat0 === null || mat1 === null || mat2 === null) continue;
+                    for (let i = 0; i < indices.length; i += 3) {
+                        // TODO
+                        const verindex0 = indices[i];
+                        const verindex1 = indices[i + 1];
+                        const verindex2 = indices[i + 2];
+                        const p0 = helpVec3_4;
+                        const p1 = helpVec3_5;
+                        const p2 = helpVec3_6;
 
-                    egret3d.Matrix.multiply(mvpmat, mat0, mat00);
-                    egret3d.Matrix.multiply(mvpmat, mat1, mat11);
-                    egret3d.Matrix.multiply(mvpmat, mat2, mat22);
+                        let index = indices[i] * 3;
+                        Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p0);
+                        index = indices[i + 1] * 3;
+                        Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p1);
+                        index = indices[i + 2] * 3;
+                        Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p2);
 
-                    egret3d.Matrix.transformVector3(p0, mat00, t0);
-                    egret3d.Matrix.transformVector3(p1, mat11, t1);
-                    egret3d.Matrix.transformVector3(p2, mat22, t2);
+                        this._getMatByIndex(verindex0, mat0);
+                        this._getMatByIndex(verindex1, mat1);
+                        this._getMatByIndex(verindex2, mat2);
+                        if (mat0 === null || mat1 === null || mat2 === null) continue;
 
-                    const result = ray.intersectsTriangle(t0, t1, t2);
-                    if (result) {
-                        if (result.distance < 0) continue;
-                        if (!pickinfo || pickinfo.distance > result.distance) {
-                            pickinfo = result;
-                            pickinfo.faceId = (indexBufferOffset + i) / 3; // TODO
-                            pickinfo.subMeshId = subMeshIndex;
-                            const tdir = helpVec3_7;
-                            egret3d.Vector3.copy(ray.direction, tdir);
-                            egret3d.Vector3.scale(tdir, result.distance);
-                            egret3d.Vector3.add(ray.origin, tdir, pickinfo.hitposition);
+                        egret3d.Matrix.multiply(mvpmat, mat0, mat00);
+                        egret3d.Matrix.multiply(mvpmat, mat1, mat11);
+                        egret3d.Matrix.multiply(mvpmat, mat2, mat22);
+
+                        egret3d.Matrix.transformVector3(p0, mat00, t0);
+                        egret3d.Matrix.transformVector3(p1, mat11, t1);
+                        egret3d.Matrix.transformVector3(p2, mat22, t2);
+
+                        const result = ray.intersectsTriangle(t0, t1, t2);
+                        if (result) {
+                            if (result.distance < 0) continue;
+                            if (!pickinfo || pickinfo.distance > result.distance) {
+                                pickinfo = result;
+                                pickinfo.triangleIndex = i / 3;
+                                pickinfo.subMeshIndex = subMeshIndex;
+                                const tdir = helpVec3_7;
+                                egret3d.Vector3.copy(ray.direction, tdir);
+                                egret3d.Vector3.scale(tdir, result.distance);
+                                egret3d.Vector3.add(ray.origin, tdir, pickinfo.position);
+                            }
                         }
                     }
                 }
-
-
 
                 subMeshIndex++;
             }

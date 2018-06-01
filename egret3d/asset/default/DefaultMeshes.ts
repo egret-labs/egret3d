@@ -416,13 +416,14 @@ namespace egret3d {
         public static genBoxByArray(array: egret3d.Vector3[]) {
             const vertexCount = 8;
             const mesh = new Mesh(vertexCount, _box.ibo, _attributesC);
+            const vertices = mesh.getVertices();
 
             for (let i = 0; i < vertexCount; ++i) {
+                const iD = i * 3;
                 const vertex = array[i];
-                mesh.setVertexAttribute(
-                    i, gltf.MeshAttributeType.POSITION, 0,
-                    vertex.x, vertex.y, vertex.z
-                );
+                vertices[iD] = vertex.x;
+                vertices[iD + 1] = vertex.y;
+                vertices[iD + 2] = vertex.z;
             }
 
             mesh.uploadSubVertexBuffer(_attributesC);
@@ -434,7 +435,7 @@ namespace egret3d {
             let index = 0;
             const mesh = new Mesh(4 * segment + 2, 3 * 4 * segment, _attributesB);
             const normal = new Vector3(0.0, 1.0, 0.0);
-            const indices = mesh.getIndices();
+            const indices = mesh.getIndices() as Uint16Array;
 
             for (let s = 0; s < 4; s++) {
                 const y = (s < 2 ? 0.5 : -0.5) * height;
@@ -456,14 +457,14 @@ namespace egret3d {
                         normal.z = z;
                     }
 
-                    mesh.setVertexAttribute(index, gltf.MeshAttributeType.POSITION, 0, x * radius, y, z * radius);
+                    mesh.setAttribute(index, gltf.MeshAttributeType.POSITION, 0, x * radius, y, z * radius);
                     // mesh.setVertexAttribute(index, gltf.MeshAttributeType.NORMAL, 0, normal.x, normal.y, normal.z);
 
                     if (s === 0 || s === 3) {
-                        mesh.setVertexAttribute(index, gltf.MeshAttributeType.TEXCOORD_0, 0, x * 0.5 + 0.5, z * 0.5 + 0.5);
+                        mesh.setAttribute(index, gltf.MeshAttributeType.TEXCOORD_0, 0, x * 0.5 + 0.5, z * 0.5 + 0.5);
                     }
                     else {
-                        mesh.setVertexAttribute(index, gltf.MeshAttributeType.TEXCOORD_0, 0, i / segment, y < 0.0 ? 0.0 : 1.0);
+                        mesh.setAttribute(index, gltf.MeshAttributeType.TEXCOORD_0, 0, i / segment, y < 0.0 ? 0.0 : 1.0);
                     }
 
                     index++;
@@ -471,14 +472,14 @@ namespace egret3d {
             }
 
             // Top
-            mesh.setVertexAttribute(index, gltf.MeshAttributeType.POSITION, 0, 0.0, 0.5 * height, 0.0);
+            mesh.setAttribute(index, gltf.MeshAttributeType.POSITION, 0, 0.0, 0.5 * height, 0.0);
             // mesh.setVertexAttribute(index, gltf.MeshAttributeType.NORMAL, 0, 0.0, 1.0, 0.0);
-            mesh.setVertexAttribute(index, gltf.MeshAttributeType.TEXCOORD_0, 0, 0.5, 0.5);
+            mesh.setAttribute(index, gltf.MeshAttributeType.TEXCOORD_0, 0, 0.5, 0.5);
             index++;
             // Bottom
-            mesh.setVertexAttribute(index, gltf.MeshAttributeType.POSITION, 0, 0.0, -0.5 * height, 0.0);
+            mesh.setAttribute(index, gltf.MeshAttributeType.POSITION, 0, 0.0, -0.5 * height, 0.0);
             // mesh.setVertexAttribute(index, gltf.MeshAttributeType.NORMAL, 0, 0.0, -1.0, 0.0);
-            mesh.setVertexAttribute(index, gltf.MeshAttributeType.TEXCOORD_0, 0, 0.5, 0.5);
+            mesh.setAttribute(index, gltf.MeshAttributeType.TEXCOORD_0, 0, 0.5, 0.5);
             index++;
             //
             index = 0;
@@ -536,7 +537,7 @@ namespace egret3d {
                     vertex.x = -radius * Math.cos(u * Math.PI * 2) * Math.sin(v * Math.PI);
                     vertex.y = radius * Math.cos(v * Math.PI);
                     vertex.z = radius * Math.sin(u * Math.PI * 2) * Math.sin(v * Math.PI);
-                    mesh.setVertexAttribute(iv, gltf.MeshAttributeType.POSITION, 0, vertex.x, vertex.y, vertex.z);
+                    mesh.setAttribute(iv, gltf.MeshAttributeType.POSITION, 0, vertex.x, vertex.y, vertex.z);
                     // Normal.
                     normal.x = vertex.x;
                     normal.y = vertex.y;
@@ -544,13 +545,13 @@ namespace egret3d {
                     const num = Math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
 
                     if (num > Number.MIN_VALUE) {
-                        mesh.setVertexAttribute(iv, gltf.MeshAttributeType.NORMAL, 0, normal.x / num, normal.y / num, normal.z / num);
+                        mesh.setAttribute(iv, gltf.MeshAttributeType.NORMAL, 0, normal.x / num, normal.y / num, normal.z / num);
                     }
                     else {
-                        mesh.setVertexAttribute(iv, gltf.MeshAttributeType.NORMAL, 0, 0.0, 0.0, 0.0);
+                        mesh.setAttribute(iv, gltf.MeshAttributeType.NORMAL, 0, 0.0, 0.0, 0.0);
                     }
 
-                    mesh.setVertexAttribute(iv, gltf.MeshAttributeType.TEXCOORD_0, 0, 1.0 - u, v);
+                    mesh.setAttribute(iv, gltf.MeshAttributeType.TEXCOORD_0, 0, 1.0 - u, v);
                     iv++;
                     verticesRow.push(index++);
                 }
@@ -577,7 +578,7 @@ namespace egret3d {
                 }
             }
 
-            const indices = mesh.getIndices();
+            const indices = mesh.getIndices() as Uint16Array;
             for (let i = 0, l = tris.length; i < l; i++) {
                 indices[i] = tris[i];
             }

@@ -51,17 +51,17 @@ namespace egret3d {
         private readonly localMatrix: Matrix = new Matrix();
         private readonly worldMatrix: Matrix = new Matrix();
         @paper.serializedField
-        @editor.property(editor.EditType.VECTOR3)
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
         private readonly localPosition: Vector3 = new Vector3();
         private readonly position: Vector3 = new Vector3();
         @paper.serializedField
-        @editor.property(editor.EditType.QUATERNION)
+        @paper.editor.property(paper.editor.EditType.QUATERNION)
         private readonly localRotation: Quaternion = new Quaternion();
         private readonly rotation: Quaternion = new Quaternion();
         private readonly localEulerAngles: Vector3 = new Vector3();
         private readonly eulerAngles: Vector3 = new Vector3();
         @paper.serializedField
-        @editor.property(editor.EditType.VECTOR3)
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
         private readonly localScale: Vector3 = new Vector3(1.0, 1.0, 1.0);
         private readonly scale: Vector3 = new Vector3(1.0, 1.0, 1.0);
         private _aabb: AABB = null as any;
@@ -80,49 +80,45 @@ namespace egret3d {
         }
 
         private _buildAABB(): AABB {
-            const vertexPosition = new egret3d.Vector3();
-            const minimum = new egret3d.Vector3();
-            const maximum = new egret3d.Vector3();
+            const vertexPosition = new Vector3();
+            const minimum = new Vector3();
+            const maximum = new Vector3();
 
             const filter = this.gameObject.getComponent(MeshFilter);
             if (filter && filter.mesh) {
-                egret3d.Vector3.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, minimum);
-                egret3d.Vector3.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, maximum);
-
-                // MD Mesh
-                // let meshdata: egret3d.MeshData = filter.mesh.data;
-                // for (let i = 0; i < meshdata.vertexCount; i++) {
-                //     const pos = meshdata.getPos(i);
-                //     egret3d.Vector3.max(pos, maximum, maximum);
-                //     egret3d.Vector3.min(pos, minimum, minimum);
-                // }
+                Vector3.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, minimum);
+                Vector3.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, maximum);
 
                 let subMeshIndex = 0;
                 for (const _primitive of filter.mesh.glTFMesh.primitives) {
-                    const vertexCount = filter.mesh.getVertexCount(subMeshIndex);
+                    const vertices = filter.mesh.getVertices(subMeshIndex);
 
-                    for (let i = 0; i < vertexCount; ++i) {
-                        filter.mesh.getVertexPosition(i, subMeshIndex, vertexPosition);
-                        egret3d.Vector3.max(vertexPosition, maximum, maximum);
-                        egret3d.Vector3.min(vertexPosition, minimum, minimum);
+                    for (let i = 0, l = vertices.length; i < l; i += 3) {
+                        Vector3.set(vertices[i], vertices[i + 1], vertices[i + 2], vertexPosition);
+                        Vector3.max(vertexPosition, maximum, maximum);
+                        Vector3.min(vertexPosition, minimum, minimum);
                     }
+
+                    subMeshIndex++;
                 }
             }
             else {
-                const skinmesh = this.gameObject.getComponent(egret3d.SkinnedMeshRenderer);
-                if (skinmesh) {
-                    egret3d.Vector3.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, minimum);
-                    egret3d.Vector3.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, maximum);
+                const skinmesh = this.gameObject.getComponent(SkinnedMeshRenderer);
+                if (skinmesh && skinmesh.mesh) {
+                    Vector3.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, minimum);
+                    Vector3.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, maximum);
 
                     let subMeshIndex = 0;
                     for (const _primitive of skinmesh.mesh.glTFMesh.primitives) {
-                        const vertexCount = skinmesh.mesh.getVertexCount(subMeshIndex);
+                        const vertices = skinmesh.mesh.getVertices(subMeshIndex);
 
-                        for (let i = 0; i < vertexCount; ++i) {
-                            skinmesh.mesh.getVertexPosition(i, subMeshIndex, vertexPosition);
-                            egret3d.Vector3.max(vertexPosition, maximum, maximum);
-                            egret3d.Vector3.min(vertexPosition, minimum, minimum);
+                        for (let i = 0, l = vertices.length; i < l; i += 3) {
+                            Vector3.set(vertices[i], vertices[i + 1], vertices[i + 2], vertexPosition);
+                            Vector3.max(vertexPosition, maximum, maximum);
+                            Vector3.min(vertexPosition, minimum, minimum);
                         }
+
+                        subMeshIndex++;
                     }
                 }
                 else {
@@ -191,8 +187,12 @@ namespace egret3d {
          * 父节点发生改变的回调方法
          * 子类可通过重载此方法进行标脏状态传递
          */
-        protected _onParentChange(_newParent: Transform | null, _oldParent: Transform | null) {
-            this.gameObject._activeInHierarchyDirty();
+        protected _onParentChange(newParent: Transform | null, oldParent: Transform | null) {
+            const prevEnabled = oldParent ? oldParent.isActiveAndEnabled : this.gameObject.activeSelf;
+            if ((newParent ? newParent.isActiveAndEnabled : this.gameObject.activeSelf) !== prevEnabled) {
+                this.gameObject._activeInHierarchyDirty(prevEnabled);
+            }
+
             this._dirtify();
         }
 
@@ -209,7 +209,7 @@ namespace egret3d {
             this.children.length = 0;
             if (element.children) {
                 for (let i = 0, l = element.children.length; i < l; i++) {
-                    const child = paper.getDeserializedObject<egret3d.Transform>(element.children[i]);
+                    const child = paper.getDeserializedObject<Transform>(element.children[i]);
                     if (child) {
                         child._parent = this;
                         this.children.push(child);
@@ -221,9 +221,8 @@ namespace egret3d {
         /**
          * 设置父节点 
          */
-        public setParent(parent: Transform, worldPositionStays: boolean = false) {
+        public setParent(newParent: Transform | null, worldPositionStays: boolean = false) {
             const oldParent = this._parent;
-            const newParent = parent;
 
             if (oldParent === newParent) {
                 return;
@@ -238,7 +237,7 @@ namespace egret3d {
             }
 
             if (newParent) {
-                parent.children.push(this);
+                newParent.children.push(this);
             }
 
             this._parent = newParent;
@@ -846,7 +845,7 @@ namespace egret3d {
         public get parent() {
             return this._parent;
         }
-        public set parent(value: Transform) {
+        public set parent(value: Transform | null) {
             this.setParent(value, false);
         }
     }

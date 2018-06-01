@@ -884,24 +884,14 @@ namespace egret3d {
          */
         protected readonly _interests = [
             {
-                componentClass: Animation,
-                listeners: [
-                    {
-                        type: paper.EventPool.EventType.Enabled,
-                        listener: (component: Animation) => {
-                            if (component.autoPlay) {
-                                component.play();
-                            }
-                        }
-                    }
-                ]
+                componentClass: Animation
             }
         ];
         /**
          * @inheritDoc
          */
-        protected _onCreateComponent(component: Animation) {
-            if (!super._onCreateComponent(component)) {
+        protected _onAddComponent(component: Animation) {
+            if (!super._onAddComponent(component)) {
                 return false;
             }
 

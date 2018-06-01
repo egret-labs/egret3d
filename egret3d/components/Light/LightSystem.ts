@@ -17,7 +17,7 @@ namespace egret3d {
                 let shadow: ILightShadow;
                 let face = 1;
 
-                if (light.isActiveAndEnabled && light.castShadows) {
+                if (light.castShadows) {
                     switch (light.type) {
 
                         case LightTypeEnum.Point:

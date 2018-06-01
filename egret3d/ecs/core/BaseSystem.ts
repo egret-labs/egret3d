@@ -15,7 +15,7 @@ namespace paper {
     export abstract class BaseSystem<T extends BaseComponent> {
         /**
          * 防止生成未经管理的系统实例。
-         * 
+         * @internal
          */
         public static _createEnabled: boolean = false;
         /**
@@ -23,7 +23,7 @@ namespace paper {
          */
         public enable: boolean = true;
         /**
-         * 
+         * @internal
          */
         public _level: number = 0;
         /**
@@ -41,9 +41,9 @@ namespace paper {
         /**
          * 
          */
-        protected readonly _gameObjectOffsets: { [key: string]: number } = {};
+        private readonly _gameObjectOffsets: { [key: string]: number } = {};
         /**
-         * 
+         * @internal
          */
         public constructor() {
             if (!BaseSystem._createEnabled) {
@@ -55,7 +55,7 @@ namespace paper {
         /**
          * 
          */
-        protected _onCreateComponent(component: T) {
+        protected _onAddComponent(component: T) {
             const components = this._components;
             const backupLength = components.length;
             const gameObject = component.gameObject;
@@ -78,7 +78,7 @@ namespace paper {
         /**
          * 
          */
-        protected _onDestroyComponent(component: T) {
+        protected _onRemoveComponent(component: T) {
             const gameObject = component.gameObject;
 
             if (!(gameObject.hashCode in this._gameObjectOffsets)) {
@@ -97,6 +97,7 @@ namespace paper {
                     if (!lastGameObject) {
                         lastGameObject = components[backupLength - interestCount].gameObject;
                     }
+
                     components[gameObjectOffset + i] = components[backupLength - interestCount + i];
                 }
 
@@ -132,8 +133,8 @@ namespace paper {
                 }
 
                 this._interestComponentCount++;
-                EventPool.addEventListener(EventPool.EventType.Create, config.componentClass, component => { this._onCreateComponent(component as any); });
-                EventPool.addEventListener(EventPool.EventType.Destroy, config.componentClass, component => { this._onDestroyComponent(component as any); });
+                EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, component => { this._onAddComponent(component as any); });
+                EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, component => { this._onRemoveComponent(component as any); });
             }
         }
         /**

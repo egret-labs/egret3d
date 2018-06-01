@@ -592,28 +592,12 @@ namespace egret3d {
 
     let helpMat_1: Matrix = new Matrix();
     let helpMat_2: Matrix = new Matrix();
-    /**
-     * 
-     */
+
     export const helpMatrixA = new Matrix();
-    /**
-     * 
-     */
+
     export const helpMatrixB = new Matrix();
-    /**
-     * 
-     */
+
     export const helpMatrixC = new Matrix();
-    /**
-     * 
-     */
+
     export const helpMatrixD = new Matrix();
-    /**
-     * 
-     */
-    export const helpMatrixE = new Matrix();
-    /**
-     * 
-     */
-    export const helpMatrixF = new Matrix();
 }

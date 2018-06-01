@@ -49,6 +49,8 @@ namespace egret3d {
         protected _glTFMesh: gltf.Mesh = null as any;
         protected _vertexBuffer: Float32Array = null as any;
 
+        protected _attributeType: { [key: string]: gltf.AccessorType } = {};
+
         /**
          * 暂时实现在这里，应该下放到 web，并将此方法抽象。
          */
@@ -95,8 +97,27 @@ namespace egret3d {
             }
         }
 
-        public constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, firstIndexCount: number, attributeNames: gltf.MeshAttributeType[], drawMode?: MeshDrawMode);
-        public constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, attributeNames: gltf.MeshAttributeType[], drawMode?: MeshDrawMode);
+        protected _cacheMeshAttributeType(attributeNames: gltf.MeshAttribute[], attributeTypes: gltf.AccessorType[]) {
+            //
+            if (attributeNames.length !== attributeTypes.length) {
+                throw "_cacheMeshAttributeType: attributeNames.length is not equal attributeType.length";
+            }
+            for (let i = 0, l = attributeNames.length; i < l; i++) {
+                this._attributeType[attributeNames[i]] = attributeTypes[i];
+            }
+        }
+
+        protected _getMeshAttributeType(attributeName: string): gltf.AccessorType {
+            if (attributeName in this._attributeType) {
+                return this._attributeType[attributeName];
+            }
+
+            return GLTFAsset.getMeshAttributeType(attributeName);
+        }
+
+        public constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, firstIndexCount: number, attributeNames: gltf.MeshAttribute[], attributeType: gltf.AccessorType[], drawMode?: MeshDrawMode);
+        public constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, firstIndexCount: number, attributeNames: gltf.MeshAttribute[], drawMode?: MeshDrawMode);
+        public constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, attributeNames: gltf.MeshAttribute[], drawMode?: MeshDrawMode);
         public constructor(gltfAsset: GLTFAsset, gltfMeshIndex: number, drawMode?: MeshDrawMode);
         public constructor(...args: any[]) {
             super();
@@ -112,7 +133,13 @@ namespace egret3d {
             }
             else { // Custom mesh.
                 const isSubIndexCountParameter = typeof args[2] === "number";
-                this._drawMode = (isSubIndexCountParameter ? args[4] : args[3]) || MeshDrawMode.Static;
+                const isAttributeTypeParameter = Array.isArray(args[4]);
+                if (isAttributeTypeParameter) {
+                    this._drawMode = args[5] || MeshDrawMode.Static;
+                    this._cacheMeshAttributeType(args[3], args[4]);
+                } else {
+                    this._drawMode = (isSubIndexCountParameter ? args[4] : args[3]) || MeshDrawMode.Static;
+                }
 
                 // Create gltf asset.
                 this._glTFAsset = GLTFAsset.createGLTFAsset();
@@ -122,7 +149,7 @@ namespace egret3d {
                 this._glTFMesh = { primitives: [{ attributes: { POSITION: 0 } }] };
                 this._glTFAsset.config.meshes = [this._glTFMesh];
                 //
-                const attributeNames = (isSubIndexCountParameter ? args[3] : args[2]) as gltf.MeshAttributeType[];
+                const attributeNames = (isSubIndexCountParameter ? args[3] : args[2]) as gltf.MeshAttribute[];
                 const buffer = this._glTFAsset.config.buffers[0];
                 const vertexBufferView = this._glTFAsset.config.bufferViews[0];
                 const accessors = this._glTFAsset.config.accessors as gltf.Accessor[];
@@ -135,7 +162,8 @@ namespace egret3d {
                     const count = isVertexCountParameter ? args[0] as number : this._getVertexCountFromBuffer(vertexBuffer as Float32Array, attributeNames);
 
                     for (const attributeName of attributeNames) { // Create
-                        const type = GLTFAsset.getMeshAttributeType(attributeName);
+                        // const type = GLTFAsset.getMeshAttributeType(attributeName);
+                        const type = this._getMeshAttributeType(attributeName);
                         const byteOffset = vertexBufferView.byteLength;
                         vertexBufferView.byteLength += count * GLTFAsset.getAccessorTypeCount(type) * Float32Array.BYTES_PER_ELEMENT;
                         attributes[attributeName] = accessors.length;
@@ -189,11 +217,12 @@ namespace egret3d {
             this.initialize();
         }
 
-        private _getVertexCountFromBuffer(vertexBuffer: Float32Array, attributeNames: gltf.MeshAttributeType[]) {
+        private _getVertexCountFromBuffer(vertexBuffer: Float32Array, attributeNames: gltf.MeshAttribute[]) {
             let vertexPerCount = 0;
 
             for (const attributeName of attributeNames) {
-                vertexPerCount += GLTFAsset.getAccessorTypeCount(GLTFAsset.getMeshAttributeType(attributeName));
+                // vertexPerCount += GLTFAsset.getAccessorTypeCount(GLTFAsset.getMeshAttributeType(attributeName));
+                vertexPerCount += GLTFAsset.getAccessorTypeCount(this._getMeshAttributeType(attributeName));
             }
 
             return vertexBuffer.length / vertexPerCount;
@@ -207,7 +236,7 @@ namespace egret3d {
                 return null;
             }
 
-            const target = paper.serializeRC(this);
+            const target = paper.serializeC(this);
             target._glTFMeshIndex = this._glTFMeshIndex;
             target._glTFAsset = paper.serializeAsset(this._glTFAsset);
 
@@ -218,8 +247,15 @@ namespace egret3d {
          * @inheritDoc
          */
         public deserialize(element: any) {
-            this._glTFMeshIndex = (element._glTFMeshIndex);
-            this._glTFAsset = paper.getDeserializedObject(element._glTFAsset) as GLTFAsset;
+            if (element._glTFAsset) {
+                this._glTFMeshIndex = element._glTFMeshIndex;
+                this._glTFAsset = paper.getDeserializedObject(element._glTFAsset) as GLTFAsset;
+            }
+            else { // TODO 旧数据兼容代码。
+                const mesh = paper.getDeserializedObject(element) as any;
+                this._glTFMeshIndex = mesh._glTFMeshIndex;
+                this._glTFAsset = mesh._glTFAsset;
+            }
 
             this.initialize();
         }
@@ -237,7 +273,8 @@ namespace egret3d {
                 webgl.deleteBuffer(ibo);
             }
 
-            this.vbo = null;
+            this.ibos.length = 0;
+            this.vbo = null as any;
 
             this._glTFAsset = null as any;
             this._glTFMesh = null as any;
@@ -255,7 +292,7 @@ namespace egret3d {
         public initialize(drawMode?: MeshDrawMode) {
             if (this._vertexBuffer) {
                 // console.warn("The mesh instance bas been initialized.");
-                return;
+                // return;
             }
 
             const config = this._glTFAsset.config;
@@ -270,8 +307,10 @@ namespace egret3d {
                 return;
             }
 
-            this._drawMode = drawMode || MeshDrawMode.Static;
             this._glTFMesh = config.meshes[this._glTFMeshIndex];
+            if (drawMode) {
+                this._drawMode = drawMode;
+            }
             //
             const vertexBufferViewAccessor = this._glTFAsset.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION);
             this._vertexBuffer = this._glTFAsset.createTypeArrayFromBufferView(this._glTFAsset.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float) as any;
@@ -288,9 +327,9 @@ namespace egret3d {
 
                 let subMeshIndex = 0;
                 for (const primitive of this._glTFMesh.primitives) {
-                    const attributeNames: gltf.MeshAttributeType[] = [];
+                    const attributeNames: gltf.MeshAttribute[] = [];
                     for (const k in primitive.attributes) {
-                        attributeNames.push(k as gltf.MeshAttributeType);
+                        attributeNames.push(k as gltf.MeshAttribute);
                     }
 
                     this.uploadSubVertexBuffer(attributeNames, subMeshIndex);
@@ -321,20 +360,21 @@ namespace egret3d {
                 console.log("Create webgl buffer error.");
             }
         }
-
+        /**
+         * @internal
+         */
         public addSubMesh(indexOffset: number, indexCount: number, materialIndex: number = 0, sourceSubMeshIndex: number = 0) {
             if (0 <= sourceSubMeshIndex && sourceSubMeshIndex < this._glTFMesh.primitives.length) {
+                this._glTFAsset.config.accessors = this._glTFAsset.config.accessors || [];
+                //
                 const sourcePrimitive = this._glTFMesh.primitives[sourceSubMeshIndex];
                 const sourceIndiceAccessor = this._glTFAsset.getAccessor(sourcePrimitive.indices || 0);
-
-                const webgl = WebGLKit.webgl;
                 const primitive = {
                     attributes: sourcePrimitive.attributes,
                     indices: this._glTFAsset.config.accessors.length,
                     material: materialIndex,
                 };
                 this._glTFMesh.primitives.push(primitive);
-
                 this._glTFAsset.config.accessors.push(
                     {
                         bufferView: sourceIndiceAccessor.bufferView,
@@ -346,6 +386,7 @@ namespace egret3d {
                 );
 
                 const accessor = this._glTFAsset.getAccessor(primitive.indices);
+                const webgl = WebGLKit.webgl;
                 const ibo = webgl.createBuffer();
 
                 if (ibo) {
@@ -375,14 +416,6 @@ namespace egret3d {
             console.warn("Error arguments.");
 
             return 0;
-        }
-
-        public getVertexPosition(vertexIndex: number, subMeshIndex: number = 0, result?: Vector3) {
-            return this.getVertexAttribute(vertexIndex, gltf.MeshAttributeType.POSITION, subMeshIndex, result);
-        }
-
-        public setVertexPosition(vertexIndex: number, vertex: Vector3, subMeshIndex: number = 0) {
-            this.setVertexAttribute(vertexIndex, gltf.MeshAttributeType.POSITION, subMeshIndex, vertex.x, vertex.y, vertex.z);
         }
 
         public getVertices(subMeshIndex: number = 0) {
@@ -431,22 +464,26 @@ namespace egret3d {
             return null;
         }
 
-        public getVertexAttribute<T extends (Vector4 | Vector3 | Vector2)>(vertexIndex: number, attributeType: gltf.MeshAttributeType, subMeshIndex: number = 0, result?: T) {
+        public getAttribute<T extends (Vector4 | Vector3 | Vector2)>(vertexIndex: number, attributeType: gltf.MeshAttribute, subMeshIndex: number = 0, result?: T) {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
                 const attributeIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType];
                 if (attributeIndex !== undefined) {
                     const accessor = this._glTFAsset.getAccessor(attributeIndex);
                     if (0 <= vertexIndex && vertexIndex < accessor.count) {
-                        const offset = this._glTFAsset.getBufferOffset(accessor) / GLTFAsset.getComponentTypeCount(accessor.componentType) + vertexIndex * GLTFAsset.getAccessorTypeCount(accessor.type);
-
+                        // const bufferOffset = this._glTFAsset.getBufferOffset(accessor);
+                        // const typeCount= GLTFAsset.getComponentTypeCount(accessor.componentType);
+                        // const offset = bufferOffset / typeCount + vertexIndex * typeCount;
+                        const typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
+                        const offset = vertexIndex * typeCount;
+                        const buffers = this._glTFAsset.createTypeArrayFromAccessor(accessor);
                         switch (accessor.type) {
                             case gltf.AccessorType.VEC2: {
                                 if (!result) {
                                     result = new Vector2() as any;
                                 }
 
-                                (result as Vector2).x = this._vertexBuffer[offset];
-                                (result as Vector2).y = this._vertexBuffer[offset + 1];
+                                (result as Vector2).x = buffers[offset];
+                                (result as Vector2).y = buffers[offset + 1];
                                 break;
                             }
 
@@ -455,9 +492,9 @@ namespace egret3d {
                                     result = new Vector3() as any;
                                 }
 
-                                (result as Vector3).x = this._vertexBuffer[offset];
-                                (result as Vector3).y = this._vertexBuffer[offset + 1];
-                                (result as Vector3).z = this._vertexBuffer[offset + 2];
+                                (result as Vector3).x = buffers[offset];
+                                (result as Vector3).y = buffers[offset + 1];
+                                (result as Vector3).z = buffers[offset + 2];
                                 break;
                             }
 
@@ -466,10 +503,10 @@ namespace egret3d {
                                     result = new Vector4() as any;
                                 }
 
-                                (result as Vector4).x = this._vertexBuffer[offset];
-                                (result as Vector4).y = this._vertexBuffer[offset + 1];
-                                (result as Vector4).z = this._vertexBuffer[offset + 2];
-                                (result as Vector4).w = this._vertexBuffer[offset + 3];
+                                (result as Vector4).x = buffers[offset];
+                                (result as Vector4).y = buffers[offset + 1];
+                                (result as Vector4).z = buffers[offset + 2];
+                                (result as Vector4).w = buffers[offset + 3];
                                 break;
                             }
                         }
@@ -484,7 +521,7 @@ namespace egret3d {
             return result;
         }
 
-        public setVertexAttribute(vertexIndex: number, attributeType: gltf.MeshAttributeType, subMeshIndex: number, ...args: number[]) {
+        public setAttribute(vertexIndex: number, attributeType: gltf.MeshAttribute, subMeshIndex: number, ...args: number[]) {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
                 const attributeIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType];
                 if (attributeIndex !== undefined) {
@@ -493,19 +530,21 @@ namespace egret3d {
                         const offset = this._glTFAsset.getBufferOffset(accessor) / GLTFAsset.getComponentTypeCount(accessor.componentType) + vertexIndex * GLTFAsset.getAccessorTypeCount(accessor.type);
 
                         switch (accessor.type) {
+                            case gltf.AccessorType.SCALAR: {
+                                this._vertexBuffer[offset] = args[0];
+                                break;
+                            }
                             case gltf.AccessorType.VEC2: {
                                 this._vertexBuffer[offset] = args[0];
                                 this._vertexBuffer[offset + 1] = args[1];
                                 break;
                             }
-
                             case gltf.AccessorType.VEC3: {
                                 this._vertexBuffer[offset] = args[0];
                                 this._vertexBuffer[offset + 1] = args[1];
                                 this._vertexBuffer[offset + 2] = args[2];
                                 break;
                             }
-
                             case gltf.AccessorType.VEC4: {
                                 this._vertexBuffer[offset] = args[0];
                                 this._vertexBuffer[offset + 1] = args[1];
@@ -521,10 +560,22 @@ namespace egret3d {
                 console.warn("Error arguments.");
             }
         }
+
+        public uploadVertexSubData(letray: Float32Array, offset: number = 0, subMeshIndex: number = 0) {
+            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
+                const webgl = WebGLKit.webgl;
+                webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
+                webgl.bufferSubData(webgl.ARRAY_BUFFER, offset, letray);
+
+                this._version++;
+            } else {
+                console.warn("Error arguments.");
+            }
+        }
         /**
          * 暂时实现在这里，应该下放到 web，并将此方法抽象。
          */
-        public uploadSubVertexBuffer(uploadAttributes: gltf.MeshAttributeType | (gltf.MeshAttributeType[]), subMeshIndex: number = 0) {
+        public uploadSubVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]), subMeshIndex: number = 0) {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
                 const webgl = WebGLKit.webgl;
                 const primitive = this._glTFMesh.primitives[subMeshIndex];
@@ -619,35 +670,42 @@ namespace egret3d {
                     }
                     else { // TODO primitive mode
                         const indices = this.getIndices(subMeshIndex);
-                        const indexAccessor = this._glTFAsset.getAccessor(primitive.indices);
-                        const indexBufferOffset = this._glTFAsset.getBufferOffset(indexAccessor); // TODO
-                        const t0 = helpVec3_1;
-                        const t1 = helpVec3_2;
-                        const t2 = helpVec3_3;
+                        if (indices) {
+                            const t0 = helpVec3_1;
+                            const t1 = helpVec3_2;
+                            const t2 = helpVec3_3;
+                            const vertices = this.getVertices(subMeshIndex);
 
-                        for (let i = 0; i < indexAccessor.count; i += 3) {
-                            const p0 = this.getVertexPosition(indices[i], subMeshIndex, helpVec3_4) as Vector3;
-                            const p1 = this.getVertexPosition(indices[i + 1], subMeshIndex, helpVec3_5) as Vector3;
-                            const p2 = this.getVertexPosition(indices[i + 2], subMeshIndex, helpVec3_6) as Vector3;
+                            for (let i = 0; i < indices.length; i += 3) {
+                                const p0 = helpVec3_4;
+                                const p1 = helpVec3_5;
+                                const p2 = helpVec3_6;
+                                let index = indices[i] * 3;
+                                Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p0);
+                                index = indices[i + 1] * 3;
+                                Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p1);
+                                index = indices[i + 2] * 3;
+                                Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p2);
 
-                            Matrix.transformVector3(p0, matrix, t0);
-                            Matrix.transformVector3(p1, matrix, t1);
-                            Matrix.transformVector3(p2, matrix, t2);
+                                Matrix.transformVector3(p0, matrix, t0);
+                                Matrix.transformVector3(p1, matrix, t1);
+                                Matrix.transformVector3(p2, matrix, t2);
 
-                            const result = ray.intersectsTriangle(t0, t1, t2);
-                            if (result) {
-                                if (result.distance < 0) {
-                                    continue;
-                                }
+                                const result = ray.intersectsTriangle(t0, t1, t2);
+                                if (result) {
+                                    if (result.distance < 0) {
+                                        continue;
+                                    }
 
-                                if (!pickInfo || pickInfo.distance > result.distance) {
-                                    pickInfo = result;
-                                    pickInfo.triangleIndex = (indexBufferOffset + i) / 3; // TODO
-                                    pickInfo.subMeshIndex = i;
-                                    const tdir = helpVec3_7;
-                                    Vector3.copy(ray.direction, tdir);
-                                    Vector3.scale(tdir, result.distance);
-                                    Vector3.add(ray.origin, tdir, pickInfo.position);
+                                    if (!pickInfo || pickInfo.distance > result.distance) {
+                                        pickInfo = result;
+                                        pickInfo.triangleIndex = i / 3;
+                                        pickInfo.subMeshIndex = i;
+                                        const tdir = helpVec3_7;
+                                        Vector3.copy(ray.direction, tdir);
+                                        Vector3.scale(tdir, result.distance);
+                                        Vector3.add(ray.origin, tdir, pickInfo.position);
+                                    }
                                 }
                             }
                         }
@@ -680,8 +738,8 @@ namespace egret3d {
         // /**
         //  * 所有顶点属性。
         //  */
-        // public get vertexBuffer() {
-        //     return this._vertexBuffer;
-        // }
+        public get vertexBuffer() {
+            return this._vertexBuffer;
+        }
     }
 }

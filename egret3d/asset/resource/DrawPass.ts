@@ -4,8 +4,14 @@ namespace egret3d {
      */
     export enum UniformTypeEnum {
         Texture,
+        Int,
+        Boolean,
         Float,
         Floatv,
+        Float2,
+        Float2v,
+        Float3,
+        Float3v,
         Float4,
         Float4v,
         Float4x4,

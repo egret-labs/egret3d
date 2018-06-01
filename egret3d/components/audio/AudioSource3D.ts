@@ -1,23 +1,12 @@
 namespace egret3d {
 
     /**
-     * 3d audio source component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 3D音频组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
      */
     export class AudioSource3D extends paper.BaseComponent {
 
-        /**
-         * 
-         */
-        public update(deltaTime: number) {
+
+        update(deltaTime: number) {
             if (!!this._channel && this._playing && this.gameObject) {
                 let position = this.gameObject.transform.getPosition();
                 this._channel.setPosition(position.x, position.y, position.z);
@@ -29,18 +18,9 @@ namespace egret3d {
         private _sound: Sound;
 
         /**
-         * set sound asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 设置音频资源
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
-        @editor.property(editor.EditType.SOUND)
+        @paper.editor.property(paper.editor.EditType.SOUND)
         public set sound(sound: Sound) {
             if (!!this._channel && this._playing) {
                 this._channel.stop();
@@ -62,18 +42,9 @@ namespace egret3d {
         private _volume: number = 1;
 
         /**
-         * volume
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 音量
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public set volume(value: number) {
             if (!!this._channel) {
                 this._channel.volume = value;
@@ -81,17 +52,9 @@ namespace egret3d {
             }
         }
 
-        /**
-         * volume
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 音量
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public get volume(): number {
             return this._volume;
@@ -99,19 +62,11 @@ namespace egret3d {
 
         private _loop: boolean = false;
 
-        /**
-         * is loop
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 是否循环
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
-        @editor.property(editor.EditType.CHECKBOX)
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public set loop(value: boolean) {
             if (!!this._channel) {
                 this._channel.loop = value;
@@ -120,16 +75,7 @@ namespace egret3d {
         }
 
         /**
-         * is loop
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 是否循环
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public get loop(): boolean {
             return this._loop;
@@ -138,16 +84,7 @@ namespace egret3d {
         private _playing: boolean = false;
 
         /**
-         * play
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 播放音频
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public play(offset?: number) {
             if (!!this._channel && !this._playing) {
@@ -156,17 +93,9 @@ namespace egret3d {
             }
         }
 
-        /**
-         * stop play
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 暂停音频
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public stop() {
             if (!!this._channel && this._playing) {
@@ -176,18 +105,9 @@ namespace egret3d {
         }
 
         /**
-         * max distance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 音频传播最远距离
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public get maxDistance(): number {
             if (!!this._channel) {
                 return this._channel.maxDistance;
@@ -196,16 +116,7 @@ namespace egret3d {
         }
 
         /**
-         * max distance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 音频传播最远距离
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public set maxDistance(value: number) {
             if (!!this._channel) {
@@ -213,19 +124,11 @@ namespace egret3d {
             }
         }
 
-        /**
-         * min distance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 音频传播最小距离
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public get minDistance(): number {
             if (!!this._channel) {
                 return this._channel.minDistance;
@@ -233,17 +136,9 @@ namespace egret3d {
             return 0;
         }
 
-        /**
-         * min distance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 音频传播最小距离
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public set minDistance(value: number) {
             if (!!this._channel) {
@@ -251,19 +146,11 @@ namespace egret3d {
             }
         }
 
-        /**
-         * rolloff factor
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 音频滚降系数
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public get rollOffFactor(): number {
             if (!!this._channel) {
                 return this._channel.rollOffFactor;
@@ -272,16 +159,7 @@ namespace egret3d {
         }
 
         /**
-         * rolloff factor
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 音频滚降系数
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public set rollOffFactor(value: number) {
             if (!!this._channel) {
@@ -289,19 +167,11 @@ namespace egret3d {
             }
         }
 
-        /**
-         * rolloff factor
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 音频滚降系数
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
-        @editor.property(editor.EditType.LIST,{listItems:[{label:'linear',value:'linear'},{label:'inverse',value:'inverse'},{label:'exponential',value:'exponential'}]})
+        @paper.editor.property(paper.editor.EditType.LIST,{listItems:[{label:'linear',value:'linear'},{label:'inverse',value:'inverse'},{label:'exponential',value:'exponential'}]})
         public get distanceModel(): string {
             if (!!this._channel) {
                 return this._channel.distanceModel;
@@ -309,17 +179,9 @@ namespace egret3d {
             return "";
         }
 
-        /**
-         * distance mode
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 音频衰减模式。支持“linear”，“inverse”，“exponential”三种
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public set distanceModel(value: string) {
             if (!!this._channel) {
@@ -327,17 +189,9 @@ namespace egret3d {
             }
         }
 
-        /**
-         * velocity
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 速度
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public getVelocity(): Vector3 {
             if (!!this._channel) {
@@ -347,23 +201,12 @@ namespace egret3d {
         }
 
         /**
-         * velocity
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 速度
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public setVelocity(x: number, y: number, z: number) {
             if (!!this._channel) {
                 this._channel.setVelocity(x, y, z);
             }
         }
-
     }
-
 }

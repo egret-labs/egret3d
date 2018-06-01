@@ -3,6 +3,7 @@ namespace paper {
     const KEY_COMPONENTS: keyof GameObject = "components";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
     const KEY_SERIALIZE: keyof ISerializable = "serialize";
+    const KEY_DESERIALIZE: keyof ISerializable = "deserialize";
 
     let _sourcePath: string = "";
     const _hashCodes: number[] = []; // 缓存序列化记录，提高查找效率
@@ -39,7 +40,7 @@ namespace paper {
     export function serializeAsset(source: paper.Asset) {
         const target = _serializeObject(source);
 
-        if (_sourcePath && !(source instanceof egret3d.Shader)) { // TODO 区分内置 asset
+        if (_sourcePath && source._isLoad) {
             target.url = egret3d.utils.getRelativePath(source.url, _sourcePath);
         }
 
@@ -47,7 +48,7 @@ namespace paper {
             return null;
         }
 
-        return _serializeR(source);
+        return serializeR(source);
     }
     /**
      * 
@@ -55,6 +56,19 @@ namespace paper {
     export function serializeRC(source: SerializableObject): any {
         const className = egret.getQualifiedClassName(source);
         return { hashCode: source.hashCode, class: findClassCode(className) || className };
+    }
+    /**
+     * 
+     */
+    export function serializeR(source: SerializableObject): any {
+        return { hashCode: source.hashCode };
+    }
+    /**
+     * 
+     */
+    export function serializeC(source: SerializableObject): any {
+        const className = egret.getQualifiedClassName(source);
+        return { class: findClassCode(className) || className };
     }
     /**
      * 
@@ -75,27 +89,20 @@ namespace paper {
         return types;
     }
 
-    function _serializeR(source: SerializableObject) {
-        return { hashCode: source.hashCode };
-    }
-
-    function _serializeC(source: SerializableObject) {
-        const className = egret.getQualifiedClassName(source);
-        return { class: findClassCode(className) || className };
-    }
-
-    function _serializeObject(source: SerializableObject, isStruct: boolean = false) {
+    function _serializeObject(source: SerializableObject, isStruct: boolean = false, parentHasCustomDeserialize: boolean = false) {
         if (_hashCodes.indexOf(source.hashCode) >= 0) {
             // if (!(source instanceof Asset)) {
             //     console.warn("Serialize object again.", source.hashCode);
             // }
 
-            return _serializeR(source);
+            return serializeR(source);
         }
 
         const classPrototype = source.constructor.prototype;
         const hasCustomSerialize = classPrototype.hasOwnProperty(KEY_SERIALIZE);
-        const target = hasCustomSerialize ? classPrototype[KEY_SERIALIZE].apply(source) : (isStruct ? _serializeC(source) : serializeRC(source));
+        const target = hasCustomSerialize ?
+            classPrototype[KEY_SERIALIZE].apply(source) :
+            (parentHasCustomDeserialize ? {} : (isStruct ? serializeC(source) : serializeRC(source)));
 
         if (!isStruct && _serializeData) {
             _hashCodes.push(source.hashCode);
@@ -166,19 +173,19 @@ namespace paper {
                         if (parent instanceof Scene) {
                             if (key === KEY_GAMEOBJECTS) {
                                 _serializeObject(source);
-                                return _serializeR(source);
+                                return serializeR(source);
                             }
                         }
                         else if (parent instanceof GameObject) {
                             if (key === KEY_COMPONENTS) {
                                 _serializeObject(source);
-                                return _serializeR(source);
+                                return serializeR(source);
                             }
                         }
                         else if (parent instanceof egret3d.Transform) {
                             if (key === KEY_CHILDREN) {
                                 _serializeObject((source as egret3d.Transform).gameObject);
-                                return _serializeR(source);
+                                return serializeR(source);
                             }
                         }
                     }
@@ -186,7 +193,7 @@ namespace paper {
                     return serializeRC(source);
                 }
 
-                return _serializeObject(source, true); // Other class.
+                return _serializeObject(source, true, parent && parent.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE)); // Other class.
             }
 
             default:

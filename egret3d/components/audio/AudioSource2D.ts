@@ -19,18 +19,9 @@ namespace egret3d {
         private _sound: Sound;
 
         /**
-         * set sound asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 设置音频资源
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
-        @editor.property(editor.EditType.SOUND)
+        @paper.editor.property(paper.editor.EditType.SOUND)
         public set sound(sound: Sound) {
             if (!!this._channel && this._playing) {
                 this._channel.stop();
@@ -52,18 +43,9 @@ namespace egret3d {
         private _volume: number = 1;
 
         /**
-         * volume
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 音量
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public set volume(value: number) {
             if (!!this._channel) {
                 this._channel.volume = value;
@@ -72,16 +54,7 @@ namespace egret3d {
         }
 
         /**
-         * volume
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 音量
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public get volume(): number {
             return this._volume;
@@ -90,18 +63,9 @@ namespace egret3d {
         private _loop: boolean = false;
 
         /**
-         * is loop
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 是否循环
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
-        @editor.property(editor.EditType.CHECKBOX)
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public set loop(value: boolean) {
             if (!!this._channel) {
                 this._channel.loop = value;
@@ -109,17 +73,9 @@ namespace egret3d {
             }
         }
 
-        /**
-         * is loop
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 是否循环
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public get loop(): boolean {
             return this._loop;
@@ -127,17 +83,9 @@ namespace egret3d {
 
         private _playing: boolean = false;
 
-        /**
-         * play
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 播放音频
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public play(offset?: number) {
             if (!!this._channel) {
@@ -146,17 +94,9 @@ namespace egret3d {
             }
         }
 
-        /**
-         * stop play
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 暂停音频
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public stop() {
             if (!!this._channel) {

@@ -106,29 +106,34 @@ namespace paper {
             this.name = name;
             this.tag = tag;
             // 自动创建transform
-            this.transform = this.addComponent(egret3d.Transform);
+            this.addComponent(egret3d.Transform);
         }
         /**
-         * 
+         * @internal
          */
-        public _activeInHierarchyDirty() {
+        public _activeInHierarchyDirty(prevActive: boolean) {
             // if (this._activeDirty) {
             //     return;
             // }
 
             this._activeDirty = true;
+            const currentActive = this.activeInHierarchy;
 
-            for (const component of this._components) {
-                paper.EventPool.dispatchEvent(paper.EventPool.EventType.Enabled, component);
+            if (currentActive !== prevActive) {
+                for (const component of this._components) {
+                    if (component.enabled) {
+                        paper.EventPool.dispatchEvent(currentActive ? paper.EventPool.EventType.Enabled : paper.EventPool.EventType.Disabled, component);
+                    }
+                }
             }
 
             for (const child of this.transform.children) {
-                child.gameObject._activeInHierarchyDirty();
+                child.gameObject._activeInHierarchyDirty(prevActive);
             }
         }
 
         private _removeComponentReference(component: BaseComponent) {
-            component.enabled = false; // 关闭组件，防止其他生命周期触发，并可以通过此处派发 onDisable 周期。
+            component.enabled = false; // TODO remove flag.
 
             const destroySystem = paper.Application.systemManager.getSystem(paper.DestroySystem);
             if (destroySystem) {
@@ -177,9 +182,16 @@ namespace paper {
         public addComponent<T extends paper.BaseComponent>(componentClass: { new(): T }): T {
             paper.BaseComponent._injectGameObject = this;
             const component = new componentClass();
+
+            if (component instanceof egret3d.Transform) {
+                this.transform = component;
+            }
+
             this._components.push(component);
             component.initialize();
-            EventPool.dispatchEvent(paper.EventPool.EventType.Create, component);
+            if (component.isActiveAndEnabled) {
+                paper.EventPool.dispatchEvent(paper.EventPool.EventType.Enabled, component);
+            }
 
             return component;
         }
@@ -328,8 +340,9 @@ namespace paper {
         }
         public set activeSelf(value: boolean) {
             if (this._activeSelf !== value) {
+                const prevActive = this.activeInHierarchy;
                 this._activeSelf = value;
-                this._activeInHierarchyDirty();
+                this._activeInHierarchyDirty(prevActive);
             }
         }
 

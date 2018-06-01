@@ -23,10 +23,21 @@ namespace egret3d {
      * @language zh_CN
      */
     export class Material extends paper.Asset {
-
         /**
          */
         public version: number = 0;
+        public $uniforms: { [name: string]: { type: UniformTypeEnum, value: any } } = {};
+
+        
+        private _defines: Array<string> = new Array();
+
+        @paper.serializedField
+        private shader: Shader;
+        @paper.serializedField
+        @paper.deserializedIgnore
+        private _textureRef: Texture[] = [];
+        private _changeShaderMap: { [name: string]: Material } = {};
+        private _renderQueue: RenderQueue = -1;
 
         /**
          * dispose asset
@@ -42,6 +53,7 @@ namespace egret3d {
          */
         dispose() {
             delete this.$uniforms;
+            delete this._defines;
 
             this.version++;
         }
@@ -116,10 +128,6 @@ namespace egret3d {
                 }
             }
         }
-
-        @paper.serializedField
-        private shader: Shader;
-
         /**
          * set shader
          * @version paper 1.0
@@ -154,7 +162,6 @@ namespace egret3d {
             return this.shader;
         }
 
-        private _changeShaderMap: { [name: string]: Material } = {};
 
         /**
          * change shader
@@ -185,8 +192,6 @@ namespace egret3d {
             }
         }
 
-        private _renderQueue: RenderQueue = -1;
-
         public set renderQueue(value: RenderQueue) {
             this._renderQueue = value;
         }
@@ -200,7 +205,47 @@ namespace egret3d {
             return this._renderQueue === -1 ? this.shader.renderQueue : this._renderQueue;
         }
 
-        public $uniforms: { [name: string]: { type: UniformTypeEnum, value: any } } = {};
+        public get shaderDefine() : string{
+            let res = "";
+            for(const key of this._defines){
+                res += "#define " + key + " \n";
+            }
+            return res;
+        }
+
+        addDefine(key: string) {
+            if (this._defines.indexOf(key) < 0) {
+                this._defines.push(key);
+            }
+            this.version++;
+        }
+
+        removeDefine(key: string) {
+            const delIndex = this._defines.indexOf(key);
+            if (delIndex >= 0) {
+                this._defines.splice(delIndex, 1);
+            }
+            this.version++;
+        }
+
+
+        setBoolean(_id: string, _bool: boolean) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _bool;
+            } else {
+                this.$uniforms[_id] = { type: UniformTypeEnum.Boolean, value: _bool };
+            }
+            this.version++;
+        }
+
+        setInt(_id: string, _number: number) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _number;
+            } else {
+                this.$uniforms[_id] = { type: UniformTypeEnum.Int, value: _number };
+            }
+            this.version++;
+        }
 
         setFloat(_id: string, _number: number) {
             if (this.$uniforms[_id] !== undefined) {
@@ -216,6 +261,42 @@ namespace egret3d {
                 this.$uniforms[_id].value = _numbers;
             } else {
                 this.$uniforms[_id] = { type: UniformTypeEnum.Floatv, value: _numbers };
+            }
+            this.version++;
+        }
+
+        setVector2(_id: string, _vector2: Vector2) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _vector2;
+            } else {
+                this.$uniforms[_id] = { type: UniformTypeEnum.Float2, value: _vector2 };
+            }
+            this.version++;
+        }
+
+        setVector2v(_id: string, _vector2v: Float32Array) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _vector2v;
+            } else {
+                this.$uniforms[_id] = { type: UniformTypeEnum.Float2v, value: _vector2v };
+            }
+            this.version++;
+        }
+
+        setVector3(_id: string, _vector3: Vector3) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _vector3;
+            } else {
+                this.$uniforms[_id] = { type: UniformTypeEnum.Float3, value: _vector3 };
+            }
+            this.version++;
+        }
+
+        setVector3v(_id: string, _vector3v: Float32Array) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _vector3v;
+            } else {
+                this.$uniforms[_id] = { type: UniformTypeEnum.Float3v, value: _vector3v };
             }
             this.version++;
         }
@@ -256,10 +337,6 @@ namespace egret3d {
             this.version++;
         }
 
-        @paper.serializedField
-        @paper.deserializedIgnore
-        private _textureRef: Texture[] = [];
-
         setTexture(_id: string, _texture: egret3d.Texture) {
             if (this.$uniforms[_id] !== undefined) {
 
@@ -299,7 +376,8 @@ namespace egret3d {
          */
         $parse(json: any) {
             let shaderName = json["shader"];
-            this.setShader(paper.Asset.find<Shader>(shaderName));
+            const shader = paper.Asset.find<Shader>(shaderName);
+            this.setShader(shader);
             let mapUniform = json["mapUniform"];
             for (let i in mapUniform) {
                 let jsonChild = mapUniform[i];

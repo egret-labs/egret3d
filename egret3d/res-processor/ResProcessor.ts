@@ -164,9 +164,9 @@ namespace RES.processor {
             data.dispose();
         }
 
-    // getData(host, resource, key, subkey) { //可选函数
+        // getData(host, resource, key, subkey) { //可选函数
 
-    // }
+        // }
 
     };
 
@@ -185,9 +185,9 @@ namespace RES.processor {
 
         }
 
-    // getData(host, resource, key, subkey) { //可选函数
+        // getData(host, resource, key, subkey) { //可选函数
 
-    // }
+        // }
 
     };
 
@@ -218,7 +218,8 @@ namespace RES.processor {
             let name = filename.substring(0, filename.indexOf("."));
             let shader = new egret3d.Shader(filename, url);
             shader.$parse(JSON.parse(text));
-            paper.Asset.register(shader);
+            paper.Asset.register(shader, true);
+
             return shader;
         },
 
@@ -289,7 +290,7 @@ namespace RES.processor {
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
             t2d.uploadImage(image.source, _mipmap, _linear, true, _repeat);
             _texture.glTexture = t2d;
-            paper.Asset.register(_texture);
+            paper.Asset.register(_texture, true);
 
             return _texture;
         },
@@ -318,7 +319,7 @@ namespace RES.processor {
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
             t2d.uploadImage(image.source, true, true, true, true);
             _texture.glTexture = t2d;
-            paper.Asset.register(_texture);
+            paper.Asset.register(_texture, true);
             return _texture;
         },
 
@@ -341,7 +342,7 @@ namespace RES.processor {
             let name = filename.substring(0, filename.indexOf("."));
             let _material = new egret3d.Material(filename, url);
             _material.$parse(JSON.parse(text));
-            paper.Asset.register(_material);
+            paper.Asset.register(_material, true);
             return _material;
         },
 
@@ -390,7 +391,7 @@ namespace RES.processor {
                 glTF.parseFromBinary(result);
             }
 
-            paper.Asset.register(glTF);
+            paper.Asset.register(glTF, true);
 
             return glTF;
         },
@@ -414,7 +415,7 @@ namespace RES.processor {
             let name = filename.substring(0, filename.indexOf("."));
             let _atlas = new egret3d.Atlas(filename, url);
             _atlas.$parse(text);
-            paper.Asset.register(_atlas);
+            paper.Asset.register(_atlas, true);
             return _atlas;
         },
 
@@ -437,20 +438,23 @@ namespace RES.processor {
             let name = filename.substring(0, filename.indexOf("."));
 
             // load ref assets
-            let assets = JSON.parse(text).assets;
-            let list = formatUrlAndSort(assets, getPath(resource.url));
-            for (let i = 0; i < list.length; i++) {
-                if (list[i].type == AssetTypeEnum.Shader) continue;
-                let r = RES.host.resourceConfig["getResource"](list[i].url);
-                if (r) {
-                    let asset: paper.Asset = await host.load(r);
+            const assets = JSON.parse(text).assets;
+            if (assets) {
+                let list = formatUrlAndSort(assets, getPath(resource.url));
+                for (let i = 0; i < list.length; i++) {
+                    if (list[i].type == AssetTypeEnum.Shader) continue;
+                    let r = RES.host.resourceConfig["getResource"](list[i].url);
+                    if (r) {
+                        let asset: paper.Asset = await host.load(r);
+                    }
                 }
             }
 
-            let _prefab = new egret3d.Prefab(filename, url);
-            _prefab.$parse(text);
-            paper.Asset.register(_prefab);
-            return _prefab;
+            const prefab = new egret3d.Prefab(filename, url);
+            prefab.$parse(text);
+            paper.Asset.register(prefab, true);
+
+            return prefab;
         },
 
         async onRemoveStart(host, resource) {
@@ -472,20 +476,23 @@ namespace RES.processor {
             let name = filename.substring(0, filename.indexOf("."));
 
             // load ref assets
-            let assets = JSON.parse(text).assets;
-            let list = formatUrlAndSort(assets, getPath(resource.url));
-            for (let i = 0; i < list.length; i++) {
-                if (list[i].type == AssetTypeEnum.Shader) continue;
-                let r = RES.host.resourceConfig["getResource"](list[i].url);
-                if (r) {
-                    let asset: paper.Asset = await host.load(r);
+            const assets = JSON.parse(text).assets;
+            if (assets) {
+                let list = formatUrlAndSort(assets, getPath(resource.url));
+                for (let i = 0; i < list.length; i++) {
+                    if (list[i].type == AssetTypeEnum.Shader) continue;
+                    let r = RES.host.resourceConfig["getResource"](list[i].url);
+                    if (r) {
+                        let asset: paper.Asset = await host.load(r);
+                    }
                 }
             }
 
-            let _scene = new egret3d.RawScene(filename, url);
-            _scene.$parse(text);
-            paper.Asset.register(_scene);
-            return _scene;
+            const scene = new egret3d.RawScene(filename, url);
+            scene.$parse(text);
+            paper.Asset.register(scene, true);
+
+            return scene;
         },
 
         async onRemoveStart(host, resource) {
@@ -507,7 +514,7 @@ namespace RES.processor {
             let name = filename.substring(0, filename.indexOf("."));
             let _font = new egret3d.Font(filename, url);
             _font.$parse(text);
-            paper.Asset.register(_font);
+            paper.Asset.register(_font, true);
             return _font;
         },
 
@@ -531,7 +538,7 @@ namespace RES.processor {
             let audioBuffer: AudioBuffer = await promisifySoundDecode(arrayBuffer, resource);
             let sound = new egret3d.Sound(filename, url);
             sound.buffer = audioBuffer;
-            paper.Asset.register(sound);
+            paper.Asset.register(sound, true);
             return sound;
         },
 
@@ -554,7 +561,7 @@ namespace RES.processor {
             let name = filename.substring(0, filename.indexOf("."));
             let _text = new egret3d.TextAsset(filename, url);
             _text.content = text;
-            paper.Asset.register(_text);
+            paper.Asset.register(_text, true);
             return _text;
         },
 
@@ -577,7 +584,7 @@ namespace RES.processor {
             let name = filename.substring(0, filename.indexOf("."));
             let _path = new egret3d.PathAsset(filename, url);
             _path.$parse(JSON.parse(text));
-            paper.Asset.register(_path);
+            paper.Asset.register(_path, true);
             return _path;
         },
 

@@ -46,12 +46,19 @@ namespace egret3d {
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
 
         public readonly viewPortPixel: RectData = { x: 0, y: 0, w: 0, h: 0 };
+
+        //
+        public readonly cameraPosition: Vector3 = new Vector3();
+        public readonly cameraForward: Vector3 = new Vector3();
+        public readonly cameraUp: Vector3 = new Vector3();
+
+
         // transforms
         // eyePos: Vector4 = new Vector4();
-        private readonly matrix_v: Matrix = new Matrix();
-        private readonly matrix_p: Matrix = new Matrix();
+        public readonly matrix_v: Matrix = new Matrix();
+        public readonly matrix_p: Matrix = new Matrix();
         private readonly matrix_mv: Matrix = new Matrix();
-        private readonly matrix_vp: Matrix = new Matrix();
+        public readonly matrix_vp: Matrix = new Matrix();
         //matrixNormal: paper.matrix = new paper.matrix();
         /**
          * 
@@ -76,6 +83,23 @@ namespace egret3d {
             camera.calcViewMatrix(this.matrix_v);
             camera.calcProjectMatrix(asp, this.matrix_p);
             Matrix.multiply(this.matrix_p, this.matrix_v, this.matrix_vp);
+
+            //
+            const position = camera.gameObject.transform.getPosition();
+            const worldMatrix = camera.gameObject.transform.getWorldMatrix().rawData;
+
+            this.cameraPosition.x = position.x;
+            this.cameraPosition.y = position.y;
+            this.cameraPosition.z = position.z;
+
+            this.cameraUp.x = worldMatrix[4];
+            this.cameraUp.y = worldMatrix[5];
+            this.cameraUp.z = worldMatrix[6];
+
+            this.cameraForward.x = -worldMatrix[8];
+            this.cameraForward.y = -worldMatrix[9];
+            this.cameraForward.z = -worldMatrix[10];
+
             this.version++;
         }
 

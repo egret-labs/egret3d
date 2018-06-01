@@ -262,28 +262,28 @@ namespace egret3d {
                 const iD = i * 2;
                 const u = i / (length - 1);
 
-                this._mesh.setVertexAttribute(
+                this._mesh.setAttribute(
                     iD, gltf.MeshAttributeType.POSITION, 0,
                     0, 0, 0
                 );
-                this._mesh.setVertexAttribute(
+                this._mesh.setAttribute(
                     iD, gltf.MeshAttributeType.COLOR_0, 0,
                     this.color.r, this.color.g, this.color.b, this.color.a
                 );
-                this._mesh.setVertexAttribute(
+                this._mesh.setAttribute(
                     iD, gltf.MeshAttributeType.TEXCOORD_0, 0,
                     u, 0
                 );
 
-                this._mesh.setVertexAttribute(
+                this._mesh.setAttribute(
                     iD + 1, gltf.MeshAttributeType.POSITION, 0,
                     0, 0, 0
                 );
-                this._mesh.setVertexAttribute(
+                this._mesh.setAttribute(
                     iD + 1, gltf.MeshAttributeType.COLOR_0, 0,
                     this.color.r, this.color.g, this.color.b, this.color.a
                 );
-                this._mesh.setVertexAttribute(
+                this._mesh.setAttribute(
                     iD + 1, gltf.MeshAttributeType.TEXCOORD_0, 0,
                     u, 1
                 );
@@ -318,12 +318,12 @@ namespace egret3d {
                     pos = this._sticks[i].location;
                     up = this._sticks[i].up;
 
-                    this._mesh.setVertexAttribute(
+                    this._mesh.setAttribute(
                         iD, gltf.MeshAttributeType.POSITION, 0,
                         pos.x, pos.y, pos.z
                     );
 
-                    this._mesh.setVertexAttribute(
+                    this._mesh.setAttribute(
                         iD + 1, gltf.MeshAttributeType.POSITION, 0,
                         pos.x + up.x, pos.y + up.y, pos.z + up.z
                     );
@@ -335,12 +335,12 @@ namespace egret3d {
                     pos = this._sticks[i].location;
                     up = this._sticks[i].up;
 
-                    this._mesh.setVertexAttribute(
+                    this._mesh.setAttribute(
                         iD, gltf.MeshAttributeType.POSITION, 0,
                         pos.x, pos.y, pos.z
                     );
 
-                    this._mesh.setVertexAttribute(
+                    this._mesh.setAttribute(
                         iD + 1, gltf.MeshAttributeType.POSITION, 0,
                         pos.x + up.x, pos.y + up.y, pos.z + up.z
                     );

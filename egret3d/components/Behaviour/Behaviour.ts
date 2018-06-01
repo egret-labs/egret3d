@@ -15,8 +15,17 @@ namespace paper {
      * - onDisable();
      * - System._onDestroyComponent();
      * - onDestroy();
- */
+     */
     export class Behaviour extends BaseComponent {
+        /**
+         * @internal
+         */
+        @paper.serializedField
+        public _isReseted: boolean = false;
+        /**
+         * @internal
+         */
+        public _isStarted: boolean = false;
 
         public initialize(): void {
             super.initialize();
@@ -95,6 +104,13 @@ namespace paper {
          * 物体被删除时调用
          */
         public onDestroy() {
+
+        }
+
+        /**
+         * 碰撞时调用
+         */
+        public onCollide(collider: any) {
 
         }
     }

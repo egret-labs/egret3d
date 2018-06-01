@@ -80,25 +80,25 @@ namespace egret3d {
          * @language
          */
         @paper.serializedField
-        @editor.property(editor.EditType.LIST,{listItems:[{label:'Direction',value:1},{label:'Point',value:2},{label:'Spot',value:3}]})
+        @paper.editor.property(paper.editor.EditType.LIST,{listItems:[{label:'Direction',value:1},{label:'Point',value:2},{label:'Spot',value:3}]})
         public type: LightTypeEnum = 0;
         @paper.serializedField
-        @editor.property(editor.EditType.COLOR)
+        @paper.editor.property(paper.editor.EditType.COLOR)
         public color: Color = new Color(1, 1, 1, 1);
         @paper.serializedField
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public intensity: number = 2;
         @paper.serializedField
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public distance: number = 50;
         @paper.serializedField
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public decay: number = 2;
         @paper.serializedField
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public angle: number = Math.PI / 6;
         @paper.serializedField
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public penumbra: number = 0;
 
         /**
@@ -114,28 +114,28 @@ namespace egret3d {
          * @language
          */
         @paper.serializedField
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public spotAngelCos: number = 0.9;
         @paper.serializedField
-        @editor.property(editor.EditType.CHECKBOX)
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public castShadows: boolean = false;
         public $directLightShadow: DirectLightShadow;
         public $pointLightShadow: PointLightShadow;
         public $spotLightShadow: SpotLightShadow;
         @paper.serializedField
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public shadowBias: number = 0.0003;
         @paper.serializedField
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public shadowRadius: number = 2;
         @paper.serializedField
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public shadowSize: number = 16;
         @paper.serializedField
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public shadowCameraNear: number = 0.1;
         @paper.serializedField
-        @editor.property(editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public shadowCameraFar: number = 200;
 
         // TODO 考虑将不同灯光类型拆分成不同的组件
