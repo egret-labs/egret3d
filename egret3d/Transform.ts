@@ -427,7 +427,7 @@ namespace egret3d {
         public setLocalRotation(x: number, y: number, z: number, w: number): void;
         public setLocalRotation(p1: Quaternion | number, p2?: number, p3?: number, p4?: number): void {
             if (p1.hasOwnProperty("x")) {
-                Vector3.copy(<Vector3>p1, this.localRotation as Vector3);
+                this.localRotation.copy(p1 as Quaternion);
             } else {
                 this.localRotation.x = <number>p1;
                 this.localRotation.y = p2 || 0;

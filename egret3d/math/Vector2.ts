@@ -2,6 +2,10 @@ namespace egret3d {
 
     export class Vector2 implements paper.ISerializable {
 
+        public static readonly ZERO: Readonly<Vector2> = new Vector2(0.0, 0.0);
+
+        public static readonly ONE: Readonly<Vector2> = new Vector2(1.0, 1.0);
+
         public x: number;
 
         public y: number;
@@ -15,9 +19,52 @@ namespace egret3d {
             return [this.x, this.y];
         }
 
-        public deserialize(element: number[]): void {
+        public deserialize(element: [number, number]) {
             this.x = element[0];
             this.y = element[1];
+        }
+
+        public copy(value: Vector2) {
+            this.x = value.x;
+            this.y = value.y;
+
+            return this;
+        }
+
+        public clone() {
+            const value = new Vector2();
+            value.copy(this);
+
+            return value;
+        }
+
+        public set(x: number, y: number) {
+            this.x = x;
+            this.y = y;
+
+            return this;
+        }
+
+        public normalize() {
+            const l = this.length;
+            if (l > Number.MIN_VALUE) {
+                this.x /= l;
+                this.y /= l;
+            }
+            else {
+                this.x = 1.0;
+                this.y = 0.0;
+            }
+
+            return this;
+        }
+
+        public get length() {
+            return Math.sqrt(this.sqrtLength);
+        }
+
+        public get sqrtLength() {
+            return this.x * this.x + this.y * this.y;
         }
 
         public static set(x: number, y: number, out: Vector2): Vector2 {
@@ -32,8 +79,8 @@ namespace egret3d {
                 v.x = v.x / num;
                 v.y = v.y / num;
             } else {
-                v.x = 0;
-                v.y = 0;
+                v.x = 1.0;
+                v.y = 0.0;
             }
             return v;
         }

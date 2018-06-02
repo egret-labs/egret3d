@@ -10,14 +10,14 @@ namespace paper.editor {
         /**初始化 */
         public static async init() {
             //启动egret3编辑环境
-            this.runEgret({ antialias: true });
+            this.runEgret();
             //初始化编辑模型
             this._editorModel = new EditorModel();
             await this.editorModel.init();
         }
 
-        private static runEgret(options: { antialias: boolean } = { antialias: false }) {
-            egret3d.runEgret(options);
+        private static runEgret() {
+            egret3d.runEgret({ antialias: true, isEditor: true, isPlaying: false });
 
             Application.systemManager.disableSystem(egret3d.CameraSystem);
             Application.systemManager.disableSystem(egret3d.Audio3DListenerSystem);

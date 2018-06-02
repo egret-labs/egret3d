@@ -40,7 +40,7 @@ namespace paper {
             }
         }
 
-        public static init() {
+        public static init({ isEditor = false, isPlaying = true } = {}) {
             const systemManager = this.systemManager;
             const systemClasses = [
                 StartSystem,
@@ -64,8 +64,8 @@ namespace paper {
                 systemManager.register(systemClass, level++);
             }
             Time.initialize();
-            this._isEditor = false;
-            this._isPlaying = true;
+            this._isEditor = isEditor;
+            this._isPlaying = isPlaying;
             this.resume();
         }
 
@@ -99,7 +99,6 @@ namespace paper {
         public static get isEditor() {
             return this._isEditor;
         }
-
 
         public static get isFocused() {
             return this._isFocused;

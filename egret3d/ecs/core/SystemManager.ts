@@ -29,17 +29,14 @@ namespace paper {
             let isAdded = false;
             BaseSystem._createEnabled = true;
             const system = new systemClass();
+            system._level = level;
 
-            if (typeof level === "number") {
-                system._level = level;
-
-                for (let i = 0, l = this._systems.length; i < l; ++i) {
-                    const eachSystem = this._systems[i];
-                    if (eachSystem._level > system._level) {
-                        isAdded = true;
-                        this._systems.splice(i, 0, system);
-                        break;
-                    }
+            for (let i = 0, l = this._systems.length; i < l; ++i) {
+                const eachSystem = this._systems[i];
+                if (eachSystem._level > system._level) {
+                    isAdded = true;
+                    this._systems.splice(i, 0, system);
+                    break;
                 }
             }
 
