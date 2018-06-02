@@ -114,4 +114,46 @@ namespace paper.editor {
         }
         return _getEditInfo(className);
     }
+
+
+    let extraPropertyMap: { [key: string]: { extends: string, propertyList: PropertyInfo[] } } = {};
+    /**
+     * 装饰器:属性
+     * @param editType 编辑类型
+     */
+    export function extraProperty(editType?: EditType, option?: PropertyOption) {
+        return function (target: any, property: string) {
+            if (!extraPropertyMap[target.constructor.name]) {
+                extraPropertyMap[target.constructor.name] = {
+                    extends: target.__proto__.constructor.name,
+                    propertyList: [],
+                }
+            }
+            if (editType !== undefined) {
+                extraPropertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
+            }
+            else {
+                //TODO:自动分析编辑类型
+            }
+        }
+    }
+
+    /**
+     * 额外信息
+     * @param classInstance 实例对象
+     */
+    export function getExtraInfo(classInstance: any): PropertyInfo[] {
+        let className = classInstance.constructor.name;
+        function _getExtraInfo(className: string): PropertyInfo[] {
+            let classInfo = extraPropertyMap[className];
+            if (classInfo) {
+                let extendsInfo = _getExtraInfo(classInfo.extends);
+                extendsInfo = extendsInfo.concat(classInfo.propertyList);
+                return extendsInfo;
+            }
+            return [];
+        }
+        return _getExtraInfo(className);
+    }
+
 }

@@ -51,18 +51,22 @@ namespace egret3d {
         private readonly localMatrix: Matrix = new Matrix();
         private readonly worldMatrix: Matrix = new Matrix();
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        @paper.editor.property(paper.editor.EditType.VECTOR3,{set:"setLocalPosition"})
         private readonly localPosition: Vector3 = new Vector3();
+        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3,{set:"setPosition"})
         private readonly position: Vector3 = new Vector3();
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.QUATERNION)
+        @paper.editor.property(paper.editor.EditType.QUATERNION,{set:"setLocalRotation"})
         private readonly localRotation: Quaternion = new Quaternion();
+        @paper.editor.extraProperty(paper.editor.EditType.QUATERNION,{set:"setRotation"})
         private readonly rotation: Quaternion = new Quaternion();
+        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3,{set:"setLocalEulerAngles"})
         private readonly localEulerAngles: Vector3 = new Vector3();
         private readonly eulerAngles: Vector3 = new Vector3();
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        @paper.editor.property(paper.editor.EditType.VECTOR3,{set:"setLocalScale"})
         private readonly localScale: Vector3 = new Vector3(1.0, 1.0, 1.0);
+        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3,{set:"setScale"})
         private readonly scale: Vector3 = new Vector3(1.0, 1.0, 1.0);
         private _aabb: AABB = null as any;
         private _parent: Transform | null = null;

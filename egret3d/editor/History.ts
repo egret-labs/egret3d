@@ -50,20 +50,6 @@ namespace paper.editor {
             return state.batchIndex > 0 && (isUndo ? this._index >= 0 : this._index < this._states.length - 1);
         }
 
-        private _getStateByObject(history: History, object: any, key: string, link: BaseState | null = null): ModifyObjectState | null {
-            let i = history._states.length;
-            while (i--) {
-                const state = history._states[i];
-                if (state instanceof ModifyObjectState) {
-                    if ((!link || state !== link) && state.source === object && state.key === key) {
-                        return state;
-                    }
-                }
-            }
-
-            return null;
-        }
-
         public back(): boolean {
             if (this._index < 0 || this._batchIndex > 0) {
                 return false;
@@ -178,16 +164,6 @@ namespace paper.editor {
             }
         }
 
-        public linkObjectState(object: any, key: string): void {
-            const currentState = this._getStateByObject(this, object, key);
-            if (currentState !== null) {
-                const prevState = this._getStateByObject(this, object, key, currentState);
-                if (prevState !== null) {
-                    currentState.fromValue = prevState.toValue;
-                }
-            }
-        }
-
         public getState(index: number): BaseState | null {
             return this._states[index];
         }
@@ -212,8 +188,6 @@ namespace paper.editor {
             return this._index;
         }
     }
-
-
 
     export abstract class BaseState {
         public autoClear: boolean = false;
@@ -242,74 +216,47 @@ namespace paper.editor {
         }
     }
 
-    //修改对象基础属性(目前只支持gameobject)
-    export class ModifyObjectState extends BaseState {
-        public static toString(): string {
-            return "[class common.ModifyObjectState]";
-        }
-
-        public static create(source: any, key: number | string, value: any, data: any = null): ModifyObjectState | null {
-            const fromValue = (key in source) ? source[key] : undefined;
-            if (fromValue === value) {
-                return null;
-            }
-
-            const state = new ModifyObjectState();
-            state.source = source;
-            state.key = key;
+    export class ModifyGameObjectPropertyState extends BaseState {
+        public static create(data: any = null): ModifyGameObjectPropertyState | null {
+            const state = new ModifyGameObjectPropertyState();
             state.data = data;
-            state.fromValue = fromValue;
-            state.toValue = value;
-
             return state;
         }
 
-        public source: any = null;
-        public key: number | string = "";
-        public fromValue: any = null;
-        public toValue: any = null;
-
         public undo(): boolean {
             if (super.undo()) {
-                let modifyObj = this.getModifyObject();
-                if (modifyObj && this.fromValue !== undefined) {
-                    this.source[this.key] = this.data.prevalue;
-                    Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,
-                        {
-                            target: modifyObj,
-                            propName: this.data.propname,
-                            propValue: this.data.prevalue
-                        }))
+                const { hashCode, propName, preValue, editType } = this.data;
+                let modifyObj = Editor.editorModel.getGameObjectById(hashCode);
+                if (modifyObj && preValue !== undefined) {
+                    const toValue = Editor.editorModel.deserializeProperty(preValue, editType);
+                    if (toValue) {
+                        Editor.editorModel.setTargetProperty(propName,modifyObj,toValue);
+                        Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,
+                            {
+                                target: modifyObj,
+                                propName: propName,
+                                propValue: toValue
+                            }))
+                    }
                 }
-
                 return true;
             }
 
             return false;
         }
 
-        private getModifyObject(): any {
-            let modifyObj;
-            console.log(this.data.modifyObjectType, this.data.belongGameObjectHashCode, this.data.hashCode)
-            if (this.data.modifyObjectType == ModifyObjectType.GAMEOBJECT) {
-                modifyObj = Editor.editorModel.getGameObjectById(this.data.hashCode);
-            } else {
-                let gameObj = Editor.editorModel.getGameObjectById(this.data.belongGameObjectHashCode);
-                modifyObj = Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
-            }
-            return modifyObj;
-        }
 
         public redo(): boolean {
             if (super.redo()) {
-                let modifyObj = this.getModifyObject();
-                if (modifyObj && this.toValue !== undefined) {
-                    modifyObj[this.key] = this.data.newvalue;
+                const { hashCode, propName, propValue } = this.data;
+                let modifyObj = Editor.editorModel.getGameObjectById(hashCode);
+                if (modifyObj && propValue !== undefined) {
+                    Editor.editorModel.setTargetProperty(propName,modifyObj,propValue);
                     Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,
                         {
                             target: modifyObj,
-                            propName: this.data.propname,
-                            propValue: this.data.newvalue
+                            propName: propName,
+                            propValue: propValue
                         }))
                 }
 
@@ -320,65 +267,38 @@ namespace paper.editor {
         }
     }
 
-    //修改transform属性
-    export class ModifyTransformPropertyState extends BaseState {
+    //修改组件属性属性
+    export class ModifyComponentPropertyState extends BaseState {
         public static toString(): string {
-            return "[class common.ModifyTransformPropertyState]";
+            return "[class common.ModifyComponentPropertyState]";
         }
 
-        public static create(source: any, key: number | string, value: any, data: any = null): ModifyTransformPropertyState | null {
-            const state = new ModifyTransformPropertyState();
+        public static create(source: any, key: number | string, value: any, data: any = null): ModifyComponentPropertyState | null {
+            const state = new ModifyComponentPropertyState();
             state.data = data;
             return state;
         }
 
-
-        private setTransformProperty(transform: egret3d.Transform, propName: string, propValue: any): boolean {
-            switch (propName) {
-                case "localPosition": transform.setLocalPosition(<egret3d.Vector3>propValue); break;
-                case "localRotation": transform.setLocalRotation(<egret3d.Quaternion>propValue); break;
-                case "localScale": transform.setLocalScale(<egret3d.Vector3>propValue); break;
-                case "localEulerAngles": transform.setLocalEulerAngles(<egret3d.Vector3>propValue); break;
-                case "position": transform.setPosition(<egret3d.Vector3>propValue); break;
-                case "rotation": transform.setRotation(<egret3d.Quaternion>propValue); break;
-                case "scale": transform.setScale(<egret3d.Vector3>propValue); break;
-                default: return false;
-            }
-            return true;
-        }
-
-        private getModifyObject(): any {
-            let modifyObj;
-            if (this.data.modifyObjectType == ModifyObjectType.GAMEOBJECT) {
-                modifyObj = Editor.editorModel.getGameObjectById(this.data.hashCode);
-            } else {
-                let gameObj = Editor.editorModel.getGameObjectById(this.data.belongGameObjectHashCode);
-                modifyObj = Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
-                this.data.target = modifyObj;
-            }
-            return modifyObj;
-        }
-
         public undo(): boolean {
-            let isSuccess = false;
             if (super.undo()) {
-                let modifyObj = this.getModifyObject();
-                let prevalue = this.data.prevalue;
-                if (modifyObj && prevalue !== undefined) {
-                    isSuccess = this.setTransformProperty(<egret3d.Transform>modifyObj, String(this.data.propname), prevalue)
-                    this.data.isSuccess = isSuccess;
+                const { propValue, propName, gameObjHashCode, preValue, editType } = this.data;
+                let gameObj: GameObject = Editor.editorModel.getGameObjectById(gameObjHashCode);
+                let modifyObj: BaseComponent = Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
+                if (modifyObj && preValue !== undefined) {
+                    let toValue = Editor.editorModel.deserializeProperty(preValue, editType);
 
-                    if (isSuccess) {
+                    if (toValue) {
+                        Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
                         Editor.editorModel.dispatchEvent(
-                            new EditorModelEvent(
-                                EditorModelEvent.CHANGE_PROPERTY,
-                                {
-                                    target: modifyObj,
-                                    propName: this.data.propname,
-                                    propValue: this.data.prevalue
-                                }
+                            new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, {
+                                target: modifyObj,
+                                propName: propName,
+                                propValue: toValue
+                            }
                             ))
                     }
+
+
                 }
                 return true;
             }
@@ -387,24 +307,19 @@ namespace paper.editor {
         }
 
         public redo(): boolean {
-            let isSuccess = false;
             if (super.redo()) {
-                let newValue = this.data.newvalue;
-                let modifyObj = this.getModifyObject();
-                if (modifyObj && newValue !== undefined) {
-                    isSuccess = this.setTransformProperty(<egret3d.Transform>modifyObj, String(this.data.propname), newValue);
-                    this.data.isSuccess = isSuccess;
-
-                    if (isSuccess) {
-                        Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,
-                            {
-                                target: modifyObj,
-                                propName: this.data.propname,
-                                propValue: this.data.newvalue
-                            }))
-                    }
+                const { propValue, propName, gameObjHashCode } = this.data;
+                let gameObj: GameObject = Editor.editorModel.getGameObjectById(gameObjHashCode);
+                let modifyObj: BaseComponent = Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
+                if (modifyObj && propValue !== undefined) {
+                    Editor.editorModel.setTargetProperty(propName,modifyObj,propValue);
+                    Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,
+                        {
+                            target: modifyObj,
+                            propName: propName,
+                            propValue: propValue
+                        }))
                 }
-
                 return true;
             }
 
@@ -914,6 +829,196 @@ namespace paper.editor {
                     element.transform.setParent(targetTransform);
                 }
                 Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.UPDATE_PARENT));
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    export class ModifyPrefabProperty extends BaseState {
+        protected getGameObjectById(gameObjectId: number): GameObject {
+            let paper = gameObjectId < 0 ? this.data.backRuntime.paper : __global['paper'];
+            let objects = paper.Application.sceneManager.getActiveScene().gameObjects;
+            for (let i: number = 0; i < objects.length; i++) {
+                if (objects[i].hashCode === gameObjectId) {
+                    return objects[i];
+                }
+            }
+            return null;
+        }
+
+        protected getGameObjectsByPrefab = (prefab: egret3d.Prefab): GameObject[] => {
+            let objects = Application.sceneManager.getActiveScene().gameObjects;
+            let result: GameObject[] = [];
+            objects.forEach(obj => {
+                if (obj.prefab && obj.prefab.url === prefab.url && (obj as any).___isRootPrefab____) {
+                    result.push(obj);
+                }
+            })
+            return result;
+        }
+
+        protected equal(a: any, b: any): boolean {
+            let className = egret.getQualifiedClassName(a);
+            if (className === egret.getQualifiedClassName(b)) {
+                switch (className) {
+                    case 'egret3d.Vector2': return egret3d.Vector2.equal(a, b);
+                    case 'egret3d.Vector3': return egret3d.Vector3.equal(a, b);
+                    case 'egret3d.Vector4': return a.x === b.x && a.y === b.y && a.z === b.z && a.w === b.w;
+                    case 'egret3d.Quaternion': return a.x === b.x && a.y === b.y && a.z === b.z && a.w === b.w;
+                    case 'egret3d.Rect': return a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
+                    case 'egret3d.Color': return a.r === b.r && a.g === b.g && a.b === b.b && a.a === b.a;
+                    default:
+                        return false;
+                }
+            }
+            else return false;
+        }
+
+        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any) {
+            Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,
+                {
+                    target: modifyObj,
+                    propName: propName,
+                    propValue: newValue
+                }))
+        }
+    }
+
+    //修改预制体游戏对象属性
+    export class ModifyPrefabGameObjectPropertyState extends ModifyPrefabProperty {
+        public static toString(): string {
+            return "[class common.ModifyPrefabGameObjectPropertyState]";
+        }
+
+        public static create(data: any = null): ModifyPrefabGameObjectPropertyState | null {
+            const state = new ModifyPrefabGameObjectPropertyState();
+            state.data = data;
+            return state;
+        }
+
+        /**
+         * 修改预制体游戏对象属性,目前只支持修改根对象
+         * @param gameObjectId 
+         * @param valueList 
+         */
+        public modifyPrefabGameObjectPropertyValues(gameObjectId: number, valueList: any[]): void {
+            let prefabObj = this.getGameObjectById(gameObjectId);
+            if (!prefabObj) {
+                return;
+            }
+            let objects = this.getGameObjectsByPrefab(prefabObj.prefab);
+            let editInfoList = editor.getEditInfo(prefabObj);
+            valueList.forEach(propertyValue => {
+                const { propName, copyValue, valueEditType } = propertyValue;
+                let newValue = Editor.editorModel.deserializeProperty(copyValue, valueEditType);
+                objects.forEach(object => {
+                    let valueType = typeof object[propName];
+
+                    if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
+                        if (object[propName] === prefabObj[propName]) {
+                            Editor.editorModel.setTargetProperty(propName, object, newValue);
+                            this.dispathPropertyEvent(object, propName, newValue);
+                        }
+                    }
+                    else {
+                        if (this.equal(object[propName], prefabObj[propName])) {
+                            Editor.editorModel.setTargetProperty(propName, object, newValue);
+                            this.dispathPropertyEvent(object, propName, newValue);
+                        }
+                    }
+                });
+
+                Editor.editorModel.setTargetProperty(propName, prefabObj, newValue);
+                this.dispathPropertyEvent(prefabObj, propName, newValue);
+            });
+        }
+
+        public undo(): boolean {
+            if (super.undo()) {
+                const { gameObjectId, preValueCopylist } = this.data;
+                this.modifyPrefabGameObjectPropertyValues(gameObjectId, preValueCopylist);
+                return true;
+            }
+
+            return false;
+        }
+
+        public redo(): boolean {
+            if (super.redo()) {
+                const { gameObjectId, newValueList } = this.data;
+                this.modifyPrefabGameObjectPropertyValues(gameObjectId, newValueList);
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    //修改预制体组件属性
+    export class ModifyPrefabComponentPropertyState extends ModifyPrefabProperty {
+        public static toString(): string {
+            return "[class common.ModifyPrefabComponentPropertyState]";
+        }
+
+        public static create(data: any = null): ModifyPrefabComponentPropertyState | null {
+            const state = new ModifyPrefabComponentPropertyState();
+            state.data = data;
+            return state;
+        }
+
+        public modifyPrefabComponentPropertyValues(gameObjectId: number, componentId: number, valueList: any[]): void {
+            let prefabObj = this.getGameObjectById(gameObjectId);
+            if (!prefabObj) {
+                return;
+            }
+            let objects = this.getGameObjectsByPrefab(prefabObj.prefab);
+            for (let k: number = 0; k < prefabObj.components.length; k++) {
+                let PrefabComp = prefabObj.components[k];
+                let editInfoList = editor.getEditInfo(PrefabComp);
+                if (PrefabComp.hashCode === componentId) {
+                    valueList.forEach(propertyValue => {
+                        const { propName, copyValue, valueEditType } = propertyValue;
+                        let newValue = Editor.editorModel.deserializeProperty(copyValue, valueEditType);
+                        objects.forEach(object => {
+                            let objectComp = object.components[k];
+                            let valueType = typeof objectComp[propName];
+                            if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
+                                if (objectComp[propName] === PrefabComp[propName]) {
+                                    Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
+                                    this.dispathPropertyEvent(objectComp, propName, newValue);
+                                }
+                            }
+                            else {
+                                if (this.equal(objectComp[propName], PrefabComp[propName])) {
+                                    Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
+                                    // this.dispathPropertyEvent(objectComp, propName, newValue);
+                                }
+                            }
+                        });
+
+                        Editor.editorModel.setTargetProperty(propName, PrefabComp, newValue);
+                        this.dispathPropertyEvent(PrefabComp, propName, newValue);
+                    })
+                }
+            }
+        }
+
+        public undo(): boolean {
+            if (super.undo()) {
+                const { gameObjectId, componentId, preValueCopylist } = this.data;
+                this.modifyPrefabComponentPropertyValues(gameObjectId, componentId, preValueCopylist);
+                return true;
+            }
+
+            return false;
+        }
+
+        public redo(): boolean {
+            if (super.redo()) {
+                const { gameObjectId, componentId, newValueList } = this.data;
+                this.modifyPrefabComponentPropertyValues(gameObjectId, componentId, newValueList);
                 return true;
             }
 
