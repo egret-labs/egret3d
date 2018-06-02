@@ -221,8 +221,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };
@@ -276,8 +274,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };
@@ -303,8 +299,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };
@@ -324,8 +318,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };
@@ -374,8 +366,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };
@@ -395,8 +385,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };
@@ -430,8 +418,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };
@@ -466,8 +452,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };
@@ -487,8 +471,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };
@@ -509,8 +491,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };
@@ -530,8 +510,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };
@@ -551,8 +529,6 @@ namespace RES.processor {
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
-
-            paper.Asset.unregister(data);
         }
 
     };

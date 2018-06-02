@@ -628,29 +628,18 @@ var paper;
             this._assets[asset.url] = asset;
         };
         /**
-         * 注销资源
-         * 销毁资源时，注销框架内部对资源的引用
-         */
-        Asset.unregister = function (asset) {
-            delete this._assets[asset.url];
-        };
-        /**
          * 获取资源
-         * @param url 资源的url
+         * @param name 资源的url
          */
-        Asset.find = function (url) {
-            return (url in this._assets) ? this._assets[url] : null;
+        Asset.find = function (name) {
+            var result = this._assets[name];
+            if (!result) {
+                return RES.getRes(name);
+            }
+            else {
+                return result;
+            }
         };
-        Object.defineProperty(Asset, "assets", {
-            /**
-             *
-             */
-            get: function () {
-                return this._assets;
-            },
-            enumerable: true,
-            configurable: true
-        });
         /**
          * @inheritDoc
          */
@@ -17571,7 +17560,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17632,7 +17620,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17670,7 +17657,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17701,7 +17687,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17764,7 +17749,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17795,7 +17779,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17845,7 +17828,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17895,7 +17877,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17926,7 +17907,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17960,7 +17940,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17990,7 +17969,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -18021,7 +17999,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });

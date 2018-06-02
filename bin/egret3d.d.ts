@@ -212,21 +212,10 @@ declare namespace paper {
          */
         static register(asset: Asset, isLoad?: boolean): void;
         /**
-         * 注销资源
-         * 销毁资源时，注销框架内部对资源的引用
-         */
-        static unregister(asset: Asset): void;
-        /**
          * 获取资源
-         * @param url 资源的url
+         * @param name 资源的url
          */
-        static find<T extends Asset>(url: string): T;
-        /**
-         *
-         */
-        static readonly assets: Readonly<{
-            [url: string]: Asset;
-        }>;
+        static find<T extends Asset>(name: string): any;
         /**
          *
          * 资源的原始URL
@@ -1732,7 +1721,7 @@ declare namespace paper {
          * load scene 加载场景
          * @param rawScene url
          */
-        loadScene(url: string): Scene;
+        loadScene(url: string): any;
         /**
          * 卸载指定场景，如果创建列表为空，则创建一个空场景。
          */

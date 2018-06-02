@@ -27,25 +27,17 @@ namespace paper {
         }
 
         /**
-         * 注销资源
-         * 销毁资源时，注销框架内部对资源的引用
-         */
-        public static unregister(asset: Asset) {
-            delete this._assets[asset.url];
-        }
-
-        /**
          * 获取资源
-         * @param url 资源的url
+         * @param name 资源的url
          */
-        public static find<T extends Asset>(url: string) {
-            return (url in this._assets) ? this._assets[url] as T : null;
-        }
-        /**
-         * 
-         */
-        public static get assets(): Readonly<{ [url: string]: Asset }> {
-            return this._assets;
+        public static find<T extends Asset>(name: string) {
+            const result = this._assets[name]
+            if (!result) {
+                return RES.getRes(name)
+            }
+            else {
+                return result as T;
+            }
         }
 
         /**
