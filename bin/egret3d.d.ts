@@ -1378,11 +1378,7 @@ declare namespace egret3d {
     class BaseObjectAsset extends paper.Asset {
         protected readonly _assets: any;
         protected _raw: any;
-        /**
-         * TODO 应补全接口和枚举。
-         *
-         */
-        $parse(jsonString: string): void;
+        $parse(json: any): void;
         /**
          * @inheritDoc
          */
@@ -2301,7 +2297,7 @@ declare namespace egret3d {
         /**
          *
          */
-        $parse(json: JSON): void;
+        $parse(json: any): void;
         private lines;
         private getpaths();
         private getBezierPointAlongCurve(points, rate, clearflag?);
@@ -2497,10 +2493,6 @@ declare namespace egret3d {
      * @language zh_CN
      */
     class TextAsset extends paper.Asset {
-        /**
-         * 文本内容
-         */
-        content: string;
         /**
          * @inheritDoc
          */
@@ -5450,7 +5442,7 @@ declare namespace egret3d {
         /**
          *
          */
-        $parse(jsonStr: string): void;
+        $parse(json: any): void;
     }
 }
 declare namespace egret3d {
@@ -6348,7 +6340,7 @@ declare namespace egret3d {
         /**
          *
          */
-        $parse(jsonStr: string): void;
+        $parse(json: string): void;
         /**
          * @inheritDoc
          */
@@ -6912,7 +6904,6 @@ declare namespace RES.processor {
     const GLVertexShaderProcessor: RES.processor.Processor;
     const GLFragmentShaderProcessor: RES.processor.Processor;
     const ShaderProcessor: RES.processor.Processor;
-    const D3PVRProcessor: RES.processor.Processor;
     const TextureDescProcessor: RES.processor.Processor;
     const TextureProcessor: RES.processor.Processor;
     const MaterialProcessor: RES.processor.Processor;

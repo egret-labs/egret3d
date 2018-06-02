@@ -138,14 +138,13 @@ namespace RES.processor {
     export const BundleProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
+            let data = await host.load(resource, "json");
             let url = getUrl(resource);
             let filename = getFileName(url);
 
             let bundle = new egret3d.AssetBundle(filename);
             bundle.url = url;
-            bundle.$parse(JSON.parse(text));
+            bundle.$parse(data);
 
             // let list = getBundleUrlList(bundle);
             let list = formatUrlAndSort(bundle.assets, getPath(resource.url));
@@ -173,8 +172,7 @@ namespace RES.processor {
     export const GLVertexShaderProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
+            let text = await host.load(resource, "text");
             let url = getUrl(resource);
             let filename = getFileName(url);
             let name = filename.substring(0, filename.indexOf("."));
@@ -194,8 +192,7 @@ namespace RES.processor {
     export const GLFragmentShaderProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
+            let text = await host.load(resource, "text");
             let url = getUrl(resource);
             let filename = getFileName(url);
             let name = filename.substring(0, filename.indexOf("."));
@@ -211,13 +208,11 @@ namespace RES.processor {
     export const ShaderProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
+            let data = await host.load(resource, "json");
             let url = getUrl(resource);
             let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
             let shader = new egret3d.Shader(filename, url);
-            shader.$parse(JSON.parse(text));
+            shader.$parse(data);
             paper.Asset.register(shader, true);
 
             return shader;
@@ -232,37 +227,19 @@ namespace RES.processor {
 
     };
 
-    export const D3PVRProcessor: RES.processor.Processor = {
-
-        async onLoadStart(host, resource) {
-
-        },
-
-        async onRemoveStart(host, resource) {
-
-        }
-
-    };
-
     export const TextureDescProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
+            let data = await host.load(resource, "json");
             let url = getUrl(resource);
             let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
 
-            let _texturedesc = JSON.parse(text);
-            let _name: string = _texturedesc["name"];
-            let _filterMode: string = _texturedesc["filterMode"];
-            let _format: string = _texturedesc["format"];
-            let _mipmap: boolean = _texturedesc["mipmap"];
-            let _wrap: string = _texturedesc["wrap"];
+            let _name: string = data["name"];
+            let _filterMode: string = data["filterMode"];
+            let _format: string = data["format"];
+            let _mipmap: boolean = data["mipmap"];
+            let _wrap: string = data["wrap"];
 
-            if (_name.indexOf("LightmapFar") >= 0) {
-                console.log("");
-            }
             let _textureFormat = egret3d.TextureFormatEnum.RGBA;
             if (_format == "RGB") {
                 _textureFormat = egret3d.TextureFormatEnum.RGB;
@@ -280,19 +257,20 @@ namespace RES.processor {
                 _repeat = true;
             }
 
-            let _textureSrc: string = url.replace(filename, _name);
+            let textureUrl = url.replace(filename, _name);
 
             let loader = new egret.ImageLoader();
-            loader.load(_textureSrc);
+            loader.load(textureUrl);
             let image = await promisify(loader, resource);
-            let _texture = new egret3d.Texture(filename, url);
-            _texture.realName = _name;
+            let texture = new egret3d.Texture(filename, url);
+            texture.realName = _name;
+            const gl = egret3d.WebGLKit.webgl;
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
             t2d.uploadImage(image.source, _mipmap, _linear, true, _repeat);
-            _texture.glTexture = t2d;
-            paper.Asset.register(_texture, true);
+            texture.glTexture = t2d;
+            paper.Asset.register(texture, true);
 
-            return _texture;
+            return texture;
         },
 
         async onRemoveStart(host, resource) {
@@ -310,7 +288,6 @@ namespace RES.processor {
             let gl = egret3d.WebGLKit.webgl;
             let url = getUrl(resource);
             let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
             let loader = new egret.ImageLoader();
             loader.load(url);
             let image = await promisify(loader, resource);
@@ -335,15 +312,13 @@ namespace RES.processor {
     export const MaterialProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
+            let data = await host.load(resource, "json");
             let url = getUrl(resource);
             let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
-            let _material = new egret3d.Material(filename, url);
-            _material.$parse(JSON.parse(text));
-            paper.Asset.register(_material, true);
-            return _material;
+            let material = new egret3d.Material(filename, url);
+            material.$parse(data);
+            paper.Asset.register(material, true);
+            return material;
         },
 
         async onRemoveStart(host, resource) {
@@ -358,7 +333,7 @@ namespace RES.processor {
     export const GLTFProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            const result = await host.load(resource, resource.type === "GLTF" ? RES.processor.JsonProcessor : RES.processor.BinaryProcessor);
+            const result = await host.load(resource, "bin");
             const url = getUrl(resource);
             const filename = getFileName(url, true);
             const glTF = new egret3d.GLTFAsset(filename, url);
@@ -374,7 +349,7 @@ namespace RES.processor {
                         const url = egret3d.utils.combinePath(glTFPath + "/", buffer.uri);
                         let r = RES.host.resourceConfig["getResource"](url); // TODO
                         if (r) {
-                            const buffer = await host.load(r, RES.processor.BinaryProcessor);
+                            const buffer = await host.load(r, "bin");
                             if (buffer) {
                                 buffers.push(buffer);
                             }
@@ -408,15 +383,13 @@ namespace RES.processor {
     export const AtlasProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
-            let _atlas = new egret3d.Atlas(filename, url);
-            _atlas.$parse(text);
-            paper.Asset.register(_atlas, true);
-            return _atlas;
+            const data = await host.load(resource, "json");
+            const url = getUrl(resource);
+            const filename = getFileName(url);
+            let atlas = new egret3d.Atlas(filename, url);
+            atlas.$parse(data);
+            paper.Asset.register(atlas, true);
+            return atlas;
         },
 
         async onRemoveStart(host, resource) {
@@ -431,27 +404,24 @@ namespace RES.processor {
     export const NewPrefabProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
-
+            const data = await host.load(resource, "json");
+            const url = getUrl(resource);
+            const filename = getFileName(url);
             // load ref assets
-            const assets = JSON.parse(text).assets;
+            const assets = data.assets;
             if (assets) {
-                let list = formatUrlAndSort(assets, getPath(resource.url));
+                const list = formatUrlAndSort(assets, getPath(resource.url));
                 for (let i = 0; i < list.length; i++) {
                     if (list[i].type == AssetTypeEnum.Shader) continue;
-                    let r = RES.host.resourceConfig["getResource"](list[i].url);
+                    const r = RES.host.resourceConfig["getResource"](list[i].url);
                     if (r) {
-                        let asset: paper.Asset = await host.load(r);
+                        const asset: paper.Asset = await host.load(r);
                     }
                 }
             }
 
             const prefab = new egret3d.Prefab(filename, url);
-            prefab.$parse(text);
+            prefab.$parse(data);
             paper.Asset.register(prefab, true);
 
             return prefab;
@@ -469,14 +439,12 @@ namespace RES.processor {
     export const NewSceneProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
+            const data = await host.load(resource, "json");
+            const url = getUrl(resource);
+            const filename = getFileName(url);
 
             // load ref assets
-            const assets = JSON.parse(text).assets;
+            const assets = data.assets;
             if (assets) {
                 let list = formatUrlAndSort(assets, getPath(resource.url));
                 for (let i = 0; i < list.length; i++) {
@@ -489,7 +457,7 @@ namespace RES.processor {
             }
 
             const scene = new egret3d.RawScene(filename, url);
-            scene.$parse(text);
+            scene.$parse(data);
             paper.Asset.register(scene, true);
 
             return scene;
@@ -507,13 +475,11 @@ namespace RES.processor {
     export const D3FontProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
-            let _font = new egret3d.Font(filename, url);
-            _font.$parse(text);
+            const data = await host.load(resource, "json");
+            const url = getUrl(resource);
+            const filename = getFileName(url);
+            const _font = new egret3d.Font(filename, url);
+            _font.$parse(data);
             paper.Asset.register(_font, true);
             return _font;
         },
@@ -530,11 +496,9 @@ namespace RES.processor {
     export const Sound3DProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let arrayBuffer: ArrayBuffer = await host.load(resource, RES.processor.BinaryProcessor);
-            let gl = egret3d.WebGLKit.webgl;
+            let arrayBuffer: ArrayBuffer = await host.load(resource, "bin");
             let url = getUrl(resource);
             let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
             let audioBuffer: AudioBuffer = await promisifySoundDecode(arrayBuffer, resource);
             let sound = new egret3d.Sound(filename, url);
             sound.buffer = audioBuffer;
@@ -554,15 +518,13 @@ namespace RES.processor {
     export const TextAssetProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
-            let _text = new egret3d.TextAsset(filename, url);
-            _text.content = text;
-            paper.Asset.register(_text, true);
-            return _text;
+
+            const data = await host.load(resource, "json");
+            const url = getUrl(resource);
+            const filename = getFileName(url);
+            let text = new egret3d.TextAsset(filename, url);
+            paper.Asset.register(text, true);
+            return text;
         },
 
         async onRemoveStart(host, resource) {
@@ -577,13 +539,11 @@ namespace RES.processor {
     export const PathAssetProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let text = await host.load(resource, RES.processor.TextProcessor);
-            let gl = egret3d.WebGLKit.webgl;
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
+            const data = await host.load(resource, "json");
+            const url = getUrl(resource);
+            const filename = getFileName(url);
             let _path = new egret3d.PathAsset(filename, url);
-            _path.$parse(JSON.parse(text));
+            _path.$parse(data);
             paper.Asset.register(_path, true);
             return _path;
         },
@@ -603,9 +563,7 @@ namespace RES.processor {
     RES.processor.map("Bundle", BundleProcessor);
     RES.processor.map("Texture", TextureProcessor);
     RES.processor.map("TextureDesc", TextureDescProcessor);
-    RES.processor.map("PVR", D3PVRProcessor);
     RES.processor.map("Material", MaterialProcessor);
-    RES.processor.map("GLTF", GLTFProcessor);
     RES.processor.map("GLTFBinary", GLTFProcessor);
     RES.processor.map("Prefab", NewPrefabProcessor);
     RES.processor.map("Scene", NewSceneProcessor);

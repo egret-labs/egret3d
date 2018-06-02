@@ -60,8 +60,7 @@ namespace egret3d {
         /**
          * 
          */
-        public $parse(jsonStr: string) {
-            var json = JSON.parse(jsonStr);
+        public $parse(json: string) {
             var name: string = json["t"]; // name
             this.texturewidth = json["w"];
             this.textureheight = json["h"];
