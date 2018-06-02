@@ -158,12 +158,11 @@ namespace egret3d {
         /**
          * 
          */
-        $parse(jsonStr: string) {
+        $parse(json: any) {
             let d1 = new Date().valueOf();
-            let json = JSON.parse(jsonStr);
 
             // parse font info
-            var font = <any[]>json["font"];
+            var font = <any[]>json.font;
             this.fontname = <string>font[0];
             var picName = <string>font[1];
             this.texture = paper.Asset.find<Texture>(utils.getPathByUrl(this.url) + "/" + picName);

@@ -5,16 +5,10 @@ namespace egret3d {
     export class BaseObjectAsset extends paper.Asset {
         protected readonly _assets: any = {};
         protected _raw: any = null;
-        /**
-         * TODO 应补全接口和枚举。
-         * 
-         */
-        public $parse(jsonString: string) {
-            // 兼容数据
-            // jsonStr = jsonStr.replace(/localRotate/g, "localRotation");
-            // jsonStr = jsonStr.replace(/localTranslate/g, "localPosition");
 
-            this._raw = JSON.parse(jsonString);
+        public $parse(json: any) {
+
+            this._raw = json;
             if (this._raw) {
                 for (const item of this._raw.assets) {
                     if (item.url.indexOf("shader.json") < 0) {

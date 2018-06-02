@@ -628,29 +628,18 @@ var paper;
             this._assets[asset.url] = asset;
         };
         /**
-         * 注销资源
-         * 销毁资源时，注销框架内部对资源的引用
-         */
-        Asset.unregister = function (asset) {
-            delete this._assets[asset.url];
-        };
-        /**
          * 获取资源
-         * @param url 资源的url
+         * @param name 资源的url
          */
-        Asset.find = function (url) {
-            return (url in this._assets) ? this._assets[url] : null;
+        Asset.find = function (name) {
+            var result = this._assets[name];
+            if (!result) {
+                return RES.getRes(name);
+            }
+            else {
+                return result;
+            }
         };
-        Object.defineProperty(Asset, "assets", {
-            /**
-             *
-             */
-            get: function () {
-                return this._assets;
-            },
-            enumerable: true,
-            configurable: true
-        });
         /**
          * @inheritDoc
          */
@@ -2458,15 +2447,8 @@ var egret3d;
             _this._raw = null;
             return _this;
         }
-        /**
-         * TODO 应补全接口和枚举。
-         *
-         */
-        BaseObjectAsset.prototype.$parse = function (jsonString) {
-            // 兼容数据
-            // jsonStr = jsonStr.replace(/localRotate/g, "localRotation");
-            // jsonStr = jsonStr.replace(/localTranslate/g, "localPosition");
-            this._raw = JSON.parse(jsonString);
+        BaseObjectAsset.prototype.$parse = function (json) {
+            this._raw = json;
             if (this._raw) {
                 for (var _i = 0, _a = this._raw.assets; _i < _a.length; _i++) {
                     var item = _a[_i];
@@ -4885,26 +4867,17 @@ var egret3d;
     var TextAsset = (function (_super) {
         __extends(TextAsset, _super);
         function TextAsset() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * 文本内容
-             */
-            _this.content = "";
-            return _this;
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         /**
          * @inheritDoc
          */
         TextAsset.prototype.dispose = function () {
-            this.content = "";
         };
         /**
          * @inheritDoc
          */
         TextAsset.prototype.caclByteLength = function () {
-            if (this.content) {
-                return egret3d.utils.caclStringByteLength(this.content);
-            }
             return 0;
         };
         return TextAsset;
@@ -14324,11 +14297,10 @@ var egret3d;
         /**
          *
          */
-        Font.prototype.$parse = function (jsonStr) {
+        Font.prototype.$parse = function (json) {
             var d1 = new Date().valueOf();
-            var json = JSON.parse(jsonStr);
             // parse font info
-            var font = json["font"];
+            var font = json.font;
             this.fontname = font[0];
             var picName = font[1];
             this.texture = paper.Asset.find(egret3d.utils.getPathByUrl(this.url) + "/" + picName);
@@ -16166,8 +16138,7 @@ var egret3d;
         /**
          *
          */
-        Atlas.prototype.$parse = function (jsonStr) {
-            var json = JSON.parse(jsonStr);
+        Atlas.prototype.$parse = function (json) {
             var name = json["t"]; // name
             this.texturewidth = json["w"];
             this.textureheight = json["h"];
@@ -17521,18 +17492,17 @@ var RES;
         processor.BundleProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, bundle, list, i, r, asset;
+                    var data, url, filename, bundle, list, i, r, asset;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
                                 bundle = new egret3d.AssetBundle(filename);
                                 bundle.url = url;
-                                bundle.$parse(JSON.parse(text));
+                                bundle.$parse(data);
                                 list = formatUrlAndSort(bundle.assets, getPath(resource.url));
                                 i = 0;
                                 _a.label = 2;
@@ -17568,13 +17538,12 @@ var RES;
         processor.GLVertexShaderProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name;
+                    var text, url, filename, name;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "text")];
                             case 1:
                                 text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
                                 url = getUrl(resource);
                                 filename = getFileName(url);
                                 name = filename.substring(0, filename.indexOf("."));
@@ -17596,13 +17565,12 @@ var RES;
         processor.GLFragmentShaderProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name;
+                    var text, url, filename, name;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "text")];
                             case 1:
                                 text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
                                 url = getUrl(resource);
                                 filename = getFileName(url);
                                 name = filename.substring(0, filename.indexOf("."));
@@ -17622,18 +17590,16 @@ var RES;
         processor.ShaderProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, shader;
+                    var data, url, filename, shader;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
                                 shader = new egret3d.Shader(filename, url);
-                                shader.$parse(JSON.parse(text));
+                                shader.$parse(data);
                                 paper.Asset.register(shader, true);
                                 return [2 /*return*/, shader];
                         }
@@ -17646,23 +17612,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
-                        return [2 /*return*/];
-                    });
-                });
-            }
-        };
-        processor.D3PVRProcessor = {
-            onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        return [2 /*return*/];
-                    });
-                });
-            },
-            onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
                         return [2 /*return*/];
                     });
                 });
@@ -17671,25 +17620,19 @@ var RES;
         processor.TextureDescProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _texturedesc, _name, _filterMode, _format, _mipmap, _wrap, _textureFormat, _linear, _repeat, _textureSrc, loader, image, _texture, t2d;
+                    var data, url, filename, _name, _filterMode, _format, _mipmap, _wrap, _textureFormat, _linear, _repeat, textureUrl, loader, image, texture, gl, t2d;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                _texturedesc = JSON.parse(text);
-                                _name = _texturedesc["name"];
-                                _filterMode = _texturedesc["filterMode"];
-                                _format = _texturedesc["format"];
-                                _mipmap = _texturedesc["mipmap"];
-                                _wrap = _texturedesc["wrap"];
-                                if (_name.indexOf("LightmapFar") >= 0) {
-                                    console.log("");
-                                }
+                                _name = data["name"];
+                                _filterMode = data["filterMode"];
+                                _format = data["format"];
+                                _mipmap = data["mipmap"];
+                                _wrap = data["wrap"];
                                 _textureFormat = 1 /* RGBA */;
                                 if (_format == "RGB") {
                                     _textureFormat = 2 /* RGB */;
@@ -17705,19 +17648,20 @@ var RES;
                                 if (_wrap.indexOf("Repeat") >= 0) {
                                     _repeat = true;
                                 }
-                                _textureSrc = url.replace(filename, _name);
+                                textureUrl = url.replace(filename, _name);
                                 loader = new egret.ImageLoader();
-                                loader.load(_textureSrc);
+                                loader.load(textureUrl);
                                 return [4 /*yield*/, promisify(loader, resource)];
                             case 2:
                                 image = _a.sent();
-                                _texture = new egret3d.Texture(filename, url);
-                                _texture.realName = _name;
+                                texture = new egret3d.Texture(filename, url);
+                                texture.realName = _name;
+                                gl = egret3d.WebGLKit.webgl;
                                 t2d = new egret3d.GlTexture2D(gl, _textureFormat);
                                 t2d.uploadImage(image.source, _mipmap, _linear, true, _repeat);
-                                _texture.glTexture = t2d;
-                                paper.Asset.register(_texture, true);
-                                return [2 /*return*/, _texture];
+                                texture.glTexture = t2d;
+                                paper.Asset.register(texture, true);
+                                return [2 /*return*/, texture];
                         }
                     });
                 });
@@ -17728,7 +17672,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17737,14 +17680,13 @@ var RES;
         processor.TextureProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var gl, url, filename, name, loader, image, _texture, _textureFormat, t2d;
+                    var gl, url, filename, loader, image, _texture, _textureFormat, t2d;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
                                 gl = egret3d.WebGLKit.webgl;
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
                                 loader = new egret.ImageLoader();
                                 loader.load(url);
                                 return [4 /*yield*/, promisify(loader, resource)];
@@ -17767,7 +17709,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17776,20 +17717,18 @@ var RES;
         processor.MaterialProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _material;
+                    var data, url, filename, material;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                _material = new egret3d.Material(filename, url);
-                                _material.$parse(JSON.parse(text));
-                                paper.Asset.register(_material, true);
-                                return [2 /*return*/, _material];
+                                material = new egret3d.Material(filename, url);
+                                material.$parse(data);
+                                paper.Asset.register(material, true);
+                                return [2 /*return*/, material];
                         }
                     });
                 });
@@ -17800,7 +17739,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17812,7 +17750,7 @@ var RES;
                     var result, url, filename, glTF, glTFBuffers, buffers, glTFPath, _i, glTFBuffers_1, buffer, url_1, r, buffer_1;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, resource.type === "GLTF" ? RES.processor.JsonProcessor : RES.processor.BinaryProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "bin")];
                             case 1:
                                 result = _a.sent();
                                 url = getUrl(resource);
@@ -17831,7 +17769,7 @@ var RES;
                                 url_1 = egret3d.utils.combinePath(glTFPath + "/", buffer.uri);
                                 r = RES.host.resourceConfig["getResource"](url_1);
                                 if (!r) return [3 /*break*/, 4];
-                                return [4 /*yield*/, host.load(r, RES.processor.BinaryProcessor)];
+                                return [4 /*yield*/, host.load(r, "bin")];
                             case 3:
                                 buffer_1 = _a.sent();
                                 if (buffer_1) {
@@ -17863,7 +17801,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17872,20 +17809,18 @@ var RES;
         processor.AtlasProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _atlas;
+                    var data, url, filename, atlas;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                _atlas = new egret3d.Atlas(filename, url);
-                                _atlas.$parse(text);
-                                paper.Asset.register(_atlas, true);
-                                return [2 /*return*/, _atlas];
+                                atlas = new egret3d.Atlas(filename, url);
+                                atlas.$parse(data);
+                                paper.Asset.register(atlas, true);
+                                return [2 /*return*/, atlas];
                         }
                     });
                 });
@@ -17896,7 +17831,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17905,17 +17839,15 @@ var RES;
         processor.NewPrefabProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, assets, list, i, r, asset, prefab;
+                    var data, url, filename, assets, list, i, r, asset, prefab;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                assets = JSON.parse(text).assets;
+                                assets = data.assets;
                                 if (!assets) return [3 /*break*/, 5];
                                 list = formatUrlAndSort(assets, getPath(resource.url));
                                 i = 0;
@@ -17935,7 +17867,7 @@ var RES;
                                 return [3 /*break*/, 2];
                             case 5:
                                 prefab = new egret3d.Prefab(filename, url);
-                                prefab.$parse(text);
+                                prefab.$parse(data);
                                 paper.Asset.register(prefab, true);
                                 return [2 /*return*/, prefab];
                         }
@@ -17948,7 +17880,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17957,17 +17888,15 @@ var RES;
         processor.NewSceneProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, assets, list, i, r, asset, scene;
+                    var data, url, filename, assets, list, i, r, asset, scene;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                assets = JSON.parse(text).assets;
+                                assets = data.assets;
                                 if (!assets) return [3 /*break*/, 5];
                                 list = formatUrlAndSort(assets, getPath(resource.url));
                                 i = 0;
@@ -17987,7 +17916,7 @@ var RES;
                                 return [3 /*break*/, 2];
                             case 5:
                                 scene = new egret3d.RawScene(filename, url);
-                                scene.$parse(text);
+                                scene.$parse(data);
                                 paper.Asset.register(scene, true);
                                 return [2 /*return*/, scene];
                         }
@@ -18000,7 +17929,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -18009,18 +17937,16 @@ var RES;
         processor.D3FontProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _font;
+                    var data, url, filename, _font;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
                                 _font = new egret3d.Font(filename, url);
-                                _font.$parse(text);
+                                _font.$parse(data);
                                 paper.Asset.register(_font, true);
                                 return [2 /*return*/, _font];
                         }
@@ -18033,7 +17959,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -18042,16 +17967,14 @@ var RES;
         processor.Sound3DProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var arrayBuffer, gl, url, filename, name, audioBuffer, sound;
+                    var arrayBuffer, url, filename, audioBuffer, sound;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.BinaryProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "bin")];
                             case 1:
                                 arrayBuffer = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
                                 return [4 /*yield*/, promisifySoundDecode(arrayBuffer, resource)];
                             case 2:
                                 audioBuffer = _a.sent();
@@ -18069,7 +17992,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -18078,20 +18000,17 @@ var RES;
         processor.TextAssetProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _text;
+                    var data, url, filename, text;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                _text = new egret3d.TextAsset(filename, url);
-                                _text.content = text;
-                                paper.Asset.register(_text, true);
-                                return [2 /*return*/, _text];
+                                text = new egret3d.TextAsset(filename, url);
+                                paper.Asset.register(text, true);
+                                return [2 /*return*/, text];
                         }
                     });
                 });
@@ -18102,7 +18021,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -18111,18 +18029,16 @@ var RES;
         processor.PathAssetProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _path;
+                    var data, url, filename, _path;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
                                 _path = new egret3d.PathAsset(filename, url);
-                                _path.$parse(JSON.parse(text));
+                                _path.$parse(data);
                                 paper.Asset.register(_path, true);
                                 return [2 /*return*/, _path];
                         }
@@ -18135,7 +18051,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -18147,9 +18062,7 @@ var RES;
         RES.processor.map("Bundle", processor.BundleProcessor);
         RES.processor.map("Texture", processor.TextureProcessor);
         RES.processor.map("TextureDesc", processor.TextureDescProcessor);
-        RES.processor.map("PVR", processor.D3PVRProcessor);
         RES.processor.map("Material", processor.MaterialProcessor);
-        RES.processor.map("GLTF", processor.GLTFProcessor);
         RES.processor.map("GLTFBinary", processor.GLTFProcessor);
         RES.processor.map("Prefab", processor.NewPrefabProcessor);
         RES.processor.map("Scene", processor.NewSceneProcessor);

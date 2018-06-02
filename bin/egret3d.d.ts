@@ -212,21 +212,10 @@ declare namespace paper {
          */
         static register(asset: Asset, isLoad?: boolean): void;
         /**
-         * 注销资源
-         * 销毁资源时，注销框架内部对资源的引用
-         */
-        static unregister(asset: Asset): void;
-        /**
          * 获取资源
-         * @param url 资源的url
+         * @param name 资源的url
          */
-        static find<T extends Asset>(url: string): T;
-        /**
-         *
-         */
-        static readonly assets: Readonly<{
-            [url: string]: Asset;
-        }>;
+        static find<T extends Asset>(name: string): any;
         /**
          *
          * 资源的原始URL
@@ -1388,11 +1377,7 @@ declare namespace egret3d {
     class BaseObjectAsset extends paper.Asset {
         protected readonly _assets: any;
         protected _raw: any;
-        /**
-         * TODO 应补全接口和枚举。
-         *
-         */
-        $parse(jsonString: string): void;
+        $parse(json: any): void;
         /**
          * @inheritDoc
          */
@@ -1746,7 +1731,7 @@ declare namespace paper {
          * load scene 加载场景
          * @param rawScene url
          */
-        loadScene(url: string): Scene;
+        loadScene(url: string): any;
         /**
          * 卸载指定场景，如果创建列表为空，则创建一个空场景。
          */
@@ -2311,7 +2296,7 @@ declare namespace egret3d {
         /**
          *
          */
-        $parse(json: JSON): void;
+        $parse(json: any): void;
         private lines;
         private getpaths();
         private getBezierPointAlongCurve(points, rate, clearflag?);
@@ -2507,10 +2492,6 @@ declare namespace egret3d {
      * @language zh_CN
      */
     class TextAsset extends paper.Asset {
-        /**
-         * 文本内容
-         */
-        content: string;
         /**
          * @inheritDoc
          */
@@ -5460,7 +5441,7 @@ declare namespace egret3d {
         /**
          *
          */
-        $parse(jsonStr: string): void;
+        $parse(json: any): void;
     }
 }
 declare namespace egret3d {
@@ -6358,7 +6339,7 @@ declare namespace egret3d {
         /**
          *
          */
-        $parse(jsonStr: string): void;
+        $parse(json: string): void;
         /**
          * @inheritDoc
          */
@@ -6922,7 +6903,6 @@ declare namespace RES.processor {
     const GLVertexShaderProcessor: RES.processor.Processor;
     const GLFragmentShaderProcessor: RES.processor.Processor;
     const ShaderProcessor: RES.processor.Processor;
-    const D3PVRProcessor: RES.processor.Processor;
     const TextureDescProcessor: RES.processor.Processor;
     const TextureProcessor: RES.processor.Processor;
     const MaterialProcessor: RES.processor.Processor;
