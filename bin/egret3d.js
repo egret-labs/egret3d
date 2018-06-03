@@ -341,7 +341,7 @@ var paper;
 var paper;
 (function (paper) {
     /**
-     *
+     * 组件基类
      */
     var BaseComponent = (function (_super) {
         __extends(BaseComponent, _super);
@@ -365,17 +365,11 @@ var paper;
         BaseComponent.prototype.uninitialize = function () {
             this.gameObject = null;
         };
-        /**
-         * @inheritDoc
-         */
         BaseComponent.prototype.serialize = function () {
             var target = paper.serializeRC(this);
             target._enabled = this._enabled;
             return target;
         };
-        /**
-         * @inheritDoc
-         */
         BaseComponent.prototype.deserialize = function (element) {
             this._enabled = element._enabled === false ? false : true;
         };
@@ -443,22 +437,13 @@ var paper;
              * 关心列表。
              */
             this._interests = [];
-            /**
-             *
-             */
             this._components = [];
-            /**
-             *
-             */
             this._gameObjectOffsets = {};
             if (!BaseSystem._createEnabled) {
                 throw new Error("Create an instance of a system is not allowed.");
             }
             BaseSystem._createEnabled = false;
         }
-        /**
-         *
-         */
         BaseSystem.prototype._onAddComponent = function (component) {
             var components = this._components;
             var backupLength = components.length;
@@ -475,9 +460,6 @@ var paper;
             this._gameObjectOffsets[gameObject.hashCode] = backupLength;
             return true;
         };
-        /**
-         *
-         */
         BaseSystem.prototype._onRemoveComponent = function (component) {
             var gameObject = component.gameObject;
             if (!(gameObject.hashCode in this._gameObjectOffsets)) {
@@ -512,9 +494,6 @@ var paper;
             }
             return null;
         };
-        /**
-         * @protected
-         */
         BaseSystem.prototype.initialize = function () {
             var _this = this;
             for (var _i = 0, _a = this._interests; _i < _a.length; _i++) {
@@ -530,9 +509,6 @@ var paper;
                 paper.EventPool.addEventListener("__disabled__" /* Disabled */, config.componentClass, function (component) { _this._onRemoveComponent(component); });
             }
         };
-        /**
-         * @protected
-         */
         BaseSystem.prototype.uninitialize = function () {
             this._components.length = 0;
             for (var k in this._gameObjectOffsets) {
@@ -2025,9 +2001,6 @@ var paper;
          */
         Behaviour.prototype.onEnable = function () {
         };
-        /**
-         *
-         */
         Behaviour.prototype.onReset = function () {
         };
         /**
@@ -2046,9 +2019,6 @@ var paper;
          */
         Behaviour.prototype.onUpdate = function (delta) {
         };
-        /**
-         *
-         */
         Behaviour.prototype.onLateUpdate = function (delta) {
         };
         /**
@@ -2804,13 +2774,7 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     *
-     */
     var Color = (function () {
-        /**
-         *
-         */
         function Color(r, g, b, a) {
             if (r === void 0) { r = 1.0; }
             if (g === void 0) { g = 1.0; }
@@ -2821,15 +2785,9 @@ var egret3d;
             this.b = b;
             this.a = a;
         }
-        /**
-         * @inheritDoc
-         */
         Color.prototype.serialize = function () {
             return [this.r, this.g, this.b, this.a];
         };
-        /**
-         * @inheritDoc
-         */
         Color.prototype.deserialize = function (element) {
             this.r = element[0];
             this.g = element[1];

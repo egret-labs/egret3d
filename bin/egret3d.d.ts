@@ -80,7 +80,7 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
-     *
+     * 组件基类
      */
     abstract class BaseComponent extends SerializableObject {
         /**
@@ -96,13 +96,7 @@ declare namespace paper {
          * 移除组件后调用。
          */
         uninitialize(): void;
-        /**
-         * @inheritDoc
-         */
         serialize(): any;
-        /**
-         * @inheritDoc
-         */
         deserialize(element: any): void;
         /**
          * 组件自身的激活状态
@@ -115,9 +109,6 @@ declare namespace paper {
     }
 }
 declare namespace paper {
-    /**
-     *
-     */
     type InterestConfig<T extends BaseComponent> = {
         componentClass: {
             new (): T;
@@ -143,37 +134,16 @@ declare namespace paper {
          * 关心列表。
          */
         protected readonly _interests: InterestConfig<T>[];
-        /**
-         *
-         */
         protected readonly _components: T[];
-        /**
-         *
-         */
         private readonly _gameObjectOffsets;
-        /**
-         *
-         */
         protected _onAddComponent(component: T): boolean;
-        /**
-         *
-         */
         protected _onRemoveComponent(component: T): boolean;
         /**
          * 系统内部根据关心列表的顺序快速查找指定组件。
          */
         protected _getComponent(gameObject: GameObject, componentOffset: number): T;
-        /**
-         * @protected
-         */
         initialize(): void;
-        /**
-         * @protected
-         */
         uninitialize(): void;
-        /**
-         * @protected
-         */
         abstract update(): void;
         /**
          * 该系统所关心的所有组件。
@@ -1296,9 +1266,6 @@ declare namespace paper {
          * 物体启用时被调用
          */
         onEnable(): void;
-        /**
-         *
-         */
         onReset(): void;
         /**
          * Start仅在物体实例化完成后，Update函数第一次被调用前调用。
@@ -1313,9 +1280,6 @@ declare namespace paper {
          * 当Behaviour启用时,其Update在每一帧被调用
          */
         onUpdate(delta: number): void;
-        /**
-         *
-         */
         onLateUpdate(delta: number): void;
         /**
          * 物体被禁用时调用
@@ -1599,37 +1563,13 @@ declare namespace egret3d.particle {
     }
 }
 declare namespace egret3d {
-    /**
-     *
-     */
     class Color implements paper.ISerializable {
-        /**
-         *
-         */
         r: number;
-        /**
-         *
-         */
         g: number;
-        /**
-         *
-         */
         b: number;
-        /**
-         *
-         */
         a: number;
-        /**
-         *
-         */
         constructor(r?: number, g?: number, b?: number, a?: number);
-        /**
-         * @inheritDoc
-         */
         serialize(): number[];
-        /**
-         * @inheritDoc
-         */
         deserialize(element: number[]): void;
         static set(r: number, g: number, b: number, a: number, out: Color): Color;
         static multiply(c1: Color, c2: Color, out: Color): Color;
