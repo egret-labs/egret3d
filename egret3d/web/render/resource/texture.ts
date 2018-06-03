@@ -1,7 +1,5 @@
 namespace egret3d {
-    /**
-     * 
-     */
+
     export const enum TextureFormatEnum {
         RGBA = 1, // WebGLRenderingContext.RGBA,
         RGB = 2, // WebGLRenderingContext.RGB,
@@ -12,9 +10,7 @@ namespace egret3d {
         PVRTC2_RGBA = 4,
     }
 
-    /**
-     * 
-     */
+
     export class TextureReader {
         public readonly gray: boolean;
         public readonly width: number;
@@ -238,8 +234,6 @@ namespace egret3d {
             this.format = format;
 
             this.texture = webgl.createTexture();
-
-            // Webglkit.caps.pvrtcExtension;
         }
 
         uploadImage(img: HTMLImageElement, mipmap: boolean, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false): void {
@@ -358,7 +352,6 @@ namespace egret3d {
         }
 
         webgl: WebGLRenderingContext;
-        //img: HTMLImageElement = null;
         loaded: boolean = false;
         texture: WebGLTexture;
         format: TextureFormatEnum;
@@ -381,7 +374,6 @@ namespace egret3d {
             return len;
         }
 
-        // 创建读取器，有可能失败
         reader: TextureReader;
 
         getReader(redOnly: boolean = false): TextureReader {
@@ -414,96 +406,39 @@ namespace egret3d {
             return false;
         }
 
-        private static mapTexture: { [id: string]: GlTexture2D } = {};
-
-        static formGrayArray(webgl: WebGLRenderingContext, array: number[] | Float32Array | Float64Array, width: number, height: number) {
-            let mipmap = false;
-            let linear = true;
-            let t = new GlTexture2D(webgl, TextureFormatEnum.RGBA, mipmap, linear);
-            let data = new Uint8Array(array.length * 4);
-            for (let y = 0; y < width; y++) {
-                for (let x = 0; x < width; x++) {
-                    let fi = y * 512 + x;
-                    let i = y * width + x;
-                    data[fi * 4] = array[i] * 255;
-                    data[fi * 4 + 1] = array[i] * 255;
-                    data[fi * 4 + 2] = array[i] * 255;
-                    data[fi * 4 + 3] = 255;
-                }
-            }
-
-            t.uploadByteArray(mipmap, linear, 512, 512, data);
-
-            return t;
+        static createColorTexture(webgl: WebGLRenderingContext, r: number, g: number, b: number) {
+            const mipmap = false;
+            const linear = true;
+            const width = 1;
+            const height = 1;
+            const texture = new GlTexture2D(webgl, TextureFormatEnum.RGBA, mipmap, linear);
+            const data = new Uint8Array([r, g, b]);
+            texture.uploadByteArray(mipmap, linear, width, height, data);
+            return texture;
         }
 
-        static staticTexture(webgl: WebGLRenderingContext, name: string) {
-            let t = GlTexture2D.mapTexture[name];
-            if (t != undefined)
-                return t;
+        static createGridTexture(webgl: WebGLRenderingContext) {
 
-
-            let mipmap = false;
-            let linear = true;
-            t = new GlTexture2D(webgl, TextureFormatEnum.RGBA, mipmap, linear);
-
-            let data = new Uint8Array(4);
-            let width = 1;
-            let height = 1;
-            data[0] = 128;
-            data[1] = 0;
-            data[2] = 128;
-            data[3] = 255;
-            if (name == "gray") {
-                data[0] = 128;
-                data[1] = 128;
-                data[2] = 128;
-                data[3] = 255;
-            } else if (name == "white") {
-                data[0] = 255;
-                data[1] = 255;
-                data[2] = 255;
-                data[3] = 255;
-            } else if (name == "black") {
-                data[0] = 0;
-                data[1] = 0;
-                data[2] = 0;
-                data[3] = 255;
-            } else if (name == "grid") {
-                width = 256;
-                height = 256;
-                data = new Uint8Array(width * width * 4);
-                for (let y = 0; y < height; y++) {
-                    for (let x = 0; x < width; x++) {
-                        let seek = (y * width + x) * 4;
-
-                        if (((x - width * 0.5) * (y - height * 0.5)) > 0) {
-                            data[seek] = 0;
-                            data[seek + 1] = 0;
-                            data[seek + 2] = 0;
-                            data[seek + 3] = 255;
-                        }
-                        else {
-                            data[seek] = 255;
-                            data[seek + 1] = 255;
-                            data[seek + 2] = 255;
-                            data[seek + 3] = 255;
-                        }
-                    }
+            const mipmap = false;
+            const linear = true;
+            const t = new GlTexture2D(webgl, TextureFormatEnum.RGBA, mipmap, linear);
+            const width = 256;
+            const height = 256;
+            const data = new Uint8Array(width * width * 4);
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const seek = (y * width + x) * 4;
+                    const bool = ((x - width * 0.5) * (y - height * 0.5)) > 0
+                    data[seek] = data[seek + 1] = data[seek + 2] = bool ? 0 : 255;
+                    data[seek + 3] = 255;
                 }
-
             }
-
             t.uploadByteArray(mipmap, linear, width, height, data);
-
-            GlTexture2D.mapTexture[name] = t;
             return t;
         }
     }
 
-    /**
-     * 
-     */
+
     export class WriteableTexture2D implements ITexture {
         constructor(webgl: WebGLRenderingContext, format: TextureFormatEnum = TextureFormatEnum.RGBA, width: number, height: number, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
             this.webgl = webgl;

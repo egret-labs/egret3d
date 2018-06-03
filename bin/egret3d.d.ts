@@ -1,17 +1,8 @@
 declare namespace paper {
-    /**
-     *
-     */
     const serializeClassMap: {
         [key: string]: string;
     };
-    /**
-     *
-     */
     function findClassCode(name: string): string;
-    /**
-     *
-     */
     function findClassCodeFrom(target: any): string;
 }
 declare namespace paper {
@@ -1371,13 +1362,17 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    type PrefabConfig = {
+        assets: any[];
+        objects: any[];
+    };
     /**
      *
      */
     class BaseObjectAsset extends paper.Asset {
         protected readonly _assets: any;
-        protected _raw: any;
-        $parse(json: any): void;
+        protected _raw: PrefabConfig;
+        $parse(json: PrefabConfig): void;
         /**
          * @inheritDoc
          */
@@ -6762,7 +6757,6 @@ declare namespace egret3d {
         static WHITE: Texture;
         static GRAY: Texture;
         static GRID: Texture;
-        private static _inited;
         static init(): void;
     }
 }
@@ -6877,9 +6871,9 @@ declare namespace RES.processor {
     const MaterialProcessor: RES.processor.Processor;
     const GLTFProcessor: RES.processor.Processor;
     const AtlasProcessor: RES.processor.Processor;
-    const NewPrefabProcessor: RES.processor.Processor;
-    const NewSceneProcessor: RES.processor.Processor;
-    const D3FontProcessor: RES.processor.Processor;
+    const PrefabProcessor: RES.processor.Processor;
+    const SceneProcessor: RES.processor.Processor;
+    const Font3DProcessor: RES.processor.Processor;
     const Sound3DProcessor: RES.processor.Processor;
     const TextAssetProcessor: RES.processor.Processor;
     const PathAssetProcessor: RES.processor.Processor;
@@ -7951,9 +7945,6 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    /**
-     *
-     */
     const enum TextureFormatEnum {
         RGBA = 1,
         RGB = 2,
@@ -7963,9 +7954,6 @@ declare namespace egret3d {
         PVRTC2_RGB = 4,
         PVRTC2_RGBA = 4,
     }
-    /**
-     *
-     */
     class TextureReader {
         readonly gray: boolean;
         readonly width: number;
@@ -8031,13 +8019,9 @@ declare namespace egret3d {
         getReader(redOnly?: boolean): TextureReader;
         dispose(webgl: WebGLRenderingContext): void;
         isFrameBuffer(): boolean;
-        private static mapTexture;
-        static formGrayArray(webgl: WebGLRenderingContext, array: number[] | Float32Array | Float64Array, width: number, height: number): GlTexture2D;
-        static staticTexture(webgl: WebGLRenderingContext, name: string): GlTexture2D;
+        static createColorTexture(webgl: WebGLRenderingContext, r: number, g: number, b: number): GlTexture2D;
+        static createGridTexture(webgl: WebGLRenderingContext): GlTexture2D;
     }
-    /**
-     *
-     */
     class WriteableTexture2D implements ITexture {
         constructor(webgl: WebGLRenderingContext, format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
         linear: boolean;

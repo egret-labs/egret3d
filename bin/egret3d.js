@@ -52,9 +52,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var paper;
 (function (paper) {
-    /**
-     *
-     */
     paper.serializeClassMap = {
         0: "paper.Scene",
         1: "paper.GameObject",
@@ -99,9 +96,6 @@ var paper;
         40: "egret3d.Animation",
         41: "egret3d.GLTFAsset",
     };
-    /**
-     *
-     */
     function findClassCode(name) {
         for (var key in paper.serializeClassMap) {
             if (paper.serializeClassMap[key] === name) {
@@ -111,9 +105,6 @@ var paper;
         return "";
     }
     paper.findClassCode = findClassCode;
-    /**
-     *
-     */
     function findClassCodeFrom(target) {
         var proto = target.__proto__;
         var classTypeOrigin = proto.__class__;
@@ -17130,31 +17121,17 @@ var egret3d;
         function DefaultTextures() {
         }
         DefaultTextures.init = function () {
-            if (this._inited) {
-                return;
-            }
-            this._inited = true;
             var gl = egret3d.WebGLKit.webgl;
-            var t1 = new egret3d.Texture("white");
-            t1.glTexture = egret3d.GlTexture2D.staticTexture(gl, "white");
-            t1.url = "white";
-            // t1.defaultAsset = true;
+            var t1 = new egret3d.Texture("white", "white");
+            t1.glTexture = egret3d.GlTexture2D.createColorTexture(gl, 255, 255, 255);
             this.WHITE = t1;
-            var t2 = new egret3d.Texture("gray");
-            t2.glTexture = egret3d.GlTexture2D.staticTexture(gl, "gray");
-            // t2.defaultAsset = true;
-            t2.url = "gray";
+            var t2 = new egret3d.Texture("gray", "gray");
+            t2.glTexture = egret3d.GlTexture2D.createColorTexture(gl, 128, 128, 128);
             this.GRAY = t2;
-            var t3 = new egret3d.Texture("grid");
-            t3.glTexture = egret3d.GlTexture2D.staticTexture(gl, "grid");
-            // t3.defaultAsset = true;
-            t3.url = "grid";
+            var t3 = new egret3d.Texture("grid", "grid");
+            t3.glTexture = egret3d.GlTexture2D.createGridTexture(gl);
             this.GRID = t3;
-            paper.Asset.register(this.WHITE);
-            paper.Asset.register(this.GRAY);
-            paper.Asset.register(this.GRID);
         };
-        DefaultTextures._inited = false;
         return DefaultTextures;
     }());
     egret3d.DefaultTextures = DefaultTextures;
@@ -17780,7 +17757,7 @@ var RES;
                 });
             }
         };
-        processor.NewPrefabProcessor = {
+        processor.PrefabProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
                     var data, url, filename, assets, list, i, r, asset, prefab;
@@ -17829,7 +17806,7 @@ var RES;
                 });
             }
         };
-        processor.NewSceneProcessor = {
+        processor.SceneProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
                     var data, url, filename, assets, list, i, r, asset, scene;
@@ -17878,10 +17855,10 @@ var RES;
                 });
             }
         };
-        processor.D3FontProcessor = {
+        processor.Font3DProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, _font;
+                    var data, url, filename, font;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
@@ -17889,10 +17866,10 @@ var RES;
                                 data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                _font = new egret3d.Font(filename, url);
-                                _font.$parse(data);
-                                paper.Asset.register(_font, true);
-                                return [2 /*return*/, _font];
+                                font = new egret3d.Font(filename, url);
+                                font.$parse(data);
+                                paper.Asset.register(font, true);
+                                return [2 /*return*/, font];
                         }
                     });
                 });
@@ -17973,7 +17950,7 @@ var RES;
         processor.PathAssetProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, _path;
+                    var data, url, filename, pathAsset;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
@@ -17981,10 +17958,10 @@ var RES;
                                 data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                _path = new egret3d.PathAsset(filename, url);
-                                _path.$parse(data);
-                                paper.Asset.register(_path, true);
-                                return [2 /*return*/, _path];
+                                pathAsset = new egret3d.PathAsset(filename, url);
+                                pathAsset.$parse(data);
+                                paper.Asset.register(pathAsset, true);
+                                return [2 /*return*/, pathAsset];
                         }
                     });
                 });
@@ -18008,10 +17985,10 @@ var RES;
         RES.processor.map("TextureDesc", processor.TextureDescProcessor);
         RES.processor.map("Material", processor.MaterialProcessor);
         RES.processor.map("GLTFBinary", processor.GLTFProcessor);
-        RES.processor.map("Prefab", processor.NewPrefabProcessor);
-        RES.processor.map("Scene", processor.NewSceneProcessor);
+        RES.processor.map("Prefab", processor.PrefabProcessor);
+        RES.processor.map("Scene", processor.SceneProcessor);
         RES.processor.map("Atlas", processor.AtlasProcessor);
-        RES.processor.map("Font", processor.D3FontProcessor);
+        RES.processor.map("Font", processor.Font3DProcessor);
         RES.processor.map("TextAsset", processor.TextAssetProcessor);
         RES.processor.map("pathAsset", processor.PathAssetProcessor);
         RES.processor.map("Sound", processor.Sound3DProcessor);
@@ -22540,9 +22517,6 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     *
-     */
     var TextureReader = (function () {
         function TextureReader(webgl, texRGBA, width, height, gray) {
             if (gray === void 0) { gray = true; }
@@ -22724,7 +22698,6 @@ var egret3d;
             if (format === void 0) { format = 1 /* RGBA */; }
             if (mipmap === void 0) { mipmap = false; }
             if (linear === void 0) { linear = true; }
-            //img: HTMLImageElement = null;
             this.loaded = false;
             this.width = 0;
             this.height = 0;
@@ -22732,7 +22705,6 @@ var egret3d;
             this.webgl = webgl;
             this.format = format;
             this.texture = webgl.createTexture();
-            // Webglkit.caps.pvrtcExtension;
         }
         GlTexture2D.prototype.uploadImage = function (img, mipmap, linear, premultiply, repeat, mirroredU, mirroredV) {
             if (premultiply === void 0) { premultiply = true; }
@@ -22901,90 +22873,38 @@ var egret3d;
         GlTexture2D.prototype.isFrameBuffer = function () {
             return false;
         };
-        GlTexture2D.formGrayArray = function (webgl, array, width, height) {
+        GlTexture2D.createColorTexture = function (webgl, r, g, b) {
+            var mipmap = false;
+            var linear = true;
+            var width = 1;
+            var height = 1;
+            var texture = new GlTexture2D(webgl, 1 /* RGBA */, mipmap, linear);
+            var data = new Uint8Array([r, g, b]);
+            texture.uploadByteArray(mipmap, linear, width, height, data);
+            return texture;
+        };
+        GlTexture2D.createGridTexture = function (webgl) {
             var mipmap = false;
             var linear = true;
             var t = new GlTexture2D(webgl, 1 /* RGBA */, mipmap, linear);
-            var data = new Uint8Array(array.length * 4);
-            for (var y = 0; y < width; y++) {
+            var width = 256;
+            var height = 256;
+            var data = new Uint8Array(width * width * 4);
+            for (var y = 0; y < height; y++) {
                 for (var x = 0; x < width; x++) {
-                    var fi = y * 512 + x;
-                    var i = y * width + x;
-                    data[fi * 4] = array[i] * 255;
-                    data[fi * 4 + 1] = array[i] * 255;
-                    data[fi * 4 + 2] = array[i] * 255;
-                    data[fi * 4 + 3] = 255;
-                }
-            }
-            t.uploadByteArray(mipmap, linear, 512, 512, data);
-            return t;
-        };
-        GlTexture2D.staticTexture = function (webgl, name) {
-            var t = GlTexture2D.mapTexture[name];
-            if (t != undefined)
-                return t;
-            var mipmap = false;
-            var linear = true;
-            t = new GlTexture2D(webgl, 1 /* RGBA */, mipmap, linear);
-            var data = new Uint8Array(4);
-            var width = 1;
-            var height = 1;
-            data[0] = 128;
-            data[1] = 0;
-            data[2] = 128;
-            data[3] = 255;
-            if (name == "gray") {
-                data[0] = 128;
-                data[1] = 128;
-                data[2] = 128;
-                data[3] = 255;
-            }
-            else if (name == "white") {
-                data[0] = 255;
-                data[1] = 255;
-                data[2] = 255;
-                data[3] = 255;
-            }
-            else if (name == "black") {
-                data[0] = 0;
-                data[1] = 0;
-                data[2] = 0;
-                data[3] = 255;
-            }
-            else if (name == "grid") {
-                width = 256;
-                height = 256;
-                data = new Uint8Array(width * width * 4);
-                for (var y = 0; y < height; y++) {
-                    for (var x = 0; x < width; x++) {
-                        var seek = (y * width + x) * 4;
-                        if (((x - width * 0.5) * (y - height * 0.5)) > 0) {
-                            data[seek] = 0;
-                            data[seek + 1] = 0;
-                            data[seek + 2] = 0;
-                            data[seek + 3] = 255;
-                        }
-                        else {
-                            data[seek] = 255;
-                            data[seek + 1] = 255;
-                            data[seek + 2] = 255;
-                            data[seek + 3] = 255;
-                        }
-                    }
+                    var seek = (y * width + x) * 4;
+                    var bool = ((x - width * 0.5) * (y - height * 0.5)) > 0;
+                    data[seek] = data[seek + 1] = data[seek + 2] = bool ? 0 : 255;
+                    data[seek + 3] = 255;
                 }
             }
             t.uploadByteArray(mipmap, linear, width, height, data);
-            GlTexture2D.mapTexture[name] = t;
             return t;
         };
-        GlTexture2D.mapTexture = {};
         return GlTexture2D;
     }());
     egret3d.GlTexture2D = GlTexture2D;
     __reflect(GlTexture2D.prototype, "egret3d.GlTexture2D", ["egret3d.ITexture"]);
-    /**
-     *
-     */
     var WriteableTexture2D = (function () {
         function WriteableTexture2D(webgl, format, width, height, linear, premultiply, repeat, mirroredU, mirroredV) {
             if (format === void 0) { format = 1 /* RGBA */; }
