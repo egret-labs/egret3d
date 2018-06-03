@@ -2362,16 +2362,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * sprite asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 精灵资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     class Sprite extends paper.Asset {
         static spriteAnimation(row: number, column: number, index: number, out: Vector4): void;
@@ -2479,28 +2470,6 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    /**
-     * text asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 文本资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class TextAsset extends paper.Asset {
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-    }
 }
 declare namespace egret3d {
     /**

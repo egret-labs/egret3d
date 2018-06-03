@@ -4658,16 +4658,7 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * sprite asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 精灵资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     var Sprite = (function (_super) {
         __extends(Sprite, _super);
@@ -4853,30 +4844,15 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * text asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 文本资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * @internal
      */
     var TextAsset = (function (_super) {
         __extends(TextAsset, _super);
         function TextAsset() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        /**
-         * @inheritDoc
-         */
         TextAsset.prototype.dispose = function () {
         };
-        /**
-         * @inheritDoc
-         */
         TextAsset.prototype.caclByteLength = function () {
             return 0;
         };
@@ -17747,7 +17723,7 @@ var RES;
         processor.GLTFProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var result, url, filename, glTF, glTFBuffers, buffers, glTFPath, _i, glTFBuffers_1, buffer, url_1, r, buffer_1;
+                    var result, url, filename, glTF;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "bin")];
@@ -17756,39 +17732,7 @@ var RES;
                                 url = getUrl(resource);
                                 filename = getFileName(url, true);
                                 glTF = new egret3d.GLTFAsset(filename, url);
-                                if (!(resource.type === "GLTF")) return [3 /*break*/, 6];
-                                glTFBuffers = result.buffers;
-                                buffers = [];
-                                if (!glTFBuffers) return [3 /*break*/, 5];
-                                glTFPath = getPath(resource.url);
-                                _i = 0, glTFBuffers_1 = glTFBuffers;
-                                _a.label = 2;
-                            case 2:
-                                if (!(_i < glTFBuffers_1.length)) return [3 /*break*/, 5];
-                                buffer = glTFBuffers_1[_i];
-                                url_1 = egret3d.utils.combinePath(glTFPath + "/", buffer.uri);
-                                r = RES.host.resourceConfig["getResource"](url_1);
-                                if (!r) return [3 /*break*/, 4];
-                                return [4 /*yield*/, host.load(r, "bin")];
-                            case 3:
-                                buffer_1 = _a.sent();
-                                if (buffer_1) {
-                                    buffers.push(buffer_1);
-                                }
-                                else {
-                                    console.error("Load glTF resource error.", url_1);
-                                }
-                                _a.label = 4;
-                            case 4:
-                                _i++;
-                                return [3 /*break*/, 2];
-                            case 5:
-                                glTF.parse(result, buffers);
-                                return [3 /*break*/, 7];
-                            case 6:
                                 glTF.parseFromBinary(result);
-                                _a.label = 7;
-                            case 7:
                                 paper.Asset.register(glTF, true);
                                 return [2 /*return*/, glTF];
                         }
@@ -26028,7 +25972,6 @@ var paper;
                 valueList.forEach(function (propertyValue) {
                     var propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
                     var newValue = editor.Editor.editorModel.deserializeProperty(copyValue, valueEditType);
-                    //设置预置体关联对象的属性,（这里要根据数值做筛选，所以先设置关联对象的属性）
                     objects.forEach(function (object) {
                         var valueType = typeof object[propName];
                         if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
@@ -26097,7 +26040,6 @@ var paper;
                         valueList.forEach(function (propertyValue) {
                             var propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
                             var newValue = editor.Editor.editorModel.deserializeProperty(copyValue, valueEditType);
-                            //设置预置体关联对象组件的属性,（这里要根据数值做筛选，所以先设置关联对象组件的属性）
                             objects.forEach(function (object) {
                                 var objectComp = object.components[k];
                                 var valueType = typeof objectComp[propName];

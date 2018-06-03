@@ -329,35 +329,7 @@ namespace RES.processor {
             const url = getUrl(resource);
             const filename = getFileName(url, true);
             const glTF = new egret3d.GLTFAsset(filename, url);
-
-            if (resource.type === "GLTF") {
-                const glTFBuffers = (result as gltf.GLTF).buffers;
-                const buffers = [];
-
-                if (glTFBuffers) {
-                    const glTFPath = getPath(resource.url);
-
-                    for (const buffer of glTFBuffers) {
-                        const url = egret3d.utils.combinePath(glTFPath + "/", buffer.uri);
-                        let r = RES.host.resourceConfig["getResource"](url); // TODO
-                        if (r) {
-                            const buffer = await host.load(r, "bin");
-                            if (buffer) {
-                                buffers.push(buffer);
-                            }
-                            else {
-                                console.error("Load glTF resource error.", url);
-                            }
-                        }
-                    }
-                }
-
-                glTF.parse(result, buffers);
-            }
-            else {
-                glTF.parseFromBinary(result);
-            }
-
+            glTF.parseFromBinary(result);
             paper.Asset.register(glTF, true);
 
             return glTF;
