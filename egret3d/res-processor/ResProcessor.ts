@@ -39,6 +39,7 @@ namespace RES.processor {
         ".mat.json": AssetTypeEnum.Material,
         ".gltf.json": AssetTypeEnum.GLTF,
         ".gltf.bin": AssetTypeEnum.GLTFBinary,
+        ".glb": AssetTypeEnum.GLTFBinary,
         ".prefab.json": AssetTypeEnum.Prefab,
         ".scene.json": AssetTypeEnum.Scene,
         ".atlas.json": AssetTypeEnum.Atlas,
@@ -329,7 +330,8 @@ namespace RES.processor {
             const url = getUrl(resource);
             const filename = getFileName(url, true);
             const glTF = new egret3d.GLTFAsset(filename, url);
-            glTF.parseFromBinary(result);
+
+            glTF.parseFromBinary(new Uint32Array(result));
             paper.Asset.register(glTF, true);
 
             return glTF;

@@ -207,18 +207,17 @@ namespace egret3d {
         /**
          * @internal
          */
-        public parse(config: gltf.GLTF, buffers: ArrayBuffer[]) {
+        public parse(config: gltf.GLTF, buffers: Uint32Array[]) {
             this.config = config;
             for (const buffer of buffers) {
-                this.buffers.push(new Uint32Array(buffer));
+                this.buffers.push(buffer);
             }
         }
         /**
          * 从二进制数据中解析资源。
          */
-        public parseFromBinary(binary: ArrayBuffer) {
+        public parseFromBinary(array: Uint32Array) {
             let index = 0;
-            const array = new Uint32Array(binary);
 
             if (
                 array[index++] !== 0x46546C67 ||
@@ -228,7 +227,7 @@ namespace egret3d {
                 return;
             }
 
-            if (array[index++] !== binary.byteLength) {
+            if (array[index++] !== array.buffer.byteLength) {
                 console.assert(false, "Error glTF data.");
                 return;
             }
@@ -244,12 +243,12 @@ namespace egret3d {
                 }
 
                 if (chunkType === 0x4E4F534A) {
-                    const jsonArray = new Uint8Array(binary, index * 4, chunkLength);
+                    const jsonArray = new Uint8Array(array.buffer, index * 4, chunkLength);
                     const jsonString = io.BinReader.utf8ArrayToString(jsonArray);
                     this.config = JSON.parse(jsonString);
                 }
                 else if (chunkType === 0x004E4942) {
-                    const buffer = new Uint32Array(binary, index * 4);
+                    const buffer = new Uint32Array(array.buffer, index * 4);
                     this.buffers.push(buffer);
                 }
                 else {
