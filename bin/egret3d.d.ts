@@ -212,21 +212,10 @@ declare namespace paper {
          */
         static register(asset: Asset, isLoad?: boolean): void;
         /**
-         * 注销资源
-         * 销毁资源时，注销框架内部对资源的引用
-         */
-        static unregister(asset: Asset): void;
-        /**
          * 获取资源
-         * @param url 资源的url
+         * @param name 资源的url
          */
-        static find<T extends Asset>(url: string): T;
-        /**
-         *
-         */
-        static readonly assets: Readonly<{
-            [url: string]: Asset;
-        }>;
+        static find<T extends Asset>(name: string): any;
         /**
          *
          * 资源的原始URL
@@ -1131,6 +1120,16 @@ declare namespace paper.editor {
      * @param classInstance 实例对象
      */
     function getEditInfo(classInstance: any): PropertyInfo[];
+    /**
+     * 装饰器:属性
+     * @param editType 编辑类型
+     */
+    function extraProperty(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
+    /**
+     * 额外信息
+     * @param classInstance 实例对象
+     */
+    function getExtraInfo(classInstance: any): PropertyInfo[];
 }
 declare namespace egret3d {
     class Vector4 implements paper.ISerializable {
@@ -1378,11 +1377,7 @@ declare namespace egret3d {
     class BaseObjectAsset extends paper.Asset {
         protected readonly _assets: any;
         protected _raw: any;
-        /**
-         * TODO 应补全接口和枚举。
-         *
-         */
-        $parse(jsonString: string): void;
+        $parse(json: any): void;
         /**
          * @inheritDoc
          */
@@ -1736,7 +1731,7 @@ declare namespace paper {
          * load scene 加载场景
          * @param rawScene url
          */
-        loadScene(url: string): Scene;
+        loadScene(url: string): any;
         /**
          * 卸载指定场景，如果创建列表为空，则创建一个空场景。
          */
@@ -2119,7 +2114,6 @@ declare namespace paper {
         private static _unscaledDeltaTime;
         static initialize(): void;
         static update(timer?: number): void;
-        static readonly now: number;
         static readonly frameCount: number;
         static readonly time: number;
         static readonly unscaledTime: number;
@@ -2302,7 +2296,7 @@ declare namespace egret3d {
         /**
          *
          */
-        $parse(json: JSON): void;
+        $parse(json: any): void;
         private lines;
         private getpaths();
         private getBezierPointAlongCurve(points, rate, clearflag?);
@@ -2368,16 +2362,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * sprite asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 精灵资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     class Sprite extends paper.Asset {
         static spriteAnimation(row: number, column: number, index: number, out: Vector4): void;
@@ -2485,32 +2470,6 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    /**
-     * text asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 文本资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class TextAsset extends paper.Asset {
-        /**
-         * 文本内容
-         */
-        content: string;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-    }
 }
 declare namespace egret3d {
     /**
@@ -5451,7 +5410,7 @@ declare namespace egret3d {
         /**
          *
          */
-        $parse(jsonStr: string): void;
+        $parse(json: any): void;
     }
 }
 declare namespace egret3d {
@@ -6349,7 +6308,7 @@ declare namespace egret3d {
         /**
          *
          */
-        $parse(jsonStr: string): void;
+        $parse(json: string): void;
         /**
          * @inheritDoc
          */
@@ -6913,7 +6872,6 @@ declare namespace RES.processor {
     const GLVertexShaderProcessor: RES.processor.Processor;
     const GLFragmentShaderProcessor: RES.processor.Processor;
     const ShaderProcessor: RES.processor.Processor;
-    const D3PVRProcessor: RES.processor.Processor;
     const TextureDescProcessor: RES.processor.Processor;
     const TextureProcessor: RES.processor.Processor;
     const MaterialProcessor: RES.processor.Processor;
@@ -8188,10 +8146,10 @@ declare namespace paper.editor {
         BASECOMPONENT = 1,
     }
     class CmdType {
-        /**更改对象基础属性 */
+        /**更改游戏对象基础属性 */
         static MODIFY_OBJECT_PROPERTY: string;
         /**修改transform属性 */
-        static MODIFY_TRANSFORM_PROPERTY: string;
+        static MODIFY_COMPONENT_PROPERTY: string;
         /**选中游戏对象 */
         static SELECT_GAMEOBJECT: string;
         /**添加游戏对象 */
@@ -8208,6 +8166,10 @@ declare namespace paper.editor {
         static REMOVE_COMPONENT: string;
         /**更改parent */
         static UPDATE_PARENT: string;
+        /**修改预制体游戏对象属性 */
+        static MODIFY_PREFAB_GAMEOBJECT_PROPERTY: string;
+        /**修改预制体组件属性 */
+        static MODIFY_PREFAB_COMPONENT_PROPERTY: string;
     }
     /**
      * 编辑模型
@@ -8217,11 +8179,41 @@ declare namespace paper.editor {
          * 初始化
          */
         init(): Promise<void>;
-        private paperHistory;
+        paperHistory: History;
         initHistory(): void;
+        addState(state: BaseState): void;
         historyEventHandler(e: BaseEvent): void;
-        private cloneEditValue(target, propName);
         setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean;
+        getEditType(propName: string, target: any): EditType;
+        /**
+         * 修改gameobject属性
+         * @param propName
+         * @param propValue
+         * @param target
+         * @param editType
+         * @param add
+         */
+        createModifyGameObjectPropertyState(propName: string, propValue: any, target: GameObject, editType: editor.EditType, add?: boolean): ModifyGameObjectPropertyState;
+        /**
+ * 修改组件属性
+ * @param propName
+ * @param propValue
+ * @param target
+ * @param editType
+ * @param add
+ */
+        createModifyComponent(propName: string, propValue: any, target: BaseComponent, editType: editor.EditType, add?: boolean): any;
+        /**
+         * 修改预制体gameobject属性,包括修改所有关联gameobject以及backruntiem的gameobject
+         * @param gameObjectId
+         * @param newValueList
+         * @param preValueCopylist
+         * @param backRuntime
+         */
+        createModifyPrefabGameObjectPropertyState(gameObjectId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
+        createModifyPrefabComponentPropertyState(gameObjectId: number, componentId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
+        serializeProperty(value: any, editType: editor.EditType): any;
+        deserializeProperty(serializeData: any, editType: editor.EditType): any;
         /**
          * 创建游戏对象
          */
@@ -8338,6 +8330,8 @@ declare namespace paper.editor {
          */
         resetComponentHashCode(gameObject: GameObject, hashcodes: number[]): void;
         getAllComponentIdFromGameObject(gameObject: GameObject, hashcodes: number[]): void;
+        private findOptionSetName(propName, target);
+        setTargetProperty(propName: string, target: any, value: any): void;
         private lastSelectIds;
         /**
          * 选中游戏对象
@@ -8459,14 +8453,12 @@ declare namespace paper.editor {
         private readonly _events;
         private _free();
         private _doState(state, isUndo);
-        private _getStateByObject(history, object, key, link?);
         back(): boolean;
         forward(): boolean;
         go(index: number): boolean;
         add(state: BaseState): void;
         beginBatch(): void;
         endBatch(): void;
-        linkObjectState(object: any, key: string): void;
         getState(index: number): BaseState | null;
         enabled: boolean;
         readonly count: number;
@@ -8480,22 +8472,14 @@ declare namespace paper.editor {
         undo(): boolean;
         redo(): boolean;
     }
-    class ModifyObjectState extends BaseState {
-        static toString(): string;
-        static create(source: any, key: number | string, value: any, data?: any): ModifyObjectState | null;
-        source: any;
-        key: number | string;
-        fromValue: any;
-        toValue: any;
+    class ModifyGameObjectPropertyState extends BaseState {
+        static create(data?: any): ModifyGameObjectPropertyState | null;
         undo(): boolean;
-        private getModifyObject();
         redo(): boolean;
     }
-    class ModifyTransformPropertyState extends BaseState {
+    class ModifyComponentPropertyState extends BaseState {
         static toString(): string;
-        static create(source: any, key: number | string, value: any, data?: any): ModifyTransformPropertyState | null;
-        private setTransformProperty(transform, propName, propValue);
-        private getModifyObject();
+        static create(source: any, key: number | string, value: any, data?: any): ModifyComponentPropertyState | null;
         undo(): boolean;
         redo(): boolean;
     }
@@ -8544,6 +8528,31 @@ declare namespace paper.editor {
     class UpdateParentState extends BaseState {
         static toString(): string;
         static create(data?: any): UpdateParentState | null;
+        undo(): boolean;
+        redo(): boolean;
+    }
+    class ModifyPrefabProperty extends BaseState {
+        protected getGameObjectById(gameObjectId: number): GameObject;
+        protected getGameObjectsByPrefab: (prefab: egret3d.Prefab) => GameObject[];
+        protected equal(a: any, b: any): boolean;
+        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
+    }
+    class ModifyPrefabGameObjectPropertyState extends ModifyPrefabProperty {
+        static toString(): string;
+        static create(data?: any): ModifyPrefabGameObjectPropertyState | null;
+        /**
+         * 修改预制体游戏对象属性,目前只支持修改根对象
+         * @param gameObjectId
+         * @param valueList
+         */
+        modifyPrefabGameObjectPropertyValues(gameObjectId: number, valueList: any[]): void;
+        undo(): boolean;
+        redo(): boolean;
+    }
+    class ModifyPrefabComponentPropertyState extends ModifyPrefabProperty {
+        static toString(): string;
+        static create(data?: any): ModifyPrefabComponentPropertyState | null;
+        modifyPrefabComponentPropertyValues(gameObjectId: number, componentId: number, valueList: any[]): void;
         undo(): boolean;
         redo(): boolean;
     }

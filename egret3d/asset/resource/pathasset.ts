@@ -96,7 +96,7 @@ namespace egret3d {
         /**
          * 
          */
-        $parse(json: JSON) {
+        $parse(json: any) {
             var type: string = json["type"];
             switch (type) {
                 case "once":

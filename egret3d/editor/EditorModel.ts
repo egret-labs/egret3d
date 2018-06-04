@@ -27,10 +27,10 @@ namespace paper.editor {
     }
 
     export class CmdType {
-        /**更改对象基础属性 */
+        /**更改游戏对象基础属性 */
         public static MODIFY_OBJECT_PROPERTY = "MODIFY_OBJECT_PROPERTY";
         /**修改transform属性 */
-        public static MODIFY_TRANSFORM_PROPERTY = "MODIFY_TRANSFORM_PROPERTY";
+        public static MODIFY_COMPONENT_PROPERTY = "MODIFY_COMPONENT_PROPERTY";
         /**选中游戏对象 */
         public static SELECT_GAMEOBJECT = "SELECT_GAMEOBJECT";
         /**添加游戏对象 */
@@ -47,6 +47,10 @@ namespace paper.editor {
         public static REMOVE_COMPONENT = "REMOVE_COMPONENT";
         /**更改parent */
         public static UPDATE_PARENT = "UPDATE_PARENT";
+        /**修改预制体游戏对象属性 */
+        public static MODIFY_PREFAB_GAMEOBJECT_PROPERTY = "MODIFY_PREFAB_GAMEOBJECT_PROPERTY";
+        /**修改预制体组件属性 */
+        public static MODIFY_PREFAB_COMPONENT_PROPERTY = "MODIFY_PREFAB_COMPONENT_PROPERTY";
     }
 
     /**
@@ -61,7 +65,7 @@ namespace paper.editor {
             this.initHistory();
         }
 
-        private paperHistory: History;
+        public paperHistory:History;
 
         initHistory() {
             this.paperHistory = new History();
@@ -73,6 +77,10 @@ namespace paper.editor {
             );
         }
 
+        public addState(state:BaseState) {
+            state && this.paperHistory && this.paperHistory.add(state);
+        }
+
         //暂时废弃
         historyEventHandler(e: BaseEvent) {
             const eventData = e.data;
@@ -81,8 +89,9 @@ namespace paper.editor {
             let eventType: string;
             switch (cmdType) {
                 case CmdType.MODIFY_OBJECT_PROPERTY:
+
                     break;
-                case CmdType.MODIFY_TRANSFORM_PROPERTY:
+                case CmdType.MODIFY_COMPONENT_PROPERTY:
                     break;
                 case CmdType.SELECT_GAMEOBJECT:
 
@@ -111,60 +120,180 @@ namespace paper.editor {
             }
         }
 
-        private cloneEditValue(target: BaseComponent | GameObject, propName: string): any {
-            let value = target[propName];
-            let out;
-            let cls;
-            if (value instanceof egret3d.Vector2) {
-                cls = egret.getDefinitionByName("egret3d.Vector2")
-                out = new cls();
-                egret3d.Vector2.copy(value, out);
-            } else if (value instanceof egret3d.Vector3) {
-                cls = egret.getDefinitionByName("egret3d.Vector3")
-                out = new cls();
-                egret3d.Vector3.copy(value, out);
-            } else if (value instanceof egret3d.Vector4) {
-                cls = egret.getDefinitionByName("egret3d.Vector3")
-                out = new cls();
-                egret3d.Vector4.copy(value, out);
+        public setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean {
+            let editType: editor.EditType = this.getEditType(propName, target);
+            if (!editType) {
+                console.error('editType not found!');
             }
-            let result = out ? out : value;
-            return result;
+            if (target instanceof GameObject) {
+                this.createModifyGameObjectPropertyState(propName, propValue, target, editType);
+            } else if (target instanceof BaseComponent) {
+                this.createModifyComponent(propName, propValue, target, editType);
+            }
+            return true;
         }
 
-        //改(如果修改的是组件属性得保存它所属gameobject hashcode和组件的hashcode)
-        //TODO：重构(根据edittype处理不同数据类型的编辑)
-        public setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean {
-            let state;
-            let data;
-            let modifyObjectType = target instanceof BaseComponent ? ModifyObjectType.BASECOMPONENT : ModifyObjectType.GAMEOBJECT;
-            if (target instanceof egret3d.Transform) {
-                data = {
-                    cmdType: CmdType.MODIFY_TRANSFORM_PROPERTY,
-                    target: target,
-                    propname: propName,
-                    prevalue: this.cloneEditValue(target, propName),
-                    newvalue: propValue,
-                    hashCode: target.hashCode,
-                    modifyObjectType: modifyObjectType,
-                    belongGameObjectHashCode: (target instanceof BaseComponent) ? target.gameObject.hashCode : -1
+        public getEditType(propName: string, target: any) {
+            let editType: editor.EditType = null;
+            let editInfoList = editor.getEditInfo(target);
+            b: for (let i: number = 0; i < editInfoList.length; i++) {
+                if (editInfoList[i].name === propName) {
+                    editType = editInfoList[i].editType;
+                    break b;
                 }
-                state = ModifyTransformPropertyState.create(target, propName, propValue, data);
-            } else {
-                data = {
-                    cmdType: CmdType.MODIFY_OBJECT_PROPERTY,
-                    target: target,
-                    propname: propName,
-                    prevalue: target[propName],
-                    newvalue: propValue,
-                    hashCode: target.hashCode,
-                    modifyObjectType: modifyObjectType,
-                    belongGameObjectHashCode: (target instanceof BaseComponent) ? target.gameObject.hashCode : -1
-                }
-                state = ModifyObjectState.create(target, propName, propValue, data);
             }
-            state && this.paperHistory.add(state);
-            return true;
+            return editType;
+        }
+
+        /**
+         * 修改gameobject属性
+         * @param propName 
+         * @param propValue 
+         * @param target 
+         * @param editType 
+         * @param add 
+         */
+        public createModifyGameObjectPropertyState(propName: string, propValue: any, target: GameObject, editType: editor.EditType, add: boolean = true) {
+            let preValue = this.serializeProperty(target[propName], editType);
+            let hashCode = target.hashCode;
+            let data = {
+                cmdType: CmdType.MODIFY_OBJECT_PROPERTY,
+                propName,
+                propValue,
+                preValue,
+                hashCode,
+                editType
+            }
+
+            let state = ModifyGameObjectPropertyState.create(data);
+            add && this.addState(state);
+            return state;
+        }
+
+                /**
+         * 修改组件属性
+         * @param propName 
+         * @param propValue 
+         * @param target 
+         * @param editType 
+         * @param add 
+         */
+        public createModifyComponent(propName: string, propValue: any, target: BaseComponent, editType: editor.EditType, add: boolean = true): any {
+            let preValue = this.serializeProperty(target[propName], editType);
+            let hashCode = target.hashCode;
+            let gameObjHashCode = target.gameObject.hashCode;
+            let data = {
+                cmdType: CmdType.MODIFY_COMPONENT_PROPERTY,
+                propName,
+                propValue,
+                preValue,
+                editType,
+                hashCode,
+                gameObjHashCode,
+            }
+            let state = ModifyComponentPropertyState.create(target, propName, propValue, data);
+            add && this.addState(state);
+            return state;
+        }
+
+        /**
+         * 修改预制体gameobject属性,包括修改所有关联gameobject以及backruntiem的gameobject
+         * @param gameObjectId 
+         * @param newValueList 
+         * @param preValueCopylist 
+         * @param backRuntime 
+         */
+        public createModifyPrefabGameObjectPropertyState(gameObjectId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any) {
+            let data = {
+                cmdType: CmdType.MODIFY_PREFAB_GAMEOBJECT_PROPERTY,
+                gameObjectId,
+                newValueList,
+                preValueCopylist,
+                backRuntime
+            }
+
+            let state = ModifyPrefabGameObjectPropertyState.create(data);
+           this.addState(state);
+        }
+
+        public createModifyPrefabComponentPropertyState(gameObjectId: number, componentId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any) {
+            let data = {
+                cmdType: CmdType.MODIFY_PREFAB_COMPONENT_PROPERTY,
+                gameObjectId,
+                componentId,
+                newValueList,
+                preValueCopylist,
+                backRuntime
+            }
+
+            let state = ModifyPrefabComponentPropertyState.create(data);
+            this.addState(state);
+        }
+
+        public serializeProperty(value: any, editType: editor.EditType): any {
+            switch (editType) {
+                case editor.EditType.NUMBER:
+                case editor.EditType.TEXT:
+                case editor.EditType.CHECKBOX:
+                    return value;
+                case editor.EditType.VECTOR2:
+                case editor.EditType.VECTOR3:
+                case editor.EditType.VECTOR4:
+                case editor.EditType.QUATERNION:
+                case editor.EditType.COLOR:
+                case editor.EditType.RECT:
+                    const className = egret.getQualifiedClassName(value);
+                    const serializeData = serialize(value);
+                    return { className, serializeData };
+                case editor.EditType.LIST:
+                case editor.EditType.MATERIAL:
+                case editor.EditType.MATERIAL_ARRAY:
+                case editor.EditType.GAMEOBJECT:
+                case editor.EditType.TRANSFROM:
+                case editor.EditType.SOUND:
+                case editor.EditType.MESH:
+                case editor.EditType.ARRAY:
+                    //TODO
+                    console.error("not supported!")
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public deserializeProperty(serializeData: any, editType: editor.EditType): any {
+            switch (editType) {
+                case editor.EditType.NUMBER:
+                case editor.EditType.TEXT:
+                case editor.EditType.CHECKBOX:
+                    return serializeData;
+                case editor.EditType.VECTOR2:
+                case editor.EditType.VECTOR3:
+                case editor.EditType.VECTOR4:
+                case editor.EditType.QUATERNION:
+                case editor.EditType.COLOR:
+                case editor.EditType.RECT:
+                    const clazz = egret.getDefinitionByName(serializeData.className);
+                    let target: ISerializable | null = null;
+                    if (clazz) {
+                        target = new clazz();
+                        target.deserialize(serializeData.serializeData.objects[0]);
+                    }
+                    return target;
+                case editor.EditType.LIST:
+                case editor.EditType.MATERIAL:
+                case editor.EditType.MATERIAL_ARRAY:
+                case editor.EditType.GAMEOBJECT:
+                case editor.EditType.TRANSFROM:
+                case editor.EditType.SOUND:
+                case editor.EditType.MESH:
+                case editor.EditType.ARRAY:
+                    //TODO
+                    console.error("not supported!")
+                    break;
+                default:
+                    break;
+            }
         }
 
         /**
@@ -179,7 +308,7 @@ namespace paper.editor {
                 mat: mat
             };
             let state = AddGameObjectState.create(data);
-            this.paperHistory.add(state);
+            this.addState(state);
         }
 
         /**
@@ -192,7 +321,7 @@ namespace paper.editor {
                 compClzName: compClzName
             }
             let state = AddComponentState.create(data);
-            this.paperHistory.add(state)
+            this.addState(state);
         }
 
         /**
@@ -204,7 +333,6 @@ namespace paper.editor {
             let components = gameObject.components;
             (components as any).push(component);
             component.initialize();
-
             if (component.isActiveAndEnabled) {
                 paper.EventPool.dispatchEvent(paper.EventPool.EventType.Enabled, component);
             }
@@ -239,7 +367,7 @@ namespace paper.editor {
             }
 
             let state = RemoveComponentState.create(data);
-            this.paperHistory.add(state);
+            this.addState(state);
         }
 
         public getComponentById(gameObject: GameObject, componentId: number) {
@@ -284,7 +412,7 @@ namespace paper.editor {
                 prefabData
             }
             let state = PasteGameObjectsState.create(data);
-            this.paperHistory.add(state);
+            this.addState(state);
         }
 
         /**
@@ -309,7 +437,7 @@ namespace paper.editor {
             }
 
             let state = DuplicateGameObjectsState.create(data);
-            this.paperHistory.add(state);
+            this.addState(state);
         }
 
         /**
@@ -473,7 +601,7 @@ namespace paper.editor {
             }
 
             let state = DeleteGameObjectsState.create(data);
-            this.paperHistory.add(state);
+            this.addState(state);
         }
 
         public _deleteGameObject(gameObjects: GameObject[]) {
@@ -498,8 +626,6 @@ namespace paper.editor {
                 originParentIds.push(parentId);
             }
 
-            //id:{url,rootid,[prefab gameobjects ids]}
-            //TODO：规范一个数据结构
             let prefabData = {};
             for (let key in prefabRootMap) {
                 let rootObj: GameObject = this.getGameObjectById(prefabRootMap[key]);
@@ -519,7 +645,7 @@ namespace paper.editor {
             };
 
             let state = UpdateParentState.create(data);
-            this.paperHistory.add(state);
+            this.addState(state);
         }
 
         /**
@@ -723,6 +849,34 @@ namespace paper.editor {
             }
         }
 
+
+        private findOptionSetName(propName: string, target: any): string {
+            const editInfoList = editor.getEditInfo(target);
+            for (let index = 0; index < editInfoList.length; index++) {
+                const element = editInfoList[index];
+                if (element.name === propName && element.option && element.option.set) {
+                    return element.option.set;
+                }
+            }
+    
+            const extraInfoList = editor.getExtraInfo(target);
+            for (let index = 0; index < extraInfoList.length; index++) {
+                const element = extraInfoList[index];
+                if (element.name === propName && element.option && element.option.set) {
+                    return element.option.set;
+                }
+            }
+        }
+
+        public setTargetProperty(propName: string, target: any, value: any) {
+            let setFunName: string = this.findOptionSetName(propName, target);
+            if (setFunName && target[setFunName]) {
+                (target[setFunName] as Function).call(target, value);
+            } else {
+                target[propName] = value;
+            }
+        }
+
         private lastSelectIds: number[] = [];
         /**
          * 选中游戏对象
@@ -730,15 +884,16 @@ namespace paper.editor {
          * @param addHistory 是否产生历史记录，只在用户进行选中相关操作时调用
          */
         public selectGameObject(gameObjects: GameObject[], addHistory: boolean = false) {
-            if (addHistory && gameObjects.length > 0) {
-                let newSelectIds = gameObjects.map((obj, index) => { return obj.hashCode });
-                let state = SelectGameObjectesState.create({ cmdType: CmdType.SELECT_GAMEOBJECT, prevalue: this.lastSelectIds, newvalue: newSelectIds })
-                this.paperHistory.add(state);
-                this.lastSelectIds = newSelectIds;
-            }
-            else {
-                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, gameObjects));
-            }
+            this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, gameObjects));
+            // if (addHistory && gameObjects.length > 0) {
+            //     let newSelectIds = gameObjects.map((obj, index) => { return obj.hashCode });
+            //     let state = paper.history.SelectGameObjectesState.create({ cmdType: CmdType.SELECT_GAMEOBJECT, prevalue: this.lastSelectIds, newvalue: newSelectIds })
+            //     this.paperHistory.add(state);
+            //     this.lastSelectIds = newSelectIds;
+            // }
+            // else {
+            //     this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, gameObjects));
+            // }
         }
 
         // 切换场景，参数是场景编号

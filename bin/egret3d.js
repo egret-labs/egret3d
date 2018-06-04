@@ -628,29 +628,18 @@ var paper;
             this._assets[asset.url] = asset;
         };
         /**
-         * 注销资源
-         * 销毁资源时，注销框架内部对资源的引用
-         */
-        Asset.unregister = function (asset) {
-            delete this._assets[asset.url];
-        };
-        /**
          * 获取资源
-         * @param url 资源的url
+         * @param name 资源的url
          */
-        Asset.find = function (url) {
-            return (url in this._assets) ? this._assets[url] : null;
+        Asset.find = function (name) {
+            var result = this._assets[name];
+            if (!result) {
+                return RES.getRes(name);
+            }
+            else {
+                return result;
+            }
         };
-        Object.defineProperty(Asset, "assets", {
-            /**
-             *
-             */
-            get: function () {
-                return this._assets;
-            },
-            enumerable: true,
-            configurable: true
-        });
         /**
          * @inheritDoc
          */
@@ -1336,6 +1325,46 @@ var paper;
             return _getEditInfo(className);
         }
         editor.getEditInfo = getEditInfo;
+        var extraPropertyMap = {};
+        /**
+         * 装饰器:属性
+         * @param editType 编辑类型
+         */
+        function extraProperty(editType, option) {
+            return function (target, property) {
+                if (!extraPropertyMap[target.constructor.name]) {
+                    extraPropertyMap[target.constructor.name] = {
+                        extends: target.__proto__.constructor.name,
+                        propertyList: [],
+                    };
+                }
+                if (editType !== undefined) {
+                    extraPropertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
+                }
+                else {
+                    //TODO:自动分析编辑类型
+                }
+            };
+        }
+        editor.extraProperty = extraProperty;
+        /**
+         * 额外信息
+         * @param classInstance 实例对象
+         */
+        function getExtraInfo(classInstance) {
+            var className = classInstance.constructor.name;
+            function _getExtraInfo(className) {
+                var classInfo = extraPropertyMap[className];
+                if (classInfo) {
+                    var extendsInfo = _getExtraInfo(classInfo.extends);
+                    extendsInfo = extendsInfo.concat(classInfo.propertyList);
+                    return extendsInfo;
+                }
+                return [];
+            }
+            return _getExtraInfo(className);
+        }
+        editor.getExtraInfo = getExtraInfo;
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var egret3d;
@@ -2418,15 +2447,8 @@ var egret3d;
             _this._raw = null;
             return _this;
         }
-        /**
-         * TODO 应补全接口和枚举。
-         *
-         */
-        BaseObjectAsset.prototype.$parse = function (jsonString) {
-            // 兼容数据
-            // jsonStr = jsonStr.replace(/localRotate/g, "localRotation");
-            // jsonStr = jsonStr.replace(/localTranslate/g, "localPosition");
-            this._raw = JSON.parse(jsonString);
+        BaseObjectAsset.prototype.$parse = function (json) {
+            this._raw = json;
             if (this._raw) {
                 for (var _i = 0, _a = this._raw.assets; _i < _a.length; _i++) {
                     var item = _a[_i];
@@ -4039,28 +4061,15 @@ var paper;
         function Time() {
         }
         Time.initialize = function () {
-            this._lastTimer = this._beginTimer = this.now;
+            this._lastTimer = this._beginTimer = Date.now() * 0.001;
         };
         Time.update = function (timer) {
-            var now = timer || this.now;
+            var now = timer || Date.now() * 0.001;
             this._frameCount += 1;
             this._unscaledTime = now - this._beginTimer;
             this._unscaledDeltaTime = now - this._lastTimer;
             this._lastTimer = now;
         };
-        Object.defineProperty(Time, "now", {
-            get: function () {
-                if (window.performance) {
-                    return window.performance.now() * 0.001;
-                }
-                else if (Date.now) {
-                    return Date.now() * 0.001;
-                }
-                return new Date().getTime() * 0.001;
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(Time, "frameCount", {
             get: function () {
                 return this._frameCount;
@@ -4649,16 +4658,7 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * sprite asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 精灵资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     var Sprite = (function (_super) {
         __extends(Sprite, _super);
@@ -4844,40 +4844,16 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * text asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 文本资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * @internal
      */
     var TextAsset = (function (_super) {
         __extends(TextAsset, _super);
         function TextAsset() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * 文本内容
-             */
-            _this.content = "";
-            return _this;
+            return _super !== null && _super.apply(this, arguments) || this;
         }
-        /**
-         * @inheritDoc
-         */
         TextAsset.prototype.dispose = function () {
-            this.content = "";
         };
-        /**
-         * @inheritDoc
-         */
         TextAsset.prototype.caclByteLength = function () {
-            if (this.content) {
-                return egret3d.utils.caclStringByteLength(this.content);
-            }
             return 0;
         };
         return TextAsset;
@@ -14297,11 +14273,10 @@ var egret3d;
         /**
          *
          */
-        Font.prototype.$parse = function (jsonStr) {
+        Font.prototype.$parse = function (json) {
             var d1 = new Date().valueOf();
-            var json = JSON.parse(jsonStr);
             // parse font info
-            var font = json["font"];
+            var font = json.font;
             this.fontname = font[0];
             var picName = font[1];
             this.texture = paper.Asset.find(egret3d.utils.getPathByUrl(this.url) + "/" + picName);
@@ -15137,16 +15112,28 @@ var egret3d;
         ], Transform.prototype, "children", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(paper.editor.EditType.VECTOR3)
+            paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalPosition" })
         ], Transform.prototype, "localPosition", void 0);
         __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.QUATERNION)
-        ], Transform.prototype, "localRotation", void 0);
+            paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setPosition" })
+        ], Transform.prototype, "position", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(paper.editor.EditType.VECTOR3)
+            paper.editor.property(paper.editor.EditType.QUATERNION, { set: "setLocalRotation" })
+        ], Transform.prototype, "localRotation", void 0);
+        __decorate([
+            paper.editor.extraProperty(paper.editor.EditType.QUATERNION, { set: "setRotation" })
+        ], Transform.prototype, "rotation", void 0);
+        __decorate([
+            paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setLocalEulerAngles" })
+        ], Transform.prototype, "localEulerAngles", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalScale" })
         ], Transform.prototype, "localScale", void 0);
+        __decorate([
+            paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setScale" })
+        ], Transform.prototype, "scale", void 0);
         return Transform;
     }(paper.BaseComponent));
     egret3d.Transform = Transform;
@@ -16127,8 +16114,7 @@ var egret3d;
         /**
          *
          */
-        Atlas.prototype.$parse = function (jsonStr) {
-            var json = JSON.parse(jsonStr);
+        Atlas.prototype.$parse = function (json) {
             var name = json["t"]; // name
             this.texturewidth = json["w"];
             this.textureheight = json["h"];
@@ -17482,18 +17468,17 @@ var RES;
         processor.BundleProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, bundle, list, i, r, asset;
+                    var data, url, filename, bundle, list, i, r, asset;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
                                 bundle = new egret3d.AssetBundle(filename);
                                 bundle.url = url;
-                                bundle.$parse(JSON.parse(text));
+                                bundle.$parse(data);
                                 list = formatUrlAndSort(bundle.assets, getPath(resource.url));
                                 i = 0;
                                 _a.label = 2;
@@ -17529,13 +17514,12 @@ var RES;
         processor.GLVertexShaderProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name;
+                    var text, url, filename, name;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "text")];
                             case 1:
                                 text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
                                 url = getUrl(resource);
                                 filename = getFileName(url);
                                 name = filename.substring(0, filename.indexOf("."));
@@ -17557,13 +17541,12 @@ var RES;
         processor.GLFragmentShaderProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name;
+                    var text, url, filename, name;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "text")];
                             case 1:
                                 text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
                                 url = getUrl(resource);
                                 filename = getFileName(url);
                                 name = filename.substring(0, filename.indexOf("."));
@@ -17583,18 +17566,16 @@ var RES;
         processor.ShaderProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, shader;
+                    var data, url, filename, shader;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
                                 shader = new egret3d.Shader(filename, url);
-                                shader.$parse(JSON.parse(text));
+                                shader.$parse(data);
                                 paper.Asset.register(shader, true);
                                 return [2 /*return*/, shader];
                         }
@@ -17607,23 +17588,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
-                        return [2 /*return*/];
-                    });
-                });
-            }
-        };
-        processor.D3PVRProcessor = {
-            onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        return [2 /*return*/];
-                    });
-                });
-            },
-            onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
                         return [2 /*return*/];
                     });
                 });
@@ -17632,25 +17596,19 @@ var RES;
         processor.TextureDescProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _texturedesc, _name, _filterMode, _format, _mipmap, _wrap, _textureFormat, _linear, _repeat, _textureSrc, loader, image, _texture, t2d;
+                    var data, url, filename, _name, _filterMode, _format, _mipmap, _wrap, _textureFormat, _linear, _repeat, textureUrl, loader, image, texture, gl, t2d;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                _texturedesc = JSON.parse(text);
-                                _name = _texturedesc["name"];
-                                _filterMode = _texturedesc["filterMode"];
-                                _format = _texturedesc["format"];
-                                _mipmap = _texturedesc["mipmap"];
-                                _wrap = _texturedesc["wrap"];
-                                if (_name.indexOf("LightmapFar") >= 0) {
-                                    console.log("");
-                                }
+                                _name = data["name"];
+                                _filterMode = data["filterMode"];
+                                _format = data["format"];
+                                _mipmap = data["mipmap"];
+                                _wrap = data["wrap"];
                                 _textureFormat = 1 /* RGBA */;
                                 if (_format == "RGB") {
                                     _textureFormat = 2 /* RGB */;
@@ -17666,19 +17624,20 @@ var RES;
                                 if (_wrap.indexOf("Repeat") >= 0) {
                                     _repeat = true;
                                 }
-                                _textureSrc = url.replace(filename, _name);
+                                textureUrl = url.replace(filename, _name);
                                 loader = new egret.ImageLoader();
-                                loader.load(_textureSrc);
+                                loader.load(textureUrl);
                                 return [4 /*yield*/, promisify(loader, resource)];
                             case 2:
                                 image = _a.sent();
-                                _texture = new egret3d.Texture(filename, url);
-                                _texture.realName = _name;
+                                texture = new egret3d.Texture(filename, url);
+                                texture.realName = _name;
+                                gl = egret3d.WebGLKit.webgl;
                                 t2d = new egret3d.GlTexture2D(gl, _textureFormat);
                                 t2d.uploadImage(image.source, _mipmap, _linear, true, _repeat);
-                                _texture.glTexture = t2d;
-                                paper.Asset.register(_texture, true);
-                                return [2 /*return*/, _texture];
+                                texture.glTexture = t2d;
+                                paper.Asset.register(texture, true);
+                                return [2 /*return*/, texture];
                         }
                     });
                 });
@@ -17689,7 +17648,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17698,14 +17656,13 @@ var RES;
         processor.TextureProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var gl, url, filename, name, loader, image, _texture, _textureFormat, t2d;
+                    var gl, url, filename, loader, image, _texture, _textureFormat, t2d;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
                                 gl = egret3d.WebGLKit.webgl;
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
                                 loader = new egret.ImageLoader();
                                 loader.load(url);
                                 return [4 /*yield*/, promisify(loader, resource)];
@@ -17728,7 +17685,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17737,20 +17693,18 @@ var RES;
         processor.MaterialProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _material;
+                    var data, url, filename, material;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                _material = new egret3d.Material(filename, url);
-                                _material.$parse(JSON.parse(text));
-                                paper.Asset.register(_material, true);
-                                return [2 /*return*/, _material];
+                                material = new egret3d.Material(filename, url);
+                                material.$parse(data);
+                                paper.Asset.register(material, true);
+                                return [2 /*return*/, material];
                         }
                     });
                 });
@@ -17761,7 +17715,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17770,48 +17723,16 @@ var RES;
         processor.GLTFProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var result, url, filename, glTF, glTFBuffers, buffers, glTFPath, _i, glTFBuffers_1, buffer, url_1, r, buffer_1;
+                    var result, url, filename, glTF;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, resource.type === "GLTF" ? RES.processor.JsonProcessor : RES.processor.BinaryProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "bin")];
                             case 1:
                                 result = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url, true);
                                 glTF = new egret3d.GLTFAsset(filename, url);
-                                if (!(resource.type === "GLTF")) return [3 /*break*/, 6];
-                                glTFBuffers = result.buffers;
-                                buffers = [];
-                                if (!glTFBuffers) return [3 /*break*/, 5];
-                                glTFPath = getPath(resource.url);
-                                _i = 0, glTFBuffers_1 = glTFBuffers;
-                                _a.label = 2;
-                            case 2:
-                                if (!(_i < glTFBuffers_1.length)) return [3 /*break*/, 5];
-                                buffer = glTFBuffers_1[_i];
-                                url_1 = egret3d.utils.combinePath(glTFPath + "/", buffer.uri);
-                                r = RES.host.resourceConfig["getResource"](url_1);
-                                if (!r) return [3 /*break*/, 4];
-                                return [4 /*yield*/, host.load(r, RES.processor.BinaryProcessor)];
-                            case 3:
-                                buffer_1 = _a.sent();
-                                if (buffer_1) {
-                                    buffers.push(buffer_1);
-                                }
-                                else {
-                                    console.error("Load glTF resource error.", url_1);
-                                }
-                                _a.label = 4;
-                            case 4:
-                                _i++;
-                                return [3 /*break*/, 2];
-                            case 5:
-                                glTF.parse(result, buffers);
-                                return [3 /*break*/, 7];
-                            case 6:
                                 glTF.parseFromBinary(result);
-                                _a.label = 7;
-                            case 7:
                                 paper.Asset.register(glTF, true);
                                 return [2 /*return*/, glTF];
                         }
@@ -17824,7 +17745,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17833,20 +17753,18 @@ var RES;
         processor.AtlasProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _atlas;
+                    var data, url, filename, atlas;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                _atlas = new egret3d.Atlas(filename, url);
-                                _atlas.$parse(text);
-                                paper.Asset.register(_atlas, true);
-                                return [2 /*return*/, _atlas];
+                                atlas = new egret3d.Atlas(filename, url);
+                                atlas.$parse(data);
+                                paper.Asset.register(atlas, true);
+                                return [2 /*return*/, atlas];
                         }
                     });
                 });
@@ -17857,7 +17775,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17866,17 +17783,15 @@ var RES;
         processor.NewPrefabProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, assets, list, i, r, asset, prefab;
+                    var data, url, filename, assets, list, i, r, asset, prefab;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                assets = JSON.parse(text).assets;
+                                assets = data.assets;
                                 if (!assets) return [3 /*break*/, 5];
                                 list = formatUrlAndSort(assets, getPath(resource.url));
                                 i = 0;
@@ -17896,7 +17811,7 @@ var RES;
                                 return [3 /*break*/, 2];
                             case 5:
                                 prefab = new egret3d.Prefab(filename, url);
-                                prefab.$parse(text);
+                                prefab.$parse(data);
                                 paper.Asset.register(prefab, true);
                                 return [2 /*return*/, prefab];
                         }
@@ -17909,7 +17824,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17918,17 +17832,15 @@ var RES;
         processor.NewSceneProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, assets, list, i, r, asset, scene;
+                    var data, url, filename, assets, list, i, r, asset, scene;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                assets = JSON.parse(text).assets;
+                                assets = data.assets;
                                 if (!assets) return [3 /*break*/, 5];
                                 list = formatUrlAndSort(assets, getPath(resource.url));
                                 i = 0;
@@ -17948,7 +17860,7 @@ var RES;
                                 return [3 /*break*/, 2];
                             case 5:
                                 scene = new egret3d.RawScene(filename, url);
-                                scene.$parse(text);
+                                scene.$parse(data);
                                 paper.Asset.register(scene, true);
                                 return [2 /*return*/, scene];
                         }
@@ -17961,7 +17873,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -17970,18 +17881,16 @@ var RES;
         processor.D3FontProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _font;
+                    var data, url, filename, _font;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
                                 _font = new egret3d.Font(filename, url);
-                                _font.$parse(text);
+                                _font.$parse(data);
                                 paper.Asset.register(_font, true);
                                 return [2 /*return*/, _font];
                         }
@@ -17994,7 +17903,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -18003,16 +17911,14 @@ var RES;
         processor.Sound3DProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var arrayBuffer, gl, url, filename, name, audioBuffer, sound;
+                    var arrayBuffer, url, filename, audioBuffer, sound;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.BinaryProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "bin")];
                             case 1:
                                 arrayBuffer = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
                                 return [4 /*yield*/, promisifySoundDecode(arrayBuffer, resource)];
                             case 2:
                                 audioBuffer = _a.sent();
@@ -18030,7 +17936,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -18039,20 +17944,17 @@ var RES;
         processor.TextAssetProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _text;
+                    var data, url, filename, text;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                _text = new egret3d.TextAsset(filename, url);
-                                _text.content = text;
-                                paper.Asset.register(_text, true);
-                                return [2 /*return*/, _text];
+                                text = new egret3d.TextAsset(filename, url);
+                                paper.Asset.register(text, true);
+                                return [2 /*return*/, text];
                         }
                     });
                 });
@@ -18063,7 +17965,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -18072,18 +17973,16 @@ var RES;
         processor.PathAssetProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var text, gl, url, filename, name, _path;
+                    var data, url, filename, _path;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.TextProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                text = _a.sent();
-                                gl = egret3d.WebGLKit.webgl;
+                                data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
                                 _path = new egret3d.PathAsset(filename, url);
-                                _path.$parse(JSON.parse(text));
+                                _path.$parse(data);
                                 paper.Asset.register(_path, true);
                                 return [2 /*return*/, _path];
                         }
@@ -18096,7 +17995,6 @@ var RES;
                     return __generator(this, function (_a) {
                         data = host.get(resource);
                         data.dispose();
-                        paper.Asset.unregister(data);
                         return [2 /*return*/];
                     });
                 });
@@ -18108,9 +18006,7 @@ var RES;
         RES.processor.map("Bundle", processor.BundleProcessor);
         RES.processor.map("Texture", processor.TextureProcessor);
         RES.processor.map("TextureDesc", processor.TextureDescProcessor);
-        RES.processor.map("PVR", processor.D3PVRProcessor);
         RES.processor.map("Material", processor.MaterialProcessor);
-        RES.processor.map("GLTF", processor.GLTFProcessor);
         RES.processor.map("GLTFBinary", processor.GLTFProcessor);
         RES.processor.map("Prefab", processor.NewPrefabProcessor);
         RES.processor.map("Scene", processor.NewSceneProcessor);
@@ -23476,10 +23372,10 @@ var paper;
         var CmdType = (function () {
             function CmdType() {
             }
-            /**更改对象基础属性 */
+            /**更改游戏对象基础属性 */
             CmdType.MODIFY_OBJECT_PROPERTY = "MODIFY_OBJECT_PROPERTY";
             /**修改transform属性 */
-            CmdType.MODIFY_TRANSFORM_PROPERTY = "MODIFY_TRANSFORM_PROPERTY";
+            CmdType.MODIFY_COMPONENT_PROPERTY = "MODIFY_COMPONENT_PROPERTY";
             /**选中游戏对象 */
             CmdType.SELECT_GAMEOBJECT = "SELECT_GAMEOBJECT";
             /**添加游戏对象 */
@@ -23496,6 +23392,10 @@ var paper;
             CmdType.REMOVE_COMPONENT = "REMOVE_COMPONENT";
             /**更改parent */
             CmdType.UPDATE_PARENT = "UPDATE_PARENT";
+            /**修改预制体游戏对象属性 */
+            CmdType.MODIFY_PREFAB_GAMEOBJECT_PROPERTY = "MODIFY_PREFAB_GAMEOBJECT_PROPERTY";
+            /**修改预制体组件属性 */
+            CmdType.MODIFY_PREFAB_COMPONENT_PROPERTY = "MODIFY_PREFAB_COMPONENT_PROPERTY";
             return CmdType;
         }());
         editor.CmdType = CmdType;
@@ -23537,6 +23437,9 @@ var paper;
                 this.paperHistory.dispatcher = editor.context;
                 editor.context.addEventListener(editor.EventType.HistoryState, this.historyEventHandler, this);
             };
+            EditorModel.prototype.addState = function (state) {
+                state && this.paperHistory && this.paperHistory.add(state);
+            };
             //暂时废弃
             EditorModel.prototype.historyEventHandler = function (e) {
                 var eventData = e.data;
@@ -23546,7 +23449,7 @@ var paper;
                 switch (cmdType) {
                     case CmdType.MODIFY_OBJECT_PROPERTY:
                         break;
-                    case CmdType.MODIFY_TRANSFORM_PROPERTY:
+                    case CmdType.MODIFY_COMPONENT_PROPERTY:
                         break;
                     case CmdType.SELECT_GAMEOBJECT:
                         break;
@@ -23572,62 +23475,173 @@ var paper;
                         break;
                 }
             };
-            EditorModel.prototype.cloneEditValue = function (target, propName) {
-                var value = target[propName];
-                var out;
-                var cls;
-                if (value instanceof egret3d.Vector2) {
-                    cls = egret.getDefinitionByName("egret3d.Vector2");
-                    out = new cls();
-                    egret3d.Vector2.copy(value, out);
-                }
-                else if (value instanceof egret3d.Vector3) {
-                    cls = egret.getDefinitionByName("egret3d.Vector3");
-                    out = new cls();
-                    egret3d.Vector3.copy(value, out);
-                }
-                else if (value instanceof egret3d.Vector4) {
-                    cls = egret.getDefinitionByName("egret3d.Vector3");
-                    out = new cls();
-                    egret3d.Vector4.copy(value, out);
-                }
-                var result = out ? out : value;
-                return result;
-            };
-            //改(如果修改的是组件属性得保存它所属gameobject hashcode和组件的hashcode)
-            //TODO：重构(根据edittype处理不同数据类型的编辑)
             EditorModel.prototype.setProperty = function (propName, propValue, target) {
-                var state;
-                var data;
-                var modifyObjectType = target instanceof paper.BaseComponent ? ModifyObjectType.BASECOMPONENT : ModifyObjectType.GAMEOBJECT;
-                if (target instanceof egret3d.Transform) {
-                    data = {
-                        cmdType: CmdType.MODIFY_TRANSFORM_PROPERTY,
-                        target: target,
-                        propname: propName,
-                        prevalue: this.cloneEditValue(target, propName),
-                        newvalue: propValue,
-                        hashCode: target.hashCode,
-                        modifyObjectType: modifyObjectType,
-                        belongGameObjectHashCode: (target instanceof paper.BaseComponent) ? target.gameObject.hashCode : -1
-                    };
-                    state = editor.ModifyTransformPropertyState.create(target, propName, propValue, data);
+                var editType = this.getEditType(propName, target);
+                if (!editType) {
+                    console.error('editType not found!');
                 }
-                else {
-                    data = {
-                        cmdType: CmdType.MODIFY_OBJECT_PROPERTY,
-                        target: target,
-                        propname: propName,
-                        prevalue: target[propName],
-                        newvalue: propValue,
-                        hashCode: target.hashCode,
-                        modifyObjectType: modifyObjectType,
-                        belongGameObjectHashCode: (target instanceof paper.BaseComponent) ? target.gameObject.hashCode : -1
-                    };
-                    state = editor.ModifyObjectState.create(target, propName, propValue, data);
+                if (target instanceof paper.GameObject) {
+                    this.createModifyGameObjectPropertyState(propName, propValue, target, editType);
                 }
-                state && this.paperHistory.add(state);
+                else if (target instanceof paper.BaseComponent) {
+                    this.createModifyComponent(propName, propValue, target, editType);
+                }
                 return true;
+            };
+            EditorModel.prototype.getEditType = function (propName, target) {
+                var editType = null;
+                var editInfoList = editor.getEditInfo(target);
+                b: for (var i = 0; i < editInfoList.length; i++) {
+                    if (editInfoList[i].name === propName) {
+                        editType = editInfoList[i].editType;
+                        break b;
+                    }
+                }
+                return editType;
+            };
+            /**
+             * 修改gameobject属性
+             * @param propName
+             * @param propValue
+             * @param target
+             * @param editType
+             * @param add
+             */
+            EditorModel.prototype.createModifyGameObjectPropertyState = function (propName, propValue, target, editType, add) {
+                if (add === void 0) { add = true; }
+                var preValue = this.serializeProperty(target[propName], editType);
+                var hashCode = target.hashCode;
+                var data = {
+                    cmdType: CmdType.MODIFY_OBJECT_PROPERTY,
+                    propName: propName,
+                    propValue: propValue,
+                    preValue: preValue,
+                    hashCode: hashCode,
+                    editType: editType
+                };
+                var state = editor.ModifyGameObjectPropertyState.create(data);
+                add && this.addState(state);
+                return state;
+            };
+            /**
+     * 修改组件属性
+     * @param propName
+     * @param propValue
+     * @param target
+     * @param editType
+     * @param add
+     */
+            EditorModel.prototype.createModifyComponent = function (propName, propValue, target, editType, add) {
+                if (add === void 0) { add = true; }
+                var preValue = this.serializeProperty(target[propName], editType);
+                var hashCode = target.hashCode;
+                var gameObjHashCode = target.gameObject.hashCode;
+                var data = {
+                    cmdType: CmdType.MODIFY_COMPONENT_PROPERTY,
+                    propName: propName,
+                    propValue: propValue,
+                    preValue: preValue,
+                    editType: editType,
+                    hashCode: hashCode,
+                    gameObjHashCode: gameObjHashCode,
+                };
+                var state = editor.ModifyComponentPropertyState.create(target, propName, propValue, data);
+                add && this.addState(state);
+                return state;
+            };
+            /**
+             * 修改预制体gameobject属性,包括修改所有关联gameobject以及backruntiem的gameobject
+             * @param gameObjectId
+             * @param newValueList
+             * @param preValueCopylist
+             * @param backRuntime
+             */
+            EditorModel.prototype.createModifyPrefabGameObjectPropertyState = function (gameObjectId, newValueList, preValueCopylist, backRuntime) {
+                var data = {
+                    cmdType: CmdType.MODIFY_PREFAB_GAMEOBJECT_PROPERTY,
+                    gameObjectId: gameObjectId,
+                    newValueList: newValueList,
+                    preValueCopylist: preValueCopylist,
+                    backRuntime: backRuntime
+                };
+                var state = editor.ModifyPrefabGameObjectPropertyState.create(data);
+                this.addState(state);
+            };
+            EditorModel.prototype.createModifyPrefabComponentPropertyState = function (gameObjectId, componentId, newValueList, preValueCopylist, backRuntime) {
+                var data = {
+                    cmdType: CmdType.MODIFY_PREFAB_COMPONENT_PROPERTY,
+                    gameObjectId: gameObjectId,
+                    componentId: componentId,
+                    newValueList: newValueList,
+                    preValueCopylist: preValueCopylist,
+                    backRuntime: backRuntime
+                };
+                var state = editor.ModifyPrefabComponentPropertyState.create(data);
+                this.addState(state);
+            };
+            EditorModel.prototype.serializeProperty = function (value, editType) {
+                switch (editType) {
+                    case editor.EditType.NUMBER:
+                    case editor.EditType.TEXT:
+                    case editor.EditType.CHECKBOX:
+                        return value;
+                    case editor.EditType.VECTOR2:
+                    case editor.EditType.VECTOR3:
+                    case editor.EditType.VECTOR4:
+                    case editor.EditType.QUATERNION:
+                    case editor.EditType.COLOR:
+                    case editor.EditType.RECT:
+                        var className = egret.getQualifiedClassName(value);
+                        var serializeData = paper.serialize(value);
+                        return { className: className, serializeData: serializeData };
+                    case editor.EditType.LIST:
+                    case editor.EditType.MATERIAL:
+                    case editor.EditType.MATERIAL_ARRAY:
+                    case editor.EditType.GAMEOBJECT:
+                    case editor.EditType.TRANSFROM:
+                    case editor.EditType.SOUND:
+                    case editor.EditType.MESH:
+                    case editor.EditType.ARRAY:
+                        //TODO
+                        console.error("not supported!");
+                        break;
+                    default:
+                        break;
+                }
+            };
+            EditorModel.prototype.deserializeProperty = function (serializeData, editType) {
+                switch (editType) {
+                    case editor.EditType.NUMBER:
+                    case editor.EditType.TEXT:
+                    case editor.EditType.CHECKBOX:
+                        return serializeData;
+                    case editor.EditType.VECTOR2:
+                    case editor.EditType.VECTOR3:
+                    case editor.EditType.VECTOR4:
+                    case editor.EditType.QUATERNION:
+                    case editor.EditType.COLOR:
+                    case editor.EditType.RECT:
+                        var clazz = egret.getDefinitionByName(serializeData.className);
+                        var target = null;
+                        if (clazz) {
+                            target = new clazz();
+                            target.deserialize(serializeData.serializeData.objects[0]);
+                        }
+                        return target;
+                    case editor.EditType.LIST:
+                    case editor.EditType.MATERIAL:
+                    case editor.EditType.MATERIAL_ARRAY:
+                    case editor.EditType.GAMEOBJECT:
+                    case editor.EditType.TRANSFROM:
+                    case editor.EditType.SOUND:
+                    case editor.EditType.MESH:
+                    case editor.EditType.ARRAY:
+                        //TODO
+                        console.error("not supported!");
+                        break;
+                    default:
+                        break;
+                }
             };
             /**
              * 创建游戏对象
@@ -23642,7 +23656,7 @@ var paper;
                     mat: mat
                 };
                 var state = editor.AddGameObjectState.create(data);
-                this.paperHistory.add(state);
+                this.addState(state);
             };
             /**
              * 添加组件
@@ -23654,7 +23668,7 @@ var paper;
                     compClzName: compClzName
                 };
                 var state = editor.AddComponentState.create(data);
-                this.paperHistory.add(state);
+                this.addState(state);
             };
             /**
             *  TODO:因gameobject未提供添加组件实例方法，暂时这样处理
@@ -23696,7 +23710,7 @@ var paper;
                     assetsMap: assetsMap
                 };
                 var state = editor.RemoveComponentState.create(data);
-                this.paperHistory.add(state);
+                this.addState(state);
             };
             EditorModel.prototype.getComponentById = function (gameObject, componentId) {
                 var component;
@@ -23738,7 +23752,7 @@ var paper;
                     prefabData: prefabData
                 };
                 var state = editor.PasteGameObjectsState.create(data);
-                this.paperHistory.add(state);
+                this.addState(state);
             };
             /**
              * 克隆游戏对象
@@ -23760,7 +23774,7 @@ var paper;
                     prefabData: prefabData
                 };
                 var state = editor.DuplicateGameObjectsState.create(data);
-                this.paperHistory.add(state);
+                this.addState(state);
             };
             /**
              *
@@ -23912,7 +23926,7 @@ var paper;
                     prefabData: prefabData
                 };
                 var state = editor.DeleteGameObjectsState.create(data);
-                this.paperHistory.add(state);
+                this.addState(state);
             };
             EditorModel.prototype._deleteGameObject = function (gameObjects) {
                 for (var i = 0, l = gameObjects.length; i < l; i++) {
@@ -23934,8 +23948,6 @@ var paper;
                     var parentId = gameObj.transform.parent ? gameObj.transform.parent.gameObject.hashCode : null;
                     originParentIds.push(parentId);
                 }
-                //id:{url,rootid,[prefab gameobjects ids]}
-                //TODO：规范一个数据结构
                 var prefabData = {};
                 for (var key in prefabRootMap) {
                     var rootObj = this.getGameObjectById(prefabRootMap[key]);
@@ -23953,7 +23965,7 @@ var paper;
                     prefabData: prefabData
                 };
                 var state = editor.UpdateParentState.create(data);
-                this.paperHistory.add(state);
+                this.addState(state);
             };
             /**
              * 清除预制体里游戏对象的prefab引用,root或者持有此root引用的游戏对象
@@ -24145,6 +24157,31 @@ var paper;
                     this.getAllComponentIdFromGameObject(obj, hashcodes);
                 }
             };
+            EditorModel.prototype.findOptionSetName = function (propName, target) {
+                var editInfoList = editor.getEditInfo(target);
+                for (var index = 0; index < editInfoList.length; index++) {
+                    var element = editInfoList[index];
+                    if (element.name === propName && element.option && element.option.set) {
+                        return element.option.set;
+                    }
+                }
+                var extraInfoList = editor.getExtraInfo(target);
+                for (var index = 0; index < extraInfoList.length; index++) {
+                    var element = extraInfoList[index];
+                    if (element.name === propName && element.option && element.option.set) {
+                        return element.option.set;
+                    }
+                }
+            };
+            EditorModel.prototype.setTargetProperty = function (propName, target, value) {
+                var setFunName = this.findOptionSetName(propName, target);
+                if (setFunName && target[setFunName]) {
+                    target[setFunName].call(target, value);
+                }
+                else {
+                    target[propName] = value;
+                }
+            };
             /**
              * 选中游戏对象
              * @param gameObjects
@@ -24152,15 +24189,16 @@ var paper;
              */
             EditorModel.prototype.selectGameObject = function (gameObjects, addHistory) {
                 if (addHistory === void 0) { addHistory = false; }
-                if (addHistory && gameObjects.length > 0) {
-                    var newSelectIds = gameObjects.map(function (obj, index) { return obj.hashCode; });
-                    var state = editor.SelectGameObjectesState.create({ cmdType: CmdType.SELECT_GAMEOBJECT, prevalue: this.lastSelectIds, newvalue: newSelectIds });
-                    this.paperHistory.add(state);
-                    this.lastSelectIds = newSelectIds;
-                }
-                else {
-                    this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, gameObjects));
-                }
+                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, gameObjects));
+                // if (addHistory && gameObjects.length > 0) {
+                //     let newSelectIds = gameObjects.map((obj, index) => { return obj.hashCode });
+                //     let state = paper.history.SelectGameObjectesState.create({ cmdType: CmdType.SELECT_GAMEOBJECT, prevalue: this.lastSelectIds, newvalue: newSelectIds })
+                //     this.paperHistory.add(state);
+                //     this.lastSelectIds = newSelectIds;
+                // }
+                // else {
+                //     this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, gameObjects));
+                // }
             };
             // 切换场景，参数是场景编号
             EditorModel.prototype.switchScene = function (url) {
@@ -25048,7 +25086,7 @@ var paper;
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
-(function (paper) {
+(function (paper_1) {
     var editor;
     (function (editor) {
         editor.EventType = {
@@ -25090,19 +25128,6 @@ var paper;
                     this._events.push(data);
                 }
                 return state.batchIndex > 0 && (isUndo ? this._index >= 0 : this._index < this._states.length - 1);
-            };
-            History.prototype._getStateByObject = function (history, object, key, link) {
-                if (link === void 0) { link = null; }
-                var i = history._states.length;
-                while (i--) {
-                    var state = history._states[i];
-                    if (state instanceof ModifyObjectState) {
-                        if ((!link || state !== link) && state.source === object && state.key === key) {
-                            return state;
-                        }
-                    }
-                }
-                return null;
             };
             History.prototype.back = function () {
                 if (this._index < 0 || this._batchIndex > 0) {
@@ -25193,15 +25218,6 @@ var paper;
                     this.go(this._states.length - 1);
                 }
             };
-            History.prototype.linkObjectState = function (object, key) {
-                var currentState = this._getStateByObject(this, object, key);
-                if (currentState !== null) {
-                    var prevState = this._getStateByObject(this, object, key, currentState);
-                    if (prevState !== null) {
-                        currentState.fromValue = prevState.toValue;
-                    }
-                }
-            };
             History.prototype.getState = function (index) {
                 return this._states[index];
             };
@@ -25263,147 +25279,29 @@ var paper;
         }());
         editor.BaseState = BaseState;
         __reflect(BaseState.prototype, "paper.editor.BaseState");
-        //修改对象基础属性(目前只支持gameobject)
-        var ModifyObjectState = (function (_super) {
-            __extends(ModifyObjectState, _super);
-            function ModifyObjectState() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.source = null;
-                _this.key = "";
-                _this.fromValue = null;
-                _this.toValue = null;
-                return _this;
-            }
-            ModifyObjectState.toString = function () {
-                return "[class common.ModifyObjectState]";
-            };
-            ModifyObjectState.create = function (source, key, value, data) {
-                if (data === void 0) { data = null; }
-                var fromValue = (key in source) ? source[key] : undefined;
-                if (fromValue === value) {
-                    return null;
-                }
-                var state = new ModifyObjectState();
-                state.source = source;
-                state.key = key;
-                state.data = data;
-                state.fromValue = fromValue;
-                state.toValue = value;
-                return state;
-            };
-            ModifyObjectState.prototype.undo = function () {
-                if (_super.prototype.undo.call(this)) {
-                    var modifyObj = this.getModifyObject();
-                    if (modifyObj && this.fromValue !== undefined) {
-                        this.source[this.key] = this.data.prevalue;
-                        editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
-                            target: modifyObj,
-                            propName: this.data.propname,
-                            propValue: this.data.prevalue
-                        }));
-                    }
-                    return true;
-                }
-                return false;
-            };
-            ModifyObjectState.prototype.getModifyObject = function () {
-                var modifyObj;
-                console.log(this.data.modifyObjectType, this.data.belongGameObjectHashCode, this.data.hashCode);
-                if (this.data.modifyObjectType == editor.ModifyObjectType.GAMEOBJECT) {
-                    modifyObj = editor.Editor.editorModel.getGameObjectById(this.data.hashCode);
-                }
-                else {
-                    var gameObj = editor.Editor.editorModel.getGameObjectById(this.data.belongGameObjectHashCode);
-                    modifyObj = editor.Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
-                }
-                return modifyObj;
-            };
-            ModifyObjectState.prototype.redo = function () {
-                if (_super.prototype.redo.call(this)) {
-                    var modifyObj = this.getModifyObject();
-                    if (modifyObj && this.toValue !== undefined) {
-                        modifyObj[this.key] = this.data.newvalue;
-                        editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
-                            target: modifyObj,
-                            propName: this.data.propname,
-                            propValue: this.data.newvalue
-                        }));
-                    }
-                    return true;
-                }
-                return false;
-            };
-            return ModifyObjectState;
-        }(BaseState));
-        editor.ModifyObjectState = ModifyObjectState;
-        __reflect(ModifyObjectState.prototype, "paper.editor.ModifyObjectState");
-        //修改transform属性
-        var ModifyTransformPropertyState = (function (_super) {
-            __extends(ModifyTransformPropertyState, _super);
-            function ModifyTransformPropertyState() {
+        var ModifyGameObjectPropertyState = (function (_super) {
+            __extends(ModifyGameObjectPropertyState, _super);
+            function ModifyGameObjectPropertyState() {
                 return _super !== null && _super.apply(this, arguments) || this;
             }
-            ModifyTransformPropertyState.toString = function () {
-                return "[class common.ModifyTransformPropertyState]";
-            };
-            ModifyTransformPropertyState.create = function (source, key, value, data) {
+            ModifyGameObjectPropertyState.create = function (data) {
                 if (data === void 0) { data = null; }
-                var state = new ModifyTransformPropertyState();
+                var state = new ModifyGameObjectPropertyState();
                 state.data = data;
                 return state;
             };
-            ModifyTransformPropertyState.prototype.setTransformProperty = function (transform, propName, propValue) {
-                switch (propName) {
-                    case "localPosition":
-                        transform.setLocalPosition(propValue);
-                        break;
-                    case "localRotation":
-                        transform.setLocalRotation(propValue);
-                        break;
-                    case "localScale":
-                        transform.setLocalScale(propValue);
-                        break;
-                    case "localEulerAngles":
-                        transform.setLocalEulerAngles(propValue);
-                        break;
-                    case "position":
-                        transform.setPosition(propValue);
-                        break;
-                    case "rotation":
-                        transform.setRotation(propValue);
-                        break;
-                    case "scale":
-                        transform.setScale(propValue);
-                        break;
-                    default: return false;
-                }
-                return true;
-            };
-            ModifyTransformPropertyState.prototype.getModifyObject = function () {
-                var modifyObj;
-                if (this.data.modifyObjectType == editor.ModifyObjectType.GAMEOBJECT) {
-                    modifyObj = editor.Editor.editorModel.getGameObjectById(this.data.hashCode);
-                }
-                else {
-                    var gameObj = editor.Editor.editorModel.getGameObjectById(this.data.belongGameObjectHashCode);
-                    modifyObj = editor.Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
-                    this.data.target = modifyObj;
-                }
-                return modifyObj;
-            };
-            ModifyTransformPropertyState.prototype.undo = function () {
-                var isSuccess = false;
+            ModifyGameObjectPropertyState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
-                    var modifyObj = this.getModifyObject();
-                    var prevalue = this.data.prevalue;
-                    if (modifyObj && prevalue !== undefined) {
-                        isSuccess = this.setTransformProperty(modifyObj, String(this.data.propname), prevalue);
-                        this.data.isSuccess = isSuccess;
-                        if (isSuccess) {
+                    var _a = this.data, hashCode = _a.hashCode, propName = _a.propName, preValue = _a.preValue, editType = _a.editType;
+                    var modifyObj = editor.Editor.editorModel.getGameObjectById(hashCode);
+                    if (modifyObj && preValue !== undefined) {
+                        var toValue = editor.Editor.editorModel.deserializeProperty(preValue, editType);
+                        if (toValue) {
+                            editor.Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
                             editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
                                 target: modifyObj,
-                                propName: this.data.propname,
-                                propValue: this.data.prevalue
+                                propName: propName,
+                                propValue: toValue
                             }));
                         }
                     }
@@ -25411,19 +25309,54 @@ var paper;
                 }
                 return false;
             };
-            ModifyTransformPropertyState.prototype.redo = function () {
-                var isSuccess = false;
+            ModifyGameObjectPropertyState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
-                    var newValue = this.data.newvalue;
-                    var modifyObj = this.getModifyObject();
-                    if (modifyObj && newValue !== undefined) {
-                        isSuccess = this.setTransformProperty(modifyObj, String(this.data.propname), newValue);
-                        this.data.isSuccess = isSuccess;
-                        if (isSuccess) {
+                    var _a = this.data, hashCode = _a.hashCode, propName = _a.propName, propValue = _a.propValue;
+                    var modifyObj = editor.Editor.editorModel.getGameObjectById(hashCode);
+                    if (modifyObj && propValue !== undefined) {
+                        editor.Editor.editorModel.setTargetProperty(propName, modifyObj, propValue);
+                        editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
+                            target: modifyObj,
+                            propName: propName,
+                            propValue: propValue
+                        }));
+                    }
+                    return true;
+                }
+                return false;
+            };
+            return ModifyGameObjectPropertyState;
+        }(BaseState));
+        editor.ModifyGameObjectPropertyState = ModifyGameObjectPropertyState;
+        __reflect(ModifyGameObjectPropertyState.prototype, "paper.editor.ModifyGameObjectPropertyState");
+        //修改组件属性属性
+        var ModifyComponentPropertyState = (function (_super) {
+            __extends(ModifyComponentPropertyState, _super);
+            function ModifyComponentPropertyState() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            ModifyComponentPropertyState.toString = function () {
+                return "[class common.ModifyComponentPropertyState]";
+            };
+            ModifyComponentPropertyState.create = function (source, key, value, data) {
+                if (data === void 0) { data = null; }
+                var state = new ModifyComponentPropertyState();
+                state.data = data;
+                return state;
+            };
+            ModifyComponentPropertyState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var _a = this.data, propValue = _a.propValue, propName = _a.propName, gameObjHashCode = _a.gameObjHashCode, preValue = _a.preValue, editType = _a.editType;
+                    var gameObj = editor.Editor.editorModel.getGameObjectById(gameObjHashCode);
+                    var modifyObj = editor.Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
+                    if (modifyObj && preValue !== undefined) {
+                        var toValue = editor.Editor.editorModel.deserializeProperty(preValue, editType);
+                        if (toValue) {
+                            editor.Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
                             editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
                                 target: modifyObj,
-                                propName: this.data.propname,
-                                propValue: this.data.newvalue
+                                propName: propName,
+                                propValue: toValue
                             }));
                         }
                     }
@@ -25431,10 +25364,27 @@ var paper;
                 }
                 return false;
             };
-            return ModifyTransformPropertyState;
+            ModifyComponentPropertyState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    var _a = this.data, propValue = _a.propValue, propName = _a.propName, gameObjHashCode = _a.gameObjHashCode;
+                    var gameObj = editor.Editor.editorModel.getGameObjectById(gameObjHashCode);
+                    var modifyObj = editor.Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
+                    if (modifyObj && propValue !== undefined) {
+                        editor.Editor.editorModel.setTargetProperty(propName, modifyObj, propValue);
+                        editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
+                            target: modifyObj,
+                            propName: propName,
+                            propValue: propValue
+                        }));
+                    }
+                    return true;
+                }
+                return false;
+            };
+            return ModifyComponentPropertyState;
         }(BaseState));
-        editor.ModifyTransformPropertyState = ModifyTransformPropertyState;
-        __reflect(ModifyTransformPropertyState.prototype, "paper.editor.ModifyTransformPropertyState");
+        editor.ModifyComponentPropertyState = ModifyComponentPropertyState;
+        __reflect(ModifyComponentPropertyState.prototype, "paper.editor.ModifyComponentPropertyState");
         //选中游戏对象
         var SelectGameObjectesState = (function (_super) {
             __extends(SelectGameObjectesState, _super);
@@ -25502,7 +25452,7 @@ var paper;
                     var parentHashCode = this.data.parentHashCode;
                     var mesh = this.data.mesh;
                     var mat = this.data.mat;
-                    var gameObj = new paper.GameObject();
+                    var gameObj = new paper_1.GameObject();
                     gameObj.name = "NewGameObject";
                     if (this.data.deleteComponentcode) {
                         editor.Editor.editorModel.resetComponentHashCode(gameObj, this.data.deleteComponentcode.concat());
@@ -25569,7 +25519,7 @@ var paper;
                         var element = datas[index];
                         var serializeData = element.serializeData;
                         var assetsMap = element.assetsMap;
-                        var gameObj = paper.deserialize(serializeData, assetsMap);
+                        var gameObj = paper_1.deserialize(serializeData, assetsMap);
                         //还原gameobject的hashcode
                         var hashcodes = element.deleteHashcode.concat();
                         editor.Editor.editorModel.resetHashCode(gameObj, hashcodes);
@@ -25589,7 +25539,7 @@ var paper;
                         var prefabRootId = prefabData[key].rootId;
                         var url = prefabData[key].url;
                         var prefabIds = prefabData[key].prefabIds;
-                        var prefab = paper.Asset.find(url);
+                        var prefab = paper_1.Asset.find(url);
                         var rootObj = editor.Editor.editorModel.getGameObjectById(prefabRootId);
                         editor.Editor.editorModel.resetPrefabbyRootId(rootObj, prefab, prefabIds);
                     }
@@ -25658,7 +25608,7 @@ var paper;
                         var element = datas[index];
                         var duplicateHashCode = element.duplicateHashCode;
                         var sourceObj = editor.Editor.editorModel.getGameObjectById(duplicateHashCode);
-                        var duplicateObj = paper.clone(sourceObj);
+                        var duplicateObj = paper_1.clone(sourceObj);
                         duplicateObj.name = sourceObj.name + "_duplicate";
                         duplicateObj.transform.setParent(sourceObj.transform.parent);
                         var stru = prefabData[index];
@@ -25721,7 +25671,7 @@ var paper;
                         var pasteHashCode = element.pasteHashCode;
                         var targetTransform = this.data.target;
                         var sourceObj = editor.Editor.editorModel.getGameObjectById(pasteHashCode);
-                        var pasteObj = paper.clone(sourceObj);
+                        var pasteObj = paper_1.clone(sourceObj);
                         pasteObj.name = sourceObj.name + "_paste";
                         pasteObj.transform.setParent(targetTransform);
                         var stru = prefabData[index];
@@ -25828,7 +25778,7 @@ var paper;
             RemoveComponentState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
                     var serializeData = this.data.serializeData;
-                    var component = paper.deserialize(serializeData, this.data.assetsMap);
+                    var component = paper_1.deserialize(serializeData, this.data.assetsMap);
                     var gameObjectId = this.data.gameObjectId;
                     if (component) {
                         var gameObject = editor.Editor.editorModel.getGameObjectById(gameObjectId);
@@ -25900,7 +25850,7 @@ var paper;
                             var prefabRootId = prefabData[element.hashCode].rootId;
                             var url = prefabData[element.hashCode].url;
                             var prefabIds = prefabData[element.hashCode].prefabIds;
-                            var prefab = paper.Asset.find(url);
+                            var prefab = paper_1.Asset.find(url);
                             var rootObj = editor.Editor.editorModel.getGameObjectById(prefabRootId);
                             editor.Editor.editorModel.resetPrefabbyRootId(rootObj, prefab, prefabIds);
                         }
@@ -25937,7 +25887,205 @@ var paper;
         }(BaseState));
         editor.UpdateParentState = UpdateParentState;
         __reflect(UpdateParentState.prototype, "paper.editor.UpdateParentState");
-    })(editor = paper.editor || (paper.editor = {}));
+        var ModifyPrefabProperty = (function (_super) {
+            __extends(ModifyPrefabProperty, _super);
+            function ModifyPrefabProperty() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.getGameObjectsByPrefab = function (prefab) {
+                    var objects = paper_1.Application.sceneManager.getActiveScene().gameObjects;
+                    var result = [];
+                    objects.forEach(function (obj) {
+                        if (obj.prefab && obj.prefab.url === prefab.url && obj.___isRootPrefab____) {
+                            result.push(obj);
+                        }
+                    });
+                    return result;
+                };
+                return _this;
+            }
+            ModifyPrefabProperty.prototype.getGameObjectById = function (gameObjectId) {
+                var paper = gameObjectId < 0 ? this.data.backRuntime.paper : __global['paper'];
+                var objects = paper.Application.sceneManager.getActiveScene().gameObjects;
+                for (var i = 0; i < objects.length; i++) {
+                    if (objects[i].hashCode === gameObjectId) {
+                        return objects[i];
+                    }
+                }
+                return null;
+            };
+            ModifyPrefabProperty.prototype.equal = function (a, b) {
+                var className = egret.getQualifiedClassName(a);
+                if (className === egret.getQualifiedClassName(b)) {
+                    switch (className) {
+                        case 'egret3d.Vector2': return egret3d.Vector2.equal(a, b);
+                        case 'egret3d.Vector3': return egret3d.Vector3.equal(a, b);
+                        case 'egret3d.Vector4': return a.x === b.x && a.y === b.y && a.z === b.z && a.w === b.w;
+                        case 'egret3d.Quaternion': return a.x === b.x && a.y === b.y && a.z === b.z && a.w === b.w;
+                        case 'egret3d.Rect': return a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
+                        case 'egret3d.Color': return a.r === b.r && a.g === b.g && a.b === b.b && a.a === b.a;
+                        default:
+                            return false;
+                    }
+                }
+                else
+                    return false;
+            };
+            ModifyPrefabProperty.prototype.dispathPropertyEvent = function (modifyObj, propName, newValue) {
+                editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
+                    target: modifyObj,
+                    propName: propName,
+                    propValue: newValue
+                }));
+            };
+            return ModifyPrefabProperty;
+        }(BaseState));
+        editor.ModifyPrefabProperty = ModifyPrefabProperty;
+        __reflect(ModifyPrefabProperty.prototype, "paper.editor.ModifyPrefabProperty");
+        //修改预制体游戏对象属性
+        var ModifyPrefabGameObjectPropertyState = (function (_super) {
+            __extends(ModifyPrefabGameObjectPropertyState, _super);
+            function ModifyPrefabGameObjectPropertyState() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            ModifyPrefabGameObjectPropertyState.toString = function () {
+                return "[class common.ModifyPrefabGameObjectPropertyState]";
+            };
+            ModifyPrefabGameObjectPropertyState.create = function (data) {
+                if (data === void 0) { data = null; }
+                var state = new ModifyPrefabGameObjectPropertyState();
+                state.data = data;
+                return state;
+            };
+            /**
+             * 修改预制体游戏对象属性,目前只支持修改根对象
+             * @param gameObjectId
+             * @param valueList
+             */
+            ModifyPrefabGameObjectPropertyState.prototype.modifyPrefabGameObjectPropertyValues = function (gameObjectId, valueList) {
+                var _this = this;
+                var prefabObj = this.getGameObjectById(gameObjectId);
+                if (!prefabObj) {
+                    return;
+                }
+                var objects = this.getGameObjectsByPrefab(prefabObj.prefab);
+                var editInfoList = editor.getEditInfo(prefabObj);
+                valueList.forEach(function (propertyValue) {
+                    var propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                    var newValue = editor.Editor.editorModel.deserializeProperty(copyValue, valueEditType);
+                    objects.forEach(function (object) {
+                        var valueType = typeof object[propName];
+                        if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
+                            if (object[propName] === prefabObj[propName]) {
+                                editor.Editor.editorModel.setTargetProperty(propName, object, newValue);
+                                _this.dispathPropertyEvent(object, propName, newValue);
+                            }
+                        }
+                        else {
+                            if (_this.equal(object[propName], prefabObj[propName])) {
+                                editor.Editor.editorModel.setTargetProperty(propName, object, newValue);
+                                _this.dispathPropertyEvent(object, propName, newValue);
+                            }
+                        }
+                    });
+                    editor.Editor.editorModel.setTargetProperty(propName, prefabObj, newValue);
+                    _this.dispathPropertyEvent(prefabObj, propName, newValue);
+                });
+            };
+            ModifyPrefabGameObjectPropertyState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var _a = this.data, gameObjectId = _a.gameObjectId, preValueCopylist = _a.preValueCopylist;
+                    this.modifyPrefabGameObjectPropertyValues(gameObjectId, preValueCopylist);
+                    return true;
+                }
+                return false;
+            };
+            ModifyPrefabGameObjectPropertyState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    var _a = this.data, gameObjectId = _a.gameObjectId, newValueList = _a.newValueList;
+                    this.modifyPrefabGameObjectPropertyValues(gameObjectId, newValueList);
+                    return true;
+                }
+                return false;
+            };
+            return ModifyPrefabGameObjectPropertyState;
+        }(ModifyPrefabProperty));
+        editor.ModifyPrefabGameObjectPropertyState = ModifyPrefabGameObjectPropertyState;
+        __reflect(ModifyPrefabGameObjectPropertyState.prototype, "paper.editor.ModifyPrefabGameObjectPropertyState");
+        //修改预制体组件属性
+        var ModifyPrefabComponentPropertyState = (function (_super) {
+            __extends(ModifyPrefabComponentPropertyState, _super);
+            function ModifyPrefabComponentPropertyState() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            ModifyPrefabComponentPropertyState.toString = function () {
+                return "[class common.ModifyPrefabComponentPropertyState]";
+            };
+            ModifyPrefabComponentPropertyState.create = function (data) {
+                if (data === void 0) { data = null; }
+                var state = new ModifyPrefabComponentPropertyState();
+                state.data = data;
+                return state;
+            };
+            ModifyPrefabComponentPropertyState.prototype.modifyPrefabComponentPropertyValues = function (gameObjectId, componentId, valueList) {
+                var _this = this;
+                var prefabObj = this.getGameObjectById(gameObjectId);
+                if (!prefabObj) {
+                    return;
+                }
+                var objects = this.getGameObjectsByPrefab(prefabObj.prefab);
+                var _loop_2 = function (k) {
+                    var PrefabComp = prefabObj.components[k];
+                    var editInfoList = editor.getEditInfo(PrefabComp);
+                    if (PrefabComp.hashCode === componentId) {
+                        valueList.forEach(function (propertyValue) {
+                            var propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                            var newValue = editor.Editor.editorModel.deserializeProperty(copyValue, valueEditType);
+                            objects.forEach(function (object) {
+                                var objectComp = object.components[k];
+                                var valueType = typeof objectComp[propName];
+                                if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
+                                    if (objectComp[propName] === PrefabComp[propName]) {
+                                        editor.Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
+                                        _this.dispathPropertyEvent(objectComp, propName, newValue);
+                                    }
+                                }
+                                else {
+                                    if (_this.equal(objectComp[propName], PrefabComp[propName])) {
+                                        editor.Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
+                                        // this.dispathPropertyEvent(objectComp, propName, newValue);
+                                    }
+                                }
+                            });
+                            editor.Editor.editorModel.setTargetProperty(propName, PrefabComp, newValue);
+                            _this.dispathPropertyEvent(PrefabComp, propName, newValue);
+                        });
+                    }
+                };
+                for (var k = 0; k < prefabObj.components.length; k++) {
+                    _loop_2(k);
+                }
+            };
+            ModifyPrefabComponentPropertyState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var _a = this.data, gameObjectId = _a.gameObjectId, componentId = _a.componentId, preValueCopylist = _a.preValueCopylist;
+                    this.modifyPrefabComponentPropertyValues(gameObjectId, componentId, preValueCopylist);
+                    return true;
+                }
+                return false;
+            };
+            ModifyPrefabComponentPropertyState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    var _a = this.data, gameObjectId = _a.gameObjectId, componentId = _a.componentId, newValueList = _a.newValueList;
+                    this.modifyPrefabComponentPropertyValues(gameObjectId, componentId, newValueList);
+                    return true;
+                }
+                return false;
+            };
+            return ModifyPrefabComponentPropertyState;
+        }(ModifyPrefabProperty));
+        editor.ModifyPrefabComponentPropertyState = ModifyPrefabComponentPropertyState;
+        __reflect(ModifyPrefabComponentPropertyState.prototype, "paper.editor.ModifyPrefabComponentPropertyState");
+    })(editor = paper_1.editor || (paper_1.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {

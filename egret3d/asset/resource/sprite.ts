@@ -1,15 +1,7 @@
 namespace egret3d {
-    /**
-     * sprite asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
+
     /**
      * 精灵资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     export class Sprite extends paper.Asset {
         // TODO remove - row：图片行数；column:图片列数；index：第几张图片（index从0开始计数）
