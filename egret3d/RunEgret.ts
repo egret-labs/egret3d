@@ -1,7 +1,12 @@
 namespace egret3d {
 
     egret.RuntimeType = {} as any;
-    export type RunEgretOptions = { antialias: boolean, defaultScene?: string }
+    export type RunEgretOptions = {
+        antialias: boolean;
+        defaultScene?: string;
+        isEditor?: boolean;
+        isPlaying?: boolean;
+    }
 
 
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number }
@@ -19,8 +24,9 @@ namespace egret3d {
         DefaultTextures.init();
         DefaultShaders.init();
         stage.init(canvas, requiredOptions);
-        paper.Application.init();
-
+        paper.Application.init(options);
+        //
+        paper.Application.sceneManager.createScene("default");
     }
 
     function getMainCanvas() {

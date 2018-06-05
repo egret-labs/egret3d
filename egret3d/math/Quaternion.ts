@@ -34,6 +34,49 @@ namespace egret3d {
             this.w = element[3];
         }
 
+        public copy(value: Vector4) {
+            this.x = value.x;
+            this.y = value.y;
+            this.z = value.z;
+            this.w = value.w;
+
+            return this;
+        }
+
+        public clone() {
+            const value = new Vector4();
+            value.copy(this);
+
+            return value;
+        }
+
+        public set(x: number, y: number, z: number, w: number) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+
+            return this;
+        }
+
+        public normalize() {
+            const l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+            if (l > Number.MIN_VALUE) {
+                this.x /= l;
+                this.y /= l;
+                this.z /= l;
+                this.w /= l;
+            }
+            else {
+                this.x = 0.0;
+                this.y = 0.0;
+                this.z = 0.0;
+                this.w = 1.0;
+            }
+
+            return this;
+        }
+
         public static set(x: number, y: number, z: number, w: number, out: Quaternion): Quaternion {
             out.x = x;
             out.y = y;

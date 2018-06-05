@@ -18,10 +18,6 @@ namespace egret3d {
             for (const component of this._components) {
                 component.update(deltaTime);
             }
-
-            if (this._components.length > 0) {
-                egret.ticker.update();
-            }
         }
     }
 }

@@ -257,6 +257,7 @@ namespace paper {
                     return component as T;
                 }
             }
+
             return null;
         }
 
@@ -376,7 +377,7 @@ namespace paper {
         }
         /**
          * 仅用于反序列化。
-         * 
+         * @internal
          */
         public set components(value: ReadonlyArray<BaseComponent>) {
             this._components.length = 0;

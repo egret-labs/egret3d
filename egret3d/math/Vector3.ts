@@ -2,6 +2,8 @@ namespace egret3d {
 
     export class Vector3 implements paper.ISerializable {
 
+        public static readonly ZERO: Readonly<Vector3> = new Vector3(0.0, 0.0, 0.0);
+
         public static readonly ONE: Readonly<Vector3> = new Vector3(1.0, 1.0, 1.0);
 
         public x: number;
@@ -26,6 +28,53 @@ namespace egret3d {
             this.z = element[2];
         }
 
+        public copy(value: Vector3) {
+            this.x = value.x;
+            this.y = value.y;
+            this.z = value.z;
+
+            return this;
+        }
+
+        public clone() {
+            const value = new Vector3();
+            value.copy(this);
+
+            return value;
+        }
+
+        public set(x: number, y: number, z: number) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+
+            return this;
+        }
+
+        public normalize() {
+            const l = this.length;
+            if (l > Number.MIN_VALUE) {
+                this.x /= l;
+                this.y /= l;
+                this.z /= l;
+            }
+            else {
+                this.x = 1.0;
+                this.y = 0.0;
+                this.z = 0.0;
+            }
+
+            return this;
+        }
+
+        public get length() {
+            return Math.sqrt(this.sqrtLength);
+        }
+
+        public get sqrtLength() {
+            return this.x * this.x + this.y * this.y + this.z * this.z;
+        }
+
         public static set(x: number, y: number, z: number, out: Vector3): Vector3 {
             out.x = x;
             out.y = y;
@@ -40,9 +89,9 @@ namespace egret3d {
                 v.y = v.y / num;
                 v.z = v.z / num;
             } else {
-                v.x = 0;
-                v.y = 0;
-                v.z = 0;
+                v.x = 1.0;
+                v.y = 0.0;
+                v.z = 0.0;
             }
             return v;
         }
