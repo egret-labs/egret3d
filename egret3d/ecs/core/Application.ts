@@ -19,7 +19,6 @@ namespace paper {
         private static _isPlaying = false;
         private static _isRunning = false;
         private static _standDeltaTime = -1;
-        private static readonly _laterCalls: (() => void)[] = [];
         private static _bindUpdate: FrameRequestCallback = null as any;
 
         private static _update() {
@@ -30,14 +29,6 @@ namespace paper {
             }
 
             this.systemManager.update();
-
-            if (this._laterCalls.length > 0) {
-                for (const callback of this._laterCalls) {
-                    callback();
-                }
-
-                this._laterCalls.length = 0;
-            }
         }
 
         public static init({ isEditor = false, isPlaying = true } = {}) {
@@ -45,9 +36,10 @@ namespace paper {
             const systemClasses = [
                 StartSystem,
                 BehaviourSystem,
+                egret3d.GuidpathSystem,
                 egret3d.BoxColliderSystem,
                 egret3d.AnimationSystem,
-                egret3d.GuidpathSystem,
+                LaterSystem,
                 egret3d.TrailRenderSystem,
                 egret3d.MeshRendererSystem,
                 egret3d.SkinnedMeshRendererSystem,
@@ -59,10 +51,12 @@ namespace paper {
                 DestroySystem,
                 EndSystem,
             ];
+
             let level = 0;
             for (const systemClass of systemClasses) {
                 systemManager.register(systemClass, level++);
             }
+
             Time.initialize();
             this._isEditor = isEditor;
             this._isPlaying = isPlaying;
@@ -93,7 +87,7 @@ namespace paper {
          * 
          */
         public static callLater(callback: () => void): void {
-            this._laterCalls.push(callback);
+            this.systemManager.getSystem(LaterSystem).callLater(callback);
         }
 
         public static get isEditor() {
