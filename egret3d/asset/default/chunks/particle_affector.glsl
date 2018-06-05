@@ -82,7 +82,7 @@ vec3 center=computePosition(_startVelocity, lifeVelocity, age, t,gravity,worldRo
 	   float c = cos(rot);
 	   float s = sin(rot);
 	   mat2 rotation= mat2(c, -s, s, c);
-	   corner=rotation*corner*cos(0.78539816339744830961566084581988);
+	   corner=rotation*corner;
 		corner*=computeBillbardSize(_startSize.xy,t);
 	   center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);
 	#endif

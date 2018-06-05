@@ -438,7 +438,7 @@ namespace egret3d {
             return this.getAttributes(gltf.MeshAttributeType.TANGENT, subMeshIndex) as Float32Array;
         }
 
-        public getAttributes(attributeType: gltf.MeshAttributeType, subMeshIndex: number = 0) {
+        public getAttributes(attributeType: gltf.MeshAttribute, subMeshIndex: number = 0) {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
                 const accessorIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType] || 0;
                 const accessor = this._glTFAsset.getAccessor(accessorIndex);
@@ -561,13 +561,29 @@ namespace egret3d {
             }
         }
 
-        public uploadVertexSubData(letray: Float32Array, offset: number = 0, subMeshIndex: number = 0) {
+        public uploadVertexSubData(uploadAttributes: gltf.MeshAttribute[], startVertexIndex: number, vertexCount: number, subMeshIndex: number = 0) {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
                 const webgl = WebGLKit.webgl;
+                const primitive = this._glTFMesh.primitives[subMeshIndex];
+                
                 webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
-                webgl.bufferSubData(webgl.ARRAY_BUFFER, offset, letray);
-
-                this._version++;
+                const attributes = primitive.attributes;
+                for (const attributeName of uploadAttributes) {
+                    const accessorIndex = attributes[attributeName];
+                    if (accessorIndex !== undefined) {
+                        const accessor = this._glTFAsset.getAccessor(accessorIndex);
+                        const compType = GLTFAsset.getComponentTypeCount(accessor.componentType);
+                        const typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
+                        const startOffset = this._glTFAsset.getBufferOffset(accessor);
+                        const bufferOffset = startOffset + startVertexIndex * typeCount * compType;
+                        const subVertexBuffer = this._glTFAsset.createTypeArrayFromAccessor(accessor);
+                        let letray = new Float32Array(subVertexBuffer.buffer, bufferOffset, typeCount * vertexCount);
+                        webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, letray);
+                    }
+                    else {
+                        console.warn("Error arguments.");
+                    }
+                }
             } else {
                 console.warn("Error arguments.");
             }

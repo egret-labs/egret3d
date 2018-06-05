@@ -28,7 +28,7 @@ namespace egret3d {
         public version: number = 0;
         public $uniforms: { [name: string]: { type: UniformTypeEnum, value: any } } = {};
 
-        
+
         private _defines: Array<string> = new Array();
 
         @paper.serializedField
@@ -205,9 +205,9 @@ namespace egret3d {
             return this._renderQueue === -1 ? this.shader.renderQueue : this._renderQueue;
         }
 
-        public get shaderDefine() : string{
+        public get shaderDefine(): string {
             let res = "";
-            for(const key of this._defines){
+            for (const key of this._defines) {
                 res += "#define " + key + " \n";
             }
             return res;
@@ -398,10 +398,16 @@ namespace egret3d {
                     case UniformTypeEnum.Float4:
                         let tempValue = jsonChild["value"];
                         try {
-                            let values = tempValue.match(RegexpUtil.vector4Regexp);
-                            if (values !== null) {
-                                let _float4: Vector4 = new Vector4(parseFloat(values[1]), parseFloat(values[2]), parseFloat(values[3]), parseFloat(values[4]));
+                            if (Array.isArray(tempValue)) {
+                                let _float4: Vector4 = new Vector4(tempValue[0], tempValue[1], tempValue[2], tempValue[3]);
                                 this.setVector4(i, _float4);
+                            } else {
+                                //旧格式兼容
+                                let values = tempValue.match(RegexpUtil.vector4Regexp);
+                                if (values !== null) {
+                                    let _float4: Vector4 = new Vector4(parseFloat(values[1]), parseFloat(values[2]), parseFloat(values[3]), parseFloat(values[4]));
+                                    this.setVector4(i, _float4);
+                                }
                             }
                         } catch (e) {
                             console.log(e);

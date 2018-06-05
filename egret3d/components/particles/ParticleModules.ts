@@ -86,8 +86,12 @@ namespace egret3d.particle {
     }
 
     export class AnimationCurve implements paper.ISerializable {
+        /**
+         * 功能与效率平衡长度取4
+         */
         private readonly _keys: Array<Keyframe> = new Array<Keyframe>();
 
+        private readonly _floatValues: Float32Array = new Float32Array(8);
         public serialize() {
             return this._keys.map(keyFrame => keyFrame.serialize());
         }
@@ -117,19 +121,8 @@ namespace egret3d.particle {
             throw "AnimationCurve: invalid t or keys.length is 0";
         }
 
-        public set keyFrames(value: ReadonlyArray<Keyframe>) {
-            if (value.length > 4) {
-                throw "the keyframes maximum length is 4.";
-            }
-
-            this._keys.length = value.length;
-            for (let i = 0, l = value.length; i < l; i++) {
-                this._keys[i] = value[i];
-            }
-        }
-
         public get floatValues(): Readonly<Float32Array> {
-            let res = new Float32Array(8);
+            let res = this._floatValues;
             let offset = 0;
             for (let keyFrame of this._keys) {
                 res[offset++] = keyFrame.time;
@@ -171,6 +164,9 @@ namespace egret3d.particle {
         private readonly alphaKeys: Array<GradientAlphaKey> = new Array<GradientAlphaKey>();
         @paper.serializedField
         private readonly colorKeys: Array<GradientColorKey> = new Array<GradientColorKey>();
+
+        private readonly _alphaValue: Float32Array = new Float32Array(8);
+        private readonly _colorValue: Float32Array = new Float32Array(16);
 
         public deserialize(element: any) {
             this.colorKeys.length = 0;
@@ -217,7 +213,7 @@ namespace egret3d.particle {
         }
 
         public get alphaValues(): Readonly<Float32Array> {
-            let res = new Float32Array(8);
+            let res = this._alphaValue;
             let offset = 0;
             for (let alpha of this.alphaKeys) {
                 res[offset++] = alpha.time;
@@ -228,7 +224,7 @@ namespace egret3d.particle {
         }
 
         public get colorValues(): Readonly<Float32Array> {
-            let res = new Float32Array(16);
+            let res = this._colorValue;
             let offset = 0;
             for (let color of this.colorKeys) {
                 res[offset++] = color.time;
@@ -530,7 +526,7 @@ namespace egret3d.particle {
             this.randomDirection = element.randomDirection;
             this.spherizeDirection = element.spherizeDirection;
         }
-        public invalidUpdate() : void{
+        public invalidUpdate(): void {
             paper.EventPool.dispatchEvent(ParticleComponenetEventType.ShapeChanged, this._comp);
         }
 
@@ -611,22 +607,6 @@ namespace egret3d.particle {
         }
     }
 
-    /**
-     * TODO
-     */
-    export class ColorBySpeedModule extends ParticleSystemModule {
-        @paper.serializedField
-        public readonly color: MinMaxGradient = new MinMaxGradient();
-        @paper.serializedField
-        public readonly range: egret3d.Vector2 = new egret3d.Vector2();
-
-        public deserialize(element: any) {
-            super.deserialize(element);
-            this.color.deserialize(element.color);
-            this.range.deserialize(element.range);
-        }
-    }
-
     export class SizeOverLifetimeModule extends ParticleSystemModule {
         @paper.serializedField
         public separateAxes: boolean = false;
@@ -651,29 +631,6 @@ namespace egret3d.particle {
             paper.EventPool.dispatchEvent(ParticleComponenetEventType.SizeOverLifetime, this._comp);
         }
     }
-    /**
-     * TODO
-     */
-    export class SizeBySpeedModule extends ParticleSystemModule {
-        @paper.serializedField
-        public readonly x: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public readonly y: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public readonly z: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public separateAxes: boolean;
-        @paper.serializedField
-        public range: egret3d.Vector2 = new egret3d.Vector2();
-
-        public deserialize(element: any) {
-            super.deserialize(element);
-            this.x.deserialize(element.x);
-            this.y.deserialize(element.y);
-            this.z.deserialize(element.z);
-            this.separateAxes = element.separateAxes;
-        }
-    }
 
     export class RotationOverLifetimeModule extends ParticleSystemModule {
         @paper.serializedField
@@ -694,30 +651,6 @@ namespace egret3d.particle {
         }
         public invalidUpdate(): void {
             paper.EventPool.dispatchEvent(ParticleComponenetEventType.RotationOverLifetime, this._comp);
-        }
-    }
-    /**
-     * TODO
-     */
-    export class RotationBySpeedModule extends ParticleSystemModule {
-        @paper.serializedField
-        public separateAxes: boolean;
-        @paper.serializedField
-        public readonly x: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public readonly y: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public readonly z: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public range: egret3d.Vector2 = new egret3d.Vector2();
-
-        public deserialize(element: any) {
-            super.deserialize(element);
-            this.separateAxes = element.separateAxes;
-            this.x.deserialize(element.x);
-            this.y.deserialize(element.y);
-            this.z.deserialize(element.z);
-            this.range.deserialize(element.range);
         }
     }
 

@@ -471,10 +471,11 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
 
-            const data = await host.load(resource, "json");
+            const data = await host.load(resource, "text");
             const url = getUrl(resource);
             const filename = getFileName(url);
             let text = new egret3d.TextAsset(filename, url);
+            text.content = data;
             paper.Asset.register(text, true);
             return text;
         },

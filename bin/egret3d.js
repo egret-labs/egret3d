@@ -4844,16 +4844,40 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * @internal
+     * text asset
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 文本资源。
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
      */
     var TextAsset = (function (_super) {
         __extends(TextAsset, _super);
         function TextAsset() {
-            return _super !== null && _super.apply(this, arguments) || this;
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             * 文本内容
+             */
+            _this.content = "";
+            return _this;
         }
+        /**
+         * @inheritDoc
+         */
         TextAsset.prototype.dispose = function () {
+            this.content = "";
         };
+        /**
+         * @inheritDoc
+         */
         TextAsset.prototype.caclByteLength = function () {
+            if (this.content) {
+                return egret3d.utils.caclStringByteLength(this.content);
+            }
             return 0;
         };
         return TextAsset;
@@ -9807,14 +9831,30 @@ var egret3d;
                 console.warn("Error arguments.");
             }
         };
-        Mesh.prototype.uploadVertexSubData = function (letray, offset, subMeshIndex) {
-            if (offset === void 0) { offset = 0; }
+        Mesh.prototype.uploadVertexSubData = function (uploadAttributes, startVertexIndex, vertexCount, subMeshIndex) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
                 var webgl = egret3d.WebGLKit.webgl;
+                var primitive = this._glTFMesh.primitives[subMeshIndex];
                 webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
-                webgl.bufferSubData(webgl.ARRAY_BUFFER, offset, letray);
-                this._version++;
+                var attributes = primitive.attributes;
+                for (var _i = 0, uploadAttributes_1 = uploadAttributes; _i < uploadAttributes_1.length; _i++) {
+                    var attributeName = uploadAttributes_1[_i];
+                    var accessorIndex = attributes[attributeName];
+                    if (accessorIndex !== undefined) {
+                        var accessor = this._glTFAsset.getAccessor(accessorIndex);
+                        var compType = egret3d.GLTFAsset.getComponentTypeCount(accessor.componentType);
+                        var typeCount = egret3d.GLTFAsset.getAccessorTypeCount(accessor.type);
+                        var startOffset = this._glTFAsset.getBufferOffset(accessor);
+                        var bufferOffset = startOffset + startVertexIndex * typeCount * compType;
+                        var subVertexBuffer = this._glTFAsset.createTypeArrayFromAccessor(accessor);
+                        var letray = new Float32Array(subVertexBuffer.buffer, bufferOffset, typeCount * vertexCount);
+                        webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, letray);
+                    }
+                    else {
+                        console.warn("Error arguments.");
+                    }
+                }
             }
             else {
                 console.warn("Error arguments.");
@@ -9843,8 +9883,8 @@ var egret3d;
                     }
                 }
                 else {
-                    for (var _i = 0, uploadAttributes_1 = uploadAttributes; _i < uploadAttributes_1.length; _i++) {
-                        var attributeName = uploadAttributes_1[_i];
+                    for (var _i = 0, uploadAttributes_2 = uploadAttributes; _i < uploadAttributes_2.length; _i++) {
+                        var attributeName = uploadAttributes_2[_i];
                         var accessorIndex = attributes[attributeName];
                         if (accessorIndex !== undefined) {
                             var accessor = this._glTFAsset.getAccessor(accessorIndex);
@@ -11611,7 +11651,11 @@ var egret3d;
         __reflect(Keyframe.prototype, "egret3d.particle.Keyframe", ["paper.ISerializable"]);
         var AnimationCurve = (function () {
             function AnimationCurve() {
+                /**
+                 * 功能与效率平衡长度取4
+                 */
                 this._keys = new Array();
+                this._floatValues = new Float32Array(8);
             }
             AnimationCurve.prototype.serialize = function () {
                 return this._keys.map(function (keyFrame) { return keyFrame.serialize(); });
@@ -11639,22 +11683,9 @@ var egret3d;
                 }
                 throw "AnimationCurve: invalid t or keys.length is 0";
             };
-            Object.defineProperty(AnimationCurve.prototype, "keyFrames", {
-                set: function (value) {
-                    if (value.length > 4) {
-                        throw "the keyframes maximum length is 4.";
-                    }
-                    this._keys.length = value.length;
-                    for (var i = 0, l = value.length; i < l; i++) {
-                        this._keys[i] = value[i];
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             Object.defineProperty(AnimationCurve.prototype, "floatValues", {
                 get: function () {
-                    var res = new Float32Array(8);
+                    var res = this._floatValues;
                     var offset = 0;
                     for (var _i = 0, _a = this._keys; _i < _a.length; _i++) {
                         var keyFrame = _a[_i];
@@ -11717,6 +11748,8 @@ var egret3d;
                 _this.mode = 0 /* Blend */;
                 _this.alphaKeys = new Array();
                 _this.colorKeys = new Array();
+                _this._alphaValue = new Float32Array(8);
+                _this._colorValue = new Float32Array(16);
                 return _this;
             }
             Gradient.prototype.deserialize = function (element) {
@@ -11762,7 +11795,7 @@ var egret3d;
             };
             Object.defineProperty(Gradient.prototype, "alphaValues", {
                 get: function () {
-                    var res = new Float32Array(8);
+                    var res = this._alphaValue;
                     var offset = 0;
                     for (var _i = 0, _a = this.alphaKeys; _i < _a.length; _i++) {
                         var alpha = _a[_i];
@@ -11776,7 +11809,7 @@ var egret3d;
             });
             Object.defineProperty(Gradient.prototype, "colorValues", {
                 get: function () {
-                    var res = new Float32Array(16);
+                    var res = this._colorValue;
                     var offset = 0;
                     for (var _i = 0, _a = this.colorKeys; _i < _a.length; _i++) {
                         var color = _a[_i];
@@ -12334,32 +12367,6 @@ var egret3d;
         }(ParticleSystemModule));
         particle.ColorOverLifetimeModule = ColorOverLifetimeModule;
         __reflect(ColorOverLifetimeModule.prototype, "egret3d.particle.ColorOverLifetimeModule");
-        /**
-         * TODO
-         */
-        var ColorBySpeedModule = (function (_super) {
-            __extends(ColorBySpeedModule, _super);
-            function ColorBySpeedModule() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.color = new MinMaxGradient();
-                _this.range = new egret3d.Vector2();
-                return _this;
-            }
-            ColorBySpeedModule.prototype.deserialize = function (element) {
-                _super.prototype.deserialize.call(this, element);
-                this.color.deserialize(element.color);
-                this.range.deserialize(element.range);
-            };
-            __decorate([
-                paper.serializedField
-            ], ColorBySpeedModule.prototype, "color", void 0);
-            __decorate([
-                paper.serializedField
-            ], ColorBySpeedModule.prototype, "range", void 0);
-            return ColorBySpeedModule;
-        }(ParticleSystemModule));
-        particle.ColorBySpeedModule = ColorBySpeedModule;
-        __reflect(ColorBySpeedModule.prototype, "egret3d.particle.ColorBySpeedModule");
         var SizeOverLifetimeModule = (function (_super) {
             __extends(SizeOverLifetimeModule, _super);
             function SizeOverLifetimeModule() {
@@ -12401,45 +12408,6 @@ var egret3d;
         }(ParticleSystemModule));
         particle.SizeOverLifetimeModule = SizeOverLifetimeModule;
         __reflect(SizeOverLifetimeModule.prototype, "egret3d.particle.SizeOverLifetimeModule");
-        /**
-         * TODO
-         */
-        var SizeBySpeedModule = (function (_super) {
-            __extends(SizeBySpeedModule, _super);
-            function SizeBySpeedModule() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.x = new MinMaxCurve();
-                _this.y = new MinMaxCurve();
-                _this.z = new MinMaxCurve();
-                _this.range = new egret3d.Vector2();
-                return _this;
-            }
-            SizeBySpeedModule.prototype.deserialize = function (element) {
-                _super.prototype.deserialize.call(this, element);
-                this.x.deserialize(element.x);
-                this.y.deserialize(element.y);
-                this.z.deserialize(element.z);
-                this.separateAxes = element.separateAxes;
-            };
-            __decorate([
-                paper.serializedField
-            ], SizeBySpeedModule.prototype, "x", void 0);
-            __decorate([
-                paper.serializedField
-            ], SizeBySpeedModule.prototype, "y", void 0);
-            __decorate([
-                paper.serializedField
-            ], SizeBySpeedModule.prototype, "z", void 0);
-            __decorate([
-                paper.serializedField
-            ], SizeBySpeedModule.prototype, "separateAxes", void 0);
-            __decorate([
-                paper.serializedField
-            ], SizeBySpeedModule.prototype, "range", void 0);
-            return SizeBySpeedModule;
-        }(ParticleSystemModule));
-        particle.SizeBySpeedModule = SizeBySpeedModule;
-        __reflect(SizeBySpeedModule.prototype, "egret3d.particle.SizeBySpeedModule");
         var RotationOverLifetimeModule = (function (_super) {
             __extends(RotationOverLifetimeModule, _super);
             function RotationOverLifetimeModule() {
@@ -12475,46 +12443,6 @@ var egret3d;
         }(ParticleSystemModule));
         particle.RotationOverLifetimeModule = RotationOverLifetimeModule;
         __reflect(RotationOverLifetimeModule.prototype, "egret3d.particle.RotationOverLifetimeModule");
-        /**
-         * TODO
-         */
-        var RotationBySpeedModule = (function (_super) {
-            __extends(RotationBySpeedModule, _super);
-            function RotationBySpeedModule() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.x = new MinMaxCurve();
-                _this.y = new MinMaxCurve();
-                _this.z = new MinMaxCurve();
-                _this.range = new egret3d.Vector2();
-                return _this;
-            }
-            RotationBySpeedModule.prototype.deserialize = function (element) {
-                _super.prototype.deserialize.call(this, element);
-                this.separateAxes = element.separateAxes;
-                this.x.deserialize(element.x);
-                this.y.deserialize(element.y);
-                this.z.deserialize(element.z);
-                this.range.deserialize(element.range);
-            };
-            __decorate([
-                paper.serializedField
-            ], RotationBySpeedModule.prototype, "separateAxes", void 0);
-            __decorate([
-                paper.serializedField
-            ], RotationBySpeedModule.prototype, "x", void 0);
-            __decorate([
-                paper.serializedField
-            ], RotationBySpeedModule.prototype, "y", void 0);
-            __decorate([
-                paper.serializedField
-            ], RotationBySpeedModule.prototype, "z", void 0);
-            __decorate([
-                paper.serializedField
-            ], RotationBySpeedModule.prototype, "range", void 0);
-            return RotationBySpeedModule;
-        }(ParticleSystemModule));
-        particle.RotationBySpeedModule = RotationBySpeedModule;
-        __reflect(RotationBySpeedModule.prototype, "egret3d.particle.RotationBySpeedModule");
         var TextureSheetAnimationModule = (function (_super) {
             __extends(TextureSheetAnimationModule, _super);
             function TextureSheetAnimationModule() {
@@ -12633,15 +12561,19 @@ var egret3d;
         var helpVec3 = new egret3d.Vector3();
         var helpVec4 = new egret3d.Vector4();
         var GRAVITY = new egret3d.Vector3(0, -9.81, 0); //TODO没有物理系统，暂时先放到这里
+        /**
+         * @internal
+         */
         var ParticleBatcher = (function () {
             function ParticleBatcher() {
                 this._dirty = false;
                 this._time = 0.0;
                 this._emittsionTime = 0;
                 this._frameRateTime = 0;
-                //当前新建指针
+                //最新存活位置
                 this._firstAliveCursor = 0;
-                //当前激活指针
+                this._lastFrameFirstCursor = 0;
+                //最后存活位置
                 this._lastAliveCursor = 0;
                 //原始顶点数量
                 this._vertexStride = 0;
@@ -12676,11 +12608,8 @@ var egret3d;
              * @param particleIndex
              */
             ParticleBatcher.prototype._isParticleExpired = function (particleIndex) {
-                var startTimeIndex = this._vertexStartTimeOffset + particleIndex * this._vertexStride * 2;
-                var lifeTime = this._vertexBuffer[startTimeIndex];
-                var startTime = this._vertexBuffer[startTimeIndex + 1];
-                var age = this._time - startTime;
-                return age + 0.0001 > lifeTime;
+                var startTimeOffset = particleIndex * this._vertexStride * 2;
+                return this._time - this._vertexTimeBuffer[startTimeOffset + 1] + 0.0001 > this._vertexTimeBuffer[startTimeOffset];
             };
             /**
              * 增加一个新的粒子
@@ -12734,21 +12663,25 @@ var egret3d;
                 var orginMesh = renderer.mesh;
                 var subPrimitive = isMesh ? orginMesh.glTFMesh.primitives[0] : null;
                 var batchMesh = renderer.batchMesh;
-                var vetices = isMesh ? orginMesh.getVertices() : null;
+                var vertices = isMesh ? orginMesh.getVertices() : null;
+                var colors = isMesh ? orginMesh.getAttributes("COLOR_0" /* COLOR_0 */, 0) : null;
+                var uvs = isMesh ? orginMesh.getAttributes("TEXCOORD_0" /* TEXCOORD_0 */, 0) : null;
                 for (var i = startIndex, l = startIndex + this._vertexStride; i < l; i++, meshIndexOffset++) {
                     if (subPrimitive) {
                         var index = meshIndexOffset * 3;
-                        egret3d.Vector3.set(vetices[index], vetices[index + 1], vetices[index + 2], helpVec3);
+                        egret3d.Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], helpVec3);
                         batchMesh.setAttribute(i, "POSITION" /* POSITION */, 0, helpVec3.x, helpVec3.y, helpVec3.z);
                         if (subPrimitive.attributes["COLOR_0" /* COLOR_0 */]) {
-                            orginMesh.getAttribute(meshIndexOffset, "COLOR_0" /* COLOR_0 */, 0, helpVec4);
+                            index = meshIndexOffset * 4;
+                            egret3d.Vector4.set(colors[index], colors[index + 1], colors[index + 2], colors[index + 3], helpVec4);
                             batchMesh.setAttribute(i, "COLOR_0" /* COLOR_0 */, 0, helpVec4.x, helpVec4.y, helpVec4.z, helpVec4.w);
                         }
                         else {
                             batchMesh.setAttribute(i, "COLOR_0" /* COLOR_0 */, 0, 1.0, 1.0, 1.0, 1.0);
                         }
                         if (subPrimitive.attributes["TEXCOORD_0" /* TEXCOORD_0 */]) {
-                            orginMesh.getAttribute(meshIndexOffset, "TEXCOORD_0" /* TEXCOORD_0 */, 0, helpVec2);
+                            index = meshIndexOffset * 2;
+                            egret3d.Vector2.set(uvs[index], uvs[index + 1], helpVec2);
                             batchMesh.setAttribute(i, "TEXCOORD_0" /* TEXCOORD_0 */, 0, helpVec2.x * uvHelper.x + uvHelper.z, helpVec2.y * uvHelper.y + uvHelper.w);
                         }
                         else {
@@ -12807,7 +12740,7 @@ var egret3d;
                 if (nextCursor >= maxParticles) {
                     nextCursor = 0;
                 }
-                if (nextCursor === this._firstAliveCursor && maxParticles > 1) {
+                if (!this._isParticleExpired(nextCursor)) {
                     return false;
                 }
                 //
@@ -12817,15 +12750,17 @@ var egret3d;
                 return true;
             };
             ParticleBatcher.prototype.clean = function () {
-                this._dirty = false;
                 this._time = 0.0;
+                this._dirty = false;
                 this._emittsionTime = 0.0;
                 this._frameRateTime = 0.0;
                 this._firstAliveCursor = 0;
+                this._lastFrameFirstCursor = 0;
                 this._lastAliveCursor = 0;
                 this._vertexStride = 0;
                 this._vertexStartTimeOffset = 0;
-                this._vertexBuffer = null;
+                this._vertexTimeBuffer = null;
+                this._vertexAttributes = null;
                 this._burstIndex = 0;
                 this._comp = null;
                 this._renderer = null;
@@ -12833,9 +12768,6 @@ var egret3d;
             ParticleBatcher.prototype.resetTime = function () {
                 this._burstIndex = 0;
                 this._emittsionTime = 0;
-                if (this._comp) {
-                    this._frameRateTime = this._time + this._comp.main.startDelay.evaluate(Math.random());
-                }
             };
             ParticleBatcher.prototype.init = function (comp, renderer) {
                 this._comp = comp;
@@ -12860,42 +12792,41 @@ var egret3d;
                     this._vertexStartTimeOffset = this._vertexStride * maxParticleCount * 20;
                 }
                 renderer.batchMesh = particle.createBatchMesh(renderer, maxParticleCount);
-                //
+                //粒子系统不能用共享材质
                 renderer.batchMaterial = renderer.materials[0].clone();
                 renderer.batchMesh.uploadSubIndexBuffer();
-                this._vertexBuffer = renderer.batchMesh.vertexBuffer;
+                this._vertexTimeBuffer = renderer.batchMesh.getAttributes("TIME" /* TIME */);
+                var primitive = renderer.batchMesh.glTFMesh.primitives[0];
+                this._vertexAttributes = [];
+                for (var k in primitive.attributes) {
+                    this._vertexAttributes.push(k);
+                }
             };
             ParticleBatcher.prototype.update = function (elapsedTime) {
                 if (this._comp.isPaused) {
                     return;
                 }
+                //
                 this._time += elapsedTime;
+                var comp = this._comp;
+                //
                 while (this._lastAliveCursor != this._firstAliveCursor) {
                     if (!this._isParticleExpired(this._lastAliveCursor)) {
                         break;
                     }
                     this._lastAliveCursor++;
-                    if (this._lastAliveCursor >= this._comp.main.maxParticles) {
+                    if (this._lastAliveCursor >= comp.main.maxParticles) {
                         this._lastAliveCursor = 0;
                     }
                 }
-                this._updateEmission(elapsedTime);
+                //检测是否已经过了Delay时间，否则不能发射
+                if (comp._isPlaying && this._time >= comp.main.startDelay.constant && comp.emission.enable) {
+                    this._updateEmission(elapsedTime);
+                }
                 this._updateRender();
             };
             ParticleBatcher.prototype._updateEmission = function (elapsedTime) {
                 var comp = this._comp;
-                if (!comp._isPlaying) {
-                    return;
-                }
-                //检测是否已经过了Delay时间，否则不能发射
-                if (this._time < comp.main.startDelay.constant) {
-                    return;
-                }
-                //更新发射器
-                if (!comp.emission.enable) {
-                    return;
-                }
-                //检测发射器是否可以发射粒子
                 //根据时间判断
                 var lastEmittsionTime = this._emittsionTime;
                 this._emittsionTime += elapsedTime;
@@ -12915,23 +12846,19 @@ var egret3d;
                     var rateOverTime = comp.emission.rateOverTime.evaluate();
                     if (rateOverTime > 0) {
                         var minEmissionTime = 1 / rateOverTime;
-                        var frameRateTime = this._frameRateTime;
-                        frameRateTime += minEmissionTime;
-                        var lifetimeMax = comp.main.startLifetime.constantMax || comp.main.startLifetime.constant;
-                        frameRateTime = this._time - (this._time - frameRateTime) % lifetimeMax;
-                        while (frameRateTime <= this._time) {
-                            if (!this._emit(frameRateTime)) {
+                        this._frameRateTime += elapsedTime;
+                        while (this._frameRateTime > minEmissionTime) {
+                            if (!this._emit(this._time)) {
                                 break;
                             }
-                            frameRateTime += minEmissionTime;
+                            this._frameRateTime -= minEmissionTime;
                         }
-                        frameRateTime = Math.floor(this._time / minEmissionTime) * minEmissionTime;
-                        this._frameRateTime = frameRateTime;
                     }
                 }
                 else {
                     //一个生命周期结束
                     if (comp.main.loop) {
+                        //直接置零，对时间敏感的可能有问题
                         this._emittsionTime = 0;
                         this._burstIndex = 0;
                     }
@@ -12942,24 +12869,34 @@ var egret3d;
                 }
             };
             ParticleBatcher.prototype._updateRender = function () {
-                var comp = this._comp;
                 var renderer = this._renderer;
                 if (!renderer) {
                     return;
                 }
+                var comp = this._comp;
                 //
                 if (this._dirty) {
-                    renderer.batchMesh.uploadVertexSubData(this._vertexBuffer, 0);
+                    //为了性能，不能提交整个buffer，只提交改变的buffer
+                    var vertexStride = this._vertexStride;
+                    if (this._firstAliveCursor > this._lastFrameFirstCursor) {
+                        var bufferOffset = this._lastFrameFirstCursor * vertexStride;
+                        var bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * vertexStride;
+                        renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, bufferCount);
+                    }
+                    else {
+                        var addCount = comp.main.maxParticles - this._lastFrameFirstCursor;
+                        var bufferOffset = this._lastFrameFirstCursor * vertexStride;
+                        //先更新尾部的，再更新头部的
+                        renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, this._lastFrameFirstCursor * vertexStride, addCount * vertexStride);
+                        renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, 0, this._firstAliveCursor * vertexStride);
+                    }
+                    this._lastFrameFirstCursor = this._firstAliveCursor;
                     this._dirty = false;
                 }
                 var transform = comp.gameObject.transform;
-                switch (comp.main.simulationSpace) {
-                    case 0 /* Local */:
-                        {
-                            renderer._setVector3("u_worldPosition" /* WORLD_POSITION */, transform.getPosition());
-                            renderer._setVector4("u_worldRotation" /* WORLD_ROTATION */, transform.getRotation());
-                        }
-                        break;
+                if (comp.main.simulationSpace === 0 /* Local */) {
+                    renderer._setVector3("u_worldPosition" /* WORLD_POSITION */, transform.getPosition());
+                    renderer._setVector4("u_worldRotation" /* WORLD_ROTATION */, transform.getRotation());
                 }
                 //
                 switch (comp.main.scaleMode) {
@@ -12985,13 +12922,13 @@ var egret3d;
                         }
                         break;
                 }
-                renderer._setVector3("u_gravity" /* GRAVIT */, this._finalGravity);
-                renderer._setFloat("u_lengthScale" /* LENGTH_SCALE */, renderer.lengthScale);
-                renderer._setFloat("u_speeaScale" /* SPEED_SCALE */, renderer.velocityScale);
                 renderer._setBoolean("u_startSize3D" /* START_SIZE3D */, comp.main.startRotation3D);
                 renderer._setInt("u_simulationSpace" /* SIMULATION_SPACE */, comp.main.simulationSpace);
                 renderer._setInt("u_scalingMode" /* SCALING_MODE */, comp.main.scaleMode);
                 renderer._setFloat("u_currentTime" /* CURRENTTIME */, this._time);
+                renderer._setFloat("u_lengthScale" /* LENGTH_SCALE */, renderer.lengthScale);
+                renderer._setFloat("u_speeaScale" /* SPEED_SCALE */, renderer.velocityScale);
+                renderer._setVector3("u_gravity" /* GRAVIT */, this._finalGravity);
             };
             Object.defineProperty(ParticleBatcher.prototype, "aliveParticleCount", {
                 get: function () {
@@ -14101,10 +14038,16 @@ var egret3d;
                     case egret3d.UniformTypeEnum.Float4:
                         var tempValue = jsonChild["value"];
                         try {
-                            var values = tempValue.match(egret3d.RegexpUtil.vector4Regexp);
-                            if (values !== null) {
-                                var _float4 = new egret3d.Vector4(parseFloat(values[1]), parseFloat(values[2]), parseFloat(values[3]), parseFloat(values[4]));
+                            if (Array.isArray(tempValue)) {
+                                var _float4 = new egret3d.Vector4(tempValue[0], tempValue[1], tempValue[2], tempValue[3]);
                                 this.setVector4(i, _float4);
+                            }
+                            else {
+                                var values = tempValue.match(egret3d.RegexpUtil.vector4Regexp);
+                                if (values !== null) {
+                                    var _float4 = new egret3d.Vector4(parseFloat(values[1]), parseFloat(values[2]), parseFloat(values[3]), parseFloat(values[4]));
+                                    this.setVector4(i, _float4);
+                                }
                             }
                         }
                         catch (e) {
@@ -17084,7 +17027,7 @@ var egret3d;
         ShaderLib.line_vert = "attribute vec4 _glesVertex;\nattribute vec4 _glesColor;\nuniform highp mat4 glstate_matrix_mvp;\nvarying lowp vec4 xlv_COLOR;\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_COLOR = _glesColor;\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
         ShaderLib.materialcolor_vert = "attribute vec4 _glesVertex;\nuniform vec4 _Color;\nuniform highp mat4 glstate_matrix_mvp;\nvarying lowp vec4 xlv_COLOR;\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_COLOR = _Color;\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
         ShaderLib.particlesystem_frag = "\nuniform sampler2D _MainTex;\nuniform vec4 _TintColor;\nvarying float v_discard;\nvarying vec4 v_color;\nvarying vec2 v_texcoord;\n\n#ifdef RENDERMODE_MESH\n varying vec4 v_mesh_color;\n#endif\n\nvoid main()\n{ \n #ifdef RENDERMODE_MESH\n  gl_FragColor=v_mesh_color;\n #else\n  gl_FragColor=vec4(1.0); \n #endif\n  \n #ifdef DIFFUSEMAP\n  if(v_discard!=0.0)\n   discard;\n  #ifdef TINTCOLOR\n   gl_FragColor*=texture2D(_MainTex,v_texcoord)*_TintColor*v_color*2.0;\n  #else\n   gl_FragColor*=texture2D(_MainTex,v_texcoord)*v_color;\n  #endif\n #else\n  #ifdef TINTCOLOR\n   gl_FragColor*=_TintColor*v_color*2.0;\n  #else\n   gl_FragColor*=v_color;\n  #endif\n #endif\n}";
-        ShaderLib.particlesystem_vert = "#if defined(SPHERHBILLBOARD)||defined(STRETCHEDBILLBOARD)||defined(HORIZONTALBILLBOARD)||defined(VERTICALBILLBOARD)\n attribute vec2 _glesCorner;\n#endif\n#ifdef RENDERMESH\n attribute vec3 _glesVertex;\n attribute vec4 _glesColor;\n#endif\nattribute vec2 _glesMultiTexCoord0;\nattribute vec3 _startPosition;\nattribute vec3 _startVelocity;\nattribute vec4 _startColor;\nattribute vec3 _startSize;\nattribute vec3 _startRotation;\nattribute vec2 _time;\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)||defined(ROTATIONTWOCONSTANTS)||defined(ROTATIONTWOCURVES)\n  attribute vec4 _random0;\n#endif\n#if defined(TEXTURESHEETANIMATIONTWOCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n  attribute vec4 _random1;\n#endif\nattribute vec3 _startWorldPosition;\nattribute vec4 _startWorldRotation;\n\n#include <particle_common>\n\nvoid main()\n{\n float age = u_currentTime - _time.y;\n float t = age/_time.x;\n if(t>1.0 || t < 0.0){    \n   v_discard=1.0;\n   return;\n  }\n   \n #include <particle_affector>\n gl_Position=glstate_matrix_vp*vec4(center,1.0);\n v_color = computeColor(_startColor, t);\n #ifdef DIFFUSEMAP\n  v_texcoord =computeUV(_glesMultiTexCoord0, t);\n #endif\n v_discard=0.0;\n}\n\n";
+        ShaderLib.particlesystem_vert = "#if defined(SPHERHBILLBOARD)||defined(STRETCHEDBILLBOARD)||defined(HORIZONTALBILLBOARD)||defined(VERTICALBILLBOARD)\n attribute vec2 _glesCorner;\n#endif\n#ifdef RENDERMESH\n attribute vec3 _glesVertex;\n attribute vec4 _glesColor;\n#endif\nattribute vec2 _glesMultiTexCoord0;\nattribute vec3 _startPosition;\nattribute vec3 _startVelocity;\nattribute vec4 _startColor;\nattribute vec3 _startSize;\nattribute vec3 _startRotation;\nattribute vec2 _time;\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)||defined(ROTATIONTWOCONSTANTS)||defined(ROTATIONTWOCURVES)\n  attribute vec4 _random0;\n#endif\n#if defined(TEXTURESHEETANIMATIONTWOCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n  attribute vec4 _random1;\n#endif\nattribute vec3 _startWorldPosition;\nattribute vec4 _startWorldRotation;\n\n#include <particle_common>\n\nvoid main()\n{\n float age = u_currentTime - _time.y;\n float t = age/_time.x;\n if(t>1.0){    \n   v_discard=1.0;\n   return;\n  }\n   \n #include <particle_affector>\n gl_Position=glstate_matrix_vp*vec4(center,1.0);\n v_color = computeColor(_startColor, t);\n #ifdef DIFFUSEMAP\n  v_texcoord =computeUV(_glesMultiTexCoord0, t);\n #endif\n v_discard=0.0;\n}\n\n";
         ShaderLib.postdepth_frag = "precision highp float;\n//varying highp vec3 xlv_Normal;   \n\nconst float PackUpscale = 256. / 255.; \n// fraction -> 0..1 (including 1)\nconst float UnpackDownscale = 255. / 256.; \n// 0..1 -> fraction (excluding 1)\nconst vec3 PackFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );\nconst vec4 UnpackFactors = UnpackDownscale / vec4( PackFactors, 1. );\nconst float ShiftRight8 = 1. / 256.;\nvec4 packDepthToRGBA( const in float v ) \n{\n    vec4 r = vec4( fract( v * PackFactors ), v );\n r.yzw -= r.xyz * ShiftRight8;\n // tidy overflow\n    return r * PackUpscale;\n}\nfloat unpackRGBAToDepth( const in vec4 v ) \n{\n    return dot( v, UnpackFactors );\n}\nvec2 packDepthToRG( const in float v ) \n{\n    vec2 r = vec2( fract( v * PackFactors.z ), v );\n r.y -= r.x * ShiftRight8;\n    return r * PackUpscale;\n}\nfloat unpackRGToDepth( const in vec2 v ) \n{\n    return dot( v.xy, UnpackFactors.zw );\n}\nvec3 packDepthToRGB( const in float v ) \n{\n    vec3 r = vec3( fract( v * PackFactors.yz ), v );\n r.yz -= r.xy * ShiftRight8;\n // tidy overflow\n    return r * PackUpscale;\n}\nfloat unpackRGBToDepth( const in vec3 v ) \n{\n    return dot( v.xyz, UnpackFactors.yzw );\n}\nvoid main() \n{\n    float z = gl_FragCoord.z;// fract(gl_FragCoord.z *256.*256.);\n    // highp vec2 normal =xlv_Normal.xy;\n    gl_FragColor=packDepthToRGBA(z);\n}";
         ShaderLib.postdepth_vert = "precision highp float;\nattribute vec4 _glesVertex;    \n\nuniform highp mat4 glstate_matrix_mvp;      \n            \nvoid main()                                     \n{        \n    gl_Position = (glstate_matrix_mvp * _glesVertex);  \n}";
         ShaderLib.postquaddepth_frag = "precision mediump float;\nvarying highp vec2 xlv_TEXCOORD0;       \nuniform sampler2D _DepthTex;   \nuniform sampler2D _MainTex;  \n\n\nconst float PackUpscale = 256. / 255.; \n// fraction -> 0..1 (including 1)\nconst float UnpackDownscale = 255. / 256.; \n// 0..1 -> fraction (excluding 1)\nconst vec3 PackFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );\nconst vec4 UnpackFactors = UnpackDownscale / vec4( PackFactors, 1. );\nconst float ShiftRight8 = 1. / 256.;\nvec4 packDepthToRGBA( const in float v ) \n{\n    vec4 r = vec4( fract( v * PackFactors ), v );\n r.yzw -= r.xyz * ShiftRight8;\n // tidy overflow\n    return r * PackUpscale;\n}\nfloat unpackRGBAToDepth( const in vec4 v ) \n{\n    return dot( v, UnpackFactors );\n}\n\n\nfloat planeDistance(const in vec3 positionA, const in vec3 normalA, \n                    const in vec3 positionB, const in vec3 normalB) \n{\n  vec3 positionDelta = positionB-positionA;\n  float planeDistanceDelta = max(abs(dot(positionDelta, normalA)), abs(dot(positionDelta, normalB)));\n  return planeDistanceDelta;\n}\n\nvoid main()         \n{\n    lowp vec4 c1=texture2D(_DepthTex, xlv_TEXCOORD0+vec2(0.001,0));\n    lowp vec4 c2=texture2D(_DepthTex, xlv_TEXCOORD0+vec2(-0.001,0));\n    lowp vec4 c3=texture2D(_DepthTex, xlv_TEXCOORD0+vec2(0,0.001));\n    lowp vec4 c4=texture2D(_DepthTex, xlv_TEXCOORD0+vec2(0,-0.001));\n    highp float z1 = unpackRGBAToDepth(c1);\n    highp float z2 = unpackRGBAToDepth(c2);\n    highp float z3 = unpackRGBAToDepth(c3);\n    highp float z4 = unpackRGBAToDepth(c4);\n    highp float d = clamp(  (abs(z2-z1)+abs(z4-z3))*10.0,0.0,1.0);\n    lowp vec4 c=texture2D(_MainTex, xlv_TEXCOORD0);\n    lowp float g = c.r*0.3+c.g*0.6+c.b*0.1;\n\n    gl_FragColor =mix(vec4(g,g,g,1.),vec4(1.0,1.0,0.0,1.0),d);// vec4(g*d,g*d,g*d,1.0);\n}";
@@ -17110,11 +17053,8 @@ var egret3d;
         ShaderChunk.light_pars_frag = "#ifdef USE_DIRECT_LIGHT\n    uniform float glstate_directLights[USE_DIRECT_LIGHT * 15];\n#endif\n\n#ifdef USE_POINT_LIGHT\n    uniform float glstate_pointLights[USE_POINT_LIGHT * 19];\n#endif\n\n#ifdef USE_SPOT_LIGHT\n    uniform float glstate_spotLights[USE_SPOT_LIGHT * 19];\n#endif";
         ShaderChunk.normal_frag = "#ifdef DOUBLE_SIDED\n    float flipNormal = ( float( gl_FrontFacing ) * 2.0 - 1.0 );\n#else\n    float flipNormal = 1.0;\n#endif\n#ifdef FLAT_SHADED\n    // Workaround for Adreno/Nexus5 not able able to do dFdx( vViewPosition ) ...\n    vec3 fdx = vec3( dFdx( xlv_POS.x ), dFdx( xlv_POS.y ), dFdx( xlv_POS.z ) );\n    vec3 fdy = vec3( dFdy( xlv_POS.x ), dFdy( xlv_POS.y ), dFdy( xlv_POS.z ) );\n    vec3 N = normalize( cross( fdx, fdy ) );\n#else\n    vec3 N = normalize(xlv_NORMAL) * flipNormal;\n#endif\n#ifdef USE_NORMAL_MAP\n    vec3 normalMapColor = texture2D(_NormalTex, xlv_TEXCOORD0).rgb;\n    // for now, uv coord is flip Y\n    mat3 tspace = tsn(N, -xlv_POS, vec2(xlv_TEXCOORD0.x, 1.0 - xlv_TEXCOORD0.y));\n    // mat3 tspace = tbn(normalize(v_Normal), v_ViewModelPos, vec2(xlv_TEXCOORD0.x, 1.0 - xlv_TEXCOORD0.y));\n    N = normalize(tspace * (normalMapColor * 2.0 - 1.0));\n#elif defined(USE_BUMPMAP)\n    N = perturbNormalArb(-xlv_POS, N, dHdxy_fwd(xlv_TEXCOORD0));\n#endif";
         ShaderChunk.packing = "const float PackUpscale = 256. / 255.; // fraction -> 0..1 (including 1)\nconst float UnpackDownscale = 255. / 256.; // 0..1 -> fraction (excluding 1)\n\nconst vec3 PackFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );\nconst vec4 UnpackFactors = UnpackDownscale / vec4( PackFactors, 1. );\n\nconst float ShiftRight8 = 1. / 256.;\n\nvec4 packDepthToRGBA( const in float v ) {\n\n    vec4 r = vec4( fract( v * PackFactors ), v );\n    r.yzw -= r.xyz * ShiftRight8; // tidy overflow\n    return r * PackUpscale;\n\n}\n\nfloat unpackRGBAToDepth( const in vec4 v ) {\n\n    return dot( v, UnpackFactors );\n\n}";
-        ShaderChunk.particle_affector = "vec3 lifeVelocity = computeVelocity(t);\nvec4 worldRotation;\nif(u_simulationSpace==1)\n worldRotation=_startWorldRotation;\nelse\n worldRotation=u_worldRotation;\nvec3 gravity=u_gravity*age;\n\nvec3 center=computePosition(_startVelocity, lifeVelocity, age, t,gravity,worldRotation); \n#ifdef SPHERHBILLBOARD\n   vec2 corner=_glesCorner.xy;\n      vec3 cameraUpVector =normalize(glstate_cameraUp);\n      vec3 sideVector = normalize(cross(glstate_cameraForward,cameraUpVector));\n      vec3 upVector = normalize(cross(sideVector,glstate_cameraForward));\n     corner*=computeBillbardSize(_startSize.xy,t);\n  #if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)\n   if(u_startSize3D){\n    vec3 rotation=vec3(_startRotation.xy,computeRotation(_startRotation.z,age,t));\n    center += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,rotation);\n   }\n   else{\n    float rot = computeRotation(_startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n    center += u_sizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n   }\n  #else\n   if(u_startSize3D){\n    center += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,_startRotation);\n   }\n   else{\n    float c = cos(_startRotation.x);\n    float s = sin(_startRotation.x);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n    center += u_sizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n   }\n  #endif\n #endif\n #ifdef STRETCHEDBILLBOARD\n  vec2 corner=_glesCorner.xy;\n  vec3 velocity;\n  #if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n      if(u_spaceType==0)\n       velocity=rotation_quaternions(u_sizeScale*(_startVelocity+lifeVelocity),worldRotation)+gravity;\n      else\n       velocity=rotation_quaternions(u_sizeScale*_startVelocity,worldRotation)+lifeVelocity+gravity;\n   #else\n      velocity= rotation_quaternions(u_sizeScale*_startVelocity,worldRotation)+gravity;\n   #endif \n  vec3 cameraUpVector = normalize(velocity);\n  vec3 direction = normalize(center-glstate_cameraPos);\n    vec3 sideVector = normalize(cross(direction,normalize(velocity)));\n  sideVector=u_sizeScale.xzy*sideVector;\n  cameraUpVector=length(vec3(u_sizeScale.x,0.0,0.0))*cameraUpVector;\n    vec2 size=computeBillbardSize(_startSize.xy,t);\n    const mat2 rotaionZHalfPI=mat2(0.0, -1.0, 1.0, 0.0);\n    corner=rotaionZHalfPI*corner;\n    corner.y=corner.y-abs(corner.y);\n    float speed=length(velocity);\n    center +=sign(u_sizeScale.x)*(sign(u_lengthScale)*size.x*corner.x*sideVector+(speed*u_speeaScale+size.y*u_lengthScale)*corner.y*cameraUpVector);\n #endif\n #ifdef HORIZONTALBILLBOARD\n  vec2 corner=_glesCorner.xy;\n    const vec3 cameraUpVector=vec3(0.0,0.0,1.0);\n    const vec3 sideVector = vec3(-1.0,0.0,0.0);\n  float rot = computeRotation(_startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n  corner*=computeBillbardSize(_startSize.xy,t);\n    center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n #endif\n #ifdef VERTICALBILLBOARD\n  vec2 corner=_glesCorner.xy;\n    const vec3 cameraUpVector =vec3(0.0,1.0,0.0);\n    vec3 sideVector = normalize(cross(glstate_cameraForward,cameraUpVector));\n  float rot = computeRotation(_startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner*cos(0.78539816339744830961566084581988);\n  corner*=computeBillbardSize(_startSize.xy,t);\n    center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n #endif\n #ifdef RENDERMESH\n    vec3 size=computeMeshSize(_startSize,t);\n  #if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)\n    if(u_startSize3D){\n     vec3 rotation=vec3(_startRotation.xy,-computeRotation(_startRotation.z, age,t));\n     center+= rotation_quaternions(u_sizeScale*rotation_euler(_glesVertex*size,rotation),worldRotation);\n    }\n    else{\n     #ifdef ROTATIONOVERLIFETIME\n      float angle=computeRotation(_startRotation.x, age,t);\n      if(_startPosition.x>0.1 || _startPosition.x < -0.1||_startPosition.y>0.1 || _startPosition.y < -0.1){\n       center+= (rotation_quaternions(rotation_axis(u_sizeScale*_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_startPosition.xy,0.0))),angle),worldRotation));//已验证\n      }\n      else{\n       #ifdef SHAPE\n        center+= u_sizeScale.xzy*(rotation_quaternions(rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),angle),worldRotation));\n       #else\n        if(u_simulationSpace==1)\n         center+=rotation_axis(u_sizeScale*_glesVertex*size,vec3(0.0,0.0,-1.0),angle);\n        else if(u_simulationSpace==0)\n         center+=rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,0.0,-1.0),angle),worldRotation);\n       #endif\n      }\n     #endif\n     #ifdef ROTATIONSEPERATE\n      vec3 angle=compute3DRotation(vec3(0.0,0.0,_startRotation.z), age,t);\n      center+= (rotation_quaternions(rotation_euler(u_sizeScale*_glesVertex*size,vec3(angle.x,angle.y,angle.z)),worldRotation));\n     #endif \n    }\n  #else\n  if(u_startSize3D){\n   center+= rotation_quaternions(u_sizeScale*rotation_euler(_glesVertex*size,_startRotation),worldRotation);\n  }\n  else{\n   if(_startPosition.x>0.1 || _startPosition.x < -0.1||_startPosition.y>0.1 || _startPosition.y < -0.1){\n    if(u_simulationSpace==1)\n     center+= rotation_axis(u_sizeScale*_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_startPosition.xy,0.0))),_startRotation.x);\n    else if(u_simulationSpace==0)\n     center+= (rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_startPosition.xy,0.0))),_startRotation.x),worldRotation));\n   }\n   else{\n    #ifdef SHAPE\n     if(u_simulationSpace==1)\n      center+= u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),_startRotation.x);\n     else if(u_simulationSpace==0)\n      center+= rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),_startRotation.x),worldRotation); \n    #else\n     if(u_simulationSpace==1)\n      center+= rotation_axis(u_sizeScale*_glesVertex*size,vec3(0.0,0.0,-1.0),_startRotation.x);\n     else if(u_simulationSpace==0)\n      center+= rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,0.0,-1.0),_startRotation.x),worldRotation);\n    #endif\n   }\n  }\n  #endif\n  v_mesh_color=_glesColor;\n  #endif";
-        ShaderChunk.particle_billboard_frag = "#ifdef SPHERHBILLBOARD\n  vec2 corner=_CornerTextureCoordinate.xy;\n        vec3 cameraUpVector =normalize(glstate_camera_up);\n        vec3 sideVector = normalize(cross(glstate_camera_forward,cameraUpVector));\n        vec3 upVector = normalize(cross(sideVector,glstate_camera_forward));\n     corner*=computeSizeBilloard(_StartSize.xy,normalizedAge);\n  #if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONOVERLIFETIMESEPERATE)\n   if(u_ThreeDStartRotation){\n    vec3 rotation=vec3(_StartRotation0.xy,computeRotation(_StartRotation0.z,age,normalizedAge));\n    center += u_SizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,rotation);\n   }\n   else{\n    float rot = computeRotation(_StartRotation0.x, age,normalizedAge);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n    center += u_SizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n   }\n  #else\n   if(u_ThreeDStartRotation){\n    center += u_SizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,_StartRotation0);\n   }\n   else{\n    float c = cos(_StartRotation0.x);\n    float s = sin(_StartRotation0.x);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n    center += u_SizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n   }\n  #endif\n   #endif\n   \n   #ifdef STRETCHEDBILLBOARD\n vec2 corner=_CornerTextureCoordinate.xy;\n vec3 velocity;\n #if defined(VELOCITYOVERLIFETIMECONSTANT)||defined(VELOCITYOVERLIFETIMECURVE)||defined(VELOCITYOVERLIFETIMERANDOMCONSTANT)||defined(VELOCITYOVERLIFETIMERANDOMCURVE)\n     if(u_VOLSpaceType==0)\n    velocity=rotation_quaternions(u_SizeScale*(startVelocity+lifeVelocity),worldRotation)+gravityVelocity;\n     else\n    velocity=rotation_quaternions(u_SizeScale*startVelocity,worldRotation)+lifeVelocity+gravityVelocity;\n    #else\n     velocity= rotation_quaternions(u_SizeScale*startVelocity,worldRotation)+gravityVelocity;\n    #endif \n  vec3 cameraUpVector = normalize(velocity);\n  vec3 direction = normalize(center-glstate_camera_pos);\n        vec3 sideVector = normalize(cross(direction,normalize(velocity)));\n  \n  sideVector=u_SizeScale.xzy*sideVector;\n  cameraUpVector=length(vec3(u_SizeScale.x,0.0,0.0))*cameraUpVector;\n  \n     vec2 size=computeSizeBilloard(_StartSize.xy,normalizedAge);\n  \n     const mat2 rotaionZHalfPI=mat2(0.0, -1.0, 1.0, 0.0);\n     corner=rotaionZHalfPI*corner;\n     corner.y=corner.y-abs(corner.y);\n  \n     float speed=length(velocity);\n     center +=sign(u_SizeScale.x)*(sign(u_StretchedBillboardLengthScale)*size.x*corner.x*sideVector+(speed*u_StretchedBillboardSpeedScale+size.y*u_StretchedBillboardLengthScale)*corner.y*cameraUpVector);\n   #endif\n   \n   #ifdef HORIZONTALBILLBOARD\n  vec2 corner=_CornerTextureCoordinate.xy;\n        const vec3 cameraUpVector=vec3(0.0,0.0,1.0);\n     const vec3 sideVector = vec3(-1.0,0.0,0.0);\n  \n  float rot = computeRotation(_StartRotation0.x, age,normalizedAge);\n        float c = cos(rot);\n        float s = sin(rot);\n        mat2 rotation= mat2(c, -s, s, c);\n     corner=rotation*corner*cos(0.78539816339744830961566084581988);\n  corner*=computeSizeBilloard(_StartSize.xy,normalizedAge);\n        center +=u_SizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n   #endif\n   \n   #ifdef VERTICALBILLBOARD\n  vec2 corner=_CornerTextureCoordinate.xy;\n        const vec3 cameraUpVector =vec3(0.0,1.0,0.0);\n        vec3 sideVector = normalize(cross(glstate_camera_forward,cameraUpVector));\n  \n  float rot = computeRotation(_StartRotation0.x, age,normalizedAge);\n        float c = cos(rot);\n        float s = sin(rot);\n        mat2 rotation= mat2(c, -s, s, c);\n     corner=rotation*corner*cos(0.78539816339744830961566084581988);\n  corner*=computeSizeBilloard(_StartSize.xy,normalizedAge);\n        center +=u_SizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n   #endif";
+        ShaderChunk.particle_affector = "vec3 lifeVelocity = computeVelocity(t);\nvec4 worldRotation;\nif(u_simulationSpace==1)\n worldRotation=_startWorldRotation;\nelse\n worldRotation=u_worldRotation;\nvec3 gravity=u_gravity*age;\n\nvec3 center=computePosition(_startVelocity, lifeVelocity, age, t,gravity,worldRotation); \n#ifdef SPHERHBILLBOARD\n   vec2 corner=_glesCorner.xy;\n      vec3 cameraUpVector =normalize(glstate_cameraUp);\n      vec3 sideVector = normalize(cross(glstate_cameraForward,cameraUpVector));\n      vec3 upVector = normalize(cross(sideVector,glstate_cameraForward));\n     corner*=computeBillbardSize(_startSize.xy,t);\n  #if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)\n   if(u_startSize3D){\n    vec3 rotation=vec3(_startRotation.xy,computeRotation(_startRotation.z,age,t));\n    center += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,rotation);\n   }\n   else{\n    float rot = computeRotation(_startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n    center += u_sizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n   }\n  #else\n   if(u_startSize3D){\n    center += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,_startRotation);\n   }\n   else{\n    float c = cos(_startRotation.x);\n    float s = sin(_startRotation.x);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n    center += u_sizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n   }\n  #endif\n #endif\n #ifdef STRETCHEDBILLBOARD\n  vec2 corner=_glesCorner.xy;\n  vec3 velocity;\n  #if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n      if(u_spaceType==0)\n       velocity=rotation_quaternions(u_sizeScale*(_startVelocity+lifeVelocity),worldRotation)+gravity;\n      else\n       velocity=rotation_quaternions(u_sizeScale*_startVelocity,worldRotation)+lifeVelocity+gravity;\n   #else\n      velocity= rotation_quaternions(u_sizeScale*_startVelocity,worldRotation)+gravity;\n   #endif \n  vec3 cameraUpVector = normalize(velocity);\n  vec3 direction = normalize(center-glstate_cameraPos);\n    vec3 sideVector = normalize(cross(direction,normalize(velocity)));\n  sideVector=u_sizeScale.xzy*sideVector;\n  cameraUpVector=length(vec3(u_sizeScale.x,0.0,0.0))*cameraUpVector;\n    vec2 size=computeBillbardSize(_startSize.xy,t);\n    const mat2 rotaionZHalfPI=mat2(0.0, -1.0, 1.0, 0.0);\n    corner=rotaionZHalfPI*corner;\n    corner.y=corner.y-abs(corner.y);\n    float speed=length(velocity);\n    center +=sign(u_sizeScale.x)*(sign(u_lengthScale)*size.x*corner.x*sideVector+(speed*u_speeaScale+size.y*u_lengthScale)*corner.y*cameraUpVector);\n #endif\n #ifdef HORIZONTALBILLBOARD\n  vec2 corner=_glesCorner.xy;\n    const vec3 cameraUpVector=vec3(0.0,0.0,1.0);\n    const vec3 sideVector = vec3(-1.0,0.0,0.0);\n  float rot = computeRotation(_startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n  corner*=computeBillbardSize(_startSize.xy,t);\n    center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n #endif\n #ifdef VERTICALBILLBOARD\n  vec2 corner=_glesCorner.xy;\n    const vec3 cameraUpVector =vec3(0.0,1.0,0.0);\n    vec3 sideVector = normalize(cross(glstate_cameraForward,cameraUpVector));\n  float rot = computeRotation(_startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n  corner*=computeBillbardSize(_startSize.xy,t);\n    center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n #endif\n #ifdef RENDERMESH\n    vec3 size=computeMeshSize(_startSize,t);\n  #if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)\n    if(u_startSize3D){\n     vec3 rotation=vec3(_startRotation.xy,-computeRotation(_startRotation.z, age,t));\n     center+= rotation_quaternions(u_sizeScale*rotation_euler(_glesVertex*size,rotation),worldRotation);\n    }\n    else{\n     #ifdef ROTATIONOVERLIFETIME\n      float angle=computeRotation(_startRotation.x, age,t);\n      if(_startPosition.x>0.1 || _startPosition.x < -0.1||_startPosition.y>0.1 || _startPosition.y < -0.1){\n       center+= (rotation_quaternions(rotation_axis(u_sizeScale*_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_startPosition.xy,0.0))),angle),worldRotation));//已验证\n      }\n      else{\n       #ifdef SHAPE\n        center+= u_sizeScale.xzy*(rotation_quaternions(rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),angle),worldRotation));\n       #else\n        if(u_simulationSpace==1)\n         center+=rotation_axis(u_sizeScale*_glesVertex*size,vec3(0.0,0.0,-1.0),angle);\n        else if(u_simulationSpace==0)\n         center+=rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,0.0,-1.0),angle),worldRotation);\n       #endif\n      }\n     #endif\n     #ifdef ROTATIONSEPERATE\n      vec3 angle=compute3DRotation(vec3(0.0,0.0,_startRotation.z), age,t);\n      center+= (rotation_quaternions(rotation_euler(u_sizeScale*_glesVertex*size,vec3(angle.x,angle.y,angle.z)),worldRotation));\n     #endif \n    }\n  #else\n  if(u_startSize3D){\n   center+= rotation_quaternions(u_sizeScale*rotation_euler(_glesVertex*size,_startRotation),worldRotation);\n  }\n  else{\n   if(_startPosition.x>0.1 || _startPosition.x < -0.1||_startPosition.y>0.1 || _startPosition.y < -0.1){\n    if(u_simulationSpace==1)\n     center+= rotation_axis(u_sizeScale*_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_startPosition.xy,0.0))),_startRotation.x);\n    else if(u_simulationSpace==0)\n     center+= (rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_startPosition.xy,0.0))),_startRotation.x),worldRotation));\n   }\n   else{\n    #ifdef SHAPE\n     if(u_simulationSpace==1)\n      center+= u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),_startRotation.x);\n     else if(u_simulationSpace==0)\n      center+= rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),_startRotation.x),worldRotation); \n    #else\n     if(u_simulationSpace==1)\n      center+= rotation_axis(u_sizeScale*_glesVertex*size,vec3(0.0,0.0,-1.0),_startRotation.x);\n     else if(u_simulationSpace==0)\n      center+= rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,0.0,-1.0),_startRotation.x),worldRotation);\n    #endif\n   }\n  }\n  #endif\n  v_mesh_color=_glesColor;\n  #endif";
         ShaderChunk.particle_common = "\n\nuniform float u_currentTime;\nuniform vec3 u_gravity;\n\nuniform vec3 u_worldPosition;\nuniform vec4 u_worldRotation;\nuniform bool u_startSize3D;\nuniform int u_scalingMode;\nuniform vec3 u_positionScale;\nuniform vec3 u_sizeScale;\nuniform mat4 glstate_matrix_vp;\n\n#ifdef STRETCHEDBILLBOARD\n uniform vec3 glstate_cameraPos;\n#endif\nuniform vec3 glstate_cameraForward;\nuniform vec3 glstate_cameraUp;\n\nuniform float u_lengthScale;\nuniform float u_speeaScale;\nuniform int u_simulationSpace;\n\n#if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n  uniform int u_spaceType;\n#endif\n#if defined(VELOCITYCONSTANT)||defined(VELOCITYTWOCONSTANT)\n  uniform vec3 u_velocityConst;\n#endif\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)\n  uniform vec2 u_velocityCurveX[4];\n  uniform vec2 u_velocityCurveY[4];\n  uniform vec2 u_velocityCurveZ[4];\n#endif\n#ifdef VELOCITYTWOCONSTANT\n  uniform vec3 u_velocityConstMax;\n#endif\n#ifdef VELOCITYTWOCURVE\n  uniform vec2 u_velocityCurveMaxX[4];\n  uniform vec2 u_velocityCurveMaxY[4];\n  uniform vec2 u_velocityCurveMaxZ[4];\n#endif\n\n#ifdef COLOROGRADIENT\n  uniform vec4 u_colorGradient[4];\n  uniform vec2 u_alphaGradient[4];\n#endif\n#ifdef COLORTWOGRADIENTS\n  uniform vec4 u_colorGradient[4];\n  uniform vec2 u_alphaGradient[4];\n  uniform vec4 u_colorGradientMax[4];\n  uniform vec2 u_alphaGradientMax[4];\n#endif\n\n#if defined(SIZECURVE)||defined(SIZETWOCURVES)\n  uniform vec2 u_sizeCurve[4];\n#endif\n#ifdef SIZETWOCURVES\n  uniform vec2 u_sizeCurveMax[4];\n#endif\n#if defined(SIZECURVESEPERATE)||defined(SIZETWOCURVESSEPERATE)\n  uniform vec2 u_sizeCurveX[4];\n  uniform vec2 u_sizeCurveY[4];\n  uniform vec2 u_sizeCurveZ[4];\n#endif\n#ifdef SIZETWOCURVESSEPERATE\n  uniform vec2 u_sizeCurveMaxX[4];\n  uniform vec2 u_sizeCurveMaxY[4];\n  uniform vec2 u_sizeCurveMaxZ[4];\n#endif\n\n#ifdef ROTATIONOVERLIFETIME\n  #if defined(ROTATIONCONSTANT)||defined(ROTATIONTWOCONSTANTS)\n    uniform float u_rotationConst;\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n    uniform float u_rotationConstMax;\n  #endif\n  #if defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\n    uniform vec2 u_rotationCurve[4];\n  #endif\n  #ifdef ROTATIONTWOCURVES\n    uniform vec2 u_rotationCurveMax[4];\n  #endif\n#endif\n#ifdef ROTATIONSEPERATE\n  #if defined(ROTATIONCONSTANT)||defined(ROTATIONTWOCONSTANTS)\n    uniform vec3 u_rotationConstSeprarate;\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n    uniform vec3 u_rotationConstMaxSeprarate;\n  #endif\n  #if defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\n    uniform vec2 u_rotationCurveX[4];\n    uniform vec2 u_rotationCurveY[4];\n    uniform vec2 u_rotationCurveZ[4];\n  uniform vec2 u_rotationCurveW[4];\n  #endif\n  #ifdef ROTATIONTWOCURVES\n    uniform vec2 u_rotationCurveMaxX[4];\n    uniform vec2 u_rotationCurveMaxY[4];\n    uniform vec2 u_rotationCurveMaxZ[4];\n  uniform vec2 u_rotationCurveMaxW[4];\n  #endif\n#endif\n\n#if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONTWOCURVE)\n  uniform float u_cycles;\n  uniform vec2 u_subUVSize;\n  uniform vec2 u_uvCurve[4];\n#endif\n#ifdef TEXTURESHEETANIMATIONTWOCURVE\n  uniform vec2 u_uvCurveMax[4];\n#endif\n\nvarying float v_discard;\nvarying vec4 v_color;\n#ifdef DIFFUSEMAP\n varying vec2 v_texcoord;\n#endif\n#ifdef RENDERMESH\n varying vec4 v_mesh_color;\n#endif\n\nvec3 rotation_euler(in vec3 vector,in vec3 euler)\n{\n  float halfPitch = euler.x * 0.5;\n float halfYaw = euler.y * 0.5;\n float halfRoll = euler.z * 0.5;\n\n float sinPitch = sin(halfPitch);\n float cosPitch = cos(halfPitch);\n float sinYaw = sin(halfYaw);\n float cosYaw = cos(halfYaw);\n float sinRoll = sin(halfRoll);\n float cosRoll = cos(halfRoll);\n\n float quaX = (cosYaw * sinPitch * cosRoll) + (sinYaw * cosPitch * sinRoll);\n float quaY = (sinYaw * cosPitch * cosRoll) - (cosYaw * sinPitch * sinRoll);\n float quaZ = (cosYaw * cosPitch * sinRoll) - (sinYaw * sinPitch * cosRoll);\n float quaW = (cosYaw * cosPitch * cosRoll) + (sinYaw * sinPitch * sinRoll);\n \n float x = quaX + quaX;\n  float y = quaY + quaY;\n  float z = quaZ + quaZ;\n  float wx = quaW * x;\n  float wy = quaW * y;\n  float wz = quaW * z;\n float xx = quaX * x;\n  float xy = quaX * y;\n float xz = quaX * z;\n  float yy = quaY * y;\n  float yz = quaY * z;\n  float zz = quaZ * z;\n\n  return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n              ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n              ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n \n}\n\nvec3 rotation_axis(in vec3 vector,in vec3 axis, in float angle)\n{\n float halfAngle = angle * 0.5;\n float sin = sin(halfAngle);\n \n float quaX = axis.x * sin;\n float quaY = axis.y * sin;\n float quaZ = axis.z * sin;\n float quaW = cos(halfAngle);\n \n float x = quaX + quaX;\n  float y = quaY + quaY;\n  float z = quaZ + quaZ;\n  float wx = quaW * x;\n  float wy = quaW * y;\n  float wz = quaW * z;\n float xx = quaX * x;\n  float xy = quaX * y;\n float xz = quaX * z;\n  float yy = quaY * y;\n  float yz = quaY * z;\n  float zz = quaZ * z;\n\n  return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n              ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n              ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n}\n\nvec3 rotation_quaternions(in vec3 v,in vec4 q) \n{\n return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);\n}\n\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)||defined(SIZECURVE)||defined(SIZECURVESEPERATE)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)\nfloat evaluate_curve_float(in vec2 curves[4],in float t)\n{\n float res;\n for(int i=1;i<4;i++)\n {\n  vec2 curve=curves[i];\n  float curTime=curve.x;\n  if(curTime>=t)\n  {\n   vec2 lastCurve=curves[i-1];\n   float lastTime=lastCurve.x;\n   float tt=(t-lastTime)/(curTime-lastTime);\n   res=mix(lastCurve.y,curve.y,tt);\n   break;\n  }\n }\n return res;\n}\n#endif\n\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)||defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\nfloat evaluate_curve_total(in vec2 curves[4],in float t)\n{\n float res=0.0;\n for(int i=1;i<4;i++)\n {\n  vec2 curve=curves[i];\n  float curTime=curve.x;\n  vec2 lastCurve=curves[i-1];\n  float lastValue=lastCurve.y;\n  \n  if(curTime>=t){\n   float lastTime=lastCurve.x;\n   float tt=(t-lastTime)/(curTime-lastTime);\n   res+=(lastValue+mix(lastValue,curve.y,tt))/2.0*_time.x*(t-lastTime);\n   break;\n  }\n  else{\n   res+=(lastValue+curve.y)/2.0*_time.x*(curTime-lastCurve.x);\n  }\n }\n return res;\n}\n#endif\n\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)\nvec4 evaluate_curve_color(in vec2 gradientAlphas[4],in vec4 gradientColors[4],in float t)\n{\n vec4 overTimeColor;\n for(int i=1;i<4;i++)\n {\n  vec2 gradientAlpha=gradientAlphas[i];\n  float alphaKey=gradientAlpha.x;\n  if(alphaKey>=t)\n  {\n   vec2 lastGradientAlpha=gradientAlphas[i-1];\n   float lastAlphaKey=lastGradientAlpha.x;\n   float age=(t-lastAlphaKey)/(alphaKey-lastAlphaKey);\n   overTimeColor.a=mix(lastGradientAlpha.y,gradientAlpha.y,age);\n   break;\n  }\n }\n \n for(int i=1;i<4;i++)\n {\n  vec4 gradientColor=gradientColors[i];\n  float colorKey=gradientColor.x;\n  if(colorKey>=t)\n  {\n   vec4 lastGradientColor=gradientColors[i-1];\n   float lastColorKey=lastGradientColor.x;\n   float age=(t-lastColorKey)/(colorKey-lastColorKey);\n   overTimeColor.rgb=mix(gradientColors[i-1].yzw,gradientColor.yzw,age);\n   break;\n  }\n }\n return overTimeColor;\n}\n#endif\n\n\n#if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONTWOCURVE)\nfloat evaluate_curve_frame(in vec2 gradientFrames[4],in float t)\n{\n float overTimeFrame;\n for(int i=1;i<4;i++)\n {\n  vec2 gradientFrame=gradientFrames[i];\n  float key=gradientFrame.x;\n  if(key>=t)\n  {\n   vec2 lastGradientFrame=gradientFrames[i-1];\n   float lastKey=lastGradientFrame.x;\n   float age=(t-lastKey)/(key-lastKey);\n   overTimeFrame=mix(lastGradientFrame.y,gradientFrame.y,age);\n   break;\n  }\n }\n return floor(overTimeFrame);\n}\n#endif\n\nvec3 computeVelocity(in float t)\n{\n  vec3 res;\n  #ifdef VELOCITYCONSTANT\n  res=u_velocityConst; \n  #endif\n  #ifdef VELOCITYCURVE\n     res= vec3(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveZ,t));\n  #endif\n  #ifdef VELOCITYTWOCONSTANT\n  res=mix(u_velocityConst,u_velocityConstMax,vec3(_random1.y,_random1.z,_random1.w)); \n  #endif\n  #ifdef VELOCITYTWOCURVE\n     res=vec3(mix(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveMaxX,t),_random1.y),\n             mix(evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveMaxY,t),_random1.z),\n        mix(evaluate_curve_float(u_velocityCurveZ,t),evaluate_curve_float(u_velocityCurveMaxZ,t),_random1.w));\n  #endif\n     \n  return res;\n} \n\nvec3 computePosition(in vec3 startVelocity, in vec3 lifeVelocity,in float age,in float t,vec3 gravityVelocity,vec4 worldRotation)\n{\n    vec3 startPosition;\n    vec3 lifePosition;\n  #if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n   #ifdef VELOCITYCONSTANT\n      startPosition=startVelocity*age;\n      lifePosition=lifeVelocity*age;\n   #endif\n   #ifdef VELOCITYCURVE\n      startPosition=startVelocity*age;\n      lifePosition=vec3(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveZ,t));\n   #endif\n   #ifdef VELOCITYTWOCONSTANT\n      startPosition=startVelocity*age;\n      lifePosition=lifeVelocity*age;\n   #endif\n   #ifdef VELOCITYTWOCURVE\n      startPosition=startVelocity*age;\n      lifePosition=vec3(mix(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveMaxX,t),_random1.y)\n                 ,mix(evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveMaxY,t),_random1.z)\n                 ,mix(evaluate_curve_total(u_velocityCurveZ,t),evaluate_curve_total(u_velocityCurveMaxZ,t),_random1.w));\n   #endif\n\n   vec3 finalPosition;\n   if(u_spaceType==0){\n     if(u_scalingMode!=2)\n      finalPosition =rotation_quaternions(u_positionScale*(_startPosition.xyz+startPosition+lifePosition),worldRotation);\n     else\n      finalPosition =rotation_quaternions(u_positionScale*_startPosition.xyz+startPosition+lifePosition,worldRotation);\n   }\n   else{\n     if(u_scalingMode!=2)\n       finalPosition = rotation_quaternions(u_positionScale*(_startPosition.xyz+startPosition),worldRotation)+lifePosition;\n     else\n       finalPosition = rotation_quaternions(u_positionScale*_startPosition.xyz+startPosition,worldRotation)+lifePosition;\n   }\n    #else\n    startPosition=startVelocity*age;\n    vec3 finalPosition;\n    if(u_scalingMode!=2)\n      finalPosition = rotation_quaternions(u_positionScale*(_startPosition.xyz+startPosition),worldRotation);\n    else\n      finalPosition = rotation_quaternions(u_positionScale*_startPosition.xyz+startPosition,worldRotation);\n  #endif\n  \n  if(u_simulationSpace==1)\n    finalPosition=finalPosition+_startWorldPosition;\n  else if(u_simulationSpace==0) \n    finalPosition=finalPosition+u_worldPosition;\n  \n  finalPosition+=0.5*gravityVelocity*age;\n \n  return finalPosition;\n}\n\n\nvec4 computeColor(in vec4 color,in float t)\n{\n #ifdef COLOROGRADIENT\n   color*=evaluate_curve_color(u_alphaGradient,u_colorGradient,t);\n #endif \n #ifdef COLORTWOGRADIENTS\n   color*=mix(evaluate_curve_color(u_alphaGradient,u_colorGradient,t),evaluate_curve_color(u_alphaGradientMax,u_colorGradientMax,t),_random0.y);\n #endif\n\n  return color;\n}\n\nvec2 computeBillbardSize(in vec2 size,in float t)\n{\n #ifdef SIZECURVE\n  size*=evaluate_curve_float(u_sizeCurve,t);\n #endif\n #ifdef SIZETWOCURVES\n   size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),_random0.z); \n #endif\n #ifdef SIZECURVESEPERATE\n  size*=vec2(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t));\n #endif\n #ifdef SIZETWOCURVESSEPERATE\n   size*=vec2(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),_random0.z)\n         ,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),_random0.z));\n #endif\n return size;\n}\n\n#ifdef RENDERMESH\nvec3 computeMeshSize(in vec3 size,in float t)\n{\n #ifdef SIZECURVE\n  size*=evaluate_curve_float(u_sizeCurve,t);\n #endif\n #ifdef SIZETWOCURVES\n   size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),_random0.z); \n #endif\n #ifdef SIZECURVESEPERATE\n  size*=vec3(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveZ,t));\n #endif\n #ifdef SIZETWOCURVESSEPERATE\n   size*=vec3(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),_random0.z)\n         ,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),_random0.z)\n       ,mix(evaluate_curve_float(u_sizeCurveZ,t),evaluate_curve_float(u_sizeCurveMaxZ,t),_random0.z));\n #endif\n return size;\n}\n#endif\n\nfloat computeRotation(in float rotation,in float age,in float t)\n{ \n #ifdef ROTATIONOVERLIFETIME\n  #ifdef ROTATIONCONSTANT\n   float ageRot=u_rotationConst*age;\n         rotation+=ageRot;\n  #endif\n  #ifdef ROTATIONCURVE\n   rotation+=evaluate_curve_total(u_rotationCurve,t);\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n   float ageRot=mix(u_rotationConst,u_rotationConstMax,_random0.w)*age;\n     rotation+=ageRot;\n   #endif\n  #ifdef ROTATIONTWOCURVES\n   rotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),_random0.w);\n  #endif\n #endif\n #ifdef ROTATIONSEPERATE\n  #ifdef ROTATIONCONSTANT\n   float ageRot=u_rotationConstSeprarate.z*age;\n         rotation+=ageRot;\n  #endif\n  #ifdef ROTATIONCURVE\n   rotation+=evaluate_curve_total(u_rotationCurveZ,t);\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n   float ageRot=mix(u_rotationConstSeprarate.z,u_rotationConstMaxSeprarate.z,_random0.w)*age;\n         rotation+=ageRot;\n     #endif\n  #ifdef ROTATIONTWOCURVES\n   rotation+=mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),_random0.w));\n  #endif\n #endif\n return rotation;\n}\n\n#if defined(RENDERMESH)&&(defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE))\nvec3 compute3DRotation(in vec3 rotation,in float age,in float t)\n{ \n #ifdef ROTATIONOVERLIFETIME\n   #ifdef ROTATIONCONSTANT\n     float ageRot=u_rotationConst*age;\n       rotation+=ageRot;\n   #endif\n   #ifdef ROTATIONCURVE\n     rotation+=evaluate_curve_total(u_rotationCurve,t);\n   #endif\n   #ifdef ROTATIONTWOCONSTANTS\n     float ageRot=mix(u_rotationConst,u_rotationConstMax,_random0.w)*age;\n       rotation+=ageRot;\n   #endif\n   #ifdef ROTATIONTWOCURVES\n     rotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),_random0.w);\n   #endif\n #endif\n #ifdef ROTATIONSEPERATE\n    #ifdef ROTATIONCONSTANT\n     vec3 ageRot=u_rotationConstSeprarate*age;\n           rotation+=ageRot;\n    #endif\n    #ifdef ROTATIONCURVE\n     rotation+=vec3(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveZ,t));\n    #endif\n    #ifdef ROTATIONTWOCONSTANTS\n     vec3 ageRot=mix(u_rotationConstSeprarate,u_rotationConstMaxSeprarate,_random0.w)*age;\n           rotation+=ageRot;\n     #endif\n    #ifdef ROTATIONTWOCURVES\n     rotation+=vec3(mix(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveMaxX,t),_random0.w)\n           ,mix(evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveMaxY,t),_random0.w)\n           ,mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),_random0.w));\n    #endif\n #endif\n return rotation;\n}\n#endif\n\nvec2 computeUV(in vec2 uv,in float t)\n{ \n #ifdef TEXTURESHEETANIMATIONCURVE\n  float cycleNormalizedAge=t*u_cycles;\n  float uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);\n  float frame=evaluate_curve_frame(u_uvCurve,uvNormalizedAge);\n  float totalULength=frame*u_subUVSize.x;\n  float floorTotalULength=floor(totalULength);\n   uv.x+=totalULength-floorTotalULength;\n  uv.y+=floorTotalULength*u_subUVSize.y;\n    #endif\n #ifdef TEXTURESHEETANIMATIONTWOCURVE\n  float cycleNormalizedAge=t*u_cycles;\n  float uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);\n   float frame=floor(mix(evaluate_curve_frame(u_uvCurve,uvNormalizedAge),evaluate_curve_frame(u_uvCurveMax,uvNormalizedAge),_random1.x));\n  float totalULength=frame*u_subUVSize.x;\n  float floorTotalULength=floor(totalULength);\n   uv.x+=totalULength-floorTotalULength;\n  uv.y+=floorTotalULength*u_subUVSize.y;\n    #endif\n return uv;\n}";
-        ShaderChunk.particle_mesh_frag = "#ifdef RENDERMODE_MESH\n     vec3 size=computeSizeMesh(_StartSize,normalizedAge);\n  #if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONOVERLIFETIMESEPERATE)\n   if(u_ThreeDStartRotation){\n    vec3 rotation=vec3(_StartRotation0.xy,-computeRotation(_StartRotation0.z, age,normalizedAge));\n    center+= rotation_quaternions(u_SizeScale*rotation_euler(_glesVertex*size,rotation),worldRotation);\n   }\n   else{\n    #ifdef ROTATIONOVERLIFETIME\n     float angle=computeRotation(_StartRotation0.x, age,normalizedAge);\n     if(_ShapePositionStartLifeTime.x!=0.0||_ShapePositionStartLifeTime.y!=0.0){\n      center+= (rotation_quaternions(rotation_axis(u_SizeScale*_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_ShapePositionStartLifeTime.xy,0.0))),angle),worldRotation));//已验证\n     }\n     else{\n      #ifdef SHAPE\n       center+= u_SizeScale.xzy*(rotation_quaternions(rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),angle),worldRotation));\n      #else\n       if(u_SimulationSpace==1)\n        center+=rotation_axis(u_SizeScale*_glesVertex*size,vec3(0.0,0.0,-1.0),angle);\n       else if(u_SimulationSpace==0)\n        center+=rotation_quaternions(u_SizeScale*rotation_axis(_glesVertex*size,vec3(0.0,0.0,-1.0),angle),worldRotation);\n      #endif\n     }\n    #endif\n    #ifdef ROTATIONOVERLIFETIMESEPERATE\n     vec3 angle=computeRotation3D(vec3(0.0,0.0,_StartRotation0.z), age,normalizedAge);\n     center+= (rotation_quaternions(rotation_euler(u_SizeScale*_glesVertex*size,vec3(angle.x,angle.y,angle.z)),worldRotation));\n    #endif \n   }\n  #else\n   if(u_ThreeDStartRotation){\n    center+= rotation_quaternions(u_SizeScale*rotation_euler(_glesVertex*size,_StartRotation0),worldRotation);\n   }\n   else{\n    if(_ShapePositionStartLifeTime.x!=0.0||_ShapePositionStartLifeTime.y!=0.0){\n     if(u_SimulationSpace==1)\n      center+= rotation_axis(u_SizeScale*_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_ShapePositionStartLifeTime.xy,0.0))),_StartRotation0.x);\n     else if(u_SimulationSpace==0)\n      center+= (rotation_quaternions(u_SizeScale*rotation_axis(_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_ShapePositionStartLifeTime.xy,0.0))),_StartRotation0.x),worldRotation));\n    }\n    else{\n     #ifdef SHAPE\n      if(u_SimulationSpace==1)\n       center+= u_SizeScale*rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),_StartRotation0.x);\n      else if(u_SimulationSpace==0)\n       center+= rotation_quaternions(u_SizeScale*rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),_StartRotation0.x),worldRotation); \n     #else\n      if(u_SimulationSpace==1)\n       center+= rotation_axis(u_SizeScale*_glesVertex*size,vec3(0.0,0.0,-1.0),_StartRotation0.x);\n      else if(u_SimulationSpace==0)\n       center+= rotation_quaternions(u_SizeScale*rotation_axis(_glesVertex*size,vec3(0.0,0.0,-1.0),_StartRotation0.x),worldRotation);\n     #endif\n    }\n   }\n  #endif\n  xlv_MESH_COLOR=_glesColor;\n   #endif";
-        ShaderChunk.particle_pars_frag = "vec3 rotation_euler(in vec3 vector,in vec3 rotation)\n{\n    float halfPitch = rotation.x * 0.5;\n float halfYaw = rotation.y * 0.5;\n float halfRoll = rotation.z * 0.5;\n\n float sinPitch = sin(halfPitch);\n float cosPitch = cos(halfPitch);\n float sinYaw = sin(halfYaw);\n float cosYaw = cos(halfYaw);\n float sinRoll = sin(halfRoll);\n float cosRoll = cos(halfRoll);\n\n float quaX = (cosYaw * sinPitch * cosRoll) + (sinYaw * cosPitch * sinRoll);\n float quaY = (sinYaw * cosPitch * cosRoll) - (cosYaw * sinPitch * sinRoll);\n float quaZ = (cosYaw * cosPitch * sinRoll) - (sinYaw * sinPitch * cosRoll);\n float quaW = (cosYaw * cosPitch * cosRoll) + (sinYaw * sinPitch * sinRoll);\n \n float x = quaX + quaX;\n    float y = quaY + quaY;\n    float z = quaZ + quaZ;\n    float wx = quaW * x;\n    float wy = quaW * y;\n    float wz = quaW * z;\n float xx = quaX * x;\n    float xy = quaX * y;\n float xz = quaX * z;\n    float yy = quaY * y;\n    float yz = quaY * z;\n    float zz = quaZ * z;\n\n    return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n                ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n                ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n \n}\n\nvec3 rotation_axis(in vec3 vector,in vec3 axis, in float angle)\n{\n float halfAngle = angle * 0.5;\n float sin = sin(halfAngle);\n \n float quaX = axis.x * sin;\n float quaY = axis.y * sin;\n float quaZ = axis.z * sin;\n float quaW = cos(halfAngle);\n \n float x = quaX + quaX;\n    float y = quaY + quaY;\n    float z = quaZ + quaZ;\n    float wx = quaW * x;\n    float wy = quaW * y;\n    float wz = quaW * z;\n float xx = quaX * x;\n    float xy = quaX * y;\n float xz = quaX * z;\n    float yy = quaY * y;\n    float yz = quaY * z;\n    float zz = quaZ * z;\n\n    return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n                ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n                ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n \n}\n\nvec3 rotation_quaternions(in vec3 v,in vec4 q) \n{\n return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);\n}\n\n#if defined(VELOCITYOVERLIFETIMECURVE)||defined(VELOCITYOVERLIFETIMERANDOMCURVE)||defined(SIZEOVERLIFETIMECURVE)||defined(SIZEOVERLIFETIMECURVESEPERATE)||defined(SIZEOVERLIFETIMERANDOMCURVES)||defined(SIZEOVERLIFETIMERANDOMCURVESSEPERATE)\nfloat evaluate_curve_float(in vec2 curves[4],in float t)\n{\n float res;\n for(int i=1;i<4;i++)\n {\n  vec2 curve=curves[i];\n  float time=curve.x;\n  if(time>=t)\n  {\n   vec2 lastCurve=curve[i-1];\n   float lastTime=lastCurve.x;\n   float age=(t-lastTime)/(time-lastTime);\n   res=mix(lastCurve.y,curve.y,age);\n   break;\n  }\n }\n return res;\n}\n#endif\n#if defined(VELOCITYOVERLIFETIMECURVE)||defined(VELOCITYOVERLIFETIMERANDOMCURVE)||defined(ROTATIONOVERLIFETIMECURVE)||defined(ROTATIONOVERLIFETIMERANDOMCURVES)\nfloat curve_total_value(in vec2 curves[4],in float t)\n{\n float res=0.0;\n for(int i=1;i<4;i++)\n {\n  vec2 curve=curves[i];\n  float time=curve.x;\n  vec2 lastCurve=curves[i-1];\n  float lastValue=lastCurve.y;\n  \n  if(time>=t){\n   float lastTime=lastCurve.x;\n   float age=(t-lastTime)/(time-lastTime);\n   res+=(lastValue+mix(lastValue,curve.y,age))/2.0*_ShapePositionStartLifeTime.w*(t-lastTime);\n   break;\n  }\n  else{\n   res+=(lastValue+curve.y)/2.0*_ShapePositionStartLifeTime.w*(time-lastCurve.x);\n  }\n }\n return res;\n}\n#endif\n\n#if defined(COLOROVERLIFETIME)||defined(RANDOMCOLOROVERLIFETIME)\nvec4 evaluate_gradient_color(in vec2 gradientAlphas[4],in vec4 gradientColors[4],in float t)\n{\n vec4 res;\n for(int i=1;i<4;i++)\n {\n  vec2 gradientAlpha=gradientAlphas[i];\n  float alphaKey=gradientAlpha.x;\n  if(alphaKey>=t)\n  {\n   vec2 lastGradientAlpha=gradientAlphas[i-1];\n   float lastAlphaKey=lastGradientAlpha.x;\n   float age=(t-lastAlphaKey)/(alphaKey-lastAlphaKey);\n   res.a=mix(lastGradientAlpha.y,gradientAlpha.y,age);\n   break;\n  }\n }\n \n for(int i=1;i<4;i++)\n {\n  vec4 gradientColor=gradientColors[i];\n  float colorKey=gradientColor.x;\n  if(colorKey>=t)\n  {\n   vec4 lastGradientColor=gradientColors[i-1];\n   float lastColorKey=lastGradientColor.x;\n   float age=(t-lastColorKey)/(colorKey-lastColorKey);\n   res.rgb=mix(gradientColors[i-1].yzw,gradientColor.yzw,age);\n   break;\n  }\n }\n return res;\n}\n#endif\n\n\n#if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONRANDOMCURVE)\nfloat evaluate_curve_frame(in vec2 gradientFrames[4],in float t)\n{\n float res;\n for(int i=1;i<4;i++)\n {\n  vec2 gradientFrame=gradientFrames[i];\n  float key=gradientFrame.x;\n  if(key>=t)\n  {\n   vec2 lastGradientFrame=gradientFrames[i-1];\n   float lastKey=lastGradientFrame.x;\n   float age=(t-lastKey)/(key-lastKey);\n   res=mix(lastGradientFrame.y,gradientFrame.y,age);\n   break;\n  }\n }\n return floor(res);\n}\n#endif";
         ShaderChunk.shadowMap_frag = "#ifdef USE_SHADOW\n    // outColor *= getShadowMask();\n#endif";
         ShaderChunk.shadowMap_pars_frag = "#ifdef USE_SHADOW\n\n    #include <packing>\n\n    #ifdef USE_DIRECT_LIGHT\n\n        uniform sampler2D glstate_directionalShadowMap[ USE_DIRECT_LIGHT ];\n        varying vec4 vDirectionalShadowCoord[ USE_DIRECT_LIGHT ];\n\n    #endif\n\n    #ifdef USE_POINT_LIGHT\n\n        uniform samplerCube glstate_pointShadowMap[ USE_POINT_LIGHT ];\n\n    #endif\n\n    #ifdef USE_SPOT_LIGHT\n\n        uniform sampler2D glstate_spotShadowMap[ USE_SPOT_LIGHT ];\n        varying vec4 vSpotShadowCoord[ USE_SPOT_LIGHT ];\n\n    #endif\n\n    float texture2DCompare( sampler2D depths, vec2 uv, float compare ) {\n\n        return step( compare, unpackRGBAToDepth( texture2D( depths, uv ) ) );\n\n    }\n\n    float textureCubeCompare( samplerCube depths, vec3 uv, float compare ) {\n\n        return step( compare, unpackRGBAToDepth( textureCube( depths, uv ) ) );\n\n    }\n\n    float getShadow( sampler2D shadowMap, vec4 shadowCoord, float shadowBias, float shadowRadius, vec2 shadowMapSize ) {\n        shadowCoord.xyz /= shadowCoord.w;\n\n        float depth = shadowCoord.z + shadowBias;\n\n        bvec4 inFrustumVec = bvec4 ( shadowCoord.x >= 0.0, shadowCoord.x <= 1.0, shadowCoord.y >= 0.0, shadowCoord.y <= 1.0 );\n        bool inFrustum = all( inFrustumVec );\n\n        bvec2 frustumTestVec = bvec2( inFrustum, depth <= 1.0 );\n\n        bool frustumTest = all( frustumTestVec );\n\n        if ( frustumTest ) {\n            #ifdef USE_PCF_SOFT_SHADOW\n                // TODO x, y not equal\n                float texelSize = shadowRadius / shadowMapSize.x;\n\n                vec2 poissonDisk[4];\n                poissonDisk[0] = vec2(-0.94201624, -0.39906216);\n                poissonDisk[1] = vec2(0.94558609, -0.76890725);\n                poissonDisk[2] = vec2(-0.094184101, -0.92938870);\n                poissonDisk[3] = vec2(0.34495938, 0.29387760);\n\n                return texture2DCompare( shadowMap, shadowCoord.xy + poissonDisk[0] * texelSize, depth ) * 0.25 +\n                    texture2DCompare( shadowMap, shadowCoord.xy + poissonDisk[1] * texelSize, depth ) * 0.25 +\n                    texture2DCompare( shadowMap, shadowCoord.xy + poissonDisk[2] * texelSize, depth ) * 0.25 +\n                    texture2DCompare( shadowMap, shadowCoord.xy + poissonDisk[3] * texelSize, depth ) * 0.25;\n            #else\n                return texture2DCompare( shadowMap, shadowCoord.xy, depth );\n            #endif\n        }\n\n        return 1.0;\n\n    }\n\n    float getPointShadow( samplerCube shadowMap, vec3 V, float shadowBias, float shadowRadius, vec2 shadowMapSize, float shadowCameraNear, float shadowCameraFar ) {\n\n        // depth = normalized distance from light to fragment position\n  float depth = ( length( V ) - shadowCameraNear ) / ( shadowCameraFar - shadowCameraNear ); // need to clamp?\n  depth += shadowBias;\n\n        V.x = -V.x; // for left-hand?\n\n        #ifdef USE_PCF_SOFT_SHADOW\n            // TODO x, y equal force\n            float texelSize = shadowRadius / shadowMapSize.x;\n\n            vec3 poissonDisk[4];\n      poissonDisk[0] = vec3(-1.0, 1.0, -1.0);\n      poissonDisk[1] = vec3(1.0, -1.0, -1.0);\n      poissonDisk[2] = vec3(-1.0, -1.0, -1.0);\n      poissonDisk[3] = vec3(1.0, -1.0, 1.0);\n\n            return textureCubeCompare( shadowMap, normalize(V) + poissonDisk[0] * texelSize, depth ) * 0.25 +\n                textureCubeCompare( shadowMap, normalize(V) + poissonDisk[1] * texelSize, depth ) * 0.25 +\n                textureCubeCompare( shadowMap, normalize(V) + poissonDisk[2] * texelSize, depth ) * 0.25 +\n                textureCubeCompare( shadowMap, normalize(V) + poissonDisk[3] * texelSize, depth ) * 0.25;\n        #else\n            return textureCubeCompare( shadowMap, normalize(V), depth);\n        #endif\n    }\n\n#endif";
         ShaderChunk.shadowMap_pars_vert = "#ifdef USE_SHADOW\n\n    #ifdef USE_DIRECT_LIGHT\n\n        uniform mat4 glstate_directionalShadowMatrix[ USE_DIRECT_LIGHT ];\n        varying vec4 vDirectionalShadowCoord[ USE_DIRECT_LIGHT ];\n\n    #endif\n\n    #ifdef USE_POINT_LIGHT\n\n        // nothing\n\n    #endif\n\n    #ifdef USE_SPOT_LIGHT\n\n        uniform mat4 glstate_spotShadowMatrix[ USE_SPOT_LIGHT ];\n        varying vec4 vSpotShadowCoord[ USE_SPOT_LIGHT ];\n\n    #endif\n\n#endif";
@@ -17947,12 +17887,13 @@ var RES;
                     var data, url, filename, text;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "json")];
+                            case 0: return [4 /*yield*/, host.load(resource, "text")];
                             case 1:
                                 data = _a.sent();
                                 url = getUrl(resource);
                                 filename = getFileName(url);
                                 text = new egret3d.TextAsset(filename, url);
+                                text.content = data;
                                 paper.Asset.register(text, true);
                                 return [2 /*return*/, text];
                         }
