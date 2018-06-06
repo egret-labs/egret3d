@@ -363,7 +363,7 @@ namespace RES.processor {
 
     };
 
-    export const NewPrefabProcessor: RES.processor.Processor = {
+    export const PrefabProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
             const data = await host.load(resource, "json");
@@ -396,7 +396,7 @@ namespace RES.processor {
 
     };
 
-    export const NewSceneProcessor: RES.processor.Processor = {
+    export const SceneProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
             const data = await host.load(resource, "json");
@@ -430,16 +430,16 @@ namespace RES.processor {
 
     };
 
-    export const D3FontProcessor: RES.processor.Processor = {
+    export const Font3DProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
             const data = await host.load(resource, "json");
             const url = getUrl(resource);
             const filename = getFileName(url);
-            const _font = new egret3d.Font(filename, url);
-            _font.$parse(data);
-            paper.Asset.register(_font, true);
-            return _font;
+            const font = new egret3d.Font(filename, url);
+            font.$parse(data);
+            paper.Asset.register(font, true);
+            return font;
         },
 
         async onRemoveStart(host, resource) {
@@ -473,10 +473,11 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
 
-            const data = await host.load(resource, "json");
+            const data = await host.load(resource, "text");
             const url = getUrl(resource);
             const filename = getFileName(url);
             let text = new egret3d.TextAsset(filename, url);
+            text.content = data;
             paper.Asset.register(text, true);
             return text;
         },
@@ -494,10 +495,10 @@ namespace RES.processor {
             const data = await host.load(resource, "json");
             const url = getUrl(resource);
             const filename = getFileName(url);
-            let _path = new egret3d.PathAsset(filename, url);
-            _path.$parse(data);
-            paper.Asset.register(_path, true);
-            return _path;
+            const pathAsset = new egret3d.PathAsset(filename, url);
+            pathAsset.$parse(data);
+            paper.Asset.register(pathAsset, true);
+            return pathAsset;
         },
 
         async onRemoveStart(host, resource) {
@@ -515,10 +516,10 @@ namespace RES.processor {
     RES.processor.map("TextureDesc", TextureDescProcessor);
     RES.processor.map("Material", MaterialProcessor);
     RES.processor.map("GLTFBinary", GLTFProcessor);
-    RES.processor.map("Prefab", NewPrefabProcessor);
-    RES.processor.map("Scene", NewSceneProcessor);
+    RES.processor.map("Prefab", PrefabProcessor);
+    RES.processor.map("Scene", SceneProcessor);
     RES.processor.map("Atlas", AtlasProcessor);
-    RES.processor.map("Font", D3FontProcessor);
+    RES.processor.map("Font", Font3DProcessor);
     RES.processor.map("TextAsset", TextAssetProcessor);
     RES.processor.map("pathAsset", PathAssetProcessor);
     RES.processor.map("Sound", Sound3DProcessor);

@@ -27,7 +27,7 @@ void main()
 {
 	float age = u_currentTime - _time.y;
 	float t = age/_time.x;
-	if(t>1.0 || t < 0.0){ 			
+	if(t>1.0){ 			
 			v_discard=1.0;
 			return;
   }
