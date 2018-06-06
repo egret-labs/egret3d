@@ -412,13 +412,12 @@ namespace egret3d {
             const width = 1;
             const height = 1;
             const texture = new GlTexture2D(webgl, TextureFormatEnum.RGBA, mipmap, linear);
-            const data = new Uint8Array([r, g, b]);
+            const data = new Uint8Array([r, g, b, 255]);
             texture.uploadByteArray(mipmap, linear, width, height, data);
             return texture;
         }
 
         static createGridTexture(webgl: WebGLRenderingContext) {
-
             const mipmap = false;
             const linear = true;
             const t = new GlTexture2D(webgl, TextureFormatEnum.RGBA, mipmap, linear);

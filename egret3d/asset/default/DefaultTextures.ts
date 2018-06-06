@@ -21,6 +21,10 @@ namespace egret3d {
             const t3 = new Texture("grid", "grid");
             t3.glTexture = egret3d.GlTexture2D.createGridTexture(gl);
             this.GRID = t3;
+
+            paper.Asset.register(t1);
+            paper.Asset.register(t2);
+            paper.Asset.register(t3);
         }
     }
 }
