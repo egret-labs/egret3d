@@ -1,42 +1,26 @@
 namespace egret3d {
-    /**
-     * 
-     */
+
     export class Color implements paper.ISerializable {
-        /**
-         * 
-         */
-        public r: number;
-        /**
-         * 
-         */
-        public g: number;
-        /**
-         * 
-         */
-        public b: number;
-        /**
-         * 
-         */
-        public a: number;
-        /**
-         * 
-         */
-        public constructor(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0) {
+
+        r: number;
+
+        g: number;
+
+        b: number;
+
+        a: number;
+
+        constructor(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0) {
             this.r = r;
             this.g = g;
             this.b = b;
             this.a = a;
         }
-        /**
-         * @inheritDoc
-         */
+
         public serialize() {
             return [this.r, this.g, this.b, this.a];
         }
-        /**
-         * @inheritDoc
-         */
+
         public deserialize(element: number[]) {
             this.r = element[0];
             this.g = element[1];
