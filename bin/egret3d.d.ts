@@ -1,3 +1,45 @@
+declare namespace egret3d {
+    class Vector3 implements paper.ISerializable {
+        static readonly ZERO: Readonly<Vector3>;
+        static readonly ONE: Readonly<Vector3>;
+        x: number;
+        y: number;
+        z: number;
+        constructor(x?: number, y?: number, z?: number);
+        serialize(): number[];
+        deserialize(element: [number, number, number]): void;
+        copy(value: Vector3): this;
+        clone(): Vector3;
+        set(x: number, y: number, z: number): this;
+        normalize(): this;
+        readonly length: number;
+        readonly sqrtLength: number;
+        static set(x: number, y: number, z: number, out: Vector3): Vector3;
+        static normalize(v: Vector3): Vector3;
+        static copy(v: Vector3, out: Vector3): Vector3;
+        static add(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
+        static subtract(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
+        static multiply(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
+        static scale(v: Vector3, scale: number): Vector3;
+        static cross(lhs: Vector3, rhs: Vector3, out: Vector3): Vector3;
+        static dot(v1: Vector3, v2: Vector3): number;
+        static getLength(v: Vector3): number;
+        static getSqrLength(v: Vector3): number;
+        static getDistance(a: Vector3, b: Vector3): number;
+        static min(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
+        static max(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
+        static lerp(v1: Vector3, v2: Vector3, v: number, out: Vector3): Vector3;
+        static equal(v1: Vector3, v2: Vector3, threshold?: number): boolean;
+    }
+    const helpVector3A: Vector3;
+    const helpVector3B: Vector3;
+    const helpVector3C: Vector3;
+    const helpVector3D: Vector3;
+    const helpVector3E: Vector3;
+    const helpVector3F: Vector3;
+    const helpVector3G: Vector3;
+    const helpVector3H: Vector3;
+}
 declare namespace paper {
     /**
      *
@@ -34,39 +76,38 @@ declare namespace paper {
     function deserializedIgnore(classPrototype: any, type: string): void;
 }
 declare namespace egret3d {
-    class Vector3 implements paper.ISerializable {
-        static readonly ONE: Readonly<Vector3>;
-        x: number;
-        y: number;
-        z: number;
-        constructor(x?: number, y?: number, z?: number);
-        serialize(): number[];
-        deserialize(element: [number, number, number]): void;
-        static set(x: number, y: number, z: number, out: Vector3): Vector3;
-        static normalize(v: Vector3): Vector3;
-        static copy(v: Vector3, out: Vector3): Vector3;
-        static add(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
-        static subtract(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
-        static multiply(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
-        static scale(v: Vector3, scale: number): Vector3;
-        static cross(lhs: Vector3, rhs: Vector3, out: Vector3): Vector3;
-        static dot(v1: Vector3, v2: Vector3): number;
-        static getLength(v: Vector3): number;
-        static getSqrLength(v: Vector3): number;
-        static getDistance(a: Vector3, b: Vector3): number;
-        static min(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
-        static max(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
-        static lerp(v1: Vector3, v2: Vector3, v: number, out: Vector3): Vector3;
-        static equal(v1: Vector3, v2: Vector3, threshold?: number): boolean;
+    class Matrix {
+        rawData: Float32Array;
+        constructor(datas?: Float32Array | null);
+        static set(n11: number, n21: number, n31: number, n41: number, n12: number, n22: number, n32: number, n42: number, n13: number, n23: number, n33: number, n43: number, n14: number, n24: number, n34: number, n44: number, matrix: Matrix): Matrix;
+        static getScale(m: Matrix, out: Vector3): Vector3;
+        static getTranslation(m: Matrix, out: Vector3): Vector3;
+        static getQuaternion(m: Matrix, out: Quaternion): Quaternion;
+        static add(left: Matrix, right: Matrix, out: Matrix): Matrix;
+        static multiply(lhs: Matrix, rhs: Matrix, out: Matrix): Matrix;
+        static scale(scaler: number, m: Matrix): Matrix;
+        static transpose(m: Matrix, out: Matrix): Matrix;
+        static inverse(src: Matrix, out: Matrix): Matrix;
+        static decompose(m: Matrix, scale: Vector3, rotation: Quaternion, translation: Vector3): boolean;
+        static copy(m: Matrix, out: Matrix): Matrix;
+        static identify(m: Matrix): Matrix;
+        static zero(m: Matrix): Matrix;
+        static formScale(xScale: number, yScale: number, zScale: number, out: Matrix): Matrix;
+        static fromTranslate(x: number, y: number, z: number, out: Matrix): Matrix;
+        static fromRTS(p: Vector3, s: Vector3, q: Quaternion, out: Matrix): Matrix;
+        static getVector3ByOffset(src: Matrix, offset: number, result: Vector3): Vector3;
+        static transformVector3(vector: Vector3, transformation: Matrix, result: Vector3): Vector3;
+        static transformNormal(vector: Vector3, transformation: Matrix, result: Vector3): Vector3;
+        static lerp(left: Matrix, right: Matrix, v: number, out: Matrix): Matrix;
+        static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix): Matrix;
+        static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix): Matrix;
+        static toEulerAngles(matrix: Matrix, out: Vector3): Vector3;
+        static determinant(matrix: Matrix): number;
     }
-    const helpVector3A: Vector3;
-    const helpVector3B: Vector3;
-    const helpVector3C: Vector3;
-    const helpVector3D: Vector3;
-    const helpVector3E: Vector3;
-    const helpVector3F: Vector3;
-    const helpVector3G: Vector3;
-    const helpVector3H: Vector3;
+    const helpMatrixA: Matrix;
+    const helpMatrixB: Matrix;
+    const helpMatrixC: Matrix;
+    const helpMatrixD: Matrix;
 }
 declare namespace paper {
     /**
@@ -271,43 +312,11 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
-    class Matrix {
-        rawData: Float32Array;
-        constructor(datas?: Float32Array | null);
-        static set(n11: number, n21: number, n31: number, n41: number, n12: number, n22: number, n32: number, n42: number, n13: number, n23: number, n33: number, n43: number, n14: number, n24: number, n34: number, n44: number, matrix: Matrix): Matrix;
-        static getScale(m: Matrix, out: Vector3): Vector3;
-        static getTranslation(m: Matrix, out: Vector3): Vector3;
-        static getQuaternion(m: Matrix, out: Quaternion): Quaternion;
-        static add(left: Matrix, right: Matrix, out: Matrix): Matrix;
-        static multiply(lhs: Matrix, rhs: Matrix, out: Matrix): Matrix;
-        static scale(scaler: number, m: Matrix): Matrix;
-        static transpose(m: Matrix, out: Matrix): Matrix;
-        static inverse(src: Matrix, out: Matrix): Matrix;
-        static decompose(m: Matrix, scale: Vector3, rotation: Quaternion, translation: Vector3): boolean;
-        static copy(m: Matrix, out: Matrix): Matrix;
-        static identify(m: Matrix): Matrix;
-        static zero(m: Matrix): Matrix;
-        static formScale(xScale: number, yScale: number, zScale: number, out: Matrix): Matrix;
-        static fromTranslate(x: number, y: number, z: number, out: Matrix): Matrix;
-        static fromRTS(p: Vector3, s: Vector3, q: Quaternion, out: Matrix): Matrix;
-        static getVector3ByOffset(src: Matrix, offset: number, result: Vector3): Vector3;
-        static transformVector3(vector: Vector3, transformation: Matrix, result: Vector3): Vector3;
-        static transformNormal(vector: Vector3, transformation: Matrix, result: Vector3): Vector3;
-        static lerp(left: Matrix, right: Matrix, v: number, out: Matrix): Matrix;
-        static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix): Matrix;
-        static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix): Matrix;
-        static toEulerAngles(matrix: Matrix, out: Vector3): Vector3;
-        static determinant(matrix: Matrix): number;
-    }
-    const helpMatrixA: Matrix;
-    const helpMatrixB: Matrix;
-    const helpMatrixC: Matrix;
-    const helpMatrixD: Matrix;
-}
-declare namespace egret3d {
     type RunEgretOptions = {
         antialias: boolean;
         defaultScene?: string;
+        isEditor?: boolean;
+        isPlaying?: boolean;
     };
     type RequiredRuntimeOptions = {
         antialias: boolean;
@@ -1139,7 +1148,11 @@ declare namespace egret3d {
         w: number;
         constructor(x?: number, y?: number, z?: number, w?: number);
         serialize(): number[];
-        deserialize(element: number[]): void;
+        deserialize(element: [number, number, number, number]): void;
+        copy(value: Vector4): this;
+        clone(): Vector4;
+        set(x: number, y: number, z: number, w: number): this;
+        normalize(): this;
         static set(x: number, y: number, z: number, w: number, out: Vector4): Vector4;
         static copy(v: Vector4, out: Vector4): Vector4;
     }
@@ -1150,26 +1163,42 @@ declare namespace egret3d {
     const helpVector4E: Vector4;
     const helpVector4F: Vector4;
 }
-declare namespace egret3d {
-    class WebGLCapabilities {
-        version: number;
-        precision: string;
-        maxPrecision: string;
-        maxTextures: number;
-        maxVertexTextures: number;
-        maxTextureSize: number;
-        maxCubemapSize: number;
-        maxVertexUniformVectors: number;
-        floatTextures: boolean;
-        anisotropyExt: EXT_texture_filter_anisotropic;
-        shaderTextureLOD: any;
-        maxAnisotropy: number;
-        maxRenderTextureSize: number;
-        standardDerivatives: boolean;
-        s3tc: WEBGL_compressed_texture_s3tc;
-        textureFloat: boolean;
-        textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
-        initialize(gl: WebGLRenderingContext): void;
+declare namespace paper {
+    /**
+     * 场景管理器
+     */
+    class SceneManager {
+        private readonly _scenes;
+        _addScene(scene: Scene): void;
+        /**
+         * 创建一个空场景并激活
+         */
+        createScene(name: string): Scene;
+        /**
+         * load scene 加载场景
+         * @param rawScene url
+         */
+        loadScene(url: string): any;
+        /**
+         * 卸载指定场景，如果创建列表为空，则创建一个空场景。
+         */
+        unloadScene(scene: Scene): void;
+        /**
+         * 卸载所有场景，并创建一个默认场景。
+         */
+        unloadAllScene(): void;
+        /**
+         *
+         */
+        getSceneByName(name: string): Scene;
+        /**
+         *
+         */
+        getSceneByURL(url: string): Scene;
+        /**
+         * 获取当前激活的场景
+         */
+        getActiveScene(): Scene;
     }
 }
 declare namespace paper.editor {
@@ -1195,6 +1224,68 @@ declare namespace paper.editor {
         type: string;
         data: any;
         constructor(type: string, data?: any);
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    class Color implements paper.ISerializable {
+        /**
+         *
+         */
+        r: number;
+        /**
+         *
+         */
+        g: number;
+        /**
+         *
+         */
+        b: number;
+        /**
+         *
+         */
+        a: number;
+        /**
+         *
+         */
+        constructor(r?: number, g?: number, b?: number, a?: number);
+        /**
+         * @inheritDoc
+         */
+        serialize(): number[];
+        /**
+         * @inheritDoc
+         */
+        deserialize(element: number[]): void;
+        static set(r: number, g: number, b: number, a: number, out: Color): Color;
+        static multiply(c1: Color, c2: Color, out: Color): Color;
+        static scale(c: Color, scaler: number): Color;
+        static copy(c: Color, out: Color): Color;
+        static lerp(c1: Color, c2: Color, value: number, out: Color): Color;
+    }
+}
+declare namespace egret3d {
+    class WebGLCapabilities {
+        version: number;
+        precision: string;
+        maxPrecision: string;
+        maxTextures: number;
+        maxVertexTextures: number;
+        maxTextureSize: number;
+        maxCubemapSize: number;
+        maxVertexUniformVectors: number;
+        floatTextures: boolean;
+        anisotropyExt: EXT_texture_filter_anisotropic;
+        shaderTextureLOD: any;
+        maxAnisotropy: number;
+        maxRenderTextureSize: number;
+        standardDerivatives: boolean;
+        s3tc: WEBGL_compressed_texture_s3tc;
+        textureFloat: boolean;
+        textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
+        initialize(gl: WebGLRenderingContext): void;
     }
 }
 declare namespace egret3d {
@@ -1338,36 +1429,6 @@ declare namespace paper {
          * 碰撞时调用
          */
         onCollide(collider: any): void;
-    }
-}
-declare namespace egret3d {
-    class Quaternion implements paper.ISerializable {
-        x: number;
-        y: number;
-        z: number;
-        w: number;
-        constructor(x?: number, y?: number, z?: number, w?: number);
-        serialize(): number[];
-        deserialize(element: number[]): void;
-        static set(x: number, y: number, z: number, w: number, out: Quaternion): Quaternion;
-        static getMagnitude(src: Quaternion): number;
-        static fromYawPitchRoll(yaw: number, pitch: number, roll: number, out: Quaternion): Quaternion;
-        static fromEulerAngles(ax: number, ay: number, az: number, out: Quaternion): Quaternion;
-        static fromAxisAngle(axis: Vector3, angle: number, out: Quaternion): Quaternion;
-        static fromMatrix(matrix: Matrix, out: Quaternion): Quaternion;
-        static lookAt(pos: Vector3, target: Vector3, out: Quaternion): Quaternion;
-        static lookAtWithUp(pos: Vector3, target: Vector3, up: Vector3, out: Quaternion): Quaternion;
-        static multiply(q1: Quaternion, q2: Quaternion, out: Quaternion): Quaternion;
-        static normalize(out: Quaternion): Quaternion;
-        static copy(q: Quaternion, out: Quaternion): Quaternion;
-        static inverse(q: Quaternion): Quaternion;
-        static toEulerAngles(q: Quaternion, out: Vector3): Vector3;
-        static toMatrix(q: Quaternion, out: Matrix): Matrix;
-        static toAxisAngle(q: Quaternion, axis: Vector3): number;
-        static transformVector3(src: Quaternion, vector: Vector3, out: Vector3): Vector3;
-        static transformVector3ByQuaternionData(src: Float32Array, srcseek: number, vector: Vector3, out: Vector3): Vector3;
-        static multiplyByQuaternionData(srca: Float32Array, srcaseek: number, srcb: Quaternion, out: Quaternion): Quaternion;
-        static lerp(srca: Quaternion, srcb: Quaternion, out: Quaternion, t: number): Quaternion;
     }
 }
 declare namespace egret3d {
@@ -1603,46 +1664,6 @@ declare namespace egret3d.particle {
         renderMode: ParticleRenderMode;
     }
 }
-declare namespace egret3d {
-    /**
-     *
-     */
-    class Color implements paper.ISerializable {
-        /**
-         *
-         */
-        r: number;
-        /**
-         *
-         */
-        g: number;
-        /**
-         *
-         */
-        b: number;
-        /**
-         *
-         */
-        a: number;
-        /**
-         *
-         */
-        constructor(r?: number, g?: number, b?: number, a?: number);
-        /**
-         * @inheritDoc
-         */
-        serialize(): number[];
-        /**
-         * @inheritDoc
-         */
-        deserialize(element: number[]): void;
-        static set(r: number, g: number, b: number, a: number, out: Color): Color;
-        static multiply(c1: Color, c2: Color, out: Color): Color;
-        static scale(c: Color, scaler: number): Color;
-        static copy(c: Color, out: Color): Color;
-        static lerp(c1: Color, c2: Color, value: number, out: Color): Color;
-    }
-}
 declare namespace paper {
     /**
      * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
@@ -1716,51 +1737,21 @@ declare namespace paper {
         update(): void;
     }
 }
-declare namespace paper {
-    /**
-     * 场景管理器
-     */
-    class SceneManager {
-        private readonly _scenes;
-        _addScene(scene: Scene): void;
-        /**
-         * 创建一个空场景并激活
-         */
-        createScene(name: string): Scene;
-        /**
-         * load scene 加载场景
-         * @param rawScene url
-         */
-        loadScene(url: string): any;
-        /**
-         * 卸载指定场景，如果创建列表为空，则创建一个空场景。
-         */
-        unloadScene(scene: Scene): void;
-        /**
-         * 卸载所有场景，并创建一个默认场景。
-         */
-        unloadAllScene(): void;
-        /**
-         *
-         */
-        getSceneByName(name: string): Scene;
-        /**
-         *
-         */
-        getSceneByURL(url: string): Scene;
-        /**
-         * 获取当前激活的场景
-         */
-        getActiveScene(): Scene;
-    }
-}
 declare namespace egret3d {
     class Vector2 implements paper.ISerializable {
+        static readonly ZERO: Readonly<Vector2>;
+        static readonly ONE: Readonly<Vector2>;
         x: number;
         y: number;
         constructor(x?: number, y?: number);
         serialize(): number[];
-        deserialize(element: number[]): void;
+        deserialize(element: [number, number]): void;
+        copy(value: Vector2): this;
+        clone(): Vector2;
+        set(x: number, y: number): this;
+        normalize(): this;
+        readonly length: number;
+        readonly sqrtLength: number;
         static set(x: number, y: number, out: Vector2): Vector2;
         static normalize(v: Vector2): Vector2;
         static add(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
@@ -1775,41 +1766,38 @@ declare namespace egret3d {
         static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2;
     }
 }
-declare namespace paper {
-    /**
-     * 组件实体系统的主入口
-     */
-    class Application {
-        /**
-         * 系统管理器
-         */
-        static readonly systemManager: SystemManager;
-        /**
-         * 场景管理器
-         */
-        static readonly sceneManager: SceneManager;
-        private static _isEditor;
-        private static _isFocused;
-        private static _isPlaying;
-        private static _isRunning;
-        private static _standDeltaTime;
-        private static readonly _laterCalls;
-        private static _bindUpdate;
-        private static _update();
-        static init(): void;
-        /**
-         *
-         */
-        static pause(): void;
-        static resume(): void;
-        /**
-         *
-         */
-        static callLater(callback: () => void): void;
-        static readonly isEditor: boolean;
-        static readonly isFocused: boolean;
-        static readonly isPlaying: boolean;
-        static readonly isRunning: boolean;
+declare namespace egret3d {
+    class Quaternion implements paper.ISerializable {
+        x: number;
+        y: number;
+        z: number;
+        w: number;
+        constructor(x?: number, y?: number, z?: number, w?: number);
+        serialize(): number[];
+        deserialize(element: number[]): void;
+        copy(value: Vector4): this;
+        clone(): Vector4;
+        set(x: number, y: number, z: number, w: number): this;
+        normalize(): this;
+        static set(x: number, y: number, z: number, w: number, out: Quaternion): Quaternion;
+        static getMagnitude(src: Quaternion): number;
+        static fromYawPitchRoll(yaw: number, pitch: number, roll: number, out: Quaternion): Quaternion;
+        static fromEulerAngles(ax: number, ay: number, az: number, out: Quaternion): Quaternion;
+        static fromAxisAngle(axis: Vector3, angle: number, out: Quaternion): Quaternion;
+        static fromMatrix(matrix: Matrix, out: Quaternion): Quaternion;
+        static lookAt(pos: Vector3, target: Vector3, out: Quaternion): Quaternion;
+        static lookAtWithUp(pos: Vector3, target: Vector3, up: Vector3, out: Quaternion): Quaternion;
+        static multiply(q1: Quaternion, q2: Quaternion, out: Quaternion): Quaternion;
+        static normalize(out: Quaternion): Quaternion;
+        static copy(q: Quaternion, out: Quaternion): Quaternion;
+        static inverse(q: Quaternion): Quaternion;
+        static toEulerAngles(q: Quaternion, out: Vector3): Vector3;
+        static toMatrix(q: Quaternion, out: Matrix): Matrix;
+        static toAxisAngle(q: Quaternion, axis: Vector3): number;
+        static transformVector3(src: Quaternion, vector: Vector3, out: Vector3): Vector3;
+        static transformVector3ByQuaternionData(src: Float32Array, srcseek: number, vector: Vector3, out: Vector3): Vector3;
+        static multiplyByQuaternionData(srca: Float32Array, srcaseek: number, srcb: Quaternion, out: Quaternion): Quaternion;
+        static lerp(srca: Quaternion, srcb: Quaternion, out: Quaternion, t: number): Quaternion;
     }
 }
 declare namespace paper {
@@ -1852,6 +1840,50 @@ declare namespace paper {
          * @param component component
          */
         function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any): void;
+    }
+}
+declare namespace egret3d {
+    /**
+     * 矩形对象
+     */
+    interface RectData {
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+    }
+    /**
+     * 矩形可序列化对象
+     */
+    class Rect implements RectData, paper.ISerializable {
+        /**
+         *
+         */
+        x: number;
+        /**
+         *
+         */
+        y: number;
+        /**
+         *
+         */
+        w: number;
+        /**
+         *
+         */
+        h: number;
+        /**
+         *
+         */
+        constructor(x?: number, y?: number, w?: number, h?: number);
+        /**
+         * @inheritDoc
+         */
+        serialize(): number[];
+        /**
+         * @inheritDoc
+         */
+        deserialize(element: number[]): void;
     }
 }
 declare namespace paper {
@@ -1980,7 +2012,7 @@ declare namespace paper {
          */
         /**
          * 仅用于反序列化。
-         *
+         * @internal
          */
         components: ReadonlyArray<BaseComponent>;
         /**
@@ -1991,38 +2023,254 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     * 矩形对象
+     * aabb box
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    interface RectData {
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-    }
     /**
-     * 矩形可序列化对象
+     * 轴对称包围盒
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
      */
-    class Rect implements RectData, paper.ISerializable {
+    class AABB {
+        /**
+         * min point
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 最小点
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        minimum: Vector3;
+        /**
+         * max point
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 最大点
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        maximum: Vector3;
+        private _dirtyCenter;
+        private _dirtyRadius;
+        private srcmin;
+        private srcmax;
+        /**
+         * build a aabb
+         * @param _minimum min point
+         * @param _maximum max point
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 构建轴对称包围盒
+         * @param _minimum 最小点
+         * @param _maximum 最大点
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        constructor(_minimum?: Vector3, _maximum?: Vector3);
+        /**
+         * update
+         * @param worldmatrix world matrix
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 刷新轴对称包围盒
+         * @param worldmatrix 物体的世界矩阵
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        update(worldmatrix: Matrix): void;
+        /**
+         * extend by a point
+         * @param vec a world point
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 包含一个点
+         * @param vec 世界坐标
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        addVector3(vec: Vector3): void;
+        /**
+         * check contains vector
+         * @param vec a world point
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 检查是否包含点
+         * @param vec 世界坐标
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        containsVector3(vec: Vector3): boolean;
+        /**
+         * intersect with aabb
+         * @param aabb aabb
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 检查是否与aabb相交
+         * @param aabb 轴对称包围盒
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        intersectAABB(aabb: AABB): boolean;
+        /**
+         *
+         * 用于视锥检测的计算，引擎内部使用
+         * 这里采用包围球式计算以提高性能
+         */
+        intersectPlane(v0: Vector3, v1: Vector3, v2: Vector3): boolean;
+        /**
+         * extend by aabb
+         * @param aabb aabb
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 包含一个aabb
+         * @param aabb 轴对称包围盒
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        addAABB(aabb: egret3d.AABB): void;
+        private _center;
+        /**
+         * get center
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取中心点位置
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        readonly center: Vector3;
+        /**
+         * get bounding sphere radius
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取包围球的半径
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        readonly radius: number;
+        /**
+         * clear
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 清空
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        clear(): void;
+        /**
+         * clone
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 克隆
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        clone(): AABB;
+        /**
+         * copy
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 复制
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        copy(aabb: AABB): AABB;
+        /**
+         * get vectors
+         * @param vecs output vectors
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取包围盒顶点数据
+         * @param vecs 引用数组
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        getVec3(vecs: Vector3[]): void;
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    class Border implements paper.ISerializable {
         /**
          *
          */
-        x: number;
+        l: number;
         /**
          *
          */
-        y: number;
+        t: number;
         /**
          *
          */
-        w: number;
+        r: number;
         /**
          *
          */
-        h: number;
+        b: number;
         /**
          *
          */
-        constructor(x?: number, y?: number, w?: number, h?: number);
+        constructor(l?: number, t?: number, r?: number, b?: number);
         /**
          * @inheritDoc
          */
@@ -2053,6 +2301,255 @@ declare namespace paper {
         UserLayer10 = 2048,
         UserLayer11 = 3840,
     }
+}
+declare namespace egret3d {
+    /**
+     *
+     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
+     */
+    class Curve3 {
+        /**
+        * 贝塞尔曲线上的，不包含第一个点
+        */
+        private _beizerPoints;
+        /**
+        * 贝塞尔曲线上所有的个数
+        */
+        private _bezierPointNum;
+        beizerPoints: egret3d.Vector3[];
+        bezierPointNum: number;
+        /**
+         * 线性贝塞尔曲线
+         */
+        static CreateLinearBezier(start: egret3d.Vector3, end: egret3d.Vector3, indices: number): Curve3;
+        /**
+         * 二次方贝塞尔曲线路径
+         * @param v0 起始点
+         * @param v1 选中的节点
+         * @param v2 结尾点
+         * @param nbPoints 将贝塞尔曲线拆分nbPoints段，一共有nbPoints + 1个点
+         */
+        static CreateQuadraticBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, bezierPointNum: number): Curve3;
+        /**
+         * 三次方贝塞尔曲线路径
+         * @param v0
+         * @param v1
+         * @param v2
+         * @param v3
+         * @param nbPoints
+         */
+        static CreateCubicBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, v3: egret3d.Vector3, bezierPointNum: number): Curve3;
+        constructor(points: egret3d.Vector3[], nbPoints: number);
+        /**
+         * 贝塞尔曲线上的点
+         */
+        getPoints(): Vector3[];
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    const RAD_DEG: number;
+    /**
+     *
+     */
+    const DEG_RAD: number;
+    function floatClamp(v: number, min?: number, max?: number): number;
+    function sign(value: number): number;
+    function numberLerp(fromV: number, toV: number, v: number): number;
+    function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3;
+    function getPointAlongCurve(curveStart: Vector3, curveStartHandle: Vector3, curveEnd: Vector3, curveEndHandle: Vector3, t: number, out: Vector3, crease?: number): void;
+}
+declare namespace egret3d {
+    class Angelref {
+        v: number;
+    }
+    class Matrix3x2 {
+        rawData: Float32Array;
+        constructor(datas?: Float32Array);
+        static multiply(lhs: Matrix3x2, rhs: Matrix3x2, out: Matrix3x2): Matrix3x2;
+        static fromRotate(angle: number, out: Matrix3x2): Matrix3x2;
+        static fromScale(xScale: number, yScale: number, out: Matrix3x2): Matrix3x2;
+        static fromTranslate(x: number, y: number, out: Matrix3x2): Matrix3x2;
+        static fromRTS(pos: Vector2, scale: Vector2, rot: number, out: Matrix3x2): void;
+        static transformVector2(mat: Matrix, inp: Vector2, out: Vector2): Vector2;
+        static transformNormal(mat: Matrix, inp: Vector2, out: Vector2): Vector2;
+        static inverse(src: Matrix3x2, out: Matrix3x2): Matrix3x2;
+        static identify(out: Matrix3x2): Matrix3x2;
+        static copy(src: Matrix3x2, out: Matrix3x2): Matrix3x2;
+        static decompose(src: Matrix3x2, scale: Vector2, rotation: Angelref, translation: Vector2): boolean;
+    }
+}
+declare namespace egret3d {
+    /**
+     * obb box
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 定向包围盒
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    class OBB extends paper.SerializableObject {
+        /**
+         * center
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 包围盒中心
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        readonly center: Vector3;
+        /**
+         * size
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 包围盒各轴向长
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        readonly size: Vector3;
+        /**
+         * vectors
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 包围盒世界空间下各个点坐标
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        readonly vectors: Readonly<[Vector3, Vector3, Vector3, Vector3, Vector3, Vector3, Vector3, Vector3]>;
+        private readonly _directions;
+        private _computeBoxExtents(axis, box, out);
+        private _axisOverlap(axis, a, b);
+        /**
+         * clone a obb
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 克隆一个obb
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        clone(): OBB;
+        /**
+         * build by min point and max point
+         * @param minimum min point
+         * @param maximum max point
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 由最大最小点构建定向包围盒
+         * @param minimum 最小点坐标
+         * @param maximum 最大点坐标
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        setByMaxMin(minimum: Readonly<Vector3>, maximum: Readonly<Vector3>): void;
+        /**
+         * build by center and size
+         * @param center center
+         * @param size size
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 由中心点和各轴向长度构建定向包围盒
+         * @param center 中心点坐标
+         * @param size 各轴向长度
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        setByCenterSize(center: Readonly<Vector3>, size: Readonly<Vector3>): void;
+        /**
+         * update by world matrix
+         * @param worldmatrix world matrix
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 刷新定向包围盒
+         * @param worldmatrix 世界矩阵
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        update(worldMatrix: Readonly<Matrix>): void;
+        /**
+         * intersect width obb
+         * @param value obb
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * obb的碰撞检测
+         * @param value 待检测obb
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        intersects(value: Readonly<OBB>): boolean;
+        /**
+         * update vectors by world matrix
+         * @param vectors vectors
+         * @param worldMatrix world matrix
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 计算世界空间下各点坐标
+         * @param vectors 结果数组
+         * @param worldMatrix 物体的世界矩阵
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        caclWorldVectors(vectors: ReadonlyArray<Vector3>, worldMatrix: Readonly<Matrix>): void;
+        deserialize(element: {
+            center: [number, number, number];
+            size: [number, number, number];
+        }): void;
+    }
+}
+declare namespace egret3d {
+    /**
+     * WebGL窗口信息
+     */
+    class Stage3D {
+        screenViewport: Readonly<RectData>;
+        absolutePosition: Readonly<RectData>;
+        private _canvas;
+        private _resizeDirty;
+        update(): void;
+        private _resize();
+    }
+    const stage: Stage3D;
 }
 declare namespace paper {
     /**
@@ -2219,6 +2716,8 @@ declare namespace paper {
          */
         bufferGameObject(gameObject: GameObject): void;
     }
+}
+declare namespace paper {
 }
 declare namespace egret3d {
     /**
@@ -3719,115 +4218,11 @@ declare namespace egret3d {
         update(light: Light, face?: number): void;
     }
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     * Light Type Enum
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * 克隆
      */
-    /**
-     * 灯光类型的枚举。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    enum LightTypeEnum {
-        /**
-         * direction light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 直射光
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Direction = 1,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 点光源
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Point = 2,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Spot = 3,
-    }
-    /**
-     * light component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 灯光组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class Light extends paper.BaseComponent {
-        /**
-         * light type
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 光源类型
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        type: LightTypeEnum;
-        color: Color;
-        intensity: number;
-        distance: number;
-        decay: number;
-        angle: number;
-        penumbra: number;
-        /**
-         * spot angel cos
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯的开合角度cos值
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        spotAngelCos: number;
-        castShadows: boolean;
-        $directLightShadow: DirectLightShadow;
-        $pointLightShadow: PointLightShadow;
-        $spotLightShadow: SpotLightShadow;
-        shadowBias: number;
-        shadowRadius: number;
-        shadowSize: number;
-        shadowCameraNear: number;
-        shadowCameraFar: number;
-    }
+    function clone<T extends paper.SerializableObject>(object: T): T;
 }
 declare namespace egret3d {
     /**
@@ -3990,11 +4385,126 @@ declare namespace egret3d {
         update(): void;
     }
 }
-declare namespace paper {
+declare namespace egret3d {
+    const enum SkinnedMeshRendererEventType {
+        Mesh = "mesh",
+        Bones = "bones",
+        Materials = "materials",
+    }
     /**
-     * 克隆
+     * Skinned Mesh Renderer Component
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    function clone<T extends paper.SerializableObject>(object: T): T;
+    /**
+     * 蒙皮网格的渲染组件
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    class SkinnedMeshRenderer extends paper.BaseComponent implements paper.IRenderer {
+        /**
+         *
+         */
+        static dataCaches: {
+            key: string;
+            data: Float32Array;
+        }[];
+        private readonly _materials;
+        private _mesh;
+        /**
+         * mesh instance
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * mesh实例
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        mesh: Mesh | null;
+        private readonly _bones;
+        /**
+         *
+         * 根骨骼
+         */
+        rootBone: Transform;
+        center: Vector3;
+        size: Vector3;
+        /**
+         *
+         */
+        _boneDirty: boolean;
+        private _maxBoneCount;
+        /**
+         * Local [qX, qY, qZ, qW, tX, tY, tZ, 1.0, ...]
+         *
+         */
+        _skeletonMatrixData: Float32Array;
+        /**
+         *
+         */
+        _retargetBoneNames: string[] | null;
+        private _efficient;
+        private cacheData;
+        private _getMatByIndex(index, out);
+        /**
+         * @inheritDoc
+         */
+        initialize(): void;
+        /**
+         * @inheritDoc
+         */
+        uninitialize(): void;
+        /**
+         * @inheritDoc
+         */
+        serialize(): any;
+        /**
+         * @inheritDoc
+         */
+        deserialize(element: any): void;
+        /**
+         * ray intersects
+         * @param ray ray
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 射线检测
+         * @param ray 射线
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        intersects(ray: Ray): any;
+        /**
+         * material list
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 材质数组
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        materials: ReadonlyArray<Material>;
+        /**
+         * 骨骼列表
+         *
+         */
+        bones: ReadonlyArray<Transform>;
+        /**
+         *
+         */
+        readonly boneBuffer: Readonly<Float32Array>;
+    }
 }
 declare namespace egret3d {
     /**
@@ -4328,7 +4838,7 @@ declare namespace egret3d {
         /**
          * 从二进制数据中解析资源。
          */
-        parseFromBinary(binary: ArrayBuffer): void;
+        parseFromBinary(array: Uint32Array): void;
         /**
          * 根据指定 BufferView 创建二进制数组。
          */
@@ -5932,327 +6442,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * aabb box
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 轴对称包围盒
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class AABB {
-        /**
-         * min point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 最小点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        minimum: Vector3;
-        /**
-         * max point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 最大点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        maximum: Vector3;
-        private _dirtyCenter;
-        private _dirtyRadius;
-        private srcmin;
-        private srcmax;
-        /**
-         * build a aabb
-         * @param _minimum min point
-         * @param _maximum max point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 构建轴对称包围盒
-         * @param _minimum 最小点
-         * @param _maximum 最大点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        constructor(_minimum?: Vector3, _maximum?: Vector3);
-        /**
-         * update
-         * @param worldmatrix world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 刷新轴对称包围盒
-         * @param worldmatrix 物体的世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        update(worldmatrix: Matrix): void;
-        /**
-         * extend by a point
-         * @param vec a world point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 包含一个点
-         * @param vec 世界坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        addVector3(vec: Vector3): void;
-        /**
-         * check contains vector
-         * @param vec a world point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 检查是否包含点
-         * @param vec 世界坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        containsVector3(vec: Vector3): boolean;
-        /**
-         * intersect with aabb
-         * @param aabb aabb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 检查是否与aabb相交
-         * @param aabb 轴对称包围盒
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        intersectAABB(aabb: AABB): boolean;
-        /**
-         *
-         * 用于视锥检测的计算，引擎内部使用
-         * 这里采用包围球式计算以提高性能
-         */
-        intersectPlane(v0: Vector3, v1: Vector3, v2: Vector3): boolean;
-        /**
-         * extend by aabb
-         * @param aabb aabb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 包含一个aabb
-         * @param aabb 轴对称包围盒
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        addAABB(aabb: egret3d.AABB): void;
-        private _center;
-        /**
-         * get center
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取中心点位置
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly center: Vector3;
-        /**
-         * get bounding sphere radius
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取包围球的半径
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly radius: number;
-        /**
-         * clear
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 清空
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        clear(): void;
-        /**
-         * clone
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 克隆
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        clone(): AABB;
-        /**
-         * copy
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 复制
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        copy(aabb: AABB): AABB;
-        /**
-         * get vectors
-         * @param vecs output vectors
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取包围盒顶点数据
-         * @param vecs 引用数组
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        getVec3(vecs: Vector3[]): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    class Border implements paper.ISerializable {
-        /**
-         *
-         */
-        l: number;
-        /**
-         *
-         */
-        t: number;
-        /**
-         *
-         */
-        r: number;
-        /**
-         *
-         */
-        b: number;
-        /**
-         *
-         */
-        constructor(l?: number, t?: number, r?: number, b?: number);
-        /**
-         * @inheritDoc
-         */
-        serialize(): number[];
-        /**
-         * @inheritDoc
-         */
-        deserialize(element: number[]): void;
-    }
-}
-declare namespace paper {
-}
-declare namespace egret3d {
-    /**
-     *
-     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
-     */
-    class Curve3 {
-        /**
-        * 贝塞尔曲线上的，不包含第一个点
-        */
-        private _beizerPoints;
-        /**
-        * 贝塞尔曲线上所有的个数
-        */
-        private _bezierPointNum;
-        beizerPoints: egret3d.Vector3[];
-        bezierPointNum: number;
-        /**
-         * 线性贝塞尔曲线
-         */
-        static CreateLinearBezier(start: egret3d.Vector3, end: egret3d.Vector3, indices: number): Curve3;
-        /**
-         * 二次方贝塞尔曲线路径
-         * @param v0 起始点
-         * @param v1 选中的节点
-         * @param v2 结尾点
-         * @param nbPoints 将贝塞尔曲线拆分nbPoints段，一共有nbPoints + 1个点
-         */
-        static CreateQuadraticBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, bezierPointNum: number): Curve3;
-        /**
-         * 三次方贝塞尔曲线路径
-         * @param v0
-         * @param v1
-         * @param v2
-         * @param v3
-         * @param nbPoints
-         */
-        static CreateCubicBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, v3: egret3d.Vector3, bezierPointNum: number): Curve3;
-        constructor(points: egret3d.Vector3[], nbPoints: number);
-        /**
-         * 贝塞尔曲线上的点
-         */
-        getPoints(): Vector3[];
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    const RAD_DEG: number;
-    /**
-     *
-     */
-    const DEG_RAD: number;
-    function floatClamp(v: number, min?: number, max?: number): number;
-    function sign(value: number): number;
-    function numberLerp(fromV: number, toV: number, v: number): number;
-    function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3;
-    function getPointAlongCurve(curveStart: Vector3, curveStartHandle: Vector3, curveEnd: Vector3, curveEndHandle: Vector3, t: number, out: Vector3, crease?: number): void;
-}
-declare namespace egret3d {
-    /**
      * atlas asset
      * @version paper 1.0
      * @platform Web
@@ -6333,182 +6522,6 @@ declare namespace egret3d {
          * @language zh_CN
          */
         texture: Texture | null;
-    }
-}
-declare namespace egret3d {
-    class Angelref {
-        v: number;
-    }
-    class Matrix3x2 {
-        rawData: Float32Array;
-        constructor(datas?: Float32Array);
-        static multiply(lhs: Matrix3x2, rhs: Matrix3x2, out: Matrix3x2): Matrix3x2;
-        static fromRotate(angle: number, out: Matrix3x2): Matrix3x2;
-        static fromScale(xScale: number, yScale: number, out: Matrix3x2): Matrix3x2;
-        static fromTranslate(x: number, y: number, out: Matrix3x2): Matrix3x2;
-        static fromRTS(pos: Vector2, scale: Vector2, rot: number, out: Matrix3x2): void;
-        static transformVector2(mat: Matrix, inp: Vector2, out: Vector2): Vector2;
-        static transformNormal(mat: Matrix, inp: Vector2, out: Vector2): Vector2;
-        static inverse(src: Matrix3x2, out: Matrix3x2): Matrix3x2;
-        static identify(out: Matrix3x2): Matrix3x2;
-        static copy(src: Matrix3x2, out: Matrix3x2): Matrix3x2;
-        static decompose(src: Matrix3x2, scale: Vector2, rotation: Angelref, translation: Vector2): boolean;
-    }
-}
-declare namespace egret3d {
-    /**
-     * obb box
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 定向包围盒
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class OBB extends paper.SerializableObject {
-        /**
-         * center
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 包围盒中心
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly center: Vector3;
-        /**
-         * size
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 包围盒各轴向长
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly size: Vector3;
-        /**
-         * vectors
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 包围盒世界空间下各个点坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly vectors: Readonly<[Vector3, Vector3, Vector3, Vector3, Vector3, Vector3, Vector3, Vector3]>;
-        private readonly _directions;
-        private _computeBoxExtents(axis, box, out);
-        private _axisOverlap(axis, a, b);
-        /**
-         * clone a obb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 克隆一个obb
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        clone(): OBB;
-        /**
-         * build by min point and max point
-         * @param minimum min point
-         * @param maximum max point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 由最大最小点构建定向包围盒
-         * @param minimum 最小点坐标
-         * @param maximum 最大点坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        setByMaxMin(minimum: Readonly<Vector3>, maximum: Readonly<Vector3>): void;
-        /**
-         * build by center and size
-         * @param center center
-         * @param size size
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 由中心点和各轴向长度构建定向包围盒
-         * @param center 中心点坐标
-         * @param size 各轴向长度
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        setByCenterSize(center: Readonly<Vector3>, size: Readonly<Vector3>): void;
-        /**
-         * update by world matrix
-         * @param worldmatrix world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 刷新定向包围盒
-         * @param worldmatrix 世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        update(worldMatrix: Readonly<Matrix>): void;
-        /**
-         * intersect width obb
-         * @param value obb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * obb的碰撞检测
-         * @param value 待检测obb
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        intersects(value: Readonly<OBB>): boolean;
-        /**
-         * update vectors by world matrix
-         * @param vectors vectors
-         * @param worldMatrix world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 计算世界空间下各点坐标
-         * @param vectors 结果数组
-         * @param worldMatrix 物体的世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        caclWorldVectors(vectors: ReadonlyArray<Vector3>, worldMatrix: Readonly<Matrix>): void;
-        deserialize(element: {
-            center: [number, number, number];
-            size: [number, number, number];
-        }): void;
     }
 }
 declare namespace egret3d {
@@ -8090,7 +8103,7 @@ declare namespace paper.editor {
         private static _editorModel;
         /**初始化 */
         static init(): Promise<void>;
-        private static runEgret(options?);
+        private static runEgret();
     }
 }
 declare namespace paper {
@@ -8109,19 +8122,45 @@ declare namespace paper {
     interface IRenderer extends paper.BaseComponent {
     }
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     * WebGL窗口信息
+     * 组件实体系统的主入口
      */
-    class Stage3D {
-        screenViewport: Readonly<RectData>;
-        absolutePosition: Readonly<RectData>;
-        private _canvas;
-        private _resizeDirty;
-        update(): void;
-        private _resize();
+    class Application {
+        /**
+         * 系统管理器
+         */
+        static readonly systemManager: SystemManager;
+        /**
+         * 场景管理器
+         */
+        static readonly sceneManager: SceneManager;
+        private static _isEditor;
+        private static _isFocused;
+        private static _isPlaying;
+        private static _isRunning;
+        private static _standDeltaTime;
+        private static readonly _laterCalls;
+        private static _bindUpdate;
+        private static _update();
+        static init({isEditor, isPlaying}?: {
+            isEditor?: boolean;
+            isPlaying?: boolean;
+        }): void;
+        /**
+         *
+         */
+        static pause(): void;
+        static resume(): void;
+        /**
+         *
+         */
+        static callLater(callback: () => void): void;
+        static readonly isEditor: boolean;
+        static readonly isFocused: boolean;
+        static readonly isPlaying: boolean;
+        static readonly isRunning: boolean;
     }
-    const stage: Stage3D;
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
@@ -8170,6 +8209,12 @@ declare namespace paper.editor {
         static MODIFY_PREFAB_GAMEOBJECT_PROPERTY: string;
         /**修改预制体组件属性 */
         static MODIFY_PREFAB_COMPONENT_PROPERTY: string;
+        /**添加组件 */
+        static ADD_PREFAB_COMPONENT: string;
+        /**移除组件 */
+        static REMOVE_PREFAB_COMPONENT: string;
+        /**修改asset属性 */
+        static MODIFY_ASSET_PROPERTY: string;
     }
     /**
      * 编辑模型
@@ -8182,36 +8227,15 @@ declare namespace paper.editor {
         paperHistory: History;
         initHistory(): void;
         addState(state: BaseState): void;
-        historyEventHandler(e: BaseEvent): void;
         setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean;
-        getEditType(propName: string, target: any): EditType;
-        /**
-         * 修改gameobject属性
-         * @param propName
-         * @param propValue
-         * @param target
-         * @param editType
-         * @param add
-         */
+        getEditType(propName: string, target: any): editor.EditType | null;
         createModifyGameObjectPropertyState(propName: string, propValue: any, target: GameObject, editType: editor.EditType, add?: boolean): ModifyGameObjectPropertyState;
-        /**
- * 修改组件属性
- * @param propName
- * @param propValue
- * @param target
- * @param editType
- * @param add
- */
         createModifyComponent(propName: string, propValue: any, target: BaseComponent, editType: editor.EditType, add?: boolean): any;
-        /**
-         * 修改预制体gameobject属性,包括修改所有关联gameobject以及backruntiem的gameobject
-         * @param gameObjectId
-         * @param newValueList
-         * @param preValueCopylist
-         * @param backRuntime
-         */
         createModifyPrefabGameObjectPropertyState(gameObjectId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
         createModifyPrefabComponentPropertyState(gameObjectId: number, componentId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
+        createRemoveComponentFromPrefab(stateData: any): void;
+        createAddComponentToPrefab(stateData: any): void;
+        createModifyAssetPropertyState(target: Asset, newValueList: any[], preValueCopylist: any[]): void;
         serializeProperty(value: any, editType: editor.EditType): any;
         deserializeProperty(serializeData: any, editType: editor.EditType): any;
         /**
@@ -8332,13 +8356,15 @@ declare namespace paper.editor {
         getAllComponentIdFromGameObject(gameObject: GameObject, hashcodes: number[]): void;
         private findOptionSetName(propName, target);
         setTargetProperty(propName: string, target: any, value: any): void;
-        private lastSelectIds;
         /**
          * 选中游戏对象
          * @param gameObjects
          * @param addHistory 是否产生历史记录，只在用户进行选中相关操作时调用
          */
-        selectGameObject(gameObjects: GameObject[], addHistory?: boolean): void;
+        selectGameObject(selectIds: number[], options?: {
+            addHistory: boolean;
+            preIds: number[];
+        }): void;
         switchScene(url: string): void;
         private _editCamera;
         geoController: GeoController;
@@ -8399,7 +8425,7 @@ declare namespace paper.editor {
          */
         private _addEventListener();
         private selectGameObjects;
-        private _selectGameObjects(gameObjects);
+        private _selectGameObjects(selectIds);
         private changeProperty;
         private _changeProperty(data);
         private changeEditMode;
@@ -8556,6 +8582,27 @@ declare namespace paper.editor {
         undo(): boolean;
         redo(): boolean;
     }
+    class RemovePrefabComponentState extends BaseState {
+        static toString(): string;
+        static create(data?: any): RemovePrefabComponentState | null;
+        protected getGameObjectById(gameObjectId: number): GameObject;
+        undo(): boolean;
+        redo(): boolean;
+    }
+    class AddPrefabComponentState extends BaseState {
+        static toString(): string;
+        static create(data?: any): AddPrefabComponentState | null;
+        undo(): boolean;
+        protected getGameObjectById(gameObjectId: number): GameObject;
+        redo(): boolean;
+    }
+    class ModifyAssetPropertyState extends BaseState {
+        static toString(): string;
+        static create(data?: any): ModifyAssetPropertyState | null;
+        modifyAssetPropertyValues(target: Asset, valueList: any[]): void;
+        undo(): boolean;
+        redo(): boolean;
+    }
 }
 declare namespace paper.editor {
     /**
@@ -8702,123 +8749,112 @@ declare namespace paper.editor {
     }
 }
 declare namespace egret3d {
-    const enum SkinnedMeshRendererEventType {
-        Mesh = "mesh",
-        Bones = "bones",
-        Materials = "materials",
-    }
     /**
-     * Skinned Mesh Renderer Component
+     * Light Type Enum
      * @version paper 1.0
      * @platform Web
      * @language en_US
      */
     /**
-     * 蒙皮网格的渲染组件
+     * 灯光类型的枚举。
      * @version paper 1.0
      * @platform Web
      * @language
      */
-    class SkinnedMeshRenderer extends paper.BaseComponent implements paper.IRenderer {
+    enum LightTypeEnum {
         /**
-         *
-         */
-        static dataCaches: {
-            key: string;
-            data: Float32Array;
-        }[];
-        private readonly _materials;
-        private _mesh;
-        /**
-         * mesh instance
+         * direction light
          * @version paper 1.0
          * @platform Web
          * @language en_US
          */
         /**
-         * mesh实例
+         * 直射光
          * @version paper 1.0
          * @platform Web
          * @language
          */
-        mesh: Mesh | null;
-        private readonly _bones;
+        Direction = 1,
         /**
-         *
-         * 根骨骼
-         */
-        rootBone: Transform;
-        center: Vector3;
-        size: Vector3;
-        /**
-         *
-         */
-        _boneDirty: boolean;
-        private _maxBoneCount;
-        /**
-         * Local [qX, qY, qZ, qW, tX, tY, tZ, 1.0, ...]
-         *
-         */
-        _skeletonMatrixData: Float32Array;
-        /**
-         *
-         */
-        _retargetBoneNames: string[] | null;
-        private _efficient;
-        private cacheData;
-        private _getMatByIndex(index, out);
-        /**
-         * @inheritDoc
-         */
-        initialize(): void;
-        /**
-         * @inheritDoc
-         */
-        uninitialize(): void;
-        /**
-         * @inheritDoc
-         */
-        serialize(): any;
-        /**
-         * @inheritDoc
-         */
-        deserialize(element: any): void;
-        /**
-         * ray intersects
-         * @param ray ray
+         * point light
          * @version paper 1.0
          * @platform Web
          * @language en_US
          */
         /**
-         * 射线检测
-         * @param ray 射线
+         * 点光源
          * @version paper 1.0
          * @platform Web
          * @language
          */
-        intersects(ray: Ray): any;
+        Point = 2,
         /**
-         * material list
+         * point light
          * @version paper 1.0
          * @platform Web
          * @language en_US
          */
         /**
-         * 材质数组
+         * 聚光灯
          * @version paper 1.0
          * @platform Web
          * @language
          */
-        materials: ReadonlyArray<Material>;
+        Spot = 3,
+    }
+    /**
+     * light component
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 灯光组件
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    class Light extends paper.BaseComponent {
         /**
-         * 骨骼列表
-         *
+         * light type
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        bones: ReadonlyArray<Transform>;
         /**
-         *
+         * 光源类型
+         * @version paper 1.0
+         * @platform Web
+         * @language
          */
-        readonly boneBuffer: Readonly<Float32Array>;
+        type: LightTypeEnum;
+        color: Color;
+        intensity: number;
+        distance: number;
+        decay: number;
+        angle: number;
+        penumbra: number;
+        /**
+         * spot angel cos
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 聚光灯的开合角度cos值
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        spotAngelCos: number;
+        castShadows: boolean;
+        $directLightShadow: DirectLightShadow;
+        $pointLightShadow: PointLightShadow;
+        $spotLightShadow: SpotLightShadow;
+        shadowBias: number;
+        shadowRadius: number;
+        shadowSize: number;
+        shadowCameraNear: number;
+        shadowCameraFar: number;
     }
 }
