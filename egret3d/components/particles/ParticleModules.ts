@@ -469,14 +469,11 @@ namespace egret3d.particle {
         @paper.serializedField
         public readonly rateOverTime: MinMaxCurve = new MinMaxCurve();
         @paper.serializedField
-        public readonly rateOverDistance: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
         public readonly bursts: Array<Burst> = new Array<Burst>();
 
         public deserialize(element: any) {
             super.deserialize(element);
             this.rateOverTime.deserialize(element.rateOverTime);
-            this.rateOverDistance.deserialize(element.rateOverDistance);
             if (element.bursts) {
                 this.bursts.length = 0;
                 for (let i = 0, l = element.bursts.length; i < l; i++) {
@@ -671,12 +668,6 @@ namespace egret3d.particle {
         public cycleCount: number;
         @paper.serializedField
         public rowIndex: number;
-        @paper.serializedField
-        public uvChannelMask: UVChannelFlags = UVChannelFlags.UV0;
-        @paper.serializedField
-        public flipU: number;
-        @paper.serializedField
-        public flipV: number;
 
         public deserialize(element: any) {
             super.deserialize(element);
@@ -688,9 +679,6 @@ namespace egret3d.particle {
             this.startFrame.deserialize(element.startFrame);
             this.cycleCount = element.cycleCount;
             this.rowIndex = element.rowIndex;
-            this.uvChannelMask = element.uvChannelMask;
-            this.flipU = element.flipU;
-            this.flipV = element.flipV;
         }
         public invalidUpdate(): void {
             paper.EventPool.dispatchEvent(ParticleComponenetEventType.TextureSheetAnimation, this._comp);
