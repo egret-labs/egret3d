@@ -41,14 +41,23 @@ namespace paper {
             super();
 
             Application.sceneManager._addScene(this);
+
+            for (const gameObject of Application.sceneManager.globalObjects) {
+                this.$addGameObject(gameObject);
+            }
         }
 
         /**
          * 销毁
-         * 
+         * @internal
          */
         public $destroy() {
+            const globalObjects = Application.sceneManager.globalObjects;
             for (const gameObject of this.gameObjects) {
+                if (globalObjects.indexOf(gameObject) >= 0) {
+                    continue;
+                }
+
                 gameObject.destroy();
             }
 
