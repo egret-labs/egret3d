@@ -51,6 +51,12 @@ namespace paper.editor {
         public static MODIFY_PREFAB_GAMEOBJECT_PROPERTY = "MODIFY_PREFAB_GAMEOBJECT_PROPERTY";
         /**修改预制体组件属性 */
         public static MODIFY_PREFAB_COMPONENT_PROPERTY = "MODIFY_PREFAB_COMPONENT_PROPERTY";
+        /**添加组件 */
+        public static ADD_PREFAB_COMPONENT = "ADD_PREFAB_COMPONENT";
+        /**移除组件 */
+        public static REMOVE_PREFAB_COMPONENT = "REMOVE_PREFAB_COMPONENT";
+        /**修改asset属性 */
+        public static MODIFY_ASSET_PROPERTY = "MODIFY_ASSET_PROPERTY";
     }
 
     /**
@@ -69,55 +75,10 @@ namespace paper.editor {
 
         initHistory() {
             this.paperHistory = new History();
-            this.paperHistory.dispatcher = context;
-            context.addEventListener(
-                EventType.HistoryState,
-                this.historyEventHandler,
-                this
-            );
         }
 
         public addState(state:BaseState) {
             state && this.paperHistory && this.paperHistory.add(state);
-        }
-
-        //暂时废弃
-        historyEventHandler(e: BaseEvent) {
-            const eventData = e.data;
-            let cmdType = eventData.data.cmdType;
-            let toValue: any;
-            let eventType: string;
-            switch (cmdType) {
-                case CmdType.MODIFY_OBJECT_PROPERTY:
-
-                    break;
-                case CmdType.MODIFY_COMPONENT_PROPERTY:
-                    break;
-                case CmdType.SELECT_GAMEOBJECT:
-
-                    break;
-                case CmdType.ADD_GAMEOBJECT:
-                    // eventType = e.data.isUndo ? EditorModelEvent.DELETE_GAMEOBJECTS : EditorModelEvent.ADD_GAMEOBJECTS;
-                    // this.dispatchEvent(new EditorModelEvent(eventType, [eventData.data.gameObj]));
-                    break;
-                case CmdType.REMOVE_GAMEOBJECTS:
-                    // eventType = e.data.isUndo ? EditorModelEvent.ADD_GAMEOBJECTS : EditorModelEvent.DELETE_GAMEOBJECTS;
-                    // this.dispatchEvent(new EditorModelEvent(eventType, eventData.data.deleteObjs));
-                    break;
-                case CmdType.DUPLICATE_GAMEOBJECTS:
-                    // eventType = e.data.isUndo ? EditorModelEvent.DELETE_GAMEOBJECTS : EditorModelEvent.ADD_GAMEOBJECTS;
-                    // this.dispatchEvent(new EditorModelEvent(eventType, eventData.data.addObjs));
-                    break;
-                case CmdType.PASTE_GAMEOBJECTS:
-
-                    break;
-                case CmdType.ADD_COMPONENT:
-                    break;
-                case CmdType.REMOVE_COMPONENT:
-                    break;
-                default:
-                    break;
-            }
         }
 
         public setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean {
@@ -133,26 +94,28 @@ namespace paper.editor {
             return true;
         }
 
-        public getEditType(propName: string, target: any) {
-            let editType: editor.EditType = null;
-            let editInfoList = editor.getEditInfo(target);
-            b: for (let i: number = 0; i < editInfoList.length; i++) {
-                if (editInfoList[i].name === propName) {
-                    editType = editInfoList[i].editType;
-                    break b;
+        public getEditType(propName: string, target: any):editor.EditType | null {
+            const editInfoList = editor.getEditInfo(target);
+            for (let index = 0; index < editInfoList.length; index++) {
+                const element = editInfoList[index];
+                if (element.name === propName) {
+                    return element.editType;
                 }
             }
-            return editType;
+
+            const extraInfoList = editor.getExtraInfo(target);
+            for (let index = 0; index < extraInfoList.length; index++) {
+                const element = extraInfoList[index];
+                if (element.name === propName) {
+                    return element.editType;
+                }
+            }
+
+            console.error("EditorModel getEditType error.")
+
+            return null;
         }
 
-        /**
-         * 修改gameobject属性
-         * @param propName 
-         * @param propValue 
-         * @param target 
-         * @param editType 
-         * @param add 
-         */
         public createModifyGameObjectPropertyState(propName: string, propValue: any, target: GameObject, editType: editor.EditType, add: boolean = true) {
             let preValue = this.serializeProperty(target[propName], editType);
             let hashCode = target.hashCode;
@@ -170,14 +133,6 @@ namespace paper.editor {
             return state;
         }
 
-                /**
-         * 修改组件属性
-         * @param propName 
-         * @param propValue 
-         * @param target 
-         * @param editType 
-         * @param add 
-         */
         public createModifyComponent(propName: string, propValue: any, target: BaseComponent, editType: editor.EditType, add: boolean = true): any {
             let preValue = this.serializeProperty(target[propName], editType);
             let hashCode = target.hashCode;
@@ -196,13 +151,6 @@ namespace paper.editor {
             return state;
         }
 
-        /**
-         * 修改预制体gameobject属性,包括修改所有关联gameobject以及backruntiem的gameobject
-         * @param gameObjectId 
-         * @param newValueList 
-         * @param preValueCopylist 
-         * @param backRuntime 
-         */
         public createModifyPrefabGameObjectPropertyState(gameObjectId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any) {
             let data = {
                 cmdType: CmdType.MODIFY_PREFAB_GAMEOBJECT_PROPERTY,
@@ -227,6 +175,39 @@ namespace paper.editor {
             }
 
             let state = ModifyPrefabComponentPropertyState.create(data);
+            this.addState(state);
+        }
+
+        public createRemoveComponentFromPrefab(stateData:any){
+            const data = {
+                cmdType: CmdType.REMOVE_PREFAB_COMPONENT,
+                ...stateData
+            }
+
+            const state = RemovePrefabComponentState.create(data);
+            this.addState(state);
+        }
+
+        public createAddComponentToPrefab(stateData:any){
+            const data = {
+                cmdType: CmdType.ADD_PREFAB_COMPONENT,
+                ...stateData
+            }
+
+            const state = AddPrefabComponentState.create(data);
+            this.addState(state);
+        }
+
+        public createModifyAssetPropertyState(target:Asset,newValueList: any[], preValueCopylist: any[])
+        {
+            const data = {
+                cmdType:CmdType.MODIFY_ASSET_PROPERTY,
+                target,
+                newValueList,
+                preValueCopylist
+            }
+
+            const state = ModifyAssetPropertyState.create(data);
             this.addState(state);
         }
 
@@ -476,6 +457,9 @@ namespace paper.editor {
                 }
                 (gameObj as any).prefab = prefab;
                 (gameObj as any).___prefabRoot____ = this.getPrefabRootObjByChild(gameObj);
+            }else{
+                (gameObj as any).prefab = null;
+                (gameObj as any).___prefabRoot____ = false;
             }
 
             for (let index = 0; index < gameObj.transform.children.length; index++) {
@@ -718,15 +702,17 @@ namespace paper.editor {
          */
         public unique(gameObjects: GameObject[]) {
             let findParent: boolean = false;
-            for (let i = 0, l = gameObjects.length; i < l; i++) {
+            let parent:egret3d.Transform | null = null;
+            for (let index = gameObjects.length - 1; index >= 0; index--) {
+                const element = gameObjects[index];
                 findParent = false;
-                let parent = gameObjects[i].transform.parent;
+                parent = element.transform.parent;
                 while (parent) {
-                    for (let j = 0; j < l; j++) {
-                        if (parent == gameObjects[j].transform) {
-                            gameObjects.splice(i, 1);
+                    for (let i = 0; i < gameObjects.length; i++) {
+                        const element = gameObjects[i];
+                        if (element.transform === parent) {
+                            gameObjects.splice(index,1);
                             findParent = true;
-                            i--;
                             break;
                         }
                     }
@@ -877,23 +863,20 @@ namespace paper.editor {
             }
         }
 
-        private lastSelectIds: number[] = [];
         /**
          * 选中游戏对象
          * @param gameObjects 
          * @param addHistory 是否产生历史记录，只在用户进行选中相关操作时调用
          */
-        public selectGameObject(gameObjects: GameObject[], addHistory: boolean = false) {
-            this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, gameObjects));
-            // if (addHistory && gameObjects.length > 0) {
-            //     let newSelectIds = gameObjects.map((obj, index) => { return obj.hashCode });
-            //     let state = paper.history.SelectGameObjectesState.create({ cmdType: CmdType.SELECT_GAMEOBJECT, prevalue: this.lastSelectIds, newvalue: newSelectIds })
+        public selectGameObject(selectIds: number[], options?:{ addHistory:boolean,preIds:number[]}) {
+            // if (options && options.addHistory && selectIds.length > 0 && options.preIds) {
+            //     let state = SelectGameObjectesState.create({ cmdType: CmdType.SELECT_GAMEOBJECT, prevalue: options.preIds, newvalue: selectIds })
             //     this.paperHistory.add(state);
-            //     this.lastSelectIds = newSelectIds;
             // }
             // else {
-            //     this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, gameObjects));
+            //     this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, selectIds));
             // }
+            this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, selectIds));
         }
 
         // 切换场景，参数是场景编号

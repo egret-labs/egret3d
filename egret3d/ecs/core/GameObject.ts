@@ -160,8 +160,12 @@ namespace paper {
          */
         public destroy() {
             if (this._destroyed) {
-                console.warn("The game object has been destroyed.", this.hashCode);
+                console.warn("The game object has been destroyed.", this.name, this.hashCode);
                 return;
+            }
+
+            if (Application.sceneManager.globalObjects.indexOf(this) >= 0) {
+                Application.sceneManager.removeGlobalObject(this);
             }
 
             this._destroyed = true;
@@ -174,7 +178,12 @@ namespace paper {
                 destroySystem.bufferGameObject(this);
             }
         }
-
+        /**
+         * 
+         */
+        public dontDestroy() {
+            Application.sceneManager.addGlobalObject(this);
+        }
 
         /**
          * 根据类型名获取组件

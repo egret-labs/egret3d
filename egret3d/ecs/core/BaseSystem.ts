@@ -1,7 +1,5 @@
 namespace paper {
-    /**
-     * 
-     */
+
     export type InterestConfig<T extends BaseComponent> = {
         componentClass: { new(): T };
         listeners?: {
@@ -34,13 +32,9 @@ namespace paper {
          * 关心列表。
          */
         protected readonly _interests: InterestConfig<T>[] = [];
-        /**
-         * 
-         */
+
         protected readonly _components: T[] = [];
-        /**
-         * 
-         */
+
         private readonly _gameObjectOffsets: { [key: string]: number } = {};
         /**
          * @internal
@@ -52,9 +46,7 @@ namespace paper {
 
             BaseSystem._createEnabled = false;
         }
-        /**
-         * 
-         */
+
         protected _onAddComponent(component: T) {
             const components = this._components;
             const backupLength = components.length;
@@ -75,9 +67,7 @@ namespace paper {
 
             return true;
         }
-        /**
-         * 
-         */
+
         protected _onRemoveComponent(component: T) {
             const gameObject = component.gameObject;
 
@@ -121,9 +111,7 @@ namespace paper {
 
             return null;
         }
-        /**
-         * @protected
-         */
+
         public initialize() {
             for (const config of this._interests) {
                 if (config.listeners) {
@@ -137,9 +125,7 @@ namespace paper {
                 EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, component => { this._onRemoveComponent(component as any); });
             }
         }
-        /**
-         * @protected
-         */
+
         public uninitialize() {
             this._components.length = 0;
 
@@ -147,9 +133,7 @@ namespace paper {
                 delete this._gameObjectOffsets[k];
             }
         }
-        /**
-         * @protected
-         */
+
         public abstract update(): void;
         /**
          * 该系统所关心的所有组件。

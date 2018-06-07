@@ -57,9 +57,6 @@ namespace paper {
 
         }
 
-        /**
-         * 
-         */
         public onReset(): void {
 
         }
@@ -86,9 +83,7 @@ namespace paper {
 
         }
 
-        /**
-         * 
-         */
+
         public onLateUpdate(delta: number) {
 
         }
