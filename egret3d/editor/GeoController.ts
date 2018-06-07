@@ -526,8 +526,8 @@ namespace paper.editor {
             this.editorModel.addEventListener(EditorModelEvent.CHANGE_PROPERTY, e => this.changeProperty(e.data), this);
         }
         private selectGameObjects = this._selectGameObjects.bind(this);
-        private _selectGameObjects(gameObjects: GameObject[]) {
-            this.selectedGameObjs = gameObjects;
+        private _selectGameObjects(selectIds: number[]) {
+            this.selectedGameObjs = this.editorModel.getGameObjectsByIds(selectIds);
             let len = this.selectedGameObjs.length;
             this._modeCanChange = true;
             if (len > 0) {
