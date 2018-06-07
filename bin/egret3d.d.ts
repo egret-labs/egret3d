@@ -41,19 +41,10 @@ declare namespace egret3d {
     const helpVector3H: Vector3;
 }
 declare namespace paper {
-    /**
-     *
-     */
     const serializeClassMap: {
         [key: string]: string;
     };
-    /**
-     *
-     */
     function findClassCode(name: string): string;
-    /**
-     *
-     */
     function findClassCodeFrom(target: any): string;
 }
 declare namespace paper {
@@ -130,7 +121,7 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
-     *
+     * 组件基类
      */
     abstract class BaseComponent extends SerializableObject {
         /**
@@ -146,13 +137,7 @@ declare namespace paper {
          * 移除组件后调用。
          */
         uninitialize(): void;
-        /**
-         * @inheritDoc
-         */
         serialize(): any;
-        /**
-         * @inheritDoc
-         */
         deserialize(element: any): void;
         /**
          * 组件自身的激活状态
@@ -165,9 +150,6 @@ declare namespace paper {
     }
 }
 declare namespace paper {
-    /**
-     *
-     */
     type InterestConfig<T extends BaseComponent> = {
         componentClass: {
             new (): T;
@@ -193,37 +175,16 @@ declare namespace paper {
          * 关心列表。
          */
         protected readonly _interests: InterestConfig<T>[];
-        /**
-         *
-         */
         protected readonly _components: T[];
-        /**
-         *
-         */
         private readonly _gameObjectOffsets;
-        /**
-         *
-         */
         protected _onAddComponent(component: T): boolean;
-        /**
-         *
-         */
         protected _onRemoveComponent(component: T): boolean;
         /**
          * 系统内部根据关心列表的顺序快速查找指定组件。
          */
         protected _getComponent(gameObject: GameObject, componentOffset: number): T;
-        /**
-         * @protected
-         */
         initialize(): void;
-        /**
-         * @protected
-         */
         uninitialize(): void;
-        /**
-         * @protected
-         */
         abstract update(): void;
         /**
          * 该系统所关心的所有组件。
@@ -1248,6 +1209,7 @@ declare namespace paper {
      */
     class SceneManager {
         private readonly _scenes;
+        private readonly _globalObjects;
         _addScene(scene: Scene): void;
         /**
          * 创建一个空场景并激活
@@ -1269,13 +1231,29 @@ declare namespace paper {
         /**
          *
          */
+        addGlobalObject(gameObject: GameObject): void;
+        /**
+         *
+         */
+        removeGlobalObject(gameObject: GameObject): void;
+        /**
+         *
+         */
         getSceneByName(name: string): Scene;
         /**
          *
          */
         getSceneByURL(url: string): Scene;
         /**
+         *
+         */
+        readonly globalObjects: ReadonlyArray<GameObject>;
+        /**
          * 获取当前激活的场景
+         */
+        readonly activeScene: Scene;
+        /**
+         * @deprecated
          */
         getActiveScene(): Scene;
     }
@@ -1340,37 +1318,13 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    /**
-     *
-     */
     class Color implements paper.ISerializable {
-        /**
-         *
-         */
         r: number;
-        /**
-         *
-         */
         g: number;
-        /**
-         *
-         */
         b: number;
-        /**
-         *
-         */
         a: number;
-        /**
-         *
-         */
         constructor(r?: number, g?: number, b?: number, a?: number);
-        /**
-         * @inheritDoc
-         */
         serialize(): number[];
-        /**
-         * @inheritDoc
-         */
         deserialize(element: number[]): void;
         static set(r: number, g: number, b: number, a: number, out: Color): Color;
         static multiply(c1: Color, c2: Color, out: Color): Color;
@@ -1447,13 +1401,17 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    type PrefabConfig = {
+        assets: any[];
+        objects: any[];
+    };
     /**
      *
      */
     class BaseObjectAsset extends paper.Asset {
         protected readonly _assets: any;
-        protected _raw: any;
-        $parse(json: any): void;
+        protected _raw: PrefabConfig;
+        $parse(json: PrefabConfig): void;
         /**
          * @inheritDoc
          */
@@ -1742,9 +1700,6 @@ declare namespace paper {
          * 物体启用时被调用
          */
         onEnable(): void;
-        /**
-         *
-         */
         onReset(): void;
         /**
          * Start仅在物体实例化完成后，Update函数第一次被调用前调用。
@@ -1759,9 +1714,6 @@ declare namespace paper {
          * 当Behaviour启用时,其Update在每一帧被调用
          */
         onUpdate(delta: number): void;
-        /**
-         *
-         */
         onLateUpdate(delta: number): void;
         /**
          * 物体被禁用时调用
@@ -1903,6 +1855,10 @@ declare namespace paper {
          */
         destroy(): void;
         /**
+         *
+         */
+        dontDestroy(): void;
+        /**
          * 根据类型名获取组件
          */
         addComponent<T extends paper.BaseComponent>(componentClass: {
@@ -2033,11 +1989,6 @@ declare namespace paper {
          */
         $rawScene: egret3d.RawScene | null;
         constructor();
-        /**
-         * 销毁
-         *
-         */
-        $destroy(): void;
         /**
          * 移除GameObject对象
          *
@@ -6866,7 +6817,6 @@ declare namespace egret3d {
         static WHITE: Texture;
         static GRAY: Texture;
         static GRID: Texture;
-        private static _inited;
         static init(): void;
     }
 }
@@ -6981,9 +6931,9 @@ declare namespace RES.processor {
     const MaterialProcessor: RES.processor.Processor;
     const GLTFProcessor: RES.processor.Processor;
     const AtlasProcessor: RES.processor.Processor;
-    const NewPrefabProcessor: RES.processor.Processor;
-    const NewSceneProcessor: RES.processor.Processor;
-    const D3FontProcessor: RES.processor.Processor;
+    const PrefabProcessor: RES.processor.Processor;
+    const SceneProcessor: RES.processor.Processor;
+    const Font3DProcessor: RES.processor.Processor;
     const Sound3DProcessor: RES.processor.Processor;
     const TextAssetProcessor: RES.processor.Processor;
     const PathAssetProcessor: RES.processor.Processor;
@@ -8048,9 +7998,6 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    /**
-     *
-     */
     const enum TextureFormatEnum {
         RGBA = 1,
         RGB = 2,
@@ -8060,9 +8007,6 @@ declare namespace egret3d {
         PVRTC2_RGB = 4,
         PVRTC2_RGBA = 4,
     }
-    /**
-     *
-     */
     class TextureReader {
         readonly gray: boolean;
         readonly width: number;
@@ -8128,13 +8072,9 @@ declare namespace egret3d {
         getReader(redOnly?: boolean): TextureReader;
         dispose(webgl: WebGLRenderingContext): void;
         isFrameBuffer(): boolean;
-        private static mapTexture;
-        static formGrayArray(webgl: WebGLRenderingContext, array: number[] | Float32Array | Float64Array, width: number, height: number): GlTexture2D;
-        static staticTexture(webgl: WebGLRenderingContext, name: string): GlTexture2D;
+        static createColorTexture(webgl: WebGLRenderingContext, r: number, g: number, b: number): GlTexture2D;
+        static createGridTexture(webgl: WebGLRenderingContext): GlTexture2D;
     }
-    /**
-     *
-     */
     class WriteableTexture2D implements ITexture {
         constructor(webgl: WebGLRenderingContext, format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
         linear: boolean;
@@ -8284,6 +8224,12 @@ declare namespace paper.editor {
         static MODIFY_PREFAB_GAMEOBJECT_PROPERTY: string;
         /**修改预制体组件属性 */
         static MODIFY_PREFAB_COMPONENT_PROPERTY: string;
+        /**添加组件 */
+        static ADD_PREFAB_COMPONENT: string;
+        /**移除组件 */
+        static REMOVE_PREFAB_COMPONENT: string;
+        /**修改asset属性 */
+        static MODIFY_ASSET_PROPERTY: string;
     }
     /**
      * 编辑模型
@@ -8296,36 +8242,15 @@ declare namespace paper.editor {
         paperHistory: History;
         initHistory(): void;
         addState(state: BaseState): void;
-        historyEventHandler(e: BaseEvent): void;
         setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean;
-        getEditType(propName: string, target: any): EditType;
-        /**
-         * 修改gameobject属性
-         * @param propName
-         * @param propValue
-         * @param target
-         * @param editType
-         * @param add
-         */
+        getEditType(propName: string, target: any): editor.EditType | null;
         createModifyGameObjectPropertyState(propName: string, propValue: any, target: GameObject, editType: editor.EditType, add?: boolean): ModifyGameObjectPropertyState;
-        /**
- * 修改组件属性
- * @param propName
- * @param propValue
- * @param target
- * @param editType
- * @param add
- */
         createModifyComponent(propName: string, propValue: any, target: BaseComponent, editType: editor.EditType, add?: boolean): any;
-        /**
-         * 修改预制体gameobject属性,包括修改所有关联gameobject以及backruntiem的gameobject
-         * @param gameObjectId
-         * @param newValueList
-         * @param preValueCopylist
-         * @param backRuntime
-         */
         createModifyPrefabGameObjectPropertyState(gameObjectId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
         createModifyPrefabComponentPropertyState(gameObjectId: number, componentId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
+        createRemoveComponentFromPrefab(stateData: any): void;
+        createAddComponentToPrefab(stateData: any): void;
+        createModifyAssetPropertyState(target: Asset, newValueList: any[], preValueCopylist: any[]): void;
         serializeProperty(value: any, editType: editor.EditType): any;
         deserializeProperty(serializeData: any, editType: editor.EditType): any;
         /**
@@ -8446,13 +8371,15 @@ declare namespace paper.editor {
         getAllComponentIdFromGameObject(gameObject: GameObject, hashcodes: number[]): void;
         private findOptionSetName(propName, target);
         setTargetProperty(propName: string, target: any, value: any): void;
-        private lastSelectIds;
         /**
          * 选中游戏对象
          * @param gameObjects
          * @param addHistory 是否产生历史记录，只在用户进行选中相关操作时调用
          */
-        selectGameObject(gameObjects: GameObject[], addHistory?: boolean): void;
+        selectGameObject(selectIds: number[], options?: {
+            addHistory: boolean;
+            preIds: number[];
+        }): void;
         switchScene(url: string): void;
         private _editCamera;
         geoController: GeoController;
@@ -8513,7 +8440,7 @@ declare namespace paper.editor {
          */
         private _addEventListener();
         private selectGameObjects;
-        private _selectGameObjects(gameObjects);
+        private _selectGameObjects(selectIds);
         private changeProperty;
         private _changeProperty(data);
         private changeEditMode;
@@ -8667,6 +8594,27 @@ declare namespace paper.editor {
         static toString(): string;
         static create(data?: any): ModifyPrefabComponentPropertyState | null;
         modifyPrefabComponentPropertyValues(gameObjectId: number, componentId: number, valueList: any[]): void;
+        undo(): boolean;
+        redo(): boolean;
+    }
+    class RemovePrefabComponentState extends BaseState {
+        static toString(): string;
+        static create(data?: any): RemovePrefabComponentState | null;
+        protected getGameObjectById(gameObjectId: number): GameObject;
+        undo(): boolean;
+        redo(): boolean;
+    }
+    class AddPrefabComponentState extends BaseState {
+        static toString(): string;
+        static create(data?: any): AddPrefabComponentState | null;
+        undo(): boolean;
+        protected getGameObjectById(gameObjectId: number): GameObject;
+        redo(): boolean;
+    }
+    class ModifyAssetPropertyState extends BaseState {
+        static toString(): string;
+        static create(data?: any): ModifyAssetPropertyState | null;
+        modifyAssetPropertyValues(target: Asset, valueList: any[]): void;
         undo(): boolean;
         redo(): boolean;
     }
