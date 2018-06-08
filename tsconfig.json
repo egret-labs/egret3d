@@ -70,7 +70,6 @@
         "egret3d/asset/resource/rawscene.ts",
         "egret3d/asset/resource/sound.ts",
         "egret3d/asset/resource/sprite.ts",
-        "egret3d/asset/resource/textasset.ts",
         "egret3d/asset/resource/texture.ts",
         "egret3d/components/Pool.ts",
         "egret3d/components/DrawCallList.ts",
