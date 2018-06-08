@@ -125,8 +125,6 @@
         "egret3d/asset/default/ShaderLib.ts",
         "egret3d/asset/default/ShaderChunk.ts",
         "egret3d/asset/default/DefaultTextures.ts",
-        "egret3d/physics/Physics.ts",
-        "egret3d/physics/PickInfo.ts",
         "egret3d/res-processor/ResProcessor.ts",
         "egret3d/asset/default/DefaultShaders.ts",
         "egret3d/asset/default/DefaultMeshes.ts",

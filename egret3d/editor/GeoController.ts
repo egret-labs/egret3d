@@ -121,7 +121,7 @@ namespace paper.editor {
                 //worldPosition = this.selectedGameObj.transform.getPosition();
                 //worldRotation = this.selectedGameObj.transform.getRotation();
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                let pickInfoArray = egret3d.Physics.RaycastAll(ray, true);
+                let pickInfoArray = egret3d.Ray.raycastAll(ray, true);
                 if (pickInfoArray && pickInfoArray.length > 0) {
                     pickInfoArray.forEach(pickInfo => {
                         let picked = pickInfo.transform.gameObject;
@@ -270,7 +270,7 @@ namespace paper.editor {
                 this._ctrlRot = ctrlRot;
 
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                let pickInfoArray = egret3d.Physics.RaycastAll(ray, true);
+                let pickInfoArray = egret3d.Ray.raycastAll(ray, true);
                 if (pickInfoArray && pickInfoArray.length > 0) {
                     pickInfoArray.forEach(pickInfo => {
                         let picked = pickInfo.transform.gameObject;

@@ -1209,6 +1209,7 @@ declare namespace paper {
      */
     class SceneManager {
         private readonly _scenes;
+        private readonly _globalObjects;
         _addScene(scene: Scene): void;
         /**
          * 创建一个空场景并激活
@@ -1230,13 +1231,29 @@ declare namespace paper {
         /**
          *
          */
+        addGlobalObject(gameObject: GameObject): void;
+        /**
+         *
+         */
+        removeGlobalObject(gameObject: GameObject): void;
+        /**
+         *
+         */
         getSceneByName(name: string): Scene;
         /**
          *
          */
         getSceneByURL(url: string): Scene;
         /**
+         *
+         */
+        readonly globalObjects: ReadonlyArray<GameObject>;
+        /**
          * 获取当前激活的场景
+         */
+        readonly activeScene: Scene;
+        /**
+         * @deprecated
          */
         getActiveScene(): Scene;
     }
@@ -1838,6 +1855,10 @@ declare namespace paper {
          */
         destroy(): void;
         /**
+         *
+         */
+        dontDestroy(): void;
+        /**
          * 根据类型名获取组件
          */
         addComponent<T extends paper.BaseComponent>(componentClass: {
@@ -1962,11 +1983,6 @@ declare namespace paper {
          */
         $rawScene: egret3d.RawScene | null;
         constructor();
-        /**
-         * 销毁
-         *
-         */
-        $destroy(): void;
         /**
          * 移除GameObject对象
          *
@@ -4183,26 +4199,23 @@ declare namespace egret3d {
         update(): void;
     }
 }
+declare namespace paper {
+    /**
+     * 克隆
+     */
+    function clone<T extends paper.SerializableObject>(object: T): T;
+}
 declare namespace egret3d {
-    class DirectLightShadow implements ILightShadow {
-        renderTarget: GlRenderTarget;
+    interface ILightShadow {
+        renderTarget: IRenderTarget;
         map: WebGLTexture;
         bias: number;
         radius: number;
         matrix: Matrix;
         windowSize: number;
         camera: Camera;
-        constructor();
-        update(light: Light): void;
-        private _updateCamera(light);
-        private _updateMatrix();
+        update(light: Light, face?: number): void;
     }
-}
-declare namespace paper {
-    /**
-     * 克隆
-     */
-    function clone<T extends paper.SerializableObject>(object: T): T;
 }
 declare namespace egret3d {
     /**
@@ -6736,6 +6749,30 @@ declare namespace egret3d {
          * @language zh_CN
          */
         intersectsTriangle(vertex0: Vector3, vertex1: Vector3, vertex2: Vector3): PickInfo;
+        /**
+         * 获取射线拾取到的最近物体。
+         */
+        static raycast(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo | null;
+        /**
+         * 获取射线路径上的所有物体。
+         */
+        static raycastAll(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo[] | null;
+        private static _doPick(ray, maxDistance, layerMask, pickAll?, isPickMesh?);
+        private static _pickMesh(ray, transform, pickInfos);
+        private static _pickCollider(ray, transform, pickInfos);
+    }
+    /**
+     * 场景拣选信息
+     */
+    class PickInfo {
+        subMeshIndex: number;
+        triangleIndex: number;
+        distance: number;
+        readonly position: Vector3;
+        readonly textureCoordA: Vector2;
+        readonly textureCoordB: Vector2;
+        transform: Transform | null;
+        collider: BaseCollider | null;
     }
 }
 declare namespace egret3d.ShaderLib {
@@ -6796,83 +6833,6 @@ declare namespace egret3d {
         static GRAY: Texture;
         static GRID: Texture;
         static init(): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * physics
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 物理类
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Physics {
-        /**
-         * get the nearest transform contect to the ray
-         * @param ray ray
-         * @param isPickMesh true pick mesh, false pick collider
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取射线拾取到的最近物体。
-         * @param ray 射线实例
-         * @param isPickMesh 是否为拾取mesh，否为拾取collider
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        static Raycast(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo | null;
-        /**
-         * get all transforms contect to the ray
-         * @param ray ray
-         * @param isPickMesh true pick mesh, false pick collider
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取射线路径上的所有物体。
-         * @param ray 射线实例
-         * @param isPickMesh 是否为拾取mesh，否为拾取collider
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        static RaycastAll(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo[] | null;
-        private static _doPick(ray, maxDistance, layerMask, pickAll?, isPickMesh?);
-        private static _pickMesh(ray, transform, pickInfos);
-        private static _pickCollider(ray, transform, pickInfos);
-    }
-}
-declare namespace egret3d {
-    /**
-     * scene pick up info
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 场景拣选信息
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class PickInfo {
-        subMeshIndex: number;
-        triangleIndex: number;
-        distance: number;
-        readonly position: Vector3;
-        readonly textureCoordA: Vector2;
-        readonly textureCoordB: Vector2;
-        transform: Transform | null;
-        collider: BaseCollider | null;
     }
 }
 declare namespace RES.processor {
@@ -8202,6 +8162,12 @@ declare namespace paper.editor {
         static MODIFY_PREFAB_GAMEOBJECT_PROPERTY: string;
         /**修改预制体组件属性 */
         static MODIFY_PREFAB_COMPONENT_PROPERTY: string;
+        /**添加组件 */
+        static ADD_PREFAB_COMPONENT: string;
+        /**移除组件 */
+        static REMOVE_PREFAB_COMPONENT: string;
+        /**修改asset属性 */
+        static MODIFY_ASSET_PROPERTY: string;
     }
     /**
      * 编辑模型
@@ -8214,36 +8180,15 @@ declare namespace paper.editor {
         paperHistory: History;
         initHistory(): void;
         addState(state: BaseState): void;
-        historyEventHandler(e: BaseEvent): void;
         setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean;
-        getEditType(propName: string, target: any): EditType;
-        /**
-         * 修改gameobject属性
-         * @param propName
-         * @param propValue
-         * @param target
-         * @param editType
-         * @param add
-         */
+        getEditType(propName: string, target: any): editor.EditType | null;
         createModifyGameObjectPropertyState(propName: string, propValue: any, target: GameObject, editType: editor.EditType, add?: boolean): ModifyGameObjectPropertyState;
-        /**
- * 修改组件属性
- * @param propName
- * @param propValue
- * @param target
- * @param editType
- * @param add
- */
         createModifyComponent(propName: string, propValue: any, target: BaseComponent, editType: editor.EditType, add?: boolean): any;
-        /**
-         * 修改预制体gameobject属性,包括修改所有关联gameobject以及backruntiem的gameobject
-         * @param gameObjectId
-         * @param newValueList
-         * @param preValueCopylist
-         * @param backRuntime
-         */
         createModifyPrefabGameObjectPropertyState(gameObjectId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
         createModifyPrefabComponentPropertyState(gameObjectId: number, componentId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
+        createRemoveComponentFromPrefab(stateData: any): void;
+        createAddComponentToPrefab(stateData: any): void;
+        createModifyAssetPropertyState(target: Asset, newValueList: any[], preValueCopylist: any[]): void;
         serializeProperty(value: any, editType: editor.EditType): any;
         deserializeProperty(serializeData: any, editType: editor.EditType): any;
         /**
@@ -8364,13 +8309,15 @@ declare namespace paper.editor {
         getAllComponentIdFromGameObject(gameObject: GameObject, hashcodes: number[]): void;
         private findOptionSetName(propName, target);
         setTargetProperty(propName: string, target: any, value: any): void;
-        private lastSelectIds;
         /**
          * 选中游戏对象
          * @param gameObjects
          * @param addHistory 是否产生历史记录，只在用户进行选中相关操作时调用
          */
-        selectGameObject(gameObjects: GameObject[], addHistory?: boolean): void;
+        selectGameObject(selectIds: number[], options?: {
+            addHistory: boolean;
+            preIds: number[];
+        }): void;
         switchScene(url: string): void;
         private _editCamera;
         geoController: GeoController;
@@ -8431,7 +8378,7 @@ declare namespace paper.editor {
          */
         private _addEventListener();
         private selectGameObjects;
-        private _selectGameObjects(gameObjects);
+        private _selectGameObjects(selectIds);
         private changeProperty;
         private _changeProperty(data);
         private changeEditMode;
@@ -8588,6 +8535,27 @@ declare namespace paper.editor {
         undo(): boolean;
         redo(): boolean;
     }
+    class RemovePrefabComponentState extends BaseState {
+        static toString(): string;
+        static create(data?: any): RemovePrefabComponentState | null;
+        protected getGameObjectById(gameObjectId: number): GameObject;
+        undo(): boolean;
+        redo(): boolean;
+    }
+    class AddPrefabComponentState extends BaseState {
+        static toString(): string;
+        static create(data?: any): AddPrefabComponentState | null;
+        undo(): boolean;
+        protected getGameObjectById(gameObjectId: number): GameObject;
+        redo(): boolean;
+    }
+    class ModifyAssetPropertyState extends BaseState {
+        static toString(): string;
+        static create(data?: any): ModifyAssetPropertyState | null;
+        modifyAssetPropertyValues(target: Asset, valueList: any[]): void;
+        undo(): boolean;
+        redo(): boolean;
+    }
 }
 declare namespace paper.editor {
     /**
@@ -8734,14 +8702,17 @@ declare namespace paper.editor {
     }
 }
 declare namespace egret3d {
-    interface ILightShadow {
-        renderTarget: IRenderTarget;
+    class DirectLightShadow implements ILightShadow {
+        renderTarget: GlRenderTarget;
         map: WebGLTexture;
         bias: number;
         radius: number;
         matrix: Matrix;
         windowSize: number;
         camera: Camera;
-        update(light: Light, face?: number): void;
+        constructor();
+        update(light: Light): void;
+        private _updateCamera(light);
+        private _updateMatrix();
     }
 }
