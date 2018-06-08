@@ -6595,158 +6595,51 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * ray
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 射线
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     class Ray {
         /**
-         * ray origin point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 射线起始点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         origin: Vector3;
         /**
-         * ray direction vector
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 射线的方向向量
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         direction: Vector3;
-        /**
-         * build a ray
-         * @param origin ray origin point
-         * @param dir ray direction vector
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
         /**
          * 构建一条射线
          * @param origin 射线起点
          * @param dir 射线方向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         constructor(origin: Vector3, direction: Vector3);
         /**
-         * intersect with aabb
-         * @param aabb aabb instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与aabb碰撞相交检测
-         * @param aabb aabb实例
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         intersectAABB(aabb: AABB): boolean;
         /**
-         * intersect with transform plane
-         * @param tran tranform instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param tran transform实例
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @param transform transform实例
          */
-        intersectPlaneTransform(tran: Transform): PickInfo;
+        intersectPlaneTransform(transform: Transform): PickInfo;
         intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3;
         /**
-         * intersect with collider
-         * @param tran tranform instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与碰撞盒相交检测
-         * @param tran 待检测带碰撞盒的transform
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @param transform 待检测带碰撞盒的transform
          */
-        intersectCollider(tran: Transform): PickInfo;
-        /**
-         * intersect with box
-         * @param minimum min vector
-         * @param maximum max vector
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+        intersectCollider(transform: Transform): PickInfo;
         /**
          * 与最大最小点表示的box相交检测
          * @param minimum 最小点
          * @param maximum 最大点
          * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean;
         /**
-         * intersect with sphere
-         * @param center sphere center
-         * @param radius sphere radius
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与球相交检测
-         * @param center 球圆心坐标
-         * @param radius 球半径
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         intersectsSphere(center: Vector3, radius: number): boolean;
         /**
-         * intersect with triangle
-         * @param vertex0
-         * @param vertex1
-         * @param vertex2
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与三角形相交检测
-         * @param vertex0
-         * @param vertex1
-         * @param vertex2
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         intersectsTriangle(vertex0: Vector3, vertex1: Vector3, vertex2: Vector3): PickInfo;
         /**

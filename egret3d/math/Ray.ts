@@ -31,62 +31,26 @@ namespace egret3d {
         6, 2, 7, 3,
         0, 4, 1, 5
     ];
-    /**
-     * ray
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
+
     /**
      * 射线
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     export class Ray {
-        /**
-         * ray origin point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 射线起始点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         public origin: Vector3;
 
         /**
-         * ray direction vector
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 射线的方向向量
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         public direction: Vector3;
 
         /**
-         * build a ray
-         * @param origin ray origin point
-         * @param dir ray direction vector
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 构建一条射线
          * @param origin 射线起点
          * @param dir 射线方向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         constructor(origin: Vector3, direction: Vector3) {
             this.origin = Vector3.copy(origin, new Vector3());
@@ -94,42 +58,21 @@ namespace egret3d {
         }
 
         /**
-         * intersect with aabb
-         * @param aabb aabb instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与aabb碰撞相交检测
-         * @param aabb aabb实例
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         public intersectAABB(aabb: AABB): boolean {
             return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
         }
 
         /**
-         * intersect with transform plane
-         * @param tran tranform instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param tran transform实例
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @param transform transform实例
          */
-        public intersectPlaneTransform(tran: Transform): PickInfo {
+        public intersectPlaneTransform(transform: Transform): PickInfo {
             let pickinfo = null;
-            let panelpoint = tran.getPosition();
+            let panelpoint = transform.getPosition();
             let forward = helpVec3_1;
-            tran.getForward(forward);
+            transform.getForward(forward);
             let hitposition = this.intersectPlane(panelpoint, forward);
             if (hitposition) {
                 pickinfo = new PickInfo();
@@ -162,21 +105,11 @@ namespace egret3d {
         }
 
         /**
-         * intersect with collider
-         * @param tran tranform instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与碰撞盒相交检测
-         * @param tran 待检测带碰撞盒的transform
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @param transform 待检测带碰撞盒的transform
          */
-        public intersectCollider(tran: Transform): PickInfo {
-            let _collider = tran.gameObject.getComponent(BaseCollider);
+        public intersectCollider(transform: Transform): PickInfo {
+            let _collider = transform.gameObject.getComponent(BaseCollider);
 
             let pickinfo = null;
             if (_collider instanceof BoxCollider) {
@@ -219,20 +152,10 @@ namespace egret3d {
         }
 
         /**
-         * intersect with box
-         * @param minimum min vector
-         * @param maximum max vector
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与最大最小点表示的box相交检测
          * @param minimum 最小点
          * @param maximum 最大点
          * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         public intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean {
             let d = 0.0;
@@ -324,20 +247,7 @@ namespace egret3d {
         }
 
         /**
-         * intersect with sphere
-         * @param center sphere center
-         * @param radius sphere radius
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与球相交检测
-         * @param center 球圆心坐标
-         * @param radius 球半径
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         public intersectsSphere(center: Vector3, radius: number): boolean {
             let center_ori = helpVec3_1;
@@ -358,23 +268,9 @@ namespace egret3d {
             return true;
         }
 
-        /**
-         * intersect with triangle
-         * @param vertex0 
-         * @param vertex1 
-         * @param vertex2 
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 与三角形相交检测
-         * @param vertex0 
-         * @param vertex1 
-         * @param vertex2 
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         public intersectsTriangle(vertex0: Vector3, vertex1: Vector3, vertex2: Vector3): PickInfo {
             let _edge1 = helpVec3_1;
