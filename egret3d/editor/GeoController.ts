@@ -526,7 +526,14 @@ namespace paper.editor {
             this.editorModel.addEventListener(EditorModelEvent.CHANGE_PROPERTY, e => this.changeProperty(e.data), this);
         }
         private selectGameObjects = this._selectGameObjects.bind(this);
-        private _selectGameObjects(selectIds: number[]) {
+        private _selectGameObjects(selectObj:any) {
+            let selectIds;
+            if (selectObj[selectItemType.GAMEOBJECT]) {
+                selectIds = selectObj[selectItemType.GAMEOBJECT];
+            }else{
+                selectIds = [];
+            }
+            
             this.selectedGameObjs = this.editorModel.getGameObjectsByIds(selectIds);
             let len = this.selectedGameObjs.length;
             this._modeCanChange = true;
@@ -567,7 +574,7 @@ namespace paper.editor {
         }
         private changeProperty = this._changeProperty.bind(this);
         private _changeProperty(data) {
-            if ((data.target instanceof egret3d.Transform) && data.propName) {
+            if ((data.target instanceof egret3d.Transform) && data.propName && this.selectedGameObjs.length > 0) {
                 let propName = <string>data.propName;
                 let target = <egret3d.Transform>data.target;
                 switch (propName) {

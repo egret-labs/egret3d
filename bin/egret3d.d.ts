@@ -7984,6 +7984,10 @@ declare namespace paper {
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
+    enum selectItemType {
+        GAMEOBJECT = 0,
+        ASSET = 1,
+    }
     /**
      * 编辑模型事件
      */
@@ -8061,7 +8065,7 @@ declare namespace paper.editor {
         /**
          * 创建游戏对象
          */
-        createGameObject(parent?: GameObject, mesh?: egret3d.Mesh, mat?: egret3d.Material): void;
+        createGameObject(list: number[]): void;
         /**
          * 添加组件
          */
@@ -8178,10 +8182,10 @@ declare namespace paper.editor {
         setTargetProperty(propName: string, target: any, value: any): void;
         /**
          * 选中游戏对象
-         * @param gameObjects
+         * @param selectObj
          * @param addHistory 是否产生历史记录，只在用户进行选中相关操作时调用
          */
-        selectGameObject(selectIds: number[], options?: {
+        selectGameObject(selectObj: any, options?: {
             addHistory: boolean;
             preIds: number[];
         }): void;
@@ -8245,7 +8249,7 @@ declare namespace paper.editor {
          */
         private _addEventListener();
         private selectGameObjects;
-        private _selectGameObjects(selectIds);
+        private _selectGameObjects(selectObj);
         private changeProperty;
         private _changeProperty(data);
         private changeEditMode;
@@ -8317,6 +8321,7 @@ declare namespace paper.editor {
         private _isDone;
         undo(): boolean;
         redo(): boolean;
+        dispatchEditorModelEvent(type: string, data?: any): void;
     }
     class ModifyGameObjectPropertyState extends BaseState {
         static create(data?: any): ModifyGameObjectPropertyState | null;

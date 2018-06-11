@@ -1,6 +1,10 @@
 /// <reference path="./EventDispatcher.ts" />
 namespace paper.editor {
     export const context: EventDispatcher = new EventDispatcher();
+    export enum selectItemType{
+        GAMEOBJECT,
+        ASSET
+    }
 
     /**
      * 编辑模型事件
@@ -280,13 +284,18 @@ namespace paper.editor {
         /**
          * 创建游戏对象
          */
-        public createGameObject(parent: GameObject = null, mesh?: egret3d.Mesh, mat?: egret3d.Material) {
-            let parentHashCode = parent ? parent.hashCode : null;
+        public createGameObject(list:number[]) {
+            let datas = [];
+
+            for (let index = 0; index < list.length; index++) {
+                const element = list[index];
+                const parentHashCode = element ? element : null;
+                datas.push({parentHashCode});
+            }
+
             let data = {
                 cmdType: CmdType.ADD_GAMEOBJECT,
-                parentHashCode: parentHashCode,
-                mesh: mesh,
-                mat: mat
+                datas,
             };
             let state = AddGameObjectState.create(data);
             this.addState(state);
@@ -390,7 +399,8 @@ namespace paper.editor {
                 cmdType: CmdType.PASTE_GAMEOBJECTS,
                 datas: datas,
                 target: target,
-                prefabData
+                prefabData,
+                selectIds:ids
             }
             let state = PasteGameObjectsState.create(data);
             this.addState(state);
@@ -401,6 +411,7 @@ namespace paper.editor {
          * @param gameObjects 
          */
         public duplicateGameObjects(gameObjects: GameObject[]) {
+            const selectIds = gameObjects.map((gameObj) => {return gameObj.hashCode});
             this.unique(gameObjects);
             let datas = [];
             for (let index = 0; index < gameObjects.length; index++) {
@@ -414,7 +425,8 @@ namespace paper.editor {
             let data = {
                 cmdType: CmdType.DUPLICATE_GAMEOBJECTS,
                 datas: datas,
-                prefabData
+                prefabData,
+                selectIds,
             }
 
             let state = DuplicateGameObjectsState.create(data);
@@ -535,7 +547,8 @@ namespace paper.editor {
          * 删除游戏对象
          * @param gameObjects 
          */
-        public deleteGameObject(gameObjects: GameObject[], prefabRootMap?: any) {
+        public deleteGameObject(gameObjects: GameObject[],prefabRootMap?: any) {
+            const selectIds = gameObjects.map((gameObj) => {return gameObj.hashCode});
             this.unique(gameObjects);
             let datas = [];
             for (let index = 0; index < gameObjects.length; index++) {
@@ -578,10 +591,12 @@ namespace paper.editor {
                 prefabData[key] = { url, rootId, prefabIds };
             }
 
+
             let data = {
                 cmdType: CmdType.REMOVE_GAMEOBJECTS,
                 datas: datas,
-                prefabData
+                prefabData,
+                selectIds,
             }
 
             let state = DeleteGameObjectsState.create(data);
@@ -865,18 +880,17 @@ namespace paper.editor {
 
         /**
          * 选中游戏对象
-         * @param gameObjects 
+         * @param selectObj 
          * @param addHistory 是否产生历史记录，只在用户进行选中相关操作时调用
          */
-        public selectGameObject(selectIds: number[], options?:{ addHistory:boolean,preIds:number[]}) {
-            // if (options && options.addHistory && selectIds.length > 0 && options.preIds) {
-            //     let state = SelectGameObjectesState.create({ cmdType: CmdType.SELECT_GAMEOBJECT, prevalue: options.preIds, newvalue: selectIds })
-            //     this.paperHistory.add(state);
-            // }
-            // else {
-            //     this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, selectIds));
-            // }
-            this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, selectIds));
+        public selectGameObject(selectObj:any, options?:{ addHistory:boolean,preIds:number[]}) {
+            if (selectObj[selectItemType.GAMEOBJECT] && options && options.addHistory && options.preIds) {
+                const selectIds = selectObj[selectItemType.GAMEOBJECT];
+                const state = SelectGameObjectesState.create({ cmdType: CmdType.SELECT_GAMEOBJECT, prevalue: options.preIds, newvalue: selectIds })
+                this.paperHistory.add(state);
+            }else{
+                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, selectObj));
+            }
         }
 
         // 切换场景，参数是场景编号
