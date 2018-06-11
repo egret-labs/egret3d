@@ -2952,34 +2952,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * text asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 文本资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class TextAsset extends paper.Asset {
-        /**
-         * 文本内容
-         */
-        content: string;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-    }
-}
-declare namespace egret3d {
-    /**
      * textrue asset
      * @version paper 1.0
      * @platform Web
@@ -4199,23 +4171,26 @@ declare namespace egret3d {
         update(): void;
     }
 }
-declare namespace paper {
-    /**
-     * 克隆
-     */
-    function clone<T extends paper.SerializableObject>(object: T): T;
-}
 declare namespace egret3d {
-    interface ILightShadow {
-        renderTarget: IRenderTarget;
+    class DirectLightShadow implements ILightShadow {
+        renderTarget: GlRenderTarget;
         map: WebGLTexture;
         bias: number;
         radius: number;
         matrix: Matrix;
         windowSize: number;
         camera: Camera;
-        update(light: Light, face?: number): void;
+        constructor();
+        update(light: Light): void;
+        private _updateCamera(light);
+        private _updateMatrix();
     }
+}
+declare namespace paper {
+    /**
+     * 克隆
+     */
+    function clone<T extends paper.SerializableObject>(object: T): T;
 }
 declare namespace egret3d {
     /**
@@ -6766,7 +6741,6 @@ declare namespace RES.processor {
     const SceneProcessor: RES.processor.Processor;
     const Font3DProcessor: RES.processor.Processor;
     const Sound3DProcessor: RES.processor.Processor;
-    const TextAssetProcessor: RES.processor.Processor;
     const PathAssetProcessor: RES.processor.Processor;
 }
 declare namespace egret3d {
@@ -8595,17 +8569,14 @@ declare namespace paper.editor {
     }
 }
 declare namespace egret3d {
-    class DirectLightShadow implements ILightShadow {
-        renderTarget: GlRenderTarget;
+    interface ILightShadow {
+        renderTarget: IRenderTarget;
         map: WebGLTexture;
         bias: number;
         radius: number;
         matrix: Matrix;
         windowSize: number;
         camera: Camera;
-        constructor();
-        update(light: Light): void;
-        private _updateCamera(light);
-        private _updateMatrix();
+        update(light: Light, face?: number): void;
     }
 }

@@ -6254,50 +6254,6 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * text asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 文本资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var TextAsset = (function (_super) {
-        __extends(TextAsset, _super);
-        function TextAsset() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * 文本内容
-             */
-            _this.content = "";
-            return _this;
-        }
-        /**
-         * @inheritDoc
-         */
-        TextAsset.prototype.dispose = function () {
-            this.content = "";
-        };
-        /**
-         * @inheritDoc
-         */
-        TextAsset.prototype.caclByteLength = function () {
-            if (this.content) {
-                return egret3d.utils.caclStringByteLength(this.content);
-            }
-            return 0;
-        };
-        return TextAsset;
-    }(paper.Asset));
-    egret3d.TextAsset = TextAsset;
-    __reflect(TextAsset.prototype, "egret3d.TextAsset");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
      * textrue asset
      * @version paper 1.0
      * @platform Web
@@ -9111,6 +9067,59 @@ var egret3d;
     }(paper.BaseSystem));
     egret3d.GuidpathSystem = GuidpathSystem;
     __reflect(GuidpathSystem.prototype, "egret3d.GuidpathSystem");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var helpMat4_1 = new egret3d.Matrix();
+    var helpMat4_2 = new egret3d.Matrix();
+    var DirectLightShadow = (function () {
+        function DirectLightShadow() {
+            this.bias = 0.0003;
+            this.radius = 2;
+            this.windowSize = 16;
+            this.renderTarget = new egret3d.GlRenderTarget(egret3d.WebGLKit.webgl, 1024, 1024, true);
+            this.map = this.renderTarget.texture;
+            this.matrix = new egret3d.Matrix();
+            this.camera = new egret3d.Camera(); // TODO 不要这样
+            this.camera.opvalue = 0;
+            this.camera.backgroundColor.r = 1.0;
+            this.camera.backgroundColor.g = 1.0;
+            this.camera.backgroundColor.b = 1.0;
+            this.camera.backgroundColor.a = 1.0;
+            this.camera.clearOption_Color = true;
+            this.camera.clearOption_Depth = true;
+            this.camera.near = 0.1;
+            this.camera.far = 1000;
+            this.camera.renderTarget = this.renderTarget;
+            this.camera.initialize();
+        }
+        DirectLightShadow.prototype.update = function (light) {
+            this.bias = light.shadowBias;
+            this.radius = light.shadowRadius;
+            this.windowSize = light.shadowSize;
+            this._updateCamera(light);
+            this._updateMatrix();
+        };
+        DirectLightShadow.prototype._updateCamera = function (light) {
+            this.camera.gameObject = light.gameObject; // for calcViewMatrix // TODO 不要这样
+            this.camera.near = light.shadowCameraNear;
+            this.camera.far = light.shadowCameraFar;
+            this.camera.size = this.windowSize;
+        };
+        DirectLightShadow.prototype._updateMatrix = function () {
+            var matrix = this.matrix;
+            var camera = this.camera;
+            // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
+            egret3d.Matrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0, matrix);
+            var viewMatrix = camera.calcViewMatrix(helpMat4_1);
+            var projectionMatrix = camera.calcProjectMatrix(512 / 512, helpMat4_2);
+            egret3d.Matrix.multiply(matrix, projectionMatrix, matrix);
+            egret3d.Matrix.multiply(matrix, viewMatrix, matrix);
+        };
+        return DirectLightShadow;
+    }());
+    egret3d.DirectLightShadow = DirectLightShadow;
+    __reflect(DirectLightShadow.prototype, "egret3d.DirectLightShadow", ["egret3d.ILightShadow"]);
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
@@ -18405,36 +18414,6 @@ var RES;
                 });
             }
         };
-        processor.TextAssetProcessor = {
-            onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, text;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "text")];
-                            case 1:
-                                data = _a.sent();
-                                url = getUrl(resource);
-                                filename = getFileName(url);
-                                text = new egret3d.TextAsset(filename, url);
-                                text.content = data;
-                                paper.Asset.register(text, true);
-                                return [2 /*return*/, text];
-                        }
-                    });
-                });
-            },
-            onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
-            }
-        };
         processor.PathAssetProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
@@ -18477,7 +18456,6 @@ var RES;
         RES.processor.map("Scene", processor.SceneProcessor);
         RES.processor.map("Atlas", processor.AtlasProcessor);
         RES.processor.map("Font", processor.Font3DProcessor);
-        RES.processor.map("TextAsset", processor.TextAssetProcessor);
         RES.processor.map("pathAsset", processor.PathAssetProcessor);
         RES.processor.map("Sound", processor.Sound3DProcessor);
     })(processor = RES.processor || (RES.processor = {}));
@@ -27452,56 +27430,3 @@ var paper;
         __reflect(GizmoShader.prototype, "paper.editor.GizmoShader");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    var helpMat4_1 = new egret3d.Matrix();
-    var helpMat4_2 = new egret3d.Matrix();
-    var DirectLightShadow = (function () {
-        function DirectLightShadow() {
-            this.bias = 0.0003;
-            this.radius = 2;
-            this.windowSize = 16;
-            this.renderTarget = new egret3d.GlRenderTarget(egret3d.WebGLKit.webgl, 1024, 1024, true);
-            this.map = this.renderTarget.texture;
-            this.matrix = new egret3d.Matrix();
-            this.camera = new egret3d.Camera(); // TODO 不要这样
-            this.camera.opvalue = 0;
-            this.camera.backgroundColor.r = 1.0;
-            this.camera.backgroundColor.g = 1.0;
-            this.camera.backgroundColor.b = 1.0;
-            this.camera.backgroundColor.a = 1.0;
-            this.camera.clearOption_Color = true;
-            this.camera.clearOption_Depth = true;
-            this.camera.near = 0.1;
-            this.camera.far = 1000;
-            this.camera.renderTarget = this.renderTarget;
-            this.camera.initialize();
-        }
-        DirectLightShadow.prototype.update = function (light) {
-            this.bias = light.shadowBias;
-            this.radius = light.shadowRadius;
-            this.windowSize = light.shadowSize;
-            this._updateCamera(light);
-            this._updateMatrix();
-        };
-        DirectLightShadow.prototype._updateCamera = function (light) {
-            this.camera.gameObject = light.gameObject; // for calcViewMatrix // TODO 不要这样
-            this.camera.near = light.shadowCameraNear;
-            this.camera.far = light.shadowCameraFar;
-            this.camera.size = this.windowSize;
-        };
-        DirectLightShadow.prototype._updateMatrix = function () {
-            var matrix = this.matrix;
-            var camera = this.camera;
-            // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
-            egret3d.Matrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0, matrix);
-            var viewMatrix = camera.calcViewMatrix(helpMat4_1);
-            var projectionMatrix = camera.calcProjectMatrix(512 / 512, helpMat4_2);
-            egret3d.Matrix.multiply(matrix, projectionMatrix, matrix);
-            egret3d.Matrix.multiply(matrix, viewMatrix, matrix);
-        };
-        return DirectLightShadow;
-    }());
-    egret3d.DirectLightShadow = DirectLightShadow;
-    __reflect(DirectLightShadow.prototype, "egret3d.DirectLightShadow", ["egret3d.ILightShadow"]);
-})(egret3d || (egret3d = {}));
