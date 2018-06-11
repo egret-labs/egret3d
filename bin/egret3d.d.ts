@@ -1209,6 +1209,7 @@ declare namespace paper {
      */
     class SceneManager {
         private readonly _scenes;
+        private readonly _globalObjects;
         _addScene(scene: Scene): void;
         /**
          * 创建一个空场景并激活
@@ -1230,13 +1231,29 @@ declare namespace paper {
         /**
          *
          */
+        addGlobalObject(gameObject: GameObject): void;
+        /**
+         *
+         */
+        removeGlobalObject(gameObject: GameObject): void;
+        /**
+         *
+         */
         getSceneByName(name: string): Scene;
         /**
          *
          */
         getSceneByURL(url: string): Scene;
         /**
+         *
+         */
+        readonly globalObjects: ReadonlyArray<GameObject>;
+        /**
          * 获取当前激活的场景
+         */
+        readonly activeScene: Scene;
+        /**
+         * @deprecated
          */
         getActiveScene(): Scene;
     }
@@ -1838,6 +1855,10 @@ declare namespace paper {
          */
         destroy(): void;
         /**
+         *
+         */
+        dontDestroy(): void;
+        /**
          * 根据类型名获取组件
          */
         addComponent<T extends paper.BaseComponent>(componentClass: {
@@ -1962,11 +1983,6 @@ declare namespace paper {
          */
         $rawScene: egret3d.RawScene | null;
         constructor();
-        /**
-         * 销毁
-         *
-         */
-        $destroy(): void;
         /**
          * 移除GameObject对象
          *
@@ -8202,6 +8218,12 @@ declare namespace paper.editor {
         static MODIFY_PREFAB_GAMEOBJECT_PROPERTY: string;
         /**修改预制体组件属性 */
         static MODIFY_PREFAB_COMPONENT_PROPERTY: string;
+        /**添加组件 */
+        static ADD_PREFAB_COMPONENT: string;
+        /**移除组件 */
+        static REMOVE_PREFAB_COMPONENT: string;
+        /**修改asset属性 */
+        static MODIFY_ASSET_PROPERTY: string;
     }
     /**
      * 编辑模型
@@ -8214,42 +8236,21 @@ declare namespace paper.editor {
         paperHistory: History;
         initHistory(): void;
         addState(state: BaseState): void;
-        historyEventHandler(e: BaseEvent): void;
         setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean;
-        getEditType(propName: string, target: any): EditType;
-        /**
-         * 修改gameobject属性
-         * @param propName
-         * @param propValue
-         * @param target
-         * @param editType
-         * @param add
-         */
+        getEditType(propName: string, target: any): editor.EditType | null;
         createModifyGameObjectPropertyState(propName: string, propValue: any, target: GameObject, editType: editor.EditType, add?: boolean): ModifyGameObjectPropertyState;
-        /**
- * 修改组件属性
- * @param propName
- * @param propValue
- * @param target
- * @param editType
- * @param add
- */
         createModifyComponent(propName: string, propValue: any, target: BaseComponent, editType: editor.EditType, add?: boolean): any;
-        /**
-         * 修改预制体gameobject属性,包括修改所有关联gameobject以及backruntiem的gameobject
-         * @param gameObjectId
-         * @param newValueList
-         * @param preValueCopylist
-         * @param backRuntime
-         */
         createModifyPrefabGameObjectPropertyState(gameObjectId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
         createModifyPrefabComponentPropertyState(gameObjectId: number, componentId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
+        createRemoveComponentFromPrefab(stateData: any): void;
+        createAddComponentToPrefab(stateData: any): void;
+        createModifyAssetPropertyState(target: Asset, newValueList: any[], preValueCopylist: any[]): void;
         serializeProperty(value: any, editType: editor.EditType): any;
         deserializeProperty(serializeData: any, editType: editor.EditType): any;
         /**
          * 创建游戏对象
          */
-        createGameObject(parent?: GameObject, mesh?: egret3d.Mesh, mat?: egret3d.Material): void;
+        createGameObject(list: number[]): void;
         /**
          * 添加组件
          */
@@ -8364,13 +8365,15 @@ declare namespace paper.editor {
         getAllComponentIdFromGameObject(gameObject: GameObject, hashcodes: number[]): void;
         private findOptionSetName(propName, target);
         setTargetProperty(propName: string, target: any, value: any): void;
-        private lastSelectIds;
         /**
          * 选中游戏对象
          * @param gameObjects
          * @param addHistory 是否产生历史记录，只在用户进行选中相关操作时调用
          */
-        selectGameObject(gameObjects: GameObject[], addHistory?: boolean): void;
+        selectGameObject(selectObj: any, options?: {
+            addHistory: boolean;
+            preIds: number[];
+        }): void;
         switchScene(url: string): void;
         private _editCamera;
         geoController: GeoController;
@@ -8431,7 +8434,7 @@ declare namespace paper.editor {
          */
         private _addEventListener();
         private selectGameObjects;
-        private _selectGameObjects(gameObjects);
+        private _selectGameObjects(selectObj);
         private changeProperty;
         private _changeProperty(data);
         private changeEditMode;
@@ -8503,6 +8506,7 @@ declare namespace paper.editor {
         private _isDone;
         undo(): boolean;
         redo(): boolean;
+        dispatchEditorModelEvent(type: string, data?: any): void;
     }
     class ModifyGameObjectPropertyState extends BaseState {
         static create(data?: any): ModifyGameObjectPropertyState | null;
@@ -8585,6 +8589,27 @@ declare namespace paper.editor {
         static toString(): string;
         static create(data?: any): ModifyPrefabComponentPropertyState | null;
         modifyPrefabComponentPropertyValues(gameObjectId: number, componentId: number, valueList: any[]): void;
+        undo(): boolean;
+        redo(): boolean;
+    }
+    class RemovePrefabComponentState extends BaseState {
+        static toString(): string;
+        static create(data?: any): RemovePrefabComponentState | null;
+        protected getGameObjectById(gameObjectId: number): GameObject;
+        undo(): boolean;
+        redo(): boolean;
+    }
+    class AddPrefabComponentState extends BaseState {
+        static toString(): string;
+        static create(data?: any): AddPrefabComponentState | null;
+        undo(): boolean;
+        protected getGameObjectById(gameObjectId: number): GameObject;
+        redo(): boolean;
+    }
+    class ModifyAssetPropertyState extends BaseState {
+        static toString(): string;
+        static create(data?: any): ModifyAssetPropertyState | null;
+        modifyAssetPropertyValues(target: Asset, valueList: any[]): void;
         undo(): boolean;
         redo(): boolean;
     }
