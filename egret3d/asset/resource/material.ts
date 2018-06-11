@@ -1,4 +1,14 @@
 namespace egret3d {
+
+    export type UniformTypes = { [name: string]: { type: UniformTypeEnum, value: any } }
+
+    export type MaterialConfig = {
+        version: number,
+        shader: string,
+        mapUniform: UniformTypes
+    }
+
+
     /**
      * 渲染排序
      */
@@ -26,7 +36,7 @@ namespace egret3d {
         /**
          */
         public version: number = 0;
-        public $uniforms: { [name: string]: { type: UniformTypeEnum, value: any } } = {};
+        public $uniforms: UniformTypes = {};
 
 
         private _defines: Array<string> = new Array();
@@ -359,62 +369,38 @@ namespace egret3d {
             }
         }
 
-        // /**
-        //  * 
-        //  */
-        // setTexture(_id: string, _texture: paper.Texture) {
-        //     if (this.$uniforms[_id] != undefined) {
-        //         this.$uniforms[_id].value = _texture;
-        //     } else {
-        //         this.$uniforms[_id] = {type: UniformTypeEnum.Texture, value: _texture};
-        //     }
-        //     this.version++;
-        // }
-
-        /**
-         * 
-         */
-        $parse(json: any) {
-            let shaderName = json["shader"];
+        $parse(json: MaterialConfig) {
+            let shaderName = json.shader
             const shader = paper.Asset.find<Shader>(shaderName);
             this.setShader(shader);
-            let mapUniform = json["mapUniform"];
+            let mapUniform = json.mapUniform;
             for (let i in mapUniform) {
                 let jsonChild = mapUniform[i];
-                let _uniformType: UniformTypeEnum = jsonChild["type"] as UniformTypeEnum;
-                switch (_uniformType) {
+                switch (jsonChild.type) {
                     case UniformTypeEnum.Texture:
-                        let _value: string = jsonChild["value"];
-                        let _texture: egret3d.Texture = paper.Asset.find<Texture>(egret3d.utils.combinePath(utils.getPathByUrl(this.url) + "/", _value));
-                        if (!_texture) {
-                            _texture = DefaultTextures.GRID;
+                        const value = jsonChild.value;
+                        const url = egret3d.utils.combinePath(utils.getPathByUrl(this.url) + "/", value)
+                        let texture: egret3d.Texture = paper.Asset.find<Texture>(url);
+                        if (!texture) {
+                            texture = DefaultTextures.GRID;
                         }
-                        this.setTexture(i, _texture);
+                        this.setTexture(i, texture);
                         break;
                     case UniformTypeEnum.Float:
-                        let __value: string = jsonChild["value"];
-                        this.setFloat(i, parseFloat(__value));
+                        let floatValue = parseFloat(jsonChild.value);
+                        this.setFloat(i, floatValue);
                         break;
                     case UniformTypeEnum.Float4:
-                        let tempValue = jsonChild["value"];
-                        try {
-                            if (Array.isArray(tempValue)) {
-                                let _float4: Vector4 = new Vector4(tempValue[0], tempValue[1], tempValue[2], tempValue[3]);
-                                this.setVector4(i, _float4);
-                            } else {
-                                //旧格式兼容
-                                let values = tempValue.match(RegexpUtil.vector4Regexp);
-                                if (values !== null) {
-                                    let _float4: Vector4 = new Vector4(parseFloat(values[1]), parseFloat(values[2]), parseFloat(values[3]), parseFloat(values[4]));
-                                    this.setVector4(i, _float4);
-                                }
-                            }
-                        } catch (e) {
-                            console.log(e);
+                        let tempValue = jsonChild.value;
+                        if (Array.isArray(tempValue)) {
+                            let _float4: Vector4 = new Vector4(tempValue[0], tempValue[1], tempValue[2], tempValue[3]);
+                            this.setVector4(i, _float4);
+                        } else {
+                            console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级")
                         }
                         break;
                     default:
-                        console.log("map uniform type in material json <" + jsonChild["type"] + "> out of range（0-2）!");
+                        console.warn(`不支持的 Uniform 参数：${this.url},${i}`);
                 }
             }
         }

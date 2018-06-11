@@ -15809,63 +15809,39 @@ var egret3d;
                 this._textureRef.push(_texture);
             }
         };
-        // /**
-        //  * 
-        //  */
-        // setTexture(_id: string, _texture: paper.Texture) {
-        //     if (this.$uniforms[_id] != undefined) {
-        //         this.$uniforms[_id].value = _texture;
-        //     } else {
-        //         this.$uniforms[_id] = {type: UniformTypeEnum.Texture, value: _texture};
-        //     }
-        //     this.version++;
-        // }
-        /**
-         *
-         */
         Material.prototype.$parse = function (json) {
-            var shaderName = json["shader"];
+            var shaderName = json.shader;
             var shader = paper.Asset.find(shaderName);
             this.setShader(shader);
-            var mapUniform = json["mapUniform"];
+            var mapUniform = json.mapUniform;
             for (var i in mapUniform) {
                 var jsonChild = mapUniform[i];
-                var _uniformType = jsonChild["type"];
-                switch (_uniformType) {
+                switch (jsonChild.type) {
                     case egret3d.UniformTypeEnum.Texture:
-                        var _value = jsonChild["value"];
-                        var _texture = paper.Asset.find(egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", _value));
-                        if (!_texture) {
-                            _texture = egret3d.DefaultTextures.GRID;
+                        var value = jsonChild.value;
+                        var url = egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", value);
+                        var texture = paper.Asset.find(url);
+                        if (!texture) {
+                            texture = egret3d.DefaultTextures.GRID;
                         }
-                        this.setTexture(i, _texture);
+                        this.setTexture(i, texture);
                         break;
                     case egret3d.UniformTypeEnum.Float:
-                        var __value = jsonChild["value"];
-                        this.setFloat(i, parseFloat(__value));
+                        var floatValue = parseFloat(jsonChild.value);
+                        this.setFloat(i, floatValue);
                         break;
                     case egret3d.UniformTypeEnum.Float4:
-                        var tempValue = jsonChild["value"];
-                        try {
-                            if (Array.isArray(tempValue)) {
-                                var _float4 = new egret3d.Vector4(tempValue[0], tempValue[1], tempValue[2], tempValue[3]);
-                                this.setVector4(i, _float4);
-                            }
-                            else {
-                                //旧格式兼容
-                                var values = tempValue.match(egret3d.RegexpUtil.vector4Regexp);
-                                if (values !== null) {
-                                    var _float4 = new egret3d.Vector4(parseFloat(values[1]), parseFloat(values[2]), parseFloat(values[3]), parseFloat(values[4]));
-                                    this.setVector4(i, _float4);
-                                }
-                            }
+                        var tempValue = jsonChild.value;
+                        if (Array.isArray(tempValue)) {
+                            var _float4 = new egret3d.Vector4(tempValue[0], tempValue[1], tempValue[2], tempValue[3]);
+                            this.setVector4(i, _float4);
                         }
-                        catch (e) {
-                            console.log(e);
+                        else {
+                            console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级");
                         }
                         break;
                     default:
-                        console.log("map uniform type in material json <" + jsonChild["type"] + "> out of range（0-2）!");
+                        console.warn("\u4E0D\u652F\u6301\u7684 Uniform \u53C2\u6570\uFF1A" + this.url + "," + i);
                 }
             }
         };

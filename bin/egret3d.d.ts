@@ -5669,6 +5669,17 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    type UniformTypes = {
+        [name: string]: {
+            type: UniformTypeEnum;
+            value: any;
+        };
+    };
+    type MaterialConfig = {
+        version: number;
+        shader: string;
+        mapUniform: UniformTypes;
+    };
     /**
      * 渲染排序
      */
@@ -5695,12 +5706,7 @@ declare namespace egret3d {
         /**
          */
         version: number;
-        $uniforms: {
-            [name: string]: {
-                type: UniformTypeEnum;
-                value: any;
-            };
-        };
+        $uniforms: UniformTypes;
         private _defines;
         private shader;
         private _textureRef;
@@ -5789,10 +5795,7 @@ declare namespace egret3d {
         setMatrix(_id: string, _matrix: Matrix): void;
         setMatrixv(_id: string, _matrixv: Float32Array): void;
         setTexture(_id: string, _texture: egret3d.Texture): void;
-        /**
-         *
-         */
-        $parse(json: any): void;
+        $parse(json: MaterialConfig): void;
         /**
          * clone material
          * @version paper 1.0
