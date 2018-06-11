@@ -1068,8 +1068,10 @@ declare namespace paper.editor {
         SOUND = 14,
         /**Mesh */
         MESH = 15,
+        /**shader */
+        SHADER = 16,
         /**数组 */
-        ARRAY = 16,
+        ARRAY = 17,
     }
     /**
      * 装饰器:自定义
@@ -5669,16 +5671,30 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    interface MaterialConfig_UniformFloat4 {
+        type: UniformTypeEnum.Float4;
+        value: [number, number, number, number];
+    }
+    interface MaterialConfig_Texture {
+        type: UniformTypeEnum.Texture;
+        value: string;
+    }
+    interface MaterialConfig_Float {
+        type: UniformTypeEnum.Float;
+        value: number;
+    }
+    type MaterialConfig = {
+        version: number;
+        shader: string;
+        mapUniform: {
+            [name: string]: MaterialConfig_UniformFloat4 | MaterialConfig_Texture | MaterialConfig_Float;
+        };
+    };
     type UniformTypes = {
         [name: string]: {
             type: UniformTypeEnum;
             value: any;
         };
-    };
-    type MaterialConfig = {
-        version: number;
-        shader: string;
-        mapUniform: UniformTypes;
     };
     /**
      * 渲染排序
@@ -5691,16 +5707,7 @@ declare namespace egret3d {
         Overlay = 4000,
     }
     /**
-     * material asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 材质资源
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     class Material extends paper.Asset {
         /**
@@ -5710,19 +5717,9 @@ declare namespace egret3d {
         private _defines;
         private shader;
         private _textureRef;
-        private _changeShaderMap;
         private _renderQueue;
         /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         dispose(): void;
         /**
@@ -5791,7 +5788,7 @@ declare namespace egret3d {
         setVector3(_id: string, _vector3: Vector3): void;
         setVector3v(_id: string, _vector3v: Float32Array): void;
         setVector4(_id: string, _vector4: Vector4): void;
-        setVector4v(_id: string, _vector4v: Float32Array): void;
+        setVector4v(_id: string, _vector4v: Float32Array | [number, number, number, number]): void;
         setMatrix(_id: string, _matrix: Matrix): void;
         setMatrixv(_id: string, _matrixv: Float32Array): void;
         setTexture(_id: string, _texture: egret3d.Texture): void;

@@ -1,11 +1,34 @@
 namespace egret3d {
 
-    export type UniformTypes = { [name: string]: { type: UniformTypeEnum, value: any } }
+
+
+
+
+    export interface MaterialConfig_UniformFloat4 {
+        type: UniformTypeEnum.Float4,
+        value: [number, number, number, number]
+    }
+
+    export interface MaterialConfig_Texture {
+        type: UniformTypeEnum.Texture,
+        value: string
+    }
+
+    export interface MaterialConfig_Float {
+        type: UniformTypeEnum.Float,
+        value: number
+    }
 
     export type MaterialConfig = {
         version: number,
         shader: string,
-        mapUniform: UniformTypes
+        mapUniform: {
+            [name: string]: MaterialConfig_UniformFloat4 | MaterialConfig_Texture | MaterialConfig_Float
+        }
+    }
+
+    export type UniformTypes = {
+        [name: string]: { type: UniformTypeEnum, value: any }
     }
 
 
@@ -21,16 +44,7 @@ namespace egret3d {
     }
 
     /**
-     * material asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 材质资源
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     export class Material extends paper.Asset {
         /**
@@ -40,27 +54,16 @@ namespace egret3d {
 
 
         private _defines: Array<string> = new Array();
-
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.SHADER)
         private shader: Shader;
         @paper.serializedField
         @paper.deserializedIgnore
         private _textureRef: Texture[] = [];
-        private _changeShaderMap: { [name: string]: Material } = {};
         private _renderQueue: RenderQueue = -1;
 
         /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         dispose() {
             delete this.$uniforms;
@@ -321,7 +324,7 @@ namespace egret3d {
             this.version++;
         }
 
-        setVector4v(_id: string, _vector4v: Float32Array) {
+        setVector4v(_id: string, _vector4v: Float32Array | [number, number, number, number]) {
             if (this.$uniforms[_id] !== undefined) {
                 this.$uniforms[_id].value = _vector4v;
             } else {
@@ -381,21 +384,19 @@ namespace egret3d {
                     case UniformTypeEnum.Texture:
                         const value = jsonChild.value;
                         const url = egret3d.utils.combinePath(utils.getPathByUrl(this.url) + "/", value)
-                        let texture: egret3d.Texture = paper.Asset.find<Texture>(url);
+                        let texture = paper.Asset.find<Texture>(url);
                         if (!texture) {
                             texture = DefaultTextures.GRID;
                         }
                         this.setTexture(i, texture);
                         break;
                     case UniformTypeEnum.Float:
-                        let floatValue = parseFloat(jsonChild.value);
-                        this.setFloat(i, floatValue);
+                        this.setFloat(i, jsonChild.value);
                         break;
                     case UniformTypeEnum.Float4:
-                        let tempValue = jsonChild.value;
+                        let tempValue = jsonChild.value as [number, number, number, number];
                         if (Array.isArray(tempValue)) {
-                            let _float4: Vector4 = new Vector4(tempValue[0], tempValue[1], tempValue[2], tempValue[3]);
-                            this.setVector4(i, _float4);
+                            this.setVector4v(i, tempValue)
                         } else {
                             console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级")
                         }

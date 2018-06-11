@@ -1287,8 +1287,10 @@ var paper;
             EditType[EditType["SOUND"] = 14] = "SOUND";
             /**Mesh */
             EditType[EditType["MESH"] = 15] = "MESH";
+            /**shader */
+            EditType[EditType["SHADER"] = 16] = "SHADER";
             /**数组 */
-            EditType[EditType["ARRAY"] = 16] = "ARRAY";
+            EditType[EditType["ARRAY"] = 17] = "ARRAY";
         })(EditType = editor.EditType || (editor.EditType = {}));
         var customMap = {};
         /**
@@ -15476,16 +15478,7 @@ var egret3d;
         RenderQueue[RenderQueue["Overlay"] = 4000] = "Overlay";
     })(RenderQueue = egret3d.RenderQueue || (egret3d.RenderQueue = {}));
     /**
-     * material asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 材质资源
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     var Material = (function (_super) {
         __extends(Material, _super);
@@ -15497,21 +15490,11 @@ var egret3d;
             _this.$uniforms = {};
             _this._defines = new Array();
             _this._textureRef = [];
-            _this._changeShaderMap = {};
             _this._renderQueue = -1;
             return _this;
         }
         /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         Material.prototype.dispose = function () {
             delete this.$uniforms;
@@ -15827,14 +15810,12 @@ var egret3d;
                         this.setTexture(i, texture);
                         break;
                     case egret3d.UniformTypeEnum.Float:
-                        var floatValue = parseFloat(jsonChild.value);
-                        this.setFloat(i, floatValue);
+                        this.setFloat(i, jsonChild.value);
                         break;
                     case egret3d.UniformTypeEnum.Float4:
                         var tempValue = jsonChild.value;
                         if (Array.isArray(tempValue)) {
-                            var _float4 = new egret3d.Vector4(tempValue[0], tempValue[1], tempValue[2], tempValue[3]);
-                            this.setVector4(i, _float4);
+                            this.setVector4v(i, tempValue);
                         }
                         else {
                             console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级");
@@ -15880,7 +15861,8 @@ var egret3d;
             return mat;
         };
         __decorate([
-            paper.serializedField
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.SHADER)
         ], Material.prototype, "shader", void 0);
         __decorate([
             paper.serializedField,
