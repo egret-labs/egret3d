@@ -469,26 +469,6 @@ namespace RES.processor {
 
     };
 
-    export const TextAssetProcessor: RES.processor.Processor = {
-
-        async onLoadStart(host, resource) {
-
-            const data = await host.load(resource, "text");
-            const url = getUrl(resource);
-            const filename = getFileName(url);
-            let text = new egret3d.TextAsset(filename, url);
-            text.content = data;
-            paper.Asset.register(text, true);
-            return text;
-        },
-
-        async onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-        }
-
-    };
-
     export const PathAssetProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
@@ -520,7 +500,6 @@ namespace RES.processor {
     RES.processor.map("Scene", SceneProcessor);
     RES.processor.map("Atlas", AtlasProcessor);
     RES.processor.map("Font", Font3DProcessor);
-    RES.processor.map("TextAsset", TextAssetProcessor);
     RES.processor.map("pathAsset", PathAssetProcessor);
     RES.processor.map("Sound", Sound3DProcessor);
 }
