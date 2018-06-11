@@ -26839,7 +26839,9 @@ var paper;
                                             this.selectedGameObjects.splice(index, 1);
                                         }
                                         var selectIds = this.selectedGameObjects.map(function (gameobj) { return gameobj.hashCode; });
-                                        this.editorModel.selectGameObject(selectIds, null);
+                                        var select = {};
+                                        select[editor.selectItemType.GAMEOBJECT] = selectIds;
+                                        this.editorModel.selectGameObject(select, null);
                                     }
                                 }
                             }
@@ -26854,13 +26856,17 @@ var paper;
                                     if (tapDelta < 200) {
                                         this.selectedGameObjects = [picked];
                                         var selectIds = this.selectedGameObjects.map(function (gameobj) { return gameobj.hashCode; });
-                                        this.editorModel.selectGameObject(selectIds, null);
+                                        var select = {};
+                                        select[editor.selectItemType.GAMEOBJECT] = selectIds;
+                                        this.editorModel.selectGameObject(select, null);
                                     }
                                 }
                             }
                             else if (tapDelta < 200) {
                                 this.selectedGameObjects = [];
-                                this.editorModel.selectGameObject([], null);
+                                var select = {};
+                                select[editor.selectItemType.GAMEOBJECT] = [];
+                                this.editorModel.selectGameObject(select, null);
                             }
                         }
                     }
