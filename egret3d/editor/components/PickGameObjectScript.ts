@@ -47,7 +47,9 @@ namespace paper.editor {
                                         this.selectedGameObjects.splice(index, 1);
                                     }
                                     const selectIds: number[] = this.selectedGameObjects.map((gameobj) => { return gameobj.hashCode });
-                                    this.editorModel.selectGameObject(selectIds, null);
+                                    let select={};
+                                    select[selectItemType.GAMEOBJECT]=selectIds;
+                                    this.editorModel.selectGameObject(select, null);
                                 }
                             }
                         }
@@ -61,12 +63,16 @@ namespace paper.editor {
                                 if (tapDelta < 200) {
                                     this.selectedGameObjects = [picked];
                                     const selectIds: number[] = this.selectedGameObjects.map((gameobj) => { return gameobj.hashCode });
-                                    this.editorModel.selectGameObject(selectIds, null);
+                                    let select={};
+                                    select[selectItemType.GAMEOBJECT]=selectIds;
+                                    this.editorModel.selectGameObject(select, null);
                                 }
                             }
                         } else if (tapDelta < 200) {
                             this.selectedGameObjects = [];
-                            this.editorModel.selectGameObject([], null);
+                            let select={};
+                            select[selectItemType.GAMEOBJECT]=[];
+                            this.editorModel.selectGameObject(select, null);
                         }
                     }
                 }
