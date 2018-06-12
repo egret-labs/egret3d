@@ -166,7 +166,7 @@ declare namespace paper {
         /**
          * 是否更新该系统。
          */
-        enable: boolean;
+        enabled: boolean;
         /**
          * 系统对于每个实体关心的组件总数。
          */
@@ -7663,11 +7663,6 @@ declare namespace paper {
 }
 declare namespace egret3d {
     class WebGLKit {
-        private static _maxVertexAttribArray;
-        static SetMaxVertexAttribArray(webgl: WebGLRenderingContext, count: number): void;
-        private static _usedTextureUnits;
-        static allocTexUnit(): number;
-        static resetTexUnit(): void;
         private static _texNumber;
         private static _activeTextureIndex;
         static activeTexture(index: number): void;
@@ -7684,10 +7679,6 @@ declare namespace egret3d {
         static blend(value: boolean, equation: number, srcRGB: number, destRGB: number, srcAlpha: number, destAlpha: number): void;
         private static _program;
         static useProgram(program: WebGLProgram): boolean;
-        static drawArrayTris(start: number, count: number): void;
-        static drawArrayLines(start: number, count: number): void;
-        static drawElementTris(start: number, count: number): void;
-        static drawElementLines(start: number, count: number): void;
         static setStates(drawPass: DrawPass, frontFaceCW?: boolean): void;
         static draw(context: RenderContext, material: Material, mesh: Mesh, subMeshIndex: number, basetype?: string, frontFaceCW?: boolean): void;
         static resetState(): void;

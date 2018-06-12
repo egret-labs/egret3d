@@ -980,7 +980,7 @@ var paper;
             /**
              * 是否更新该系统。
              */
-            this.enable = true;
+            this.enabled = true;
             /**
              * @internal
              */
@@ -1515,7 +1515,7 @@ var paper;
             for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
                 if (system && system.constructor === systemClass) {
-                    system.enable = true;
+                    system.enabled = true;
                 }
             }
         };
@@ -1526,7 +1526,7 @@ var paper;
             for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
                 if (system && system.constructor === systemClass) {
-                    system.enable = false;
+                    system.enabled = false;
                 }
             }
         };
@@ -1537,7 +1537,7 @@ var paper;
             for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
                 if (system && system.constructor === systemClass) {
-                    return system.enable;
+                    return system.enabled;
                 }
             }
             return false;
@@ -1567,7 +1567,7 @@ var paper;
                         this._systems[index - removeCount] = system;
                         this._systems[index] = null;
                     }
-                    if (system.enable) {
+                    if (system.enabled) {
                         system.update();
                     }
                 }
@@ -2640,7 +2640,7 @@ var egret3d;
             }
             // Egret2D渲染不加入DrawCallList的排序
             var egret2DRenderSystem = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem);
-            if (egret2DRenderSystem && egret2DRenderSystem.enable) {
+            if (egret2DRenderSystem && egret2DRenderSystem.enabled) {
                 for (var _b = 0, _c = egret2DRenderSystem.components; _b < _c.length; _b++) {
                     var egret2DRenderer = _c[_b];
                     if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
@@ -21515,23 +21515,6 @@ var egret3d;
     var WebGLKit = (function () {
         function WebGLKit() {
         }
-        WebGLKit.SetMaxVertexAttribArray = function (webgl, count) {
-            for (var i = count; i < WebGLKit._maxVertexAttribArray; i++) {
-                webgl.disableVertexAttribArray(i);
-            }
-            WebGLKit._maxVertexAttribArray = count;
-        };
-        WebGLKit.allocTexUnit = function () {
-            var textureUnit = this._usedTextureUnits;
-            if (textureUnit >= this.capabilities.maxTextures) {
-                console.warn('trying to use ' + textureUnit + ' texture units while this GPU supports only ' + this.capabilities.maxTextures);
-            }
-            this._usedTextureUnits += 1;
-            return textureUnit;
-        };
-        WebGLKit.resetTexUnit = function () {
-            this._usedTextureUnits = 0;
-        };
         WebGLKit.activeTexture = function (index) {
             if (this._activeTextureIndex != index) {
                 this.webgl.activeTexture(WebGLKit._texNumber[index]);
@@ -21606,30 +21589,6 @@ var egret3d;
                 return true;
             }
             return false;
-        };
-        // 三角形应用vbo
-        WebGLKit.drawArrayTris = function (start, count) {
-            var webgl = this.webgl;
-            // DrawInfo.ins.triCount += count / 3;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawArrays(webgl.TRIANGLES, start, count);
-        };
-        // 直线应用vbo
-        WebGLKit.drawArrayLines = function (start, count) {
-            var webgl = this.webgl;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawArrays(webgl.LINES, start, count);
-        };
-        WebGLKit.drawElementTris = function (start, count) {
-            var webgl = this.webgl;
-            // DrawInfo.ins.triCount += count / 3;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawElements(webgl.TRIANGLES, count, webgl.UNSIGNED_SHORT, start * 2);
-        };
-        WebGLKit.drawElementLines = function (start, count) {
-            var webgl = this.webgl;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawElements(webgl.LINES, count, webgl.UNSIGNED_SHORT, start * 2);
         };
         WebGLKit.setStates = function (drawPass, frontFaceCW) {
             if (frontFaceCW === void 0) { frontFaceCW = false; }
@@ -21756,8 +21715,6 @@ var egret3d;
                 this.capabilities.initialize(webgl);
             }
         };
-        WebGLKit._maxVertexAttribArray = 0;
-        WebGLKit._usedTextureUnits = 0;
         WebGLKit._texNumber = null;
         WebGLKit._activeTextureIndex = -1;
         WebGLKit._frontFaceCW = false;
