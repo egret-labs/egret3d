@@ -63,7 +63,7 @@ namespace egret3d {
             }
             // Egret2D渲染不加入DrawCallList的排序
             const egret2DRenderSystem = paper.Application.systemManager.getSystem(Egret2DRendererSystem);
-            if (egret2DRenderSystem && egret2DRenderSystem.enable) {
+            if (egret2DRenderSystem && egret2DRenderSystem.enabled) {
                 for (const egret2DRenderer of egret2DRenderSystem.components) {
                     if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                         egret2DRenderer.render(camera.context, camera);

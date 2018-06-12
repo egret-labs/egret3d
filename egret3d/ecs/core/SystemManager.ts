@@ -126,7 +126,7 @@ namespace paper {
         public enableSystem(systemClass: { new(): BaseSystem<any> }) {
             for (const system of this._systems) {
                 if (system && system.constructor === systemClass) {
-                    system.enable = true;
+                    system.enabled = true;
                 }
             }
         }
@@ -136,7 +136,7 @@ namespace paper {
         public disableSystem(systemClass: { new(): BaseSystem<any> }) {
             for (const system of this._systems) {
                 if (system && system.constructor === systemClass) {
-                    system.enable = false;
+                    system.enabled = false;
                 }
             }
         }
@@ -146,7 +146,7 @@ namespace paper {
         public getSystemEnabled(systemClass: { new(): BaseSystem<any> }) {
             for (const system of this._systems) {
                 if (system && system.constructor === systemClass) {
-                    return system.enable;
+                    return system.enabled;
                 }
             }
 
@@ -178,7 +178,7 @@ namespace paper {
                         this._systems[index] = null;
                     }
 
-                    if (system.enable) {
+                    if (system.enabled) {
                         system.update();
                     }
                 }
