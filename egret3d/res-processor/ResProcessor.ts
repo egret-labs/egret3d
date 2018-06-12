@@ -15,15 +15,7 @@ namespace RES.processor {
         GLTF,
         GLTFBinary,
         Prefab,
-        Scene,
-        TextAsset,
-        Atlas,
-        Font,
-        PackBin,
-        PackTxt,
-        pathAsset,
-        PVR,
-        Sound
+        Scene
     }
 
     const typeMap = {
@@ -33,25 +25,13 @@ namespace RES.processor {
         ".shader.json": AssetTypeEnum.Shader,
         ".png": AssetTypeEnum.Texture,
         ".jpg": AssetTypeEnum.Texture,
-        ".pvr.bin": AssetTypeEnum.PVR,
-        ".pvr": AssetTypeEnum.PVR,
         ".imgdesc.json": AssetTypeEnum.TextureDesc,
         ".mat.json": AssetTypeEnum.Material,
         ".gltf.json": AssetTypeEnum.GLTF,
         ".gltf.bin": AssetTypeEnum.GLTFBinary,
         ".glb": AssetTypeEnum.GLTFBinary,
         ".prefab.json": AssetTypeEnum.Prefab,
-        ".scene.json": AssetTypeEnum.Scene,
-        ".atlas.json": AssetTypeEnum.Atlas,
-        ".font.json": AssetTypeEnum.Font,
-        ".json": AssetTypeEnum.TextAsset,
-        ".txt": AssetTypeEnum.TextAsset,
-        ".effect.json": AssetTypeEnum.TextAsset,
-        ".packs.bin": AssetTypeEnum.PackBin,
-        ".packs.txt": AssetTypeEnum.PackTxt,
-        ".path.json": AssetTypeEnum.pathAsset,
-        ".mp3": AssetTypeEnum.Sound,
-        ".ogg": AssetTypeEnum.Sound
+        ".scene.json": AssetTypeEnum.Scene
     }
 
     function calcType(url: string): AssetTypeEnum {

@@ -6719,14 +6719,6 @@ declare namespace RES.processor {
         GLTFBinary = 11,
         Prefab = 12,
         Scene = 13,
-        TextAsset = 14,
-        Atlas = 15,
-        Font = 16,
-        PackBin = 17,
-        PackTxt = 18,
-        pathAsset = 19,
-        PVR = 20,
-        Sound = 21,
     }
     const BundleProcessor: RES.processor.Processor;
     const GLVertexShaderProcessor: RES.processor.Processor;

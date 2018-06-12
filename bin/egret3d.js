@@ -17779,14 +17779,6 @@ var RES;
             AssetTypeEnum[AssetTypeEnum["GLTFBinary"] = 11] = "GLTFBinary";
             AssetTypeEnum[AssetTypeEnum["Prefab"] = 12] = "Prefab";
             AssetTypeEnum[AssetTypeEnum["Scene"] = 13] = "Scene";
-            AssetTypeEnum[AssetTypeEnum["TextAsset"] = 14] = "TextAsset";
-            AssetTypeEnum[AssetTypeEnum["Atlas"] = 15] = "Atlas";
-            AssetTypeEnum[AssetTypeEnum["Font"] = 16] = "Font";
-            AssetTypeEnum[AssetTypeEnum["PackBin"] = 17] = "PackBin";
-            AssetTypeEnum[AssetTypeEnum["PackTxt"] = 18] = "PackTxt";
-            AssetTypeEnum[AssetTypeEnum["pathAsset"] = 19] = "pathAsset";
-            AssetTypeEnum[AssetTypeEnum["PVR"] = 20] = "PVR";
-            AssetTypeEnum[AssetTypeEnum["Sound"] = 21] = "Sound";
         })(AssetTypeEnum = processor.AssetTypeEnum || (processor.AssetTypeEnum = {}));
         var typeMap = {
             ".vs.glsl": AssetTypeEnum.GLVertexShader,
@@ -17795,25 +17787,13 @@ var RES;
             ".shader.json": AssetTypeEnum.Shader,
             ".png": AssetTypeEnum.Texture,
             ".jpg": AssetTypeEnum.Texture,
-            ".pvr.bin": AssetTypeEnum.PVR,
-            ".pvr": AssetTypeEnum.PVR,
             ".imgdesc.json": AssetTypeEnum.TextureDesc,
             ".mat.json": AssetTypeEnum.Material,
             ".gltf.json": AssetTypeEnum.GLTF,
             ".gltf.bin": AssetTypeEnum.GLTFBinary,
             ".glb": AssetTypeEnum.GLTFBinary,
             ".prefab.json": AssetTypeEnum.Prefab,
-            ".scene.json": AssetTypeEnum.Scene,
-            ".atlas.json": AssetTypeEnum.Atlas,
-            ".font.json": AssetTypeEnum.Font,
-            ".json": AssetTypeEnum.TextAsset,
-            ".txt": AssetTypeEnum.TextAsset,
-            ".effect.json": AssetTypeEnum.TextAsset,
-            ".packs.bin": AssetTypeEnum.PackBin,
-            ".packs.txt": AssetTypeEnum.PackTxt,
-            ".path.json": AssetTypeEnum.pathAsset,
-            ".mp3": AssetTypeEnum.Sound,
-            ".ogg": AssetTypeEnum.Sound
+            ".scene.json": AssetTypeEnum.Scene
         };
         function calcType(url) {
             var filei = url.lastIndexOf("/");
