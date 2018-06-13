@@ -26,15 +26,30 @@ namespace egret3d.particle {
         private _lastAliveCursor: number = 0;
         //原始顶点数量
         private _vertexStride: number = 0;
-        //时间属性在vbo中的起始位置
-        private _vertexStartTimeOffset: number = 0;
-        //总的vbo
-        private _vertexTimeBuffer: Float32Array;
-        private _vertexAttributes: gltf.MeshAttribute[];
         //当前爆发的索引
         private _burstIndex: number = 0;
         //最终重力
         private _finalGravity = new Vector3();
+        private _vertexAttributes: gltf.MeshAttribute[];
+
+        //vbo缓存
+        private _positionBufferCache: Float32Array;
+        private _colorBufferCache: Float32Array;
+        private _uvBufferCache: Float32Array;
+        private _cornerBufferCache: Float32Array;
+        private _startPositionBufferCache: Float32Array;
+        private _startVelocityBufferCache: Float32Array;
+        private _startColorBufferCache: Float32Array;
+        private _startSizeBufferCache: Float32Array;
+        private _startRotationBufferCache: Float32Array;
+        private _startTimeBufferCache: Float32Array;
+        private _random0BufferCache: Float32Array;
+        private _random1BufferCache: Float32Array;
+        private _worldPostionBufferCache: Float32Array;
+        private _worldRoationBufferCache: Float32Array;
+
+        private _worldPostionCache: Vector3;
+        private _worldRotationCache: Quaternion;
 
         private _comp: ParticleComponent;
         private _renderer: ParticleRenderer;
@@ -64,7 +79,7 @@ namespace egret3d.particle {
          */
         private _isParticleExpired(particleIndex: number): boolean {
             const startTimeOffset = particleIndex * this._vertexStride * 2;
-            return this._time - this._vertexTimeBuffer[startTimeOffset + 1] + 0.0001 > this._vertexTimeBuffer[startTimeOffset];
+            return this._time - this._startTimeBufferCache[startTimeOffset + 1] + 0.0001 > this._startTimeBufferCache[startTimeOffset];
         }
 
         /**
@@ -112,86 +127,93 @@ namespace egret3d.particle {
 
             const needRandom0 = needRandomColor || needRandomSize || needRandomRotation || randomTextureAnimation;
 
-            const transform = comp.gameObject.transform;
-            const worldPosition = transform.getPosition();
-            const worldRotation = transform.getRotation();
-
-            const startIndex = this._firstAliveCursor * this._vertexStride;
-            let meshIndexOffset: number = 0;
+            const worldPosition = this._worldPostionCache;
+            const worldRotation = this._worldRotationCache;
 
             const renderer = this._renderer;
             const isMesh = renderer._renderMode === ParticleRenderMode.Mesh;
-            if (isMesh && !renderer.mesh) {
-                console.error("Data error.");
-            }
-
             const orginMesh = renderer.mesh as Mesh;
             const subPrimitive = isMesh ? orginMesh.glTFMesh.primitives[0] : null;
-            const batchMesh = renderer.batchMesh;
-            const vertices = isMesh ? orginMesh.getVertices() : null;
-            const colors = isMesh ? orginMesh.getAttributes(gltf.MeshAttributeType.COLOR_0, 0) : null;
             const uvs = isMesh ? orginMesh.getAttributes(gltf.MeshAttributeType.TEXCOORD_0, 0) : null;
 
-            for (let i = startIndex, l = startIndex + this._vertexStride; i < l; i++ , meshIndexOffset++) {
+            const startIndex = this._firstAliveCursor * this._vertexStride;
+            for (let i = startIndex, meshIndexOffset = 0, l = startIndex + this._vertexStride; i < l; i++ , meshIndexOffset++) {
+                const vector2Offset = i * 2;
+                const vector3Offset = i * 3;
+                const vector4Offset = i * 4;
                 if (subPrimitive) { // isMesh
-                    let index = meshIndexOffset * 3;
-
-                    Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], helpVec3);
-                    batchMesh.setAttribute(i, ParticleMaterialAttribute.POSITION, 0, helpVec3.x, helpVec3.y, helpVec3.z)
-                    if (subPrimitive.attributes[gltf.MeshAttributeType.COLOR_0]) {
-                        index = meshIndexOffset * 4;
-                        Vector4.set(colors[index], colors[index + 1], colors[index + 2], colors[index + 3], helpVec4);
-                        batchMesh.setAttribute(i, ParticleMaterialAttribute.COLOR_0, 0, helpVec4.x, helpVec4.y, helpVec4.z, helpVec4.w);
-                    }
-                    else {
-                        batchMesh.setAttribute(i, ParticleMaterialAttribute.COLOR_0, 0, 1.0, 1.0, 1.0, 1.0);
-                    }
-
                     if (subPrimitive.attributes[gltf.MeshAttributeType.TEXCOORD_0]) {
-                        index = meshIndexOffset * 2;
-                        Vector2.set(uvs[index], uvs[index + 1], helpVec2);
-                        batchMesh.setAttribute(i, ParticleMaterialAttribute.TEXCOORD_0, 0, helpVec2.x * uvHelper.x + uvHelper.z, helpVec2.y * uvHelper.y + uvHelper.w);
-                    } else {
-                        batchMesh.setAttribute(i, ParticleMaterialAttribute.TEXCOORD_0, 0, 0, 0);
+                        const index = meshIndexOffset * 2;
+                        this._uvBufferCache[vector2Offset] = uvs[index] * uvHelper.x + uvHelper.z;
+                        this._uvBufferCache[vector2Offset + 1] = uvs[index + 1] * uvHelper.y + uvHelper.w;
                     }
                 } else {
                     switch (meshIndexOffset) {
                         case 0:
-                            batchMesh.setAttribute(i, ParticleMaterialAttribute.CORNER, 0, -0.5, -0.5);
-                            batchMesh.setAttribute(i, ParticleMaterialAttribute.TEXCOORD_0, 0, uvHelper.z, uvHelper.y + uvHelper.w);
+                            this._uvBufferCache[vector2Offset] = uvHelper.z;
+                            this._uvBufferCache[vector2Offset + 1] = uvHelper.y + uvHelper.w;
                             break;
                         case 1:
-                            batchMesh.setAttribute(i, ParticleMaterialAttribute.CORNER, 0, 0.5, -0.5);
-                            batchMesh.setAttribute(i, ParticleMaterialAttribute.TEXCOORD_0, 0, uvHelper.x + uvHelper.z, uvHelper.y + uvHelper.w);
+                            this._uvBufferCache[vector2Offset] = uvHelper.x + uvHelper.z;
+                            this._uvBufferCache[vector2Offset + 1] = uvHelper.y + uvHelper.w;
                             break;
                         case 2:
-                            batchMesh.setAttribute(i, ParticleMaterialAttribute.CORNER, 0, 0.5, 0.5);
-                            batchMesh.setAttribute(i, ParticleMaterialAttribute.TEXCOORD_0, 0, uvHelper.x + uvHelper.z, uvHelper.w);
+                            this._uvBufferCache[vector2Offset] = uvHelper.x + uvHelper.z;
+                            this._uvBufferCache[vector2Offset + 1] = uvHelper.w;
                             break;
                         case 3:
-                            batchMesh.setAttribute(i, ParticleMaterialAttribute.CORNER, 0, -0.5, 0.5, uvHelper.z, uvHelper.w);
-                            batchMesh.setAttribute(i, ParticleMaterialAttribute.TEXCOORD_0, 0, uvHelper.z, uvHelper.w);
+                            this._uvBufferCache[vector2Offset] = uvHelper.z;
+                            this._uvBufferCache[vector2Offset + 1] = uvHelper.w;
                             break;
                     }
                 }
 
                 //
-                batchMesh.setAttribute(i, ParticleMaterialAttribute.START_POSITION, 0, positionHelper.x, positionHelper.y, positionHelper.z);
-                batchMesh.setAttribute(i, ParticleMaterialAttribute.START_VELOCITY, 0, velocityHelper.x, velocityHelper.y, velocityHelper.z);
-                batchMesh.setAttribute(i, ParticleMaterialAttribute.START_COLOR, 0, startColorHelper.r, startColorHelper.g, startColorHelper.b, startColorHelper.a);
-                batchMesh.setAttribute(i, ParticleMaterialAttribute.START_SIZE, 0, startSizeHelper.x, startSizeHelper.y, startSizeHelper.z);
-                batchMesh.setAttribute(i, ParticleMaterialAttribute.START_ROTATION, 0, startRotationHelper.x, startRotationHelper.y, startRotationHelper.z);
-                batchMesh.setAttribute(i, ParticleMaterialAttribute.TIME, 0, lifetime, time);
+                this._startPositionBufferCache[vector3Offset] = positionHelper.x;
+                this._startPositionBufferCache[vector3Offset + 1] = positionHelper.y;
+                this._startPositionBufferCache[vector3Offset + 2] = positionHelper.z;
+
+                this._startVelocityBufferCache[vector3Offset] = velocityHelper.x;
+                this._startVelocityBufferCache[vector3Offset + 1] = velocityHelper.y;
+                this._startVelocityBufferCache[vector3Offset + 2] = velocityHelper.z;
+
+                this._startColorBufferCache[vector4Offset] = startColorHelper.r;
+                this._startColorBufferCache[vector4Offset + 1] = startColorHelper.g;
+                this._startColorBufferCache[vector4Offset + 2] = startColorHelper.b;
+                this._startColorBufferCache[vector4Offset + 3] = startColorHelper.a;
+
+                this._startSizeBufferCache[vector3Offset] = startSizeHelper.x;
+                this._startSizeBufferCache[vector3Offset + 1] = startSizeHelper.y;
+                this._startSizeBufferCache[vector3Offset + 2] = startSizeHelper.z;
+
+                this._startRotationBufferCache[vector3Offset] = startRotationHelper.x;
+                this._startRotationBufferCache[vector3Offset + 1] = startRotationHelper.y;
+                this._startRotationBufferCache[vector3Offset + 2] = startRotationHelper.z;
+
+                this._startTimeBufferCache[vector2Offset] = lifetime;
+                this._startTimeBufferCache[vector2Offset + 1] = time;
                 //
                 if (needRandom0) {
-                    batchMesh.setAttribute(i, ParticleMaterialAttribute.RANDOM0, 0, randomColor, randomSize, randomRotation, randomTextureAnimation);
+                    this._random0BufferCache[vector4Offset] = randomColor;
+                    this._random0BufferCache[vector4Offset + 1] = randomSize;
+                    this._random0BufferCache[vector4Offset + 2] = randomRotation;
+                    this._random0BufferCache[vector4Offset + 3] = randomTextureAnimation;
                 }
                 if (neeedRandomVelocity) {
-                    batchMesh.setAttribute(i, ParticleMaterialAttribute.RANDOM1, 0, randomVelocityX, randomVelocityY, randomVelocityZ, 0);
+                    this._random1BufferCache[vector4Offset] = randomVelocityX;
+                    this._random1BufferCache[vector4Offset + 1] = randomVelocityY;
+                    this._random1BufferCache[vector4Offset + 2] = randomVelocityZ;
+                    this._random1BufferCache[vector4Offset + 3] = 0;
                 }
                 if (comp.main.simulationSpace === SimulationSpace.World) {
-                    batchMesh.setAttribute(i, ParticleMaterialAttribute.WORLD_POSITION, 0, worldPosition.x, worldPosition.y, worldPosition.z);
-                    batchMesh.setAttribute(i, ParticleMaterialAttribute.WORLD_ROTATION, 0, worldRotation.x, worldRotation.y, worldRotation.z, worldRotation.w);
+                    this._worldPostionBufferCache[vector3Offset] = worldPosition.x;
+                    this._worldPostionBufferCache[vector3Offset + 1] = worldPosition.y;
+                    this._worldPostionBufferCache[vector3Offset + 2] = worldPosition.z;
+                    
+                    this._worldRoationBufferCache[vector4Offset] = worldRotation.x;
+                    this._worldRoationBufferCache[vector4Offset + 1] = worldRotation.y;
+                    this._worldRoationBufferCache[vector4Offset + 2] = worldRotation.z;
+                    this._worldRoationBufferCache[vector4Offset + 3] = worldRotation.w;
                 }
             };
 
@@ -229,10 +251,25 @@ namespace egret3d.particle {
             this._lastFrameFirstCursor = 0;
             this._lastAliveCursor = 0;
             this._vertexStride = 0;
-            this._vertexStartTimeOffset = 0;
-            this._vertexTimeBuffer = null;
             this._vertexAttributes = null;
             this._burstIndex = 0;
+            this._positionBufferCache = null;
+            this._colorBufferCache = null;
+            this._uvBufferCache = null;
+            this._cornerBufferCache = null;
+            this._startPositionBufferCache = null;
+            this._startVelocityBufferCache = null;
+            this._startColorBufferCache = null;
+            this._startSizeBufferCache = null;
+            this._startRotationBufferCache = null;
+            this._startTimeBufferCache = null;
+            this._random0BufferCache = null;
+            this._random1BufferCache = null;
+            this._worldPostionBufferCache = null;
+            this._worldRoationBufferCache = null;
+
+            this._worldPostionCache = null;
+            this._worldRotationCache = null;
 
             this._comp = null;
             this._renderer = null;
@@ -247,39 +284,37 @@ namespace egret3d.particle {
             this._comp = comp;
             this._renderer = renderer;
 
-            const maxParticleCount = comp.main.maxParticles;
-            if (renderer._renderMode === ParticleRenderMode.None || maxParticleCount <= 0) {
-                throw "ParticleSystem : error renderMode or maxParticleCount";
-            }
-
-            if (renderer.materials.length !== 1) {
-                throw "ParticleSystem : materials.length != 1";
-            }
-
+            const mesh = createBatchMesh(renderer, comp.main.maxParticles);
             if (renderer._renderMode === ParticleRenderMode.Mesh) {
-                const mesh = renderer.mesh;
-                if (mesh.subMeshCount > 1) {
-                    throw "ParticleSystem : subMeshCount > 1";
-                }
-                this._vertexStride = mesh.vertexCount;
-                this._vertexStartTimeOffset = this._vertexStride * maxParticleCount * 25;
+                this._vertexStride = renderer.mesh.vertexCount;
+                this._positionBufferCache = mesh.getAttributes(ParticleMaterialAttribute.POSITION);
+                this._colorBufferCache = mesh.getAttributes(ParticleMaterialAttribute.COLOR_0);
             } else {
                 this._vertexStride = 4;
-                this._vertexStartTimeOffset = this._vertexStride * maxParticleCount * 20;
+                this._cornerBufferCache = mesh.getAttributes(ParticleMaterialAttribute.CORNER);
             }
+            this._uvBufferCache = mesh.getAttributes(ParticleMaterialAttribute.TEXCOORD_0);
+            this._startPositionBufferCache = mesh.getAttributes(ParticleMaterialAttribute.START_POSITION);
+            this._startVelocityBufferCache = mesh.getAttributes(ParticleMaterialAttribute.START_VELOCITY);
+            this._startColorBufferCache = mesh.getAttributes(ParticleMaterialAttribute.START_COLOR);
+            this._startSizeBufferCache = mesh.getAttributes(ParticleMaterialAttribute.START_SIZE);
+            this._startRotationBufferCache = mesh.getAttributes(ParticleMaterialAttribute.START_ROTATION);
+            this._startTimeBufferCache = mesh.getAttributes(ParticleMaterialAttribute.TIME);
+            this._random0BufferCache = mesh.getAttributes(ParticleMaterialAttribute.RANDOM0);
+            this._random1BufferCache = mesh.getAttributes(ParticleMaterialAttribute.RANDOM1);
+            this._worldPostionBufferCache = mesh.getAttributes(ParticleMaterialAttribute.WORLD_POSITION);
+            this._worldRoationBufferCache = mesh.getAttributes(ParticleMaterialAttribute.WORLD_ROTATION);
 
-            renderer.batchMesh = createBatchMesh(renderer, maxParticleCount);
-
-            //粒子系统不能用共享材质
-            renderer.batchMaterial = renderer.materials[0].clone();
-            renderer.batchMesh.uploadSubIndexBuffer();
-            this._vertexTimeBuffer = renderer.batchMesh.getAttributes(ParticleMaterialAttribute.TIME);
-
-            const primitive = renderer.batchMesh.glTFMesh.primitives[0];
+            const primitive = mesh.glTFMesh.primitives[0];
             this._vertexAttributes = [];
             for (const k in primitive.attributes) {
                 this._vertexAttributes.push(k as gltf.MeshAttribute);
             }
+
+            renderer.batchMesh = mesh;
+            //粒子系统不能用共享材质
+            renderer.batchMaterial = renderer.materials[0].clone();
+            mesh.uploadSubIndexBuffer();
         }
 
         public update(elapsedTime: number) {
@@ -299,6 +334,10 @@ namespace egret3d.particle {
                     this._lastAliveCursor = 0;
                 }
             }
+
+            const transform = comp.gameObject.transform;
+            this._worldPostionCache = transform.getPosition();
+            this._worldRotationCache = transform.getRotation();
             //检测是否已经过了Delay时间，否则不能发射
             if (comp._isPlaying && this._time >= comp.main.startDelay.constant && comp.emission.enable) {
                 this._updateEmission(elapsedTime);
@@ -375,8 +414,8 @@ namespace egret3d.particle {
 
             const transform = comp.gameObject.transform;
             if (comp.main.simulationSpace === SimulationSpace.Local) {
-                renderer._setVector3(ParticleMaterialUniform.WORLD_POSITION, transform.getPosition());
-                renderer._setVector4(ParticleMaterialUniform.WORLD_ROTATION, transform.getRotation());
+                renderer._setVector3(ParticleMaterialUniform.WORLD_POSITION, this._worldPostionCache);
+                renderer._setVector4(ParticleMaterialUniform.WORLD_ROTATION, this._worldRotationCache);
             }
             //
             switch (comp.main.scaleMode) {

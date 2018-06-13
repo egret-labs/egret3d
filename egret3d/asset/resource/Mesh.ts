@@ -427,20 +427,26 @@ namespace egret3d {
         }
 
         public getColors(subMeshIndex: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.COLOR_0, subMeshIndex) as Float32Array;
+            const res =  this.getAttributes(gltf.MeshAttributeType.COLOR_0, subMeshIndex) as Float32Array;
+            return res ? res as Float32Array : null;
         }
 
         public getNormals(subMeshIndex: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.NORMAL, subMeshIndex) as Float32Array;
+            const res = this.getAttributes(gltf.MeshAttributeType.NORMAL, subMeshIndex) as Float32Array;
+            return res ? res as Float32Array : null;
         }
 
         public getTangents(subMeshIndex: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.TANGENT, subMeshIndex) as Float32Array;
+            const res = this.getAttributes(gltf.MeshAttributeType.TANGENT, subMeshIndex);
+            return res ? res as Float32Array : null;
         }
 
         public getAttributes(attributeType: gltf.MeshAttribute, subMeshIndex: number = 0) {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const accessorIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType] || 0;
+                const accessorIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType];
+                if (accessorIndex === undefined) {
+                    return null;
+                }
                 const accessor = this._glTFAsset.getAccessor(accessorIndex);
 
                 return this._glTFAsset.createTypeArrayFromAccessor(accessor);
@@ -565,7 +571,7 @@ namespace egret3d {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
                 const webgl = WebGLKit.webgl;
                 const primitive = this._glTFMesh.primitives[subMeshIndex];
-                
+
                 webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
                 const attributes = primitive.attributes;
                 for (const attributeName of uploadAttributes) {
