@@ -27,14 +27,14 @@ namespace egret3d {
             return [this.x, this.y, this.z, this.w];
         }
 
-        public deserialize(element: number[]): void {
+        public deserialize(element: Readonly<[number, number, number, number]>): void {
             this.x = element[0];
             this.y = element[1];
             this.z = element[2];
             this.w = element[3];
         }
 
-        public copy(value: Vector4) {
+        public copy(value: Readonly<Vector4>) {
             this.x = value.x;
             this.y = value.y;
             this.z = value.z;
@@ -60,7 +60,8 @@ namespace egret3d {
         }
 
         public normalize() {
-            const l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+            const l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+
             if (l > Number.MIN_VALUE) {
                 this.x /= l;
                 this.y /= l;
@@ -75,6 +76,48 @@ namespace egret3d {
             }
 
             return this;
+        }
+
+        public inverse() {
+            const ll = this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z;
+
+            if (ll > 0.0) {
+                const ill = 1.0 / ll;
+                this.x = -this.x * ill;
+                this.y = -this.y * ill;
+                this.z = -this.z * ill;
+                this.w = this.w * ill;
+            }
+
+            return this;
+        }
+
+        public multiply(value: Readonly<Quaternion>) {
+            const w1 = this.w, x1 = this.x, y1 = this.y, z1 = this.z;
+            const w2 = value.w, x2 = value.x, y2 = value.y, z2 = value.z;
+
+            this.x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2;
+            this.y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2;
+            this.z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2;
+            this.w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2;
+
+            this.normalize();
+
+            return this;
+        }
+
+        public transformVector3(value: Vector3) {
+            const x2 = value.x, y2 = value.y, z2 = value.z;
+            const x1 = this.w * x2 + this.y * z2 - this.z * y2;
+            const y1 = this.w * y2 - this.x * z2 + this.z * x2;
+            const z1 = this.w * z2 + this.x * y2 - this.y * x2;
+            const w1 = -this.x * x2 - this.y * y2 - this.z * z2;
+
+            value.x = -w1 * this.x + x1 * this.w - y1 * this.z + z1 * this.y;
+            value.y = -w1 * this.y + x1 * this.z + y1 * this.w - z1 * this.x;
+            value.z = -w1 * this.z - x1 * this.y + y1 * this.x + z1 * this.w;
+
+            return value;
         }
 
         public static set(x: number, y: number, z: number, w: number, out: Quaternion): Quaternion {

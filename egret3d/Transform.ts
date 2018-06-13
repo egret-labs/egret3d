@@ -51,22 +51,22 @@ namespace egret3d {
         private readonly localMatrix: Matrix = new Matrix();
         private readonly worldMatrix: Matrix = new Matrix();
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.VECTOR3,{set:"setLocalPosition"})
+        @paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalPosition" })
         private readonly localPosition: Vector3 = new Vector3();
-        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3,{set:"setPosition"})
+        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setPosition" })
         private readonly position: Vector3 = new Vector3();
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.QUATERNION,{set:"setLocalRotation"})
+        @paper.editor.property(paper.editor.EditType.QUATERNION, { set: "setLocalRotation" })
         private readonly localRotation: Quaternion = new Quaternion();
-        @paper.editor.extraProperty(paper.editor.EditType.QUATERNION,{set:"setRotation"})
+        @paper.editor.extraProperty(paper.editor.EditType.QUATERNION, { set: "setRotation" })
         private readonly rotation: Quaternion = new Quaternion();
-        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3,{set:"setLocalEulerAngles"})
+        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setLocalEulerAngles" })
         private readonly localEulerAngles: Vector3 = new Vector3();
         private readonly eulerAngles: Vector3 = new Vector3();
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.VECTOR3,{set:"setLocalScale"})
+        @paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalScale" })
         private readonly localScale: Vector3 = new Vector3(1.0, 1.0, 1.0);
-        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3,{set:"setScale"})
+        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setScale" })
         private readonly scale: Vector3 = new Vector3(1.0, 1.0, 1.0);
         private _aabb: AABB = null as any;
         private _parent: Transform | null = null;
@@ -361,7 +361,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getPosition(): Vector3 {
+        public getPosition(): Readonly<Vector3> {
             Matrix.getTranslation(this.getWorldMatrix(), this.position);
             return this.position;
         }
@@ -380,7 +380,7 @@ namespace egret3d {
          */
         public setPosition(v: Vector3): void;
         public setPosition(x: number, y: number, z: number): void;
-        public setPosition(p1: Vector3 | number, p2?: number, p3?: number): void {
+        public setPosition(p1: Readonly<Vector3> | number, p2?: number, p3?: number): void {
             if (p1.hasOwnProperty("x")) {
                 Vector3.copy(<Vector3>p1, helpVec3);
             } else {
@@ -411,7 +411,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getLocalRotation(): Quaternion {
+        public getLocalRotation(): Readonly<Quaternion> {
             return this.localRotation;
         }
 
@@ -455,7 +455,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getRotation(): Quaternion {
+        public getRotation(): Readonly<Quaternion> {
             Quaternion.fromMatrix(this.getWorldMatrix(), this.rotation);
             return this.rotation;
         }
@@ -510,7 +510,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getLocalEulerAngles(): Vector3 {
+        public getLocalEulerAngles(): Readonly<Vector3> {
             Quaternion.toEulerAngles(this.localRotation, this.localEulerAngles);
             return this.localEulerAngles;
         }
@@ -553,7 +553,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getEulerAngles() {
+        public getEulerAngles(): Readonly<Vector3> {
             Matrix.toEulerAngles(this.getWorldMatrix(), this.eulerAngles);
             return this.eulerAngles;
         }
@@ -606,7 +606,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getLocalScale(): Vector3 {
+        public getLocalScale(): Readonly<Vector3> {
             return this.localScale;
         }
 
@@ -649,7 +649,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getScale(): Vector3 {
+        public getScale(): Readonly<Vector3> {
             Matrix.getScale(this.getWorldMatrix(), this.scale);
             return this.scale;
         }

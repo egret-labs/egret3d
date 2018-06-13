@@ -1,25 +1,150 @@
 namespace egret3d {
 
-    let helpVec3_1: Vector3 = new Vector3();
+    const _helpVectorA: Vector3 = new Vector3();
 
     export class Matrix {
+        public readonly rawData: Float32Array;
 
-        public rawData: Float32Array;
-
-        constructor(datas: Float32Array | null = null) {
-            if (datas) {
-                this.rawData = datas;
+        public constructor(rawData: Float32Array | null = null) {
+            if (rawData) {
+                this.rawData = rawData;
             }
             else {
                 this.rawData = new Float32Array(
                     [
-                        1, 0, 0, 0,
-                        0, 1, 0, 0,
-                        0, 0, 1, 0,
-                        0, 0, 0, 1
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0
                     ]
                 );
             }
+        }
+
+        public copy(value: Readonly<Matrix>) {
+            this.rawData[0] = value.rawData[0];
+            this.rawData[1] = value.rawData[1];
+            this.rawData[2] = value.rawData[2];
+            this.rawData[3] = value.rawData[3];
+
+            this.rawData[4] = value.rawData[4];
+            this.rawData[5] = value.rawData[5];
+            this.rawData[6] = value.rawData[6];
+            this.rawData[7] = value.rawData[7];
+
+            this.rawData[8] = value.rawData[8];
+            this.rawData[9] = value.rawData[9];
+            this.rawData[10] = value.rawData[10];
+            this.rawData[11] = value.rawData[11];
+
+            this.rawData[12] = value.rawData[12];
+            this.rawData[13] = value.rawData[13];
+            this.rawData[14] = value.rawData[14];
+            this.rawData[15] = value.rawData[15];
+
+            return this;
+        }
+
+        public clone() {
+            const value = new Matrix();
+            value.copy(this);
+
+            return value;
+        }
+
+        public set(
+            n11: number, n21: number, n31: number, n41: number,
+            n12: number, n22: number, n32: number, n42: number,
+            n13: number, n23: number, n33: number, n43: number,
+            n14: number, n24: number, n34: number, n44: number,
+        ) {
+            this.rawData[0] = n11;
+            this.rawData[1] = n12;
+            this.rawData[2] = n13;
+            this.rawData[3] = n14;
+
+            this.rawData[4] = n21;
+            this.rawData[5] = n22;
+            this.rawData[6] = n23;
+            this.rawData[7] = n24;
+
+            this.rawData[8] = n31;
+            this.rawData[9] = n32;
+            this.rawData[10] = n33;
+            this.rawData[11] = n34;
+
+            this.rawData[12] = n41;
+            this.rawData[13] = n42;
+            this.rawData[14] = n43;
+            this.rawData[15] = n44;
+
+            return this;
+        }
+
+        public set3x3(
+            n11: number, n21: number, n31: number,
+            n12: number, n22: number, n32: number,
+            n13: number, n23: number, n33: number,
+        ) {
+            this.rawData[0] = n11;
+            this.rawData[1] = n12;
+            this.rawData[2] = n13;
+
+            this.rawData[4] = n21;
+            this.rawData[5] = n22;
+            this.rawData[6] = n23;
+
+            this.rawData[8] = n31;
+            this.rawData[9] = n32;
+            this.rawData[10] = n33;
+
+            return this;
+        }
+
+        public setTranslation(translation: Readonly<Vector3>) {
+            this.rawData[12] = translation.x;
+            this.rawData[13] = translation.y;
+            this.rawData[14] = translation.z;
+            this.rawData[15] = 1.0;
+
+            return this;
+        }
+
+        public identity() {
+            this.rawData[0] = 1.0;
+            this.rawData[1] = 0.0;
+            this.rawData[2] = 0.0;
+            this.rawData[3] = 0.0;
+
+            this.rawData[4] = 0.0;
+            this.rawData[5] = 1.0;
+            this.rawData[6] = 0.0;
+            this.rawData[7] = 0.0;
+
+            this.rawData[8] = 0.0;
+            this.rawData[9] = 0.0;
+            this.rawData[10] = 1.0;
+            this.rawData[11] = 0.0;
+
+            this.rawData[12] = 0.0;
+            this.rawData[13] = 0.0;
+            this.rawData[14] = 0.0;
+            this.rawData[15] = 1.0;
+
+            return this;
+        }
+
+        public transformVector3(value: Vector3) {
+            const x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]) + this.rawData[12];
+            const y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]) + this.rawData[13];
+            const z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]) + this.rawData[14];
+            const w = (value.x * this.rawData[3]) + (value.y * this.rawData[7]) + (value.z * this.rawData[11]) + this.rawData[15];
+
+            value.x = x / w;
+            value.y = y / w;
+            value.z = z / w;
+
+            return value;
         }
 
         public static set(
@@ -498,7 +623,7 @@ namespace egret3d {
 
         public static toEulerAngles(matrix: Matrix, out: Vector3): Vector3 {
             var x, y, z, sx, sy, sz, m, halfPi;
-            var scale = helpVec3_1;
+            var scale = _helpVectorA;
 
             Matrix.getScale(matrix, scale);
 

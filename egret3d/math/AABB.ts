@@ -1,10 +1,10 @@
 namespace egret3d {
 
-    let tmpVecA = new Vector3();
-    let tmpVecB = new Vector3();
-    let tmpVecC = new Vector3();
-    let tmpVecD = new Vector3();
-    let tmpVecE = new Vector3();
+    const tmpVecA = new Vector3();
+    const tmpVecB = new Vector3();
+    const tmpVecC = new Vector3();
+    const tmpVecD = new Vector3();
+    const tmpVecE = new Vector3();
 
     /**
      * aabb box
@@ -31,7 +31,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public minimum: Vector3 = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+        public readonly minimum: Vector3 = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
 
         /**
          * max point
@@ -45,7 +45,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public maximum: Vector3 = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+        public readonly maximum: Vector3 = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
         private _dirtyCenter: boolean = true;
         private _dirtyRadius: boolean = true;
@@ -56,29 +56,29 @@ namespace egret3d {
 
         /**
          * build a aabb
-         * @param _minimum min point
-         * @param _maximum max point
+         * @param minimum min point
+         * @param maximum max point
          * @version paper 1.0
          * @platform Web
          * @language en_US
          */
         /**
          * 构建轴对称包围盒
-         * @param _minimum 最小点
-         * @param _maximum 最大点
+         * @param minimum 最小点
+         * @param maximum 最大点
          * @version paper 1.0
          * @platform Web
          * @language zh_CN
          */
-        constructor(_minimum?: Vector3, _maximum?: Vector3) {
-            if (_minimum) {
-                Vector3.copy(_minimum, this.srcmin);
-                Vector3.copy(_minimum, this.minimum);
+        constructor(minimum?: Vector3, maximum?: Vector3) {
+            if (minimum) {
+                Vector3.copy(minimum, this.srcmin);
+                Vector3.copy(minimum, this.minimum);
             }
 
-            if (_maximum) {
-                Vector3.copy(_maximum, this.srcmax);
-                Vector3.copy(_maximum, this.maximum);
+            if (maximum) {
+                Vector3.copy(maximum, this.srcmax);
+                Vector3.copy(maximum, this.maximum);
             }
         }
 

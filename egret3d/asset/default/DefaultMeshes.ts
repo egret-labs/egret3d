@@ -374,10 +374,6 @@ namespace egret3d {
         gltf.MeshAttributeType.TEXCOORD_0,
     ];
 
-    const _attributesC: gltf.MeshAttributeType[] = [
-        gltf.MeshAttributeType.POSITION,
-    ];
-
     export class DefaultMeshes {
         public static QUAD: Mesh;
         public static QUAD_PARTICLE: Mesh;
@@ -413,23 +409,23 @@ namespace egret3d {
             return mesh;
         }
 
-        public static genBoxByArray(array: egret3d.Vector3[]) {
-            const vertexCount = 8;
-            const mesh = new Mesh(vertexCount, _box.ibo, _attributesC);
-            const vertices = mesh.getVertices();
+        // public static createBoxMesh(width: number, height: number, depth: number, widthSegments: uint = 1, heightSegments: uint = 1, depthSegments: uint = 1) {
+        //     // const vertexCount = 8;
+        //     // const mesh = new Mesh(vertexCount, _box.ibo, _attributesC);
+        //     // const vertices = mesh.getVertices();
 
-            for (let i = 0; i < vertexCount; ++i) {
-                const iD = i * 3;
-                const vertex = array[i];
-                vertices[iD] = vertex.x;
-                vertices[iD + 1] = vertex.y;
-                vertices[iD + 2] = vertex.z;
-            }
+        //     // for (let i = 0; i < vertexCount; ++i) {
+        //     //     const iD = i * 3;
+        //     //     const vertex = array[i];
+        //     //     vertices[iD] = vertex.x;
+        //     //     vertices[iD + 1] = vertex.y;
+        //     //     vertices[iD + 2] = vertex.z;
+        //     // }
 
-            mesh.uploadSubVertexBuffer(_attributesC);
+        //     // mesh.uploadSubVertexBuffer(_attributesC);
 
-            return mesh;
-        }
+        //     return mesh;
+        // }
 
         public static createCylinderCCW(height: number, radius: number, segment = 20) {
             let index = 0;

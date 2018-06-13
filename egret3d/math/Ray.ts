@@ -175,48 +175,48 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public intersectCollider(tran: Transform): PickInfo {
-            let _collider = tran.gameObject.getComponent(BaseCollider);
+        // public intersectCollider(tran: Transform): PickInfo {
+        //     let _collider = tran.gameObject.getComponent(BaseCollider);
 
-            let pickinfo = null;
-            if (_collider instanceof BoxCollider) {
-                let obb = _collider.bounds;
-                obb.caclWorldVectors(_helpVectors, _collider.gameObject.transform.getWorldMatrix());
-                // let data = MeshData.genBoxByArray(vecs); !!!???
+        //     let pickinfo = null;
+        //     if (_collider instanceof BoxCollider) {
+        //         let obb = _collider.bounds;
+        //         obb.caclWorldVectors(_helpVectors, _collider.gameObject.transform.getWorldMatrix());
+        //         // let data = MeshData.genBoxByArray(vecs); !!!???
 
-                for (let index = 0; index < boxIndices.length; index += 3) {
-                    const verindex0 = boxIndices[index];
-                    const verindex1 = boxIndices[index + 1];
-                    const verindex2 = boxIndices[index + 2];
+        //         for (let index = 0; index < boxIndices.length; index += 3) {
+        //             const verindex0 = boxIndices[index];
+        //             const verindex1 = boxIndices[index + 1];
+        //             const verindex2 = boxIndices[index + 2];
 
-                    const p0 = _helpVectors[verindex0];
-                    const p1 = _helpVectors[verindex1];
-                    const p2 = _helpVectors[verindex2];
+        //             const p0 = _helpVectors[verindex0];
+        //             const p1 = _helpVectors[verindex1];
+        //             const p2 = _helpVectors[verindex2];
 
-                    let result = this.intersectsTriangle(p0, p1, p2);
-                    if (result) {
-                        if (result.distance < 0) continue;
-                        if (!pickinfo || pickinfo.distance > result.distance) {
-                            pickinfo = result;
-                            let tdir = helpVec3_1;
-                            Vector3.copy(this.direction, tdir);
-                            Vector3.scale(tdir, result.distance);
-                            Vector3.add(this.origin, tdir, pickinfo.hitposition);
-                        }
-                    }
-                }
-            }
-            // else if (_collider instanceof MeshCollider) { // TODO
-            //     let mesh = _collider.getBound();
-            //     if (mesh != null) {
-            //         pickinfo = mesh.intersects(this, tran.getWorldMatrix());
-            //     }
-            // }
-            //  else if (_collider instanceof CanvasRenderer) {
-            //     pickinfo = this.intersectPlaneTransform(tran);
-            // }
-            return pickinfo;
-        }
+        //             let result = this.intersectsTriangle(p0, p1, p2);
+        //             if (result) {
+        //                 if (result.distance < 0) continue;
+        //                 if (!pickinfo || pickinfo.distance > result.distance) {
+        //                     pickinfo = result;
+        //                     let tdir = helpVec3_1;
+        //                     Vector3.copy(this.direction, tdir);
+        //                     Vector3.scale(tdir, result.distance);
+        //                     Vector3.add(this.origin, tdir, pickinfo.hitposition);
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     // else if (_collider instanceof MeshCollider) { // TODO
+        //     //     let mesh = _collider.getBound();
+        //     //     if (mesh != null) {
+        //     //         pickinfo = mesh.intersects(this, tran.getWorldMatrix());
+        //     //     }
+        //     // }
+        //     //  else if (_collider instanceof CanvasRenderer) {
+        //     //     pickinfo = this.intersectPlaneTransform(tran);
+        //     // }
+        //     return pickinfo;
+        // }
 
         /**
          * intersect with box

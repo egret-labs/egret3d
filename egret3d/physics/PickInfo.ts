@@ -19,6 +19,6 @@ namespace egret3d {
         public readonly textureCoordA: Vector2 = new Vector2();
         public readonly textureCoordB: Vector2 = new Vector2();
         public transform: Transform | null = null;
-        public collider: BaseCollider | null = null;
+        // public collider: BaseCollider | null = null;
     }
 }

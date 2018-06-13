@@ -61,7 +61,7 @@ namespace egret3d {
                         this._pickMesh(ray, gameObject.transform, pickedList);
                     }
                     else {
-                        this._pickCollider(ray, gameObject.transform, pickedList);
+                        // this._pickCollider(ray, gameObject.transform, pickedList); TODO
                     }
                 }
             }
@@ -115,18 +115,18 @@ namespace egret3d {
             }
         }
 
-        private static _pickCollider(ray: Ray, transform: Transform, pickInfos: PickInfo[]) {
-            if (transform.gameObject.activeInHierarchy) {
-                const pickInfo = ray.intersectCollider(transform);
-                if (pickInfo) {
-                    pickInfos.push(pickInfo);
-                    pickInfo.transform = transform;
-                }
-            }
+        // private static _pickCollider(ray: Ray, transform: Transform, pickInfos: PickInfo[]) {
+        //     if (transform.gameObject.activeInHierarchy) {
+        //         const pickInfo = ray.intersectCollider(transform);
+        //         if (pickInfo) {
+        //             pickInfos.push(pickInfo);
+        //             pickInfo.transform = transform;
+        //         }
+        //     }
 
-            for (const child of transform.children) {
-                this._pickCollider(ray, child, pickInfos);
-            }
-        }
+        //     for (const child of transform.children) {
+        //         this._pickCollider(ray, child, pickInfos);
+        //     }
+        // }
     }
 }

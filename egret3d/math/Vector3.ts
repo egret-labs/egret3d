@@ -1,10 +1,14 @@
 namespace egret3d {
 
     export class Vector3 implements paper.ISerializable {
-
         public static readonly ZERO: Readonly<Vector3> = new Vector3(0.0, 0.0, 0.0);
-
         public static readonly ONE: Readonly<Vector3> = new Vector3(1.0, 1.0, 1.0);
+        public static readonly UP: Readonly<Vector3> = new Vector3(0.0, 1.0, 0.0);
+        public static readonly DOWN: Readonly<Vector3> = new Vector3(0.0, -1.0, 0.0);
+        public static readonly LEFT: Readonly<Vector3> = new Vector3(-1.0, 0.0, 0.0);
+        public static readonly RIGHT: Readonly<Vector3> = new Vector3(1.0, 0.0, 0.0);
+        public static readonly FORWARD: Readonly<Vector3> = new Vector3(0.0, 0.0, 1.0);
+        public static readonly BACK: Readonly<Vector3> = new Vector3(0.0, 0.0, -1.0);
 
         public x: number;
 
@@ -22,13 +26,13 @@ namespace egret3d {
             return [this.x, this.y, this.z];
         }
 
-        public deserialize(element: [number, number, number]) {
+        public deserialize(element: Readonly<[number, number, number]>) {
             this.x = element[0];
             this.y = element[1];
             this.z = element[2];
         }
 
-        public copy(value: Vector3) {
+        public copy(value: Readonly<Vector3>) {
             this.x = value.x;
             this.y = value.y;
             this.z = value.z;
@@ -65,6 +69,73 @@ namespace egret3d {
             }
 
             return this;
+        }
+
+        public scale(scale: number) {
+            this.x *= scale;
+            this.y *= scale;
+            this.z *= scale;
+
+            return this;
+        }
+
+        public add(value: Readonly<Vector3>) {
+            this.x += value.x;
+            this.y += value.y;
+            this.z += value.z;
+
+            return this;
+        }
+
+        public subtract(value: Readonly<Vector3>) {
+            this.x -= value.x;
+            this.y -= value.y;
+            this.z -= value.z;
+
+            return this;
+        }
+
+        public multiply(value: Readonly<Vector3>) {
+            this.x *= value.x;
+            this.y *= value.y;
+            this.z *= value.z;
+
+            return this;
+        }
+
+        public cross(rhs: Readonly<Vector3>) {
+            const x = this.x;
+            const y = this.y;
+            const z = this.z;
+            this.x = y * rhs.z - z * rhs.y;
+            this.y = z * rhs.x - x * rhs.z;
+            this.z = x * rhs.y - y * rhs.x;
+
+            return this;
+        }
+
+        public dot(value: Readonly<Vector3>) {
+            return this.x * value.x + this.y * value.y + this.z * value.z;
+        }
+
+        public equal(value: Vector3, threshold: number = 0.00001) {
+            if (Math.abs(this.x - value.x) > threshold) {
+                return false;
+            }
+
+            if (Math.abs(this.y - value.y) > threshold) {
+                return false;
+            }
+
+            if (Math.abs(this.z - value.z) > threshold) {
+                return false;
+            }
+
+            return true;
+        }
+
+        public getDistance(value: Readonly<Vector3>) {
+            return helpVector3H.copy(this).subtract(value).length;
         }
 
         public get length() {
