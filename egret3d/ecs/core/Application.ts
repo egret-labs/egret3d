@@ -1,5 +1,7 @@
-namespace paper {
+type int = number;
+type uint = number;
 
+namespace paper {
     /**
      * 组件实体系统的主入口
      */
@@ -34,10 +36,10 @@ namespace paper {
         public static init({ isEditor = false, isPlaying = true } = {}) {
             const systemManager = this.systemManager;
             const systemClasses = [
-                StartSystem,
+                StartSystem, // TODO
+                egret3d.ammo.PhysicsSystem,
                 BehaviourSystem,
                 egret3d.GuidpathSystem,
-                egret3d.BoxColliderSystem,
                 egret3d.AnimationSystem,
                 LaterSystem,
                 egret3d.TrailRenderSystem,

@@ -3,7 +3,8 @@ namespace paper {
      * 
      */
     export type InterestConfig<T extends BaseComponent> = {
-        componentClass: { new(): T };
+        componentClass: { new(): T } | ({ new(): T }[]);
+
         listeners?: {
             type: string;
             listener: (component: T) => void;
@@ -52,16 +53,37 @@ namespace paper {
 
             BaseSystem._createEnabled = false;
         }
+
+        private readonly _addListener = (component: T) => {
+            this._onAddComponent(component as any);
+        }
         /**
          * 
          */
         protected _onAddComponent(component: T) {
+            if (!this.enable) {
+                return false;
+            }
+
             const components = this._components;
             const backupLength = components.length;
             const gameObject = component.gameObject;
 
             for (const config of this._interests) {
-                const insterestComponent = gameObject.getComponent(config.componentClass); // TODO 更快的查找方式
+                let insterestComponent: T | null = null;
+
+                if (Array.isArray(config.componentClass)) {
+                    for (const componentClass of config.componentClass) {
+                        insterestComponent = gameObject.getComponent(componentClass); // TODO 更快的查找方式
+                        if (insterestComponent) {
+                            break;
+                        }
+                    }
+                }
+                else {
+                    insterestComponent = gameObject.getComponent(config.componentClass); // TODO 更快的查找方式
+                }
+
                 if (!insterestComponent || components.indexOf(insterestComponent) >= 0) {
                     components.length = backupLength;
 
@@ -125,16 +147,35 @@ namespace paper {
          * @protected
          */
         public initialize() {
+            this._onAddComponent = this._onAddComponent.bind(this);
+            this._onRemoveComponent = this._onRemoveComponent.bind(this);
+
             for (const config of this._interests) {
                 if (config.listeners) {
                     for (const listenerConfig of config.listeners) {
-                        EventPool.addEventListener(listenerConfig.type, config.componentClass, listenerConfig.listener);
+                        if (Array.isArray(config.componentClass)) {
+                            for (const componentClass of config.componentClass) {
+                                EventPool.addEventListener(listenerConfig.type, componentClass, listenerConfig.listener);
+                            }
+                        }
+                        else {
+                            EventPool.addEventListener(listenerConfig.type, config.componentClass, listenerConfig.listener);
+                        }
                     }
                 }
 
                 this._interestComponentCount++;
-                EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, component => { this._onAddComponent(component as any); });
-                EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, component => { this._onRemoveComponent(component as any); });
+
+                if (Array.isArray(config.componentClass)) {
+                    for (const componentClass of config.componentClass) {
+                        EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddComponent);
+                        EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveComponent);
+                    }
+                }
+                else {
+                    EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddComponent);
+                    EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveComponent);
+                }
             }
         }
         /**

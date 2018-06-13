@@ -22,6 +22,7 @@
     "files": [
         "libs/egret.d.ts",
         "libs/resourcemanager.d.ts",
+
         "egret3d/ecs/serialize/SerializeClassMap.ts",
         "egret3d/ecs/serialize/Clone.ts",
         "egret3d/ecs/serialize/Deserialize.ts",
@@ -79,8 +80,6 @@
         "egret3d/components/audio/AudioSource2D.ts",
         "egret3d/components/audio/AudioSource3D.ts",
         "egret3d/components/audio/AudioSource3DSystem.ts",
-        "egret3d/components/collider/BoxCollider.ts",
-        "egret3d/components/collider/BoxColliderSystem.ts",
         "egret3d/components/Camera/Camera.ts",
         "egret3d/components/Camera/CameraPostQueue.ts",
         "egret3d/components/Camera/RenderContext.ts",
@@ -113,7 +112,9 @@
         "egret3d/components/particles/ParticleComponent.ts",
         "egret3d/components/particles/ParticleRenderer.ts",
         "egret3d/components/particles/ParticleSystem.ts",
+
         "egret3d/web/render/resource/WebGLUniform.ts",
+
         "egret3d/asset/resource/material.ts",
         "egret3d/asset/resource/font.ts",
         "egret3d/asset/resource/DrawPass.ts",
@@ -160,6 +161,25 @@
         "egret3d/editor/components/PickGameObjectScript.ts",
         "egret3d/editor/gizmo/Gizmo.ts",
         "egret3d/editor/gizmo/GizmoShader.ts",
-        "egret3d/editor/gizmo/GizmoShaderLibs.ts"
+        "egret3d/editor/gizmo/GizmoShaderLibs.ts",
+
+        "libs/ammo.d.ts",
+        "egret3d/ammo/shapes/CollisionShape.ts",
+        "egret3d/ammo/shapes/BoxShape.ts",
+        "egret3d/ammo/shapes/CapsuleShape.ts",
+        "egret3d/ammo/shapes/ConeShape.ts",
+        "egret3d/ammo/shapes/CompoundShape.ts",
+        "egret3d/ammo/shapes/ConvexHullShape.ts",
+        "egret3d/ammo/shapes/CylinderShape.ts",
+        "egret3d/ammo/shapes/SphereShape.ts",
+        "egret3d/ammo/shapes/HeightfieldTerrainShape.ts",
+        "egret3d/ammo/constraints/TypedConstraint.ts",
+        "egret3d/ammo/constraints/FixedConstraint.ts",
+        "egret3d/ammo/constraints/SliderConstraint.ts",
+        "egret3d/ammo/constraints/HingedConstraint.ts",
+        "egret3d/ammo/constraints/ConeTwistConstraint.ts",
+        "egret3d/ammo/CollisionObject.ts",
+        "egret3d/ammo/Rigidbody.ts",
+        "egret3d/ammo/PhysicsSystem.ts"
     ]
 }

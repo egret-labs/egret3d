@@ -1,0 +1,206 @@
+namespace egret3d.ammo {
+    /**
+     * 
+     */
+    export class PhysicsSystem extends paper.BaseSystem<CollisionShape | CollisionObject> {
+        private static _helpVector3A: Ammo.btVector3 | null = null;
+        private static _helpVector3B: Ammo.btVector3 | null = null;
+        private static _helpVector3C: Ammo.btVector3 | null = null;
+        private static _helpVector3D: Ammo.btVector3 | null = null;
+        private static _helpQuaternionA: Ammo.btQuaternion | null = null;
+        private static _helpMatrix3x3: Ammo.btMatrix3x3 | null = null;
+        private static _helpTransformA: Ammo.btTransform | null = null;
+        private static _helpTransformB: Ammo.btTransform | null = null;
+        /**
+         * @internal
+         */
+        public static get helpVector3A(): Ammo.btVector3 {
+            if (!this._helpVector3A) {
+                this._helpVector3A = new Ammo.btVector3();
+            }
+
+            return this._helpVector3A;
+        }
+        /**
+         * @internal
+         */
+        public static get helpVector3B(): Ammo.btVector3 {
+            if (!this._helpVector3B) {
+                this._helpVector3B = new Ammo.btVector3();
+            }
+
+            return this._helpVector3B;
+        }
+        /**
+         * @internal
+         */
+        public static get helpVector3C(): Ammo.btVector3 {
+            if (!this._helpVector3C) {
+                this._helpVector3C = new Ammo.btVector3();
+            }
+
+            return this._helpVector3C;
+        }
+        /**
+         * @internal
+         */
+        public static get helpVector3D(): Ammo.btVector3 {
+            if (!this._helpVector3D) {
+                this._helpVector3D = new Ammo.btVector3();
+            }
+
+            return this._helpVector3D;
+        }
+        /**
+         * @internal
+         */
+        public static get helpQuaternionA(): Ammo.btQuaternion {
+            if (!this._helpQuaternionA) {
+                this._helpQuaternionA = new Ammo.btQuaternion();
+            }
+
+            return this._helpQuaternionA;
+        }
+        /**
+         * @internal
+         */
+        public static get helpMatrix3x3(): Ammo.btMatrix3x3 {
+            if (!this._helpMatrix3x3) {
+                this._helpMatrix3x3 = new Ammo.btMatrix3x3();
+            }
+
+            return this._helpMatrix3x3;
+        }
+        /**
+         * @internal
+         */
+        public static get helpTransformA(): Ammo.btTransform {
+            if (!this._helpTransformA) {
+                this._helpTransformA = new Ammo.btTransform();
+            }
+
+            return this._helpTransformA;
+        }
+        /**
+         * @internal
+         */
+        public static get helpTransformB(): Ammo.btTransform {
+            if (!this._helpTransformB) {
+                this._helpTransformB = new Ammo.btTransform();
+            }
+
+            return this._helpTransformB;
+        }
+
+        protected readonly _interests = [
+            { componentClass: [BoxShape, CapsuleShape, ConeShape, ConvexHullShape, CylinderShape, HeightfieldTerrainShape, SphereShape] },
+            { componentClass: [CollisionObject, Rigidbody] },
+        ];
+
+        private _worldType: Ammo.WorldType = Ammo.WorldType.RigidBodyDynamics;
+        private _collisionType: Ammo.CollisionConfType = Ammo.CollisionConfType.DefaultDynamicsWorldCollisionConf;
+        private _broadphaseType: Ammo.BroadphaseType = Ammo.BroadphaseType.DynamicAABBBroadphase;
+
+        private readonly _axis3SweepBroadphaseMin: Vector3 = new Vector3(-1000.0, -1000.0, -1000.0);
+        private readonly _axis3SweepBroadphaseMax: Vector3 = new Vector3(1000.0, 1000.0, 1000.0);
+        private readonly _gravity: Vector3 = new Vector3(0.0, -9.8, 0.0);
+        private _btWorld: Ammo.btCollisionWorld;
+        private _btDDWorld: Ammo.btDiscreteDynamicsWorld;
+
+        protected _onAddComponent(component: CollisionShape | CollisionObject) {
+            if (!super._onAddComponent(component)) {
+                return false;
+            }
+
+            const collisionObject = this._getComponent(component.gameObject, 1) as CollisionObject;
+            const btCollisionObject = collisionObject.btCollisionObject;
+
+            const collisionShape = this._getComponent(component.gameObject, 0) as CollisionShape; // TODO mesh shape 可能数据非法。
+            collisionShape.btCollisionShape.setMargin(0.05); // TODO
+            btCollisionObject.setCollisionShape(collisionShape.btCollisionShape);
+
+            if (collisionObject instanceof Rigidbody) {
+                collisionObject._updateMass();
+                this._btDDWorld.addRigidBody(collisionObject.btRigidbody);
+            }
+            else {
+                this._btWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
+            }
+
+            return true;
+        }
+
+        protected _onRemoveComponent(component: CollisionShape | CollisionObject) {
+            if (!super._onRemoveComponent(component)) {
+                return false;
+            }
+
+            const collisionObject = this._getComponent(component.gameObject, 1) as CollisionObject;
+            this._btWorld.removeCollisionObject(collisionObject.btCollisionObject);
+
+            return true;
+        }
+
+        protected _updateGravity() {
+            const btVector3 = PhysicsSystem.helpVector3A;
+            btVector3.setValue(this._gravity.x, this._gravity.y, this._gravity.z);
+            this._btDDWorld.setGravity(btVector3);
+        }
+
+        public initialize() {
+            super.initialize();
+
+            const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
+            const dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
+            const broadphase = new Ammo.btDbvtBroadphase();
+            const solver = new Ammo.btSequentialImpulseConstraintSolver();
+            this._btWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+            // 
+            this._btDDWorld = this._btWorld as any;
+
+            if (this._btDDWorld) {
+                this._updateGravity();
+            }
+        }
+
+        public update() {
+            if (this._btDDWorld) {
+                const helpTransformA = PhysicsSystem.helpTransformA;
+                this._btDDWorld.stepSimulation(paper.Time.deltaTime, paper.Time.maxFixedSubSteps, paper.Time.fixedTimeStep);
+
+                for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
+                    const collisionObject = this._components[i + 1] as CollisionObject;
+                    if (collisionObject instanceof Rigidbody && collisionObject.btCollisionObject) {
+                        const motionState = (collisionObject.btCollisionObject as Ammo.btRigidBody).getMotionState();
+                        if (motionState) {
+                            const transform = collisionObject.gameObject.transform;
+                            motionState.getWorldTransform(helpTransformA);
+                            const t = helpTransformA.getOrigin();
+                            const r = helpTransformA.getRotation();
+
+                            transform.setPosition(t.x(), t.y(), t.z());
+                            transform.setRotation(r.x(), r.y(), r.z(), r.w());
+                        }
+                    }
+                }
+            }
+        }
+        /**
+         * 
+         */
+        public get gravity(): Readonly<Vector3> {
+            return this._gravity;
+        }
+        public set gravity(value: Readonly<Vector3>) {
+            this._gravity.copy(value);
+
+            if (this._btDDWorld) {
+                this._updateGravity();
+            }
+        }
+
+        public get btWorld() {
+            return this._btWorld;
+        }
+    }
+}
