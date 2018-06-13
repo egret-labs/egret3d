@@ -4,7 +4,7 @@ namespace paper {
      */
     export namespace EventPool {
         /**
-         * 
+         * @internal
          */
         export const enum EventType {
             Enabled = "__enabled__",
@@ -81,7 +81,7 @@ namespace paper {
          * @param component component
          */
         export function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any) {
-            // 如果是组件的添加或删除事件，并且该组件派生自 Behaviour 组件，则需要使用基类的组件类型，这些组件发出的添加或删除事件都能被 BehaviourSystem 收到。 
+            // 如果是组件的添加或删除事件，并且该组件派生自 Behaviour 组件，则需要使用基类的组件类型，这些组件发出的添加或删除事件都能被生命周期系统收到。 
             if (type === EventType.Enabled || type === EventType.Disabled) {
                 if (egret.is(component, _behaviourComponentType)) {
                     _dispatchEvent(type, _behaviourComponentType, component);

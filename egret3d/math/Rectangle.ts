@@ -1,8 +1,8 @@
 namespace egret3d {
     /**
-     * 矩形对象
+     * 
      */
-    export interface RectData {
+    export interface IRectangle {
 
         x: number;
 
@@ -15,23 +15,23 @@ namespace egret3d {
     /**
      * 矩形可序列化对象
      */
-    export class Rect implements RectData, paper.ISerializable {
+    export class Rectangle implements IRectangle, paper.ISerializable {
         /**
          * 
          */
-        public x: number = 0.0;
+        public x: number;
         /**
          * 
          */
-        public y: number = 0.0;
+        public y: number;
         /**
          * 
          */
-        public w: number = 0.0;
+        public w: number;
         /**
          * 
          */
-        public h: number = 0.0;
+        public h: number;
         /**
          * 
          */
@@ -41,15 +41,11 @@ namespace egret3d {
             this.w = w;
             this.h = h;
         }
-        /**
-         * @inheritDoc
-         */
+
         public serialize() {
             return [this.x, this.y, this.w, this.h];
         }
-        /**
-         * @inheritDoc
-         */
+
         public deserialize(element: number[]) {
             this.x = element[0];
             this.y = element[1];
@@ -57,21 +53,4 @@ namespace egret3d {
             this.h = element[3];
         }
     }
-
-    /**
-     * @internal
-     */
-    export const helpRectA = new Rect();
-    /**
-     * @internal
-     */
-    export const helpRectB = new Rect();
-    /**
-     * @internal
-     */
-    export const helpRectC = new Rect();
-    /**
-     * @internal 
-     */
-    export const helpRectD = new Rect();
 }

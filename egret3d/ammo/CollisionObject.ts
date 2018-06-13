@@ -42,7 +42,7 @@ namespace egret3d.ammo {
                 Ammo.destroy(this._btCollisionObject);
             }
 
-            this._btCollisionObject = null;
+            this._btCollisionObject = null as any;
         }
         /**
          * 
@@ -56,7 +56,10 @@ namespace egret3d.ammo {
             }
 
             this._collisionFlags = value;
-            this._btCollisionObject.setCollisionFlags(this._collisionFlags);
+
+            if (this._btCollisionObject) {
+                this._btCollisionObject.setCollisionFlags(this._collisionFlags);
+            }
         }
         /**
          * 
@@ -69,9 +72,12 @@ namespace egret3d.ammo {
                 return;
             }
 
-            // TODO
-
-            this._collisionGroups = value;
+            if (this._btCollisionObject) {
+                console.warn("Cannot change the collision groups after the collision object has been created.");
+            }
+            else {
+                this._collisionGroups = value;
+            }
         }
         /**
          * 
@@ -84,9 +90,12 @@ namespace egret3d.ammo {
                 return;
             }
 
-            // TODO
-
-            this._collisionMask = value;
+            if (this._btCollisionObject) {
+                console.warn("Cannot change the collision mask after the collision object has been created.");
+            }
+            else {
+                this._collisionMask = value;
+            }
         }
         /**
          * 
@@ -95,7 +104,7 @@ namespace egret3d.ammo {
             if (!this._btCollisionObject) {
                 this._btCollisionObject = this._createCollisionObject();
             }
-            
+
             return this._btCollisionObject;
         }
     }

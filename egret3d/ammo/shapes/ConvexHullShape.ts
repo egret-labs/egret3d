@@ -23,7 +23,7 @@ namespace egret3d.ammo {
                 return btCollisionShape;
             }
 
-            return null;
+            throw new Error("Arguments error.");
         }
 
         protected _updateScale(btCollisionShape: Ammo.btCollisionShape) {

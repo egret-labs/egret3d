@@ -19,10 +19,8 @@ namespace paper {
          * @internal
          */
         public static _createEnabled: boolean = false;
-        /**
-         * 是否更新该系统。
-         */
-        public enable: boolean = true;
+
+        protected _enabled: boolean = true;
         /**
          * @internal
          */
@@ -61,10 +59,6 @@ namespace paper {
          * 
          */
         protected _onAddComponent(component: T) {
-            if (!this.enable) {
-                return false;
-            }
-
             const components = this._components;
             const backupLength = components.length;
             const gameObject = component.gameObject;
@@ -203,6 +197,23 @@ namespace paper {
          */
         public get components(): ReadonlyArray<T> {
             return this._components;
+        }
+        /**
+         * 是否更新该系统。
+         */
+        public get enabled() {
+            return this._enabled;
+        }
+        public set enabled(value: boolean) {
+            if (this._enabled === value) {
+                return;
+            }
+
+            this._enabled = value;
+        }
+
+        public get level() {
+            return this._level;
         }
     }
 }

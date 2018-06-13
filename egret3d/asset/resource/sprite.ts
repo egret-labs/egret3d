@@ -41,7 +41,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public readonly rect: Rect = new Rect();
+        public readonly rect: Rectangle = new Rectangle();
         /**
          * border
          * @version paper 1.0

@@ -179,11 +179,12 @@ namespace egret3d.ammo {
             if (this._additionalDamping === value) {
                 return;
             }
-
-            this._additionalDamping = value;
-
+            
             if (this._btRigidbody) {
-                // TODO
+                console.warn("Cannot change the additionalDamping after the collision object has been created.");
+            }
+            else {
+                this._additionalDamping = value;
             }
         }
         /**
@@ -196,11 +197,12 @@ namespace egret3d.ammo {
             if (this._additionalLinearDampingFactor === value) {
                 return;
             }
-
-            this._additionalLinearDampingFactor = value;
-
+            
             if (this._btRigidbody) {
-                // TODO
+                console.warn("Cannot change the additionalLinearDampingFactor after the collision object has been created.");
+            }
+            else {
+                this._additionalLinearDampingFactor = value;
             }
         }
         /**
@@ -214,10 +216,11 @@ namespace egret3d.ammo {
                 return;
             }
 
-            this._additionalLinearDampingThresholdSqr = value;
-
             if (this._btRigidbody) {
-                // TODO
+                console.warn("Cannot change the additionalLinearDampingThresholdSqr after the collision object has been created.");
+            }
+            else {
+                this._additionalLinearDampingThresholdSqr = value;
             }
         }
         /**
@@ -231,10 +234,11 @@ namespace egret3d.ammo {
                 return;
             }
 
-            this._additionalAngularDampingFactor = value;
-
             if (this._btRigidbody) {
-                // TODO
+                console.warn("Cannot change the additionalAngularDampingFactor after the collision object has been created.");
+            }
+            else {
+                this._additionalAngularDampingFactor = value;
             }
         }
         /**
@@ -248,10 +252,11 @@ namespace egret3d.ammo {
                 return;
             }
 
-            this._additionalAngularDampingThresholdSqr = value;
-
             if (this._btRigidbody) {
-                // TODO
+                console.warn("Cannot change the additionalAngularDampingThresholdSqr after the collision object has been created.");
+            }
+            else {
+                this._additionalAngularDampingThresholdSqr = value;
             }
         }
         /**
@@ -339,7 +344,9 @@ namespace egret3d.ammo {
          * 
          */
         public get localInertia(): Readonly<Vector3> {
-            // this._btRigidbody.getLocalInertia(); TODO
+            const btLocalInertia = this._btRigidbody.getLocalInertia();
+            this._localInertia.set(btLocalInertia.getX(), btLocalInertia.getY(), btLocalInertia.getZ());
+
             return this._localInertia;
         }
         /**

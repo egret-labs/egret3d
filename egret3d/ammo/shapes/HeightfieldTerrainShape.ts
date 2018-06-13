@@ -24,10 +24,11 @@ namespace egret3d.ammo {
                 return;
             }
 
-            this._upAxis = value;
-
             if (this._btCollisionShape) {
-                // TODO
+                console.warn("Cannot change the up axis after the collision shape has been created.");
+            }
+            else {
+                this._upAxis = value;
             }
         }
     }

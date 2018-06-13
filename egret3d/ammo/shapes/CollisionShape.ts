@@ -3,9 +3,9 @@ namespace egret3d.ammo {
      * 
      */
     export abstract class CollisionShape extends paper.BaseComponent {
-        protected _btCollisionShape: Ammo.btCollisionShape | null = null;
+        protected _btCollisionShape: Ammo.btCollisionShape = null as any;
 
-        protected abstract _createCollisionShape(): Ammo.btCollisionShape | null;
+        protected abstract _createCollisionShape(): Ammo.btCollisionShape;
 
         public uninitialize() {
             super.uninitialize();
@@ -14,7 +14,7 @@ namespace egret3d.ammo {
                 Ammo.destroy(this._btCollisionShape);
             }
 
-            this._btCollisionShape = null;
+            this._btCollisionShape = null as any;
         }
         /**
          * 

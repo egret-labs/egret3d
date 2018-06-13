@@ -29,10 +29,11 @@ namespace egret3d.ammo {
             return this._size;
         }
         public set size(value: Readonly<Vector3>) {
-            this._size.copy(value);
-
             if (this._btCollisionShape) {
-                // TODO
+                console.warn("Cannot change the size after the collision shape has been created.\nSize is only the initial value.\nUse scale to change the shape of a collision shape.");
+            }
+            else {
+                this._size.copy(value);
             }
         }
         /**

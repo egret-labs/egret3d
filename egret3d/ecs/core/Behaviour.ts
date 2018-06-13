@@ -5,7 +5,7 @@ namespace paper {
      */
     export const _executeInEditModeComponents: any[] = [];
     /**
-     * 标记组件是否在编辑模式也拥有生命周期。
+     * 标记脚本组件是否在编辑模式也拥有生命周期。
      */
     export function executeInEditMode<T extends Behaviour>(target: { new(): T }) {
         _executeInEditModeComponents.push(target);

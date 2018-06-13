@@ -1,11 +1,9 @@
 namespace paper {
-
     /**
      * 
      */
     export class EndSystem extends paper.BaseSystem<Behaviour> {
         protected readonly _interests = [{ componentClass: Behaviour as any }];
-        private readonly _onDisableBehaviours: (Behaviour | null)[] = [];
 
         protected _onAddComponent(component: Behaviour) {
             const index = this._components.indexOf(component);

@@ -8,10 +8,10 @@ namespace egret3d {
 
 
 
-        screenViewport: Readonly<RectData> = { x: 0, y: 0, w: 0, h: 0 };
+        screenViewport: Readonly<IRectangle> = { x: 0, y: 0, w: 0, h: 0 };
 
 
-        absolutePosition: Readonly<RectData> = { x: 0, y: 0, w: 0, h: 0 }
+        absolutePosition: Readonly<IRectangle> = { x: 0, y: 0, w: 0, h: 0 }
 
         private _canvas: HTMLCanvasElement;
 
@@ -22,7 +22,7 @@ namespace egret3d {
             this._canvas = canvas;
             window.addEventListener("resize", () => this._resizeDirty = true, false);
 
-            const screenViewport = this.screenViewport as RectData;
+            const screenViewport = this.screenViewport as IRectangle;
             screenViewport.w = options.contentWidth;
             screenViewport.h = options.contentHeight;
             canvas.width = screenViewport.w;
@@ -56,7 +56,7 @@ namespace egret3d {
 
 
             let canvas = this._canvas;
-            const absolutePosition = this.absolutePosition as RectData;
+            const absolutePosition = this.absolutePosition as IRectangle;
             absolutePosition.w = stageSize.displayWidth;
             absolutePosition.h = stageSize.displayHeight;
 

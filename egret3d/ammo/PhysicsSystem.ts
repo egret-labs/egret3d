@@ -93,8 +93,12 @@ namespace egret3d.ammo {
         }
 
         protected readonly _interests = [
-            { componentClass: [BoxShape, CapsuleShape, ConeShape, ConvexHullShape, CylinderShape, HeightfieldTerrainShape, SphereShape] },
-            { componentClass: [CollisionObject, Rigidbody] },
+            {
+                componentClass: [BoxShape, CapsuleShape, ConeShape, ConvexHullShape, CylinderShape, HeightfieldTerrainShape, SphereShape]
+            },
+            {
+                componentClass: [CollisionObject, Rigidbody]
+            },
         ];
 
         private _worldType: Ammo.WorldType = Ammo.WorldType.RigidBodyDynamics;
@@ -104,8 +108,8 @@ namespace egret3d.ammo {
         private readonly _axis3SweepBroadphaseMin: Vector3 = new Vector3(-1000.0, -1000.0, -1000.0);
         private readonly _axis3SweepBroadphaseMax: Vector3 = new Vector3(1000.0, 1000.0, 1000.0);
         private readonly _gravity: Vector3 = new Vector3(0.0, -9.8, 0.0);
-        private _btWorld: Ammo.btCollisionWorld;
-        private _btDDWorld: Ammo.btDiscreteDynamicsWorld;
+        private _btCollisionWorld: Ammo.btCollisionWorld = null as any;
+        private _btDynamicsWorld: Ammo.btDynamicsWorld | null = null;
 
         protected _onAddComponent(component: CollisionShape | CollisionObject) {
             if (!super._onAddComponent(component)) {
@@ -113,19 +117,21 @@ namespace egret3d.ammo {
             }
 
             const collisionObject = this._getComponent(component.gameObject, 1) as CollisionObject;
+            const collisionShape = this._getComponent(component.gameObject, 0) as CollisionShape;
             const btCollisionObject = collisionObject.btCollisionObject;
+            const btCollisionShape = collisionShape.btCollisionShape;
 
-            const collisionShape = this._getComponent(component.gameObject, 0) as CollisionShape; // TODO mesh shape 可能数据非法。
-            collisionShape.btCollisionShape.setMargin(0.05); // TODO
-            btCollisionObject.setCollisionShape(collisionShape.btCollisionShape);
+            btCollisionShape.setMargin(0.05); // TODO
+            btCollisionObject.setCollisionShape(btCollisionShape);
 
             if (collisionObject instanceof Rigidbody) {
                 collisionObject._updateMass();
-                this._btDDWorld.addRigidBody(collisionObject.btRigidbody);
+                this._btDynamicsWorld.addRigidBody(collisionObject.btRigidbody, collisionObject.collisionGroups, collisionObject.collisionMask);
             }
             else {
-                this._btWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
+                this._btCollisionWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
             }
+
 
             return true;
         }
@@ -136,7 +142,7 @@ namespace egret3d.ammo {
             }
 
             const collisionObject = this._getComponent(component.gameObject, 1) as CollisionObject;
-            this._btWorld.removeCollisionObject(collisionObject.btCollisionObject);
+            this._btCollisionWorld.removeCollisionObject(collisionObject.btCollisionObject);
 
             return true;
         }
@@ -144,7 +150,7 @@ namespace egret3d.ammo {
         protected _updateGravity() {
             const btVector3 = PhysicsSystem.helpVector3A;
             btVector3.setValue(this._gravity.x, this._gravity.y, this._gravity.z);
-            this._btDDWorld.setGravity(btVector3);
+            (this._btDynamicsWorld as Ammo.btDynamicsWorld).setGravity(btVector3);
         }
 
         public initialize() {
@@ -154,19 +160,19 @@ namespace egret3d.ammo {
             const dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
             const broadphase = new Ammo.btDbvtBroadphase();
             const solver = new Ammo.btSequentialImpulseConstraintSolver();
-            this._btWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+            this._btCollisionWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
             // 
-            this._btDDWorld = this._btWorld as any;
+            this._btDynamicsWorld = this._btCollisionWorld as any;
 
-            if (this._btDDWorld) {
+            if (this._btDynamicsWorld) {
                 this._updateGravity();
             }
         }
 
         public update() {
-            if (this._btDDWorld) {
+            if (this._btDynamicsWorld) {
                 const helpTransformA = PhysicsSystem.helpTransformA;
-                this._btDDWorld.stepSimulation(paper.Time.deltaTime, paper.Time.maxFixedSubSteps, paper.Time.fixedTimeStep);
+                this._btDynamicsWorld.stepSimulation(paper.Time.deltaTime, paper.Time.maxFixedSubSteps, paper.Time.fixedTimeStep);
 
                 for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
                     const collisionObject = this._components[i + 1] as CollisionObject;
@@ -194,13 +200,17 @@ namespace egret3d.ammo {
         public set gravity(value: Readonly<Vector3>) {
             this._gravity.copy(value);
 
-            if (this._btDDWorld) {
+            if (this._btDynamicsWorld) {
                 this._updateGravity();
             }
         }
 
-        public get btWorld() {
-            return this._btWorld;
+        public get btCollisionWorld() {
+            return this._btCollisionWorld;
+        }
+
+        public get btDynamicsWorld() {
+            return this._btDynamicsWorld;
         }
     }
 }

@@ -20,6 +20,7 @@ namespace egret3d.ammo {
                     break;
 
                 case Ammo.Axis.Y:
+                default:
                     btCollisionShape = new Ammo.btConeShape(this._radius, this._height);
                     break;
 
@@ -49,10 +50,11 @@ namespace egret3d.ammo {
                 return;
             }
 
-            this._upAxis = value;
-
             if (this._btCollisionShape) {
-                // TODO
+                console.warn("Cannot change the up axis after the collision shape has been created.");
+            }
+            else {
+                this._upAxis = value;
             }
         }
         /**
@@ -66,10 +68,11 @@ namespace egret3d.ammo {
                 return;
             }
 
-            this._radius = value;
-
             if (this._btCollisionShape) {
-                // TODO
+                console.warn("Cannot change the radius after the collision shape has been created.");
+            }
+            else {
+                this._radius = value;
             }
         }
         /**
@@ -83,10 +86,11 @@ namespace egret3d.ammo {
                 return;
             }
 
-            this._height = value;
-
             if (this._btCollisionShape) {
-                // TODO
+                console.warn("Cannot change the height after the collision shape has been created.");
+            }
+            else {
+                this._height = value;
             }
         }
         /**

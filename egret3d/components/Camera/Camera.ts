@@ -1,36 +1,5 @@
 namespace egret3d {
-
-    /**
-     * culling mask
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * culling mask 枚举。
-     * 相机的cullingmask与renderer的renderLayer相匹配，才会执行渲染。否则将会被跳过。
-     * 这个属性可以实现相机的选择性剔除。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    export const enum CullingMask {
-        Everything = 0xFFFFFF,
-        Nothing = 0x000001,
-        Default = 0x000002,
-        UI = 0x000004,
-        UserLayer1 = 0x000008,
-        UserLayer2 = 0x000010,
-        UserLayer3 = 0x000020,
-        UserLayer4 = 0x000040,
-        UserLayer5 = 0x000080,
-        UserLayer6 = 0x0000f0,
-        UserLayer7 = 0x000100,
-        UserLayer8 = 0x000200,
-        UserLayer9 = 0x000400,
-        UserLayer10 = 0x000800,
-        UserLayer11 = 0x000f00
-    }
+    const helpRectA = new Rectangle();
 
     /**
      * camera component
@@ -111,7 +80,7 @@ namespace egret3d {
          * @language
          */
         @paper.serializedField
-        public cullingMask: CullingMask = CullingMask.Default | CullingMask.UI;
+        public cullingMask: paper.CullingMask = paper.CullingMask.Default | paper.CullingMask.UI;
 
         /**
          * camera render order
@@ -201,7 +170,7 @@ namespace egret3d {
          * @language
          */
         @paper.serializedField
-        public readonly viewport: Rect = new Rect(0, 0, 1, 1);
+        public readonly viewport: Rectangle = new Rectangle(0, 0, 1, 1);
 
         /**
          * TODO 功能完善后开放此接口
@@ -430,7 +399,7 @@ namespace egret3d {
          * @platform Web
          * @language
          */
-        public calcViewPortPixel(viewPortPixel: RectData) {
+        public calcViewPortPixel(viewPortPixel: IRectangle) {
             let w: number;
             let h: number;
             const renderTarget = this.renderTarget;

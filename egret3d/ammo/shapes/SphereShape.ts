@@ -31,10 +31,11 @@ namespace egret3d.ammo {
                 return;
             }
 
-            this._radius = value;
-
             if (this._btCollisionShape) {
-                // TODO
+                console.warn("Cannot change the radius after the collision shape has been created.");
+            }
+            else {
+                this._radius = value;
             }
         }
         /**
