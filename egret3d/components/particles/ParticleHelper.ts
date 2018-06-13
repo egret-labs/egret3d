@@ -199,8 +199,9 @@ namespace egret3d.particle {
         position.y = temp.y * shape.radius;
         position.z = 0;
 
-        const sinValue = Math.sin(shape.angle);
-        const cosValue = Math.cos(shape.angle);
+        const angle = shape.angle * Math.PI / 180.0;
+        const sinValue = Math.sin(angle);
+        const cosValue = Math.cos(angle);
 
         direction.x = temp.x * sinValue;
         direction.y = temp.y * sinValue;

@@ -564,13 +564,13 @@ namespace egret3d {
             {
                 const shader = new Shader("particles_additive.shader.json");
                 shader.url = "particles_additive.shader.json";
-                shader.renderQueue = RenderQueue.Overlay;
+                shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(0.5, 0.5, 0.5, 0.5) };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(0, 0, 0, 0) };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
-                renderPass.state_ztest = false;
+                renderPass.state_ztest = true;
                 renderPass.state_ztest_method = WebGLKit.LEQUAL;
                 renderPass.state_zwrite = false;
                 renderPass.state_showface = ShowFaceStateEnum.ALL;
@@ -610,7 +610,7 @@ namespace egret3d {
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
-                renderPass.state_ztest = false;
+                renderPass.state_ztest = true;
                 renderPass.state_ztest_method = WebGLKit.LEQUAL;
                 renderPass.state_zwrite = false;
                 renderPass.state_showface = ShowFaceStateEnum.ALL;
