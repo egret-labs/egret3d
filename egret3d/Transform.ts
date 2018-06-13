@@ -200,9 +200,6 @@ namespace egret3d {
             this._dirtify();
         }
 
-        /**
-         * @inheritDoc
-         */
         public deserialize(element: any) {
             super.deserialize(element); // TODO
 

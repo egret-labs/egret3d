@@ -45,6 +45,9 @@ namespace paper {
                     child.gameObject.destroy();
                 }
             }
+            
+            egret3d.InputManager.update(Time.deltaTime);
+            egret3d.Performance.endCounter(egret3d.PerformanceType.All);
         }
     }
 }

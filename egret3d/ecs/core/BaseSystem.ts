@@ -144,6 +144,12 @@ namespace paper {
             return null;
         }
         /**
+         * @internal
+         */
+        protected _isEditorUpdate() {
+            return Application.isEditor && !Application.isPlaying;
+        }
+        /**
          * @protected
          */
         public initialize() {

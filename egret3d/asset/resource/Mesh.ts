@@ -228,9 +228,6 @@ namespace egret3d {
             return vertexBuffer.length / vertexPerCount;
         }
 
-        /**
-         * @inheritDoc
-         */
         public serialize() {
             if (!this._glTFAsset.url) {
                 return null;
@@ -243,9 +240,6 @@ namespace egret3d {
             return target;
         }
 
-        /**
-         * @inheritDoc
-         */
         public deserialize(element: any) {
             if (element._glTFAsset) {
                 this._glTFMeshIndex = element._glTFMeshIndex;
@@ -568,7 +562,8 @@ namespace egret3d {
                 webgl.bufferSubData(webgl.ARRAY_BUFFER, offset, letray);
 
                 this._version++;
-            } else {
+            }
+            else {
                 console.warn("Error arguments.");
             }
         }

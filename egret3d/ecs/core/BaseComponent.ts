@@ -28,18 +28,14 @@ namespace paper {
         public uninitialize() {
             (this as any).gameObject = null;
         }
-        /**
-         * @inheritDoc
-         */
+
         public serialize(): any {
             const target = serializeRC(this);
             target._enabled = this._enabled;
 
             return target;
         }
-        /**
-         * @inheritDoc
-         */
+
         public deserialize(element: any): void {
             this._enabled = element._enabled === false ? false : true;
         }

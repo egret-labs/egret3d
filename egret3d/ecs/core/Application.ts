@@ -34,14 +34,13 @@ namespace paper {
         }
 
         public static init({ isEditor = false, isPlaying = true } = {}) {
-            const systemManager = this.systemManager;
             const systemClasses = [
-                StartSystem, // TODO
-                egret3d.ammo.PhysicsSystem,
-                BehaviourSystem,
+                StartSystem,
+                egret3d.ammo.PhysicsSystem, // TODO 分离
+                UpdateSystem,
                 egret3d.GuidpathSystem,
                 egret3d.AnimationSystem,
-                LaterSystem,
+                LaterUpdateSystem,
                 egret3d.TrailRenderSystem,
                 egret3d.MeshRendererSystem,
                 egret3d.SkinnedMeshRendererSystem,
@@ -50,13 +49,13 @@ namespace paper {
                 egret3d.LightSystem,
                 egret3d.CameraSystem,
                 egret3d.AudioSource3DSystem,
-                DestroySystem,
                 EndSystem,
+                DestroySystem,
             ];
 
             let level = 0;
             for (const systemClass of systemClasses) {
-                systemManager.register(systemClass, level++);
+                this.systemManager.register(systemClass, level++);
             }
 
             Time.initialize();
@@ -85,12 +84,6 @@ namespace paper {
 
             this._update();
         }
-        /**
-         * 
-         */
-        public static callLater(callback: () => void): void {
-            this.systemManager.getSystem(LaterSystem).callLater(callback);
-        }
 
         public static get isEditor() {
             return this._isEditor;
@@ -106,6 +99,13 @@ namespace paper {
 
         public static get isRunning() {
             return this._isRunning;
+        }
+
+        /**
+         * @deprecated
+         */
+        public static callLater(callback: () => void): void {
+            (this.systemManager.getSystem(LaterUpdateSystem) as LaterUpdateSystem).callLater(callback);
         }
     }
 }

@@ -1,13 +1,23 @@
 
 namespace paper {
+    /**
+     * @internal
+     */
+    export const _executeInEditModeComponents: any[] = [];
+    /**
+     * 标记组件是否在编辑模式也拥有生命周期。
+     */
+    export function executeInEditMode<T extends Behaviour>(target: { new(): T }) {
+        _executeInEditModeComponents.push(target);
+    }
 
     /**
      * 脚本组件。
      * 生命周期的顺序。
      * - onAwake();
      * - System._onCreateComponent();
-     * - onEnable();
      * - onReset();
+     * - onEnable();
      * - onStart();
      * - onFixedUpdate();
      * - onUpdate();
@@ -51,16 +61,16 @@ namespace paper {
         }
 
         /**
-         * 物体启用时被调用
+         * 
          */
-        public onEnable() {
+        public onReset(): void {
 
         }
 
         /**
-         * 
+         * 物体启用时被调用
          */
-        public onReset(): void {
+        public onEnable() {
 
         }
 
