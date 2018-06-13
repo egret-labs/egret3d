@@ -3,9 +3,7 @@ namespace egret3d {
      * 
      */
     export class MeshRendererSystem extends paper.BaseSystem<MeshRenderer | MeshFilter> {
-        /**
-         * @inheritDoc
-         */
+
         protected readonly _interests = [
             {
                 componentClass: MeshRenderer,
@@ -96,9 +94,7 @@ namespace egret3d {
             return null;
         });
         private readonly _drawCallList: DrawCallList = new DrawCallList(this._createDrawCalls);
-        /**
-         * @inheritDoc
-         */
+
         protected _onAddComponent(component: MeshRenderer | MeshFilter) {
             if (!super._onAddComponent(component)) {
                 return false;
@@ -109,9 +105,7 @@ namespace egret3d {
 
             return true;
         }
-        /**
-         * @inheritDoc
-         */
+
         protected _onRemoveComponent(component: MeshRenderer | MeshFilter) {
             if (!super._onRemoveComponent(component)) {
                 return false;
@@ -131,9 +125,15 @@ namespace egret3d {
                 }
             }
         }
-        /**
-         * @inheritDoc
-         */
+
+        public uninitialize() {
+            for (const component of this._components) {
+                this._drawCallList.removeDrawCalls(component.gameObject);
+            }
+
+            super.uninitialize();
+        }
+
         public update() {
         }
     }

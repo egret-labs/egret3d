@@ -3,9 +3,7 @@ namespace egret3d {
      * TODO 需要完善
      */
     export class SkinnedMeshRendererSystem extends paper.BaseSystem<SkinnedMeshRenderer> {
-        /**
-         * @inheritDoc
-         */
+
         protected readonly _interests = [
             {
                 componentClass: SkinnedMeshRenderer,
@@ -74,9 +72,6 @@ namespace egret3d {
             }
         }
 
-        /**
-         * @inheritDoc
-         */
         protected _onAddComponent(component: SkinnedMeshRenderer) {
             if (!super._onAddComponent(component)) {
                 return false;
@@ -86,9 +81,7 @@ namespace egret3d {
 
             return true;
         }
-        /**
-         * @inheritDoc
-         */
+
         protected _onRemoveComponent(component: SkinnedMeshRenderer) {
             if (!super._onRemoveComponent(component)) {
                 return false;
@@ -98,9 +91,15 @@ namespace egret3d {
 
             return true;
         }
-        /**
-         * @inheritDoc
-         */
+
+        public uninitialize() {
+            for (const component of this._components) {
+                this._drawCallList.removeDrawCalls(component.gameObject);
+            }
+
+            super.uninitialize();
+        }
+
         public update() {
         }
     }

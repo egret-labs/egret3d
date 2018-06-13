@@ -51,10 +51,6 @@ namespace paper {
 
             BaseSystem._createEnabled = false;
         }
-
-        private readonly _addListener = (component: T) => {
-            this._onAddComponent(component as any);
-        }
         /**
          * 
          */

@@ -14,7 +14,7 @@ namespace egret3d.ammo {
         @paper.serializedField
         protected _lowAngularLimit: number = 0.0;
         @paper.serializedField
-        protected _highAngularLimit: number = 0.0; // lowLimitAngleRadians
+        protected _highAngularLimit: number = 0.0;
         @paper.serializedField
         protected _limitSoftness: number = 0.9;
         @paper.serializedField
@@ -26,13 +26,13 @@ namespace egret3d.ammo {
 
         protected _createConstraint() {
             const collisionObject = this.gameObject.getComponent(CollisionObject);
-            if (!collisionObject || !collisionObject.btCollisionObject) {
-                console.debug("Arguments error.");
+            if (!collisionObject) {
+                console.debug("Never.");
                 return null;
             }
 
-            if (!this._otherRigidBody || !this._otherRigidBody.btCollisionObject) {
-                console.debug("Arguments error.");
+            if (!this._otherRigidBody) {
+                console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
                 return null;
             }
 

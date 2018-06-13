@@ -1,17 +1,21 @@
 namespace egret3d.ammo {
     /**
-     * 
+     * TODO
      */
     export class HeightfieldTerrainShape extends CollisionShape {
         @paper.serializedField
         protected _upAxis: Ammo.Axis = Ammo.Axis.Y;
 
         protected _createCollisionShape() {
-            // const btVector3 = PhysicsSystem.helperVector3;
-            // btVector3.setValue(this._size.x * 0.5, this._size.y * 0.5, this._size.z * 0.5);
-            const btCollisionShape = new Ammo.btHeightfieldTerrainShape();
+            const meshFilter = this.gameObject.getComponent(MeshFilter);
+            if (meshFilter && meshFilter.mesh) {
+                const vertices = meshFilter.mesh.getVertices();
+                const btCollisionShape = new Ammo.btHeightfieldTerrainShape(0, 0, null as any, 1.0, 0.0, 1.0, this._upAxis, "PHY_FLOAT", false);
 
-            return btCollisionShape;
+                return btCollisionShape;
+            }
+
+            throw new Error("Arguments error.");
         }
         /**
          * 

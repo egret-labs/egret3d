@@ -14,14 +14,14 @@ namespace paper {
             if (this._isEditorUpdate()) {
                 for (const component of components) {
                     if (component && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
-                        component.onUpdate(deltaTime);
+                        component.onLateUpdate(deltaTime);
                     }
                 }
             }
             else {
                 for (const component of components) {
                     if (component) {
-                        component.onUpdate(deltaTime);
+                        component.onLateUpdate(deltaTime);
                     }
                 }
             }

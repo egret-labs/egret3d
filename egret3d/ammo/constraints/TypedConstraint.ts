@@ -18,7 +18,7 @@ namespace egret3d.ammo {
         @paper.serializedField
         protected _constraintType: Ammo.ConstraintType = Ammo.ConstraintType.ConstrainToAnotherBody;
         @paper.serializedField
-        protected _overrideNumSolverIterations: number = 20;
+        protected _overrideNumSolverIterations: int = 20;
         @paper.serializedField
         protected _breakingImpulseThreshold: number = Infinity;
         @paper.serializedField
@@ -27,12 +27,26 @@ namespace egret3d.ammo {
         protected readonly _constraintAxisX: Vector3 = Vector3.FORWARD.clone();
         @paper.serializedField
         protected readonly _constraintAxisY: Vector3 = Vector3.UP.clone();
-        protected _thisRigidBody: Rigidbody | null = null;
         @paper.serializedField
         protected _otherRigidBody: Rigidbody | null = null;
         protected _btTypedConstraint: Ammo.btTypedConstraint | null = null;
 
         protected abstract _createConstraint(): Ammo.btTypedConstraint | null;
+
+        protected _getCollisionObject() {
+            const collisionObject = this.gameObject.getComponent(CollisionObject);
+            if (!collisionObject) {
+                console.debug("Never.");
+                return null;
+            }
+
+            if (!this._otherRigidBody) {
+                console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
+                return null;
+            }
+
+            return collisionObject;
+        }
 
         protected _createFrame(forward: Vector3, up: Vector3, constraintPoint: Vector3, frame: Matrix) {
             const right = Vector3.cross(forward, up, _helpVector3A).normalize();
@@ -46,8 +60,8 @@ namespace egret3d.ammo {
 
         protected _createFrames(forwardA: Vector3, upA: Vector3, constraintPointA: Vector3, frameA: Matrix, frameB: Matrix) {
             if (!this._otherRigidBody) {
-                console.debug("Rigid body error.");
-                return false;
+                console.debug("Never.");
+                return;
             }
 
             frameA.identity(); // TODO move to createFrame?
@@ -74,8 +88,6 @@ namespace egret3d.ammo {
                     thisTransform.getWorldMatrix().transformVector3(_helpVector3D.copy(constraintPointA))
                 )
             );
-
-            return true;
         }
 
         public uninitialize() {

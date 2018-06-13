@@ -101,12 +101,11 @@ namespace egret3d.ammo {
             },
         ];
 
-        private _worldType: Ammo.WorldType = Ammo.WorldType.RigidBodyDynamics;
-        private _collisionType: Ammo.CollisionConfType = Ammo.CollisionConfType.DefaultDynamicsWorldCollisionConf;
-        private _broadphaseType: Ammo.BroadphaseType = Ammo.BroadphaseType.DynamicAABBBroadphase;
-
-        private readonly _axis3SweepBroadphaseMin: Vector3 = new Vector3(-1000.0, -1000.0, -1000.0);
-        private readonly _axis3SweepBroadphaseMax: Vector3 = new Vector3(1000.0, 1000.0, 1000.0);
+        private _worldType: Ammo.WorldType = Ammo.WorldType.RigidBodyDynamics; // TODO
+        private _collisionType: Ammo.CollisionConfType = Ammo.CollisionConfType.DefaultDynamicsWorldCollisionConf; // TODO
+        private _broadphaseType: Ammo.BroadphaseType = Ammo.BroadphaseType.DynamicAABBBroadphase; // TODO
+        private readonly _axis3SweepBroadphaseMin: Vector3 = new Vector3(-1000.0, -1000.0, -1000.0); // TODO
+        private readonly _axis3SweepBroadphaseMax: Vector3 = new Vector3(1000.0, 1000.0, 1000.0); // TODO
         private readonly _gravity: Vector3 = new Vector3(0.0, -9.8, 0.0);
         private _btCollisionWorld: Ammo.btCollisionWorld = null as any;
         private _btDynamicsWorld: Ammo.btDynamicsWorld | null = null;
@@ -124,14 +123,34 @@ namespace egret3d.ammo {
             btCollisionShape.setMargin(0.05); // TODO
             btCollisionObject.setCollisionShape(btCollisionShape);
 
-            if (collisionObject instanceof Rigidbody) {
-                collisionObject._updateMass();
-                this._btDynamicsWorld.addRigidBody(collisionObject.btRigidbody, collisionObject.collisionGroups, collisionObject.collisionMask);
-            }
-            else {
-                this._btCollisionWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
-            }
+            switch (this._worldType) {
+                case Ammo.WorldType.CollisionOnly:
+                    this._btCollisionWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
+                    break;
 
+                case Ammo.WorldType.RigidBodyDynamics:
+                    if (this._btDynamicsWorld) {
+                        if (collisionObject instanceof Rigidbody) {
+                            collisionObject._updateMass();
+                            this._btDynamicsWorld.addRigidBody(collisionObject.btRigidbody, collisionObject.collisionGroups, collisionObject.collisionMask);
+                        }
+                        else {
+                            this._btCollisionWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
+                        }
+                    }
+                    else {
+                        throw new Error("Arguments error.");
+                    }
+                    break;
+
+                case Ammo.WorldType.MultiBodyWorld:
+                    // TODO
+                    break;
+
+                case Ammo.WorldType.SoftBodyAndRigidBody:
+                    // TODO
+                    break;
+            }
 
             return true;
         }

@@ -33,21 +33,50 @@ namespace paper {
         }
 
         public update() {
+            let index = 0;
+            let removeCount = 0;
             const deltaTime = Time.deltaTime;
+            const components = this._components;
 
             if (this._isEditorUpdate()) {
-                for (const component of this._components) {
-                    if (component && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
-                        component.onUpdate(deltaTime);
+                for (const component of components) {
+                    if (component) {
+                        if (_executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                            component.onUpdate(deltaTime);
+                        }
+
+                        if (removeCount > 0) {
+                            components[index - removeCount] = component;
+                            components[index] = null as any;
+                        }
                     }
+                    else {
+                        removeCount++;
+                    }
+
+                    index++;
                 }
             }
             else {
-                for (const component of this._components) {
+                for (const component of components) {
                     if (component) {
                         component.onUpdate(deltaTime);
+
+                        if (removeCount > 0) {
+                            components[index - removeCount] = component;
+                            components[index] = null as any;
+                        }
                     }
+                    else {
+                        removeCount++;
+                    }
+
+                    index++;
                 }
+            }
+
+            if (removeCount > 0) {
+                components.length -= removeCount;
             }
         }
     }
