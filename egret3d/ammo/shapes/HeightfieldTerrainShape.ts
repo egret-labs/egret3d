@@ -12,6 +12,7 @@ namespace egret3d.ammo {
                 const vertices = meshFilter.mesh.getVertices();
                 const btCollisionShape = new Ammo.btHeightfieldTerrainShape(0, 0, null as any, 1.0, 0.0, 1.0, this._upAxis, "PHY_FLOAT", false);
 
+                btCollisionShape.setMargin(this._margin);
                 return btCollisionShape;
             }
 

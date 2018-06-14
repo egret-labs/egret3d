@@ -3,7 +3,7 @@ namespace paper {
      * 
      */
     export class EndSystem extends paper.BaseSystem<Behaviour> {
-        protected readonly _interests = [{ componentClass: Behaviour as any }];
+        protected readonly _interests = [{ componentClass: Behaviour as any, isExtends: true }];
 
         protected _onAddComponent(component: Behaviour) {
             const index = this._components.indexOf(component);

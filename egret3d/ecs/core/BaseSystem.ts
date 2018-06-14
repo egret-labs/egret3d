@@ -4,7 +4,7 @@ namespace paper {
      */
     export type InterestConfig<T extends BaseComponent> = {
         componentClass: { new(): T } | ({ new(): T }[]);
-
+        isExtends?: boolean;
         listeners?: {
             type: string;
             listener: (component: T) => void;
@@ -64,14 +64,14 @@ namespace paper {
 
                 if (Array.isArray(config.componentClass)) {
                     for (const componentClass of config.componentClass) {
-                        insterestComponent = gameObject.getComponent(componentClass); // TODO 更快的查找方式
+                        insterestComponent = gameObject.getComponent(componentClass, config.isExtends === true); // TODO 更快的查找方式
                         if (insterestComponent) {
                             break;
                         }
                     }
                 }
                 else {
-                    insterestComponent = gameObject.getComponent(config.componentClass); // TODO 更快的查找方式
+                    insterestComponent = gameObject.getComponent(config.componentClass, config.isExtends === true); // TODO 更快的查找方式
                 }
 
                 if (!insterestComponent || components.indexOf(insterestComponent) >= 0) {

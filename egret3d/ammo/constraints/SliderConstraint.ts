@@ -6,20 +6,20 @@ namespace egret3d.ammo {
         @paper.serializedField
         protected _lowerLinearLimit: number = -10.0;
         @paper.serializedField
-        protected _upperLinearLimit: number = -10.0;
+        protected _upperLinearLimit: number = 10.0;
         @paper.serializedField
         protected _lowerAngularLimit: number = -Math.PI;
         @paper.serializedField
         protected _upperAngularLimit: number = Math.PI;
 
         protected _createConstraint() {
-            const collisionObject = this.gameObject.getComponent(CollisionObject);
-            if (!collisionObject) {
+            const rigidbody = this.gameObject.getComponent(Rigidbody);
+            if (!rigidbody) {
                 console.debug("Never.");
                 return null;
             }
 
-            if (!this._otherRigidBody) {
+            if (!this._connectedBody) {
                 console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
                 return null;
             }
@@ -28,29 +28,28 @@ namespace egret3d.ammo {
             const helpMatrixB = TypedConstraint._helpMatrixB;
 
             if (this._constraintType === Ammo.ConstraintType.ConstrainToAnotherBody) {
-                if (this._createFrames(this._constraintAxisX, this._constraintAxisY, this._constraintPoint, helpMatrixA, helpMatrixB)) {
-                    const helpMatrix3x3 = PhysicsSystem.helpMatrix3x3;
+                if (this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA, helpMatrixB)) {
+                    const helpVector3A = PhysicsSystem.helpVector3A;
+                    const helpQuaternionA = PhysicsSystem.helpQuaternionA;
                     const helpTransformA = PhysicsSystem.helpTransformA;
                     const helpTransformB = PhysicsSystem.helpTransformB;
                     //
-                    helpMatrix3x3.setValue(
-                        helpMatrixA.rawData[0], helpMatrixA.rawData[1], helpMatrixA.rawData[2],
-                        helpMatrixA.rawData[4], helpMatrixA.rawData[5], helpMatrixA.rawData[6],
-                        helpMatrixA.rawData[8], helpMatrixA.rawData[9], helpMatrixA.rawData[10],
-                    );
+                    const helpQA = Matrix.getQuaternion(helpMatrixA, TypedConstraint._helpQuaternionA);
+                    helpVector3A.setValue(helpMatrixA.rawData[8], helpMatrixA.rawData[9], helpMatrixA.rawData[10]);
+                    helpQuaternionA.setValue(helpQA.x, helpQA.y, helpQA.z, helpQA.w);
                     helpTransformA.setIdentity();
-                    helpTransformA.setBasis(helpMatrix3x3);
+                    helpTransformA.setOrigin(helpVector3A);
+                    helpTransformA.setRotation(helpQuaternionA);
                     //
-                    helpMatrix3x3.setValue(
-                        helpMatrixB.rawData[0], helpMatrixB.rawData[1], helpMatrixB.rawData[2],
-                        helpMatrixB.rawData[4], helpMatrixB.rawData[5], helpMatrixB.rawData[6],
-                        helpMatrixB.rawData[8], helpMatrixB.rawData[9], helpMatrixB.rawData[10],
-                    );
+                    const helpQB = Matrix.getQuaternion(helpMatrixB, TypedConstraint._helpQuaternionA);
+                    helpVector3A.setValue(helpMatrixB.rawData[8], helpMatrixB.rawData[9], helpMatrixB.rawData[10]);
+                    helpQuaternionA.setValue(helpQB.x, helpQB.y, helpQB.z, helpQB.w);
                     helpTransformB.setIdentity();
-                    helpTransformB.setBasis(helpMatrix3x3);
+                    helpTransformB.setOrigin(helpVector3A);
+                    helpTransformB.setRotation(helpQuaternionA);
                     //
                     const btConstraint = new Ammo.btSliderConstraint(
-                        collisionObject.btCollisionObject as Ammo.btRigidBody, this._otherRigidBody.btCollisionObject as Ammo.btRigidBody,
+                        rigidbody.btRigidbody, this._connectedBody.btRigidbody,
                         helpTransformA, helpTransformB,
                         true
                     );
@@ -59,12 +58,12 @@ namespace egret3d.ammo {
                     btConstraint.setLowerAngLimit(this._lowerAngularLimit);
                     btConstraint.setUpperAngLimit(this._upperAngularLimit);
                     btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
-                    btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+                    // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
 
                     return btConstraint;
                 }
             }
-            else if (this._createFrame(this._constraintAxisX, this._constraintAxisY, this._constraintPoint, helpMatrixA)) {
+            else if (this._createFrame(this._axisX, this._axisY, this._anchor, helpMatrixA)) {
                 console.debug("btSliderConstraint TODO.");
                 // TODO
                 // const btConstraint = new Ammo.btSliderConstraint();

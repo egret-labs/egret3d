@@ -30,7 +30,7 @@ namespace egret3d {
         public static get main() {
             const entity = paper.GameObject.findWithTag("MainCamera");
             if (entity) {
-                return entity.getComponent(Camera);
+                return entity.getComponent(Camera, true);
             }
 
             return null;

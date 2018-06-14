@@ -3,7 +3,7 @@ namespace paper {
      * 
      */
     export class LaterUpdateSystem extends paper.BaseSystem<Behaviour> {
-        protected readonly _interests = [{ componentClass: Behaviour as any }];
+        protected readonly _interests = [{ componentClass: Behaviour as any, isExtends: true }];
         private readonly _laterCalls: (() => void)[] = [];
 
         public update() {

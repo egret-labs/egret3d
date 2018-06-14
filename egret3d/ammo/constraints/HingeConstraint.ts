@@ -2,36 +2,38 @@ namespace egret3d.ammo {
     /**
      * 
      */
-    export class HingedConstraint extends TypedConstraint {
+    export class HingeConstraint extends TypedConstraint {
         @paper.serializedField
         protected _motorEnabled: boolean = false;
         @paper.serializedField
         protected _limitEnabled: boolean = false;
         @paper.serializedField
-        protected _targetMotorAngularVelocity: number = 0.0;
+        protected _targetVelocity: number = 0.0;
         @paper.serializedField
         protected _maxMotorImpulse: number = 0.0;
         @paper.serializedField
-        protected _lowAngularLimit: number = 0.0;
+        protected _lowAngular: number = 0.0;
         @paper.serializedField
-        protected _highAngularLimit: number = 0.0;
+        protected _highAngular: number = 0.0;
         @paper.serializedField
-        protected _limitSoftness: number = 0.9;
+        protected _softness: number = 0.9;
         @paper.serializedField
-        protected _limitBiasFactor: number = 0.3;
+        protected _biasFactor: number = 0.3;
+        @paper.serializedField
+        protected _relaxationFactor: number = 0.0;
 
         protected _updateLimit() {
-            (this._btTypedConstraint as Ammo.btHingeConstraint).setLimit(this._lowAngularLimit, this._highAngularLimit, this._limitSoftness, this._limitBiasFactor);
+            (this._btTypedConstraint as Ammo.btHingeConstraint).setLimit(this._lowAngular, this._highAngular, this._softness, this._biasFactor, this._relaxationFactor);
         }
 
         protected _createConstraint() {
-            const collisionObject = this.gameObject.getComponent(CollisionObject);
-            if (!collisionObject) {
+            const rigidbody = this.gameObject.getComponent(Rigidbody);
+            if (!rigidbody) {
                 console.debug("Never.");
                 return null;
             }
 
-            if (!this._otherRigidBody) {
+            if (!this._connectedBody) {
                 console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
                 return null;
             }
@@ -40,7 +42,7 @@ namespace egret3d.ammo {
             const helpMatrixB = TypedConstraint._helpMatrixB;
 
             if (this._constraintType === Ammo.ConstraintType.ConstrainToAnotherBody) {
-                if (this._createFrames(this._constraintAxisX, this._constraintAxisY, this._constraintPoint, helpMatrixA, helpMatrixB)) {
+                if (this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA, helpMatrixB)) {
                     const helpVertex3A = PhysicsSystem.helpVector3A;
                     const helpVertex3B = PhysicsSystem.helpVector3B;
                     const helpVertex3C = PhysicsSystem.helpVector3C;
@@ -51,12 +53,13 @@ namespace egret3d.ammo {
                     helpVertex3D.setValue(helpMatrixB.rawData[0], helpMatrixB.rawData[4], helpMatrixB.rawData[8]);
                     //
                     const btConstraint = new Ammo.btHingeConstraint(
-                        collisionObject.btCollisionObject as Ammo.btRigidBody, this._otherRigidBody.btCollisionObject as Ammo.btRigidBody,
-                        helpVertex3A, helpVertex3B, helpVertex3C, helpVertex3D
+                        rigidbody.btRigidbody, this._connectedBody.btRigidbody,
+                        helpVertex3A, helpVertex3B, helpVertex3C, helpVertex3D,
+                        true
                     );
 
                     if (this._motorEnabled) {
-                        btConstraint.enableAngularMotor(this._motorEnabled, this._targetMotorAngularVelocity, this._maxMotorImpulse);
+                        btConstraint.enableAngularMotor(this._motorEnabled, this._targetVelocity, this._maxMotorImpulse);
                     }
 
                     if (this._limitEnabled) {
@@ -64,7 +67,7 @@ namespace egret3d.ammo {
                     }
 
                     btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
-                    btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+                    // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
 
                     return btConstraint;
                 }
@@ -96,31 +99,18 @@ namespace egret3d.ammo {
         /**
          * 
          */
-        public get limitEnabled() {
-            return this._limitEnabled;
+        public get targetVelocity() {
+            return this._targetVelocity;
         }
-        public set limitEnabled(value: boolean) {
-            if (this._limitEnabled === value) {
+        public set targetVelocity(value: number) {
+            if (this._targetVelocity === value) {
                 return;
             }
 
-            this._limitEnabled = value;
-        }
-        /**
-         * 
-         */
-        public get targetMotorAngularVelocity() {
-            return this._targetMotorAngularVelocity;
-        }
-        public set targetMotorAngularVelocity(value: number) {
-            if (this._targetMotorAngularVelocity === value) {
-                return;
-            }
+            this._targetVelocity = value;
 
-            this._targetMotorAngularVelocity = value;
-
-            if (this._btTypedConstraint) {
-                (this._btTypedConstraint as Ammo.btHingeConstraint).enableAngularMotor(this._motorEnabled, this._targetMotorAngularVelocity, this._maxMotorImpulse);
+            if (this._btTypedConstraint && this._motorEnabled) {
+                (this._btTypedConstraint as Ammo.btHingeConstraint).enableAngularMotor(this._motorEnabled, this._targetVelocity, this._maxMotorImpulse);
             }
         }
         /**
@@ -136,24 +126,37 @@ namespace egret3d.ammo {
 
             this._maxMotorImpulse = value;
 
-            if (this._btTypedConstraint) {
+            if (this._btTypedConstraint && this._motorEnabled) {
                 (this._btTypedConstraint as Ammo.btHingeConstraint).setMaxMotorImpulse(this._maxMotorImpulse);
             }
         }
         /**
          * 
          */
-        public get lowAngularLimit() {
-            return this._lowAngularLimit;
+        public get limitEnabled() {
+            return this._limitEnabled;
         }
-        public set lowAngularLimit(value: number) {
-            if (this._lowAngularLimit === value) {
+        public set limitEnabled(value: boolean) {
+            if (this._limitEnabled === value) {
                 return;
             }
 
-            this._lowAngularLimit = value;
+            this._limitEnabled = value;
+        }
+        /**
+         * 
+         */
+        public get lowAngularLimit() {
+            return this._lowAngular;
+        }
+        public set lowAngularLimit(value: number) {
+            if (this._lowAngular === value) {
+                return;
+            }
 
-            if (this._btTypedConstraint) {
+            this._lowAngular = value;
+
+            if (this._btTypedConstraint && this._limitEnabled) {
                 this._updateLimit();
             }
         }
@@ -161,60 +164,78 @@ namespace egret3d.ammo {
          * 
          */
         public get highAngularLimit() {
-            return this._highAngularLimit;
+            return this._highAngular;
         }
         public set highAngularLimit(value: number) {
-            if (this._highAngularLimit === value) {
+            if (this._highAngular === value) {
                 return;
             }
 
-            this._highAngularLimit = value;
+            this._highAngular = value;
 
-            if (this._btTypedConstraint) {
+            if (this._btTypedConstraint && this._limitEnabled) {
                 this._updateLimit();
             }
         }
         /**
          * 
          */
-        public get limitSoftness() {
-            return this._limitSoftness;
+        public get softnessLimit() {
+            return this._softness;
         }
-        public set limitSoftness(value: number) {
-            if (this._limitSoftness === value) {
+        public set softnessLimit(value: number) {
+            if (this._softness === value) {
                 return;
             }
 
-            this._limitSoftness = value;
+            this._softness = value;
 
-            if (this._btTypedConstraint) {
+            if (this._btTypedConstraint && this._limitEnabled) {
                 this._updateLimit();
             }
         }
         /**
          * 
          */
-        public get limitBiasFactor() {
-            return this._limitBiasFactor;
+        public get biasFactorLimit() {
+            return this._biasFactor;
         }
-        public set limitBiasFactor(value: number) {
-            if (this._limitBiasFactor === value) {
+        public set biasFactorLimit(value: number) {
+            if (this._biasFactor === value) {
                 return;
             }
 
-            this._limitBiasFactor = value;
+            this._biasFactor = value;
 
-            if (this._btTypedConstraint) {
+            if (this._btTypedConstraint && this._limitEnabled) {
                 this._updateLimit();
             }
         }
         /**
          * 
          */
-        public get angle() {
+        public get relaxationFactor() {
+            return this._relaxationFactor;
+        }
+        public set relaxationFactor(value: number) {
+            if (this._relaxationFactor === value) {
+                return;
+            }
+
+            this._relaxationFactor = value;
+
+            if (this._btTypedConstraint && this._limitEnabled) {
+                this._updateLimit();
+            }
+        }
+        /**
+         * 
+         */
+        public get hingeAngle() {
             if (this._btTypedConstraint) {
                 return (this._btTypedConstraint as Ammo.btHingeConstraint).getHingeAngle() as number;
             }
+
             return 0.0;
         }
     }

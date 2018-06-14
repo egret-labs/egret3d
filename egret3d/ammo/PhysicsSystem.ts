@@ -8,7 +8,6 @@ namespace egret3d.ammo {
         private static _helpVector3C: Ammo.btVector3 | null = null;
         private static _helpVector3D: Ammo.btVector3 | null = null;
         private static _helpQuaternionA: Ammo.btQuaternion | null = null;
-        private static _helpMatrix3x3: Ammo.btMatrix3x3 | null = null;
         private static _helpTransformA: Ammo.btTransform | null = null;
         private static _helpTransformB: Ammo.btTransform | null = null;
         /**
@@ -64,16 +63,6 @@ namespace egret3d.ammo {
         /**
          * @internal
          */
-        public static get helpMatrix3x3(): Ammo.btMatrix3x3 {
-            if (!this._helpMatrix3x3) {
-                this._helpMatrix3x3 = new Ammo.btMatrix3x3();
-            }
-
-            return this._helpMatrix3x3;
-        }
-        /**
-         * @internal
-         */
         public static get helpTransformA(): Ammo.btTransform {
             if (!this._helpTransformA) {
                 this._helpTransformA = new Ammo.btTransform();
@@ -109,47 +98,17 @@ namespace egret3d.ammo {
         private readonly _gravity: Vector3 = new Vector3(0.0, -9.8, 0.0);
         private _btCollisionWorld: Ammo.btCollisionWorld = null as any;
         private _btDynamicsWorld: Ammo.btDynamicsWorld | null = null;
+        // TODO 完善系统生命周期
+        private readonly _startGameObjects: paper.GameObject[] = [];
+        private readonly _constraints: TypedConstraint[] = [];
 
         protected _onAddComponent(component: CollisionShape | CollisionObject) {
             if (!super._onAddComponent(component)) {
                 return false;
             }
 
-            const collisionObject = this._getComponent(component.gameObject, 1) as CollisionObject;
-            const collisionShape = this._getComponent(component.gameObject, 0) as CollisionShape;
-            const btCollisionObject = collisionObject.btCollisionObject;
-            const btCollisionShape = collisionShape.btCollisionShape;
-
-            btCollisionShape.setMargin(0.05); // TODO
-            btCollisionObject.setCollisionShape(btCollisionShape);
-
-            switch (this._worldType) {
-                case Ammo.WorldType.CollisionOnly:
-                    this._btCollisionWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
-                    break;
-
-                case Ammo.WorldType.RigidBodyDynamics:
-                    if (this._btDynamicsWorld) {
-                        if (collisionObject instanceof Rigidbody) {
-                            collisionObject._updateMass();
-                            this._btDynamicsWorld.addRigidBody(collisionObject.btRigidbody, collisionObject.collisionGroups, collisionObject.collisionMask);
-                        }
-                        else {
-                            this._btCollisionWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
-                        }
-                    }
-                    else {
-                        throw new Error("Arguments error.");
-                    }
-                    break;
-
-                case Ammo.WorldType.MultiBodyWorld:
-                    // TODO
-                    break;
-
-                case Ammo.WorldType.SoftBodyAndRigidBody:
-                    // TODO
-                    break;
+            if (this._startGameObjects.indexOf(component.gameObject) < 0) {
+                this._startGameObjects.push(component.gameObject);
             }
 
             return true;
@@ -160,8 +119,14 @@ namespace egret3d.ammo {
                 return false;
             }
 
-            const collisionObject = this._getComponent(component.gameObject, 1) as CollisionObject;
-            this._btCollisionWorld.removeCollisionObject(collisionObject.btCollisionObject);
+            const index = this._startGameObjects.indexOf(component.gameObject);
+            if (index >= 0) {
+                this._startGameObjects.splice(index, 1);
+            }
+            else {
+                const collisionObject = this._getComponent(component.gameObject, 1) as CollisionObject;
+                this._btCollisionWorld.removeCollisionObject(collisionObject.btCollisionObject);
+            }
 
             return true;
         }
@@ -181,14 +146,93 @@ namespace egret3d.ammo {
             const solver = new Ammo.btSequentialImpulseConstraintSolver();
             this._btCollisionWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
             // 
-            this._btDynamicsWorld = this._btCollisionWorld as any;
+            this._btDynamicsWorld = this._btCollisionWorld as Ammo.btDiscreteDynamicsWorld;
 
             if (this._btDynamicsWorld) {
                 this._updateGravity();
             }
+
+            // TODO 完善约束初始化机制。
+            const constraintClasses = [
+                FixedConstraint,
+                SliderConstraint,
+                HingeConstraint,
+                ConeTwistConstraint,
+            ];
+
+            for (const constraintClass of constraintClasses) {
+                paper.EventPool.addEventListener(paper.EventPool.EventType.Enabled, constraintClass as any, (component: TypedConstraint) => {
+                    if (this._constraints.indexOf(component) < 0) {
+                        this._constraints.push(component);
+                    }
+                });
+                paper.EventPool.addEventListener(paper.EventPool.EventType.Disabled, constraintClass as any, (component: TypedConstraint) => {
+                    const index = this._constraints.indexOf(component);
+                    const btTypedConstraint = component.btTypedConstraint;
+
+                    if (index >= 0) {
+                        this._constraints.splice(index, 1);
+                    }
+                    else if (this._btDynamicsWorld && btTypedConstraint) {
+                        this._btDynamicsWorld.removeConstraint(btTypedConstraint);
+                    }
+                });
+            }
         }
 
         public update() {
+            if (this._startGameObjects.length > 0) {
+                for (const gameObject of this._startGameObjects) {
+                    const collisionObject = this._getComponent(gameObject, 1) as CollisionObject;
+                    const collisionShape = this._getComponent(gameObject, 0) as CollisionShape;
+                    const btCollisionObject = collisionObject.btCollisionObject;
+                    const btCollisionShape = collisionShape.btCollisionShape;
+                    btCollisionObject.setCollisionShape(btCollisionShape);
+
+                    switch (this._worldType) {
+                        case Ammo.WorldType.CollisionOnly:
+                            this._btCollisionWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
+                            break;
+
+                        case Ammo.WorldType.RigidBodyDynamics:
+                            if (this._btDynamicsWorld) {
+                                if (collisionObject instanceof Rigidbody) {
+                                    collisionObject._updateMass();
+                                    this._btDynamicsWorld.addRigidBody(collisionObject.btRigidbody, collisionObject.collisionGroups, collisionObject.collisionMask);
+                                }
+                                else {
+                                    this._btCollisionWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
+                                }
+                            }
+                            else {
+                                throw new Error("Arguments error.");
+                            }
+                            break;
+
+                        case Ammo.WorldType.MultiBodyWorld:
+                            // TODO
+                            break;
+
+                        case Ammo.WorldType.SoftBodyAndRigidBody:
+                            // TODO
+                            break;
+                    }
+                }
+
+                this._startGameObjects.length = 0;
+            }
+
+            if (this._constraints.length > 0) {
+                for (const constraint of this._constraints) {
+                    const btTypedConstraint = constraint.btTypedConstraint;
+                    if (this._btDynamicsWorld && btTypedConstraint) {
+                        this._btDynamicsWorld.addConstraint(btTypedConstraint, !constraint.collisionEnabled);
+                    }
+                }
+
+                this._constraints.length = 0;
+            }
+
             if (this._btDynamicsWorld) {
                 const helpTransformA = PhysicsSystem.helpTransformA;
                 this._btDynamicsWorld.stepSimulation(paper.Time.deltaTime, paper.Time.maxFixedSubSteps, paper.Time.fixedTimeStep);

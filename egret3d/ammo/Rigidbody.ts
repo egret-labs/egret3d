@@ -54,10 +54,15 @@ namespace egret3d.ammo {
             rigidBodyInfo.m_additionalAngularDampingThresholdSqr = this._additionalAngularDampingThresholdSqr;
 
             const btCollisionObject = new Ammo.btRigidBody(rigidBodyInfo);
+
+            //TODO if kinematic then disable deactivation
             const motionState = new Ammo.btDefaultMotionState(this._getBTTransform()); // TODO 可扩展 的 state。
             btCollisionObject.setMotionState(motionState);
+
             //
             this._btRigidbody = btCollisionObject as any;
+
+            Ammo.destroy(rigidBodyInfo); //
 
             return btCollisionObject;
         }
@@ -68,7 +73,7 @@ namespace egret3d.ammo {
             const helpVector3A = PhysicsSystem.helpVector3A;
 
             if (this.isDynamic()) {
-                const collisionShape = this.gameObject.getComponent(CollisionShape as any) as CollisionShape;
+                const collisionShape = this.gameObject.getComponent(CollisionShape as any, true) as CollisionShape;
                 collisionShape.btCollisionShape.calculateLocalInertia(this._mass, helpVector3A);
                 this._btRigidbody.setMassProps(this._mass, helpVector3A);
             }
@@ -179,7 +184,7 @@ namespace egret3d.ammo {
             if (this._additionalDamping === value) {
                 return;
             }
-            
+
             if (this._btRigidbody) {
                 console.warn("Cannot change the additionalDamping after the collision object has been created.");
             }
@@ -197,7 +202,7 @@ namespace egret3d.ammo {
             if (this._additionalLinearDampingFactor === value) {
                 return;
             }
-            
+
             if (this._btRigidbody) {
                 console.warn("Cannot change the additionalLinearDampingFactor after the collision object has been created.");
             }

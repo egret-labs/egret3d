@@ -3,7 +3,7 @@ namespace paper {
      * 
      */
     export class StartSystem extends BaseSystem<Behaviour> {
-        protected readonly _interests = [{ componentClass: Behaviour as any }];
+        protected readonly _interests = [{ componentClass: Behaviour as any, isExtends: true }];
         private readonly _onResetBehaviours: (Behaviour | null)[] = [];
 
         protected _onAddComponent(component: Behaviour) {

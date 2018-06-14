@@ -10,6 +10,7 @@ namespace egret3d.ammo {
 
         protected _createCollisionShape() {
             const btCollisionShape = new Ammo.btSphereShape(this._radius);
+            btCollisionShape.setMargin(this._margin);
             this._updateScale(btCollisionShape);
 
             return btCollisionShape;

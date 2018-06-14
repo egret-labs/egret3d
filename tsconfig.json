@@ -10,13 +10,13 @@
         "declaration": true,
         "stripInternal": true,
         "alwaysStrict": true,
-        "noImplicitAny": true,
-        "noImplicitThis": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "strictNullChecks": true,
+        "noImplicitAny": false,
+        "noImplicitThis": false,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "strictNullChecks": false,
         "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": true,
+        "allowSyntheticDefaultImports": false,
         "outFile": "bin/egret3d.js"
     },
     "files": [
@@ -178,10 +178,11 @@
         "egret3d/ammo/constraints/TypedConstraint.ts",
         "egret3d/ammo/constraints/FixedConstraint.ts",
         "egret3d/ammo/constraints/SliderConstraint.ts",
-        "egret3d/ammo/constraints/HingedConstraint.ts",
+        "egret3d/ammo/constraints/HingeConstraint.ts",
         "egret3d/ammo/constraints/ConeTwistConstraint.ts",
         "egret3d/ammo/CollisionObject.ts",
         "egret3d/ammo/Rigidbody.ts",
+        "egret3d/ammo/softbody/Softbody.ts",
         "egret3d/ammo/PhysicsSystem.ts"
     ]
 }

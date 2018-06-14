@@ -18,6 +18,7 @@ namespace egret3d.ammo {
                     btCollisionShape.addPoint(btVector3, i === l - 1);
                 }
 
+                btCollisionShape.setMargin(this._margin);
                 this._updateScale(btCollisionShape);
 
                 return btCollisionShape;

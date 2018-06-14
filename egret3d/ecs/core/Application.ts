@@ -20,7 +20,6 @@ namespace paper {
         private static _isFocused = false;
         private static _isPlaying = false;
         private static _isRunning = false;
-        private static _standDeltaTime = -1;
         private static _bindUpdate: FrameRequestCallback = null as any;
 
         private static _update() {

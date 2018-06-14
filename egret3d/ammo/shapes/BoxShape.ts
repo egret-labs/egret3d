@@ -12,6 +12,7 @@ namespace egret3d.ammo {
             const btVector3 = PhysicsSystem.helpVector3A;
             btVector3.setValue(this._size.x * 0.5, this._size.y * 0.5, this._size.z * 0.5);
             const btCollisionShape = new Ammo.btBoxShape(btVector3);
+            btCollisionShape.setMargin(this._margin);
             this._updateScale(btCollisionShape);
 
             return btCollisionShape;

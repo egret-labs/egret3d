@@ -3,7 +3,7 @@ namespace paper {
      * 
      */
     export class UpdateSystem extends paper.BaseSystem<Behaviour> {
-        protected readonly _interests = [{ componentClass: Behaviour as any }];
+        protected readonly _interests = [{ componentClass: Behaviour as any, isExtends: true }];
 
         protected _onAddComponent(component: Behaviour) {
             if (this._components.indexOf(component) < 0) {

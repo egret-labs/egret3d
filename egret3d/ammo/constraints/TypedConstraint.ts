@@ -3,18 +3,18 @@ namespace egret3d.ammo {
     const _helpVector3B = new Vector3();
     const _helpVector3C = new Vector3();
     const _helpVector3D = new Vector3();
-    const _helpQuaternion = new Quaternion();
     const _helpMatrix = new Matrix();
 
     /**
      * 
      */
     export abstract class TypedConstraint extends paper.BaseComponent {
+        protected static readonly _helpQuaternionA: Quaternion = new Quaternion();
         protected static readonly _helpMatrixA: Matrix = new Matrix();
         protected static readonly _helpMatrixB: Matrix = new Matrix();
 
         @paper.serializedField
-        protected _disableCollisionsBetweenConstrainedBodies: boolean = true;
+        protected _collisionEnabled: boolean = false;
         @paper.serializedField
         protected _constraintType: Ammo.ConstraintType = Ammo.ConstraintType.ConstrainToAnotherBody;
         @paper.serializedField
@@ -22,31 +22,16 @@ namespace egret3d.ammo {
         @paper.serializedField
         protected _breakingImpulseThreshold: number = Infinity;
         @paper.serializedField
-        protected readonly _constraintPoint: Vector3 = Vector3.ZERO.clone();
+        protected readonly _anchor: Vector3 = Vector3.ZERO.clone();
         @paper.serializedField
-        protected readonly _constraintAxisX: Vector3 = Vector3.FORWARD.clone();
+        protected readonly _axisX: Vector3 = Vector3.FORWARD.clone();
         @paper.serializedField
-        protected readonly _constraintAxisY: Vector3 = Vector3.UP.clone();
+        protected readonly _axisY: Vector3 = Vector3.UP.clone();
         @paper.serializedField
-        protected _otherRigidBody: Rigidbody | null = null;
+        protected _connectedBody: Rigidbody | null = null;
         protected _btTypedConstraint: Ammo.btTypedConstraint | null = null;
 
         protected abstract _createConstraint(): Ammo.btTypedConstraint | null;
-
-        protected _getCollisionObject() {
-            const collisionObject = this.gameObject.getComponent(CollisionObject);
-            if (!collisionObject) {
-                console.debug("Never.");
-                return null;
-            }
-
-            if (!this._otherRigidBody) {
-                console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
-                return null;
-            }
-
-            return collisionObject;
-        }
 
         protected _createFrame(forward: Vector3, up: Vector3, constraintPoint: Vector3, frame: Matrix) {
             const right = Vector3.cross(forward, up, _helpVector3A).normalize();
@@ -59,7 +44,7 @@ namespace egret3d.ammo {
         }
 
         protected _createFrames(forwardA: Vector3, upA: Vector3, constraintPointA: Vector3, frameA: Matrix, frameB: Matrix) {
-            if (!this._otherRigidBody) {
+            if (!this._connectedBody) {
                 console.debug("Never.");
                 return;
             }
@@ -68,11 +53,11 @@ namespace egret3d.ammo {
             frameB.identity();
             this._createFrame(forwardA, upA, constraintPointA, frameA);
             const thisTransform = this.gameObject.transform;
-            const otherTransform = this._otherRigidBody.gameObject.transform;
+            const otherTransform = this._connectedBody.gameObject.transform;
             const quaternion = Quaternion.multiply(
                 thisTransform.getLocalRotation(),
                 otherTransform.getLocalRotation(),
-                _helpQuaternion
+                TypedConstraint._helpQuaternionA
             );
             const matrixValues = frameA.rawData;
             const xx = quaternion.transformVector3(_helpVector3A.set(matrixValues[0], matrixValues[1], matrixValues[2]));
@@ -98,6 +83,136 @@ namespace egret3d.ammo {
             }
 
             this._btTypedConstraint = null;
+        }
+        /**
+         * 
+         */
+        public get collisionEnabled() {
+            return this._collisionEnabled;
+        }
+        public set collisionEnabled(value: boolean) {
+            if (this._collisionEnabled === value) {
+                return;
+            }
+
+            if (this._btTypedConstraint) {
+                console.warn("Cannot change the disableCollisionsBetweenConstrainedBodies after the constraint has been created.");
+            }
+            else {
+                this._collisionEnabled = value;
+            }
+        }
+        /**
+         * 
+         */
+        public get constraintType() {
+            return this._constraintType;
+        }
+        public set constraintType(value: Ammo.ConstraintType) {
+            if (this._constraintType === value) {
+                return;
+            }
+
+            if (this._btTypedConstraint) {
+                console.warn("Cannot change the constraint type after the constraint has been created.");
+            }
+            else {
+                this._constraintType = value;
+            }
+        }
+        /**
+         * 
+         */
+        public get overrideNumSolverIterations() {
+            return this._overrideNumSolverIterations;
+        }
+        public set overrideNumSolverIterations(value: Ammo.ConstraintType) {
+            if (this._overrideNumSolverIterations === value) {
+                return;
+            }
+
+            this._overrideNumSolverIterations = value;
+
+            if (this._btTypedConstraint) {
+                this._btTypedConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+            }
+        }
+        /**
+         * 
+         */
+        public get breakingImpulseThreshold() {
+            return this._breakingImpulseThreshold;
+        }
+        public set breakingImpulseThreshold(value: Ammo.ConstraintType) {
+            if (this._breakingImpulseThreshold === value) {
+                return;
+            }
+
+            this._breakingImpulseThreshold = value;
+
+            if (this._btTypedConstraint) {
+                this._btTypedConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
+            }
+        }
+        /**
+         * 
+         */
+        public get anchor() {
+            return this._anchor;
+        }
+        public set anchor(value: Vector3) {
+            if (this._btTypedConstraint) {
+                console.warn("Cannot change the anchor after the constraint has been created.");
+            }
+            else {
+                this._anchor.copy(value);
+            }
+        }
+        /**
+         * 
+         */
+        public get axisX() {
+            return this._axisX;
+        }
+        public set axisX(value: Vector3) {
+            if (this._btTypedConstraint) {
+                console.warn("Cannot change the axis x after the constraint has been created.");
+            }
+            else {
+                this._axisX.copy(value);
+            }
+        }
+        /**
+         * 
+         */
+        public get axisY() {
+            return this._axisY;
+        }
+        public set axisY(value: Vector3) {
+            if (this._btTypedConstraint) {
+                console.warn("Cannot change the axis y after the constraint has been created.");
+            }
+            else {
+                this._axisY.copy(value);
+            }
+        }
+        /**
+         * 
+         */
+        public get connectedBody() {
+            return this._connectedBody;
+        }
+        public set connectedBody(value: Rigidbody | null) {
+            if (this._connectedBody === value) {
+                return;
+            }
+
+            if (this._btTypedConstraint) {
+                console.warn("Cannot change the axis y after the constraint has been created.");
+            }
+            else {
+                this._connectedBody = value;
+            }
         }
 
         public get btTypedConstraint() {

@@ -141,17 +141,17 @@ namespace paper {
             }
         }
 
-        private _getComponentsInChildren<T extends paper.BaseComponent>(componentClass: { new(gameObject: GameObject): T }, child: GameObject, array: T[]) {
+        private _getComponentsInChildren<T extends paper.BaseComponent>(componentClass: { new(gameObject: GameObject): T }, child: GameObject, array: T[], isExtends: boolean = false) {
             const components = child._components;
 
             for (const component of components) {
-                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
+                if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentClass)) : component.constructor === componentClass) {
                     array.push(component as T);
                 }
             }
 
             for (const childOfChild of child.transform.children) {
-                this._getComponentsInChildren(componentClass, childOfChild.gameObject, array);
+                this._getComponentsInChildren(componentClass, childOfChild.gameObject, array, isExtends);
             }
         }
 
@@ -199,7 +199,7 @@ namespace paper {
         /**
          * 移除组件
          */
-        public removeComponent<T extends paper.BaseComponent>(componentInstanceOrClass: { new(): T } | T) {
+        public removeComponent<T extends paper.BaseComponent>(componentInstanceOrClass: { new(): T } | T, isExtends: boolean = false, isAll: boolean = false) {
             if (componentInstanceOrClass instanceof paper.BaseComponent) {
                 if (componentInstanceOrClass === this.transform as any) {
                     return;
@@ -222,20 +222,19 @@ namespace paper {
                     return;
                 }
 
-                let index = 0;
-                for (const component of this._components) {
-                    if (egret.is(component, egret.getQualifiedClassName(componentInstanceOrClass))) {
+                let i = this._components.length;
+                while (i--) {
+                    const component = this._components[i];
+                    if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentInstanceOrClass)) : component.constructor === componentInstanceOrClass) {
                         this._removeComponentReference(component);
-                        this._components.splice(index, 1);
-
-                        return;
+                        this._components.splice(i, 1);
+                        if (!isAll) {
+                            return;
+                        }
                     }
-
-                    index++;
                 }
             }
         }
-
 
         /**
          * 移除自身的所有组件
@@ -251,25 +250,45 @@ namespace paper {
         /**
          * 根据类型名获取组件
          */
-        public getComponent<T extends paper.BaseComponent>(componentClass: { new(): T }) {
-            for (const component of this._components) {
-                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
-                    return component as T;
+        public getComponent<T extends paper.BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
+            if (isExtends) {
+                for (const component of this._components) {
+                    if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
+                        return component as T;
+                    }
+                }
+            }
+            else {
+                for (const component of this._components) {
+                    if (component.constructor === componentClass) {
+                        return component as T;
+                    }
                 }
             }
 
             return null;
         }
 
+        public getComponents<T extends paper.BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
+            const components: T[] = [];
+            for (const component of this._components) {
+                if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentClass)) : component.constructor === componentClass) {
+                    components.push(component as any);
+                }
+            }
+
+            return components;
+        }
+
         /**
          * 搜索自己和父节点中所有特定类型的组件
          */
-        public getComponentInParent<T extends paper.BaseComponent>(componentClass: { new(): T }) {
+        public getComponentInParent<T extends paper.BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
             let result: T | null = null;
             let parent = this.transform.parent;
 
             while (!result && parent) {
-                result = parent.gameObject.getComponent(componentClass);
+                result = parent.gameObject.getComponent(componentClass, isExtends);
                 parent = parent.parent;
             }
 
@@ -279,9 +298,9 @@ namespace paper {
         /**
          * 搜索自己和子节点中所有特定类型的组件
          */
-        public getComponentsInChildren<T extends paper.BaseComponent>(componentClass: { new(): T }) {
+        public getComponentsInChildren<T extends paper.BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
             const components: T[] = [];
-            this._getComponentsInChildren(componentClass, this, components);
+            this._getComponentsInChildren(componentClass, this, components, isExtends);
 
             return components;
         }

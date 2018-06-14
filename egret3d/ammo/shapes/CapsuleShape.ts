@@ -29,6 +29,7 @@ namespace egret3d.ammo {
                     break;
             }
 
+            btCollisionShape.setMargin(this._margin);
             this._updateScale(btCollisionShape);
 
             return btCollisionShape;
