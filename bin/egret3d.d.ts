@@ -166,7 +166,7 @@ declare namespace paper {
         /**
          * 是否更新该系统。
          */
-        enable: boolean;
+        enabled: boolean;
         /**
          * 系统对于每个实体关心的组件总数。
          */
@@ -1068,8 +1068,10 @@ declare namespace paper.editor {
         SOUND = 14,
         /**Mesh */
         MESH = 15,
+        /**shader */
+        SHADER = 16,
         /**数组 */
-        ARRAY = 16,
+        ARRAY = 17,
     }
     /**
      * 装饰器:自定义
@@ -2946,34 +2948,6 @@ declare namespace egret3d {
          * @language zh_CN
          */
         texture: Texture | null;
-    }
-}
-declare namespace egret3d {
-    /**
-     * text asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 文本资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class TextAsset extends paper.Asset {
-        /**
-         * 文本内容
-         */
-        content: string;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
     }
 }
 declare namespace egret3d {
@@ -5691,6 +5665,31 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    interface MaterialConfig_UniformFloat4 {
+        type: UniformTypeEnum.Float4;
+        value: [number, number, number, number];
+    }
+    interface MaterialConfig_Texture {
+        type: UniformTypeEnum.Texture;
+        value: string;
+    }
+    interface MaterialConfig_Float {
+        type: UniformTypeEnum.Float;
+        value: number;
+    }
+    type MaterialConfig = {
+        version: number;
+        shader: string;
+        mapUniform: {
+            [name: string]: MaterialConfig_UniformFloat4 | MaterialConfig_Texture | MaterialConfig_Float;
+        };
+    };
+    type UniformTypes = {
+        [name: string]: {
+            type: UniformTypeEnum;
+            value: any;
+        };
+    };
     /**
      * 渲染排序
      */
@@ -5702,43 +5701,19 @@ declare namespace egret3d {
         Overlay = 4000,
     }
     /**
-     * material asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 材质资源
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     class Material extends paper.Asset {
         /**
          */
         version: number;
-        $uniforms: {
-            [name: string]: {
-                type: UniformTypeEnum;
-                value: any;
-            };
-        };
+        $uniforms: UniformTypes;
         private _defines;
         private shader;
         private _textureRef;
-        private _changeShaderMap;
         private _renderQueue;
         /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         dispose(): void;
         /**
@@ -5807,14 +5782,11 @@ declare namespace egret3d {
         setVector3(_id: string, _vector3: Vector3): void;
         setVector3v(_id: string, _vector3v: Float32Array): void;
         setVector4(_id: string, _vector4: Vector4): void;
-        setVector4v(_id: string, _vector4v: Float32Array): void;
+        setVector4v(_id: string, _vector4v: Float32Array | [number, number, number, number]): void;
         setMatrix(_id: string, _matrix: Matrix): void;
         setMatrixv(_id: string, _matrixv: Float32Array): void;
         setTexture(_id: string, _texture: egret3d.Texture): void;
-        /**
-         *
-         */
-        $parse(json: any): void;
+        $parse(json: MaterialConfig): void;
         /**
          * clone material
          * @version paper 1.0
@@ -6592,160 +6564,77 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * ray
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 射线
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     class Ray {
         /**
-         * ray origin point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 射线起始点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         origin: Vector3;
         /**
-         * ray direction vector
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 射线的方向向量
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         direction: Vector3;
-        /**
-         * build a ray
-         * @param origin ray origin point
-         * @param dir ray direction vector
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
         /**
          * 构建一条射线
          * @param origin 射线起点
          * @param dir 射线方向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         constructor(origin: Vector3, direction: Vector3);
         /**
-         * intersect with aabb
-         * @param aabb aabb instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与aabb碰撞相交检测
-         * @param aabb aabb实例
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         intersectAABB(aabb: AABB): boolean;
         /**
-         * intersect with transform plane
-         * @param tran tranform instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param tran transform实例
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @param transform transform实例
          */
-        intersectPlaneTransform(tran: Transform): PickInfo;
+        intersectPlaneTransform(transform: Transform): PickInfo;
         intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3;
         /**
-         * intersect with collider
-         * @param tran tranform instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与碰撞盒相交检测
-         * @param tran 待检测带碰撞盒的transform
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @param transform 待检测带碰撞盒的transform
          */
-        intersectCollider(tran: Transform): PickInfo;
-        /**
-         * intersect with box
-         * @param minimum min vector
-         * @param maximum max vector
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+        intersectCollider(transform: Transform): PickInfo;
         /**
          * 与最大最小点表示的box相交检测
          * @param minimum 最小点
          * @param maximum 最大点
          * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean;
         /**
-         * intersect with sphere
-         * @param center sphere center
-         * @param radius sphere radius
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与球相交检测
-         * @param center 球圆心坐标
-         * @param radius 球半径
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         intersectsSphere(center: Vector3, radius: number): boolean;
         /**
-         * intersect with triangle
-         * @param vertex0
-         * @param vertex1
-         * @param vertex2
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与三角形相交检测
-         * @param vertex0
-         * @param vertex1
-         * @param vertex2
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         intersectsTriangle(vertex0: Vector3, vertex1: Vector3, vertex2: Vector3): PickInfo;
+        /**
+         * 获取射线拾取到的最近物体。
+         */
+        static raycast(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo | null;
+        /**
+         * 获取射线路径上的所有物体。
+         */
+        static raycastAll(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo[] | null;
+        private static _doPick(ray, maxDistance, layerMask, pickAll?, isPickMesh?);
+        private static _pickMesh(ray, transform, pickInfos);
+        private static _pickCollider(ray, transform, pickInfos);
+    }
+    /**
+     * 场景拣选信息
+     */
+    class PickInfo {
+        subMeshIndex: number;
+        triangleIndex: number;
+        distance: number;
+        readonly position: Vector3;
+        readonly textureCoordA: Vector2;
+        readonly textureCoordB: Vector2;
+        transform: Transform | null;
+        collider: BaseCollider | null;
     }
 }
 declare namespace egret3d.ShaderLib {
@@ -6808,83 +6697,6 @@ declare namespace egret3d {
         static init(): void;
     }
 }
-declare namespace egret3d {
-    /**
-     * physics
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 物理类
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Physics {
-        /**
-         * get the nearest transform contect to the ray
-         * @param ray ray
-         * @param isPickMesh true pick mesh, false pick collider
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取射线拾取到的最近物体。
-         * @param ray 射线实例
-         * @param isPickMesh 是否为拾取mesh，否为拾取collider
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        static Raycast(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo | null;
-        /**
-         * get all transforms contect to the ray
-         * @param ray ray
-         * @param isPickMesh true pick mesh, false pick collider
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取射线路径上的所有物体。
-         * @param ray 射线实例
-         * @param isPickMesh 是否为拾取mesh，否为拾取collider
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        static RaycastAll(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo[] | null;
-        private static _doPick(ray, maxDistance, layerMask, pickAll?, isPickMesh?);
-        private static _pickMesh(ray, transform, pickInfos);
-        private static _pickCollider(ray, transform, pickInfos);
-    }
-}
-declare namespace egret3d {
-    /**
-     * scene pick up info
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 场景拣选信息
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class PickInfo {
-        subMeshIndex: number;
-        triangleIndex: number;
-        distance: number;
-        readonly position: Vector3;
-        readonly textureCoordA: Vector2;
-        readonly textureCoordB: Vector2;
-        transform: Transform | null;
-        collider: BaseCollider | null;
-    }
-}
 declare namespace RES.processor {
     enum AssetTypeEnum {
         Unknown = 0,
@@ -6901,14 +6713,6 @@ declare namespace RES.processor {
         GLTFBinary = 11,
         Prefab = 12,
         Scene = 13,
-        TextAsset = 14,
-        Atlas = 15,
-        Font = 16,
-        PackBin = 17,
-        PackTxt = 18,
-        pathAsset = 19,
-        PVR = 20,
-        Sound = 21,
     }
     const BundleProcessor: RES.processor.Processor;
     const GLVertexShaderProcessor: RES.processor.Processor;
@@ -6923,7 +6727,6 @@ declare namespace RES.processor {
     const SceneProcessor: RES.processor.Processor;
     const Font3DProcessor: RES.processor.Processor;
     const Sound3DProcessor: RES.processor.Processor;
-    const TextAssetProcessor: RES.processor.Processor;
     const PathAssetProcessor: RES.processor.Processor;
 }
 declare namespace egret3d {
@@ -7846,11 +7649,6 @@ declare namespace paper {
 }
 declare namespace egret3d {
     class WebGLKit {
-        private static _maxVertexAttribArray;
-        static SetMaxVertexAttribArray(webgl: WebGLRenderingContext, count: number): void;
-        private static _usedTextureUnits;
-        static allocTexUnit(): number;
-        static resetTexUnit(): void;
         private static _texNumber;
         private static _activeTextureIndex;
         static activeTexture(index: number): void;
@@ -7867,10 +7665,6 @@ declare namespace egret3d {
         static blend(value: boolean, equation: number, srcRGB: number, destRGB: number, srcAlpha: number, destAlpha: number): void;
         private static _program;
         static useProgram(program: WebGLProgram): boolean;
-        static drawArrayTris(start: number, count: number): void;
-        static drawArrayLines(start: number, count: number): void;
-        static drawElementTris(start: number, count: number): void;
-        static drawElementLines(start: number, count: number): void;
         static setStates(drawPass: DrawPass, frontFaceCW?: boolean): void;
         static draw(context: RenderContext, material: Material, mesh: Mesh, subMeshIndex: number, basetype?: string, frontFaceCW?: boolean): void;
         static resetState(): void;
@@ -8167,6 +7961,10 @@ declare namespace paper {
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
+    enum selectItemType {
+        GAMEOBJECT = 0,
+        ASSET = 1,
+    }
     /**
      * 编辑模型事件
      */
@@ -8244,7 +8042,7 @@ declare namespace paper.editor {
         /**
          * 创建游戏对象
          */
-        createGameObject(parent?: GameObject, mesh?: egret3d.Mesh, mat?: egret3d.Material): void;
+        createGameObject(list: number[]): void;
         /**
          * 添加组件
          */
@@ -8361,10 +8159,10 @@ declare namespace paper.editor {
         setTargetProperty(propName: string, target: any, value: any): void;
         /**
          * 选中游戏对象
-         * @param gameObjects
+         * @param selectObj
          * @param addHistory 是否产生历史记录，只在用户进行选中相关操作时调用
          */
-        selectGameObject(selectIds: number[], options?: {
+        selectGameObject(selectObj: any, options?: {
             addHistory: boolean;
             preIds: number[];
         }): void;
@@ -8428,7 +8226,7 @@ declare namespace paper.editor {
          */
         private _addEventListener();
         private selectGameObjects;
-        private _selectGameObjects(selectIds);
+        private _selectGameObjects(selectObj);
         private changeProperty;
         private _changeProperty(data);
         private changeEditMode;
@@ -8500,6 +8298,7 @@ declare namespace paper.editor {
         private _isDone;
         undo(): boolean;
         redo(): boolean;
+        dispatchEditorModelEvent(type: string, data?: any): void;
     }
     class ModifyGameObjectPropertyState extends BaseState {
         static create(data?: any): ModifyGameObjectPropertyState | null;

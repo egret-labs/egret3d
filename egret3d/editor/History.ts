@@ -214,6 +214,11 @@ namespace paper.editor {
 
             return true;
         }
+
+        public dispatchEditorModelEvent(type:string,data?:any)
+        {
+            Editor.editorModel.dispatchEvent(new EditorModelEvent(type,data));
+        }
     }
 
     export class ModifyGameObjectPropertyState extends BaseState {
@@ -231,12 +236,7 @@ namespace paper.editor {
                     const toValue = Editor.editorModel.deserializeProperty(preValue, editType);
                     if (toValue) {
                         Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
-                        Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,
-                            {
-                                target: modifyObj,
-                                propName: propName,
-                                propValue: toValue
-                            }))
+                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target:modifyObj,propName: propName,propValue: toValue})
                     }
                 }
                 return true;
@@ -252,12 +252,7 @@ namespace paper.editor {
                 let modifyObj = Editor.editorModel.getGameObjectById(hashCode);
                 if (modifyObj && propValue !== undefined) {
                     Editor.editorModel.setTargetProperty(propName, modifyObj, propValue);
-                    Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,
-                        {
-                            target: modifyObj,
-                            propName: propName,
-                            propValue: propValue
-                        }))
+                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target:modifyObj,propName: propName,propValue: propValue})
                 }
 
                 return true;
@@ -289,13 +284,7 @@ namespace paper.editor {
 
                     if (toValue) {
                         Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
-                        Editor.editorModel.dispatchEvent(
-                            new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, {
-                                target: modifyObj,
-                                propName: propName,
-                                propValue: toValue
-                            }
-                            ))
+                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target: modifyObj,propName: propName, propValue: toValue})
                     }
 
 
@@ -313,12 +302,7 @@ namespace paper.editor {
                 let modifyObj: BaseComponent = Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
                 if (modifyObj && propValue !== undefined) {
                     Editor.editorModel.setTargetProperty(propName, modifyObj, propValue);
-                    Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,
-                        {
-                            target: modifyObj,
-                            propName: propName,
-                            propValue: propValue
-                        }))
+                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target: modifyObj,propName: propName, propValue: propValue})
                 }
                 return true;
             }
@@ -343,8 +327,7 @@ namespace paper.editor {
         public undo(): boolean {
             if (super.undo()) {
                 let preSelectids = this.data.prevalue;
-                let selectObjs = Editor.editorModel.getGameObjectsByIds(preSelectids);
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, selectObjs));
+                this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,{0:preSelectids});
                 return true;
             }
 
@@ -354,8 +337,7 @@ namespace paper.editor {
         public redo(): boolean {
             if (super.redo()) {
                 let newSelectids = this.data.newvalue;
-                let selectObjs = Editor.editorModel.getGameObjectsByIds(newSelectids);
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, selectObjs));
+                this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,{0:newSelectids});
                 return true;
             }
 
@@ -377,11 +359,17 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                let gameObj = Editor.editorModel.getGameObjectById(this.data.gameObjHashcode);
-                Editor.editorModel._deleteGameObject([gameObj]);
-                this.data.gameObj = gameObj;
-
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, [this.data.gameObj]));
+                let {datas} = this.data;
+                let delectHashCodes:number[] = datas.map((data) => {if (data.cacheGameObjectHashCode) {
+                    return data.cacheGameObjectHashCode;
+                }});
+                let gameObjs = Editor.editorModel.getGameObjectsByIds(delectHashCodes);
+                Editor.editorModel._deleteGameObject(gameObjs);
+                const selectIds:number = datas.map((data) => {if (data.parentHashCode) {
+                    return data.parentHashCode;
+                }});
+                
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,selectIds);
                 return true;
             }
 
@@ -390,49 +378,39 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                let parentHashCode = this.data.parentHashCode;
-                let mesh = this.data.mesh;
-                let mat = this.data.mat;
-                let gameObj = new GameObject();
-                gameObj.name = "NewGameObject";
+                let {datas} = this.data;
+                let selectIds:number[] = [];
+                for (let index = 0; index < datas.length; index++) {
+                    const element = datas[index];
+                    const {parentHashCode} = element;
+                    let gameObj = new GameObject();
+                    gameObj.name = "NewGameObject";
 
-                if (this.data.deleteComponentcode) {
-                    Editor.editorModel.resetComponentHashCode(gameObj, this.data.deleteComponentcode.concat());
-                } else {
-                    //保存gameobject组件的hashcode
-                    let gameObjectComponentsHashCode = [];
-                    Editor.editorModel.getAllComponentIdFromGameObject(gameObj, gameObjectComponentsHashCode);
-                    this.data.deleteComponentcode = gameObjectComponentsHashCode;
-                    console.log("缓存的组件hashcode:" + this.data.deleteComponentcode)
-                }
-
-                if (this.data.gameObjHashcode) {
-                    (gameObj as any).hashCode = this.data.gameObjHashcode;
-                } else {
-                    this.data.gameObjHashcode = gameObj.hashCode;
-                }
-
-                if (parentHashCode) {
-                    let parentObj = Editor.editorModel.getGameObjectById(parentHashCode);
-                    if (parentObj)
-                        gameObj.transform.setParent(parentObj.transform);
-                }
-
-                if (mesh) {
-                    let objMesh = gameObj.addComponent(egret3d.MeshFilter);
-                    objMesh.mesh = mesh;
-                    let renderer = gameObj.addComponent(egret3d.MeshRenderer);
-                    if (!mat) {
-                        let mat = new egret3d.Material();
-                        mat.setShader(egret3d.DefaultShaders.MATERIAL_COLOR);
-                        mat.setVector4("_Color", new egret3d.Vector4(0.5, 0.5, 0.5, 1.0));
+                    if (element.cacheGameObjectHashCode) {
+                        (gameObj as any).hashCode = element.cacheGameObjectHashCode;
+                    } else {
+                        element.cacheGameObjectHashCode = gameObj.hashCode;
                     }
-                    renderer.materials = [mat];
+
+                    if (element.cacheComponentsHashCodes) {
+                        Editor.editorModel.resetComponentHashCode(gameObj, element.cacheComponentsHashCodes.concat());
+                    }else{
+                        element.cacheComponentsHashCodes = [];
+                        Editor.editorModel.getAllComponentIdFromGameObject(gameObj, element.cacheComponentsHashCodes);
+                    }   
+
+                    if (parentHashCode) {
+                        const parentGameObj:GameObject | null = Editor.editorModel.getGameObjectById(parentHashCode);
+                        if (parentGameObj) {
+                            gameObj.transform.setParent(parentGameObj.transform);
+                        }
+                    }
+
+                    selectIds.push(gameObj.hashCode);
                 }
 
-                this.data.gameObj = gameObj;
-
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, [this.data.gameObj]));
+                //select new objects
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectIds);
 
                 return true;
             }
@@ -455,17 +433,16 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                const { datas, prefabData } = this.data;
-                let deleteObjs = [];
+                const { datas, prefabData,selectIds } = this.data;
+                let addIds = [];
+
                 for (let index = 0; index < datas.length; index++) {
                     let element = datas[index];
                     let serializeData = element.serializeData;
                     let assetsMap = element.assetsMap;
                     let gameObj: GameObject = deserialize(serializeData, assetsMap);
-                    //还原gameobject的hashcode
                     let hashcodes = element.deleteHashcode.concat();
                     Editor.editorModel.resetHashCode(gameObj, hashcodes);
-                    //还原gameobject组件的hashcode
                     let componentsHashcodes = element.deleteComponentcode.concat();
                     Editor.editorModel.resetComponentHashCode(gameObj, componentsHashcodes);
                     let parentHashCode = element.parentHashcode;
@@ -474,7 +451,7 @@ namespace paper.editor {
                         if (parent_3)
                             gameObj.transform.setParent(parent_3.transform);
                     }
-                    deleteObjs.push(gameObj);
+                    addIds.push(gameObj.hashCode);
                 }
 
                 //预制体相关
@@ -487,8 +464,7 @@ namespace paper.editor {
                     Editor.editorModel.resetPrefabbyRootId(rootObj, prefab, prefabIds);
                 }
 
-                this.data.deleteObjs = deleteObjs;
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, deleteObjs));
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectIds);
                 return true;
             }
 
@@ -514,9 +490,9 @@ namespace paper.editor {
 
                 deleteObjs = Editor.editorModel.getGameObjectsByIds(deleteHashcodes);
                 Editor.editorModel._deleteGameObject(deleteObjs);
-                this.data.deleteObjs = deleteObjs;
 
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, deleteObjs));
+                //clear select
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,[]);
                 return true;
             }
 
@@ -540,7 +516,8 @@ namespace paper.editor {
         public undo(): boolean {
             if (super.undo()) {
                 Editor.editorModel._deleteGameObject(this.data.addObjs);
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, this.data.addObjs));
+                const {selectIds} = this.data;
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,selectIds);
                 return true;
             }
 
@@ -552,6 +529,7 @@ namespace paper.editor {
                 let datas = this.data.datas;
                 let prefabData = this.data.prefabData;
                 let addObjs: GameObject[] = [];
+                let selectIds:number[] = [];
 
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
@@ -565,6 +543,7 @@ namespace paper.editor {
                     Editor.editorModel.duplicatePrefabDataToGameObject(duplicateObj, stru, 0);
 
                     addObjs.push(duplicateObj);
+                    
                     //缓存hashcode,有就使用缓存的cache，保持cachecode始终不变
                     if (!element.cacheHashCodes) {
                         let hashCodes: number[] = [];
@@ -578,10 +557,13 @@ namespace paper.editor {
                         Editor.editorModel.resetHashCode(duplicateObj, element.cacheHashCodes.concat());
                         Editor.editorModel.resetComponentHashCode(duplicateObj, element.cacheComponentHashCodes.concat());
                     }
+
+                    selectIds.push(duplicateObj.hashCode);
                 }
 
                 this.data.addObjs = addObjs;
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, addObjs));
+
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectIds);
                 return true;
             }
 
@@ -604,7 +586,8 @@ namespace paper.editor {
         public undo(): boolean {
             if (super.undo()) {
                 Editor.editorModel._deleteGameObject(this.data.addObjs);
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, this.data.addObjs));
+                const {selectIds} = this.data;
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,selectIds);
                 return true;
             }
 
@@ -616,6 +599,7 @@ namespace paper.editor {
                 let datas = this.data.datas;
                 let addObjs: GameObject[] = [];
                 let prefabData = this.data.prefabData;
+                let selectIds:number[] = [];
 
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
@@ -631,6 +615,7 @@ namespace paper.editor {
                     Editor.editorModel.duplicatePrefabDataToGameObject(pasteObj, stru, 0);
 
                     addObjs.push(pasteObj);
+                    
                     //缓存hashcode,有就使用缓存的cache，保持cachecode始终不变
                     if (!element.cacheHashCodes) {
                         let hashCodes: number[] = [];
@@ -644,10 +629,12 @@ namespace paper.editor {
                         Editor.editorModel.resetHashCode(pasteObj, element.cacheHashCodes.concat());
                         Editor.editorModel.resetComponentHashCode(pasteObj, element.cacheComponentHashCodes.concat());
                     }
+
+                    selectIds.push(pasteObj.hashCode);
                 }
 
                 this.data.addObjs = addObjs;
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, addObjs));
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectIds);
 
                 return true;
             }
@@ -682,7 +669,7 @@ namespace paper.editor {
                         }
                     }
                 }
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.REMOVE_COMPONENT));
+                this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
                 return true;
             }
 
@@ -703,7 +690,7 @@ namespace paper.editor {
                         this.data.cacheHashCode = addComponent.hashCode;
                     }
                 }
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.ADD_COMPONENT));
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                 return true;
             }
 
@@ -736,7 +723,7 @@ namespace paper.editor {
                     if (gameObject) {
                         Editor.editorModel.addComponentToGameObject(gameObject, component);
                     }
-                    Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.ADD_COMPONENT));
+                    this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                 }
                 return true;
             }
@@ -758,7 +745,7 @@ namespace paper.editor {
                         }
                     }
                 }
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.REMOVE_COMPONENT));
+                this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
                 return true;
             }
 
@@ -802,7 +789,7 @@ namespace paper.editor {
                         Editor.editorModel.resetPrefabbyRootId(rootObj, prefab, prefabIds);
                     }
                 }
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.UPDATE_PARENT));
+                this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_PARENT);
                 return true;
             }
 
@@ -827,7 +814,7 @@ namespace paper.editor {
                     }
                     element.transform.setParent(targetTransform);
                 }
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.UPDATE_PARENT));
+                this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_PARENT);
                 return true;
             }
 
@@ -876,12 +863,7 @@ namespace paper.editor {
         }
 
         protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any) {
-            Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,
-                {
-                    target: modifyObj,
-                    propName: propName,
-                    propValue: newValue
-                }))
+            this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target: modifyObj, propName: propName,propValue: newValue})
         }
     }
 
@@ -1063,7 +1045,7 @@ namespace paper.editor {
                             (addComponent as any).hashCode = componentId;
                             (addComponent as any).gameObject = gameObj;
                             Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
-                            Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.ADD_COMPONENT));
+                            this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                         }
                     }
                 }
@@ -1084,7 +1066,7 @@ namespace paper.editor {
                         const componentObj = Editor.editorModel.getComponentById(gameObj, componentId);
                         if (componentObj) {
                             gameObj.removeComponent(componentObj.constructor as any);
-                            Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.REMOVE_COMPONENT));
+                            this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
                         }
                     }
                 }
@@ -1120,7 +1102,7 @@ namespace paper.editor {
                         if (removeComponent) {
                             gameObj.removeComponent(removeComponent as any);
                         }
-                        Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.REMOVE_COMPONENT));
+                        this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
                     }
                 }
                 return true;
@@ -1155,7 +1137,7 @@ namespace paper.editor {
                         } else {
                             element.cacheHashCode = addComponent.hashCode;
                         }
-                        Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.ADD_COMPONENT));
+                        this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                     }
                 }
                 return true;
@@ -1183,12 +1165,7 @@ namespace paper.editor {
                 const { propName, copyValue, valueEditType } = propertyValue;
                 const newValue = Editor.editorModel.deserializeProperty(copyValue, valueEditType);
                 Editor.editorModel.setTargetProperty(propName, target, newValue);
-                Editor.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,
-                    {
-                        target: target,
-                        propName: propName,
-                        propValue: newValue
-                    }))
+                this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target:target,propName:propName,propValue:newValue});
             });
         }
 

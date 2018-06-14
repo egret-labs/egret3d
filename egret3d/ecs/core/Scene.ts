@@ -53,7 +53,9 @@ namespace paper {
          */
         public $destroy() {
             const globalObjects = Application.sceneManager.globalObjects;
-            for (const gameObject of this.gameObjects) {
+            let i = this.gameObjects.length;
+            while (i--) {
+                const gameObject = this.gameObjects[i];
                 if (globalObjects.indexOf(gameObject) >= 0) {
                     continue;
                 }

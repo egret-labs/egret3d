@@ -15,19 +15,19 @@ namespace paper {
          * 防止生成未经管理的系统实例。
          * @internal
          */
-        public static _createEnabled: boolean = false;
+        public static _createEnabled = false;
         /**
          * 是否更新该系统。
          */
-        public enable: boolean = true;
+        public enabled = true;
         /**
          * @internal
          */
-        public _level: number = 0;
+        public _level = 0;
         /**
          * 系统对于每个实体关心的组件总数。
          */
-        protected _interestComponentCount: number = 0;
+        protected _interestComponentCount = 0;
         /**
          * 关心列表。
          */
@@ -39,11 +39,10 @@ namespace paper {
         /**
          * @internal
          */
-        public constructor() {
+        constructor() {
             if (!BaseSystem._createEnabled) {
                 throw new Error("Create an instance of a system is not allowed.");
             }
-
             BaseSystem._createEnabled = false;
         }
 
@@ -126,7 +125,7 @@ namespace paper {
             }
         }
 
-        public uninitialize() {
+        uninitialize() {
             this._components.length = 0;
 
             for (const k in this._gameObjectOffsets) {
@@ -134,11 +133,11 @@ namespace paper {
             }
         }
 
-        public abstract update(): void;
+        abstract update(): void;
         /**
          * 该系统所关心的所有组件。
          */
-        public get components(): ReadonlyArray<T> {
+        get components(): ReadonlyArray<T> {
             return this._components;
         }
     }
