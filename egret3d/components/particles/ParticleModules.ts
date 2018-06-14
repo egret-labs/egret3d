@@ -1,4 +1,8 @@
 namespace egret3d.particle {
+
+    const colorHelper1: Color = new Color();
+    const colorHelper2: Color = new Color();
+    
     export const enum CurveMode {
         Constant = 0,
         Curve = 1,
@@ -331,14 +335,12 @@ namespace egret3d.particle {
             } else if (this.mode === ColorGradientMode.Gradient) {
                 return this.gradient.evaluate(t, out);
             } else if (this.mode === ColorGradientMode.TwoGradients) {
-                const minColor = new Color();
-                const maxColor = new Color();
-                this.gradientMin.evaluate(t, minColor);
-                this.gradientMax.evaluate(t, maxColor);
-                out.r = (Math.random() * (minColor.r - maxColor.r) + minColor.r);
-                out.g = (Math.random() * (minColor.g - maxColor.g) + minColor.g);
-                out.b = (Math.random() * (minColor.b - maxColor.b) + minColor.b);
-                out.a = (Math.random() * (minColor.a - maxColor.a) + minColor.a);
+                this.gradientMin.evaluate(t, colorHelper1);
+                this.gradientMax.evaluate(t, colorHelper2);
+                out.r = (Math.random() * (colorHelper1.r - colorHelper2.r) + colorHelper1.r);
+                out.g = (Math.random() * (colorHelper1.g - colorHelper2.g) + colorHelper1.g);
+                out.b = (Math.random() * (colorHelper1.b - colorHelper2.b) + colorHelper1.b);
+                out.a = (Math.random() * (colorHelper1.a - colorHelper2.a) + colorHelper1.a);
             } else {
                 out.r = Math.random();
                 out.g = Math.random();
