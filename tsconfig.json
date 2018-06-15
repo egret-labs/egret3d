@@ -17,7 +17,7 @@
         "strictNullChecks": false,
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": false,
-        "outFile": "D:/Paper/doc/template/3d-examples/egret3d/egret3d.js"
+        "outFile": "bin/egret3d.js"
     },
     "files": [
         "libs/egret.d.ts",
