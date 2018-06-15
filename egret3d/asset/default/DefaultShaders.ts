@@ -546,7 +546,7 @@ namespace egret3d {
                 shader.url = "particles.shader.json";
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [0.5, 0.5, 0.5, 0.5] };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
@@ -566,7 +566,7 @@ namespace egret3d {
                 shader.url = "particles_additive.shader.json";
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [0, 0, 0, 0] };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
@@ -586,7 +586,7 @@ namespace egret3d {
                 shader.url = "particles_additive_premultiply.shader.json";
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [0.5, 0.5, 0.5, 0.5] };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
@@ -627,7 +627,7 @@ namespace egret3d {
                 shader.url = "particles_blend_premultiply.shader.json";
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [0.5, 0.5, 0.5, 0.5] };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
