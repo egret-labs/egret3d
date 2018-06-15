@@ -1,5 +1,5 @@
 node_modules
 .wing
 example/bin-release
-report
+devconfig
 tests**

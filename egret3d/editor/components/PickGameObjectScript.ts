@@ -23,7 +23,7 @@ namespace paper.editor {
                 // 点击 game object 激活
                 if (this.bindMouse.wasReleased(0)) {
                     let ray = this.camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                    let pickInfo = egret3d.Physics.Raycast(ray, true);
+                    let pickInfo = egret3d.Ray.raycast(ray, true);
                     let tapDelta = Date.now() - this._tapStart;
                     if (this.bindKeyboard.isPressed('CONTROL')) {
                         if (pickInfo) {
@@ -46,8 +46,10 @@ namespace paper.editor {
                                     } else if (l > 1) {
                                         this.selectedGameObjects.splice(index, 1);
                                     }
-                                    const selectIds:number[] = this.selectedGameObjects.map((gameobj) => {return gameobj.hashCode});
-                                    this.editorModel.selectGameObject(selectIds, null);
+                                    const selectIds: number[] = this.selectedGameObjects.map((gameobj) => { return gameobj.hashCode });
+                                    let select={};
+                                    select[selectItemType.GAMEOBJECT]=selectIds;
+                                    this.editorModel.selectGameObject(select, null);
                                 }
                             }
                         }
@@ -60,13 +62,17 @@ namespace paper.editor {
                                 // 对GameObject的点选
                                 if (tapDelta < 200) {
                                     this.selectedGameObjects = [picked];
-                                    const selectIds:number[] = this.selectedGameObjects.map((gameobj) => {return gameobj.hashCode});
-                                    this.editorModel.selectGameObject(selectIds, null);
+                                    const selectIds: number[] = this.selectedGameObjects.map((gameobj) => { return gameobj.hashCode });
+                                    let select={};
+                                    select[selectItemType.GAMEOBJECT]=selectIds;
+                                    this.editorModel.selectGameObject(select, null);
                                 }
                             }
                         } else if (tapDelta < 200) {
                             this.selectedGameObjects = [];
-                            this.editorModel.selectGameObject([], null);
+                            let select={};
+                            select[selectItemType.GAMEOBJECT]=[];
+                            this.editorModel.selectGameObject(select, null);
                         }
                     }
                 }

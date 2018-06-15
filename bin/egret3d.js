@@ -980,7 +980,7 @@ var paper;
             /**
              * 是否更新该系统。
              */
-            this.enable = true;
+            this.enabled = true;
             /**
              * @internal
              */
@@ -1287,8 +1287,10 @@ var paper;
             EditType[EditType["SOUND"] = 14] = "SOUND";
             /**Mesh */
             EditType[EditType["MESH"] = 15] = "MESH";
+            /**shader */
+            EditType[EditType["SHADER"] = 16] = "SHADER";
             /**数组 */
-            EditType[EditType["ARRAY"] = 16] = "ARRAY";
+            EditType[EditType["ARRAY"] = 17] = "ARRAY";
         })(EditType = editor.EditType || (editor.EditType = {}));
         var customMap = {};
         /**
@@ -1513,7 +1515,7 @@ var paper;
             for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
                 if (system && system.constructor === systemClass) {
-                    system.enable = true;
+                    system.enabled = true;
                 }
             }
         };
@@ -1524,7 +1526,7 @@ var paper;
             for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
                 if (system && system.constructor === systemClass) {
-                    system.enable = false;
+                    system.enabled = false;
                 }
             }
         };
@@ -1535,7 +1537,7 @@ var paper;
             for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
                 if (system && system.constructor === systemClass) {
-                    return system.enable;
+                    return system.enabled;
                 }
             }
             return false;
@@ -1565,7 +1567,7 @@ var paper;
                         this._systems[index - removeCount] = system;
                         this._systems[index] = null;
                     }
-                    if (system.enable) {
+                    if (system.enabled) {
                         system.update();
                     }
                 }
@@ -2638,7 +2640,7 @@ var egret3d;
             }
             // Egret2D渲染不加入DrawCallList的排序
             var egret2DRenderSystem = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem);
-            if (egret2DRenderSystem && egret2DRenderSystem.enable) {
+            if (egret2DRenderSystem && egret2DRenderSystem.enabled) {
                 for (var _b = 0, _c = egret2DRenderSystem.components; _b < _c.length; _b++) {
                     var egret2DRenderer = _c[_b];
                     if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
@@ -3983,8 +3985,9 @@ var paper;
          */
         Scene.prototype.$destroy = function () {
             var globalObjects = paper.Application.sceneManager.globalObjects;
-            for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
+            var i = this.gameObjects.length;
+            while (i--) {
+                var gameObject = this.gameObjects[i];
                 if (globalObjects.indexOf(gameObject) >= 0) {
                     continue;
                 }
@@ -6267,50 +6270,6 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * text asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 文本资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var TextAsset = (function (_super) {
-        __extends(TextAsset, _super);
-        function TextAsset() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * 文本内容
-             */
-            _this.content = "";
-            return _this;
-        }
-        /**
-         * @inheritDoc
-         */
-        TextAsset.prototype.dispose = function () {
-            this.content = "";
-        };
-        /**
-         * @inheritDoc
-         */
-        TextAsset.prototype.caclByteLength = function () {
-            if (this.content) {
-                return egret3d.utils.caclStringByteLength(this.content);
-            }
-            return 0;
-        };
-        return TextAsset;
-    }(paper.Asset));
-    egret3d.TextAsset = TextAsset;
-    __reflect(TextAsset.prototype, "egret3d.TextAsset");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
      * textrue asset
      * @version paper 1.0
      * @platform Web
@@ -8442,15 +8401,15 @@ var egret;
                 var attribute = program.attributes;
                 for (var key in attribute) {
                     if (key === "aVertexPosition") {
-                        gl.vertexAttribPointer(attribute["aVertexPosition"].location, 2, gl.FLOAT, false, 5 * 4, 0);
+                        gl.vertexAttribPointer(attribute["aVertexPosition"].location, 2, gl.FLOAT, false, 4 * 4, 0);
                         gl.enableVertexAttribArray(attribute["aVertexPosition"].location);
                     }
                     else if (key === "aTextureCoord") {
-                        gl.vertexAttribPointer(attribute["aTextureCoord"].location, 2, gl.FLOAT, false, 5 * 4, 2 * 4);
+                        gl.vertexAttribPointer(attribute["aTextureCoord"].location, 2, gl.UNSIGNED_SHORT, true, 4 * 4, 2 * 4);
                         gl.enableVertexAttribArray(attribute["aTextureCoord"].location);
                     }
                     else if (key === "aColor") {
-                        gl.vertexAttribPointer(attribute["aColor"].location, 1, gl.FLOAT, false, 5 * 4, 4 * 4);
+                        gl.vertexAttribPointer(attribute["aColor"].location, 1, gl.FLOAT, false, 4 * 4, 3 * 4);
                         gl.enableVertexAttribArray(attribute["aColor"].location);
                     }
                 }
@@ -15533,16 +15492,7 @@ var egret3d;
         RenderQueue[RenderQueue["Overlay"] = 4000] = "Overlay";
     })(RenderQueue = egret3d.RenderQueue || (egret3d.RenderQueue = {}));
     /**
-     * material asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 材质资源
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     var Material = (function (_super) {
         __extends(Material, _super);
@@ -15554,21 +15504,11 @@ var egret3d;
             _this.$uniforms = {};
             _this._defines = new Array();
             _this._textureRef = [];
-            _this._changeShaderMap = {};
             _this._renderQueue = -1;
             return _this;
         }
         /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         Material.prototype.dispose = function () {
             delete this.$uniforms;
@@ -15866,63 +15806,37 @@ var egret3d;
                 this._textureRef.push(_texture);
             }
         };
-        // /**
-        //  * 
-        //  */
-        // setTexture(_id: string, _texture: paper.Texture) {
-        //     if (this.$uniforms[_id] != undefined) {
-        //         this.$uniforms[_id].value = _texture;
-        //     } else {
-        //         this.$uniforms[_id] = {type: UniformTypeEnum.Texture, value: _texture};
-        //     }
-        //     this.version++;
-        // }
-        /**
-         *
-         */
         Material.prototype.$parse = function (json) {
-            var shaderName = json["shader"];
+            var shaderName = json.shader;
             var shader = paper.Asset.find(shaderName);
             this.setShader(shader);
-            var mapUniform = json["mapUniform"];
+            var mapUniform = json.mapUniform;
             for (var i in mapUniform) {
                 var jsonChild = mapUniform[i];
-                var _uniformType = jsonChild["type"];
-                switch (_uniformType) {
+                switch (jsonChild.type) {
                     case egret3d.UniformTypeEnum.Texture:
-                        var _value = jsonChild["value"];
-                        var _texture = paper.Asset.find(egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", _value));
-                        if (!_texture) {
-                            _texture = egret3d.DefaultTextures.GRID;
+                        var value = jsonChild.value;
+                        var url = egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", value);
+                        var texture = paper.Asset.find(url);
+                        if (!texture) {
+                            texture = egret3d.DefaultTextures.GRID;
                         }
-                        this.setTexture(i, _texture);
+                        this.setTexture(i, texture);
                         break;
                     case egret3d.UniformTypeEnum.Float:
-                        var __value = jsonChild["value"];
-                        this.setFloat(i, parseFloat(__value));
+                        this.setFloat(i, jsonChild.value);
                         break;
                     case egret3d.UniformTypeEnum.Float4:
-                        var tempValue = jsonChild["value"];
-                        try {
-                            if (Array.isArray(tempValue)) {
-                                var _float4 = new egret3d.Vector4(tempValue[0], tempValue[1], tempValue[2], tempValue[3]);
-                                this.setVector4(i, _float4);
-                            }
-                            else {
-                                //旧格式兼容
-                                var values = tempValue.match(egret3d.RegexpUtil.vector4Regexp);
-                                if (values !== null) {
-                                    var _float4 = new egret3d.Vector4(parseFloat(values[1]), parseFloat(values[2]), parseFloat(values[3]), parseFloat(values[4]));
-                                    this.setVector4(i, _float4);
-                                }
-                            }
+                        var tempValue = jsonChild.value;
+                        if (Array.isArray(tempValue)) {
+                            this.setVector4v(i, tempValue);
                         }
-                        catch (e) {
-                            console.log(e);
+                        else {
+                            console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级");
                         }
                         break;
                     default:
-                        console.log("map uniform type in material json <" + jsonChild["type"] + "> out of range（0-2）!");
+                        console.warn("\u4E0D\u652F\u6301\u7684 Uniform \u53C2\u6570\uFF1A" + this.url + "," + i);
                 }
             }
         };
@@ -15961,7 +15875,8 @@ var egret3d;
             return mat;
         };
         __decorate([
-            paper.serializedField
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.SHADER)
         ], Material.prototype, "shader", void 0);
         __decorate([
             paper.serializedField,
@@ -17424,77 +17339,36 @@ var egret3d;
         0, 4, 1, 5
     ];
     /**
-     * ray
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 射线
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     var Ray = (function () {
-        /**
-         * build a ray
-         * @param origin ray origin point
-         * @param dir ray direction vector
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
         /**
          * 构建一条射线
          * @param origin 射线起点
          * @param dir 射线方向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         function Ray(origin, direction) {
             this.origin = egret3d.Vector3.copy(origin, new egret3d.Vector3());
             this.direction = egret3d.Vector3.copy(direction, new egret3d.Vector3());
         }
         /**
-         * intersect with aabb
-         * @param aabb aabb instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与aabb碰撞相交检测
-         * @param aabb aabb实例
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         Ray.prototype.intersectAABB = function (aabb) {
             return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
         };
         /**
-         * intersect with transform plane
-         * @param tran tranform instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param tran transform实例
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @param transform transform实例
          */
-        Ray.prototype.intersectPlaneTransform = function (tran) {
+        Ray.prototype.intersectPlaneTransform = function (transform) {
             var pickinfo = null;
-            var panelpoint = tran.getPosition();
+            var panelpoint = transform.getPosition();
             var forward = helpVec3_1;
-            tran.getForward(forward);
+            transform.getForward(forward);
             var hitposition = this.intersectPlane(panelpoint, forward);
             if (hitposition) {
-                pickinfo = new egret3d.PickInfo();
+                pickinfo = new PickInfo();
                 pickinfo.hitposition = hitposition;
                 pickinfo.distance = egret3d.Vector3.getDistance(pickinfo.hitposition, this.origin);
             }
@@ -17523,21 +17397,11 @@ var egret3d;
             }
         };
         /**
-         * intersect with collider
-         * @param tran tranform instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与碰撞盒相交检测
-         * @param tran 待检测带碰撞盒的transform
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @param transform 待检测带碰撞盒的transform
          */
-        Ray.prototype.intersectCollider = function (tran) {
-            var _collider = tran.gameObject.getComponent(egret3d.BaseCollider);
+        Ray.prototype.intersectCollider = function (transform) {
+            var _collider = transform.gameObject.getComponent(egret3d.BaseCollider);
             var pickinfo = null;
             if (_collider instanceof egret3d.BoxCollider) {
                 var obb = _collider.bounds;
@@ -17576,20 +17440,10 @@ var egret3d;
             return pickinfo;
         };
         /**
-         * intersect with box
-         * @param minimum min vector
-         * @param maximum max vector
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与最大最小点表示的box相交检测
          * @param minimum 最小点
          * @param maximum 最大点
          * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         Ray.prototype.intersectBoxMinMax = function (minimum, maximum) {
             var d = 0.0;
@@ -17670,20 +17524,7 @@ var egret3d;
             return true;
         };
         /**
-         * intersect with sphere
-         * @param center sphere center
-         * @param radius sphere radius
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与球相交检测
-         * @param center 球圆心坐标
-         * @param radius 球半径
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         Ray.prototype.intersectsSphere = function (center, radius) {
             var center_ori = helpVec3_1;
@@ -17701,22 +17542,7 @@ var egret3d;
             return true;
         };
         /**
-         * intersect with triangle
-         * @param vertex0
-         * @param vertex1
-         * @param vertex2
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 与三角形相交检测
-         * @param vertex0
-         * @param vertex1
-         * @param vertex2
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         Ray.prototype.intersectsTriangle = function (vertex0, vertex1, vertex2) {
             var _edge1 = helpVec3_1;
@@ -17742,16 +17568,124 @@ var egret3d;
             if (bv < 0 || bu + bv > 1.0) {
                 return null;
             }
-            var pickInfo = new egret3d.PickInfo();
+            var pickInfo = new PickInfo();
             pickInfo.distance = egret3d.Vector3.dot(_edge2, _qvec) * invdet;
             pickInfo.textureCoordA.x = bu;
             pickInfo.textureCoordA.y = bv;
             return pickInfo;
         };
+        /**
+         * 获取射线拾取到的最近物体。
+         */
+        Ray.raycast = function (ray, isPickMesh, maxDistance, layerMask) {
+            if (isPickMesh === void 0) { isPickMesh = false; }
+            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
+            if (layerMask === void 0) { layerMask = 2 /* Default */ | 4 /* UI */; }
+            return this._doPick(ray, maxDistance, layerMask, false, isPickMesh);
+        };
+        /**
+         * 获取射线路径上的所有物体。
+         */
+        Ray.raycastAll = function (ray, isPickMesh, maxDistance, layerMask) {
+            if (isPickMesh === void 0) { isPickMesh = false; }
+            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
+            if (layerMask === void 0) { layerMask = 2 /* Default */ | 4 /* UI */; }
+            return this._doPick(ray, maxDistance, layerMask, true, isPickMesh);
+        };
+        Ray._doPick = function (ray, maxDistance, layerMask, pickAll, isPickMesh) {
+            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
+            if (pickAll === void 0) { pickAll = false; }
+            if (isPickMesh === void 0) { isPickMesh = false; }
+            var pickedList = [];
+            for (var _i = 0, _a = paper.Application.sceneManager.getActiveScene().getRootGameObjects(); _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.layer & layerMask) {
+                    if (isPickMesh) {
+                        this._pickMesh(ray, gameObject.transform, pickedList);
+                    }
+                    else {
+                        this._pickCollider(ray, gameObject.transform, pickedList);
+                    }
+                }
+            }
+            if (pickedList.length === 0) {
+                return null;
+            }
+            if (pickAll) {
+                return pickedList;
+            }
+            var index = 0;
+            for (var i = 1; i < pickedList.length; i++) {
+                if (pickedList[i].distance < pickedList[index].distance) {
+                    index = i;
+                }
+            }
+            return pickedList[index];
+        };
+        Ray._pickMesh = function (ray, transform, pickInfos) {
+            if (transform.gameObject.activeInHierarchy) {
+                var meshFilter = transform.gameObject.getComponent(egret3d.MeshFilter);
+                if (meshFilter) {
+                    var mesh = meshFilter.mesh;
+                    if (mesh) {
+                        var pickinfo = mesh.intersects(ray, transform.getWorldMatrix());
+                        if (pickinfo) {
+                            pickInfos.push(pickinfo);
+                            pickinfo.transform = transform;
+                        }
+                    }
+                }
+                else {
+                    var skinmesh = transform.gameObject.getComponent(egret3d.SkinnedMeshRenderer);
+                    if (skinmesh) {
+                        var pickinfo = skinmesh.intersects(ray);
+                        if (pickinfo) {
+                            pickInfos.push(pickinfo);
+                            pickinfo.transform = transform;
+                        }
+                    }
+                }
+            }
+            for (var _i = 0, _a = transform.children; _i < _a.length; _i++) {
+                var child = _a[_i];
+                this._pickMesh(ray, child, pickInfos);
+            }
+        };
+        Ray._pickCollider = function (ray, transform, pickInfos) {
+            if (transform.gameObject.activeInHierarchy) {
+                var pickInfo = ray.intersectCollider(transform);
+                if (pickInfo) {
+                    pickInfos.push(pickInfo);
+                    pickInfo.transform = transform;
+                }
+            }
+            for (var _i = 0, _a = transform.children; _i < _a.length; _i++) {
+                var child = _a[_i];
+                this._pickCollider(ray, child, pickInfos);
+            }
+        };
         return Ray;
     }());
     egret3d.Ray = Ray;
     __reflect(Ray.prototype, "egret3d.Ray");
+    /**
+     * 场景拣选信息
+     */
+    var PickInfo = (function () {
+        function PickInfo() {
+            this.subMeshIndex = -1;
+            this.triangleIndex = -1;
+            this.distance = 0.0;
+            this.position = new egret3d.Vector3();
+            this.textureCoordA = new egret3d.Vector2();
+            this.textureCoordB = new egret3d.Vector2();
+            this.transform = null;
+            this.collider = null;
+        }
+        return PickInfo;
+    }());
+    egret3d.PickInfo = PickInfo;
+    __reflect(PickInfo.prototype, "egret3d.PickInfo");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -17838,174 +17772,6 @@ var egret3d;
     egret3d.DefaultTextures = DefaultTextures;
     __reflect(DefaultTextures.prototype, "egret3d.DefaultTextures");
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * physics
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 物理类
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var Physics = (function () {
-        function Physics() {
-        }
-        /**
-         * get the nearest transform contect to the ray
-         * @param ray ray
-         * @param isPickMesh true pick mesh, false pick collider
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取射线拾取到的最近物体。
-         * @param ray 射线实例
-         * @param isPickMesh 是否为拾取mesh，否为拾取collider
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Physics.Raycast = function (ray, isPickMesh, maxDistance, layerMask) {
-            if (isPickMesh === void 0) { isPickMesh = false; }
-            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
-            if (layerMask === void 0) { layerMask = 2 /* Default */ | 4 /* UI */; }
-            return this._doPick(ray, maxDistance, layerMask, false, isPickMesh);
-        };
-        /**
-         * get all transforms contect to the ray
-         * @param ray ray
-         * @param isPickMesh true pick mesh, false pick collider
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取射线路径上的所有物体。
-         * @param ray 射线实例
-         * @param isPickMesh 是否为拾取mesh，否为拾取collider
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Physics.RaycastAll = function (ray, isPickMesh, maxDistance, layerMask) {
-            if (isPickMesh === void 0) { isPickMesh = false; }
-            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
-            if (layerMask === void 0) { layerMask = 2 /* Default */ | 4 /* UI */; }
-            return this._doPick(ray, maxDistance, layerMask, true, isPickMesh);
-        };
-        Physics._doPick = function (ray, maxDistance, layerMask, pickAll, isPickMesh) {
-            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
-            if (pickAll === void 0) { pickAll = false; }
-            if (isPickMesh === void 0) { isPickMesh = false; }
-            var pickedList = [];
-            for (var _i = 0, _a = paper.Application.sceneManager.getActiveScene().getRootGameObjects(); _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.layer & layerMask) {
-                    if (isPickMesh) {
-                        this._pickMesh(ray, gameObject.transform, pickedList);
-                    }
-                    else {
-                        this._pickCollider(ray, gameObject.transform, pickedList);
-                    }
-                }
-            }
-            if (pickedList.length === 0) {
-                return null;
-            }
-            if (pickAll) {
-                return pickedList;
-            }
-            var index = 0;
-            for (var i = 1; i < pickedList.length; i++) {
-                if (pickedList[i].distance < pickedList[index].distance) {
-                    index = i;
-                }
-            }
-            return pickedList[index];
-        };
-        Physics._pickMesh = function (ray, transform, pickInfos) {
-            if (transform.gameObject.activeInHierarchy) {
-                var meshFilter = transform.gameObject.getComponent(egret3d.MeshFilter);
-                if (meshFilter) {
-                    var mesh = meshFilter.mesh;
-                    if (mesh) {
-                        var pickinfo = mesh.intersects(ray, transform.getWorldMatrix());
-                        if (pickinfo) {
-                            pickInfos.push(pickinfo);
-                            pickinfo.transform = transform;
-                        }
-                    }
-                }
-                else {
-                    var skinmesh = transform.gameObject.getComponent(egret3d.SkinnedMeshRenderer);
-                    if (skinmesh) {
-                        var pickinfo = skinmesh.intersects(ray);
-                        if (pickinfo) {
-                            pickInfos.push(pickinfo);
-                            pickinfo.transform = transform;
-                        }
-                    }
-                }
-            }
-            for (var _i = 0, _a = transform.children; _i < _a.length; _i++) {
-                var child = _a[_i];
-                this._pickMesh(ray, child, pickInfos);
-            }
-        };
-        Physics._pickCollider = function (ray, transform, pickInfos) {
-            if (transform.gameObject.activeInHierarchy) {
-                var pickInfo = ray.intersectCollider(transform);
-                if (pickInfo) {
-                    pickInfos.push(pickInfo);
-                    pickInfo.transform = transform;
-                }
-            }
-            for (var _i = 0, _a = transform.children; _i < _a.length; _i++) {
-                var child = _a[_i];
-                this._pickCollider(ray, child, pickInfos);
-            }
-        };
-        return Physics;
-    }());
-    egret3d.Physics = Physics;
-    __reflect(Physics.prototype, "egret3d.Physics");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * scene pick up info
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 场景拣选信息
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var PickInfo = (function () {
-        function PickInfo() {
-            this.subMeshIndex = -1;
-            this.triangleIndex = -1;
-            this.distance = 0.0;
-            this.position = new egret3d.Vector3();
-            this.textureCoordA = new egret3d.Vector2();
-            this.textureCoordB = new egret3d.Vector2();
-            this.transform = null;
-            this.collider = null;
-        }
-        return PickInfo;
-    }());
-    egret3d.PickInfo = PickInfo;
-    __reflect(PickInfo.prototype, "egret3d.PickInfo");
-})(egret3d || (egret3d = {}));
 var RES;
 (function (RES) {
     var processor;
@@ -18027,14 +17793,6 @@ var RES;
             AssetTypeEnum[AssetTypeEnum["GLTFBinary"] = 11] = "GLTFBinary";
             AssetTypeEnum[AssetTypeEnum["Prefab"] = 12] = "Prefab";
             AssetTypeEnum[AssetTypeEnum["Scene"] = 13] = "Scene";
-            AssetTypeEnum[AssetTypeEnum["TextAsset"] = 14] = "TextAsset";
-            AssetTypeEnum[AssetTypeEnum["Atlas"] = 15] = "Atlas";
-            AssetTypeEnum[AssetTypeEnum["Font"] = 16] = "Font";
-            AssetTypeEnum[AssetTypeEnum["PackBin"] = 17] = "PackBin";
-            AssetTypeEnum[AssetTypeEnum["PackTxt"] = 18] = "PackTxt";
-            AssetTypeEnum[AssetTypeEnum["pathAsset"] = 19] = "pathAsset";
-            AssetTypeEnum[AssetTypeEnum["PVR"] = 20] = "PVR";
-            AssetTypeEnum[AssetTypeEnum["Sound"] = 21] = "Sound";
         })(AssetTypeEnum = processor.AssetTypeEnum || (processor.AssetTypeEnum = {}));
         var typeMap = {
             ".vs.glsl": AssetTypeEnum.GLVertexShader,
@@ -18043,25 +17801,13 @@ var RES;
             ".shader.json": AssetTypeEnum.Shader,
             ".png": AssetTypeEnum.Texture,
             ".jpg": AssetTypeEnum.Texture,
-            ".pvr.bin": AssetTypeEnum.PVR,
-            ".pvr": AssetTypeEnum.PVR,
             ".imgdesc.json": AssetTypeEnum.TextureDesc,
             ".mat.json": AssetTypeEnum.Material,
             ".gltf.json": AssetTypeEnum.GLTF,
             ".gltf.bin": AssetTypeEnum.GLTFBinary,
             ".glb": AssetTypeEnum.GLTFBinary,
             ".prefab.json": AssetTypeEnum.Prefab,
-            ".scene.json": AssetTypeEnum.Scene,
-            ".atlas.json": AssetTypeEnum.Atlas,
-            ".font.json": AssetTypeEnum.Font,
-            ".json": AssetTypeEnum.TextAsset,
-            ".txt": AssetTypeEnum.TextAsset,
-            ".effect.json": AssetTypeEnum.TextAsset,
-            ".packs.bin": AssetTypeEnum.PackBin,
-            ".packs.txt": AssetTypeEnum.PackTxt,
-            ".path.json": AssetTypeEnum.pathAsset,
-            ".mp3": AssetTypeEnum.Sound,
-            ".ogg": AssetTypeEnum.Sound
+            ".scene.json": AssetTypeEnum.Scene
         };
         function calcType(url) {
             var filei = url.lastIndexOf("/");
@@ -18620,36 +18366,6 @@ var RES;
                 });
             }
         };
-        processor.TextAssetProcessor = {
-            onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, text;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "text")];
-                            case 1:
-                                data = _a.sent();
-                                url = getUrl(resource);
-                                filename = getFileName(url);
-                                text = new egret3d.TextAsset(filename, url);
-                                text.content = data;
-                                paper.Asset.register(text, true);
-                                return [2 /*return*/, text];
-                        }
-                    });
-                });
-            },
-            onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
-            }
-        };
         processor.PathAssetProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
@@ -18692,7 +18408,6 @@ var RES;
         RES.processor.map("Scene", processor.SceneProcessor);
         RES.processor.map("Atlas", processor.AtlasProcessor);
         RES.processor.map("Font", processor.Font3DProcessor);
-        RES.processor.map("TextAsset", processor.TextAssetProcessor);
         RES.processor.map("pathAsset", processor.PathAssetProcessor);
         RES.processor.map("Sound", processor.Sound3DProcessor);
     })(processor = RES.processor || (RES.processor = {}));
@@ -21780,6 +21495,10 @@ var paper;
             if (gameObject.transform) {
                 for (var _i = 0, _a = gameObject.transform.children; _i < _a.length; _i++) {
                     var child = _a[_i];
+                    if (paper.Application.sceneManager.globalObjects.indexOf(child.gameObject) >= 0) {
+                        child.parent = null;
+                        continue;
+                    }
                     child.gameObject.destroy();
                 }
             }
@@ -21794,23 +21513,6 @@ var egret3d;
     var WebGLKit = (function () {
         function WebGLKit() {
         }
-        WebGLKit.SetMaxVertexAttribArray = function (webgl, count) {
-            for (var i = count; i < WebGLKit._maxVertexAttribArray; i++) {
-                webgl.disableVertexAttribArray(i);
-            }
-            WebGLKit._maxVertexAttribArray = count;
-        };
-        WebGLKit.allocTexUnit = function () {
-            var textureUnit = this._usedTextureUnits;
-            if (textureUnit >= this.capabilities.maxTextures) {
-                console.warn('trying to use ' + textureUnit + ' texture units while this GPU supports only ' + this.capabilities.maxTextures);
-            }
-            this._usedTextureUnits += 1;
-            return textureUnit;
-        };
-        WebGLKit.resetTexUnit = function () {
-            this._usedTextureUnits = 0;
-        };
         WebGLKit.activeTexture = function (index) {
             if (this._activeTextureIndex != index) {
                 this.webgl.activeTexture(WebGLKit._texNumber[index]);
@@ -21885,30 +21587,6 @@ var egret3d;
                 return true;
             }
             return false;
-        };
-        // 三角形应用vbo
-        WebGLKit.drawArrayTris = function (start, count) {
-            var webgl = this.webgl;
-            // DrawInfo.ins.triCount += count / 3;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawArrays(webgl.TRIANGLES, start, count);
-        };
-        // 直线应用vbo
-        WebGLKit.drawArrayLines = function (start, count) {
-            var webgl = this.webgl;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawArrays(webgl.LINES, start, count);
-        };
-        WebGLKit.drawElementTris = function (start, count) {
-            var webgl = this.webgl;
-            // DrawInfo.ins.triCount += count / 3;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawElements(webgl.TRIANGLES, count, webgl.UNSIGNED_SHORT, start * 2);
-        };
-        WebGLKit.drawElementLines = function (start, count) {
-            var webgl = this.webgl;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawElements(webgl.LINES, count, webgl.UNSIGNED_SHORT, start * 2);
         };
         WebGLKit.setStates = function (drawPass, frontFaceCW) {
             if (frontFaceCW === void 0) { frontFaceCW = false; }
@@ -22035,8 +21713,6 @@ var egret3d;
                 this.capabilities.initialize(webgl);
             }
         };
-        WebGLKit._maxVertexAttribArray = 0;
-        WebGLKit._usedTextureUnits = 0;
         WebGLKit._texNumber = null;
         WebGLKit._activeTextureIndex = -1;
         WebGLKit._frontFaceCW = false;
@@ -23880,6 +23556,11 @@ var paper;
     var editor;
     (function (editor) {
         editor.context = new editor.EventDispatcher();
+        var selectItemType;
+        (function (selectItemType) {
+            selectItemType[selectItemType["GAMEOBJECT"] = 0] = "GAMEOBJECT";
+            selectItemType[selectItemType["ASSET"] = 1] = "ASSET";
+        })(selectItemType = editor.selectItemType || (editor.selectItemType = {}));
         /**
          * 编辑模型事件
          */
@@ -24156,14 +23837,16 @@ var paper;
             /**
              * 创建游戏对象
              */
-            EditorModel.prototype.createGameObject = function (parent, mesh, mat) {
-                if (parent === void 0) { parent = null; }
-                var parentHashCode = parent ? parent.hashCode : null;
+            EditorModel.prototype.createGameObject = function (list) {
+                var datas = [];
+                for (var index = 0; index < list.length; index++) {
+                    var element = list[index];
+                    var parentHashCode = element ? element : null;
+                    datas.push({ parentHashCode: parentHashCode });
+                }
                 var data = {
                     cmdType: CmdType.ADD_GAMEOBJECT,
-                    parentHashCode: parentHashCode,
-                    mesh: mesh,
-                    mat: mat
+                    datas: datas,
                 };
                 var state = editor.AddGameObjectState.create(data);
                 this.addState(state);
@@ -24259,7 +23942,8 @@ var paper;
                     cmdType: CmdType.PASTE_GAMEOBJECTS,
                     datas: datas,
                     target: target,
-                    prefabData: prefabData
+                    prefabData: prefabData,
+                    selectIds: ids
                 };
                 var state = editor.PasteGameObjectsState.create(data);
                 this.addState(state);
@@ -24269,6 +23953,7 @@ var paper;
              * @param gameObjects
              */
             EditorModel.prototype.duplicateGameObjects = function (gameObjects) {
+                var selectIds = gameObjects.map(function (gameObj) { return gameObj.hashCode; });
                 this.unique(gameObjects);
                 var datas = [];
                 for (var index = 0; index < gameObjects.length; index++) {
@@ -24281,7 +23966,8 @@ var paper;
                 var data = {
                     cmdType: CmdType.DUPLICATE_GAMEOBJECTS,
                     datas: datas,
-                    prefabData: prefabData
+                    prefabData: prefabData,
+                    selectIds: selectIds,
                 };
                 var state = editor.DuplicateGameObjectsState.create(data);
                 this.addState(state);
@@ -24393,6 +24079,7 @@ var paper;
              * @param gameObjects
              */
             EditorModel.prototype.deleteGameObject = function (gameObjects, prefabRootMap) {
+                var selectIds = gameObjects.map(function (gameObj) { return gameObj.hashCode; });
                 this.unique(gameObjects);
                 var datas = [];
                 var _loop_1 = function (index) {
@@ -24437,7 +24124,8 @@ var paper;
                 var data = {
                     cmdType: CmdType.REMOVE_GAMEOBJECTS,
                     datas: datas,
-                    prefabData: prefabData
+                    prefabData: prefabData,
+                    selectIds: selectIds,
                 };
                 var state = editor.DeleteGameObjectsState.create(data);
                 this.addState(state);
@@ -24700,18 +24388,18 @@ var paper;
             };
             /**
              * 选中游戏对象
-             * @param gameObjects
+             * @param selectObj
              * @param addHistory 是否产生历史记录，只在用户进行选中相关操作时调用
              */
-            EditorModel.prototype.selectGameObject = function (selectIds, options) {
-                // if (options && options.addHistory && selectIds.length > 0 && options.preIds) {
-                //     let state = SelectGameObjectesState.create({ cmdType: CmdType.SELECT_GAMEOBJECT, prevalue: options.preIds, newvalue: selectIds })
-                //     this.paperHistory.add(state);
-                // }
-                // else {
-                //     this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, selectIds));
-                // }
-                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, selectIds));
+            EditorModel.prototype.selectGameObject = function (selectObj, options) {
+                if (selectObj[selectItemType.GAMEOBJECT] && options && options.addHistory && options.preIds) {
+                    var selectIds = selectObj[selectItemType.GAMEOBJECT];
+                    var state = editor.SelectGameObjectesState.create({ cmdType: CmdType.SELECT_GAMEOBJECT, prevalue: options.preIds, newvalue: selectIds });
+                    this.paperHistory.add(state);
+                }
+                else {
+                    this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, selectObj));
+                }
             };
             // 切换场景，参数是场景编号
             EditorModel.prototype.switchScene = function (url) {
@@ -24928,7 +24616,7 @@ var paper;
                     //worldPosition = this.selectedGameObj.transform.getPosition();
                     //worldRotation = this.selectedGameObj.transform.getRotation();
                     var ray_1 = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                    var pickInfoArray = egret3d.Physics.RaycastAll(ray_1, true);
+                    var pickInfoArray = egret3d.Ray.raycastAll(ray_1, true);
                     if (pickInfoArray && pickInfoArray.length > 0) {
                         pickInfoArray.forEach(function (pickInfo) {
                             var picked = pickInfo.transform.gameObject;
@@ -25087,7 +24775,7 @@ var paper;
                     var ctrlRot_1 = this.controller.transform.getRotation();
                     this._ctrlRot = ctrlRot_1;
                     var ray_2 = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                    var pickInfoArray = egret3d.Physics.RaycastAll(ray_2, true);
+                    var pickInfoArray = egret3d.Ray.raycastAll(ray_2, true);
                     if (pickInfoArray && pickInfoArray.length > 0) {
                         pickInfoArray.forEach(function (pickInfo) {
                             var picked = pickInfo.transform.gameObject;
@@ -25331,7 +25019,14 @@ var paper;
                 this.editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, function (e) { return _this.changeEditType(e.data); }, this);
                 this.editorModel.addEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, function (e) { return _this.changeProperty(e.data); }, this);
             };
-            GeoController.prototype._selectGameObjects = function (selectIds) {
+            GeoController.prototype._selectGameObjects = function (selectObj) {
+                var selectIds;
+                if (selectObj[editor.selectItemType.GAMEOBJECT]) {
+                    selectIds = selectObj[editor.selectItemType.GAMEOBJECT];
+                }
+                else {
+                    selectIds = [];
+                }
                 this.selectedGameObjs = this.editorModel.getGameObjectsByIds(selectIds);
                 var len = this.selectedGameObjs.length;
                 this._modeCanChange = true;
@@ -25373,7 +25068,7 @@ var paper;
                 }
             };
             GeoController.prototype._changeProperty = function (data) {
-                if ((data.target instanceof egret3d.Transform) && data.propName) {
+                if ((data.target instanceof egret3d.Transform) && data.propName && this.selectedGameObjs.length > 0) {
                     var propName = data.propName;
                     var target = data.target;
                     switch (propName) {
@@ -25789,6 +25484,9 @@ var paper;
                 this._isDone = true;
                 return true;
             };
+            BaseState.prototype.dispatchEditorModelEvent = function (type, data) {
+                editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(type, data));
+            };
             return BaseState;
         }());
         editor.BaseState = BaseState;
@@ -25812,11 +25510,7 @@ var paper;
                         var toValue = editor.Editor.editorModel.deserializeProperty(preValue, editType);
                         if (toValue) {
                             editor.Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
-                            editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
-                                target: modifyObj,
-                                propName: propName,
-                                propValue: toValue
-                            }));
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: toValue });
                         }
                     }
                     return true;
@@ -25829,11 +25523,7 @@ var paper;
                     var modifyObj = editor.Editor.editorModel.getGameObjectById(hashCode);
                     if (modifyObj && propValue !== undefined) {
                         editor.Editor.editorModel.setTargetProperty(propName, modifyObj, propValue);
-                        editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
-                            target: modifyObj,
-                            propName: propName,
-                            propValue: propValue
-                        }));
+                        this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: propValue });
                     }
                     return true;
                 }
@@ -25867,11 +25557,7 @@ var paper;
                         var toValue = editor.Editor.editorModel.deserializeProperty(preValue, editType);
                         if (toValue) {
                             editor.Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
-                            editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
-                                target: modifyObj,
-                                propName: propName,
-                                propValue: toValue
-                            }));
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: toValue });
                         }
                     }
                     return true;
@@ -25885,11 +25571,7 @@ var paper;
                     var modifyObj = editor.Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
                     if (modifyObj && propValue !== undefined) {
                         editor.Editor.editorModel.setTargetProperty(propName, modifyObj, propValue);
-                        editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
-                            target: modifyObj,
-                            propName: propName,
-                            propValue: propValue
-                        }));
+                        this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: propValue });
                     }
                     return true;
                 }
@@ -25917,8 +25599,7 @@ var paper;
             SelectGameObjectesState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
                     var preSelectids = this.data.prevalue;
-                    var selectObjs = editor.Editor.editorModel.getGameObjectsByIds(preSelectids);
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.SELECT_GAMEOBJECTS, selectObjs));
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.SELECT_GAMEOBJECTS, { 0: preSelectids });
                     return true;
                 }
                 return false;
@@ -25926,8 +25607,7 @@ var paper;
             SelectGameObjectesState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
                     var newSelectids = this.data.newvalue;
-                    var selectObjs = editor.Editor.editorModel.getGameObjectsByIds(newSelectids);
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.SELECT_GAMEOBJECTS, selectObjs));
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.SELECT_GAMEOBJECTS, { 0: newSelectids });
                     return true;
                 }
                 return false;
@@ -25953,55 +25633,56 @@ var paper;
             };
             AddGameObjectState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
-                    var gameObj = editor.Editor.editorModel.getGameObjectById(this.data.gameObjHashcode);
-                    editor.Editor.editorModel._deleteGameObject([gameObj]);
-                    this.data.gameObj = gameObj;
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, [this.data.gameObj]));
+                    var datas = this.data.datas;
+                    var delectHashCodes = datas.map(function (data) {
+                        if (data.cacheGameObjectHashCode) {
+                            return data.cacheGameObjectHashCode;
+                        }
+                    });
+                    var gameObjs = editor.Editor.editorModel.getGameObjectsByIds(delectHashCodes);
+                    editor.Editor.editorModel._deleteGameObject(gameObjs);
+                    var selectIds = datas.map(function (data) {
+                        if (data.parentHashCode) {
+                            return data.parentHashCode;
+                        }
+                    });
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, selectIds);
                     return true;
                 }
                 return false;
             };
             AddGameObjectState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
-                    var parentHashCode = this.data.parentHashCode;
-                    var mesh = this.data.mesh;
-                    var mat = this.data.mat;
-                    var gameObj = new paper_1.GameObject();
-                    gameObj.name = "NewGameObject";
-                    if (this.data.deleteComponentcode) {
-                        editor.Editor.editorModel.resetComponentHashCode(gameObj, this.data.deleteComponentcode.concat());
-                    }
-                    else {
-                        //保存gameobject组件的hashcode
-                        var gameObjectComponentsHashCode = [];
-                        editor.Editor.editorModel.getAllComponentIdFromGameObject(gameObj, gameObjectComponentsHashCode);
-                        this.data.deleteComponentcode = gameObjectComponentsHashCode;
-                        console.log("缓存的组件hashcode:" + this.data.deleteComponentcode);
-                    }
-                    if (this.data.gameObjHashcode) {
-                        gameObj.hashCode = this.data.gameObjHashcode;
-                    }
-                    else {
-                        this.data.gameObjHashcode = gameObj.hashCode;
-                    }
-                    if (parentHashCode) {
-                        var parentObj = editor.Editor.editorModel.getGameObjectById(parentHashCode);
-                        if (parentObj)
-                            gameObj.transform.setParent(parentObj.transform);
-                    }
-                    if (mesh) {
-                        var objMesh = gameObj.addComponent(egret3d.MeshFilter);
-                        objMesh.mesh = mesh;
-                        var renderer = gameObj.addComponent(egret3d.MeshRenderer);
-                        if (!mat) {
-                            var mat_1 = new egret3d.Material();
-                            mat_1.setShader(egret3d.DefaultShaders.MATERIAL_COLOR);
-                            mat_1.setVector4("_Color", new egret3d.Vector4(0.5, 0.5, 0.5, 1.0));
+                    var datas = this.data.datas;
+                    var selectIds = [];
+                    for (var index = 0; index < datas.length; index++) {
+                        var element = datas[index];
+                        var parentHashCode = element.parentHashCode;
+                        var gameObj = new paper_1.GameObject();
+                        gameObj.name = "NewGameObject";
+                        if (element.cacheGameObjectHashCode) {
+                            gameObj.hashCode = element.cacheGameObjectHashCode;
                         }
-                        renderer.materials = [mat];
+                        else {
+                            element.cacheGameObjectHashCode = gameObj.hashCode;
+                        }
+                        if (element.cacheComponentsHashCodes) {
+                            editor.Editor.editorModel.resetComponentHashCode(gameObj, element.cacheComponentsHashCodes.concat());
+                        }
+                        else {
+                            element.cacheComponentsHashCodes = [];
+                            editor.Editor.editorModel.getAllComponentIdFromGameObject(gameObj, element.cacheComponentsHashCodes);
+                        }
+                        if (parentHashCode) {
+                            var parentGameObj = editor.Editor.editorModel.getGameObjectById(parentHashCode);
+                            if (parentGameObj) {
+                                gameObj.transform.setParent(parentGameObj.transform);
+                            }
+                        }
+                        selectIds.push(gameObj.hashCode);
                     }
-                    this.data.gameObj = gameObj;
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, [this.data.gameObj]));
+                    //select new objects
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, selectIds);
                     return true;
                 }
                 return false;
@@ -26027,17 +25708,15 @@ var paper;
             };
             DeleteGameObjectsState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
-                    var _a = this.data, datas = _a.datas, prefabData = _a.prefabData;
-                    var deleteObjs = [];
+                    var _a = this.data, datas = _a.datas, prefabData = _a.prefabData, selectIds = _a.selectIds;
+                    var addIds = [];
                     for (var index = 0; index < datas.length; index++) {
                         var element = datas[index];
                         var serializeData = element.serializeData;
                         var assetsMap = element.assetsMap;
                         var gameObj = paper_1.deserialize(serializeData, assetsMap);
-                        //还原gameobject的hashcode
                         var hashcodes = element.deleteHashcode.concat();
                         editor.Editor.editorModel.resetHashCode(gameObj, hashcodes);
-                        //还原gameobject组件的hashcode
                         var componentsHashcodes = element.deleteComponentcode.concat();
                         editor.Editor.editorModel.resetComponentHashCode(gameObj, componentsHashcodes);
                         var parentHashCode = element.parentHashcode;
@@ -26046,7 +25725,7 @@ var paper;
                             if (parent_3)
                                 gameObj.transform.setParent(parent_3.transform);
                         }
-                        deleteObjs.push(gameObj);
+                        addIds.push(gameObj.hashCode);
                     }
                     //预制体相关
                     for (var key in prefabData) {
@@ -26057,8 +25736,7 @@ var paper;
                         var rootObj = editor.Editor.editorModel.getGameObjectById(prefabRootId);
                         editor.Editor.editorModel.resetPrefabbyRootId(rootObj, prefab, prefabIds);
                     }
-                    this.data.deleteObjs = deleteObjs;
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, deleteObjs));
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, selectIds);
                     return true;
                 }
                 return false;
@@ -26080,8 +25758,8 @@ var paper;
                     }
                     deleteObjs = editor.Editor.editorModel.getGameObjectsByIds(deleteHashcodes);
                     editor.Editor.editorModel._deleteGameObject(deleteObjs);
-                    this.data.deleteObjs = deleteObjs;
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, deleteObjs));
+                    //clear select
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, []);
                     return true;
                 }
                 return false;
@@ -26108,7 +25786,8 @@ var paper;
             DuplicateGameObjectsState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
                     editor.Editor.editorModel._deleteGameObject(this.data.addObjs);
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, this.data.addObjs));
+                    var selectIds = this.data.selectIds;
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, selectIds);
                     return true;
                 }
                 return false;
@@ -26118,6 +25797,7 @@ var paper;
                     var datas = this.data.datas;
                     var prefabData = this.data.prefabData;
                     var addObjs = [];
+                    var selectIds = [];
                     for (var index = 0; index < datas.length; index++) {
                         var element = datas[index];
                         var duplicateHashCode = element.duplicateHashCode;
@@ -26141,9 +25821,10 @@ var paper;
                             editor.Editor.editorModel.resetHashCode(duplicateObj, element.cacheHashCodes.concat());
                             editor.Editor.editorModel.resetComponentHashCode(duplicateObj, element.cacheComponentHashCodes.concat());
                         }
+                        selectIds.push(duplicateObj.hashCode);
                     }
                     this.data.addObjs = addObjs;
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, addObjs));
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, selectIds);
                     return true;
                 }
                 return false;
@@ -26170,7 +25851,8 @@ var paper;
             PasteGameObjectsState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
                     editor.Editor.editorModel._deleteGameObject(this.data.addObjs);
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, this.data.addObjs));
+                    var selectIds = this.data.selectIds;
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, selectIds);
                     return true;
                 }
                 return false;
@@ -26180,6 +25862,7 @@ var paper;
                     var datas = this.data.datas;
                     var addObjs = [];
                     var prefabData = this.data.prefabData;
+                    var selectIds = [];
                     for (var index = 0; index < datas.length; index++) {
                         var element = datas[index];
                         var pasteHashCode = element.pasteHashCode;
@@ -26204,9 +25887,10 @@ var paper;
                             editor.Editor.editorModel.resetHashCode(pasteObj, element.cacheHashCodes.concat());
                             editor.Editor.editorModel.resetComponentHashCode(pasteObj, element.cacheComponentHashCodes.concat());
                         }
+                        selectIds.push(pasteObj.hashCode);
                     }
                     this.data.addObjs = addObjs;
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, addObjs));
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, selectIds);
                     return true;
                 }
                 return false;
@@ -26244,7 +25928,7 @@ var paper;
                             }
                         }
                     }
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT));
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                     return true;
                 }
                 return false;
@@ -26264,7 +25948,7 @@ var paper;
                             this.data.cacheHashCode = addComponent.hashCode;
                         }
                     }
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT));
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                     return true;
                 }
                 return false;
@@ -26300,7 +25984,7 @@ var paper;
                         if (gameObject) {
                             editor.Editor.editorModel.addComponentToGameObject(gameObject, component);
                         }
-                        editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT));
+                        this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                     }
                     return true;
                 }
@@ -26320,7 +26004,7 @@ var paper;
                             }
                         }
                     }
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT));
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                     return true;
                 }
                 return false;
@@ -26368,7 +26052,7 @@ var paper;
                             editor.Editor.editorModel.resetPrefabbyRootId(rootObj, prefab, prefabIds);
                         }
                     }
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.UPDATE_PARENT));
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_PARENT);
                     return true;
                 }
                 return false;
@@ -26391,7 +26075,7 @@ var paper;
                         }
                         element.transform.setParent(targetTransform);
                     }
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.UPDATE_PARENT));
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_PARENT);
                     return true;
                 }
                 return false;
@@ -26444,11 +26128,7 @@ var paper;
                     return false;
             };
             ModifyPrefabProperty.prototype.dispathPropertyEvent = function (modifyObj, propName, newValue) {
-                editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
-                    target: modifyObj,
-                    propName: propName,
-                    propValue: newValue
-                }));
+                this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
             };
             return ModifyPrefabProperty;
         }(BaseState));
@@ -26636,7 +26316,7 @@ var paper;
                                 addComponent.hashCode = componentId;
                                 addComponent.gameObject = gameObj;
                                 editor.Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
-                                editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT));
+                                this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                             }
                         }
                     }
@@ -26655,7 +26335,7 @@ var paper;
                             var componentObj = editor.Editor.editorModel.getComponentById(gameObj, componentId);
                             if (componentObj) {
                                 gameObj.removeComponent(componentObj.constructor);
-                                editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT));
+                                this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                             }
                         }
                     }
@@ -26694,7 +26374,7 @@ var paper;
                             if (removeComponent) {
                                 gameObj.removeComponent(removeComponent);
                             }
-                            editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT));
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                         }
                     }
                     return true;
@@ -26726,7 +26406,7 @@ var paper;
                             else {
                                 element.cacheHashCode = addComponent.hashCode;
                             }
-                            editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT));
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                         }
                     }
                     return true;
@@ -26753,16 +26433,13 @@ var paper;
                 return state;
             };
             ModifyAssetPropertyState.prototype.modifyAssetPropertyValues = function (target, valueList) {
+                var _this = this;
                 var editInfoList = editor.getEditInfo(target);
                 valueList.forEach(function (propertyValue) {
                     var propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
                     var newValue = editor.Editor.editorModel.deserializeProperty(copyValue, valueEditType);
                     editor.Editor.editorModel.setTargetProperty(propName, target, newValue);
-                    editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, {
-                        target: target,
-                        propName: propName,
-                        propValue: newValue
-                    }));
+                    _this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: newValue });
                 });
             };
             ModifyAssetPropertyState.prototype.undo = function () {
@@ -27092,7 +26769,7 @@ var paper;
                     // 点击 game object 激活
                     if (this.bindMouse.wasReleased(0)) {
                         var ray = this.camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                        var pickInfo = egret3d.Physics.Raycast(ray, true);
+                        var pickInfo = egret3d.Ray.raycast(ray, true);
                         var tapDelta = Date.now() - this._tapStart;
                         if (this.bindKeyboard.isPressed('CONTROL')) {
                             if (pickInfo) {
@@ -27117,7 +26794,9 @@ var paper;
                                             this.selectedGameObjects.splice(index, 1);
                                         }
                                         var selectIds = this.selectedGameObjects.map(function (gameobj) { return gameobj.hashCode; });
-                                        this.editorModel.selectGameObject(selectIds, null);
+                                        var select = {};
+                                        select[editor.selectItemType.GAMEOBJECT] = selectIds;
+                                        this.editorModel.selectGameObject(select, null);
                                     }
                                 }
                             }
@@ -27132,13 +26811,17 @@ var paper;
                                     if (tapDelta < 200) {
                                         this.selectedGameObjects = [picked];
                                         var selectIds = this.selectedGameObjects.map(function (gameobj) { return gameobj.hashCode; });
-                                        this.editorModel.selectGameObject(selectIds, null);
+                                        var select = {};
+                                        select[editor.selectItemType.GAMEOBJECT] = selectIds;
+                                        this.editorModel.selectGameObject(select, null);
                                     }
                                 }
                             }
                             else if (tapDelta < 200) {
                                 this.selectedGameObjects = [];
-                                this.editorModel.selectGameObject([], null);
+                                var select = {};
+                                select[editor.selectItemType.GAMEOBJECT] = [];
+                                this.editorModel.selectGameObject(select, null);
                             }
                         }
                     }

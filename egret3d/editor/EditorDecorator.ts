@@ -54,6 +54,8 @@ namespace paper.editor {
         SOUND,
         /**Mesh */
         MESH,
+        /**shader */
+        SHADER,
         /**数组 */
         ARRAY
     }

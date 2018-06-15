@@ -15,15 +15,7 @@ namespace RES.processor {
         GLTF,
         GLTFBinary,
         Prefab,
-        Scene,
-        TextAsset,
-        Atlas,
-        Font,
-        PackBin,
-        PackTxt,
-        pathAsset,
-        PVR,
-        Sound
+        Scene
     }
 
     const typeMap = {
@@ -33,25 +25,13 @@ namespace RES.processor {
         ".shader.json": AssetTypeEnum.Shader,
         ".png": AssetTypeEnum.Texture,
         ".jpg": AssetTypeEnum.Texture,
-        ".pvr.bin": AssetTypeEnum.PVR,
-        ".pvr": AssetTypeEnum.PVR,
         ".imgdesc.json": AssetTypeEnum.TextureDesc,
         ".mat.json": AssetTypeEnum.Material,
         ".gltf.json": AssetTypeEnum.GLTF,
         ".gltf.bin": AssetTypeEnum.GLTFBinary,
         ".glb": AssetTypeEnum.GLTFBinary,
         ".prefab.json": AssetTypeEnum.Prefab,
-        ".scene.json": AssetTypeEnum.Scene,
-        ".atlas.json": AssetTypeEnum.Atlas,
-        ".font.json": AssetTypeEnum.Font,
-        ".json": AssetTypeEnum.TextAsset,
-        ".txt": AssetTypeEnum.TextAsset,
-        ".effect.json": AssetTypeEnum.TextAsset,
-        ".packs.bin": AssetTypeEnum.PackBin,
-        ".packs.txt": AssetTypeEnum.PackTxt,
-        ".path.json": AssetTypeEnum.pathAsset,
-        ".mp3": AssetTypeEnum.Sound,
-        ".ogg": AssetTypeEnum.Sound
+        ".scene.json": AssetTypeEnum.Scene
     }
 
     function calcType(url: string): AssetTypeEnum {
@@ -469,26 +449,6 @@ namespace RES.processor {
 
     };
 
-    export const TextAssetProcessor: RES.processor.Processor = {
-
-        async onLoadStart(host, resource) {
-
-            const data = await host.load(resource, "text");
-            const url = getUrl(resource);
-            const filename = getFileName(url);
-            let text = new egret3d.TextAsset(filename, url);
-            text.content = data;
-            paper.Asset.register(text, true);
-            return text;
-        },
-
-        async onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-        }
-
-    };
-
     export const PathAssetProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
@@ -520,7 +480,6 @@ namespace RES.processor {
     RES.processor.map("Scene", SceneProcessor);
     RES.processor.map("Atlas", AtlasProcessor);
     RES.processor.map("Font", Font3DProcessor);
-    RES.processor.map("TextAsset", TextAssetProcessor);
     RES.processor.map("pathAsset", PathAssetProcessor);
     RES.processor.map("Sound", Sound3DProcessor);
 }
