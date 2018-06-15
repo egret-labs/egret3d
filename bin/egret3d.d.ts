@@ -1881,6 +1881,12 @@ declare namespace paper {
             new (): T;
         }): T;
         /**
+         * 根据类型名获取所有组件
+         */
+        getComponents<T extends paper.BaseComponent>(componentClass: {
+            new (): T;
+        }): T[];
+        /**
          * 搜索自己和父节点中所有特定类型的组件
          */
         getComponentInParent<T extends paper.BaseComponent>(componentClass: {

@@ -3754,6 +3754,19 @@ var paper;
             return null;
         };
         /**
+         * 根据类型名获取所有组件
+         */
+        GameObject.prototype.getComponents = function (componentClass) {
+            var components = [];
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
+                    components.push(component);
+                }
+            }
+            return components;
+        };
+        /**
          * 搜索自己和父节点中所有特定类型的组件
          */
         GameObject.prototype.getComponentInParent = function (componentClass) {
