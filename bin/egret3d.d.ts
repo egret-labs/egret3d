@@ -1881,6 +1881,12 @@ declare namespace paper {
             new (): T;
         }): T;
         /**
+         * 根据类型名获取所有组件
+         */
+        getComponents<T extends paper.BaseComponent>(componentClass: {
+            new (): T;
+        }): T[];
+        /**
          * 搜索自己和父节点中所有特定类型的组件
          */
         getComponentInParent<T extends paper.BaseComponent>(componentClass: {
@@ -6698,23 +6704,6 @@ declare namespace egret3d {
     }
 }
 declare namespace RES.processor {
-    enum AssetTypeEnum {
-        Unknown = 0,
-        Auto = 1,
-        Bundle = 2,
-        CompressBundle = 3,
-        GLVertexShader = 4,
-        GLFragmentShader = 5,
-        Shader = 6,
-        Texture = 7,
-        TextureDesc = 8,
-        Material = 9,
-        GLTF = 10,
-        GLTFBinary = 11,
-        Prefab = 12,
-        Scene = 13,
-    }
-    const BundleProcessor: RES.processor.Processor;
     const GLVertexShaderProcessor: RES.processor.Processor;
     const GLFragmentShaderProcessor: RES.processor.Processor;
     const ShaderProcessor: RES.processor.Processor;
@@ -7295,11 +7284,12 @@ declare namespace egret3d {
     class MouseDevice extends EventDispatcher {
         private _offsetX;
         private _offsetY;
-        private _scaler;
+        private _scalerX;
+        private _scalerY;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scaler: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
         /**
          *
          */
@@ -7557,11 +7547,12 @@ declare namespace egret3d {
     class TouchDevice extends EventDispatcher {
         private _offsetX;
         private _offsetY;
-        private _scaler;
+        private _scalerX;
+        private _scalerY;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scaler: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
         /**
          *
          */

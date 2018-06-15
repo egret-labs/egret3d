@@ -3754,6 +3754,19 @@ var paper;
             return null;
         };
         /**
+         * 根据类型名获取所有组件
+         */
+        GameObject.prototype.getComponents = function (componentClass) {
+            var components = [];
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
+                    components.push(component);
+                }
+            }
+            return components;
+        };
+        /**
          * 搜索自己和父节点中所有特定类型的组件
          */
         GameObject.prototype.getComponentInParent = function (componentClass) {
@@ -5288,9 +5301,7 @@ var egret3d;
             window.addEventListener("resize", function () { return _this._resizeDirty = true; }, false);
             var screenViewport = this.screenViewport;
             screenViewport.w = options.contentWidth;
-            screenViewport.h = options.contentHeight;
             canvas.width = screenViewport.w;
-            canvas.height = screenViewport.h;
         };
         Stage3D.prototype.update = function () {
             if (this._resizeDirty) {
@@ -5299,23 +5310,15 @@ var egret3d;
             }
         };
         Stage3D.prototype._resize = function () {
-            var boundingClientWidth = window.innerWidth;
-            var boundingClientHeight = window.innerHeight;
-            var stageSize = calculateStageSize("showAll", boundingClientWidth, boundingClientHeight, this.screenViewport.w, this.screenViewport.h);
-            var canvas = this._canvas;
+            var displayWidth = window.innerWidth;
+            var displayHeight = window.innerHeight;
             var absolutePosition = this.absolutePosition;
-            absolutePosition.w = stageSize.displayWidth;
-            absolutePosition.h = stageSize.displayHeight;
-            var isLandscape = stageSize.displayWidth > stageSize.displayHeight;
-            var top = 0;
-            if (isLandscape) {
-                absolutePosition.y = top + (boundingClientHeight - stageSize.displayHeight) / 2;
-                absolutePosition.x = (boundingClientWidth - stageSize.displayWidth) / 2;
-            }
-            else {
-                absolutePosition.y = top + (boundingClientHeight - stageSize.displayHeight) / 2;
-                absolutePosition.x = (boundingClientWidth - stageSize.displayWidth) / 2;
-            }
+            absolutePosition.w = displayWidth;
+            absolutePosition.h = displayHeight;
+            var screenH = Math.ceil(this.screenViewport.w / displayWidth * displayHeight);
+            this.screenViewport.h = screenH;
+            var canvas = this._canvas;
+            canvas.height = this.screenViewport.h;
             var x = absolutePosition.x, y = absolutePosition.y, w = absolutePosition.w, h = absolutePosition.h;
             canvas.style.left = x + "px";
             canvas.style.top = y + "px";
@@ -5327,85 +5330,6 @@ var egret3d;
     }());
     egret3d.Stage3D = Stage3D;
     __reflect(Stage3D.prototype, "egret3d.Stage3D");
-    function calculateStageSize(scaleMode, screenWidth, screenHeight, contentWidth, contentHeight) {
-        var displayWidth = screenWidth;
-        var displayHeight = screenHeight;
-        var stageWidth = contentWidth;
-        var stageHeight = contentHeight;
-        var scaleX = (screenWidth / stageWidth) || 0;
-        var scaleY = (screenHeight / stageHeight) || 0;
-        if (scaleX > scaleY) {
-            displayWidth = Math.round(stageWidth * scaleY);
-        }
-        else {
-            displayHeight = Math.round(stageHeight * scaleX);
-        }
-        // switch (scaleMode) {
-        //     case StageScaleMode.EXACT_FIT:
-        //         break;
-        //     case StageScaleMode.FIXED_HEIGHT:
-        //         stageWidth = Math.round(screenWidth / scaleY);
-        //         break;
-        //     case StageScaleMode.FIXED_WIDTH:
-        //         stageHeight = Math.round(screenHeight / scaleX);
-        //         break;
-        //     case StageScaleMode.NO_BORDER:
-        //         if (scaleX > scaleY) {
-        //             displayHeight = Math.round(stageHeight * scaleX);
-        //         }
-        //         else {
-        //             displayWidth = Math.round(stageWidth * scaleY);
-        //         }
-        //         break;
-        //     case StageScaleMode.SHOW_ALL:
-        //         if (scaleX > scaleY) {
-        //             displayWidth = Math.round(stageWidth * scaleY);
-        //         }
-        //         else {
-        //             displayHeight = Math.round(stageHeight * scaleX);
-        //         }
-        //         break;
-        //     case StageScaleMode.FIXED_NARROW:
-        //         if (scaleX > scaleY) {
-        //             stageWidth = Math.round(screenWidth / scaleY);
-        //         }
-        //         else {
-        //             stageHeight = Math.round(screenHeight / scaleX);
-        //         }
-        //         break;
-        //     case StageScaleMode.FIXED_WIDE:
-        //         if (scaleX > scaleY) {
-        //             stageHeight = Math.round(screenHeight / scaleX);
-        //         }
-        //         else {
-        //             stageWidth = Math.round(screenWidth / scaleY);
-        //         }
-        //         break;
-        //     default:
-        //         stageWidth = screenWidth;
-        //         stageHeight = screenHeight;
-        //         break;
-        // }
-        //宽高不是2的整数倍会导致图片绘制出现问题
-        if (stageWidth % 2 != 0) {
-            stageWidth += 1;
-        }
-        if (stageHeight % 2 != 0) {
-            stageHeight += 1;
-        }
-        if (displayWidth % 2 != 0) {
-            displayWidth += 1;
-        }
-        if (displayHeight % 2 != 0) {
-            displayHeight += 1;
-        }
-        return {
-            stageWidth: stageWidth,
-            stageHeight: stageHeight,
-            displayWidth: displayWidth,
-            displayHeight: displayHeight
-        };
-    }
     egret3d.stage = new Stage3D();
 })(egret3d || (egret3d = {}));
 var paper;
@@ -5706,10 +5630,11 @@ var paper;
         StartSystem.prototype.update = function () {
             egret3d.Performance.startCounter("all" /* All */);
             egret3d.stage.update();
-            var _a = egret3d.stage.absolutePosition, x = _a.x, y = _a.y, w = _a.w;
-            var scale = egret3d.stage.screenViewport.w / w;
-            egret3d.InputManager.touch.updateOffsetAndScale(x, y, scale);
-            egret3d.InputManager.mouse.updateOffsetAndScale(x, y, scale);
+            var _a = egret3d.stage.absolutePosition, x = _a.x, y = _a.y, w = _a.w, h = _a.h;
+            var scaleX = egret3d.stage.screenViewport.w / w;
+            var scaleY = egret3d.stage.screenViewport.h / h;
+            egret3d.InputManager.touch.updateOffsetAndScale(x, y, scaleX, scaleY);
+            egret3d.InputManager.mouse.updateOffsetAndScale(x, y, scaleX, scaleY);
         };
         return StartSystem;
     }(paper.BaseSystem));
@@ -17824,30 +17749,24 @@ var RES;
         var AssetTypeEnum;
         (function (AssetTypeEnum) {
             AssetTypeEnum[AssetTypeEnum["Unknown"] = 0] = "Unknown";
-            AssetTypeEnum[AssetTypeEnum["Auto"] = 1] = "Auto";
-            AssetTypeEnum[AssetTypeEnum["Bundle"] = 2] = "Bundle";
-            AssetTypeEnum[AssetTypeEnum["CompressBundle"] = 3] = "CompressBundle";
-            AssetTypeEnum[AssetTypeEnum["GLVertexShader"] = 4] = "GLVertexShader";
-            AssetTypeEnum[AssetTypeEnum["GLFragmentShader"] = 5] = "GLFragmentShader";
-            AssetTypeEnum[AssetTypeEnum["Shader"] = 6] = "Shader";
-            AssetTypeEnum[AssetTypeEnum["Texture"] = 7] = "Texture";
-            AssetTypeEnum[AssetTypeEnum["TextureDesc"] = 8] = "TextureDesc";
-            AssetTypeEnum[AssetTypeEnum["Material"] = 9] = "Material";
-            AssetTypeEnum[AssetTypeEnum["GLTF"] = 10] = "GLTF";
-            AssetTypeEnum[AssetTypeEnum["GLTFBinary"] = 11] = "GLTFBinary";
-            AssetTypeEnum[AssetTypeEnum["Prefab"] = 12] = "Prefab";
-            AssetTypeEnum[AssetTypeEnum["Scene"] = 13] = "Scene";
-        })(AssetTypeEnum = processor.AssetTypeEnum || (processor.AssetTypeEnum = {}));
+            AssetTypeEnum[AssetTypeEnum["GLVertexShader"] = 1] = "GLVertexShader";
+            AssetTypeEnum[AssetTypeEnum["GLFragmentShader"] = 2] = "GLFragmentShader";
+            AssetTypeEnum[AssetTypeEnum["Shader"] = 3] = "Shader";
+            AssetTypeEnum[AssetTypeEnum["Texture"] = 4] = "Texture";
+            AssetTypeEnum[AssetTypeEnum["TextureDesc"] = 5] = "TextureDesc";
+            AssetTypeEnum[AssetTypeEnum["Material"] = 6] = "Material";
+            AssetTypeEnum[AssetTypeEnum["GLTFBinary"] = 7] = "GLTFBinary";
+            AssetTypeEnum[AssetTypeEnum["Prefab"] = 8] = "Prefab";
+            AssetTypeEnum[AssetTypeEnum["Scene"] = 9] = "Scene";
+        })(AssetTypeEnum || (AssetTypeEnum = {}));
         var typeMap = {
             ".vs.glsl": AssetTypeEnum.GLVertexShader,
-            ".assetbundle.json": AssetTypeEnum.Bundle,
             ".fs.glsl": AssetTypeEnum.GLFragmentShader,
             ".shader.json": AssetTypeEnum.Shader,
             ".png": AssetTypeEnum.Texture,
             ".jpg": AssetTypeEnum.Texture,
             ".imgdesc.json": AssetTypeEnum.TextureDesc,
             ".mat.json": AssetTypeEnum.Material,
-            ".gltf.json": AssetTypeEnum.GLTF,
             ".gltf.bin": AssetTypeEnum.GLTFBinary,
             ".glb": AssetTypeEnum.GLTFBinary,
             ".prefab.json": AssetTypeEnum.Prefab,
@@ -17894,10 +17813,9 @@ var RES;
             list = assets.map(function (item) {
                 return { url: egret3d.utils.combinePath(path + "/", item[urlKey]), type: calcType(item[urlKey]) };
             });
-            list.sort(function (a, b) {
+            return list.sort(function (a, b) {
                 return a.type - b.type;
-            });
-            return list;
+            }).map(function (item) { return item.url; });
         }
         function promisify(loader, resource) {
             return __awaiter(this, void 0, void 0, function () {
@@ -17934,52 +17852,6 @@ var RES;
                 });
             });
         }
-        processor.BundleProcessor = {
-            onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, bundle, list, i, r, asset;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "json")];
-                            case 1:
-                                data = _a.sent();
-                                url = getUrl(resource);
-                                filename = getFileName(url);
-                                bundle = new egret3d.AssetBundle(filename);
-                                bundle.url = url;
-                                bundle.$parse(data);
-                                list = formatUrlAndSort(bundle.assets, getPath(resource.url));
-                                i = 0;
-                                _a.label = 2;
-                            case 2:
-                                if (!(i < list.length)) return [3 /*break*/, 5];
-                                r = RES.host.resourceConfig["getResource"](list[i].url);
-                                if (!r) return [3 /*break*/, 4];
-                                return [4 /*yield*/, host.load(r)];
-                            case 3:
-                                asset = _a.sent();
-                                _a.label = 4;
-                            case 4:
-                                i++;
-                                return [3 /*break*/, 2];
-                            case 5: return [2 /*return*/, bundle];
-                        }
-                    });
-                });
-            },
-            onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
-            }
-            // getData(host, resource, key, subkey) { //可选函数
-            // }
-        };
         processor.GLVertexShaderProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
@@ -18252,7 +18124,7 @@ var RES;
         processor.PrefabProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, assets, list, i, r, asset, prefab;
+                    var data, url, filename, assets, list, _i, list_1, item, r, asset, prefab;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
@@ -18263,20 +18135,19 @@ var RES;
                                 assets = data.assets;
                                 if (!assets) return [3 /*break*/, 5];
                                 list = formatUrlAndSort(assets, getPath(resource.url));
-                                i = 0;
+                                _i = 0, list_1 = list;
                                 _a.label = 2;
                             case 2:
-                                if (!(i < list.length)) return [3 /*break*/, 5];
-                                if (list[i].type == AssetTypeEnum.Shader)
-                                    return [3 /*break*/, 4];
-                                r = RES.host.resourceConfig["getResource"](list[i].url);
+                                if (!(_i < list_1.length)) return [3 /*break*/, 5];
+                                item = list_1[_i];
+                                r = RES.host.resourceConfig["getResource"](item);
                                 if (!r) return [3 /*break*/, 4];
                                 return [4 /*yield*/, host.load(r)];
                             case 3:
                                 asset = _a.sent();
                                 _a.label = 4;
                             case 4:
-                                i++;
+                                _i++;
                                 return [3 /*break*/, 2];
                             case 5:
                                 prefab = new egret3d.Prefab(filename, url);
@@ -18301,7 +18172,7 @@ var RES;
         processor.SceneProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, assets, list, i, r, asset, scene;
+                    var data, url, filename, assets, list, _i, list_2, item, r, asset, scene;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
@@ -18312,20 +18183,19 @@ var RES;
                                 assets = data.assets;
                                 if (!assets) return [3 /*break*/, 5];
                                 list = formatUrlAndSort(assets, getPath(resource.url));
-                                i = 0;
+                                _i = 0, list_2 = list;
                                 _a.label = 2;
                             case 2:
-                                if (!(i < list.length)) return [3 /*break*/, 5];
-                                if (list[i].type == AssetTypeEnum.Shader)
-                                    return [3 /*break*/, 4];
-                                r = RES.host.resourceConfig["getResource"](list[i].url);
+                                if (!(_i < list_2.length)) return [3 /*break*/, 5];
+                                item = list_2[_i];
+                                r = RES.host.resourceConfig["getResource"](item);
                                 if (!r) return [3 /*break*/, 4];
                                 return [4 /*yield*/, host.load(r)];
                             case 3:
                                 asset = _a.sent();
                                 _a.label = 4;
                             case 4:
-                                i++;
+                                _i++;
                                 return [3 /*break*/, 2];
                             case 5:
                                 scene = new egret3d.RawScene(filename, url);
@@ -18443,7 +18313,6 @@ var RES;
         RES.processor.map("GLVertexShader", processor.GLVertexShaderProcessor);
         RES.processor.map("GLFragmentShader", processor.GLFragmentShaderProcessor);
         RES.processor.map("Shader", processor.ShaderProcessor);
-        RES.processor.map("Bundle", processor.BundleProcessor);
         RES.processor.map("Texture", processor.TextureProcessor);
         RES.processor.map("TextureDesc", processor.TextureDescProcessor);
         RES.processor.map("Material", processor.MaterialProcessor);
@@ -20929,7 +20798,8 @@ var egret3d;
             var _this = _super.call(this) || this;
             _this._offsetX = 0;
             _this._offsetY = 0;
-            _this._scaler = 1;
+            _this._scalerX = 1;
+            _this._scalerY = 1;
             /**
              * mouse position
              * @version paper 1.0
@@ -20970,17 +20840,18 @@ var egret3d;
         /**
          *
          */
-        MouseDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scaler) {
+        MouseDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scalerX, scalerY) {
             this._offsetX = offsetX;
             this._offsetY = offsetY;
-            this._scaler = scaler;
+            this._scalerX = scalerX;
+            this._scalerY = scalerY;
         };
         /**
          *
          */
         MouseDevice.prototype.convertPosition = function (e, out) {
-            out.x = (e.clientX - this._offsetX) * this._scaler;
-            out.y = (e.clientY - this._offsetY) * this._scaler;
+            out.x = (e.clientX - this._offsetX) * this._scalerX;
+            out.y = (e.clientY - this._offsetY) * this._scalerY;
         };
         /**
          * disable right key menu
@@ -21308,7 +21179,8 @@ var egret3d;
             var _this = _super.call(this) || this;
             _this._offsetX = 0;
             _this._offsetY = 0;
-            _this._scaler = 1;
+            _this._scalerX = 1;
+            _this._scalerY = 1;
             _this._touchesMap = {};
             _this._touches = [];
             /**
@@ -21337,17 +21209,18 @@ var egret3d;
         /**
          *
          */
-        TouchDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scaler) {
+        TouchDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scalerX, scalerY) {
             this._offsetX = offsetX;
             this._offsetY = offsetY;
-            this._scaler = scaler;
+            this._scalerX = scalerX;
+            this._scalerY = scalerY;
         };
         /**
          *
          */
         TouchDevice.prototype.convertPosition = function (e, out) {
-            out.x = (e.clientX - this._offsetX) * this._scaler;
-            out.y = (e.clientY - this._offsetY) * this._scaler;
+            out.x = (e.clientX - this._offsetX) * this._scalerX;
+            out.y = (e.clientY - this._offsetY) * this._scalerY;
         };
         TouchDevice.prototype.attach = function (element) {
             if (this._element) {

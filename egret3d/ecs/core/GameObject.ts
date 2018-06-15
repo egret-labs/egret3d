@@ -271,6 +271,20 @@ namespace paper {
         }
 
         /**
+         * 根据类型名获取所有组件
+         */
+        public getComponents<T extends paper.BaseComponent>(componentClass: { new(): T }) {
+            let components: T[] = [];
+            for (const component of this._components) {
+                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
+                    components.push(component as T);
+                }
+            }
+
+            return components;
+        }
+
+        /**
          * 搜索自己和父节点中所有特定类型的组件
          */
         public getComponentInParent<T extends paper.BaseComponent>(componentClass: { new(): T }) {
