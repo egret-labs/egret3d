@@ -7295,11 +7295,12 @@ declare namespace egret3d {
     class MouseDevice extends EventDispatcher {
         private _offsetX;
         private _offsetY;
-        private _scaler;
+        private _scalerX;
+        private _scalerY;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scaler: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
         /**
          *
          */
@@ -7557,11 +7558,12 @@ declare namespace egret3d {
     class TouchDevice extends EventDispatcher {
         private _offsetX;
         private _offsetY;
-        private _scaler;
+        private _scalerX;
+        private _scalerY;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scaler: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
         /**
          *
          */
