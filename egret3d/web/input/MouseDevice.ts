@@ -16,21 +16,23 @@ namespace egret3d {
 
         private _offsetX:number = 0;
         private _offsetY:number = 0;
-        private _scaler:number = 1;
+        private _scalerX:number = 1;
+        private _scalerY:number = 1;
         /**
          *  
          */
-        public updateOffsetAndScale(offsetX:number, offsetY:number, scaler:number) {
+        public updateOffsetAndScale(offsetX:number, offsetY:number, scalerX:number, scalerY:number) {
             this._offsetX = offsetX;
             this._offsetY = offsetY;
-            this._scaler = scaler;
+            this._scalerX = scalerX;
+            this._scalerY = scalerY;
         }
         /**
          *  
          */
         public convertPosition(e:MouseEvent, out:Vector2) {
-            out.x = (e.clientX - this._offsetX) * this._scaler;
-            out.y = (e.clientY - this._offsetY) * this._scaler;
+            out.x = (e.clientX - this._offsetX) * this._scalerX;
+            out.y = (e.clientY - this._offsetY) * this._scalerY;
         }
 
         /**

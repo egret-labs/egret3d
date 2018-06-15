@@ -5312,23 +5312,12 @@ var egret3d;
             }
         };
         Stage3D.prototype._resize = function () {
-            var boundingClientWidth = window.innerWidth;
-            var boundingClientHeight = window.innerHeight;
-            var stageSize = calculateStageSize("showAll", boundingClientWidth, boundingClientHeight, this.screenViewport.w, this.screenViewport.h);
+            var displayWidth = window.innerWidth;
+            var displayHeight = this.screenViewport.h / this.screenViewport.w * window.innerWidth;
             var canvas = this._canvas;
             var absolutePosition = this.absolutePosition;
-            absolutePosition.w = stageSize.displayWidth;
-            absolutePosition.h = stageSize.displayHeight;
-            var isLandscape = stageSize.displayWidth > stageSize.displayHeight;
-            var top = 0;
-            if (isLandscape) {
-                absolutePosition.y = top + (boundingClientHeight - stageSize.displayHeight) / 2;
-                absolutePosition.x = (boundingClientWidth - stageSize.displayWidth) / 2;
-            }
-            else {
-                absolutePosition.y = top + (boundingClientHeight - stageSize.displayHeight) / 2;
-                absolutePosition.x = (boundingClientWidth - stageSize.displayWidth) / 2;
-            }
+            absolutePosition.w = displayWidth;
+            absolutePosition.h = displayHeight;
             var x = absolutePosition.x, y = absolutePosition.y, w = absolutePosition.w, h = absolutePosition.h;
             canvas.style.left = x + "px";
             canvas.style.top = y + "px";
@@ -5340,85 +5329,6 @@ var egret3d;
     }());
     egret3d.Stage3D = Stage3D;
     __reflect(Stage3D.prototype, "egret3d.Stage3D");
-    function calculateStageSize(scaleMode, screenWidth, screenHeight, contentWidth, contentHeight) {
-        var displayWidth = screenWidth;
-        var displayHeight = screenHeight;
-        var stageWidth = contentWidth;
-        var stageHeight = contentHeight;
-        var scaleX = (screenWidth / stageWidth) || 0;
-        var scaleY = (screenHeight / stageHeight) || 0;
-        if (scaleX > scaleY) {
-            displayWidth = Math.round(stageWidth * scaleY);
-        }
-        else {
-            displayHeight = Math.round(stageHeight * scaleX);
-        }
-        // switch (scaleMode) {
-        //     case StageScaleMode.EXACT_FIT:
-        //         break;
-        //     case StageScaleMode.FIXED_HEIGHT:
-        //         stageWidth = Math.round(screenWidth / scaleY);
-        //         break;
-        //     case StageScaleMode.FIXED_WIDTH:
-        //         stageHeight = Math.round(screenHeight / scaleX);
-        //         break;
-        //     case StageScaleMode.NO_BORDER:
-        //         if (scaleX > scaleY) {
-        //             displayHeight = Math.round(stageHeight * scaleX);
-        //         }
-        //         else {
-        //             displayWidth = Math.round(stageWidth * scaleY);
-        //         }
-        //         break;
-        //     case StageScaleMode.SHOW_ALL:
-        //         if (scaleX > scaleY) {
-        //             displayWidth = Math.round(stageWidth * scaleY);
-        //         }
-        //         else {
-        //             displayHeight = Math.round(stageHeight * scaleX);
-        //         }
-        //         break;
-        //     case StageScaleMode.FIXED_NARROW:
-        //         if (scaleX > scaleY) {
-        //             stageWidth = Math.round(screenWidth / scaleY);
-        //         }
-        //         else {
-        //             stageHeight = Math.round(screenHeight / scaleX);
-        //         }
-        //         break;
-        //     case StageScaleMode.FIXED_WIDE:
-        //         if (scaleX > scaleY) {
-        //             stageHeight = Math.round(screenHeight / scaleX);
-        //         }
-        //         else {
-        //             stageWidth = Math.round(screenWidth / scaleY);
-        //         }
-        //         break;
-        //     default:
-        //         stageWidth = screenWidth;
-        //         stageHeight = screenHeight;
-        //         break;
-        // }
-        //宽高不是2的整数倍会导致图片绘制出现问题
-        if (stageWidth % 2 != 0) {
-            stageWidth += 1;
-        }
-        if (stageHeight % 2 != 0) {
-            stageHeight += 1;
-        }
-        if (displayWidth % 2 != 0) {
-            displayWidth += 1;
-        }
-        if (displayHeight % 2 != 0) {
-            displayHeight += 1;
-        }
-        return {
-            stageWidth: stageWidth,
-            stageHeight: stageHeight,
-            displayWidth: displayWidth,
-            displayHeight: displayHeight
-        };
-    }
     egret3d.stage = new Stage3D();
 })(egret3d || (egret3d = {}));
 var paper;
@@ -5719,10 +5629,11 @@ var paper;
         StartSystem.prototype.update = function () {
             egret3d.Performance.startCounter("all" /* All */);
             egret3d.stage.update();
-            var _a = egret3d.stage.absolutePosition, x = _a.x, y = _a.y, w = _a.w;
-            var scale = egret3d.stage.screenViewport.w / w;
-            egret3d.InputManager.touch.updateOffsetAndScale(x, y, scale);
-            egret3d.InputManager.mouse.updateOffsetAndScale(x, y, scale);
+            var _a = egret3d.stage.absolutePosition, x = _a.x, y = _a.y, w = _a.w, h = _a.h;
+            var scaleX = egret3d.stage.screenViewport.w / w;
+            var scaleY = egret3d.stage.screenViewport.h / h;
+            egret3d.InputManager.touch.updateOffsetAndScale(x, y, scaleX, scaleY);
+            egret3d.InputManager.mouse.updateOffsetAndScale(x, y, scaleX, scaleY);
         };
         return StartSystem;
     }(paper.BaseSystem));
@@ -20942,7 +20853,8 @@ var egret3d;
             var _this = _super.call(this) || this;
             _this._offsetX = 0;
             _this._offsetY = 0;
-            _this._scaler = 1;
+            _this._scalerX = 1;
+            _this._scalerY = 1;
             /**
              * mouse position
              * @version paper 1.0
@@ -20983,17 +20895,18 @@ var egret3d;
         /**
          *
          */
-        MouseDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scaler) {
+        MouseDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scalerX, scalerY) {
             this._offsetX = offsetX;
             this._offsetY = offsetY;
-            this._scaler = scaler;
+            this._scalerX = scalerX;
+            this._scalerY = scalerY;
         };
         /**
          *
          */
         MouseDevice.prototype.convertPosition = function (e, out) {
-            out.x = (e.clientX - this._offsetX) * this._scaler;
-            out.y = (e.clientY - this._offsetY) * this._scaler;
+            out.x = (e.clientX - this._offsetX) * this._scalerX;
+            out.y = (e.clientY - this._offsetY) * this._scalerY;
         };
         /**
          * disable right key menu
@@ -21321,7 +21234,8 @@ var egret3d;
             var _this = _super.call(this) || this;
             _this._offsetX = 0;
             _this._offsetY = 0;
-            _this._scaler = 1;
+            _this._scalerX = 1;
+            _this._scalerY = 1;
             _this._touchesMap = {};
             _this._touches = [];
             /**
@@ -21350,17 +21264,18 @@ var egret3d;
         /**
          *
          */
-        TouchDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scaler) {
+        TouchDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scalerX, scalerY) {
             this._offsetX = offsetX;
             this._offsetY = offsetY;
-            this._scaler = scaler;
+            this._scalerX = scalerX;
+            this._scalerY = scalerY;
         };
         /**
          *
          */
         TouchDevice.prototype.convertPosition = function (e, out) {
-            out.x = (e.clientX - this._offsetX) * this._scaler;
-            out.y = (e.clientY - this._offsetY) * this._scaler;
+            out.x = (e.clientX - this._offsetX) * this._scalerX;
+            out.y = (e.clientY - this._offsetY) * this._scalerY;
         };
         TouchDevice.prototype.attach = function (element) {
             if (this._element) {
