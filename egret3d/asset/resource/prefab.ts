@@ -1,7 +1,7 @@
 namespace egret3d {
 
     export type PrefabConfig = {
-        assets: any[]
+        assets: { hashCode: number, class: string, url: string }[]
         objects: any[]
     }
 

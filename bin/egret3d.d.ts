@@ -218,7 +218,7 @@ declare namespace paper {
          * 获取资源
          * @param name 资源的url
          */
-        static find<T extends Asset>(name: string): any;
+        static find<T extends Asset>(name: string): T;
         /**
          *
          * 资源的原始URL
@@ -1222,7 +1222,7 @@ declare namespace paper {
          * load scene 加载场景
          * @param rawScene url
          */
-        loadScene(url: string): any;
+        loadScene(url: string): Scene;
         /**
          * 卸载指定场景，如果创建列表为空，则创建一个空场景。
          */
@@ -1405,7 +1405,11 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     type PrefabConfig = {
-        assets: any[];
+        assets: {
+            hashCode: number;
+            class: string;
+            url: string;
+        }[];
         objects: any[];
     };
     /**
@@ -1604,8 +1608,6 @@ declare namespace egret3d.particle {
     class ParticleRenderer extends paper.BaseComponent implements paper.IRenderer {
         private _mesh;
         private readonly _materials;
-        maxParticleSize: number;
-        minParticleSize: number;
         velocityScale: number;
         _renderMode: ParticleRenderMode;
         lengthScale: number;
@@ -1885,6 +1887,12 @@ declare namespace paper {
             new (): T;
         }): T;
         /**
+         * 根据类型名获取所有组件
+         */
+        getComponents<T extends paper.BaseComponent>(componentClass: {
+            new (): T;
+        }): T[];
+        /**
          * 搜索自己和父节点中所有特定类型的组件
          */
         getComponentInParent<T extends paper.BaseComponent>(componentClass: {
@@ -1963,10 +1971,6 @@ declare namespace paper {
      * 场景类
      */
     class Scene extends SerializableObject {
-        /**
-         *
-         */
-        static defaultName: string;
         /**
          * 场景名称。
          */
@@ -5455,7 +5459,6 @@ declare namespace egret3d.particle {
     }
     class EmissionModule extends ParticleSystemModule {
         readonly rateOverTime: MinMaxCurve;
-        readonly rateOverDistance: MinMaxCurve;
         readonly bursts: Array<Burst>;
         deserialize(element: any): void;
     }
@@ -5524,9 +5527,6 @@ declare namespace egret3d.particle {
         readonly startFrame: MinMaxCurve;
         cycleCount: number;
         rowIndex: number;
-        uvChannelMask: UVChannelFlags;
-        flipU: number;
-        flipV: number;
         deserialize(element: any): void;
         invalidUpdate(): void;
         evaluate(t: number, out: Vector4): Vector4;
@@ -6706,31 +6706,6 @@ declare namespace egret3d {
     }
 }
 declare namespace RES.processor {
-    enum AssetTypeEnum {
-        Unknown = 0,
-        Auto = 1,
-        Bundle = 2,
-        CompressBundle = 3,
-        GLVertexShader = 4,
-        GLFragmentShader = 5,
-        Shader = 6,
-        Texture = 7,
-        TextureDesc = 8,
-        Material = 9,
-        GLTF = 10,
-        GLTFBinary = 11,
-        Prefab = 12,
-        Scene = 13,
-        TextAsset = 14,
-        Atlas = 15,
-        Font = 16,
-        PackBin = 17,
-        PackTxt = 18,
-        pathAsset = 19,
-        PVR = 20,
-        Sound = 21,
-    }
-    const BundleProcessor: RES.processor.Processor;
     const GLVertexShaderProcessor: RES.processor.Processor;
     const GLFragmentShaderProcessor: RES.processor.Processor;
     const ShaderProcessor: RES.processor.Processor;
@@ -7311,11 +7286,12 @@ declare namespace egret3d {
     class MouseDevice extends EventDispatcher {
         private _offsetX;
         private _offsetY;
-        private _scaler;
+        private _scalerX;
+        private _scalerY;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scaler: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
         /**
          *
          */
@@ -7573,11 +7549,12 @@ declare namespace egret3d {
     class TouchDevice extends EventDispatcher {
         private _offsetX;
         private _offsetY;
-        private _scaler;
+        private _scalerX;
+        private _scalerY;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scaler: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
         /**
          *
          */
@@ -7665,11 +7642,6 @@ declare namespace paper {
 }
 declare namespace egret3d {
     class WebGLKit {
-        private static _maxVertexAttribArray;
-        static SetMaxVertexAttribArray(webgl: WebGLRenderingContext, count: number): void;
-        private static _usedTextureUnits;
-        static allocTexUnit(): number;
-        static resetTexUnit(): void;
         private static _texNumber;
         private static _activeTextureIndex;
         static activeTexture(index: number): void;
@@ -7686,10 +7658,6 @@ declare namespace egret3d {
         static blend(value: boolean, equation: number, srcRGB: number, destRGB: number, srcAlpha: number, destAlpha: number): void;
         private static _program;
         static useProgram(program: WebGLProgram): boolean;
-        static drawArrayTris(start: number, count: number): void;
-        static drawArrayLines(start: number, count: number): void;
-        static drawElementTris(start: number, count: number): void;
-        static drawElementLines(start: number, count: number): void;
         static setStates(drawPass: DrawPass, frontFaceCW?: boolean): void;
         static draw(context: RenderContext, material: Material, mesh: Mesh, subMeshIndex: number, basetype?: string, frontFaceCW?: boolean): void;
         static resetState(): void;

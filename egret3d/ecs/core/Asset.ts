@@ -33,7 +33,7 @@ namespace paper {
         public static find<T extends Asset>(name: string) {
             const result = this._assets[name]
             if (!result) {
-                return RES.getRes(name)
+                return RES.getRes(name) as T;
             }
             else {
                 return result as T;

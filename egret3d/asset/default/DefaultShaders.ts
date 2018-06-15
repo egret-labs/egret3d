@@ -75,7 +75,7 @@ namespace egret3d {
                 shader.url = "shader/lambert";
                 shader.renderQueue = RenderQueue.Geometry;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_Color"] = { type: "Vector4", value: new Vector4(1, 1, 1, 1) };
+                shader.defaultValue["_Color"] = { type: "Vector4", value: [1, 1, 1, 1] };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_lambert_vs, def_lambert_fs);
@@ -113,7 +113,7 @@ namespace egret3d {
                 shader.url = "shader/lambertnormal";
                 shader.renderQueue = RenderQueue.Geometry;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_Color"] = { type: "Vector4", value: new Vector4(1, 1, 1, 1) };
+                shader.defaultValue["_Color"] = { type: "Vector4", value: [1, 1, 1, 1] };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_lambertnormal_vs, def_lambertnormal_fs);
@@ -153,7 +153,7 @@ namespace egret3d {
                 sh.renderQueue = RenderQueue.Geometry;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
-                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: new Vector4(1, 1, 0, 0) };
+                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
                 sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
                 const p = new DrawPass(def_diffuse_vs, def_diffuse_fs);
                 sh.passes["base"].push(p);
@@ -175,7 +175,7 @@ namespace egret3d {
                 sh.renderQueue = RenderQueue.Transparent;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
-                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: new Vector4(1, 1, 0, 0) };
+                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
                 sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
                 const p = new DrawPass(def_diffuse_vs, def_diffuse_fs);
                 sh.passes["base"].push(p);
@@ -198,7 +198,7 @@ namespace egret3d {
                 sh.renderQueue = RenderQueue.Transparent;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
-                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: new Vector4(1, 1, 0, 0) };
+                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
                 sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
                 const p = new DrawPass(def_diffuse_vs, def_diffuse_fs);
                 sh.passes["base"].push(p);
@@ -221,7 +221,7 @@ namespace egret3d {
                 sh.renderQueue = RenderQueue.Transparent;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
-                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: new Vector4(1, 1, 0, 0) };
+                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
                 sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
                 const p = new DrawPass(def_diffuse_vs, def_diffuse_fs);
                 sh.passes["base"].push(p);
@@ -244,7 +244,7 @@ namespace egret3d {
                 sh.renderQueue = RenderQueue.Transparent;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
-                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: new Vector4(1, 1, 0, 0) };
+                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
                 sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
                 const p = new DrawPass(def_diffuse_vs, def_diffuse_fs);
                 sh.passes["base"].push(p);
@@ -266,7 +266,7 @@ namespace egret3d {
                 // sh.defaultAsset = true;
                 sh.renderQueue = RenderQueue.Geometry;
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: new Vector4(1, 1, 0, 0) };
+                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
                 sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
 
                 const p = new DrawPass(def_diffuse_vs, def_diffuse_fs);
@@ -335,9 +335,9 @@ namespace egret3d {
                 sh.renderQueue = RenderQueue.Geometry;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
-                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: new Vector4(1, 1, 0, 0) };
+                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
                 sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
-                sh.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(1, 1, 1, 1) };
+                sh.defaultValue["_TintColor"] = { type: "Vector4", value: [1, 1, 1, 1] };
                 const p = new DrawPass(def_diffuse_vs, def_diffusetintcolor_fs);
                 sh.passes["base"].push(p);
                 p.state_ztest = true;
@@ -358,7 +358,7 @@ namespace egret3d {
                 sh.renderQueue = RenderQueue.Geometry;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
-                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: new Vector4(1, 1, 0, 0) };
+                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
                 sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
                 const p = new DrawPass(def_diffusevertcolor_vs, def_diffusevertcolor_fs);
                 sh.passes["base"].push(p);
@@ -380,7 +380,7 @@ namespace egret3d {
                 sh.renderQueue = RenderQueue.Geometry;
                 // sh.defaultAsset = true;
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
-                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: new Vector4(1, 1, 0, 0) };
+                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
                 sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
 
                 const p = new DrawPass(def_diffuse_vs, def_diffuse_fs);
@@ -505,7 +505,7 @@ namespace egret3d {
                 const sh = new Shader("materialcolor.shader.json");
                 sh.url = "materialcolor.shader.json";
                 sh.renderQueue = RenderQueue.Geometry;
-                sh.defaultValue["_Color"] = { type: "Vector4", value: new Vector4(1, 1, 1, 1) };
+                sh.defaultValue["_Color"] = { type: "Vector4", value: [1,1,1,1] };
                 // sh.defaultAsset = true;
                 sh.passes["base"] = [];
                 const p = new DrawPass(def_materialcolor_vs, def_line_fs);
@@ -525,7 +525,7 @@ namespace egret3d {
                 const sh = new Shader("gizmos.shader.json");
                 sh.url = "gizmos.shader.json";
                 sh.renderQueue = RenderQueue.Overlay;
-                sh.defaultValue["_Color"] = { type: "Vector4", value: new Vector4(1, 1, 1, 1) };
+                sh.defaultValue["_Color"] = { type: "Vector4", value: [1, 1, 1, 1] };
                 // sh.defaultAsset = true;
                 sh.passes["base"] = [];
                 const p = new DrawPass(def_materialcolor_vs, def_line_fs);
@@ -546,7 +546,7 @@ namespace egret3d {
                 shader.url = "particles.shader.json";
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(0.5, 0.5, 0.5, 0.5) };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
@@ -564,13 +564,13 @@ namespace egret3d {
             {
                 const shader = new Shader("particles_additive.shader.json");
                 shader.url = "particles_additive.shader.json";
-                shader.renderQueue = RenderQueue.Overlay;
+                shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(0.5, 0.5, 0.5, 0.5) };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
-                renderPass.state_ztest = false;
+                renderPass.state_ztest = true;
                 renderPass.state_ztest_method = WebGLKit.LEQUAL;
                 renderPass.state_zwrite = false;
                 renderPass.state_showface = ShowFaceStateEnum.ALL;
@@ -586,7 +586,7 @@ namespace egret3d {
                 shader.url = "particles_additive_premultiply.shader.json";
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(0.5, 0.5, 0.5, 0.5) };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
@@ -606,11 +606,11 @@ namespace egret3d {
                 shader.url = "particles_blend.shader.json";
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(1.0, 1.0, 1.0, 1.0) };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
-                renderPass.state_ztest = false;
+                renderPass.state_ztest = true;
                 renderPass.state_ztest_method = WebGLKit.LEQUAL;
                 renderPass.state_zwrite = false;
                 renderPass.state_showface = ShowFaceStateEnum.ALL;
@@ -627,7 +627,7 @@ namespace egret3d {
                 shader.url = "particles_blend_premultiply.shader.json";
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
-                shader.defaultValue["_TintColor"] = { type: "Vector4", value: new Vector4(0.5, 0.5, 0.5, 0.5) };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
 
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);

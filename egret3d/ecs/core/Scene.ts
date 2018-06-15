@@ -4,10 +4,6 @@ namespace paper {
      * 场景类
      */
     export class Scene extends SerializableObject {
-        /**
-         * 
-         */
-        public static defaultName: string = "default";
 
         /**
          * 场景名称。
@@ -53,7 +49,9 @@ namespace paper {
          */
         public $destroy() {
             const globalObjects = Application.sceneManager.globalObjects;
-            for (const gameObject of this.gameObjects) {
+            let i = this.gameObjects.length;
+            while (i--) {
+                const gameObject = this.gameObjects[i];
                 if (globalObjects.indexOf(gameObject) >= 0) {
                     continue;
                 }

@@ -22,7 +22,10 @@ const testsuiteFilename = './devconfig/testsuite.json';
 if (fs.existsSync(testsuiteFilename)) {
     const json = JSON.parse(fs.readFileSync(testsuiteFilename, 'utf-8'));
     for (let item of json) {
-        const copyToDir = path.join(item, 'egret3d/bin');
+        let copyToDir = path.join(item, 'egret3d/bin');
+        if (!fs.existsSync(copyToDir)){
+            copyToDir = path.join(item,"libs/egret3d");
+        }
         fs.writeFileSync(path.join(copyToDir, 'egret3d.js'), e3djs)
         fs.writeFileSync(path.join(copyToDir, 'egret3d.min.js'), e3djs_min)
         fs.writeFileSync(path.join(copyToDir, 'egret3d.d.ts'), e3ddts);

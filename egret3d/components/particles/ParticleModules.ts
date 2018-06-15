@@ -1,4 +1,8 @@
 namespace egret3d.particle {
+
+    const colorHelper1: Color = new Color();
+    const colorHelper2: Color = new Color();
+    
     export const enum CurveMode {
         Constant = 0,
         Curve = 1,
@@ -331,14 +335,12 @@ namespace egret3d.particle {
             } else if (this.mode === ColorGradientMode.Gradient) {
                 return this.gradient.evaluate(t, out);
             } else if (this.mode === ColorGradientMode.TwoGradients) {
-                const minColor = new Color();
-                const maxColor = new Color();
-                this.gradientMin.evaluate(t, minColor);
-                this.gradientMax.evaluate(t, maxColor);
-                out.r = (Math.random() * (minColor.r - maxColor.r) + minColor.r);
-                out.g = (Math.random() * (minColor.g - maxColor.g) + minColor.g);
-                out.b = (Math.random() * (minColor.b - maxColor.b) + minColor.b);
-                out.a = (Math.random() * (minColor.a - maxColor.a) + minColor.a);
+                this.gradientMin.evaluate(t, colorHelper1);
+                this.gradientMax.evaluate(t, colorHelper2);
+                out.r = (Math.random() * (colorHelper1.r - colorHelper2.r) + colorHelper1.r);
+                out.g = (Math.random() * (colorHelper1.g - colorHelper2.g) + colorHelper1.g);
+                out.b = (Math.random() * (colorHelper1.b - colorHelper2.b) + colorHelper1.b);
+                out.a = (Math.random() * (colorHelper1.a - colorHelper2.a) + colorHelper1.a);
             } else {
                 out.r = Math.random();
                 out.g = Math.random();
@@ -469,14 +471,11 @@ namespace egret3d.particle {
         @paper.serializedField
         public readonly rateOverTime: MinMaxCurve = new MinMaxCurve();
         @paper.serializedField
-        public readonly rateOverDistance: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
         public readonly bursts: Array<Burst> = new Array<Burst>();
 
         public deserialize(element: any) {
             super.deserialize(element);
             this.rateOverTime.deserialize(element.rateOverTime);
-            this.rateOverDistance.deserialize(element.rateOverDistance);
             if (element.bursts) {
                 this.bursts.length = 0;
                 for (let i = 0, l = element.bursts.length; i < l; i++) {
@@ -671,12 +670,6 @@ namespace egret3d.particle {
         public cycleCount: number;
         @paper.serializedField
         public rowIndex: number;
-        @paper.serializedField
-        public uvChannelMask: UVChannelFlags = UVChannelFlags.UV0;
-        @paper.serializedField
-        public flipU: number;
-        @paper.serializedField
-        public flipV: number;
 
         public deserialize(element: any) {
             super.deserialize(element);
@@ -688,9 +681,6 @@ namespace egret3d.particle {
             this.startFrame.deserialize(element.startFrame);
             this.cycleCount = element.cycleCount;
             this.rowIndex = element.rowIndex;
-            this.uvChannelMask = element.uvChannelMask;
-            this.flipU = element.flipU;
-            this.flipV = element.flipV;
         }
         public invalidUpdate(): void {
             paper.EventPool.dispatchEvent(ParticleComponenetEventType.TextureSheetAnimation, this._comp);
