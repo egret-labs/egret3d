@@ -43,6 +43,7 @@ namespace egret3d {
             target._lightmapIndex = this._lightmapIndex;
             target._lightmapScaleOffset = [this._lightmapScaleOffset.x, this._lightmapScaleOffset.y, this._lightmapScaleOffset.z, this._lightmapScaleOffset.w];
             target._materials = [] as any[];
+            target.uuid = this.uuid;
 
             for (const material of this._materials) {
                 target._materials.push(paper.serializeAsset(material));
@@ -57,6 +58,7 @@ namespace egret3d {
             this._receiveShadows = element._receiveShadows || false;
             this._castShadows = element._castShadows || false;
             this._lightmapIndex = element._lightmapIndex;
+            this.uuid = element.uuid;
 
             if (element._materials) {
                 this._materials.length = 0;

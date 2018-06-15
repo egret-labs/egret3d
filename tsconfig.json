@@ -17,7 +17,7 @@
         "strictNullChecks": false,
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": false,
-        "outFile": "bin/egret3d.js"
+        "outFile": "D:/Paper/doc/template/3d-examples/egret3d/egret3d.js"
     },
     "files": [
         "libs/egret.d.ts",
@@ -151,6 +151,7 @@
         "egret3d/editor/EventDispatcher.ts",
         "egret3d/editor/GeoController.ts",
         "egret3d/editor/History.ts",
+        "egret3d/editor/uuid.ts",
         "egret3d/editor/systems/EditorCameraSystem.ts",
         "egret3d/editor/systems/GizmosSystem.ts",
         "egret3d/editor/components/EditorCameraScript.ts",

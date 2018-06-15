@@ -8,8 +8,18 @@ namespace paper.editor {
     };
 
     export class History {
+        constructor();
+        constructor(serializeData:any);
+        constructor(serializeData?:any){
+            this._index = serializeData ? serializeData.index : -1;
+            this._locked = serializeData ? serializeData.locked : 0;
+            this._batchIndex = serializeData ? serializeData.batchIndex : 0;
+            this._states = serializeData ? serializeData.states : [];
+        }
+
         public static toString(): string {
             return "[class common.History]";
+            
         }
 
         public dispatcher: EventDispatcher | null = null;
@@ -120,7 +130,7 @@ namespace paper.editor {
 
         public add(state: BaseState): void {
             if (this._locked !== 0) {
-                // return;
+                return;
             }
 
             if (this._batchIndex > 0) {
@@ -128,6 +138,7 @@ namespace paper.editor {
                 this._batchStates.push(state);
             }
             else {
+                console.log("addstate:",this._index);
                 this._states[this._index + 1] = state;
 
                 if (this.dispatcher !== null) {
@@ -187,6 +198,72 @@ namespace paper.editor {
         public get index(): number {
             return this._index;
         }
+
+        public get batchIndex():number{
+            return this._batchIndex;
+        }
+    
+        public get locked():0 | 1 | 2 |3{
+            return this._locked;
+        }
+
+        public get states():BaseState[]
+        {
+            return this._states;
+        }
+    }
+
+    export class HistoryUtil{
+        public static serialize(history:History):any{
+            const states:BaseState[] = history.states; 
+            const statesData:any[] = [];
+            for (let index = 0; index < states.length; index++) {
+                const element = states[index];
+                const className = egret.getQualifiedClassName(element);
+                const data = {
+                    className,
+                    batchIndex:element.batchIndex,
+                    data:element.data,
+                    autoClear:element.autoClear,
+                    isDone:element.isDone,
+                } 
+                statesData.push(data);
+            }
+
+            const serializeHistory = {
+                index:history.index,
+                batchIndex:history.batchIndex,
+                locked:history.locked,
+                statesData,
+            }
+
+            return serializeHistory;
+        }
+
+        public static deserialize(serializeHistory:any):any{
+            const states:BaseState[] = [];
+            const statesData:any[] = serializeHistory.statesData;
+            for (let index = 0; index < statesData.length; index++) {
+                const element = statesData[index];
+                const clazz = egret.getDefinitionByName(element.className);
+                let state: BaseState = null;
+                if (clazz) {
+                    state = new clazz();
+                    state.batchIndex = element.batchIndex;
+                    state.data = element.data;
+                    state.autoClear = element.autoClear;
+                    state.isDone = element.isDone;
+                    states.push(state);
+                }
+            }
+            const initData = {
+                states,
+                index:serializeHistory.index,
+                batchIndex:serializeHistory.batchIndex,
+                locked:serializeHistory.locked,
+            }
+            return new History(initData);
+        }
     }
 
     export abstract class BaseState {
@@ -215,6 +292,14 @@ namespace paper.editor {
             return true;
         }
 
+        public get isDone():boolean{
+            return this._isDone;
+        }
+
+        public set isDone(value:boolean){
+            this._isDone = value;
+        }
+
         public dispatchEditorModelEvent(type:string,data?:any)
         {
             Editor.editorModel.dispatchEvent(new EditorModelEvent(type,data));
@@ -230,31 +315,31 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                const { hashCode, propName, preValue, editType } = this.data;
-                let modifyObj = Editor.editorModel.getGameObjectById(hashCode);
-                if (modifyObj && preValue !== undefined) {
-                    const toValue = Editor.editorModel.deserializeProperty(preValue, editType);
-                    if (toValue) {
-                        Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
-                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target:modifyObj,propName: propName,propValue: toValue})
-                    }
-                }
+                const { preValue } = this.data;
+                this.modifyProperty(preValue);
                 return true;
             }
 
             return false;
         }
 
+        private modifyProperty(value:any)
+        {
+            const { uuid, propName,editType } = this.data;
+            let modifyObj = Editor.editorModel.getGameObjectByUUid(uuid);
+            if (modifyObj && value !== undefined) {
+                const toValue = Editor.editorModel.deserializeProperty(value, editType);
+                if (toValue !== null) {
+                    Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
+                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target:modifyObj,propName: propName,propValue: toValue})
+                }
+            }
+        }
 
         public redo(): boolean {
             if (super.redo()) {
-                const { hashCode, propName, propValue } = this.data;
-                let modifyObj = Editor.editorModel.getGameObjectById(hashCode);
-                if (modifyObj && propValue !== undefined) {
-                    Editor.editorModel.setTargetProperty(propName, modifyObj, propValue);
-                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target:modifyObj,propName: propName,propValue: propValue})
-                }
-
+                const { newValue } = this.data;
+                this.modifyProperty(newValue);
                 return true;
             }
 
@@ -276,34 +361,35 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                const { propValue, propName, gameObjHashCode, preValue, editType } = this.data;
-                let gameObj: GameObject = Editor.editorModel.getGameObjectById(gameObjHashCode);
-                let modifyObj: BaseComponent = Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
-                if (modifyObj && preValue !== undefined) {
-                    let toValue = Editor.editorModel.deserializeProperty(preValue, editType);
-
-                    if (toValue) {
-                        Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
-                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target: modifyObj,propName: propName, propValue: toValue})
-                    }
-
-
-                }
+                const { preValue} = this.data;
+                this.modifyProperty(preValue);
                 return true;
             }
 
             return false;
         }
 
+        private modifyProperty(value:any):void{
+            const { propName, componentUUid,gameObjectUUid,editType } = this.data;
+            let gameObj: GameObject | null = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+            let modifyObj: BaseComponent | null;
+            if (gameObj) {
+                modifyObj = Editor.editorModel.getComponentById(gameObj,componentUUid);
+            }
+            if (modifyObj && value !== undefined) {
+                let toValue = Editor.editorModel.deserializeProperty(value, editType);
+
+                if (toValue !== null) {
+                    Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
+                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target: modifyObj,propName: propName, propValue: toValue});
+                }
+            }
+        }
+
         public redo(): boolean {
             if (super.redo()) {
-                const { propValue, propName, gameObjHashCode } = this.data;
-                let gameObj: GameObject = Editor.editorModel.getGameObjectById(gameObjHashCode);
-                let modifyObj: BaseComponent = Editor.editorModel.getComponentById(gameObj, this.data.hashCode);
-                if (modifyObj && propValue !== undefined) {
-                    Editor.editorModel.setTargetProperty(propName, modifyObj, propValue);
-                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target: modifyObj,propName: propName, propValue: propValue})
-                }
+                const { newValue} = this.data;
+                this.modifyProperty(newValue);
                 return true;
             }
 
@@ -327,7 +413,9 @@ namespace paper.editor {
         public undo(): boolean {
             if (super.undo()) {
                 let preSelectids = this.data.prevalue;
-                this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,{0:preSelectids});
+                let selectObjs = {};
+                selectObjs[selectItemType.GAMEOBJECT] = preSelectids;
+                this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,selectObjs);
                 return true;
             }
 
@@ -337,7 +425,9 @@ namespace paper.editor {
         public redo(): boolean {
             if (super.redo()) {
                 let newSelectids = this.data.newvalue;
-                this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,{0:newSelectids});
+                let selectObjs = {};
+                selectObjs[selectItemType.GAMEOBJECT] = newSelectids;
+                this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,selectObjs);
                 return true;
             }
 
@@ -360,16 +450,16 @@ namespace paper.editor {
         public undo(): boolean {
             if (super.undo()) {
                 let {datas} = this.data;
-                let delectHashCodes:number[] = datas.map((data) => {if (data.cacheGameObjectHashCode) {
-                    return data.cacheGameObjectHashCode;
+                let delectUUids:string[] = datas.map((data) => {if (data.cacheGameObjectUUid) {
+                    return data.cacheGameObjectUUid;
                 }});
-                let gameObjs = Editor.editorModel.getGameObjectsByIds(delectHashCodes);
+                let gameObjs = Editor.editorModel.getGameObjectsByUUids(delectUUids);
                 Editor.editorModel._deleteGameObject(gameObjs);
-                const selectIds:number = datas.map((data) => {if (data.parentHashCode) {
-                    return data.parentHashCode;
+                const selectUUids:number = datas.map((data) => {if (data.parentUUid) {
+                    return data.parentUUid;
                 }});
                 
-                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,selectIds);
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,selectUUids);
                 return true;
             }
 
@@ -379,38 +469,39 @@ namespace paper.editor {
         public redo(): boolean {
             if (super.redo()) {
                 let {datas} = this.data;
-                let selectIds:number[] = [];
+                let selectUUids:string[] = [];
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
-                    const {parentHashCode} = element;
+                    const {parentUUid} = element;
                     let gameObj = new GameObject();
                     gameObj.name = "NewGameObject";
+                    Editor.editorModel.generateGameobjectUUids(gameObj);
 
-                    if (element.cacheGameObjectHashCode) {
-                        (gameObj as any).hashCode = element.cacheGameObjectHashCode;
+                    if (element.cacheGameObjectUUid) {
+                        gameObj.uuid = element.cacheGameObjectUUid;
                     } else {
-                        element.cacheGameObjectHashCode = gameObj.hashCode;
+                        element.cacheGameObjectUUid = gameObj.uuid;
                     }
 
-                    if (element.cacheComponentsHashCodes) {
-                        Editor.editorModel.resetComponentHashCode(gameObj, element.cacheComponentsHashCodes.concat());
+                    if (element.cacheComponentsUUids) {
+                        Editor.editorModel.resetComponentUUid(gameObj, element.cacheComponentsUUids.concat());
                     }else{
-                        element.cacheComponentsHashCodes = [];
-                        Editor.editorModel.getAllComponentIdFromGameObject(gameObj, element.cacheComponentsHashCodes);
+                        element.cacheComponentsUUids = [];
+                        Editor.editorModel.getAllComponentUUidFromGameObject(gameObj, element.cacheComponentsUUids);
                     }   
 
-                    if (parentHashCode) {
-                        const parentGameObj:GameObject | null = Editor.editorModel.getGameObjectById(parentHashCode);
+                    if (parentUUid) {
+                        const parentGameObj:GameObject | null = Editor.editorModel.getGameObjectByUUid(parentUUid);
                         if (parentGameObj) {
                             gameObj.transform.setParent(parentGameObj.transform);
                         }
                     }
 
-                    selectIds.push(gameObj.hashCode);
+                    selectUUids.push(gameObj.uuid);
                 }
 
                 //select new objects
-                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectIds);
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectUUids);
 
                 return true;
             }
@@ -434,24 +525,22 @@ namespace paper.editor {
         public undo(): boolean {
             if (super.undo()) {
                 const { datas, prefabData,selectIds } = this.data;
-                let addIds = [];
 
                 for (let index = 0; index < datas.length; index++) {
                     let element = datas[index];
                     let serializeData = element.serializeData;
                     let assetsMap = element.assetsMap;
                     let gameObj: GameObject = deserialize(serializeData, assetsMap);
-                    let hashcodes = element.deleteHashcode.concat();
-                    Editor.editorModel.resetHashCode(gameObj, hashcodes);
-                    let componentsHashcodes = element.deleteComponentcode.concat();
-                    Editor.editorModel.resetComponentHashCode(gameObj, componentsHashcodes);
-                    let parentHashCode = element.parentHashcode;
-                    if (parentHashCode) {
-                        let parent_3 = Editor.editorModel.getGameObjectById(parentHashCode);
+                    let uuids = element.deleteuuids.concat();
+                    Editor.editorModel.resetUUid(gameObj, uuids);
+                    let componentsUUids = element.deleteComponentUUids.concat();
+                    Editor.editorModel.resetComponentUUid(gameObj, componentsUUids);
+                    let parentUUid = element.parentUUid;
+                    if (parentUUid) {
+                        let parent_3 = Editor.editorModel.getGameObjectByUUid(parentUUid);
                         if (parent_3)
                             gameObj.transform.setParent(parent_3.transform);
                     }
-                    addIds.push(gameObj.hashCode);
                 }
 
                 //预制体相关
@@ -460,8 +549,10 @@ namespace paper.editor {
                     const url = prefabData[key].url;
                     const prefabIds = prefabData[key].prefabIds;
                     const prefab = Asset.find(url);
-                    let rootObj = Editor.editorModel.getGameObjectById(prefabRootId);
-                    Editor.editorModel.resetPrefabbyRootId(rootObj, prefab, prefabIds);
+                    let rootObj:GameObject | null = Editor.editorModel.getGameObjectByUUid(prefabRootId);
+                    if (rootObj) {
+                        Editor.editorModel.resetPrefabbyRootId(rootObj, prefab, prefabIds);
+                    }
                 }
 
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectIds);
@@ -475,20 +566,22 @@ namespace paper.editor {
             if (super.redo()) {
                 const { datas, prefabData } = this.data;
                 let deleteObjs = [];
-                let deleteHashcodes = [];
+                let deleteUUids = [];
                 for (let index = 0; index < datas.length; index++) {
                     let element = datas[index];
-                    deleteHashcodes.push(element.deleteHashcode[0]);
+                    deleteUUids.push(element.deleteuuids[0]);
                 }
 
                 //先处理预制体相关逻辑，再执行删除逻辑
                 for (let key in prefabData) {
-                    const prefabRootId: number = prefabData[key].rootId;
-                    const rootObj: GameObject = Editor.editorModel.getGameObjectById(prefabRootId);
-                    Editor.editorModel.clearRootPrefabInstance(rootObj, rootObj);
+                    const prefabRootId: string = prefabData[key].rootId;
+                    const rootObj: GameObject | null = Editor.editorModel.getGameObjectByUUid(prefabRootId);
+                    if (rootObj) {
+                        Editor.editorModel.clearRootPrefabInstance(rootObj, rootObj);
+                    }
                 }
 
-                deleteObjs = Editor.editorModel.getGameObjectsByIds(deleteHashcodes);
+                deleteObjs = Editor.editorModel.getGameObjectsByUUids(deleteUUids);
                 Editor.editorModel._deleteGameObject(deleteObjs);
 
                 //clear select
@@ -529,36 +622,40 @@ namespace paper.editor {
                 let datas = this.data.datas;
                 let prefabData = this.data.prefabData;
                 let addObjs: GameObject[] = [];
-                let selectIds:number[] = [];
+                let selectIds:string[] = [];
 
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
-                    let duplicateHashCode = element.duplicateHashCode;
-                    let sourceObj: GameObject = Editor.editorModel.getGameObjectById(duplicateHashCode);
+                    let duplicateUUid = element.duplicateUUid;
+                    let sourceObj: GameObject | null = Editor.editorModel.getGameObjectByUUid(duplicateUUid);
+                    if (!sourceObj) {
+                        continue;
+                    }
                     let duplicateObj = clone(sourceObj);
                     duplicateObj.name = sourceObj.name + "_duplicate";
                     duplicateObj.transform.setParent(sourceObj.transform.parent);
+                    Editor.editorModel.generateGameobjectUUids(duplicateObj);
 
                     let stru = prefabData[index];
                     Editor.editorModel.duplicatePrefabDataToGameObject(duplicateObj, stru, 0);
 
                     addObjs.push(duplicateObj);
                     
-                    //缓存hashcode,有就使用缓存的cache，保持cachecode始终不变
-                    if (!element.cacheHashCodes) {
-                        let hashCodes: number[] = [];
-                        Editor.editorModel.getAllHashCodeFromGameObject(duplicateObj, hashCodes);
-                        element["cacheHashCodes"] = hashCodes;
+                     //缓存uuid,有就使用缓存的cache，保持uuid始终不变
+                     if (!element.cacheGameObjectUUids) {
+                        let gameObjectUUids: string[] = [];
+                        Editor.editorModel.getAllUUidFromGameObject(duplicateObj, gameObjectUUids);
+                        element.cacheGameObjectUUids = gameObjectUUids;
 
-                        let componentHashcodes: number[] = [];
-                        Editor.editorModel.getAllComponentIdFromGameObject(duplicateObj, componentHashcodes);
-                        element["cacheComponentHashCodes"] = componentHashcodes;
+                        let componentUUids: string[] = [];
+                        Editor.editorModel.getAllComponentUUidFromGameObject(duplicateObj, componentUUids);
+                        element.cacheComponentUUids = componentUUids;
                     } else {
-                        Editor.editorModel.resetHashCode(duplicateObj, element.cacheHashCodes.concat());
-                        Editor.editorModel.resetComponentHashCode(duplicateObj, element.cacheComponentHashCodes.concat());
+                        Editor.editorModel.resetUUid(duplicateObj, element.cacheGameObjectUUids.concat());
+                        Editor.editorModel.resetComponentUUid(duplicateObj, element.cacheComponentUUids.concat());
                     }
 
-                    selectIds.push(duplicateObj.hashCode);
+                    selectIds.push(duplicateObj.uuid);
                 }
 
                 this.data.addObjs = addObjs;
@@ -577,7 +674,7 @@ namespace paper.editor {
             return "[class common.PasteGameObjectsState]";
         }
 
-        public static create(data: any = null): PasteGameObjectsState | null {
+        public static create(data: any = null): PasteGameObjectsState {
             const state = new PasteGameObjectsState();
             state.data = data;
             return state;
@@ -599,38 +696,43 @@ namespace paper.editor {
                 let datas = this.data.datas;
                 let addObjs: GameObject[] = [];
                 let prefabData = this.data.prefabData;
-                let selectIds:number[] = [];
+                let selectIds:string[] = [];
 
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
-                    let pasteHashCode = element.pasteHashCode;
+                    let parentUUid = element.parentUUid;
                     let targetTransform = this.data.target;
 
-                    let sourceObj = Editor.editorModel.getGameObjectById(pasteHashCode);
+                    let sourceObj = Editor.editorModel.getGameObjectByUUid(parentUUid);
+                    if (!sourceObj) {
+                        continue;
+                    }
                     let pasteObj = clone(sourceObj);
                     pasteObj.name = sourceObj.name + "_paste";
                     pasteObj.transform.setParent(targetTransform);
+                    Editor.editorModel.generateGameobjectUUids(pasteObj);
+
 
                     let stru = prefabData[index];
                     Editor.editorModel.duplicatePrefabDataToGameObject(pasteObj, stru, 0);
 
                     addObjs.push(pasteObj);
                     
-                    //缓存hashcode,有就使用缓存的cache，保持cachecode始终不变
-                    if (!element.cacheHashCodes) {
-                        let hashCodes: number[] = [];
-                        Editor.editorModel.getAllHashCodeFromGameObject(pasteObj, hashCodes);
-                        element.cacheHashCodes = hashCodes;
+                    //缓存uuid,有就使用缓存的cache，保持uuid始终不变
+                    if (!element.cacheGameObjectUUids) {
+                        let gameObjectUUids: string[] = [];
+                        Editor.editorModel.getAllUUidFromGameObject(pasteObj, gameObjectUUids);
+                        element.cacheGameObjectUUids = gameObjectUUids;
 
-                        let componentHashcodes: number[] = [];
-                        Editor.editorModel.getAllComponentIdFromGameObject(pasteObj, componentHashcodes);
-                        element["cacheComponentHashCodes"] = componentHashcodes;
+                        let componentUUids: string[] = [];
+                        Editor.editorModel.getAllComponentUUidFromGameObject(pasteObj, componentUUids);
+                        element.cacheComponentUUids = componentUUids;
                     } else {
-                        Editor.editorModel.resetHashCode(pasteObj, element.cacheHashCodes.concat());
-                        Editor.editorModel.resetComponentHashCode(pasteObj, element.cacheComponentHashCodes.concat());
+                        Editor.editorModel.resetUUid(pasteObj, element.cacheGameObjectUUids.concat());
+                        Editor.editorModel.resetComponentUUid(pasteObj, element.cacheComponentUUids.concat());
                     }
 
-                    selectIds.push(pasteObj.hashCode);
+                    selectIds.push(pasteObj.uuid);
                 }
 
                 this.data.addObjs = addObjs;
@@ -657,13 +759,13 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                let gameObjectId = this.data.gameObjectId;
-                let componentId = this.data.cacheHashCode;
-                let gameObject = Editor.editorModel.getGameObjectById(gameObjectId);
+                let gameObjectUUid = this.data.gameObjectUUid;
+                let componentId = this.data.cacheUUid;
+                let gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (gameObject) {
                     for (let i: number = 0; i < gameObject.components.length; i++) {
                         let comp = gameObject.components[i];
-                        if (comp.hashCode === componentId) {
+                        if (comp.uuid === componentId) {
                             gameObject.removeComponent(comp.constructor as any);
                             break;
                         }
@@ -678,16 +780,18 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                let gameObjectId = this.data.gameObjectId;
+                let gameObjectUUid = this.data.gameObjectUUid;
                 let compClzName = this.data.compClzName;
-                let gameObject = Editor.editorModel.getGameObjectById(gameObjectId);
+                let gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (gameObject) {
                     let compClz = egret.getDefinitionByName(compClzName);
                     let addComponent = gameObject.addComponent(compClz);
-                    if (this.data.cacheHashCode) {
-                        (addComponent as any).hashCode = this.data.cacheHashCode
+                    addComponent.uuid = generateUuid();
+
+                    if (this.data.cacheUUid) {
+                        addComponent.uuid = this.data.cacheUUid;
                     } else {
-                        this.data.cacheHashCode = addComponent.hashCode;
+                        this.data.cacheUUid = addComponent.uuid;
                     }
                 }
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
@@ -714,16 +818,16 @@ namespace paper.editor {
             if (super.undo()) {
                 let serializeData = this.data.serializeData;
                 let component: BaseComponent = deserialize(serializeData, this.data.assetsMap);
-                let gameObjectId = this.data.gameObjectId;
+                let gameObjectUUid = this.data.gameObjectUUid;
                 if (component) {
-                    let gameObject = Editor.editorModel.getGameObjectById(gameObjectId);
-                    (component as any).hashCode = this.data.hashcode;
-                    (component as any).gameObject = gameObject;
-
+                    let gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObject) {
+                        component.uuid = this.data.componentUUid;
+                        (component as any).gameObject = gameObject;
+
                         Editor.editorModel.addComponentToGameObject(gameObject, component);
+                        this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                     }
-                    this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                 }
                 return true;
             }
@@ -733,13 +837,13 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                let gameObjectId = this.data.gameObjectId;
-                let componentId = this.data.componentId;
-                let obj = Editor.editorModel.getGameObjectById(gameObjectId);
+                let gameObjectUUid = this.data.gameObjectUUid;
+                let componentUUid = this.data.componentUUid;
+                let obj = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (obj) {
                     for (let i: number = 0; i < obj.components.length; i++) {
                         let comp = obj.components[i];
-                        if (comp.hashCode === componentId) {
+                        if (comp.uuid === componentUUid) {
                             obj.removeComponent(comp.constructor as any);
                             break;
                         }
@@ -767,8 +871,8 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                const { gameObjectIds, targetId, originParentIds, prefabData } = this.data;
-                const gameObjs = Editor.editorModel.getGameObjectsByIds(gameObjectIds);
+                const { gameObjectUUids, targetUUid, originParentIds, prefabData } = this.data;
+                const gameObjs = Editor.editorModel.getGameObjectsByUUids(gameObjectUUids);
                 let originParentId;
                 let originParent;
                 let originTransForm;
@@ -776,17 +880,20 @@ namespace paper.editor {
                     const element = gameObjs[index];
                     originParentId = originParentIds[index];
                     if (originParentId) {
-                        originParent = Editor.editorModel.getGameObjectById(originParentId);
+                        originParent = Editor.editorModel.getGameObjectByUUid(originParentId);
                     }
                     originTransForm = originParent ? originParent.transform : null;
                     element.transform.setParent(originTransForm);
-                    if (prefabData[element.hashCode]) {
-                        const prefabRootId = prefabData[element.hashCode].rootId;
-                        const url = prefabData[element.hashCode].url;
-                        const prefabIds = prefabData[element.hashCode].prefabIds;
+
+                    if (prefabData[element.uuid]) {
+                        const prefabRootId = prefabData[element.uuid].rootId;
+                        const url = prefabData[element.uuid].url;
+                        const prefabIds = prefabData[element.uuid].prefabIds;
                         const prefab = Asset.find(url);
-                        let rootObj = Editor.editorModel.getGameObjectById(prefabRootId);
-                        Editor.editorModel.resetPrefabbyRootId(rootObj, prefab, prefabIds);
+                        let rootObj = Editor.editorModel.getGameObjectByUUid(prefabRootId);
+                        if (rootObj) {
+                            Editor.editorModel.resetPrefabbyRootId(rootObj, prefab, prefabIds);
+                        }
                     }
                 }
                 this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_PARENT);
@@ -798,18 +905,18 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                const { gameObjectIds, targetId, prefabData } = this.data;
-                const gameObjs = Editor.editorModel.getGameObjectsByIds(gameObjectIds);
-                const targetGameObj = Editor.editorModel.getGameObjectById(targetId);
+                const { gameObjectUUids, targetUUid, prefabData } = this.data;
+                const gameObjs = Editor.editorModel.getGameObjectsByUUids(gameObjectUUids);
+                const targetGameObj = Editor.editorModel.getGameObjectByUUid(targetUUid);
                 let targetTransform = null;
                 for (let index = 0; index < gameObjs.length; index++) {
                     const element = gameObjs[index];
                     if (targetGameObj) {
                         targetTransform = targetGameObj.transform;
                     }
-                    if (prefabData[element.hashCode]) {
-                        const prefabRootId: number = prefabData[element.hashCode].rootId;
-                        const rootObj: GameObject = Editor.editorModel.getGameObjectById(prefabRootId);
+                    if (prefabData[element.uuid]) {
+                        const prefabRootId: string = prefabData[element.uuid].rootId;
+                        const rootObj: GameObject = Editor.editorModel.getGameObjectByUUid(prefabRootId);
                         Editor.editorModel.clearRootPrefabInstance(rootObj, rootObj);
                     }
                     element.transform.setParent(targetTransform);
@@ -823,17 +930,6 @@ namespace paper.editor {
     }
 
     export class ModifyPrefabProperty extends BaseState {
-        protected getGameObjectById(gameObjectId: number): GameObject {
-            let paper = gameObjectId < 0 ? this.data.backRuntime.paper : __global['paper'];
-            let objects = paper.Application.sceneManager.getActiveScene().gameObjects;
-            for (let i: number = 0; i < objects.length; i++) {
-                if (objects[i].hashCode === gameObjectId) {
-                    return objects[i];
-                }
-            }
-            return null;
-        }
-
         protected getGameObjectsByPrefab = (prefab: egret3d.Prefab): GameObject[] => {
             let objects = Application.sceneManager.getActiveScene().gameObjects;
             let result: GameObject[] = [];
@@ -884,8 +980,8 @@ namespace paper.editor {
          * @param gameObjectId 
          * @param valueList 
          */
-        public modifyPrefabGameObjectPropertyValues(gameObjectId: number, valueList: any[]): void {
-            let prefabObj = this.getGameObjectById(gameObjectId);
+        public modifyPrefabGameObjectPropertyValues(gameObjectUUid: string, valueList: any[]): void {
+            let prefabObj = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
             if (!prefabObj) {
                 return;
             }
@@ -918,8 +1014,8 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                const { gameObjectId, preValueCopylist } = this.data;
-                this.modifyPrefabGameObjectPropertyValues(gameObjectId, preValueCopylist);
+                const { gameObjectUUid, preValueCopylist } = this.data;
+                this.modifyPrefabGameObjectPropertyValues(gameObjectUUid, preValueCopylist);
                 return true;
             }
 
@@ -928,8 +1024,8 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                const { gameObjectId, newValueList } = this.data;
-                this.modifyPrefabGameObjectPropertyValues(gameObjectId, newValueList);
+                const { gameObjectUUid, newValueList } = this.data;
+                this.modifyPrefabGameObjectPropertyValues(gameObjectUUid, newValueList);
                 return true;
             }
 
@@ -949,8 +1045,8 @@ namespace paper.editor {
             return state;
         }
 
-        public modifyPrefabComponentPropertyValues(gameObjectId: number, componentId: number, valueList: any[]): void {
-            let prefabObj = this.getGameObjectById(gameObjectId);
+        public modifyPrefabComponentPropertyValues(gameObjUUid: string, componentUUid: string, valueList: any[]): void {
+            let prefabObj = Editor.editorModel.getGameObjectByUUid(gameObjUUid);
             if (!prefabObj) {
                 return;
             }
@@ -958,7 +1054,7 @@ namespace paper.editor {
             for (let k: number = 0; k < prefabObj.components.length; k++) {
                 let PrefabComp = prefabObj.components[k];
                 let editInfoList = editor.getEditInfo(PrefabComp);
-                if (PrefabComp.hashCode === componentId) {
+                if (PrefabComp.uuid === componentUUid) {
                     valueList.forEach(propertyValue => {
                         const { propName, copyValue, valueEditType } = propertyValue;
                         let newValue = Editor.editorModel.deserializeProperty(copyValue, valueEditType);
@@ -988,8 +1084,8 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                const { gameObjectId, componentId, preValueCopylist } = this.data;
-                this.modifyPrefabComponentPropertyValues(gameObjectId, componentId, preValueCopylist);
+                const { gameObjUUid, componentUUid, preValueCopylist } = this.data;
+                this.modifyPrefabComponentPropertyValues(gameObjUUid, componentUUid, preValueCopylist);
                 return true;
             }
 
@@ -998,8 +1094,8 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                const { gameObjectId, componentId, newValueList } = this.data;
-                this.modifyPrefabComponentPropertyValues(gameObjectId, componentId, newValueList);
+                const { gameObjUUid, componentUUid, newValueList } = this.data;
+                this.modifyPrefabComponentPropertyValues(gameObjUUid, componentUUid, newValueList);
                 return true;
             }
 
@@ -1021,28 +1117,17 @@ namespace paper.editor {
             return state;
         }
 
-        protected getGameObjectById(gameObjectId: number): GameObject {
-            let paper = gameObjectId < 0 ? this.data.backRuntime.paper : __global['paper'];
-            let objects = paper.Application.sceneManager.getActiveScene().gameObjects;
-            for (let i: number = 0; i < objects.length; i++) {
-                if (objects[i].hashCode === gameObjectId) {
-                    return objects[i];
-                }
-            }
-            return null;
-        }
-
         public undo(): boolean {
             if (super.undo()) {
                 const { datas } = this.data;
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
-                    const { gameObjectId, componentId, serializeData, assetsMap } = element;
+                    const { gameObjUUid, componentUUid, serializeData, assetsMap } = element;
                     const addComponent: BaseComponent = deserialize(serializeData, assetsMap);
                     if (addComponent) {
-                        const gameObj = this.getGameObjectById(gameObjectId);
+                        const gameObj = Editor.editorModel.getGameObjectByUUid(gameObjUUid);
                         if (gameObj) {
-                            (addComponent as any).hashCode = componentId;
+                            addComponent.uuid = componentUUid;
                             (addComponent as any).gameObject = gameObj;
                             Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
                             this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
@@ -1060,10 +1145,10 @@ namespace paper.editor {
                 const { datas } = this.data;
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
-                    const { gameObjectId, componentId } = element;
-                    const gameObj = this.getGameObjectById(gameObjectId);
+                    const { gameObjUUid, componentUUid } = element;
+                    const gameObj = Editor.editorModel.getGameObjectByUUid(gameObjUUid);
                     if (gameObj) {
-                        const componentObj = Editor.editorModel.getComponentById(gameObj, componentId);
+                        const componentObj = Editor.editorModel.getComponentById(gameObj, componentUUid);
                         if (componentObj) {
                             gameObj.removeComponent(componentObj.constructor as any);
                             this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
@@ -1095,10 +1180,10 @@ namespace paper.editor {
                 const { datas } = this.data;
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
-                    const { gameObjectId, compClzName, cacheHashCode } = element;
-                    const gameObj = this.getGameObjectById(gameObjectId);
-                    if (gameObj && cacheHashCode) {
-                        const removeComponent = Editor.editorModel.getComponentById(gameObj, cacheHashCode);
+                    const { gameObjectUUid, compClzName, cacheUUid } = element;
+                    const gameObj = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                    if (gameObj && cacheUUid) {
+                        const removeComponent = Editor.editorModel.getComponentById(gameObj, cacheUUid);
                         if (removeComponent) {
                             gameObj.removeComponent(removeComponent as any);
                         }
@@ -1111,31 +1196,21 @@ namespace paper.editor {
             return false;
         }
 
-
-        protected getGameObjectById(gameObjectId: number): GameObject {
-            let paper = gameObjectId < 0 ? this.data.backRuntime.paper : __global['paper'];
-            let objects = paper.Application.sceneManager.getActiveScene().gameObjects;
-            for (let i: number = 0; i < objects.length; i++) {
-                if (objects[i].hashCode === gameObjectId) {
-                    return objects[i];
-                }
-            }
-            return null;
-        }
-
         public redo(): boolean {
             if (super.redo()) {
                 const { datas } = this.data;
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
-                    const { gameObjectId, compClz } = element;
-                    const gameObj = this.getGameObjectById(gameObjectId);
+                    const { gameObjectUUid, compClz } = element;
+                    const gameObj = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObj) {
                         const addComponent = gameObj.addComponent(compClz);
-                        if (element.cacheHashCode) {
-                            (addComponent as any).hashCode = element.cacheHashCode;
+                        addComponent.uuid = generateUuid();
+
+                        if (element.cacheUUid) {
+                            addComponent.uuid = element.cacheUUid;
                         } else {
-                            element.cacheHashCode = addComponent.hashCode;
+                            element.cacheUUid = addComponent.uuid;
                         }
                         this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                     }
@@ -1171,8 +1246,8 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                const { gameObjectId, preValueCopylist } = this.data;
-                this.modifyAssetPropertyValues(gameObjectId, preValueCopylist);
+                const { target, preValueCopylist } = this.data;
+                this.modifyAssetPropertyValues(target, preValueCopylist);
                 return true;
             }
 

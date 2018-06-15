@@ -69,7 +69,6 @@ namespace paper {
         @editor.property(editor.EditType.TEXT)
         public name: string = "";
 
-
         /**
          * 标签
          */
@@ -94,6 +93,9 @@ namespace paper {
         private _activeDirty = true;
         private readonly _components: BaseComponent[] = [];
         private _scene: Scene = null as any;
+
+        @paper.serializedField
+        public uuid:string | null = null;
 
         /**
          * 创建GameObject，并添加到当前场景中

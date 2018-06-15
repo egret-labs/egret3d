@@ -14,6 +14,9 @@ namespace paper {
         public readonly gameObject: GameObject = BaseComponent._injectGameObject;
 
         @paper.serializedField
+        public uuid:string | null = null;
+
+        @paper.serializedField
         protected _enabled: boolean = true;
 
         /**
@@ -38,6 +41,7 @@ namespace paper {
 
         public deserialize(element: any): void {
             this._enabled = element._enabled === false ? false : true;
+            this.uuid = element.uuid;
         }
 
         /**

@@ -349,6 +349,7 @@ namespace egret3d {
          * @inheritDoc
          */
         public deserialize(element: any) {
+            this.uuid = element.uuid;
             this.fov = element.fov;
             this.opvalue = element.opvalue;
             this._near = element._near;

@@ -55,7 +55,7 @@ namespace egret3d {
 
         private _defines: Array<string> = new Array();
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.SHADER)
+        @paper.editor.property(paper.editor.EditType.SHADER,{set:"setShader"})
         private shader: Shader;
         @paper.serializedField
         @paper.deserializedIgnore

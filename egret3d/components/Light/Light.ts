@@ -81,7 +81,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST,{listItems:[{label:'Direction',value:1},{label:'Point',value:2},{label:'Spot',value:3}]})
-        public type: LightTypeEnum = 0;
+        public type: LightTypeEnum = 1;
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.COLOR)
         public color: Color = new Color(1, 1, 1, 1);

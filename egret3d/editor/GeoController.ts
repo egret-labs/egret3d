@@ -499,7 +499,7 @@ namespace paper.editor {
                 for (let i = 0, l = this.selectedGameObjs.length; i < l; i++) {
                     content.push({
                         type: "gameObject",
-                        id: this.selectedGameObjs[i].hashCode
+                        uuid: this.selectedGameObjs[i].uuid
                     })
                 }
                 let str = JSON.stringify(content);
@@ -534,7 +534,7 @@ namespace paper.editor {
                 selectIds = [];
             }
             
-            this.selectedGameObjs = this.editorModel.getGameObjectsByIds(selectIds);
+            this.selectedGameObjs = this.editorModel.getGameObjectsByUUids(selectIds);
             let len = this.selectedGameObjs.length;
             this._modeCanChange = true;
             if (len > 0) {

@@ -128,6 +128,7 @@ declare namespace paper {
          * 组件挂载的 GameObject
          */
         readonly gameObject: GameObject;
+        uuid: string | null;
         protected _enabled: boolean;
         /**
          * 添加组件后，内部初始化，在反序列化后被调用。
@@ -166,7 +167,7 @@ declare namespace paper {
         /**
          * 是否更新该系统。
          */
-        enable: boolean;
+        enabled: boolean;
         /**
          * 系统对于每个实体关心的组件总数。
          */
@@ -1846,6 +1847,7 @@ declare namespace paper {
         private _activeDirty;
         private readonly _components;
         private _scene;
+        uuid: string | null;
         /**
          * 创建GameObject，并添加到当前场景中
          */
@@ -8049,14 +8051,16 @@ declare namespace paper.editor {
          */
         init(): Promise<void>;
         paperHistory: History;
+        backRunTime: any;
         initHistory(): void;
+        setBackRuntime(back: any): void;
         addState(state: BaseState): void;
         setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean;
         getEditType(propName: string, target: any): editor.EditType | null;
         createModifyGameObjectPropertyState(propName: string, propValue: any, target: GameObject, editType: editor.EditType, add?: boolean): ModifyGameObjectPropertyState;
         createModifyComponent(propName: string, propValue: any, target: BaseComponent, editType: editor.EditType, add?: boolean): any;
-        createModifyPrefabGameObjectPropertyState(gameObjectId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
-        createModifyPrefabComponentPropertyState(gameObjectId: number, componentId: number, newValueList: any[], preValueCopylist: any[], backRuntime: any): void;
+        createModifyPrefabGameObjectPropertyState(gameObjectId: number, newValueList: any[], preValueCopylist: any[]): void;
+        createModifyPrefabComponentPropertyState(gameObjectId: number, componentId: number, newValueList: any[], preValueCopylist: any[]): void;
         createRemoveComponentFromPrefab(stateData: any): void;
         createAddComponentToPrefab(stateData: any): void;
         createModifyAssetPropertyState(target: Asset, newValueList: any[], preValueCopylist: any[]): void;
@@ -8065,7 +8069,7 @@ declare namespace paper.editor {
         /**
          * 创建游戏对象
          */
-        createGameObject(list: number[]): void;
+        createGameObject(parentUUids: string[]): void;
         /**
          * 添加组件
          */
@@ -8081,8 +8085,8 @@ declare namespace paper.editor {
          * @param gameObjectId
          * @param componentId
          */
-        removeComponent(gameObjectId: number, componentId: number): void;
-        getComponentById(gameObject: GameObject, componentId: number): BaseComponent;
+        removeComponent(gameObjectId: number, componentId: number): boolean;
+        getComponentById(gameObject: GameObject, componentId: number): BaseComponent | null;
         /**
          * 粘贴游戏对象
          * @param target
@@ -8152,12 +8156,14 @@ declare namespace paper.editor {
          * @param gameObjects
          */
         unique(gameObjects: GameObject[]): void;
-        getGameObjectById(gameObjectId: number): GameObject;
+        getGameObjectById(gameObjectId: number): GameObject | null;
+        getGameObjectByUUid(uuid: string, inBackRuntime?: boolean): GameObject | null;
         /**
          * 根据id获取对象列表
          * @param ids 不重复的id列表
          */
         getGameObjectsByIds(ids: number[]): GameObject[];
+        getGameObjectsByUUids(uuids: string[]): GameObject[];
         private getAllHashCodeFromGameObjects(gameobjects);
         /**
          * 获取gameobject和其子gameobject的hashcode
@@ -8171,13 +8177,10 @@ declare namespace paper.editor {
          * @param hashcodes
          */
         resetHashCode(gameObj: GameObject, hashcodes: number[]): void;
-        /**
-         * 还原游戏对象及其子游戏对象的组件的hashcode
-         * @param gameObject
-         * @param hashcodes
-         */
         resetComponentHashCode(gameObject: GameObject, hashcodes: number[]): void;
+        resetComponentUUid(gameObject: GameObject, uuids: string[]): void;
         getAllComponentIdFromGameObject(gameObject: GameObject, hashcodes: number[]): void;
+        getAllComponentUUidFromGameObject(gameObject: GameObject, uuids: string[]): void;
         private findOptionSetName(propName, target);
         setTargetProperty(propName: string, target: any, value: any): void;
         /**
@@ -8190,6 +8193,7 @@ declare namespace paper.editor {
             preIds: number[];
         }): void;
         switchScene(url: string): void;
+        resetHistory(data: string): void;
         private _editCamera;
         geoController: GeoController;
         private loadEditScene(url);
@@ -8206,6 +8210,7 @@ declare namespace paper.editor {
          * 序列化场景
          */
         serializeActiveScene(): string;
+        serializeHistory(): string;
         undo: () => void;
         redo: () => void;
     }
@@ -8293,6 +8298,8 @@ declare namespace paper.editor {
         HistoryFree: string;
     };
     class History {
+        constructor();
+        constructor(serializeData: any);
         static toString(): string;
         dispatcher: EventDispatcher | null;
         private _locked;
@@ -8313,6 +8320,13 @@ declare namespace paper.editor {
         enabled: boolean;
         readonly count: number;
         readonly index: number;
+        readonly batchIndex: number;
+        readonly locked: 0 | 1 | 2 | 3;
+        readonly states: BaseState[];
+    }
+    class HistoryUtil {
+        static serialize(history: History): any;
+        static deserialize(serializeHistory: any): any;
     }
     abstract class BaseState {
         autoClear: boolean;
@@ -8321,17 +8335,20 @@ declare namespace paper.editor {
         private _isDone;
         undo(): boolean;
         redo(): boolean;
+        isDone: boolean;
         dispatchEditorModelEvent(type: string, data?: any): void;
     }
     class ModifyGameObjectPropertyState extends BaseState {
         static create(data?: any): ModifyGameObjectPropertyState | null;
         undo(): boolean;
+        private modifyProperty(value);
         redo(): boolean;
     }
     class ModifyComponentPropertyState extends BaseState {
         static toString(): string;
         static create(source: any, key: number | string, value: any, data?: any): ModifyComponentPropertyState | null;
         undo(): boolean;
+        private modifyProperty(value);
         redo(): boolean;
     }
     class SelectGameObjectesState extends BaseState {
@@ -8383,7 +8400,6 @@ declare namespace paper.editor {
         redo(): boolean;
     }
     class ModifyPrefabProperty extends BaseState {
-        protected getGameObjectById(gameObjectId: number): GameObject;
         protected getGameObjectsByPrefab: (prefab: egret3d.Prefab) => GameObject[];
         protected equal(a: any, b: any): boolean;
         protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
@@ -8410,7 +8426,6 @@ declare namespace paper.editor {
     class RemovePrefabComponentState extends BaseState {
         static toString(): string;
         static create(data?: any): RemovePrefabComponentState | null;
-        protected getGameObjectById(gameObjectId: number): GameObject;
         undo(): boolean;
         redo(): boolean;
     }
@@ -8418,7 +8433,6 @@ declare namespace paper.editor {
         static toString(): string;
         static create(data?: any): AddPrefabComponentState | null;
         undo(): boolean;
-        protected getGameObjectById(gameObjectId: number): GameObject;
         redo(): boolean;
     }
     class ModifyAssetPropertyState extends BaseState {
@@ -8428,6 +8442,25 @@ declare namespace paper.editor {
         undo(): boolean;
         redo(): boolean;
     }
+}
+declare namespace paper.editor {
+    /**
+     * Represents a UUID as defined by rfc4122.
+     */
+    interface UUID {
+        /**
+         * @returns the canonical representation in sets of hexadecimal numbers separated by dashes.
+         */
+        asHex(): string;
+    }
+    function v4(): UUID;
+    function isUUID(value: string): boolean;
+    /**
+     * Parses a UUID that is of the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
+     * @param value A uuid string.
+     */
+    function parse(value: string): UUID;
+    function generateUuid(): string;
 }
 declare namespace paper.editor {
     /**

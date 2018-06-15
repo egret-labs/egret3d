@@ -46,9 +46,9 @@ namespace paper.editor {
                                     } else if (l > 1) {
                                         this.selectedGameObjects.splice(index, 1);
                                     }
-                                    const selectIds: number[] = this.selectedGameObjects.map((gameobj) => { return gameobj.hashCode });
+                                    const selectUUids: string[] = this.selectedGameObjects.map((gameobj) => { return gameobj.uuid });
                                     let select={};
-                                    select[selectItemType.GAMEOBJECT]=selectIds;
+                                    select[selectItemType.GAMEOBJECT]= selectUUids;
                                     this.editorModel.selectGameObject(select, null);
                                 }
                             }
@@ -62,9 +62,9 @@ namespace paper.editor {
                                 // 对GameObject的点选
                                 if (tapDelta < 200) {
                                     this.selectedGameObjects = [picked];
-                                    const selectIds: number[] = this.selectedGameObjects.map((gameobj) => { return gameobj.hashCode });
+                                    const selectUUids: string[] = this.selectedGameObjects.map((gameobj) => { return gameobj.uuid });
                                     let select={};
-                                    select[selectItemType.GAMEOBJECT]=selectIds;
+                                    select[selectItemType.GAMEOBJECT]=selectUUids;
                                     this.editorModel.selectGameObject(select, null);
                                 }
                             }
