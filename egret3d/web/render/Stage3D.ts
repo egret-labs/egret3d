@@ -24,12 +24,7 @@ namespace egret3d {
 
             const screenViewport = this.screenViewport as RectData;
             screenViewport.w = options.contentWidth;
-            screenViewport.h = options.contentHeight;
             canvas.width = screenViewport.w;
-            canvas.height = screenViewport.h;
-
-
-
         }
 
         private _resizeDirty: boolean = true;
@@ -46,11 +41,17 @@ namespace egret3d {
 
         private _resize() {
             const displayWidth = window.innerWidth;
-            const displayHeight = this.screenViewport.h / this.screenViewport.w * window.innerWidth;
-            let canvas = this._canvas;
+            const displayHeight = window.innerHeight;
+            
             const absolutePosition = this.absolutePosition as RectData;
             absolutePosition.w = displayWidth;
             absolutePosition.h = displayHeight;
+
+            let screenH = Math.ceil(this.screenViewport.w / displayWidth * displayHeight);
+            (this.screenViewport  as RectData).h = screenH;
+
+            const canvas = this._canvas;
+            canvas.height = this.screenViewport.h;
 
             const { x, y, w, h } = absolutePosition;
             canvas.style.left = x + "px";

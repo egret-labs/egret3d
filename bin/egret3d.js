@@ -5288,9 +5288,7 @@ var egret3d;
             window.addEventListener("resize", function () { return _this._resizeDirty = true; }, false);
             var screenViewport = this.screenViewport;
             screenViewport.w = options.contentWidth;
-            screenViewport.h = options.contentHeight;
             canvas.width = screenViewport.w;
-            canvas.height = screenViewport.h;
         };
         Stage3D.prototype.update = function () {
             if (this._resizeDirty) {
@@ -5300,11 +5298,14 @@ var egret3d;
         };
         Stage3D.prototype._resize = function () {
             var displayWidth = window.innerWidth;
-            var displayHeight = this.screenViewport.h / this.screenViewport.w * window.innerWidth;
-            var canvas = this._canvas;
+            var displayHeight = window.innerHeight;
             var absolutePosition = this.absolutePosition;
             absolutePosition.w = displayWidth;
             absolutePosition.h = displayHeight;
+            var screenH = Math.ceil(this.screenViewport.w / displayWidth * displayHeight);
+            this.screenViewport.h = screenH;
+            var canvas = this._canvas;
+            canvas.height = this.screenViewport.h;
             var x = absolutePosition.x, y = absolutePosition.y, w = absolutePosition.w, h = absolutePosition.h;
             canvas.style.left = x + "px";
             canvas.style.top = y + "px";
