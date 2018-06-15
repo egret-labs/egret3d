@@ -1779,7 +1779,7 @@ var paper;
                 this._scenes.splice(index, 1);
             }
             if (this._scenes.length === 0) {
-                this.createScene(paper.Scene.defaultName);
+                this.createScene("default");
             }
         };
         /**
@@ -1792,7 +1792,7 @@ var paper;
             }
             this._scenes.length = 0;
             if (this._scenes.length === 0) {
-                this.createScene(paper.Scene.defaultName);
+                this.createScene("default");
             }
         };
         /**
@@ -4025,10 +4025,6 @@ var paper;
             }
             return gameObjects;
         };
-        /**
-         *
-         */
-        Scene.defaultName = "default";
         __decorate([
             paper.serializedField
         ], Scene.prototype, "name", void 0);
@@ -17799,18 +17795,12 @@ var RES;
             return url.substring(0, url.lastIndexOf("/"));
         }
         function getUrl(resource) {
-            if (resource.root) {
-                return resource.root + resource.url;
-            }
-            else {
-                return RES['resourceRoot'] + resource.url; //兼容引擎5.1.9以及更低版本
-            }
+            return resource.root + resource.url;
         }
-        function formatUrlAndSort(assets, path, urlKey) {
-            if (urlKey === void 0) { urlKey = "url"; }
+        function formatUrlAndSort(assets, path) {
             var list = [];
             list = assets.map(function (item) {
-                return { url: egret3d.utils.combinePath(path + "/", item[urlKey]), type: calcType(item[urlKey]) };
+                return { url: egret3d.utils.combinePath(path + "/", item.url), type: calcType(item.url) };
             });
             return list.sort(function (a, b) {
                 return a.type - b.type;

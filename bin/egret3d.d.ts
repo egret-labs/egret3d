@@ -217,7 +217,7 @@ declare namespace paper {
          * 获取资源
          * @param name 资源的url
          */
-        static find<T extends Asset>(name: string): any;
+        static find<T extends Asset>(name: string): T;
         /**
          *
          * 资源的原始URL
@@ -1221,7 +1221,7 @@ declare namespace paper {
          * load scene 加载场景
          * @param rawScene url
          */
-        loadScene(url: string): any;
+        loadScene(url: string): Scene;
         /**
          * 卸载指定场景，如果创建列表为空，则创建一个空场景。
          */
@@ -1404,7 +1404,11 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     type PrefabConfig = {
-        assets: any[];
+        assets: {
+            hashCode: number;
+            class: string;
+            url: string;
+        }[];
         objects: any[];
     };
     /**
@@ -1965,10 +1969,6 @@ declare namespace paper {
      * 场景类
      */
     class Scene extends SerializableObject {
-        /**
-         *
-         */
-        static defaultName: string;
         /**
          * 场景名称。
          */

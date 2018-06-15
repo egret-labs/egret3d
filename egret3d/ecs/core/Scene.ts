@@ -4,10 +4,6 @@ namespace paper {
      * 场景类
      */
     export class Scene extends SerializableObject {
-        /**
-         * 
-         */
-        public static defaultName: string = "default";
 
         /**
          * 场景名称。

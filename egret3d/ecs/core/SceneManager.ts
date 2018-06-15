@@ -61,7 +61,7 @@ namespace paper {
             }
 
             if (this._scenes.length === 0) {
-                this.createScene(Scene.defaultName);
+                this.createScene("default");
             }
         }
 
@@ -76,7 +76,7 @@ namespace paper {
             this._scenes.length = 0;
 
             if (this._scenes.length === 0) {
-                this.createScene(Scene.defaultName);
+                this.createScene("default");
             }
         }
 

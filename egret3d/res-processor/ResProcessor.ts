@@ -57,20 +57,14 @@ namespace RES.processor {
         return url.substring(0, url.lastIndexOf("/"));
     }
 
-    function getUrl(resource: RES.ResourceInfo): string {
-        if (resource.root) {
-            return resource.root + resource.url;
-        }
-        else {
-            return RES['resourceRoot'] + resource.url;//兼容引擎5.1.9以及更低版本
-        }
-
+    function getUrl(resource: RES.ResourceInfo) {
+        return resource.root + resource.url;
     }
 
-    function formatUrlAndSort(assets: any[], path: string, urlKey: string = "url"): string[] {
+    function formatUrlAndSort(assets: any[], path: string, ): string[] {
         let list: { url: string, type: AssetTypeEnum }[] = [];
         list = assets.map<{ url: string, type: AssetTypeEnum }>(item => {
-            return { url: egret3d.utils.combinePath(path + "/", item[urlKey]), type: calcType(item[urlKey]) }
+            return { url: egret3d.utils.combinePath(path + "/", item.url), type: calcType(item.url) }
         });
         return list.sort((a, b) => {
             return a.type - b.type;
@@ -305,7 +299,7 @@ namespace RES.processor {
     export const PrefabProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            const data = await host.load(resource, "json");
+            const data: egret3d.PrefabConfig = await host.load(resource, "json");
             const url = getUrl(resource);
             const filename = getFileName(url);
             // load ref assets
