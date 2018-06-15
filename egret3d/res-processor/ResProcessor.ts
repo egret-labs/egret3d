@@ -1,18 +1,14 @@
 namespace RES.processor {
 
     // 按照加载优先级排序
-    export enum AssetTypeEnum {
+    enum AssetTypeEnum {
         Unknown,
-        Auto,
-        Bundle,
-        CompressBundle,
         GLVertexShader,
         GLFragmentShader,
         Shader,
         Texture,
         TextureDesc,
         Material,
-        GLTF,
         GLTFBinary,
         Prefab,
         Scene
@@ -20,14 +16,12 @@ namespace RES.processor {
 
     const typeMap = {
         ".vs.glsl": AssetTypeEnum.GLVertexShader,
-        ".assetbundle.json": AssetTypeEnum.Bundle,
         ".fs.glsl": AssetTypeEnum.GLFragmentShader,
         ".shader.json": AssetTypeEnum.Shader,
         ".png": AssetTypeEnum.Texture,
         ".jpg": AssetTypeEnum.Texture,
         ".imgdesc.json": AssetTypeEnum.TextureDesc,
         ".mat.json": AssetTypeEnum.Material,
-        ".gltf.json": AssetTypeEnum.GLTF,
         ".gltf.bin": AssetTypeEnum.GLTFBinary,
         ".glb": AssetTypeEnum.GLTFBinary,
         ".prefab.json": AssetTypeEnum.Prefab,
@@ -73,15 +67,14 @@ namespace RES.processor {
 
     }
 
-    function formatUrlAndSort(assets: any[], path: string, urlKey: string = "url"): { url: string, type: AssetTypeEnum }[] {
+    function formatUrlAndSort(assets: any[], path: string, urlKey: string = "url"): string[] {
         let list: { url: string, type: AssetTypeEnum }[] = [];
         list = assets.map<{ url: string, type: AssetTypeEnum }>(item => {
             return { url: egret3d.utils.combinePath(path + "/", item[urlKey]), type: calcType(item[urlKey]) }
         });
-        list.sort((a, b) => {
+        return list.sort((a, b) => {
             return a.type - b.type;
-        });
-        return list;
+        }).map(item => item.url);
     }
 
     async function promisify(loader: egret.ImageLoader | egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
@@ -115,40 +108,6 @@ namespace RES.processor {
             egret3d.sound.WebAudio.instance.decodeAudioData(arrayBuffer, onSuccess, onError);
         })
     }
-
-    export const BundleProcessor: RES.processor.Processor = {
-
-        async onLoadStart(host, resource) {
-            let data = await host.load(resource, "json");
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-
-            let bundle = new egret3d.AssetBundle(filename);
-            bundle.url = url;
-            bundle.$parse(data);
-
-            // let list = getBundleUrlList(bundle);
-            let list = formatUrlAndSort(bundle.assets, getPath(resource.url));
-            for (let i = 0; i < list.length; i++) {
-                let r = RES.host.resourceConfig["getResource"](list[i].url);
-                if (r) {
-                    let asset: paper.Asset = await host.load(r);
-                }
-            }
-
-            return bundle;
-        },
-
-        async onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-        }
-
-        // getData(host, resource, key, subkey) { //可选函数
-
-        // }
-
-    };
 
     export const GLVertexShaderProcessor: RES.processor.Processor = {
 
@@ -353,11 +312,10 @@ namespace RES.processor {
             const assets = data.assets;
             if (assets) {
                 const list = formatUrlAndSort(assets, getPath(resource.url));
-                for (let i = 0; i < list.length; i++) {
-                    if (list[i].type == AssetTypeEnum.Shader) continue;
-                    const r = RES.host.resourceConfig["getResource"](list[i].url);
+                for (let item of list) {
+                    let r = RES.host.resourceConfig["getResource"](item);
                     if (r) {
-                        const asset: paper.Asset = await host.load(r);
+                        let asset: paper.Asset = await host.load(r);
                     }
                 }
             }
@@ -386,10 +344,9 @@ namespace RES.processor {
             // load ref assets
             const assets = data.assets;
             if (assets) {
-                let list = formatUrlAndSort(assets, getPath(resource.url));
-                for (let i = 0; i < list.length; i++) {
-                    if (list[i].type == AssetTypeEnum.Shader) continue;
-                    let r = RES.host.resourceConfig["getResource"](list[i].url);
+                const list = formatUrlAndSort(assets, getPath(resource.url));
+                for (let item of list) {
+                    let r = RES.host.resourceConfig["getResource"](item);
                     if (r) {
                         let asset: paper.Asset = await host.load(r);
                     }
@@ -471,7 +428,6 @@ namespace RES.processor {
     RES.processor.map("GLVertexShader", GLVertexShaderProcessor);
     RES.processor.map("GLFragmentShader", GLFragmentShaderProcessor);
     RES.processor.map("Shader", ShaderProcessor);
-    RES.processor.map("Bundle", BundleProcessor);
     RES.processor.map("Texture", TextureProcessor);
     RES.processor.map("TextureDesc", TextureDescProcessor);
     RES.processor.map("Material", MaterialProcessor);

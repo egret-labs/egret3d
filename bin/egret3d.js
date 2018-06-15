@@ -3754,6 +3754,19 @@ var paper;
             return null;
         };
         /**
+         * 根据类型名获取所有组件
+         */
+        GameObject.prototype.getComponents = function (componentClass) {
+            var components = [];
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
+                    components.push(component);
+                }
+            }
+            return components;
+        };
+        /**
          * 搜索自己和父节点中所有特定类型的组件
          */
         GameObject.prototype.getComponentInParent = function (componentClass) {
@@ -17736,30 +17749,24 @@ var RES;
         var AssetTypeEnum;
         (function (AssetTypeEnum) {
             AssetTypeEnum[AssetTypeEnum["Unknown"] = 0] = "Unknown";
-            AssetTypeEnum[AssetTypeEnum["Auto"] = 1] = "Auto";
-            AssetTypeEnum[AssetTypeEnum["Bundle"] = 2] = "Bundle";
-            AssetTypeEnum[AssetTypeEnum["CompressBundle"] = 3] = "CompressBundle";
-            AssetTypeEnum[AssetTypeEnum["GLVertexShader"] = 4] = "GLVertexShader";
-            AssetTypeEnum[AssetTypeEnum["GLFragmentShader"] = 5] = "GLFragmentShader";
-            AssetTypeEnum[AssetTypeEnum["Shader"] = 6] = "Shader";
-            AssetTypeEnum[AssetTypeEnum["Texture"] = 7] = "Texture";
-            AssetTypeEnum[AssetTypeEnum["TextureDesc"] = 8] = "TextureDesc";
-            AssetTypeEnum[AssetTypeEnum["Material"] = 9] = "Material";
-            AssetTypeEnum[AssetTypeEnum["GLTF"] = 10] = "GLTF";
-            AssetTypeEnum[AssetTypeEnum["GLTFBinary"] = 11] = "GLTFBinary";
-            AssetTypeEnum[AssetTypeEnum["Prefab"] = 12] = "Prefab";
-            AssetTypeEnum[AssetTypeEnum["Scene"] = 13] = "Scene";
-        })(AssetTypeEnum = processor.AssetTypeEnum || (processor.AssetTypeEnum = {}));
+            AssetTypeEnum[AssetTypeEnum["GLVertexShader"] = 1] = "GLVertexShader";
+            AssetTypeEnum[AssetTypeEnum["GLFragmentShader"] = 2] = "GLFragmentShader";
+            AssetTypeEnum[AssetTypeEnum["Shader"] = 3] = "Shader";
+            AssetTypeEnum[AssetTypeEnum["Texture"] = 4] = "Texture";
+            AssetTypeEnum[AssetTypeEnum["TextureDesc"] = 5] = "TextureDesc";
+            AssetTypeEnum[AssetTypeEnum["Material"] = 6] = "Material";
+            AssetTypeEnum[AssetTypeEnum["GLTFBinary"] = 7] = "GLTFBinary";
+            AssetTypeEnum[AssetTypeEnum["Prefab"] = 8] = "Prefab";
+            AssetTypeEnum[AssetTypeEnum["Scene"] = 9] = "Scene";
+        })(AssetTypeEnum || (AssetTypeEnum = {}));
         var typeMap = {
             ".vs.glsl": AssetTypeEnum.GLVertexShader,
-            ".assetbundle.json": AssetTypeEnum.Bundle,
             ".fs.glsl": AssetTypeEnum.GLFragmentShader,
             ".shader.json": AssetTypeEnum.Shader,
             ".png": AssetTypeEnum.Texture,
             ".jpg": AssetTypeEnum.Texture,
             ".imgdesc.json": AssetTypeEnum.TextureDesc,
             ".mat.json": AssetTypeEnum.Material,
-            ".gltf.json": AssetTypeEnum.GLTF,
             ".gltf.bin": AssetTypeEnum.GLTFBinary,
             ".glb": AssetTypeEnum.GLTFBinary,
             ".prefab.json": AssetTypeEnum.Prefab,
@@ -17806,10 +17813,9 @@ var RES;
             list = assets.map(function (item) {
                 return { url: egret3d.utils.combinePath(path + "/", item[urlKey]), type: calcType(item[urlKey]) };
             });
-            list.sort(function (a, b) {
+            return list.sort(function (a, b) {
                 return a.type - b.type;
-            });
-            return list;
+            }).map(function (item) { return item.url; });
         }
         function promisify(loader, resource) {
             return __awaiter(this, void 0, void 0, function () {
@@ -17846,52 +17852,6 @@ var RES;
                 });
             });
         }
-        processor.BundleProcessor = {
-            onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, bundle, list, i, r, asset;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "json")];
-                            case 1:
-                                data = _a.sent();
-                                url = getUrl(resource);
-                                filename = getFileName(url);
-                                bundle = new egret3d.AssetBundle(filename);
-                                bundle.url = url;
-                                bundle.$parse(data);
-                                list = formatUrlAndSort(bundle.assets, getPath(resource.url));
-                                i = 0;
-                                _a.label = 2;
-                            case 2:
-                                if (!(i < list.length)) return [3 /*break*/, 5];
-                                r = RES.host.resourceConfig["getResource"](list[i].url);
-                                if (!r) return [3 /*break*/, 4];
-                                return [4 /*yield*/, host.load(r)];
-                            case 3:
-                                asset = _a.sent();
-                                _a.label = 4;
-                            case 4:
-                                i++;
-                                return [3 /*break*/, 2];
-                            case 5: return [2 /*return*/, bundle];
-                        }
-                    });
-                });
-            },
-            onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
-            }
-            // getData(host, resource, key, subkey) { //可选函数
-            // }
-        };
         processor.GLVertexShaderProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
@@ -18164,7 +18124,7 @@ var RES;
         processor.PrefabProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, assets, list, i, r, asset, prefab;
+                    var data, url, filename, assets, list, _i, list_1, item, r, asset, prefab;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
@@ -18175,20 +18135,19 @@ var RES;
                                 assets = data.assets;
                                 if (!assets) return [3 /*break*/, 5];
                                 list = formatUrlAndSort(assets, getPath(resource.url));
-                                i = 0;
+                                _i = 0, list_1 = list;
                                 _a.label = 2;
                             case 2:
-                                if (!(i < list.length)) return [3 /*break*/, 5];
-                                if (list[i].type == AssetTypeEnum.Shader)
-                                    return [3 /*break*/, 4];
-                                r = RES.host.resourceConfig["getResource"](list[i].url);
+                                if (!(_i < list_1.length)) return [3 /*break*/, 5];
+                                item = list_1[_i];
+                                r = RES.host.resourceConfig["getResource"](item);
                                 if (!r) return [3 /*break*/, 4];
                                 return [4 /*yield*/, host.load(r)];
                             case 3:
                                 asset = _a.sent();
                                 _a.label = 4;
                             case 4:
-                                i++;
+                                _i++;
                                 return [3 /*break*/, 2];
                             case 5:
                                 prefab = new egret3d.Prefab(filename, url);
@@ -18213,7 +18172,7 @@ var RES;
         processor.SceneProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, assets, list, i, r, asset, scene;
+                    var data, url, filename, assets, list, _i, list_2, item, r, asset, scene;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
@@ -18224,20 +18183,19 @@ var RES;
                                 assets = data.assets;
                                 if (!assets) return [3 /*break*/, 5];
                                 list = formatUrlAndSort(assets, getPath(resource.url));
-                                i = 0;
+                                _i = 0, list_2 = list;
                                 _a.label = 2;
                             case 2:
-                                if (!(i < list.length)) return [3 /*break*/, 5];
-                                if (list[i].type == AssetTypeEnum.Shader)
-                                    return [3 /*break*/, 4];
-                                r = RES.host.resourceConfig["getResource"](list[i].url);
+                                if (!(_i < list_2.length)) return [3 /*break*/, 5];
+                                item = list_2[_i];
+                                r = RES.host.resourceConfig["getResource"](item);
                                 if (!r) return [3 /*break*/, 4];
                                 return [4 /*yield*/, host.load(r)];
                             case 3:
                                 asset = _a.sent();
                                 _a.label = 4;
                             case 4:
-                                i++;
+                                _i++;
                                 return [3 /*break*/, 2];
                             case 5:
                                 scene = new egret3d.RawScene(filename, url);
@@ -18355,7 +18313,6 @@ var RES;
         RES.processor.map("GLVertexShader", processor.GLVertexShaderProcessor);
         RES.processor.map("GLFragmentShader", processor.GLFragmentShaderProcessor);
         RES.processor.map("Shader", processor.ShaderProcessor);
-        RES.processor.map("Bundle", processor.BundleProcessor);
         RES.processor.map("Texture", processor.TextureProcessor);
         RES.processor.map("TextureDesc", processor.TextureDescProcessor);
         RES.processor.map("Material", processor.MaterialProcessor);
