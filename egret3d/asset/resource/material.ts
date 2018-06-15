@@ -134,7 +134,11 @@ namespace egret3d {
                         this.setTexture(key, uniform.value);
                         break;
                     case "Vector4":
-                        this.setVector4(key, uniform.value);
+                        if(Array.isArray(uniform.value)){
+                            this.setVector4v(key, uniform.value as any);
+                        }else{
+                            this.setVector4(key, uniform.value);
+                        }                        
                         break;
                     case "Range":
                         this.setFloat(key, uniform.value);

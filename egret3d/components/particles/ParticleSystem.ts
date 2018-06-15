@@ -32,8 +32,12 @@ namespace egret3d.particle {
                 const drawCalls: DrawCall[] = [];
                 const primitives = renderer.batchMesh.glTFMesh.primitives;
 
-                if (primitives.length > 2) {
-                    throw "";
+                if (primitives.length !== 1) {
+                    console.error("ParticleSystem : materials.length != 1");
+                }
+
+                if (renderer._renderMode === ParticleRenderMode.None) {
+                    console.error("ParticleSystem : error renderMode");
                 }
 
                 for (const primitive of primitives) {

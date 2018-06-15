@@ -1603,8 +1603,6 @@ declare namespace egret3d.particle {
     class ParticleRenderer extends paper.BaseComponent implements paper.IRenderer {
         private _mesh;
         private readonly _materials;
-        maxParticleSize: number;
-        minParticleSize: number;
         velocityScale: number;
         _renderMode: ParticleRenderMode;
         lengthScale: number;
@@ -5459,7 +5457,6 @@ declare namespace egret3d.particle {
     }
     class EmissionModule extends ParticleSystemModule {
         readonly rateOverTime: MinMaxCurve;
-        readonly rateOverDistance: MinMaxCurve;
         readonly bursts: Array<Burst>;
         deserialize(element: any): void;
     }
@@ -5528,9 +5525,6 @@ declare namespace egret3d.particle {
         readonly startFrame: MinMaxCurve;
         cycleCount: number;
         rowIndex: number;
-        uvChannelMask: UVChannelFlags;
-        flipU: number;
-        flipV: number;
         deserialize(element: any): void;
         invalidUpdate(): void;
         evaluate(t: number, out: Vector4): Vector4;
