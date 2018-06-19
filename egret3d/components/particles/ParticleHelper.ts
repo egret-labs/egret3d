@@ -22,16 +22,24 @@ namespace egret3d.particle {
             let index = 0;
             //提前填充
             const orginPostionBuffer = mesh.getAttributes(gltf.MeshAttributeType.POSITION);
+            const orginUVBuffer = mesh.getAttributes(gltf.MeshAttributeType.TEXCOORD_0);
             const orginColorBuffer = mesh.getAttributes(gltf.MeshAttributeType.COLOR_0);
             const positionBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.POSITION);
             const colorBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.COLOR_0);
+            const uvBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.TEXCOORD_0);
             for (let i = 0; i < totalVertexCount; i++) {
+                const vector2Offset = i * 2;
                 const vector3Offset = i * 3;
                 const vector4Offset = i * 4;
                 const orginVertexIndex = i % mesh.vertexCount;
                 positionBuffer[vector3Offset] = orginPostionBuffer[orginVertexIndex * 3];
                 positionBuffer[vector3Offset + 1] = orginPostionBuffer[orginVertexIndex * 3 + 1];
                 positionBuffer[vector3Offset + 2] = orginPostionBuffer[orginVertexIndex * 3 + 2];
+
+                if(orginUVBuffer){
+                    uvBuffer[vector2Offset] = orginUVBuffer[orginVertexIndex * 2];
+                    uvBuffer[vector2Offset + 1] = orginUVBuffer[orginVertexIndex * 2 + 1];
+                }
 
                 if (orginColorBuffer) {
                     colorBuffer[vector4Offset] = orginColorBuffer[orginVertexIndex * 4];
@@ -69,6 +77,7 @@ namespace egret3d.particle {
             const batchMesh = new Mesh(totalVertexCount, totalIndexCount, totalIndexCount, meshAttributes, meshAttributesType, MeshDrawMode.Dynamic);
 
             const cornerBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.CORNER);
+            const uvBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.TEXCOORD_0);
             for (let i = 0; i < totalVertexCount; i++) {
                 const orginVertexIndex = i % vertexStride;
                 const vector2Offset = i * 2;
@@ -76,18 +85,26 @@ namespace egret3d.particle {
                     case 0:
                         cornerBuffer[vector2Offset] = -0.5;
                         cornerBuffer[vector2Offset + 1] = -0.5;
+                        uvBuffer[vector2Offset] = 0.0;
+                        uvBuffer[vector2Offset + 1] = 1.0;
                         break;
                     case 1:
                         cornerBuffer[vector2Offset] = 0.5;
                         cornerBuffer[vector2Offset + 1] = -0.5;
+                        uvBuffer[vector2Offset] = 1.0;
+                        uvBuffer[vector2Offset + 1] = 1.0;
                         break;
                     case 2:
                         cornerBuffer[vector2Offset] = 0.5;
                         cornerBuffer[vector2Offset + 1] = 0.5;
+                        uvBuffer[vector2Offset] = 1.0;
+                        uvBuffer[vector2Offset + 1] = 0.0;
                         break;
                     case 3:
                         cornerBuffer[vector2Offset] = -0.5;
                         cornerBuffer[vector2Offset + 1] = 0.5;
+                        uvBuffer[vector2Offset] = 0.0;
+                        uvBuffer[vector2Offset + 1] = 0.0;
                         break;
                 }
             }
