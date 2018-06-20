@@ -180,6 +180,7 @@
         "egret3d/ammo/constraints/SliderConstraint.ts",
         "egret3d/ammo/constraints/HingeConstraint.ts",
         "egret3d/ammo/constraints/ConeTwistConstraint.ts",
+        "egret3d/ammo/constraints/BallSocketConstraint.ts",
         "egret3d/ammo/CollisionObject.ts",
         "egret3d/ammo/Rigidbody.ts",
         "egret3d/ammo/PhysicsSystem.ts"

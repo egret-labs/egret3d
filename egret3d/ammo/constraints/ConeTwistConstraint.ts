@@ -27,11 +27,6 @@ namespace egret3d.ammo {
                 return null;
             }
 
-            if (!this._connectedBody) {
-                console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
-                return null;
-            }
-
             const helpVector3A = PhysicsSystem.helpVector3A;
             const helpQuaternionA = PhysicsSystem.helpQuaternionA;
             const helpTransformA = PhysicsSystem.helpTransformA;
@@ -41,6 +36,11 @@ namespace egret3d.ammo {
             let btConstraint: Ammo.btConeTwistConstraint;
 
             if (this._constraintType === Ammo.ConstraintType.ConstrainToAnotherBody) {
+                if (!this._connectedBody) {
+                    console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
+                    return null;
+                }
+
                 this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA, helpMatrixB);
                 //
                 const helpQA = Matrix.getQuaternion(helpMatrixA, TypedConstraint._helpQuaternionA);
@@ -61,10 +61,6 @@ namespace egret3d.ammo {
                     rigidbody.btRigidbody, this._connectedBody.btRigidbody,
                     helpTransformA, helpTransformB
                 );
-                this._updateLimit();
-
-                btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
-                // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
             }
             else {
                 this._createFrame(this._axisX, this._axisY, this._anchor, helpMatrixA);
@@ -75,9 +71,14 @@ namespace egret3d.ammo {
                 helpTransformA.setIdentity();
                 helpTransformA.setOrigin(helpVector3A);
                 helpTransformA.setRotation(helpQuaternionA);
+                btConstraint = new Ammo.btConeTwistConstraint(rigidbody.btRigidbody, helpTransformA as any);
             }
 
-            return null;
+            this._updateLimit();
+            btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
+            // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+
+            return btConstraint;
         }
         /**
          * 
