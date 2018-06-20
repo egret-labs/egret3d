@@ -35,13 +35,17 @@ namespace egret3d.ammo {
         protected abstract _createConstraint(): Ammo.btTypedConstraint | null;
 
         protected _createFrame(forward: Vector3, up: Vector3, constraintPoint: Vector3, frame: Matrix) {
-            const vR = Vector3.cross(forward, up, _helpVector3A).normalize();
+            const vR = Vector3.cross(forward, up, _helpVector3A);
             const vU = Vector3.cross(vR, forward, _helpVector3B).normalize();
+
+            vR.normalize();
+            vU.normalize();
+
             frame.identity();
             frame.set3x3(
-                forward.x, forward.y, forward.z,
-                vU.x, vU.y, vU.z,
-                vR.x, vR.y, vR.z,
+                forward.x, vU.x, vR.x,
+                forward.y, vU.y, vR.y,
+                forward.z, vU.z, vR.z,
             );
             frame.setTranslation(constraintPoint);
         }
@@ -67,9 +71,9 @@ namespace egret3d.ammo {
             const zz = quaternion.transformVector3(_helpVector3C.set(matrixValues[8], matrixValues[9], matrixValues[10]));
             frameB.identity();
             frameB.set3x3(
-                xx.x, xx.y, xx.z,
-                yy.x, yy.y, yy.z,
-                zz.x, zz.y, zz.z,
+                xx.x, yy.x, zz.x,
+                xx.y, yy.y, zz.y,
+                xx.z, yy.z, zz.z,
             );
             frameB.setTranslation(
                 _helpMatrix.copy(otherTransform.getWorldMatrix()).inverse().transformVector3(

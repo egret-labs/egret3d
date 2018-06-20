@@ -42,7 +42,6 @@ namespace egret3d.ammo {
                 rigidbody.btRigidbody, this._connectedBody.btRigidbody,
                 helpTransformA, helpTransformB
             );
-            btConstraint.m_overrideNumSolverIterations = this._overrideNumSolverIterations;
             btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
             // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
 

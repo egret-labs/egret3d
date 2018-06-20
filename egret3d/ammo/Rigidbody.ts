@@ -74,14 +74,14 @@ namespace egret3d.ammo {
 
             if (this._mass > 0.0 && this.isDynamic()) {
                 const collisionShape = this.gameObject.getComponent(CollisionShape as any, true) as CollisionShape;
-                const localInertia = this.localInertia;
-
-                helpVector3A.setValue(localInertia.x, localInertia.y, localInertia.z);
+                helpVector3A.setValue(this._localInertia.x, this._localInertia.y, this._localInertia.z);
                 collisionShape.btCollisionShape.calculateLocalInertia(this._mass, helpVector3A);
+                this._localInertia.set(helpVector3A.x(), helpVector3A.y(), helpVector3A.z());
                 this._btRigidbody.setMassProps(this._mass, helpVector3A);
                 this._btRigidbody.setActivationState(Ammo.ActivationState.DisableDeactivation);
             }
             else {
+                this._localInertia.set(0.0, 0.0, 0.0);
                 helpVector3A.setValue(0.0, 0.0, 0.0);
                 this._btRigidbody.setMassProps(0.0, helpVector3A);
                 this._btRigidbody.setActivationState(Ammo.ActivationState.Undefined);
@@ -370,9 +370,6 @@ namespace egret3d.ammo {
          * 
          */
         public get localInertia(): Readonly<Vector3> {
-            const btLocalInertia = this._btRigidbody.getLocalInertia();
-            this._localInertia.set(btLocalInertia.getX(), btLocalInertia.getY(), btLocalInertia.getZ());
-
             return this._localInertia;
         }
         /**
