@@ -57,7 +57,7 @@ namespace egret3d.ammo {
                 btConstraint = new Ammo.btHingeConstraint(
                     rigidbody.btRigidbody, this._connectedBody.btRigidbody,
                     helpVertex3A, helpVertex3B, helpVertex3C, helpVertex3D,
-                    false
+                    true
                 );
             }
             else {
@@ -68,7 +68,7 @@ namespace egret3d.ammo {
 
                 btConstraint = new Ammo.btHingeConstraint(
                     rigidbody.btRigidbody, helpVertex3A as any, helpVertex3B as any,
-                    false as any
+                    true as any
                 );
             }
 
