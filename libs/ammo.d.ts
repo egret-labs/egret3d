@@ -12,6 +12,16 @@ declare module Ammo {
 		Z = 2,
 	}
 
+    export const enum ActivationState
+    {
+        Undefined = 0,
+        ActiveTag = 1,
+        IslandSleeping = 2,
+        WantsDeactivation = 3,
+        DisableDeactivation = 4,
+        DisableSimulation = 5,
+    }
+
 	export const enum CollisionConfType {
 		DefaultDynamicsWorldCollisionConf,
 		SoftBodyRigidBodyCollisionConf,

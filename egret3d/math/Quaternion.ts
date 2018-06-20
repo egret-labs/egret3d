@@ -365,18 +365,18 @@ namespace egret3d {
             return out;
         }
 
-        public static inverse(q: Quaternion): Quaternion {
+        public static inverse(q: Quaternion, out: Quaternion): Quaternion {
             let norm: number = q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z;
 
             if (norm > 0.0) {
                 let invNorm = 1.0 / norm;
-                q.w = q.w * invNorm;
-                q.x = -q.x * invNorm;
-                q.y = -q.y * invNorm;
-                q.z = -q.z * invNorm;
+                out.w = q.w * invNorm;
+                out.x = -q.x * invNorm;
+                out.y = -q.y * invNorm;
+                out.z = -q.z * invNorm;
             }
 
-            return q;
+            return out;
         }
 
         public static toEulerAngles(q: Quaternion, out: Vector3): Vector3 {

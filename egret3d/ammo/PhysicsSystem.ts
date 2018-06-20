@@ -226,7 +226,7 @@ namespace egret3d.ammo {
                 for (const constraint of this._constraints) {
                     const btTypedConstraint = constraint.btTypedConstraint;
                     if (this._btDynamicsWorld && btTypedConstraint) {
-                        this._btDynamicsWorld.addConstraint(btTypedConstraint, !constraint.collisionEnabled);
+                        this._btDynamicsWorld.addConstraint(btTypedConstraint, true); // TODO
                     }
                 }
 

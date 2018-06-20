@@ -10,6 +10,7 @@ namespace egret3d.ammo {
      */
     export abstract class TypedConstraint extends paper.BaseComponent {
         protected static readonly _helpQuaternionA: Quaternion = new Quaternion();
+        protected static readonly _helpQuaternionB: Quaternion = new Quaternion();
         protected static readonly _helpMatrixA: Matrix = new Matrix();
         protected static readonly _helpMatrixB: Matrix = new Matrix();
 
@@ -34,11 +35,13 @@ namespace egret3d.ammo {
         protected abstract _createConstraint(): Ammo.btTypedConstraint | null;
 
         protected _createFrame(forward: Vector3, up: Vector3, constraintPoint: Vector3, frame: Matrix) {
-            const right = Vector3.cross(forward, up, _helpVector3A).normalize();
+            const vR = Vector3.cross(forward, up, _helpVector3A).normalize();
+            const vU = Vector3.cross(vR, forward, _helpVector3B).normalize();
+            frame.identity();
             frame.set3x3(
                 forward.x, forward.y, forward.z,
-                up.x, up.y, up.z,
-                right.x, right.y, right.z,
+                vU.x, vU.y, vU.z,
+                vR.x, vR.y, vR.z,
             );
             frame.setTranslation(constraintPoint);
         }
@@ -49,27 +52,27 @@ namespace egret3d.ammo {
                 return;
             }
 
-            frameA.identity(); // TODO move to createFrame?
-            frameB.identity();
             this._createFrame(forwardA, upA, constraintPointA, frameA);
             const thisTransform = this.gameObject.transform;
             const otherTransform = this._connectedBody.gameObject.transform;
             const quaternion = Quaternion.multiply(
                 thisTransform.getLocalRotation(),
-                otherTransform.getLocalRotation(),
-                TypedConstraint._helpQuaternionA
+                Quaternion.inverse(otherTransform.getLocalRotation(), TypedConstraint._helpQuaternionA),
+                TypedConstraint._helpQuaternionB
             );
+
             const matrixValues = frameA.rawData;
             const xx = quaternion.transformVector3(_helpVector3A.set(matrixValues[0], matrixValues[1], matrixValues[2]));
             const yy = quaternion.transformVector3(_helpVector3B.set(matrixValues[4], matrixValues[5], matrixValues[6]));
             const zz = quaternion.transformVector3(_helpVector3C.set(matrixValues[8], matrixValues[9], matrixValues[10]));
+            frameB.identity();
             frameB.set3x3(
                 xx.x, xx.y, xx.z,
                 yy.x, yy.y, yy.z,
                 zz.x, zz.y, zz.z,
             );
             frameB.setTranslation(
-                _helpMatrix.copy(otherTransform.getWorldMatrix()).identity().transformVector3(
+                _helpMatrix.copy(otherTransform.getWorldMatrix()).inverse().transformVector3(
                     thisTransform.getWorldMatrix().transformVector3(_helpVector3D.copy(constraintPointA))
                 )
             );

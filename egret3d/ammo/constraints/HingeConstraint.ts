@@ -33,51 +33,57 @@ namespace egret3d.ammo {
                 return null;
             }
 
-            if (!this._connectedBody) {
-                console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
-                return null;
-            }
-
-            const helpMatrixA = TypedConstraint._helpMatrixA;
-            const helpMatrixB = TypedConstraint._helpMatrixB;
+            let btConstraint: Ammo.btHingeConstraint;
 
             if (this._constraintType === Ammo.ConstraintType.ConstrainToAnotherBody) {
-                if (this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA, helpMatrixB)) {
-                    const helpVertex3A = PhysicsSystem.helpVector3A;
-                    const helpVertex3B = PhysicsSystem.helpVector3B;
-                    const helpVertex3C = PhysicsSystem.helpVector3C;
-                    const helpVertex3D = PhysicsSystem.helpVector3D;
-                    helpVertex3A.setValue(helpMatrixA.rawData[8], helpMatrixA.rawData[9], helpMatrixA.rawData[10]);
-                    helpVertex3B.setValue(helpMatrixB.rawData[8], helpMatrixB.rawData[9], helpMatrixB.rawData[10]);
-                    helpVertex3C.setValue(helpMatrixA.rawData[0], helpMatrixA.rawData[4], helpMatrixA.rawData[8]);
-                    helpVertex3D.setValue(helpMatrixB.rawData[0], helpMatrixB.rawData[4], helpMatrixB.rawData[8]);
-                    //
-                    const btConstraint = new Ammo.btHingeConstraint(
-                        rigidbody.btRigidbody, this._connectedBody.btRigidbody,
-                        helpVertex3A, helpVertex3B, helpVertex3C, helpVertex3D,
-                        true
-                    );
-
-                    if (this._motorEnabled) {
-                        btConstraint.enableAngularMotor(this._motorEnabled, this._targetVelocity, this._maxMotorImpulse);
-                    }
-
-                    if (this._limitEnabled) {
-                        this._updateLimit();
-                    }
-
-                    btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
-                    // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
-
-                    return btConstraint;
+                if (!this._connectedBody) {
+                    console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
+                    return null;
                 }
+
+                const helpMatrixA = TypedConstraint._helpMatrixA;
+                const helpMatrixB = TypedConstraint._helpMatrixB;
+
+                this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA, helpMatrixB);
+                const helpVertex3A = PhysicsSystem.helpVector3A;
+                const helpVertex3B = PhysicsSystem.helpVector3B;
+                const helpVertex3C = PhysicsSystem.helpVector3C;
+                const helpVertex3D = PhysicsSystem.helpVector3D;
+                helpVertex3A.setValue(helpMatrixA.rawData[12], helpMatrixA.rawData[13], helpMatrixA.rawData[14]);
+                helpVertex3B.setValue(helpMatrixB.rawData[12], helpMatrixB.rawData[13], helpMatrixB.rawData[14]);
+                helpVertex3C.setValue(helpMatrixA.rawData[0], helpMatrixA.rawData[4], helpMatrixA.rawData[8]);
+                helpVertex3D.setValue(helpMatrixB.rawData[0], helpMatrixB.rawData[4], helpMatrixB.rawData[8]);
+                //
+                btConstraint = new Ammo.btHingeConstraint(
+                    rigidbody.btRigidbody, this._connectedBody.btRigidbody,
+                    helpVertex3A, helpVertex3B, helpVertex3C, helpVertex3D,
+                    false
+                );
             }
             else {
-                // TODO
-                console.debug("btHingeConstraint TODO.");
+                const helpVertex3A = PhysicsSystem.helpVector3A;
+                const helpVertex3B = PhysicsSystem.helpVector3B;
+                helpVertex3A.setValue(this._anchor.x, this._anchor.y, this._anchor.z);
+                helpVertex3B.setValue(this._axisX.x, this._axisX.y, this._axisX.z);
+
+                btConstraint = new Ammo.btHingeConstraint(
+                    rigidbody.btRigidbody, helpVertex3A as any, helpVertex3B as any,
+                    false as any
+                );
             }
 
-            return null;
+            if (this._motorEnabled) {
+                btConstraint.enableAngularMotor(this._motorEnabled, this._targetVelocity, this._maxMotorImpulse);
+            }
+
+            if (this._limitEnabled) {
+                this._updateLimit();
+            }
+
+            btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
+            // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+
+            return btConstraint;
         }
         /**
          * 

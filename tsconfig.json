@@ -182,7 +182,9 @@
         "egret3d/ammo/constraints/ConeTwistConstraint.ts",
         "egret3d/ammo/CollisionObject.ts",
         "egret3d/ammo/Rigidbody.ts",
-        "egret3d/ammo/softbody/Softbody.ts",
-        "egret3d/ammo/PhysicsSystem.ts"
+        "egret3d/ammo/PhysicsSystem.ts",
+
+        "egret3d/oimo/Rigidbody.ts",
+        "egret3d/oimo/PhysicsSystem.ts"
     ]
 }

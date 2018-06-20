@@ -12,9 +12,9 @@ namespace egret3d.ammo {
         private _rollingFriction: number = 0.0;
 
         @paper.serializedField
-        private _linearDamping: number = 0.0;
+        private _linearDamping: number = 0.1;
         @paper.serializedField
-        private _angularDamping: number = 0.0;
+        private _angularDamping: number = 0.1;
 
         @paper.serializedField
         private _additionalDamping: boolean = false;
@@ -47,18 +47,18 @@ namespace egret3d.ammo {
             rigidBodyInfo.m_rollingFriction = this._rollingFriction;
             rigidBodyInfo.m_linearDamping = this._linearDamping;
             rigidBodyInfo.m_angularDamping = this._angularDamping;
+            rigidBodyInfo.m_restitution = this._restitution;
+            rigidBodyInfo.m_linearSleepingThreshold = this._linearSleepingThreshold;
+            rigidBodyInfo.m_angularSleepingThreshold = this._angularSleepingThreshold;
             rigidBodyInfo.m_additionalDamping = this._additionalDamping;
             rigidBodyInfo.m_additionalDampingFactor = this._additionalLinearDampingFactor;
             rigidBodyInfo.m_additionalLinearDampingThresholdSqr = this._additionalLinearDampingThresholdSqr;
             rigidBodyInfo.m_additionalAngularDampingFactor = this._additionalAngularDampingFactor;
             rigidBodyInfo.m_additionalAngularDampingThresholdSqr = this._additionalAngularDampingThresholdSqr;
-
-            const btCollisionObject = new Ammo.btRigidBody(rigidBodyInfo);
-
-            //TODO if kinematic then disable deactivation
+            const btCollisionObject = new Ammo.btRigidBody(rigidBodyInfo as any);
             const motionState = new Ammo.btDefaultMotionState(this._getBTTransform()); // TODO 可扩展 的 state。
+            btCollisionObject.setCollisionFlags(this._collisionFlags);
             btCollisionObject.setMotionState(motionState);
-
             //
             this._btRigidbody = btCollisionObject as any;
 
@@ -72,14 +72,19 @@ namespace egret3d.ammo {
         public _updateMass() {
             const helpVector3A = PhysicsSystem.helpVector3A;
 
-            if (this.isDynamic()) {
+            if (this._mass > 0.0 && this.isDynamic()) {
                 const collisionShape = this.gameObject.getComponent(CollisionShape as any, true) as CollisionShape;
+                const localInertia = this.localInertia;
+
+                helpVector3A.setValue(localInertia.x, localInertia.y, localInertia.z);
                 collisionShape.btCollisionShape.calculateLocalInertia(this._mass, helpVector3A);
                 this._btRigidbody.setMassProps(this._mass, helpVector3A);
+                this._btRigidbody.setActivationState(Ammo.ActivationState.DisableDeactivation);
             }
             else {
-                helpVector3A.setZero();
-                this._btRigidbody.setMassProps(this._mass, helpVector3A);
+                helpVector3A.setValue(0.0, 0.0, 0.0);
+                this._btRigidbody.setMassProps(0.0, helpVector3A);
+                this._btRigidbody.setActivationState(Ammo.ActivationState.Undefined);
             }
         }
         /**
@@ -88,6 +93,22 @@ namespace egret3d.ammo {
         public isDynamic() {
             return (this._collisionFlags & Ammo.CollisionFlags.StaticObject) !== Ammo.CollisionFlags.StaticObject
                 && (this._collisionFlags & Ammo.CollisionFlags.KinematicObject) !== Ammo.CollisionFlags.KinematicObject;
+        }
+
+        public get collisionFlags() {
+            return this._collisionFlags;
+        }
+        public set collisionFlags(value: Ammo.CollisionFlags) {
+            if (this._collisionFlags === value) {
+                return;
+            }
+
+            this._collisionFlags = value;
+
+            if (this._btCollisionObject) {
+                this._btCollisionObject.setCollisionFlags(this._collisionFlags);
+                this._updateMass();
+            }
         }
         /**
          * 

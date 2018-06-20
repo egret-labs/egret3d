@@ -486,8 +486,7 @@ namespace egret3d {
             } else {
                 let parentRot = this._parent.getRotation();
                 Quaternion.copy(parentRot, helpQuat4_2);
-                Quaternion.inverse(helpQuat4_2);
-                Quaternion.multiply(helpQuat4_2, helpQuat4, this.localRotation);
+                Quaternion.multiply(helpQuat4_2.inverse(), helpQuat4, this.localRotation);
             }
 
             if (!this._dirtyLocal) {
@@ -582,8 +581,7 @@ namespace egret3d {
             } else {
                 let parentRot = this._parent.getRotation();
                 Quaternion.copy(parentRot, helpQuat4_2);
-                Quaternion.inverse(helpQuat4_2);
-                Quaternion.multiply(helpQuat4_2, helpQuat4, this.localRotation);
+                Quaternion.multiply(helpQuat4_2.inverse(), helpQuat4, this.localRotation);
             }
 
             if (!this._dirtyLocal) {

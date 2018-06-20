@@ -25,14 +25,14 @@ namespace egret3d.ammo {
             const helpTransformB = PhysicsSystem.helpTransformB;
             //
             const helpQA = Matrix.getQuaternion(helpMatrixA, TypedConstraint._helpQuaternionA);
-            helpVector3A.setValue(helpMatrixA.rawData[8], helpMatrixA.rawData[9], helpMatrixA.rawData[10]);
+            helpVector3A.setValue(helpMatrixA.rawData[12], helpMatrixA.rawData[13], helpMatrixA.rawData[14]);
             helpQuaternionA.setValue(helpQA.x, helpQA.y, helpQA.z, helpQA.w);
             helpTransformA.setIdentity();
             helpTransformA.setOrigin(helpVector3A);
             helpTransformA.setRotation(helpQuaternionA);
             //
             const helpQB = Matrix.getQuaternion(helpMatrixB, TypedConstraint._helpQuaternionA);
-            helpVector3A.setValue(helpMatrixB.rawData[8], helpMatrixB.rawData[9], helpMatrixB.rawData[10]);
+            helpVector3A.setValue(helpMatrixB.rawData[12], helpMatrixB.rawData[13], helpMatrixB.rawData[14]);
             helpQuaternionA.setValue(helpQB.x, helpQB.y, helpQB.z, helpQB.w);
             helpTransformB.setIdentity();
             helpTransformB.setOrigin(helpVector3A);
@@ -42,6 +42,7 @@ namespace egret3d.ammo {
                 rigidbody.btRigidbody, this._connectedBody.btRigidbody,
                 helpTransformA, helpTransformB
             );
+            btConstraint.m_overrideNumSolverIterations = this._overrideNumSolverIterations;
             btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
             // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
 
