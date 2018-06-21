@@ -55,6 +55,8 @@ namespace egret3d {
          * @inheritDoc
          */
         public deserialize(element: any) {
+            super.deserialize(element);
+
             this._receiveShadows = element._receiveShadows || false;
             this._castShadows = element._castShadows || false;
             this._lightmapIndex = element._lightmapIndex;
