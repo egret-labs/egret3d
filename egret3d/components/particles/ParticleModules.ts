@@ -485,16 +485,16 @@ namespace egret3d.particle {
             this.startSizeX.deserialize(element.startSizeX);
             this.startSizeY.deserialize(element.startSizeY);
             this.startSizeZ.deserialize(element.startSizeZ);
-            this._startRotation3D = element._startRotation3D || element.startRotation3D;
+            this._startRotation3D = (element._startRotation3D || element.startRotation3D) || false;
             this.startRotationX.deserialize(element.startRotationX);
             this.startRotationY.deserialize(element.startRotationY);
             this.startRotationZ.deserialize(element.startRotationZ);
             this.startColor.deserialize(element.startColor);
             this.gravityModifier.deserialize(element.gravityModifier);
-            this._simulationSpace = element._simulationSpace || element.simulationSpace;
-            this._scaleMode = element._scaleMode || element.scaleMode;
+            this._simulationSpace = (element._simulationSpace || element.simulationSpace) || 0;
+            this._scaleMode = (element._scaleMode || element.scaleMode) || ScalingMode.Hierarchy;
             this.playOnAwake = element.playOnAwake;
-            this._maxParticles = element._maxParticles || element.maxParticles;
+            this._maxParticles = (element._maxParticles || element.maxParticles) || 0;
         }
 
         public set startRotation3D(value: boolean) {
@@ -631,8 +631,8 @@ namespace egret3d.particle {
 
         public deserialize(element: any) {
             super.deserialize(element);
-            this._mode = element._mode || element.mode;
-            this._space = element._space || element.space;
+            this._mode = (element._mode || element.mode) || CurveMode.Constant;
+            this._space = (element._space || element.space) || SimulationSpace.Local;
             this._x.deserialize(element._x || element.x);
             this._y.deserialize(element._y || element.y);
             this._z.deserialize(element._z || element.z);
@@ -736,7 +736,7 @@ namespace egret3d.particle {
 
         public deserialize(element: any) {
             super.deserialize(element);
-            this._separateAxes = element._separateAxes || element.separateAxes;
+            this._separateAxes = (element._separateAxes || element.separateAxes) || false;
             this._size.deserialize(element._size || element.size);
             this._x.deserialize(element._x || element.x);
             this._y.deserialize(element._y || element.y);
@@ -813,7 +813,7 @@ namespace egret3d.particle {
 
         public deserialize(element: any) {
             super.deserialize(element);
-            this._separateAxes = element._separateAxes || element.separateAxes;
+            this._separateAxes = (element._separateAxes || element.separateAxes) || false;
             this._x.deserialize(element._x || element.x);
             this._y.deserialize(element._y || element.y);
             this._z.deserialize(element._z || element.z);
@@ -902,14 +902,14 @@ namespace egret3d.particle {
 
         public deserialize(element: any) {
             super.deserialize(element);
-            this._numTilesX = element._numTilesX || element.numTilesX;
-            this._numTilesY = element._numTilesY || element.numTilesY;
-            this._animation = element._animation || element.animation;
-            this._useRandomRow = element._useRandomRow || element.useRandomRow;
+            this._numTilesX = (element._numTilesX || element.numTilesX) || 0;
+            this._numTilesY = (element._numTilesY || element.numTilesY) || 0;
+            this._animation = (element._animation || element.animation) || AnimationType.WholeSheet;
+            this._useRandomRow = (element._useRandomRow || element.useRandomRow) || false;
             this._frameOverTime.deserialize(element._frameOverTime || element.frameOverTime);
             this._startFrame.deserialize(element._startFrame || element.startFrame);
-            this._cycleCount = element._cycleCount || element.cycleCount;
-            this._rowIndex = element._rowIndex || element.rowIndex;
+            this._cycleCount = (element._cycleCount || element.cycleCount) || 0;
+            this._rowIndex = (element._rowIndex || element.rowIndex) || 0;
         }
 
         public set numTilesX(value: number) {

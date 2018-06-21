@@ -80,6 +80,8 @@ namespace paper {
          */
         public transform: egret3d.Transform = null as any;
 
+        public renderer: egret3d.MeshRenderer = null as any;
+
         /**
          * 预制体
          */
@@ -196,6 +198,8 @@ namespace paper {
 
             if (component instanceof egret3d.Transform) {
                 this.transform = component;
+            }else if(component instanceof egret3d.MeshRenderer){
+                this.renderer = component;
             }
 
             this._components.push(component);
