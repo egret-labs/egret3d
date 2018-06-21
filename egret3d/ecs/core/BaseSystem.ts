@@ -56,9 +56,11 @@ namespace paper {
          */
         protected _onAddComponent(component: T) {
             const components = this._components;
-            const backupLength = components.length;
             const gameObject = component.gameObject;
+            const isAdded = gameObject.hashCode in this._gameObjectOffsets;
+            const backupLength = isAdded ? this._gameObjectOffsets[gameObject.hashCode] : components.length;
 
+            let index = 0;
             for (const config of this._interests) {
                 let insterestComponent: T | null = null;
 
@@ -74,18 +76,22 @@ namespace paper {
                     insterestComponent = gameObject.getComponent(config.componentClass, config.isExtends === true); // TODO 更快的查找方式
                 }
 
-                if (!insterestComponent || components.indexOf(insterestComponent) >= 0) {
+                if (!insterestComponent) {
                     components.length = backupLength;
 
                     return false;
                 }
 
-                components.push(insterestComponent);
+                components[backupLength + index] = insterestComponent;
+                index++;
             }
 
-            this._gameObjectOffsets[gameObject.hashCode] = backupLength;
+            if (!isAdded) {
+                this._gameObjectOffsets[gameObject.hashCode] = backupLength;
+                return true;
+            }
 
-            return true;
+            return false;
         }
         /**
          * 

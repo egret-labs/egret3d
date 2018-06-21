@@ -1,18 +1,17 @@
 namespace egret3d.ammo {
-    const _helpVector3A = new Vector3();
-    const _helpVector3B = new Vector3();
-    const _helpVector3C = new Vector3();
-    const _helpVector3D = new Vector3();
-    const _helpMatrix = new Matrix();
-
     /**
      * 
      */
     export abstract class TypedConstraint extends paper.BaseComponent {
+        protected static readonly _helpVector3A: Vector3 = new Vector3();
+        protected static readonly _helpVector3B: Vector3 = new Vector3();
+        protected static readonly _helpVector3C: Vector3 = new Vector3();
+        protected static readonly _helpVector3D: Vector3 = new Vector3();
         protected static readonly _helpQuaternionA: Quaternion = new Quaternion();
         protected static readonly _helpQuaternionB: Quaternion = new Quaternion();
         protected static readonly _helpMatrixA: Matrix = new Matrix();
         protected static readonly _helpMatrixB: Matrix = new Matrix();
+        protected static readonly _helpMatrixC: Matrix = new Matrix();
 
         @paper.serializedField
         protected _collisionEnabled: boolean = false;
@@ -35,8 +34,8 @@ namespace egret3d.ammo {
         protected abstract _createConstraint(): Ammo.btTypedConstraint | null;
 
         protected _createFrame(forward: Vector3, up: Vector3, constraintPoint: Vector3, frame: Matrix) {
-            const vR = Vector3.cross(forward, up, _helpVector3A);
-            const vU = Vector3.cross(vR, forward, _helpVector3B).normalize();
+            const vR = Vector3.cross(forward, up, TypedConstraint._helpVector3A);
+            const vU = Vector3.cross(vR, forward, TypedConstraint._helpVector3B).normalize();
 
             vR.normalize();
             vU.normalize();
@@ -66,9 +65,9 @@ namespace egret3d.ammo {
             );
 
             const matrixValues = frameA.rawData;
-            const xx = quaternion.transformVector3(_helpVector3A.set(matrixValues[0], matrixValues[1], matrixValues[2]));
-            const yy = quaternion.transformVector3(_helpVector3B.set(matrixValues[4], matrixValues[5], matrixValues[6]));
-            const zz = quaternion.transformVector3(_helpVector3C.set(matrixValues[8], matrixValues[9], matrixValues[10]));
+            const xx = quaternion.transformVector3(TypedConstraint._helpVector3A.set(matrixValues[0], matrixValues[1], matrixValues[2]));
+            const yy = quaternion.transformVector3(TypedConstraint._helpVector3B.set(matrixValues[4], matrixValues[5], matrixValues[6]));
+            const zz = quaternion.transformVector3(TypedConstraint._helpVector3C.set(matrixValues[8], matrixValues[9], matrixValues[10]));
             frameB.identity();
             frameB.set3x3(
                 xx.x, yy.x, zz.x,
@@ -76,8 +75,8 @@ namespace egret3d.ammo {
                 xx.z, yy.z, zz.z,
             );
             frameB.setTranslation(
-                _helpMatrix.copy(otherTransform.getWorldMatrix()).inverse().transformVector3(
-                    thisTransform.getWorldMatrix().transformVector3(_helpVector3D.copy(constraintPointA))
+                TypedConstraint._helpMatrixC.copy(otherTransform.getWorldMatrix()).inverse().transformVector3(
+                    thisTransform.getWorldMatrix().transformVector3(TypedConstraint._helpVector3D.copy(constraintPointA))
                 )
             );
         }

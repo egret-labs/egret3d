@@ -3,6 +3,8 @@ namespace egret3d.ammo {
      * 
      */
     export class Rigidbody extends CollisionObject {
+        public readonly collisionObjectType: Ammo.CollisionObjectTypes = Ammo.CollisionObjectTypes.CollisionObject | Ammo.CollisionObjectTypes.RigidBody;
+
         @paper.serializedField
         private _mass: number = 1.0;
 
@@ -43,18 +45,19 @@ namespace egret3d.ammo {
 
         protected _createCollisionObject() {
             const rigidBodyInfo = new Ammo.btRigidBodyConstructionInfo();
-            rigidBodyInfo.m_friction = this._friction;
-            rigidBodyInfo.m_rollingFriction = this._rollingFriction;
-            rigidBodyInfo.m_linearDamping = this._linearDamping;
-            rigidBodyInfo.m_angularDamping = this._angularDamping;
-            rigidBodyInfo.m_restitution = this._restitution;
-            rigidBodyInfo.m_linearSleepingThreshold = this._linearSleepingThreshold;
-            rigidBodyInfo.m_angularSleepingThreshold = this._angularSleepingThreshold;
-            rigidBodyInfo.m_additionalDamping = this._additionalDamping;
-            rigidBodyInfo.m_additionalDampingFactor = this._additionalLinearDampingFactor;
-            rigidBodyInfo.m_additionalLinearDampingThresholdSqr = this._additionalLinearDampingThresholdSqr;
-            rigidBodyInfo.m_additionalAngularDampingFactor = this._additionalAngularDampingFactor;
-            rigidBodyInfo.m_additionalAngularDampingThresholdSqr = this._additionalAngularDampingThresholdSqr;
+            (rigidBodyInfo as any).set_m_friction(this._friction);
+            (rigidBodyInfo as any).set_m_rollingFriction(this._rollingFriction);
+            (rigidBodyInfo as any).set_m_linearDamping(this._linearDamping);
+            (rigidBodyInfo as any).set_m_angularDamping(this._angularDamping);
+            (rigidBodyInfo as any).set_m_restitution(this._restitution);
+            (rigidBodyInfo as any).set_m_linearSleepingThreshold(this._linearSleepingThreshold);
+            (rigidBodyInfo as any).set_m_angularSleepingThreshold(this._angularSleepingThreshold);
+            (rigidBodyInfo as any).set_m_additionalDamping(this._additionalDamping);
+            (rigidBodyInfo as any).set_m_additionalDampingFactor(this._additionalLinearDampingFactor);
+            (rigidBodyInfo as any).set_m_additionalLinearDampingThresholdSqr(this._additionalLinearDampingThresholdSqr);
+            (rigidBodyInfo as any).set_m_additionalAngularDampingFactor(this._additionalAngularDampingFactor);
+            (rigidBodyInfo as any).set_m_additionalAngularDampingThresholdSqr(this._additionalAngularDampingThresholdSqr);
+
             const btCollisionObject = new Ammo.btRigidBody(rigidBodyInfo as any);
             const motionState = new Ammo.btDefaultMotionState(this._getBTTransform()); // TODO 可扩展 的 state。
             btCollisionObject.setCollisionFlags(this._collisionFlags);
@@ -94,7 +97,9 @@ namespace egret3d.ammo {
             return (this._collisionFlags & Ammo.CollisionFlags.StaticObject) !== Ammo.CollisionFlags.StaticObject
                 && (this._collisionFlags & Ammo.CollisionFlags.KinematicObject) !== Ammo.CollisionFlags.KinematicObject;
         }
-
+        /**
+         * 
+         */
         public get collisionFlags() {
             return this._collisionFlags;
         }

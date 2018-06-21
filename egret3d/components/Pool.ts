@@ -37,6 +37,10 @@ namespace egret3d {
             }
         }
 
+        public get() {
+            return this._instances.pop() || null;
+        }
+
         public clear() {
             this._instances.length = 0;
         }

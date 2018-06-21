@@ -141,7 +141,7 @@ namespace paper {
             }
         }
 
-        private _getComponentsInChildren<T extends paper.BaseComponent>(componentClass: { new(gameObject: GameObject): T }, child: GameObject, array: T[], isExtends: boolean = false) {
+        private _getComponentsInChildren<T extends paper.BaseComponent>(componentClass: { new(): T }, child: GameObject, array: T[], isExtends: boolean = false) {
             const components = child._components;
 
             for (const component of components) {

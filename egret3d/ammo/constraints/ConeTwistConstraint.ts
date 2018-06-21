@@ -71,6 +71,7 @@ namespace egret3d.ammo {
                 helpTransformA.setIdentity();
                 helpTransformA.setOrigin(helpVector3A);
                 helpTransformA.setRotation(helpQuaternionA);
+                //
                 btConstraint = new Ammo.btConeTwistConstraint(rigidbody.btRigidbody, helpTransformA as any);
             }
 

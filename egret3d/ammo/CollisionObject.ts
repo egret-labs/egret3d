@@ -3,6 +3,8 @@ namespace egret3d.ammo {
      * 
      */
     export class CollisionObject extends paper.BaseComponent {
+        public readonly collisionObjectType: Ammo.CollisionObjectTypes = Ammo.CollisionObjectTypes.CollisionObject;
+
         @paper.serializedField
         protected _collisionFlags: Ammo.CollisionFlags = Ammo.CollisionFlags.None;
         @paper.serializedField

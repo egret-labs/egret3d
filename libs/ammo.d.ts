@@ -12,15 +12,14 @@ declare module Ammo {
 		Z = 2,
 	}
 
-    export const enum ActivationState
-    {
-        Undefined = 0,
-        ActiveTag = 1,
-        IslandSleeping = 2,
-        WantsDeactivation = 3,
-        DisableDeactivation = 4,
-        DisableSimulation = 5,
-    }
+	export const enum ActivationState {
+		Undefined = 0,
+		ActiveTag = 1,
+		IslandSleeping = 2,
+		WantsDeactivation = 3,
+		DisableDeactivation = 4,
+		DisableSimulation = 5,
+	}
 
 	export const enum CollisionConfType {
 		DefaultDynamicsWorldCollisionConf,
@@ -45,6 +44,17 @@ declare module Ammo {
 		StaticPlaneShape = 8,
 	}
 
+	export const enum CollisionObjectTypes {
+		None = 0,
+		CollisionObject = 1,
+		RigidBody = 2,
+		GhostObject = 4,
+		SoftBody = 8,
+		HFFluid = 16,
+		UserType = 32,
+		FeatherstoneLink = 64,
+	}
+
 	export const enum ConstraintType {
 		ConstrainToPointInSpace,
 		ConstrainToAnotherBody,
@@ -59,17 +69,10 @@ declare module Ammo {
 		CharacterObject = 16,
 		DisableVisualizeObject = 32,
 		DisableSpuCollisionProcessing = 64,
-	}
-
-	export const enum CollisionObjectTypes {
-		None = 0,
-		CollisionObject = 1,
-		RigidBody = 2,
-		GhostObject = 4,
-		SoftBody = 8,
-		HFFluid = 16,
-		UserType = 32,
-		FeatherstoneLink = 64,
+		HasContactStiffnessDamping = 128,
+		HasCustomDebugRenderingColor = 256,
+		HasFrictionAnchor = 512,
+		HasCollisionSoundTrigger = 1024,
 	}
 
 	export const enum CollisionFilterGroups {
@@ -3920,7 +3923,7 @@ declare module Ammo {
 		m_ratio: number;
 		m_padding: string;
 	}
-	export class btGeneric6DofConstraint {
+	export class btGeneric6DofConstraint extends btTypedConstraint {
 		constructor(rbA?: btRigidBody, rbB?: btRigidBody, frameInA?: btTransform, frameInB?: btTransform, useLinearReferenceFrameA?: boolean); m_useSolveConstraintObsolete: boolean;
 		m_objectType: number;
 		m_frameInA: btTransform;
@@ -7476,7 +7479,7 @@ declare module Ammo {
 		getUserIndex(): number;
 		serializeSingleShape(serializer?: btSerializer): void;
 	}
-	export class btPoint2PointConstraint {
+	export class btPoint2PointConstraint extends btTypedConstraint {
 		constructor(rbA?: btRigidBody, rbB?: btRigidBody, pivotInA?: btVector3, pivotInB?: btVector3); m_useSolveConstraintObsolete: boolean;
 		m_setting: btConstraintSetting;
 		m_objectType: number;

@@ -183,6 +183,7 @@
         "egret3d/ammo/constraints/BallSocketConstraint.ts",
         "egret3d/ammo/CollisionObject.ts",
         "egret3d/ammo/Rigidbody.ts",
+        "egret3d/ammo/RaycastInfo.ts",
         "egret3d/ammo/PhysicsSystem.ts"
     ]
 }
