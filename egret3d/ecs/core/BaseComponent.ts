@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * 
+     * 组件基类
      */
     export abstract class BaseComponent extends SerializableObject {
         /**
@@ -12,6 +12,9 @@ namespace paper {
          * 组件挂载的 GameObject
          */
         public readonly gameObject: GameObject = BaseComponent._injectGameObject;
+
+        @paper.serializedField
+        public uuid:string | null = null;
 
         @paper.serializedField
         protected _enabled: boolean = true;
@@ -38,6 +41,7 @@ namespace paper {
 
         public deserialize(element: any): void {
             this._enabled = element._enabled === false ? false : true;
+            this.uuid = element.uuid;
         }
 
         /**

@@ -14,7 +14,7 @@ vec3 center=computePosition(_startVelocity, lifeVelocity, age, t,gravity,worldRo
 	     vec3 upVector = normalize(cross(sideVector,glstate_cameraForward));
 	   	corner*=computeBillbardSize(_startSize.xy,t);
 		#if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)
-			if(u_startSize3D){
+			if(u_startRotation3D){
 				vec3 rotation=vec3(_startRotation.xy,computeRotation(_startRotation.z,age,t));
 				center += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,rotation);
 			}
@@ -27,7 +27,7 @@ vec3 center=computePosition(_startVelocity, lifeVelocity, age, t,gravity,worldRo
 				center += u_sizeScale.xzy*(corner.x*sideVector+corner.y*upVector);
 			}
 		#else
-			if(u_startSize3D){
+			if(u_startRotation3D){
 				center += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,_startRotation);
 			}
 			else{
@@ -82,14 +82,14 @@ vec3 center=computePosition(_startVelocity, lifeVelocity, age, t,gravity,worldRo
 	   float c = cos(rot);
 	   float s = sin(rot);
 	   mat2 rotation= mat2(c, -s, s, c);
-	   corner=rotation*corner*cos(0.78539816339744830961566084581988);
+	   corner=rotation*corner;
 		corner*=computeBillbardSize(_startSize.xy,t);
 	   center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);
 	#endif
 	#ifdef RENDERMESH
 	   vec3 size=computeMeshSize(_startSize,t);
 		#if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)
-				if(u_startSize3D){
+				if(u_startRotation3D){
 					vec3 rotation=vec3(_startRotation.xy,-computeRotation(_startRotation.z, age,t));
 					center+= rotation_quaternions(u_sizeScale*rotation_euler(_glesVertex*size,rotation),worldRotation);
 				}
@@ -116,7 +116,7 @@ vec3 center=computePosition(_startVelocity, lifeVelocity, age, t,gravity,worldRo
 					#endif	
 				}
 		#else
-		if(u_startSize3D){
+		if(u_startRotation3D){
 			center+= rotation_quaternions(u_sizeScale*rotation_euler(_glesVertex*size,_startRotation),worldRotation);
 		}
 		else{

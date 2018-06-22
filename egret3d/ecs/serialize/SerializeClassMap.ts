@@ -1,7 +1,5 @@
 namespace paper {
-    /**
-     *  
-     */
+
     export const serializeClassMap: { [key: string]: string } = {
         0: "paper.Scene",
         1: "paper.GameObject",
@@ -47,9 +45,7 @@ namespace paper {
         41: "egret3d.GLTFAsset",
     };
 
-    /**
-     *  
-     */
+
     export function findClassCode(name: string) {
         for (let key in serializeClassMap) {
             if (serializeClassMap[key] === name) {
@@ -60,9 +56,7 @@ namespace paper {
         return "";
     }
 
-    /**
-     *  
-     */
+
     export function findClassCodeFrom(target: any) {
         const proto = target.__proto__;
         const classTypeOrigin = proto.__class__;

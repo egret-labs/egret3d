@@ -20,7 +20,7 @@ namespace egret3d {
             super();
 
             this.stage = new egret.Stage();
-            this.stage.maxTouches = 1;
+            this.stage.maxTouches = 99;
             this.root = new egret.DisplayObjectContainer();
             this.stage.addChild(this.root);
         }

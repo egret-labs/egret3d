@@ -1,12 +1,18 @@
 namespace egret3d {
+
+    export type PrefabConfig = {
+        assets: { hashCode: number, class: string, url: string }[]
+        objects: any[]
+    }
+
     /**
      * 
      */
     export class BaseObjectAsset extends paper.Asset {
         protected readonly _assets: any = {};
-        protected _raw: any = null;
+        protected _raw: PrefabConfig = null;
 
-        public $parse(json: any) {
+        public $parse(json: PrefabConfig) {
 
             this._raw = json;
             if (this._raw) {

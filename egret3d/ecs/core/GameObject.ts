@@ -69,7 +69,6 @@ namespace paper {
         @editor.property(editor.EditType.TEXT)
         public name: string = "";
 
-
         /**
          * 标签
          */
@@ -80,6 +79,8 @@ namespace paper {
          * 变换组件
          */
         public transform: egret3d.Transform = null as any;
+
+        public renderer: egret3d.MeshRenderer = null as any;
 
         /**
          * 预制体
@@ -94,6 +95,9 @@ namespace paper {
         private _activeDirty = true;
         private readonly _components: BaseComponent[] = [];
         private _scene: Scene = null as any;
+
+        @paper.serializedField
+        public uuid:string | null = null;
 
         /**
          * 创建GameObject，并添加到当前场景中
@@ -160,8 +164,12 @@ namespace paper {
          */
         public destroy() {
             if (this._destroyed) {
-                console.warn("The game object has been destroyed.", this.hashCode);
+                console.warn("The game object has been destroyed.", this.name, this.hashCode);
                 return;
+            }
+
+            if (Application.sceneManager.globalObjects.indexOf(this) >= 0) {
+                Application.sceneManager.removeGlobalObject(this);
             }
 
             this._destroyed = true;
@@ -174,7 +182,12 @@ namespace paper {
                 destroySystem.bufferGameObject(this);
             }
         }
-
+        /**
+         * 
+         */
+        public dontDestroy() {
+            Application.sceneManager.addGlobalObject(this);
+        }
 
         /**
          * 根据类型名获取组件
@@ -185,6 +198,8 @@ namespace paper {
 
             if (component instanceof egret3d.Transform) {
                 this.transform = component;
+            }else if(component instanceof egret3d.MeshRenderer){
+                this.renderer = component;
             }
 
             this._components.push(component);

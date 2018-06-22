@@ -1,11 +1,16 @@
 namespace egret3d.particle {
-    export const enum ParticleComponenetEventType {
-        ColorOverLifetime = "colorOverLifetime",
-        VelocityOverLifetime = "velocityOverLifetime",
-        SizeOverLifetime = "sizeOverLifetime",
-        RotationOverLifetime = "rotationOverLifetime",
-        TextureSheetAnimation = "textureSheetAnimation",
+    export const enum ParticleCompEventType {
+        MainChanged = "mainChanged",
+        ColorChanged = "colorChanged",
+        VelocityChanged = "velocityChanged",
+        SizeChanged = "sizeChanged",
+        RotationChanged = "rotationChanged",
+        TextureSheetChanged = "textureSheetChanged",
         ShapeChanged = "shapeChanged",
+        StartRotation3DChanged = "rotation3DChanged",
+        SimulationSpaceChanged = "simulationSpace",
+        ScaleModeChanged = "scaleMode",
+        MaxParticlesChanged = "maxParticles"
     }
 
     export class ParticleComponent extends paper.BaseComponent {

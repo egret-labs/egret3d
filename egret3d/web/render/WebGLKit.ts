@@ -1,34 +1,7 @@
 namespace egret3d {
 
     export class WebGLKit {
-        private static _maxVertexAttribArray: number = 0;
 
-        static SetMaxVertexAttribArray(webgl: WebGLRenderingContext, count: number) {
-            for (var i = count; i < WebGLKit._maxVertexAttribArray; i++) {
-                webgl.disableVertexAttribArray(i);
-            }
-            WebGLKit._maxVertexAttribArray = count;
-        }
-
-        private static _usedTextureUnits: number = 0;
-
-        static allocTexUnit(): number {
-            var textureUnit = this._usedTextureUnits;
-
-            if (textureUnit >= this.capabilities.maxTextures) {
-
-                console.warn('trying to use ' + textureUnit + ' texture units while this GPU supports only ' + this.capabilities.maxTextures);
-
-            }
-
-            this._usedTextureUnits += 1;
-
-            return textureUnit;
-        }
-
-        static resetTexUnit() {
-            this._usedTextureUnits = 0;
-        }
 
         private static _texNumber: number[] = null;
         private static _activeTextureIndex: number = -1;
@@ -118,33 +91,6 @@ namespace egret3d {
             return false;
         }
 
-        // 三角形应用vbo
-        static drawArrayTris(start: number, count: number) {
-            let webgl: WebGLRenderingContext = this.webgl;
-            // DrawInfo.ins.triCount += count / 3;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawArrays(webgl.TRIANGLES, start, count);
-        }
-        // 直线应用vbo
-        static drawArrayLines(start: number, count: number) {
-            let webgl: WebGLRenderingContext = this.webgl;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawArrays(webgl.LINES, start, count);
-        }
-
-        static drawElementTris(start: number, count: number) {
-            let webgl: WebGLRenderingContext = this.webgl;
-            // DrawInfo.ins.triCount += count / 3;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawElements(webgl.TRIANGLES, count, webgl.UNSIGNED_SHORT, start * 2);
-        }
-
-        static drawElementLines(start: number, count: number) {
-            let webgl: WebGLRenderingContext = this.webgl;
-            // DrawInfo.ins.renderCount++;
-            webgl.drawElements(webgl.LINES, count, webgl.UNSIGNED_SHORT, start * 2);
-        }
-
         static setStates(drawPass: DrawPass, frontFaceCW: boolean = false) {
 
             WebGLKit.showFace(drawPass.state_showface, frontFaceCW);
@@ -202,14 +148,14 @@ namespace egret3d {
 
                 if (primitive.indices !== undefined) {
                     const indexAccessor = mesh.glTFAsset.getAccessor(primitive.indices);
-                    switch (primitive.mode) {
+                    switch (primitive.mode) { // TODO
                         case gltf.MeshPrimitiveMode.Lines:
-                            webGL.drawElements(webGL.LINES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset); // TODO CHECK
+                            webGL.drawElements(webGL.LINES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset);
                             break;
 
                         case gltf.MeshPrimitiveMode.Triangles:
                         default:
-                            webGL.drawElements(webGL.TRIANGLES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset); // TODO CHECK
+                            webGL.drawElements(webGL.TRIANGLES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset);
                             break;
                     }
                 }
@@ -217,6 +163,14 @@ namespace egret3d {
                     switch (primitive.mode) {
                         case gltf.MeshPrimitiveMode.Lines:
                             webGL.drawArrays(webGL.LINES, bufferOffset, vertexAccessor.count);
+                            break;
+
+                        case gltf.MeshPrimitiveMode.LineLoop:
+                            webGL.drawArrays(webGL.LINE_LOOP, bufferOffset, vertexAccessor.count);
+                            break;
+
+                        case gltf.MeshPrimitiveMode.LineStrip:
+                            webGL.drawArrays(webGL.LINE_STRIP, bufferOffset, vertexAccessor.count);
                             break;
 
                         case gltf.MeshPrimitiveMode.Triangles:

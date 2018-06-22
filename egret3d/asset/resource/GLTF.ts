@@ -190,8 +190,10 @@ namespace egret3d {
 
             glftAsset.config = {
                 asset: {
-                    version: "2"
+                    version: "2.0"
                 },
+                extensionsRequired: ["paper"],
+                extensionsUsed: ["paper"],
             } as gltf.GLTF;
 
             return glftAsset;
@@ -227,7 +229,7 @@ namespace egret3d {
                 return;
             }
 
-            if (array[index++] !== array.buffer.byteLength) {
+            if (array[index++] !== array.byteLength) {
                 console.assert(false, "Error glTF data.");
                 return;
             }
@@ -243,12 +245,12 @@ namespace egret3d {
                 }
 
                 if (chunkType === 0x4E4F534A) {
-                    const jsonArray = new Uint8Array(array.buffer, index * 4, chunkLength);
+                    const jsonArray = new Uint8Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint8Array.BYTES_PER_ELEMENT);
                     const jsonString = io.BinReader.utf8ArrayToString(jsonArray);
                     this.config = JSON.parse(jsonString);
                 }
                 else if (chunkType === 0x004E4942) {
-                    const buffer = new Uint32Array(array.buffer, index * 4);
+                    const buffer = new Uint32Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint32Array.BYTES_PER_ELEMENT);
                     this.buffers.push(buffer);
                 }
                 else {

@@ -41,6 +41,11 @@ namespace paper {
 
             if (gameObject.transform) {
                 for (const child of gameObject.transform.children) {
+                    if (Application.sceneManager.globalObjects.indexOf(child.gameObject) >= 0) {
+                        child.parent = null;
+                        continue;
+                    }
+
                     child.gameObject.destroy();
                 }
             }

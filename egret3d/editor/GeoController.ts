@@ -121,7 +121,7 @@ namespace paper.editor {
                 //worldPosition = this.selectedGameObj.transform.getPosition();
                 //worldRotation = this.selectedGameObj.transform.getRotation();
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                let pickInfoArray = egret3d.Physics.RaycastAll(ray, true);
+                let pickInfoArray = egret3d.Ray.raycastAll(ray, true);
                 if (pickInfoArray && pickInfoArray.length > 0) {
                     pickInfoArray.forEach(pickInfo => {
                         let picked = pickInfo.transform.gameObject;
@@ -270,7 +270,7 @@ namespace paper.editor {
                 this._ctrlRot = ctrlRot;
 
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                let pickInfoArray = egret3d.Physics.RaycastAll(ray, true);
+                let pickInfoArray = egret3d.Ray.raycastAll(ray, true);
                 if (pickInfoArray && pickInfoArray.length > 0) {
                     pickInfoArray.forEach(pickInfo => {
                         let picked = pickInfo.transform.gameObject;
@@ -499,7 +499,7 @@ namespace paper.editor {
                 for (let i = 0, l = this.selectedGameObjs.length; i < l; i++) {
                     content.push({
                         type: "gameObject",
-                        id: this.selectedGameObjs[i].hashCode
+                        uuid: this.selectedGameObjs[i].uuid
                     })
                 }
                 let str = JSON.stringify(content);
@@ -526,8 +526,15 @@ namespace paper.editor {
             this.editorModel.addEventListener(EditorModelEvent.CHANGE_PROPERTY, e => this.changeProperty(e.data), this);
         }
         private selectGameObjects = this._selectGameObjects.bind(this);
-        private _selectGameObjects(gameObjects: GameObject[]) {
-            this.selectedGameObjs = gameObjects;
+        private _selectGameObjects(selectObj:any) {
+            let selectIds;
+            if (selectObj[selectItemType.GAMEOBJECT]) {
+                selectIds = selectObj[selectItemType.GAMEOBJECT];
+            }else{
+                selectIds = [];
+            }
+            
+            this.selectedGameObjs = this.editorModel.getGameObjectsByUUids(selectIds);
             let len = this.selectedGameObjs.length;
             this._modeCanChange = true;
             if (len > 0) {
@@ -567,7 +574,7 @@ namespace paper.editor {
         }
         private changeProperty = this._changeProperty.bind(this);
         private _changeProperty(data) {
-            if ((data.target instanceof egret3d.Transform) && data.propName) {
+            if ((data.target instanceof egret3d.Transform) && data.propName && this.selectedGameObjs.length > 0) {
                 let propName = <string>data.propName;
                 let target = <egret3d.Transform>data.target;
                 switch (propName) {

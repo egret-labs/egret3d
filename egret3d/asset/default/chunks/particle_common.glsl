@@ -5,7 +5,7 @@ uniform vec3 u_gravity;
 
 uniform vec3 u_worldPosition;
 uniform vec4 u_worldRotation;
-uniform bool u_startSize3D;
+uniform bool u_startRotation3D;
 uniform int u_scalingMode;
 uniform vec3 u_positionScale;
 uniform vec3 u_sizeScale;
@@ -106,7 +106,7 @@ uniform int u_simulationSpace;
 
 #if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONTWOCURVE)
   uniform float u_cycles;
-  uniform vec2 u_subUVSize;
+  uniform vec4 u_subUV;
   uniform vec2 u_uvCurve[4];
 #endif
 #ifdef TEXTURESHEETANIMATIONTWOCURVE
@@ -508,19 +508,23 @@ vec2 computeUV(in vec2 uv,in float t)
 		float cycleNormalizedAge=t*u_cycles;
 		float uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);
 		float frame=evaluate_curve_frame(u_uvCurve,uvNormalizedAge);
-		float totalULength=frame*u_subUVSize.x;
+		uv.x *= u_subUV.x + u_subUV.z;
+		uv.y *= u_subUV.y + u_subUV.w;
+		float totalULength=frame*u_subUV.x;
 		float floorTotalULength=floor(totalULength);
 	  uv.x+=totalULength-floorTotalULength;
-		uv.y+=floorTotalULength*u_subUVSize.y;
+		uv.y+=floorTotalULength*u_subUV.y;
     #endif
 	#ifdef TEXTURESHEETANIMATIONTWOCURVE
 		float cycleNormalizedAge=t*u_cycles;
 		float uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);
 	  float frame=floor(mix(evaluate_curve_frame(u_uvCurve,uvNormalizedAge),evaluate_curve_frame(u_uvCurveMax,uvNormalizedAge),_random1.x));
-		float totalULength=frame*u_subUVSize.x;
+		uv.x *= u_subUV.x + u_subUV.z;
+		uv.y *= u_subUV.y + u_subUV.w;
+		float totalULength=frame*u_subUV.x;
 		float floorTotalULength=floor(totalULength);
 	  uv.x+=totalULength-floorTotalULength;
-		uv.y+=floorTotalULength*u_subUVSize.y;
+		uv.y+=floorTotalULength*u_subUV.y;
     #endif
 	return uv;
 }

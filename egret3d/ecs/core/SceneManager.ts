@@ -4,7 +4,7 @@ namespace paper {
      */
     export class SceneManager {
         private readonly _scenes: Scene[] = [];
-
+        private readonly _globalObjects: GameObject[] = [];
 
         public _addScene(scene: Scene) {
             if (this._scenes.indexOf(scene) < 0) {
@@ -61,7 +61,7 @@ namespace paper {
             }
 
             if (this._scenes.length === 0) {
-                this.createScene(Scene.defaultName);
+                this.createScene("default");
             }
         }
 
@@ -76,8 +76,33 @@ namespace paper {
             this._scenes.length = 0;
 
             if (this._scenes.length === 0) {
-                this.createScene(Scene.defaultName);
+                this.createScene("default");
             }
+        }
+
+        /**
+         * 
+         */
+        public addGlobalObject(gameObject: GameObject) {
+            if (this._globalObjects.indexOf(gameObject) >= 0) {
+                console.warn("The game object has been added to globals.", gameObject.name, gameObject.hashCode);
+                return;
+            }
+
+            this._globalObjects.push(gameObject);
+        }
+
+        /**
+         * 
+         */
+        public removeGlobalObject(gameObject: GameObject) {
+            const index = this._globalObjects.indexOf(gameObject);
+            if (index < 0) {
+                console.warn("The game object has been removed from globals.", gameObject.name, gameObject.hashCode);
+                return;
+            }
+
+            this._globalObjects.splice(index, 1, gameObject);
         }
 
         /**
@@ -107,7 +132,21 @@ namespace paper {
         }
 
         /**
+         * 
+         */
+        public get globalObjects(): ReadonlyArray<GameObject> {
+            return this._globalObjects;
+        }
+
+        /**
          * 获取当前激活的场景
+         */
+        public get activeScene() {
+            return this._scenes[0];
+        }
+
+        /**
+         * @deprecated
          */
         public getActiveScene() {
             return this._scenes[0];

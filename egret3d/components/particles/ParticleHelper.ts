@@ -4,18 +4,10 @@ namespace egret3d.particle {
     * @internal
     */
     export function createBatchMesh(renderer: ParticleRenderer, maxParticleCount: number) {
-        if (renderer._renderMode === ParticleRenderMode.None || maxParticleCount <= 0) {
-            throw "ParticleSystem : error renderMode or maxParticleCount";
-        }
-
         const meshAttributes: string[] = [];
         const meshAttributesType: gltf.AccessorType[] = [];
         if (renderer._renderMode === ParticleRenderMode.Mesh) {
             const mesh = renderer.mesh;
-            if (mesh.subMeshCount > 1) {
-                throw "ParticleSystem : subMeshCount > 1";
-            }
-
             const orginIndexBuffer = mesh.getIndices();
             const orginIndexBufferCount = orginIndexBuffer.length;
             for (const attribute of MeshShaderAttributeFormat) {
@@ -26,9 +18,43 @@ namespace egret3d.particle {
             const totalVertexCount = mesh.vertexCount * maxParticleCount;
             const totalIndexCount = orginIndexBufferCount * maxParticleCount;
             const batchMesh = new Mesh(totalVertexCount, totalIndexCount, totalIndexCount, meshAttributes, meshAttributesType, MeshDrawMode.Dynamic);
-            const indexBuffer = batchMesh.getIndices();
             //
             let index = 0;
+            //提前填充
+            const orginPostionBuffer = mesh.getAttributes(gltf.MeshAttributeType.POSITION);
+            const orginUVBuffer = mesh.getAttributes(gltf.MeshAttributeType.TEXCOORD_0);
+            const orginColorBuffer = mesh.getAttributes(gltf.MeshAttributeType.COLOR_0);
+            const positionBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.POSITION);
+            const colorBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.COLOR_0);
+            const uvBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.TEXCOORD_0);
+            for (let i = 0; i < totalVertexCount; i++) {
+                const vector2Offset = i * 2;
+                const vector3Offset = i * 3;
+                const vector4Offset = i * 4;
+                const orginVertexIndex = i % mesh.vertexCount;
+                positionBuffer[vector3Offset] = orginPostionBuffer[orginVertexIndex * 3];
+                positionBuffer[vector3Offset + 1] = orginPostionBuffer[orginVertexIndex * 3 + 1];
+                positionBuffer[vector3Offset + 2] = orginPostionBuffer[orginVertexIndex * 3 + 2];
+
+                if(orginUVBuffer){
+                    uvBuffer[vector2Offset] = orginUVBuffer[orginVertexIndex * 2];
+                    uvBuffer[vector2Offset + 1] = orginUVBuffer[orginVertexIndex * 2 + 1];
+                }
+
+                if (orginColorBuffer) {
+                    colorBuffer[vector4Offset] = orginColorBuffer[orginVertexIndex * 4];
+                    colorBuffer[vector4Offset + 1] = orginColorBuffer[orginVertexIndex * 4 + 1];
+                    colorBuffer[vector4Offset + 2] = orginColorBuffer[orginVertexIndex * 4 + 2];
+                    colorBuffer[vector4Offset + 3] = orginColorBuffer[orginVertexIndex * 4 + 3];
+                } else {
+                    colorBuffer[vector4Offset] = 1;
+                    colorBuffer[vector4Offset + 1] = 1;
+                    colorBuffer[vector4Offset + 2] = 1;
+                    colorBuffer[vector4Offset + 3] = 1;
+                }
+            }
+
+            const indexBuffer = batchMesh.getIndices();
             for (let i = 0; i < maxParticleCount; i++) {
                 const indexOffset = i * mesh.vertexCount;
                 for (let j = 0; j < orginIndexBufferCount; j++) {
@@ -49,8 +75,40 @@ namespace egret3d.particle {
             const totalIndexCount = orginIndexBufferCount * maxParticleCount;
 
             const batchMesh = new Mesh(totalVertexCount, totalIndexCount, totalIndexCount, meshAttributes, meshAttributesType, MeshDrawMode.Dynamic);
-            const indexBuffer = batchMesh.getIndices();
 
+            const cornerBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.CORNER);
+            const uvBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.TEXCOORD_0);
+            for (let i = 0; i < totalVertexCount; i++) {
+                const orginVertexIndex = i % vertexStride;
+                const vector2Offset = i * 2;
+                switch (orginVertexIndex) {
+                    case 0:
+                        cornerBuffer[vector2Offset] = -0.5;
+                        cornerBuffer[vector2Offset + 1] = -0.5;
+                        uvBuffer[vector2Offset] = 0.0;
+                        uvBuffer[vector2Offset + 1] = 1.0;
+                        break;
+                    case 1:
+                        cornerBuffer[vector2Offset] = 0.5;
+                        cornerBuffer[vector2Offset + 1] = -0.5;
+                        uvBuffer[vector2Offset] = 1.0;
+                        uvBuffer[vector2Offset + 1] = 1.0;
+                        break;
+                    case 2:
+                        cornerBuffer[vector2Offset] = 0.5;
+                        cornerBuffer[vector2Offset + 1] = 0.5;
+                        uvBuffer[vector2Offset] = 1.0;
+                        uvBuffer[vector2Offset + 1] = 0.0;
+                        break;
+                    case 3:
+                        cornerBuffer[vector2Offset] = -0.5;
+                        cornerBuffer[vector2Offset + 1] = 0.5;
+                        uvBuffer[vector2Offset] = 0.0;
+                        uvBuffer[vector2Offset + 1] = 0.0;
+                        break;
+                }
+            }
+            const indexBuffer = batchMesh.getIndices();
             for (let i = 0; i < maxParticleCount; i++) {
                 const indexOffset = i * 6;
                 const firstVertex = i * vertexStride;
@@ -199,8 +257,9 @@ namespace egret3d.particle {
         position.y = temp.y * shape.radius;
         position.z = 0;
 
-        const sinValue = Math.sin(shape.angle);
-        const cosValue = Math.cos(shape.angle);
+        const angle = shape.angle * Math.PI / 180.0;
+        const sinValue = Math.sin(angle);
+        const cosValue = Math.cos(angle);
 
         direction.x = temp.x * sinValue;
         direction.y = temp.y * sinValue;

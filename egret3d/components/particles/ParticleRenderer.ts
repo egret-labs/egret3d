@@ -6,6 +6,9 @@ namespace egret3d.particle {
         Mesh = "mesh",
         Materials = "materials",
         RenderMode = "renderMode",
+        LengthScaleChanged = "lengthScale",
+        VelocityScaleChanged = "velocityScale",
+
     }
     export const enum ParticleSortMode {
         None = 0,
@@ -57,7 +60,7 @@ namespace egret3d.particle {
         SIZE_SCALE = 'u_sizeScale',
         SCALING_MODE = 'u_scalingMode',
         GRAVIT = 'u_gravity',
-        START_SIZE3D = 'u_startSize3D',
+        START_ROTATION3D = 'u_startRotation3D',
         SIMULATION_SPACE = 'u_simulationSpace',
         CURRENTTIME = 'u_currentTime',
         ALPHAS_GRADIENT = 'u_alphaGradient',
@@ -96,7 +99,7 @@ namespace egret3d.particle {
         ROTATION_CURVE_MAX_Z = 'u_rotationCurveMaxZ',
         ROTATION_CURVE_MAX_W = 'u_rotationCurveMaxW',
         CYCLES = 'u_cycles',
-        SUB_UV_SIZE = 'u_subUVSize',
+        SUB_UV = 'u_subUV',
         UV_CURVE = 'u_uvCurve',
         UV_CURVE_MAX = 'u_uvCurveMax',
         LENGTH_SCALE = 'u_lengthScale',
@@ -173,10 +176,6 @@ namespace egret3d.particle {
         @paper.serializedField
         private readonly _materials: Material[] = [];
         @paper.serializedField
-        public maxParticleSize: number;
-        @paper.serializedField
-        public minParticleSize: number;
-        @paper.serializedField
         public velocityScale: number;
         @paper.serializedField
         public _renderMode: ParticleRenderMode = ParticleRenderMode.Billboard;
@@ -199,8 +198,6 @@ namespace egret3d.particle {
                 (this._mesh as Mesh).deserialize(element._mesh);
             }
 
-            this.maxParticleSize = element.maxParticleSize;
-            this.minParticleSize = element.minParticleSize;
             this.velocityScale = element.velocityScale;
             this._renderMode = element._renderMode;
             this.lengthScale = element.lengthScale;
@@ -217,8 +214,6 @@ namespace egret3d.particle {
 
             this._mesh = null;
             this._materials.length = 0;
-            this.maxParticleSize = 0;
-            this.minParticleSize = 0;
             this._renderMode = ParticleRenderMode.Billboard;
             this.velocityScale = 1.0;
             this.lengthScale = 1.0;

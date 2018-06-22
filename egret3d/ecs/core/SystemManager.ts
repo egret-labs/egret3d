@@ -196,6 +196,8 @@ namespace paper {
 
             for (const system of this._systems) {
                 if (system) {
+                    const systemName = (system.constructor as any).name;
+                    egret3d.Profile.startTime(systemName);
                     if (removeCount > 0) {
                         this._systems[index - removeCount] = system;
                         this._systems[index] = null;
@@ -204,6 +206,7 @@ namespace paper {
                     if (system.enabled) {
                         system.update();
                     }
+                    egret3d.Profile.endTime(systemName);
                 }
                 else {
                     removeCount++;

@@ -282,15 +282,23 @@ namespace egret3d.ammo {
                 // raycastInfo.clean(); TODO cache
                 // PhysicsSystem._raycastInfoPool.add(raycastInfo);
 
-                const collisionObject = (rayResult.m_collisionObject as any).egretComponent as CollisionObject;
+                const btCollisionObject = (rayResult as any).get_m_collisionObject() as Ammo.btCollisionObject;
                 const position = (rayResult as any).get_m_hitPointWorld() as Ammo.btVector3;
                 const normal = (rayResult as any).get_m_hitNormalWorld() as Ammo.btVector3;
+
+                // TODO
+                for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
+                    const collisionObject = this._components[i + 1] as CollisionObject;
+                    if ((collisionObject.btCollisionObject as any).a === (btCollisionObject as any).a) {
+                        raycastInfo.transform = collisionObject.gameObject.transform;
+                        raycastInfo.collisionObject = collisionObject;
+                        break;
+                    }
+                }
 
                 raycastInfo.position.set(position.x(), position.y(), position.z());
                 raycastInfo.normal.set(normal.x(), normal.y(), normal.z());
                 raycastInfo.distance = from.getDistance(raycastInfo.position); // distance 是否应该惰性计算。
-                raycastInfo.transform = collisionObject.gameObject.transform;
-                raycastInfo.collisionObject = collisionObject;
 
                 return raycastInfo;
             }

@@ -1,7 +1,5 @@
 namespace paper {
-    /**
-     * 
-     */
+
     export type InterestConfig<T extends BaseComponent> = {
         componentClass: { new(): T } | ({ new(): T }[]);
         isExtends?: boolean;
@@ -28,32 +26,25 @@ namespace paper {
         /**
          * 系统对于每个实体关心的组件总数。
          */
-        protected _interestComponentCount: number = 0;
+        protected _interestComponentCount = 0;
         /**
          * 关心列表。
          */
         protected readonly _interests: InterestConfig<T>[] = [];
-        /**
-         * 
-         */
+
         protected readonly _components: T[] = [];
-        /**
-         * 
-         */
+
         private readonly _gameObjectOffsets: { [key: string]: number } = {};
         /**
          * @internal
          */
-        public constructor() {
+        constructor() {
             if (!BaseSystem._createEnabled) {
                 throw new Error("Create an instance of a system is not allowed.");
             }
-
             BaseSystem._createEnabled = false;
         }
-        /**
-         * 
-         */
+
         protected _onAddComponent(component: T) {
             const components = this._components;
             const gameObject = component.gameObject;
@@ -145,9 +136,7 @@ namespace paper {
         protected _isEditorUpdate() {
             return Application.isEditor && !Application.isPlaying;
         }
-        /**
-         * @protected
-         */
+
         public initialize() {
             this._onAddComponent = this._onAddComponent.bind(this);
             this._onRemoveComponent = this._onRemoveComponent.bind(this);
@@ -180,9 +169,7 @@ namespace paper {
                 }
             }
         }
-        /**
-         * @protected
-         */
+
         public uninitialize() {
             this._components.length = 0;
 
@@ -190,14 +177,12 @@ namespace paper {
                 delete this._gameObjectOffsets[k];
             }
         }
-        /**
-         * @protected
-         */
-        public abstract update(): void;
+        
+        abstract update(): void;
         /**
          * 该系统所关心的所有组件。
          */
-        public get components(): ReadonlyArray<T> {
+        get components(): ReadonlyArray<T> {
             return this._components;
         }
         /**

@@ -295,6 +295,7 @@ namespace egret3d {
             target._bones = [] as paper.IHashCode[];
             target._mesh = this._mesh ? this._mesh.serialize() : null;
             target._materials = [] as paper.IHashCode[];
+            target.uuid = this.uuid;
 
             if (this.rootBone) {
                 target.rootBone = { hashCode: this.rootBone.hashCode };
@@ -320,8 +321,11 @@ namespace egret3d {
          * @inheritDoc
          */
         public deserialize(element: any) {
+            super.deserialize(element);
+            
             this.center.deserialize(element.center);
             this.size.deserialize(element.size);
+            this.uuid = element.uuid;
 
             if (element._mesh) {
                 this._mesh = new (Mesh as any)(); //

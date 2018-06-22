@@ -1,57 +1,31 @@
 namespace RES.processor {
 
     // 按照加载优先级排序
-    export enum AssetTypeEnum {
+    enum AssetTypeEnum {
         Unknown,
-        Auto,
-        Bundle,
-        CompressBundle,
         GLVertexShader,
         GLFragmentShader,
         Shader,
         Texture,
         TextureDesc,
         Material,
-        GLTF,
         GLTFBinary,
         Prefab,
-        Scene,
-        TextAsset,
-        Atlas,
-        Font,
-        PackBin,
-        PackTxt,
-        pathAsset,
-        PVR,
-        Sound
+        Scene
     }
 
     const typeMap = {
         ".vs.glsl": AssetTypeEnum.GLVertexShader,
-        ".assetbundle.json": AssetTypeEnum.Bundle,
         ".fs.glsl": AssetTypeEnum.GLFragmentShader,
         ".shader.json": AssetTypeEnum.Shader,
         ".png": AssetTypeEnum.Texture,
         ".jpg": AssetTypeEnum.Texture,
-        ".pvr.bin": AssetTypeEnum.PVR,
-        ".pvr": AssetTypeEnum.PVR,
         ".imgdesc.json": AssetTypeEnum.TextureDesc,
         ".mat.json": AssetTypeEnum.Material,
-        ".gltf.json": AssetTypeEnum.GLTF,
         ".gltf.bin": AssetTypeEnum.GLTFBinary,
         ".glb": AssetTypeEnum.GLTFBinary,
         ".prefab.json": AssetTypeEnum.Prefab,
-        ".scene.json": AssetTypeEnum.Scene,
-        ".atlas.json": AssetTypeEnum.Atlas,
-        ".font.json": AssetTypeEnum.Font,
-        ".json": AssetTypeEnum.TextAsset,
-        ".txt": AssetTypeEnum.TextAsset,
-        ".effect.json": AssetTypeEnum.TextAsset,
-        ".packs.bin": AssetTypeEnum.PackBin,
-        ".packs.txt": AssetTypeEnum.PackTxt,
-        ".path.json": AssetTypeEnum.pathAsset,
-        ".mp3": AssetTypeEnum.Sound,
-        ".ogg": AssetTypeEnum.Sound
+        ".scene.json": AssetTypeEnum.Scene
     }
 
     function calcType(url: string): AssetTypeEnum {
@@ -83,25 +57,18 @@ namespace RES.processor {
         return url.substring(0, url.lastIndexOf("/"));
     }
 
-    function getUrl(resource: RES.ResourceInfo): string {
-        if (resource.root) {
-            return resource.root + resource.url;
-        }
-        else {
-            return RES['resourceRoot'] + resource.url;//兼容引擎5.1.9以及更低版本
-        }
-
+    function getUrl(resource: RES.ResourceInfo) {
+        return resource.root + resource.url;
     }
 
-    function formatUrlAndSort(assets: any[], path: string, urlKey: string = "url"): { url: string, type: AssetTypeEnum }[] {
+    function formatUrlAndSort(assets: any[], path: string, ): string[] {
         let list: { url: string, type: AssetTypeEnum }[] = [];
         list = assets.map<{ url: string, type: AssetTypeEnum }>(item => {
-            return { url: egret3d.utils.combinePath(path + "/", item[urlKey]), type: calcType(item[urlKey]) }
+            return { url: egret3d.utils.combinePath(path + "/", item.url), type: calcType(item.url) }
         });
-        list.sort((a, b) => {
+        return list.sort((a, b) => {
             return a.type - b.type;
-        });
-        return list;
+        }).map(item => item.url);
     }
 
     async function promisify(loader: egret.ImageLoader | egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
@@ -135,40 +102,6 @@ namespace RES.processor {
             egret3d.sound.WebAudio.instance.decodeAudioData(arrayBuffer, onSuccess, onError);
         })
     }
-
-    export const BundleProcessor: RES.processor.Processor = {
-
-        async onLoadStart(host, resource) {
-            let data = await host.load(resource, "json");
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-
-            let bundle = new egret3d.AssetBundle(filename);
-            bundle.url = url;
-            bundle.$parse(data);
-
-            // let list = getBundleUrlList(bundle);
-            let list = formatUrlAndSort(bundle.assets, getPath(resource.url));
-            for (let i = 0; i < list.length; i++) {
-                let r = RES.host.resourceConfig["getResource"](list[i].url);
-                if (r) {
-                    let asset: paper.Asset = await host.load(r);
-                }
-            }
-
-            return bundle;
-        },
-
-        async onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-        }
-
-        // getData(host, resource, key, subkey) { //可选函数
-
-        // }
-
-    };
 
     export const GLVertexShaderProcessor: RES.processor.Processor = {
 
@@ -363,21 +296,20 @@ namespace RES.processor {
 
     };
 
-    export const NewPrefabProcessor: RES.processor.Processor = {
+    export const PrefabProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            const data = await host.load(resource, "json");
+            const data: egret3d.PrefabConfig = await host.load(resource, "json");
             const url = getUrl(resource);
             const filename = getFileName(url);
             // load ref assets
             const assets = data.assets;
             if (assets) {
                 const list = formatUrlAndSort(assets, getPath(resource.url));
-                for (let i = 0; i < list.length; i++) {
-                    if (list[i].type == AssetTypeEnum.Shader) continue;
-                    const r = RES.host.resourceConfig["getResource"](list[i].url);
+                for (let item of list) {
+                    let r = RES.host.resourceConfig["getResource"](item);
                     if (r) {
-                        const asset: paper.Asset = await host.load(r);
+                        let asset: paper.Asset = await host.load(r);
                     }
                 }
             }
@@ -396,7 +328,7 @@ namespace RES.processor {
 
     };
 
-    export const NewSceneProcessor: RES.processor.Processor = {
+    export const SceneProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
             const data = await host.load(resource, "json");
@@ -406,10 +338,9 @@ namespace RES.processor {
             // load ref assets
             const assets = data.assets;
             if (assets) {
-                let list = formatUrlAndSort(assets, getPath(resource.url));
-                for (let i = 0; i < list.length; i++) {
-                    if (list[i].type == AssetTypeEnum.Shader) continue;
-                    let r = RES.host.resourceConfig["getResource"](list[i].url);
+                const list = formatUrlAndSort(assets, getPath(resource.url));
+                for (let item of list) {
+                    let r = RES.host.resourceConfig["getResource"](item);
                     if (r) {
                         let asset: paper.Asset = await host.load(r);
                     }
@@ -430,16 +361,16 @@ namespace RES.processor {
 
     };
 
-    export const D3FontProcessor: RES.processor.Processor = {
+    export const Font3DProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
             const data = await host.load(resource, "json");
             const url = getUrl(resource);
             const filename = getFileName(url);
-            const _font = new egret3d.Font(filename, url);
-            _font.$parse(data);
-            paper.Asset.register(_font, true);
-            return _font;
+            const font = new egret3d.Font(filename, url);
+            font.$parse(data);
+            paper.Asset.register(font, true);
+            return font;
         },
 
         async onRemoveStart(host, resource) {
@@ -469,35 +400,16 @@ namespace RES.processor {
 
     };
 
-    export const TextAssetProcessor: RES.processor.Processor = {
-
-        async onLoadStart(host, resource) {
-
-            const data = await host.load(resource, "json");
-            const url = getUrl(resource);
-            const filename = getFileName(url);
-            let text = new egret3d.TextAsset(filename, url);
-            paper.Asset.register(text, true);
-            return text;
-        },
-
-        async onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-        }
-
-    };
-
     export const PathAssetProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
             const data = await host.load(resource, "json");
             const url = getUrl(resource);
             const filename = getFileName(url);
-            let _path = new egret3d.PathAsset(filename, url);
-            _path.$parse(data);
-            paper.Asset.register(_path, true);
-            return _path;
+            const pathAsset = new egret3d.PathAsset(filename, url);
+            pathAsset.$parse(data);
+            paper.Asset.register(pathAsset, true);
+            return pathAsset;
         },
 
         async onRemoveStart(host, resource) {
@@ -510,16 +422,14 @@ namespace RES.processor {
     RES.processor.map("GLVertexShader", GLVertexShaderProcessor);
     RES.processor.map("GLFragmentShader", GLFragmentShaderProcessor);
     RES.processor.map("Shader", ShaderProcessor);
-    RES.processor.map("Bundle", BundleProcessor);
     RES.processor.map("Texture", TextureProcessor);
     RES.processor.map("TextureDesc", TextureDescProcessor);
     RES.processor.map("Material", MaterialProcessor);
     RES.processor.map("GLTFBinary", GLTFProcessor);
-    RES.processor.map("Prefab", NewPrefabProcessor);
-    RES.processor.map("Scene", NewSceneProcessor);
+    RES.processor.map("Prefab", PrefabProcessor);
+    RES.processor.map("Scene", SceneProcessor);
     RES.processor.map("Atlas", AtlasProcessor);
-    RES.processor.map("Font", D3FontProcessor);
-    RES.processor.map("TextAsset", TextAssetProcessor);
+    RES.processor.map("Font", Font3DProcessor);
     RES.processor.map("pathAsset", PathAssetProcessor);
     RES.processor.map("Sound", Sound3DProcessor);
 }

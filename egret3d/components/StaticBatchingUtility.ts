@@ -7,6 +7,8 @@ namespace egret3d {
     const helpInverseMatrix: Matrix = new Matrix();
     //缓存已经校验过的对象，用于过滤
     const cacheInstances: number[] = [];
+
+    let beforeCombineCount: number = 0;
     /**
      * 尝试对场景内所有静态对象合并
      */
@@ -23,18 +25,24 @@ namespace egret3d {
      */
     export function combine(instances: Readonly<paper.GameObject[]>): void {
         cacheInstances.length = 0;
+        beforeCombineCount = 0;
         const allCombines: { [key: string]: CombineInstance[] } = {};
         //1.通过材质填充合并列表
         for (const obj of instances) {
             _colletCombineInstance(obj, allCombines);
         }
+        console.log("合并前:" + beforeCombineCount);
+        let afterCombineCount = 0;
         //2.相同材质的合并
         for (const key in allCombines) {
             const combines = allCombines[key];
             for (const combine of combines) {
                 _combineInstance(combine);
+                afterCombineCount++;
             }
         }
+
+        console.log("合并后:" + afterCombineCount + "节省:" + (beforeCombineCount - afterCombineCount));
 
         cacheInstances.length = 0;
     }
@@ -68,6 +76,7 @@ namespace egret3d {
             return;
         }
 
+        beforeCombineCount++;
         const materials = meshRenderer.materials;
         const meshData = meshFilter.mesh;
 

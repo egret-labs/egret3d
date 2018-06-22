@@ -96,9 +96,7 @@ namespace paper {
 
         }
 
-        /**
-         * 
-         */
+
         public onLateUpdate(delta: number) {
 
         }
