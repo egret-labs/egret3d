@@ -57,9 +57,10 @@ namespace egret3d.ammo {
             (rigidBodyInfo as any).set_m_additionalLinearDampingThresholdSqr(this._additionalLinearDampingThresholdSqr);
             (rigidBodyInfo as any).set_m_additionalAngularDampingFactor(this._additionalAngularDampingFactor);
             (rigidBodyInfo as any).set_m_additionalAngularDampingThresholdSqr(this._additionalAngularDampingThresholdSqr);
-
+            //
             const btCollisionObject = new Ammo.btRigidBody(rigidBodyInfo as any);
             const motionState = new Ammo.btDefaultMotionState(this._getBTTransform()); // TODO 可扩展 的 state。
+            (btCollisionObject as any).egretComponent = this; //
             btCollisionObject.setCollisionFlags(this._collisionFlags);
             btCollisionObject.setMotionState(motionState);
             //

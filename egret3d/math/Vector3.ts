@@ -134,7 +134,7 @@ namespace egret3d {
             return true;
         }
 
-        public getDistance(value: Readonly<Vector3>) {
+        public getDistance(value: Readonly<Vector3>): number {
             return helpVector3H.copy(this).subtract(value).length;
         }
 

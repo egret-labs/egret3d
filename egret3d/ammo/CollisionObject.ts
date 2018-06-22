@@ -15,6 +15,7 @@ namespace egret3d.ammo {
 
         protected _createCollisionObject(): Ammo.btCollisionObject {
             const btCollisionObject = new Ammo.btCollisionObject();
+            (btCollisionObject as any).egretComponent = this; //
             btCollisionObject.setWorldTransform(this._getBTTransform());
             btCollisionObject.setCollisionFlags(this._collisionFlags);
 
