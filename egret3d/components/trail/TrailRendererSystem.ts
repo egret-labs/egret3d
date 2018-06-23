@@ -2,17 +2,17 @@ namespace egret3d {
     /**
      * TrailRender系统
      */
-    export class TrailRenderSystem extends paper.BaseSystem<TrailRender> {
+    export class TrailRendererSystem extends paper.BaseSystem<TrailRenderer> {
         /**
          * @inheritDoc
          */
         public readonly _interests = [
             {
-                componentClass: TrailRender,
+                componentClass: TrailRenderer,
                 listeners: [
                     {
                         type: TrailRenderEventType.Meterial,
-                        listener: (component: TrailRender) => {
+                        listener: (component: TrailRenderer) => {
                             const renderer = this._getComponent(component.gameObject, 0);
                             if (renderer) {
                                 this._drawCallList.updateDrawCalls(component.gameObject, false);
@@ -26,7 +26,7 @@ namespace egret3d {
         private readonly _transform: Transform = new Transform(); // TODO 不要这样，这是组件
 
         private readonly _createDrawCalls = ((gameObject: paper.GameObject) => {
-            const renderer = this._getComponent(gameObject, 0) as TrailRender;
+            const renderer = this._getComponent(gameObject, 0) as TrailRenderer;
 
             if (renderer._mesh && renderer._material && renderer.$active) {
                 let subMeshIndex = 0;
@@ -57,7 +57,7 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        protected _onAddComponent(component: TrailRender) {
+        protected _onAddComponent(component: TrailRenderer) {
             if (!super._onAddComponent(component)) {
                 return false;
             }
@@ -69,7 +69,7 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        protected _onRemoveComponent(component: TrailRender) {
+        protected _onRemoveComponent(component: TrailRenderer) {
             if (!super._onRemoveComponent(component)) {
                 return false;
             }

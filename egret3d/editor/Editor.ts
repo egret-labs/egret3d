@@ -20,8 +20,6 @@ namespace paper.editor {
             egret3d.runEgret({ antialias: true, isEditor: true, isPlaying: false });
 
             Application.systemManager.disableSystem(egret3d.CameraSystem);
-            Application.systemManager.disableSystem(egret3d.Audio3DListenerSystem);
-            Application.systemManager.disableSystem(egret3d.AudioSource3DSystem);
             Application.systemManager.registerBefore(editor.EditorCameraSystem, DestroySystem);
             Application.systemManager.registerBefore(editor.GizmosSystem, DestroySystem);
         }

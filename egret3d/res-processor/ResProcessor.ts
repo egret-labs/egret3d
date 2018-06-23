@@ -88,21 +88,6 @@ namespace RES.processor {
         })
     }
 
-    async function promisifySoundDecode(arrayBuffer: ArrayBuffer, resource: RES.ResourceInfo): Promise<any> {
-
-        return new Promise((resolve, reject) => {
-            let onSuccess = (audioBuffer) => {
-                resolve(audioBuffer);
-            }
-
-            let onError = () => {
-                let e = new RES.ResourceManagerError(1001, resource.url);
-                reject(e);
-            }
-            egret3d.sound.WebAudio.instance.decodeAudioData(arrayBuffer, onSuccess, onError);
-        })
-    }
-
     export const GLVertexShaderProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
@@ -380,26 +365,6 @@ namespace RES.processor {
 
     };
 
-    export const Sound3DProcessor: RES.processor.Processor = {
-
-        async onLoadStart(host, resource) {
-            let arrayBuffer: ArrayBuffer = await host.load(resource, "bin");
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-            let audioBuffer: AudioBuffer = await promisifySoundDecode(arrayBuffer, resource);
-            let sound = new egret3d.Sound(filename, url);
-            sound.buffer = audioBuffer;
-            paper.Asset.register(sound, true);
-            return sound;
-        },
-
-        async onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-        }
-
-    };
-
     export const PathAssetProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
@@ -431,5 +396,4 @@ namespace RES.processor {
     RES.processor.map("Atlas", AtlasProcessor);
     RES.processor.map("Font", Font3DProcessor);
     RES.processor.map("pathAsset", PathAssetProcessor);
-    RES.processor.map("Sound", Sound3DProcessor);
 }

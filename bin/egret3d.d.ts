@@ -1367,23 +1367,6 @@ declare namespace egret3d {
         private notifyListener(event);
     }
 }
-declare namespace egret3d.sound {
-    /**
-     *
-     */
-    class WebAudioChannel2D {
-        protected source: AudioBufferSourceNode;
-        protected gain: GainNode;
-        constructor();
-        protected _init(): void;
-        buffer: AudioBuffer;
-        volume: number;
-        loop: boolean;
-        start(offset?: number): void;
-        stop(): void;
-        dispose(): void;
-    }
-}
 declare namespace egret3d {
     /**
      * Camera系统
@@ -1756,6 +1739,22 @@ declare namespace egret3d {
     const helpVector4D: Vector4;
     const helpVector4E: Vector4;
     const helpVector4F: Vector4;
+}
+declare namespace paper {
+    /**
+     * renderer component interface
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 渲染器组件接口
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    interface IRenderer extends paper.BaseComponent {
+    }
 }
 declare namespace paper {
     /**
@@ -2693,22 +2692,6 @@ declare namespace paper {
 }
 declare namespace paper {
 }
-declare namespace paper {
-    /**
-     *
-     */
-    class LaterSystem extends paper.BaseSystem<paper.BaseComponent> {
-        private readonly _laterCalls;
-        /**
-         * @inheritDoc
-         */
-        update(): void;
-        /**
-         *
-         */
-        callLater(callback: () => void): void;
-    }
-}
 declare namespace egret3d {
     /**
      * path play type
@@ -3041,170 +3024,6 @@ declare namespace egret3d {
         updateShadowCasters(gameObject: paper.GameObject, castShadows: boolean): void;
         removeDrawCalls(gameObject: paper.GameObject): void;
         getDrawCalls(gameObject: paper.GameObject): DrawCall[] | null;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 声音监听组件。目前场景中只允许有一个监听器。对3D声音有效。
-     */
-    class Audio3DListener extends paper.BaseComponent {
-    }
-}
-declare namespace egret3d {
-    /**
-     * Audio系统
-     */
-    class Audio3DListenerSystem extends paper.BaseSystem<Audio3DListener> {
-        /**
-         * @inheritDoc
-         */
-        protected readonly _interests: {
-            componentClass: typeof Audio3DListener;
-        }[];
-        private _updateAudioListener(audioListener);
-        /**
-         * @inheritDoc
-         */
-        update(): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 2d audio source component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 2D音频组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class AudioSource2D extends paper.BaseComponent {
-        private _channel;
-        private _sound;
-        /**
-         * 设置音频资源
-         */
-        sound: Sound;
-        private _volume;
-        /**
-         * 音量
-         */
-        /**
-         * 音量
-         */
-        volume: number;
-        private _loop;
-        /**
-         * 是否循环
-         */
-        /**
-         * 是否循环
-         */
-        loop: boolean;
-        private _playing;
-        /**
-         * 播放音频
-         */
-        play(offset?: number): void;
-        /**
-         * 暂停音频
-         */
-        stop(): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 3D音频组件
-     */
-    class AudioSource3D extends paper.BaseComponent {
-        update(deltaTime: number): void;
-        private _channel;
-        private _sound;
-        /**
-         * 设置音频资源
-         */
-        sound: Sound;
-        private _volume;
-        /**
-         * 音量
-         */
-        /**
-         * 音量
-         */
-        volume: number;
-        private _loop;
-        /**
-         * 是否循环
-         */
-        /**
-         * 是否循环
-         */
-        loop: boolean;
-        private _playing;
-        /**
-         * 播放音频
-         */
-        play(offset?: number): void;
-        /**
-         * 暂停音频
-         */
-        stop(): void;
-        /**
-         * 音频传播最远距离
-         */
-        /**
-         * 音频传播最远距离
-         */
-        maxDistance: number;
-        /**
-         * 音频传播最小距离
-         */
-        /**
-         * 音频传播最小距离
-         */
-        minDistance: number;
-        /**
-         * 音频滚降系数
-         */
-        /**
-         * 音频滚降系数
-         */
-        rollOffFactor: number;
-        /**
-         * 音频滚降系数
-         */
-        /**
-         * 音频衰减模式。支持“linear”，“inverse”，“exponential”三种
-         */
-        distanceModel: string;
-        /**
-         * 速度
-         */
-        getVelocity(): Vector3;
-        /**
-         * 速度
-         */
-        setVelocity(x: number, y: number, z: number): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * Audio系统
-     */
-    class AudioSource3DSystem extends paper.BaseSystem<AudioSource3D> {
-        /**
-         * @inheritDoc
-         */
-        protected readonly _interests: {
-            componentClass: typeof AudioSource3D;
-        }[];
-        /**
-         * @inheritDoc
-         */
-        update(): void;
     }
 }
 declare namespace egret3d {
@@ -4194,11 +4013,17 @@ declare namespace egret3d {
         private _updateMatrix();
     }
 }
-declare namespace paper {
-    /**
-     * 克隆
-     */
-    function clone<T extends paper.SerializableObject>(object: T): T;
+declare namespace egret3d {
+    interface ILightShadow {
+        renderTarget: IRenderTarget;
+        map: WebGLTexture;
+        bias: number;
+        radius: number;
+        matrix: Matrix;
+        windowSize: number;
+        camera: Camera;
+        update(light: Light, face?: number): void;
+    }
 }
 declare namespace egret3d {
     /**
@@ -4310,22 +4135,11 @@ declare namespace egret3d {
         shadowCameraFar: number;
     }
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     * Light系统
+     * 克隆
      */
-    class LightSystem extends paper.BaseSystem<Light> {
-        /**
-         * @inheritDoc
-         */
-        protected readonly _interests: {
-            componentClass: typeof Light;
-        }[];
-        /**
-         * @inheritDoc
-         */
-        update(): void;
-    }
+    function clone<T extends paper.SerializableObject>(object: T): T;
 }
 declare namespace egret3d {
     class PointLightShadow implements ILightShadow {
@@ -4611,7 +4425,7 @@ declare namespace egret3d {
      * @platform Web
      * @language
      */
-    class TrailRender extends paper.BaseComponent implements paper.IRenderer {
+    class TrailRenderer extends paper.BaseComponent implements paper.IRenderer {
         /**
          * extend direction
          * @version paper 1.0
@@ -4731,15 +4545,15 @@ declare namespace egret3d {
     /**
      * TrailRender系统
      */
-    class TrailRenderSystem extends paper.BaseSystem<TrailRender> {
+    class TrailRendererSystem extends paper.BaseSystem<TrailRenderer> {
         /**
          * @inheritDoc
          */
         readonly _interests: {
-            componentClass: typeof TrailRender;
+            componentClass: typeof TrailRenderer;
             listeners: {
                 type: TrailRenderEventType;
-                listener: (component: TrailRender) => void;
+                listener: (component: TrailRenderer) => void;
             }[];
         }[];
         private readonly _transform;
@@ -4748,11 +4562,11 @@ declare namespace egret3d {
         /**
          * @inheritDoc
          */
-        protected _onAddComponent(component: TrailRender): boolean;
+        protected _onAddComponent(component: TrailRenderer): boolean;
         /**
          * @inheritDoc
          */
-        protected _onRemoveComponent(component: TrailRender): boolean;
+        protected _onRemoveComponent(component: TrailRenderer): boolean;
         /**
          * @inheritDoc
          */
@@ -5565,6 +5379,20 @@ declare namespace egret3d.particle {
     }
 }
 declare namespace paper {
+    /**
+     *
+     */
+    class LaterSystem extends paper.BaseSystem<paper.BaseComponent> {
+        private readonly _laterCalls;
+        /**
+         * @inheritDoc
+         */
+        update(): void;
+        /**
+         *
+         */
+        callLater(callback: () => void): void;
+    }
 }
 declare namespace egret3d.particle {
     class ParticleSystem extends paper.BaseSystem<ParticleComponent | ParticleRenderer> {
@@ -6717,7 +6545,6 @@ declare namespace RES.processor {
     const PrefabProcessor: RES.processor.Processor;
     const SceneProcessor: RES.processor.Processor;
     const Font3DProcessor: RES.processor.Processor;
-    const Sound3DProcessor: RES.processor.Processor;
     const PathAssetProcessor: RES.processor.Processor;
 }
 declare namespace egret3d {
@@ -6951,74 +6778,6 @@ declare namespace egret3d.utils {
     function caclStringByteLength(value: string): number;
     function getKeyCodeByAscii(ev: KeyboardEvent): number;
 }
-declare namespace egret3d.sound {
-    /**
-     * web audio
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 基于 Web Audio 网络音频模块（单例）
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class WebAudio {
-        private static _instance;
-        /**
-         * web audio instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 基于 Web Audio 网络音频模块单例
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        static readonly instance: WebAudio;
-        private _audioContext;
-        /**
-         *
-         */
-        readonly audioContext: AudioContext;
-        private constructor();
-        /**
-         * is support web audio
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前运行环境是否支持 Web Audio
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        readonly isSupported: boolean;
-        /**
-         * active
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 某些平台中（IOS），需要在用户输入事件监听中调用此方法，音频才能正常播放
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        active(): void;
-        /**
-         *
-         */
-        decodeAudioData(buffer: ArrayBuffer, onSuccess: (buf: AudioBuffer) => void, onError: () => void): void;
-        private audioListener;
-        getAudioListener(): WebAudioListener;
-    }
-}
 declare namespace Stats {
     /**
      * 显示调试面板
@@ -7028,40 +6787,6 @@ declare namespace Stats {
      * 关闭调试面板
      */
     function hide(): void;
-}
-declare namespace egret3d.sound {
-    /**
-     *
-     */
-    class WebAudioChannel3D extends WebAudioChannel2D {
-        private panner;
-        protected _init(): void;
-        maxDistance: number;
-        minDistance: number;
-        rollOffFactor: number;
-        distanceModel: string;
-        private position;
-        setPosition(x: number, y: number, z: number): void;
-        getPosition(): Vector3;
-        private velocity;
-        setVelocity(x: number, y: number, z: number): void;
-        getVelocity(): Vector3;
-    }
-}
-declare namespace egret3d.sound {
-    class WebAudioListener {
-        private readonly listener;
-        private position;
-        private velocity;
-        private orientation;
-        constructor();
-        setPosition(x: number, y: number, z: number): void;
-        getPosition(): Vector3;
-        setVelocity(x: number, y: number, z: number): void;
-        getVelocity(): Vector3;
-        setOrientation(orientation: Matrix): void;
-        getOrientation(): Matrix;
-    }
 }
 declare namespace egret3d {
     /**
@@ -7617,28 +7342,6 @@ declare namespace egret3d {
     }
 }
 declare namespace paper {
-    /**
-     * 销毁系统
-     *
-     */
-    class DestroySystem extends BaseSystem<BaseComponent> {
-        private readonly _bufferedComponents;
-        private readonly _bufferedGameObjects;
-        /**
-         * @inheritDoc
-         */
-        update(): void;
-        /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
-         *
-         */
-        bufferComponent(component: BaseComponent): void;
-        /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
-         *
-         */
-        bufferGameObject(gameObject: GameObject): void;
-    }
 }
 declare namespace egret3d {
     class WebGLKit {
@@ -7907,6 +7610,30 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
+     * 销毁系统
+     *
+     */
+    class DestroySystem extends BaseSystem<BaseComponent> {
+        private readonly _bufferedComponents;
+        private readonly _bufferedGameObjects;
+        /**
+         * @inheritDoc
+         */
+        update(): void;
+        /**
+         * 将实体缓存到销毁系统，以便在系统运行时销毁。
+         *
+         */
+        bufferComponent(component: BaseComponent): void;
+        /**
+         * 将实体缓存到销毁系统，以便在系统运行时销毁。
+         *
+         */
+        bufferGameObject(gameObject: GameObject): void;
+    }
+}
+declare namespace paper {
+    /**
      * 序列化方法
      * 只有 ISerializable (有对应hashCode属性) 参与序列化
      * 只有被标记的对象属性 参与序列化
@@ -7935,22 +7662,6 @@ declare namespace paper {
      *
      */
     function getTypesFromPrototype(classPrototype: any, typeKey: string, types?: string[] | null): string[];
-}
-declare namespace paper {
-    /**
-     * renderer component interface
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 渲染器组件接口
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    interface IRenderer extends paper.BaseComponent {
-    }
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
@@ -8023,52 +7734,29 @@ declare namespace paper.editor {
         initHistory(): void;
         setBackRuntime(back: any): void;
         addState(state: BaseState): void;
-        setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean;
         getEditType(propName: string, target: any): editor.EditType | null;
+        setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean;
         createModifyGameObjectPropertyState(propName: string, propValue: any, target: GameObject, editType: editor.EditType, add?: boolean): ModifyGameObjectPropertyState;
         createModifyComponent(propName: string, propValue: any, target: BaseComponent, editType: editor.EditType, add?: boolean): any;
-        createModifyPrefabGameObjectPropertyState(gameObjectId: number, newValueList: any[], preValueCopylist: any[]): void;
-        createModifyPrefabComponentPropertyState(gameObjectId: number, componentId: number, newValueList: any[], preValueCopylist: any[]): void;
+        createModifyPrefabGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): void;
+        createModifyPrefabComponentPropertyState(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): void;
         createRemoveComponentFromPrefab(stateData: any): void;
         createAddComponentToPrefab(stateData: any): void;
         createModifyAssetPropertyState(target: Asset, newValueList: any[], preValueCopylist: any[]): void;
         serializeProperty(value: any, editType: editor.EditType): any;
         deserializeProperty(serializeData: any, editType: editor.EditType): any;
-        /**
-         * 创建游戏对象
-         */
         createGameObject(parentUUids: string[]): void;
+        addComponent(gameObjectUUid: string, compClzName: string): void;
         /**
-         * 添加组件
-         */
-        addComponent(gameObjectId: number, compClzName: string): void;
-        /**
-        *  TODO:因gameobject未提供添加组件实例方法，暂时这样处理
+        *  TODO:因gameobject未提供通过组件实例添加组件的方法，暂时这样处理
         * @param gameObject
         * @param component
         */
         addComponentToGameObject(gameObject: GameObject, component: BaseComponent): void;
-        /**
-         * 移除组件
-         * @param gameObjectId
-         * @param componentId
-         */
-        removeComponent(gameObjectId: number, componentId: number): boolean;
-        getComponentById(gameObject: GameObject, componentId: number): BaseComponent | null;
-        /**
-         * 粘贴游戏对象
-         * @param target
-         */
+        removeComponent(gameObjectUUid: string, componentUUid: string): void;
+        getComponentById(gameObject: GameObject, componentId: string): BaseComponent | null;
         pasteGameObject(target?: egret3d.Transform): void;
-        /**
-         * 克隆游戏对象
-         * @param gameObjects
-         */
         duplicateGameObjects(gameObjects: GameObject[]): void;
-        /**
-         *
-         * @param gameObjects 去重之后的游戏对象
-         */
         private getPrefabDataForDuplicate(gameObjects);
         /**
          * 设置克隆对象的prefab信息
@@ -8090,18 +7778,10 @@ declare namespace paper.editor {
          * @param rootObjs
          */
         private getPrefabRootObjsFromGameObject(gameObj, rootObjs);
-        /**
-         * 查找root游戏对象
-         * @param gameObj
-         */
-        getPrefabRootObjByChild(gameObj: GameObject): GameObject;
-        /**
-         * 删除游戏对象
-         * @param gameObjects
-         */
+        private getPrefabRootObjByChild(gameObj);
         deleteGameObject(gameObjects: GameObject[], prefabRootMap?: any): void;
         _deleteGameObject(gameObjects: GameObject[]): void;
-        updateParent(gameObjectIds: number[], targetId: number, prefabRootMap?: any): void;
+        updateParent(gameObjectUUids: string[], targetUUid: string, prefabRootMap?: any): void;
         /**
          * 清除预制体里游戏对象的prefab引用,root或者持有此root引用的游戏对象
          * @param rootId 预制体的根id
@@ -8112,53 +7792,38 @@ declare namespace paper.editor {
          * @param rootObj
          * @param prefab
          */
-        resetPrefabbyRootId(rootObj: GameObject, prefab: any, prefabIds: number[]): void;
+        resetPrefabbyRootId(rootObj: GameObject, prefab: any, prefabIds: string[]): void;
         /**
          * 获取预制体实例包含的所有游戏对象id
          * @param rootObj
          * @param ids
          */
-        getAllIdsFromPrefabInstance(gameObj: GameObject, ids: number[], rootObj: GameObject): void;
+        getAllIdsFromPrefabInstance(gameObj: GameObject, ids: string[], rootObj: GameObject): void;
         /**
          * 去重
          * @param gameObjects
          */
         unique(gameObjects: GameObject[]): void;
-        getGameObjectById(gameObjectId: number): GameObject | null;
-        getGameObjectByUUid(uuid: string, inBackRuntime?: boolean): GameObject | null;
+        getGameObjectByUUid(uuid: string): GameObject | null;
         /**
-         * 根据id获取对象列表
-         * @param ids 不重复的id列表
+         *
+         * @param uuids unique id
          */
-        getGameObjectsByIds(ids: number[]): GameObject[];
         getGameObjectsByUUids(uuids: string[]): GameObject[];
-        private getAllHashCodeFromGameObjects(gameobjects);
-        /**
-         * 获取gameobject和其子gameobject的hashcode
-         * @param gameObject
-         * @param hashcodes
-         */
-        getAllHashCodeFromGameObject(gameObject: GameObject, hashcodes: number[]): void;
-        /**
-         * 还原游戏对象及其子游戏对象的hashcode
-         * @param gameObj
-         * @param hashcodes
-         */
-        resetHashCode(gameObj: GameObject, hashcodes: number[]): void;
-        resetComponentHashCode(gameObject: GameObject, hashcodes: number[]): void;
-        resetComponentUUid(gameObject: GameObject, uuids: string[]): void;
-        getAllComponentIdFromGameObject(gameObject: GameObject, hashcodes: number[]): void;
+        getAllUUidFromGameObject(gameObject: GameObject, uuids: string[]): void;
+        resetUUid(gameObj: GameObject, uuids: string[]): void;
         getAllComponentUUidFromGameObject(gameObject: GameObject, uuids: string[]): void;
+        resetComponentUUid(gameObject: GameObject, uuids: string[]): void;
+        /**
+         * call after duplicate/create/paste
+         * @param instance
+         */
+        generateGameobjectUUids(instance: paper.GameObject): void;
         private findOptionSetName(propName, target);
         setTargetProperty(propName: string, target: any, value: any): void;
-        /**
-         * 选中游戏对象
-         * @param selectObj
-         * @param addHistory 是否产生历史记录，只在用户进行选中相关操作时调用
-         */
         selectGameObject(selectObj: any, options?: {
             addHistory: boolean;
-            preIds: number[];
+            preIds: string[];
         }): void;
         switchScene(url: string): void;
         resetHistory(data: string): void;
@@ -8345,7 +8010,7 @@ declare namespace paper.editor {
     }
     class PasteGameObjectsState extends BaseState {
         static toString(): string;
-        static create(data?: any): PasteGameObjectsState | null;
+        static create(data?: any): PasteGameObjectsState;
         undo(): boolean;
         redo(): boolean;
     }
@@ -8380,14 +8045,14 @@ declare namespace paper.editor {
          * @param gameObjectId
          * @param valueList
          */
-        modifyPrefabGameObjectPropertyValues(gameObjectId: number, valueList: any[]): void;
+        modifyPrefabGameObjectPropertyValues(gameObjectUUid: string, valueList: any[]): void;
         undo(): boolean;
         redo(): boolean;
     }
     class ModifyPrefabComponentPropertyState extends ModifyPrefabProperty {
         static toString(): string;
         static create(data?: any): ModifyPrefabComponentPropertyState | null;
-        modifyPrefabComponentPropertyValues(gameObjectId: number, componentId: number, valueList: any[]): void;
+        modifyPrefabComponentPropertyValues(gameObjUUid: string, componentUUid: string, valueList: any[]): void;
         undo(): boolean;
         redo(): boolean;
     }
@@ -8575,14 +8240,19 @@ declare namespace paper.editor {
     }
 }
 declare namespace egret3d {
-    interface ILightShadow {
-        renderTarget: IRenderTarget;
-        map: WebGLTexture;
-        bias: number;
-        radius: number;
-        matrix: Matrix;
-        windowSize: number;
-        camera: Camera;
-        update(light: Light, face?: number): void;
+    /**
+     * Light系统
+     */
+    class LightSystem extends paper.BaseSystem<Light> {
+        /**
+         * @inheritDoc
+         */
+        protected readonly _interests: {
+            componentClass: typeof Light;
+        }[];
+        /**
+         * @inheritDoc
+         */
+        update(): void;
     }
 }
