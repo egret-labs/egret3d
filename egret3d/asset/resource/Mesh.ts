@@ -590,6 +590,8 @@ namespace egret3d {
                         console.warn("Error arguments.");
                     }
                 }
+
+                this._version++;
             } else {
                 console.warn("Error arguments.");
             }

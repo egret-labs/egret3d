@@ -105,13 +105,13 @@ namespace egret3d {
          */
         /**
          * 相机的渲染剔除，对应GameObject的层级
-         * @default CullingMask.Default | CullingMask.UI
+         * @default CullingMask.Everything
          * @version paper 1.0
          * @platform Web
          * @language
          */
         @paper.serializedField
-        public cullingMask: CullingMask = CullingMask.Default | CullingMask.UI;
+        public cullingMask: CullingMask = CullingMask.Everything;
 
         /**
          * camera render order
@@ -344,22 +344,6 @@ namespace egret3d {
             else {
 
             }
-        }
-        /**
-         * @inheritDoc
-         */
-        public deserialize(element: any) {
-            this.uuid = element.uuid;
-            this.fov = element.fov;
-            this.opvalue = element.opvalue;
-            this._near = element._near;
-            this._far = element._far;
-            this.cullingMask = element.cullingMask;
-            this.order = element.order;
-            this.clearOption_Color = element.clearOption_Color;
-            this.clearOption_Depth = element.clearOption_Depth;
-            this.backgroundColor.deserialize(element.backgroundColor);
-            this.viewport.deserialize(element.viewport);
         }
         /**
          * @inheritDoc

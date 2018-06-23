@@ -2,7 +2,7 @@ namespace egret3d.particle {
 
     const colorHelper1: Color = new Color();
     const colorHelper2: Color = new Color();
-    
+
     export const enum CurveMode {
         Constant = 0,
         Curve = 1,
@@ -87,6 +87,10 @@ namespace egret3d.particle {
             this.time = element[0];
             this.value = element[1];
         }
+        public clone(source: Keyframe) {
+            this.time = source.time;
+            this.value = source.value;
+        }
     }
 
     export class AnimationCurve implements paper.ISerializable {
@@ -134,6 +138,18 @@ namespace egret3d.particle {
             }
 
             return res;
+        }
+
+        public clone(source: AnimationCurve) {
+            this._keys.length = 0;
+
+            const sourceKeys = source._keys;
+            for (let i = 0, l = sourceKeys.length; i < l; i++) {
+                var keyframe = new Keyframe();
+                keyframe.time = sourceKeys[i].time;
+                keyframe.value = sourceKeys[i].value;
+                this._keys.push(keyframe);
+            }
         }
     }
 
@@ -280,6 +296,16 @@ namespace egret3d.particle {
                 return (Math.random() * (min - max) + min);
             }
         }
+
+        public clone(source: MinMaxCurve) {
+            this.mode = source.mode;
+            this.constant = source.constant;
+            this.constantMin = source.constantMin;
+            this.constantMax = source.constantMax;
+            this.curve.clone(source.curve);
+            this.curveMin.clone(source.curveMin);
+            this.curveMax.clone(source.curveMax);
+        }
     }
 
     export class MinMaxGradient extends paper.SerializableObject {
@@ -408,16 +434,16 @@ namespace egret3d.particle {
         public readonly startSpeed: MinMaxCurve = new MinMaxCurve();
         //
         @paper.serializedField
-        public startSize3D: boolean = false;
-        @paper.serializedField
         public readonly startSizeX: MinMaxCurve = new MinMaxCurve();
         @paper.serializedField
         public readonly startSizeY: MinMaxCurve = new MinMaxCurve();
         @paper.serializedField
         public readonly startSizeZ: MinMaxCurve = new MinMaxCurve();
-        //
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public startRotation3D: boolean = false;
+        public _startRotation3D: boolean = false;
         @paper.serializedField
         public readonly startRotationX: MinMaxCurve = new MinMaxCurve();
         @paper.serializedField
@@ -430,18 +456,24 @@ namespace egret3d.particle {
         //
         @paper.serializedField
         public readonly gravityModifier: MinMaxCurve = new MinMaxCurve(); //TODO
-        //
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public simulationSpace: SimulationSpace = SimulationSpace.Local;
-        //
+        public _simulationSpace: SimulationSpace = SimulationSpace.Local;
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public scaleMode: ScalingMode = ScalingMode.Hierarchy;
+        public _scaleMode: ScalingMode = ScalingMode.Hierarchy;
         //
         @paper.serializedField
         public playOnAwake: boolean = false;
-        //
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public maxParticles: number = 0;
+        public _maxParticles: number = 0;
 
         public deserialize(element: any) {
             super.deserialize(element);
@@ -450,20 +482,56 @@ namespace egret3d.particle {
             this.startDelay.deserialize(element.startDelay);
             this.startLifetime.deserialize(element.startLifetime);
             this.startSpeed.deserialize(element.startSpeed);
-            this.startSize3D = element.startSize3D;
             this.startSizeX.deserialize(element.startSizeX);
             this.startSizeY.deserialize(element.startSizeY);
             this.startSizeZ.deserialize(element.startSizeZ);
-            this.startRotation3D = element.startRotation3D;
+            this._startRotation3D = (element._startRotation3D || element.startRotation3D) || false;
             this.startRotationX.deserialize(element.startRotationX);
             this.startRotationY.deserialize(element.startRotationY);
             this.startRotationZ.deserialize(element.startRotationZ);
             this.startColor.deserialize(element.startColor);
             this.gravityModifier.deserialize(element.gravityModifier);
-            this.simulationSpace = element.simulationSpace;
-            this.scaleMode = element.scaleMode;
+            this._simulationSpace = (element._simulationSpace || element.simulationSpace) || 0;
+            this._scaleMode = (element._scaleMode || element.scaleMode) || ScalingMode.Hierarchy;
             this.playOnAwake = element.playOnAwake;
-            this.maxParticles = element.maxParticles;
+            this._maxParticles = (element._maxParticles || element.maxParticles) || 0;
+        }
+
+        public set startRotation3D(value: boolean) {
+            if (this._startRotation3D !== value) {
+                this._startRotation3D = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.StartRotation3DChanged, this._comp);
+            }
+        }
+        public get startRotation3D() {
+            return this._startRotation3D;
+        }
+        public set simulationSpace(value: SimulationSpace) {
+            if (this._simulationSpace !== value) {
+                this._simulationSpace = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.SimulationSpaceChanged, this._comp);
+            }
+        }
+        public get simulationSpace() {
+            return this._simulationSpace;
+        }
+        public set scaleMode(value: ScalingMode) {
+            if (this._scaleMode !== value) {
+                this._scaleMode = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.ScaleModeChanged, this._comp);
+            }
+        }
+        public get scaleMode() {
+            return this._scaleMode;
+        }
+        public set maxParticles(value: number) {
+            if (this._maxParticles !== value) {
+                this._maxParticles = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.MaxParticlesChanged, this._comp);
+            }
+        }
+        public get maxParticles() {
+            return this._maxParticles;
         }
     }
 
@@ -526,7 +594,7 @@ namespace egret3d.particle {
             this.spherizeDirection = element.spherizeDirection;
         }
         public invalidUpdate(): void {
-            paper.EventPool.dispatchEvent(ParticleComponenetEventType.ShapeChanged, this._comp);
+            paper.EventPool.dispatchEvent(ParticleCompEventType.ShapeChanged, this._comp);
         }
 
         public generatePositionAndDirection(position: Vector3, direction: Vector3) {
@@ -539,189 +607,421 @@ namespace egret3d.particle {
          * @internal
          */
         @paper.serializedField
-        public mode: CurveMode = CurveMode.Constant;
+        public _mode: CurveMode = CurveMode.Constant;
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public space: SimulationSpace = SimulationSpace.Local;
+        public _space: SimulationSpace = SimulationSpace.Local;
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly x: MinMaxCurve = new MinMaxCurve();
+        public readonly _x: MinMaxCurve = new MinMaxCurve();
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly y: MinMaxCurve = new MinMaxCurve();
+        public readonly _y: MinMaxCurve = new MinMaxCurve();
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly z: MinMaxCurve = new MinMaxCurve();
-
-        public initialize() {
-            super.initialize();
-        }
-
-        public deserialize(element: any) {
-            super.deserialize(element);
-            this.mode = element.mode;
-            this.space = element.space;
-            this.x.deserialize(element.x);
-            this.y.deserialize(element.y);
-            this.z.deserialize(element.z);
-        }
-
-        public invalidUpdate(): void {
-            paper.EventPool.dispatchEvent(ParticleComponenetEventType.VelocityOverLifetime, this._comp);
-        }
-    }
-
-    export class LimitVelocityOverLifetimeModule extends ParticleSystemModule {
-        @paper.serializedField
-        public readonly x: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public readonly y: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public readonly z: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public dampen: number;
-        @paper.serializedField
-        public separateAxes: boolean;
-        @paper.serializedField
-        public space: SimulationSpace = SimulationSpace.Local;
+        public readonly _z: MinMaxCurve = new MinMaxCurve();
 
         public deserialize(element: any) {
             super.deserialize(element);
-            this.x.deserialize(element.limitX);
-            this.y.deserialize(element.limitY);
-            this.z.deserialize(element.limitZ);
-            this.dampen = element.dampen;
-            this.separateAxes = element.separateAxes;
-            this.space = element.space;
+            this._mode = (element._mode || element.mode) || CurveMode.Constant;
+            this._space = (element._space || element.space) || SimulationSpace.Local;
+            this._x.deserialize(element._x || element.x);
+            this._y.deserialize(element._y || element.y);
+            this._z.deserialize(element._z || element.z);
+        }
+
+        public set mode(value: CurveMode) {
+            if (this._mode !== value) {
+                this._mode = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.VelocityChanged, this._comp);
+            }
+        }
+        public get mode() {
+            return this._mode;
+        }
+        public set space(value: SimulationSpace) {
+            if (this._space !== value) {
+                this._space = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.VelocityChanged, this._comp);
+            }
+        }
+        public get space() {
+            return this._space;
+        }
+        public set x(value: Readonly<MinMaxCurve>) {
+            if (this._x !== value) {
+                this._x.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.VelocityChanged, this._comp);
+            }
+        }
+        public get x() {
+            return this._x;
+        }
+        public set y(value: Readonly<MinMaxCurve>) {
+            if (this._y !== value) {
+                this._y.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.VelocityChanged, this._comp);
+            }
+        }
+        public get y() {
+            return this._y;
+        }
+        public set z(value: Readonly<MinMaxCurve>) {
+            if (this._z !== value) {
+                this._z.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.VelocityChanged, this._comp);
+            }
+        }
+        public get z() {
+            return this._z;
         }
     }
 
     export class ColorOverLifetimeModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public color: MinMaxGradient = new MinMaxGradient();
+        public _color: MinMaxGradient = new MinMaxGradient();
 
         public deserialize(element: any) {
             super.deserialize(element);
-            this.color.deserialize(element.color);
+            this._color.deserialize(element._color || element.color);
         }
-
-        public invalidUpdate(): void {
-            paper.EventPool.dispatchEvent(ParticleComponenetEventType.ColorOverLifetime, this._comp);
+        public set color(value: Readonly<MinMaxGradient>) {
+            if (this._color !== value) {
+                this._color = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.ColorChanged, this._comp);
+            }
+        }
+        public get color() {
+            return this._color;
         }
     }
 
     export class SizeOverLifetimeModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public separateAxes: boolean = false;
+        public _separateAxes: boolean = false;
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly size: MinMaxCurve = new MinMaxCurve();
+        public readonly _size: MinMaxCurve = new MinMaxCurve();
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly x: MinMaxCurve = new MinMaxCurve();
+        public readonly _x: MinMaxCurve = new MinMaxCurve();
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly y: MinMaxCurve = new MinMaxCurve();
+        public readonly _y: MinMaxCurve = new MinMaxCurve();
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly z: MinMaxCurve = new MinMaxCurve();
+        public readonly _z: MinMaxCurve = new MinMaxCurve();
 
         public deserialize(element: any) {
             super.deserialize(element);
-            this.separateAxes = element.separateAxes || false;
-            this.size.deserialize(element.x);
-            this.x.deserialize(element.x);
-            this.y.deserialize(element.y);
-            this.z.deserialize(element.z);
+            this._separateAxes = (element._separateAxes || element.separateAxes) || false;
+            this._size.deserialize(element._size || element.size);
+            this._x.deserialize(element._x || element.x);
+            this._y.deserialize(element._y || element.y);
+            this._z.deserialize(element._z || element.z);
         }
-        public invalidUpdate(): void {
-            paper.EventPool.dispatchEvent(ParticleComponenetEventType.SizeOverLifetime, this._comp);
+        public set separateAxes(value: boolean) {
+            if (this._separateAxes !== value) {
+                this._separateAxes = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.SizeChanged, this._comp);
+            }
+        }
+        public get separateAxes() {
+            return this._separateAxes;
+        }
+        public set size(value: Readonly<MinMaxCurve>) {
+            if (this._size !== value) {
+                this._size.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.SizeChanged, this._comp);
+            }
+        }
+        public get size() {
+            return this._size;
+        }
+        public set x(value: Readonly<MinMaxCurve>) {
+            if (this._x !== value) {
+                this._x.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.SizeChanged, this._comp);
+            }
+        }
+        public get x() {
+            return this._x;
+        }
+        public set y(value: Readonly<MinMaxCurve>) {
+            if (this._y !== value) {
+                this._y.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.SizeChanged, this._comp);
+            }
+        }
+        public get y() {
+            return this._y;
+        }
+        public set z(value: Readonly<MinMaxCurve>) {
+            if (this._z !== value) {
+                this._z.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.SizeChanged, this._comp);
+            }
+        }
+        public get z() {
+            return this._z;
         }
     }
 
     export class RotationOverLifetimeModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly x: MinMaxCurve = new MinMaxCurve();
+        public _separateAxes: boolean;
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly y: MinMaxCurve = new MinMaxCurve();
+        public readonly _x: MinMaxCurve = new MinMaxCurve();
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly z: MinMaxCurve = new MinMaxCurve();
+        public readonly _y: MinMaxCurve = new MinMaxCurve();
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public separateAxes: boolean;
+        public readonly _z: MinMaxCurve = new MinMaxCurve();
 
         public deserialize(element: any) {
             super.deserialize(element);
-            this.x.deserialize(element.x);
-            this.y.deserialize(element.y);
-            this.z.deserialize(element.z);
-            this.separateAxes = element.separateAxes;
+            this._separateAxes = (element._separateAxes || element.separateAxes) || false;
+            this._x.deserialize(element._x || element.x);
+            this._y.deserialize(element._y || element.y);
+            this._z.deserialize(element._z || element.z);
         }
-        public invalidUpdate(): void {
-            paper.EventPool.dispatchEvent(ParticleComponenetEventType.RotationOverLifetime, this._comp);
+        public set separateAxes(value: boolean) {
+            if (this._separateAxes !== value) {
+                this._separateAxes = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.RotationChanged, this._comp);
+            }
+        }
+        public get separateAxes() {
+            return this._separateAxes;
+        }
+        public set x(value: Readonly<MinMaxCurve>) {
+            if (this._x !== value) {
+                this._x.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.RotationChanged, this._comp);
+            }
+        }
+        public get x() {
+            return this._x;
+        }
+        public set y(value: Readonly<MinMaxCurve>) {
+            if (this._y !== value) {
+                this._y.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.RotationChanged, this._comp);
+            }
+        }
+        public get y() {
+            return this._y;
+        }
+        public set z(value: Readonly<MinMaxCurve>) {
+            if (this._z !== value) {
+                this._z.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.RotationChanged, this._comp);
+            }
+        }
+        public get z() {
+            return this._z;
         }
     }
 
     export class TextureSheetAnimationModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public numTilesX: number;
+        public _numTilesX: number;
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public numTilesY: number;
+        public _numTilesY: number;
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public animation: AnimationType = AnimationType.WholeSheet;
+        public _animation: AnimationType = AnimationType.WholeSheet;
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public useRandomRow: boolean;
+        public _useRandomRow: boolean;
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly frameOverTime: MinMaxCurve = new MinMaxCurve();
+        public readonly _frameOverTime: MinMaxCurve = new MinMaxCurve();
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public readonly startFrame: MinMaxCurve = new MinMaxCurve();
+        public readonly _startFrame: MinMaxCurve = new MinMaxCurve();
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public cycleCount: number;
+        public _cycleCount: number;
+        /**
+         * @internal
+         */
         @paper.serializedField
-        public rowIndex: number;
+        public _rowIndex: number;
+
+        private readonly _floatValues: Float32Array = new Float32Array(4);
 
         public deserialize(element: any) {
             super.deserialize(element);
-            this.numTilesX = element.numTilesX;
-            this.numTilesY = element.numTilesY;
-            this.animation = element.animation;
-            this.useRandomRow = element.useRandomRow;
-            this.frameOverTime.deserialize(element.frameOverTime);
-            this.startFrame.deserialize(element.startFrame);
-            this.cycleCount = element.cycleCount;
-            this.rowIndex = element.rowIndex;
-        }
-        public invalidUpdate(): void {
-            paper.EventPool.dispatchEvent(ParticleComponenetEventType.TextureSheetAnimation, this._comp);
+            this._numTilesX = (element._numTilesX || element.numTilesX) || 0;
+            this._numTilesY = (element._numTilesY || element.numTilesY) || 0;
+            this._animation = (element._animation || element.animation) || AnimationType.WholeSheet;
+            this._useRandomRow = (element._useRandomRow || element.useRandomRow) || false;
+            this._frameOverTime.deserialize(element._frameOverTime || element.frameOverTime);
+            this._startFrame.deserialize(element._startFrame || element.startFrame);
+            this._cycleCount = (element._cycleCount || element.cycleCount) || 0;
+            this._rowIndex = (element._rowIndex || element.rowIndex) || 0;
         }
 
-        public evaluate(t: number = 0.0, out: Vector4): Vector4 {
+        public set numTilesX(value: number) {
+            if (this._numTilesX !== value) {
+                this._numTilesX = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+            }
+        }
+        public get numTilesX() {
+            return this._numTilesX;
+        }
+        public set numTilesY(value: number) {
+            if (this._numTilesY !== value) {
+                this._numTilesY = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+            }
+        }
+        public get numTilesY() {
+            return this._numTilesY;
+        }
+        public set animation(value: AnimationType) {
+            if (this._animation !== value) {
+                this._animation = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+            }
+        }
+        public get animation() {
+            return this._animation;
+        }
+        public set useRandomRow(value: boolean) {
+            if (this._useRandomRow !== value) {
+                this._useRandomRow = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+            }
+        }
+        public get useRandomRow() {
+            return this._useRandomRow;
+        }
+        public set frameOverTime(value: Readonly<MinMaxCurve>) {
+            if (this._frameOverTime !== value) {
+                this._frameOverTime.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+            }
+        }
+        public get frameOverTime() {
+            return this._frameOverTime;
+        }
+        public set startFrame(value: Readonly<MinMaxCurve>) {
+            if (this._startFrame !== value) {
+                this._startFrame.clone(value);
+                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+            }
+        }
+        public get startFrame() {
+            return this._startFrame;
+        }
+        public set cycleCount(value: number) {
+            if (this._cycleCount !== value) {
+                this._cycleCount = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+            }
+        }
+        public get cycleCount() {
+            return this._cycleCount;
+        }
+        public set rowIndex(value: number) {
+            if (this._rowIndex !== value) {
+                this._rowIndex = value;
+                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+            }
+        }
+        public get rowIndex() {
+            return this._rowIndex;
+        }
+
+        public get floatValues(): Readonly<Float32Array> {
+            let res = this._floatValues;
             if (this.enable) {
-                const subU: number = 1.0 / this.numTilesX;
-                const subV: number = 1.0 / this.numTilesY;
+                const subU: number = 1.0 / this._numTilesX;
+                const subV: number = 1.0 / this._numTilesY;
 
-                let startFrmaeCount = Math.floor(this.startFrame.evaluate(t));
-                startFrmaeCount += Math.floor(this.frameOverTime.evaluate(t));
-
+                let startFrmaeCount = Math.floor(this._startFrame.constant);
                 let startRow = 0;
-                switch (this.animation) {
+                switch (this._animation) {
                     case AnimationType.SingleRow:
                         {
-                            if (this.useRandomRow) {
-                                startRow = Math.floor(Math.random() * this.numTilesY);
+                            if (this._useRandomRow) {
+                                startRow = Math.floor(Math.random() * this._numTilesY);
                             } else {
-                                startRow = this.rowIndex;
+                                startRow = this._rowIndex;
                             }
+                            break;
                         }
-                        break;
                     case AnimationType.WholeSheet:
                         {
-                            startRow = Math.floor(startFrmaeCount / this.numTilesX);
+                            startRow = Math.floor(startFrmaeCount / this._numTilesX);
+                            break;
                         }
-                        break;
                 }
-                const startCol = Math.floor(startFrmaeCount % this.numTilesX);
-
-                out.x = subU;
-                out.y = subV;
-                out.z = startCol * subU;
-                out.w = startRow * subV;
+                const startCol = Math.floor(startFrmaeCount % this._numTilesX);
+                res[0] = subU;
+                res[1] = subV;
+                res[2] = startCol * subU;
+                res[3] = startRow * subV;
             } else {
-                out.x = out.y = 1.0;
-                out.z = out.w = 0.0;
+                res[0] = 1.0;
+                res[1] = 1.0;
+                res[2] = 0.0;
+                res[3] = 0.0;
             }
-            return out;
+
+            return res;
         }
     }
 }

@@ -320,6 +320,8 @@ namespace egret3d {
          * @inheritDoc
          */
         public deserialize(element: any) {
+            super.deserialize(element);
+            
             this.center.deserialize(element.center);
             this.size.deserialize(element.size);
             this.uuid = element.uuid;

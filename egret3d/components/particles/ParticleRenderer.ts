@@ -6,6 +6,9 @@ namespace egret3d.particle {
         Mesh = "mesh",
         Materials = "materials",
         RenderMode = "renderMode",
+        LengthScaleChanged = "lengthScale",
+        VelocityScaleChanged = "velocityScale",
+
     }
     export const enum ParticleSortMode {
         None = 0,
@@ -57,7 +60,7 @@ namespace egret3d.particle {
         SIZE_SCALE = 'u_sizeScale',
         SCALING_MODE = 'u_scalingMode',
         GRAVIT = 'u_gravity',
-        START_SIZE3D = 'u_startSize3D',
+        START_ROTATION3D = 'u_startRotation3D',
         SIMULATION_SPACE = 'u_simulationSpace',
         CURRENTTIME = 'u_currentTime',
         ALPHAS_GRADIENT = 'u_alphaGradient',
@@ -96,7 +99,7 @@ namespace egret3d.particle {
         ROTATION_CURVE_MAX_Z = 'u_rotationCurveMaxZ',
         ROTATION_CURVE_MAX_W = 'u_rotationCurveMaxW',
         CYCLES = 'u_cycles',
-        SUB_UV_SIZE = 'u_subUVSize',
+        SUB_UV = 'u_subUV',
         UV_CURVE = 'u_uvCurve',
         UV_CURVE_MAX = 'u_uvCurveMax',
         LENGTH_SCALE = 'u_lengthScale',

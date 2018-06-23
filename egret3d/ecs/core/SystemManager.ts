@@ -6,6 +6,7 @@ namespace paper {
         private readonly _systems: (BaseSystem<any> | null)[] = [];
         private readonly _unregisterSystems: (BaseSystem<any>)[] = [];
 
+
         private _checkRegistered(systemClass: { new(): BaseSystem<any> }) {
             for (const system of this._systems) {
                 if (system && system.constructor === systemClass) {
@@ -173,6 +174,8 @@ namespace paper {
 
             for (const system of this._systems) {
                 if (system) {
+                    const systemName = (system.constructor as any).name;
+                    egret3d.Profile.startTime(systemName);
                     if (removeCount > 0) {
                         this._systems[index - removeCount] = system;
                         this._systems[index] = null;
@@ -181,6 +184,7 @@ namespace paper {
                     if (system.enabled) {
                         system.update();
                     }
+                    egret3d.Profile.endTime(systemName);
                 }
                 else {
                     removeCount++;

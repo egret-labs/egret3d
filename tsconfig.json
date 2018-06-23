@@ -133,6 +133,7 @@
         "egret3d/web/render/WebGLKit.ts",
         "egret3d/components/StaticBatchingUtility.ts",
         "egret3d/Performance.ts",
+        "egret3d/Profile.ts",
         "egret3d/web/render/resource/GLProgram.ts",
         "egret3d/web/render/resource/texture.ts",
         "egret3d/web/render/resource/WebGLAttribute.ts",
