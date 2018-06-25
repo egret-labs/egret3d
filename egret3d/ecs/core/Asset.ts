@@ -49,30 +49,14 @@ namespace paper {
         public url: string = "";
 
         /**
-         * get asset name
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 名称。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public name: string = "";
-
-        /**
          * @internal
          */
         public _isLoad: boolean = false;
         /**
          * 
          */
-        public constructor(name: string = "", url: string = "") {
+        constructor(url: string = "") {
             super();
-
-            this.name = name;
             this.url = url;
         }
         /**

@@ -225,22 +225,9 @@ declare namespace paper {
          */
         url: string;
         /**
-         * get asset name
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 名称。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        name: string;
-        /**
          *
          */
-        constructor(name?: string, url?: string);
+        constructor(url?: string);
         /**
          * @inheritDoc
          */
@@ -2833,115 +2820,6 @@ declare namespace egret3d {
          * @inheritDoc
          */
         caclByteLength(): number;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 精灵资源。
-     */
-    class Sprite extends paper.Asset {
-        static spriteAnimation(row: number, column: number, index: number, out: Vector4): void;
-        /**
-         * atlas
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 所属图集
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        atlas: string;
-        /**
-         * rect
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 有效区域
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly rect: Rect;
-        /**
-         * border
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 边距
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly border: Border;
-        private _urange;
-        private _vrange;
-        private _texture;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-        /**
-         * u range
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * uv的u范围
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly urange: Vector2;
-        /**
-         * v range
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * uv的v范围
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly vrange: Vector2;
-        /**
-         * current texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前texture
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        /**
-         * current texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前texture
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        texture: Texture | null;
     }
 }
 declare namespace egret3d {
@@ -6278,90 +6156,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * atlas asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 图集资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Atlas extends paper.Asset {
-        /**
-         * texture pixel width
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 纹理像素宽度。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        texturewidth: number;
-        /**
-         * texture pixel height
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 纹理像素高度。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        textureheight: number;
-        /**
-         * sprite map
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 精灵字典，key为精灵名称。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        private readonly _sprites;
-        private _texture;
-        /**
-         *
-         */
-        $parse(json: string): void;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-        readonly sprites: Readonly<{
-            [key: string]: Sprite;
-        }>;
-        /**
-         * atlas texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 图集材质。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        texture: Texture | null;
-    }
-}
-declare namespace egret3d {
-    /**
      * 射线
      */
     class Ray {
@@ -6503,7 +6297,6 @@ declare namespace RES.processor {
     const TextureProcessor: RES.processor.Processor;
     const MaterialProcessor: RES.processor.Processor;
     const GLTFProcessor: RES.processor.Processor;
-    const AtlasProcessor: RES.processor.Processor;
     const PrefabProcessor: RES.processor.Processor;
     const SceneProcessor: RES.processor.Processor;
     const Font3DProcessor: RES.processor.Processor;

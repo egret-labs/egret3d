@@ -1115,8 +1115,7 @@ var paper;
         /**
          *
          */
-        function Asset(name, url) {
-            if (name === void 0) { name = ""; }
+        function Asset(url) {
             if (url === void 0) { url = ""; }
             var _this = _super.call(this) || this;
             /**
@@ -1125,23 +1124,9 @@ var paper;
              */
             _this.url = "";
             /**
-             * get asset name
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 名称。
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            _this.name = "";
-            /**
              * @internal
              */
             _this._isLoad = false;
-            _this.name = name;
             _this.url = url;
             return _this;
         }
@@ -1198,7 +1183,7 @@ var egret3d;
     function runEgret(options) {
         if (options === void 0) { options = { antialias: false }; }
         //
-        var requiredOptions = getOptions();
+        var requiredOptions = getOptions(options);
         var canvas = getMainCanvas();
         egret3d.WebGLKit.init(canvas, requiredOptions);
         egret3d.InputManager.init(canvas);
@@ -1222,10 +1207,10 @@ var egret3d;
             return canvas;
         }
     }
-    function getOptions() {
+    function getOptions(options) {
         if (window.canvas) {
             return {
-                antialias: false,
+                antialias: options.antialias,
                 contentWidth: 640,
                 contentHeight: 1136
             };
@@ -1233,7 +1218,7 @@ var egret3d;
         else {
             var div = document.getElementsByClassName("egret-player")[0];
             return {
-                antialias: false,
+                antialias: options.antialias,
                 contentWidth: parseInt(div.getAttribute("data-content-width")),
                 contentHeight: parseInt(div.getAttribute("data-content-height"))
             };
@@ -5899,192 +5884,6 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 精灵资源。
-     */
-    var Sprite = (function (_super) {
-        __extends(Sprite, _super);
-        function Sprite() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * atlas
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 所属图集
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            _this.atlas = "";
-            /**
-             * rect
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 有效区域
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            _this.rect = new egret3d.Rect();
-            /**
-             * border
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 边距
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            _this.border = new egret3d.Border();
-            _this._urange = null;
-            _this._vrange = null;
-            _this._texture = null;
-            return _this;
-        }
-        // TODO remove - row：图片行数；column:图片列数；index：第几张图片（index从0开始计数）
-        Sprite.spriteAnimation = function (row, column, index, out) {
-            var width = 1 / column;
-            var height = 1 / row;
-            var offsetx = width * (index % column);
-            var offsety = height * Math.floor(index / column);
-            out.x = width;
-            out.y = height;
-            out.z = offsetx;
-            out.w = offsety;
-        };
-        /**
-         * @inheritDoc
-         */
-        Sprite.prototype.dispose = function () {
-            this.atlas = "";
-            // this.rect.clear();
-            // this.border.clear();
-            this._urange = null;
-            this._vrange = null;
-            this._texture = null;
-        };
-        /**
-         * @inheritDoc
-         */
-        Sprite.prototype.caclByteLength = function () {
-            var total = 0;
-            if (this._texture) {
-                total += this._texture.caclByteLength();
-            }
-            return total;
-        };
-        Object.defineProperty(Sprite.prototype, "urange", {
-            /**
-             * u range
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * uv的u范围
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            get: function () {
-                if (!this._urange) {
-                    this._urange = new egret3d.Vector2();
-                    if (this._texture) {
-                        this._urange.x = this.rect.x / this._texture.glTexture.width;
-                        this._urange.y = (this.rect.x + this.rect.w) / this._texture.glTexture.width;
-                    }
-                    else {
-                        this._urange.x = 0.0;
-                        this._urange.y = 1.0;
-                    }
-                }
-                return this._urange;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Sprite.prototype, "vrange", {
-            /**
-             * v range
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * uv的v范围
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            get: function () {
-                if (!this._vrange) {
-                    this._vrange = new egret3d.Vector2();
-                    if (this._texture) {
-                        this._vrange.x = this.rect.y / this._texture.glTexture.height;
-                        this._vrange.y = (this.rect.y + this.rect.h) / this._texture.glTexture.height;
-                    }
-                    else {
-                        this._vrange.x = 0.0;
-                        this._vrange.y = 1.0;
-                    }
-                }
-                return this._vrange;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Sprite.prototype, "texture", {
-            /**
-             * current texture
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 当前texture
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            get: function () {
-                return this._texture;
-            },
-            /**
-             * current texture
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 当前texture
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            set: function (value) {
-                this._urange = null;
-                this._vrange = null;
-                this._texture = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return Sprite;
-    }(paper.Asset));
-    egret3d.Sprite = Sprite;
-    __reflect(Sprite.prototype, "egret3d.Sprite");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
      * textrue asset
      * @version paper 1.0
      * @platform Web
@@ -10252,7 +10051,7 @@ var egret3d;
          *
          */
         GLTFAsset.createGLTFAsset = function () {
-            var glftAsset = new GLTFAsset();
+            var glftAsset = new GLTFAsset("");
             glftAsset.config = {
                 asset: {
                     version: "2.0"
@@ -15637,7 +15436,7 @@ var egret3d;
          * @language zh_CN
          */
         Material.prototype.clone = function () {
-            var mat = new Material(this.name);
+            var mat = new Material();
             mat.setShader(this.shader);
             for (var i in this.$uniforms) {
                 var data = this.$uniforms[i];
@@ -16890,156 +16689,6 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     * atlas asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 图集资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var Atlas = (function (_super) {
-        __extends(Atlas, _super);
-        function Atlas() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * texture pixel width
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 纹理像素宽度。
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            _this.texturewidth = 0;
-            /**
-             * texture pixel height
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 纹理像素高度。
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            _this.textureheight = 0;
-            /**
-             * sprite map
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 精灵字典，key为精灵名称。
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            _this._sprites = {};
-            _this._texture = null;
-            return _this;
-        }
-        /**
-         *
-         */
-        Atlas.prototype.$parse = function (json) {
-            var name = json["t"]; // name
-            this.texturewidth = json["w"];
-            this.textureheight = json["h"];
-            var s = json["s"];
-            this.texture = paper.Asset.find(egret3d.utils.getPathByUrl(this.url) + "/" + name);
-            if (!this.texture) {
-                console.log("atlas texture not found");
-            }
-            for (var i in s) {
-                var ss = s[i];
-                var spriteName = ss[0];
-                var r = new egret3d.Sprite(this.name + "_" + spriteName); // 用Atlas的名字的Sprite的名字拼接
-                // - 引用计数
-                if (this.texture) {
-                    r.texture = this.texture;
-                }
-                r.rect.x = ss[1];
-                r.rect.y = ss[1];
-                r.rect.w = ss[1];
-                r.rect.h = ss[1];
-                r.border.t = 0;
-                r.border.b = 0;
-                r.border.l = 0;
-                r.border.r = 0;
-                r.atlas = this.hashCode.toString();
-                this._sprites[spriteName] = r;
-            }
-        };
-        /**
-         * @inheritDoc
-         */
-        Atlas.prototype.dispose = function () {
-            for (var k in this._sprites) {
-                delete this._sprites[k];
-            }
-            this._texture = null;
-        };
-        /**
-         * @inheritDoc
-         */
-        Atlas.prototype.caclByteLength = function () {
-            var total = 0;
-            for (var k in this._sprites) {
-                total += this._sprites[k].caclByteLength();
-                total += egret3d.utils.caclStringByteLength(k);
-            }
-            return total;
-        };
-        Object.defineProperty(Atlas.prototype, "sprites", {
-            get: function () {
-                return this._sprites;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Atlas.prototype, "texture", {
-            /**
-             * atlas texture
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 图集材质。
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            get: function () {
-                return this._texture;
-            },
-            set: function (value) {
-                // if (this._texture != null) {
-                //     this._texture.unuse();
-                // }
-                this._texture = value;
-                // this._texture.use();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return Atlas;
-    }(paper.Asset));
-    egret3d.Atlas = Atlas;
-    __reflect(Atlas.prototype, "egret3d.Atlas");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
     var _helpVector3A = new egret3d.Vector3();
     var _helpVector3B = new egret3d.Vector3();
     var _helpVector3C = new egret3d.Vector3();
@@ -17487,13 +17136,13 @@ var egret3d;
         }
         DefaultTextures.init = function () {
             var gl = egret3d.WebGLKit.webgl;
-            var t1 = new egret3d.Texture("white", "white");
+            var t1 = new egret3d.Texture("white");
             t1.glTexture = egret3d.GlTexture2D.createColorTexture(gl, 255, 255, 255);
             this.WHITE = t1;
-            var t2 = new egret3d.Texture("gray", "gray");
+            var t2 = new egret3d.Texture("gray");
             t2.glTexture = egret3d.GlTexture2D.createColorTexture(gl, 128, 128, 128);
             this.GRAY = t2;
-            var t3 = new egret3d.Texture("grid", "grid");
+            var t3 = new egret3d.Texture("grid");
             t3.glTexture = egret3d.GlTexture2D.createGridTexture(gl);
             this.GRID = t3;
             paper.Asset.register(t1);
@@ -17649,15 +17298,14 @@ var RES;
         processor.ShaderProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, shader;
+                    var data, url, shader;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
                                 url = getUrl(resource);
-                                filename = getFileName(url);
-                                shader = new egret3d.Shader(filename, url);
+                                shader = new egret3d.Shader(url);
                                 shader.$parse(data);
                                 paper.Asset.register(shader, true);
                                 return [2 /*return*/, shader];
@@ -17713,7 +17361,7 @@ var RES;
                                 return [4 /*yield*/, promisify(loader, resource)];
                             case 2:
                                 image = _a.sent();
-                                texture = new egret3d.Texture(filename, url);
+                                texture = new egret3d.Texture(url);
                                 texture.realName = _name;
                                 gl = egret3d.WebGLKit.webgl;
                                 t2d = new egret3d.GlTexture2D(gl, _textureFormat);
@@ -17739,19 +17387,18 @@ var RES;
         processor.TextureProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var gl, url, filename, loader, image, _texture, _textureFormat, t2d;
+                    var gl, url, loader, image, _texture, _textureFormat, t2d;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
                                 gl = egret3d.WebGLKit.webgl;
                                 url = getUrl(resource);
-                                filename = getFileName(url);
                                 loader = new egret.ImageLoader();
                                 loader.load(url);
                                 return [4 /*yield*/, promisify(loader, resource)];
                             case 1:
                                 image = _a.sent();
-                                _texture = new egret3d.Texture(filename, url);
+                                _texture = new egret3d.Texture(url);
                                 _textureFormat = 1 /* RGBA */;
                                 t2d = new egret3d.GlTexture2D(gl, _textureFormat);
                                 t2d.uploadImage(image.source, true, true, true, true);
@@ -17776,15 +17423,14 @@ var RES;
         processor.MaterialProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, material;
+                    var data, url, material;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
                                 url = getUrl(resource);
-                                filename = getFileName(url);
-                                material = new egret3d.Material(filename, url);
+                                material = new egret3d.Material(url);
                                 material.$parse(data);
                                 paper.Asset.register(material, true);
                                 return [2 /*return*/, material];
@@ -17806,15 +17452,14 @@ var RES;
         processor.GLTFProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var result, url, filename, glTF;
+                    var result, url, glTF;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "bin")];
                             case 1:
                                 result = _a.sent();
                                 url = getUrl(resource);
-                                filename = getFileName(url, true);
-                                glTF = new egret3d.GLTFAsset(filename, url);
+                                glTF = new egret3d.GLTFAsset(url);
                                 glTF.parseFromBinary(new Uint32Array(result));
                                 paper.Asset.register(glTF, true);
                                 return [2 /*return*/, glTF];
@@ -17833,47 +17478,16 @@ var RES;
                 });
             }
         };
-        processor.AtlasProcessor = {
-            onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, atlas;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "json")];
-                            case 1:
-                                data = _a.sent();
-                                url = getUrl(resource);
-                                filename = getFileName(url);
-                                atlas = new egret3d.Atlas(filename, url);
-                                atlas.$parse(data);
-                                paper.Asset.register(atlas, true);
-                                return [2 /*return*/, atlas];
-                        }
-                    });
-                });
-            },
-            onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
-            }
-        };
         processor.PrefabProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, assets, list, _i, list_1, item, r, asset, prefab;
+                    var data, url, assets, list, _i, list_1, item, r, asset, prefab;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
                                 url = getUrl(resource);
-                                filename = getFileName(url);
                                 assets = data.assets;
                                 if (!assets) return [3 /*break*/, 5];
                                 list = formatUrlAndSort(assets, getPath(resource.url));
@@ -17892,7 +17506,7 @@ var RES;
                                 _i++;
                                 return [3 /*break*/, 2];
                             case 5:
-                                prefab = new egret3d.Prefab(filename, url);
+                                prefab = new egret3d.Prefab(url);
                                 prefab.$parse(data);
                                 paper.Asset.register(prefab, true);
                                 return [2 /*return*/, prefab];
@@ -17914,14 +17528,13 @@ var RES;
         processor.SceneProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, assets, list, _i, list_2, item, r, asset, scene;
+                    var data, url, assets, list, _i, list_2, item, r, asset, scene;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
                                 url = getUrl(resource);
-                                filename = getFileName(url);
                                 assets = data.assets;
                                 if (!assets) return [3 /*break*/, 5];
                                 list = formatUrlAndSort(assets, getPath(resource.url));
@@ -17940,7 +17553,7 @@ var RES;
                                 _i++;
                                 return [3 /*break*/, 2];
                             case 5:
-                                scene = new egret3d.RawScene(filename, url);
+                                scene = new egret3d.RawScene(url);
                                 scene.$parse(data);
                                 paper.Asset.register(scene, true);
                                 return [2 /*return*/, scene];
@@ -17962,15 +17575,14 @@ var RES;
         processor.Font3DProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, font;
+                    var data, url, font;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
                                 url = getUrl(resource);
-                                filename = getFileName(url);
-                                font = new egret3d.Font(filename, url);
+                                font = new egret3d.Font(url);
                                 font.$parse(data);
                                 paper.Asset.register(font, true);
                                 return [2 /*return*/, font];
@@ -17992,15 +17604,14 @@ var RES;
         processor.PathAssetProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, filename, pathAsset;
+                    var data, url, pathAsset;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
                                 url = getUrl(resource);
-                                filename = getFileName(url);
-                                pathAsset = new egret3d.PathAsset(filename, url);
+                                pathAsset = new egret3d.PathAsset(url);
                                 pathAsset.$parse(data);
                                 paper.Asset.register(pathAsset, true);
                                 return [2 /*return*/, pathAsset];
@@ -18028,7 +17639,6 @@ var RES;
         RES.processor.map("GLTFBinary", processor.GLTFProcessor);
         RES.processor.map("Prefab", processor.PrefabProcessor);
         RES.processor.map("Scene", processor.SceneProcessor);
-        RES.processor.map("Atlas", processor.AtlasProcessor);
         RES.processor.map("Font", processor.Font3DProcessor);
         RES.processor.map("pathAsset", processor.PathAssetProcessor);
     })(processor = RES.processor || (RES.processor = {}));
