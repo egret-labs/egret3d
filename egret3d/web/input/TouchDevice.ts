@@ -94,32 +94,32 @@ namespace egret3d {
      */
     export class TouchPoint {
 
-        public altitudeAngle:number = Math.PI / 2; // Value of 0 radians indicates that the stylus is parallel to the surface, pi/2 indicates that it is perpendicular.
-        public azimuthAngle:number = 0; // Value of 0 radians indicates that the stylus is pointed along the x-axis of the device.
-        public deltaPosition:Vector2 = new Vector2(); // The position delta since last change.
+        public altitudeAngle: number = Math.PI / 2; // Value of 0 radians indicates that the stylus is parallel to the surface, pi/2 indicates that it is perpendicular.
+        public azimuthAngle: number = 0; // Value of 0 radians indicates that the stylus is pointed along the x-axis of the device.
+        public deltaPosition: Vector2 = new Vector2(); // The position delta since last change.
         // public deltaTime:number = 0; // TODO Amount of time that has passed since the last recorded change in Touch values.
-        public fingerId:number = 0; // The unique index for the touch.
-        public maximumPossiblePressure:number = 1.0; // The maximum possible pressure value for a platform. If Input.touchPressureSupported returns false, the value of this property will always be 1.0f.
-        public phase:TouchPhase; //	Describes the phase of the touch.
-        public position:Vector2 = new Vector2(); // The position of the touch in pixel coordinates.
+        public fingerId: number = 0; // The unique index for the touch.
+        public maximumPossiblePressure: number = 1.0; // The maximum possible pressure value for a platform. If Input.touchPressureSupported returns false, the value of this property will always be 1.0f.
+        public phase: TouchPhase; //	Describes the phase of the touch.
+        public position: Vector2 = new Vector2(); // The position of the touch in pixel coordinates.
         public pressure = 1.0; //	The current amount of pressure being applied to a touch. 1.0f is considered to be the pressure of an average touch. If Input.touchPressureSupported returns false, the value of this property will always be 1.0f.
 
-        public radius:Vector2 = new Vector2(); // ADD: different from Unity
+        public radius: Vector2 = new Vector2(); // ADD: different from Unity
         // public radius:number = 0; // DELETE: An estimated value of the radius of a touch. Add radiusletiance to get the maximum touch size, subtract it to get the minimum touch size.
         // public radiusletiance:number = 0; // DELETE: The amount that the radius leties by for a touch.
         // public rawPosition:Vector2 = new Vector2(); // DELETE: The raw position used for the touch.
 
         // public tapCount:number = 0; // TODO Number of taps.
-        public type:string = "Direct"; // A value that indicates whether a touch was of Direct, Indirect (or remote), or Stylus type.
+        public type: string = "Direct"; // A value that indicates whether a touch was of Direct, Indirect (or remote), or Stylus type.
 
         /**
          *  
          */
-        public set(touch:any, phase:TouchPhase, device:TouchDevice) {
+        public set(touch: any, phase: TouchPhase, device: TouchDevice) {
             this.altitudeAngle = touch.rotationAngle;
             this.azimuthAngle = touch.rotationAngle;
 
-            if(phase == TouchPhase.BEGAN || phase == TouchPhase.STATIONARY) {
+            if (phase == TouchPhase.BEGAN || phase == TouchPhase.STATIONARY) {
                 this.deltaPosition.x = 0;
                 this.deltaPosition.y = 0;
             } else {
@@ -137,19 +137,19 @@ namespace egret3d {
             // this.tapCount;
         }
 
-        private static _pointPool:TouchPoint[] = [];
+        private static _pointPool: TouchPoint[] = [];
 
         /**
          *  
          */
-        public static create():TouchPoint {
+        public static create(): TouchPoint {
             return this._pointPool.pop() || new TouchPoint();
         }
 
         /**
          *  
          */
-        public static release(touchPoint:TouchPoint) {
+        public static release(touchPoint: TouchPoint) {
             this._pointPool.push(touchPoint);
         }
 
@@ -169,31 +169,39 @@ namespace egret3d {
      */
     export class TouchDevice extends EventDispatcher {
 
-        private _offsetX:number = 0;
-        private _offsetY:number = 0;
-        private _scalerX:number = 1;
-        private _scalerY:number = 1;
+        private _offsetX: number = 0;
+        private _offsetY: number = 0;
+        private _scalerX: number = 1;
+        private _scalerY: number = 1;
+        private _rotated: boolean = false;
         /**
          *  
          */
-        public updateOffsetAndScale(offsetX:number, offsetY:number, scalerX:number, scalerY:number) {
+        public updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number, rotated:boolean) {
             this._offsetX = offsetX;
             this._offsetY = offsetY;
             this._scalerX = scalerX;
             this._scalerY = scalerY;
+            this._rotated = rotated;
         }
         /**
          *  
          */
-        public convertPosition(e:Touch, out:Vector2) {
-            out.x = (e.clientX - this._offsetX) * this._scalerX;
-            out.y = (e.clientY - this._offsetY) * this._scalerY;
+        public convertPosition(e: Touch, out: Vector2) {
+            if (this._rotated) {
+                out.y = (window.innerWidth - e.clientX + this._offsetX) * this._scalerX;
+                out.x = (e.clientY - this._offsetY) * this._scalerY;
+            }
+            else {
+                out.x = (e.clientX - this._offsetX) * this._scalerX;
+                out.y = (e.clientY - this._offsetY) * this._scalerY;
+            }
         }
 
-        private _touchesMap:{[key:number]:TouchPoint} = {};
+        private _touchesMap: { [key: number]: TouchPoint } = {};
 
-        private _touches:TouchPoint[] = [];
-        
+        private _touches: TouchPoint[] = [];
+
         /**
          * touch count
          * @version paper 1.0
@@ -208,10 +216,10 @@ namespace egret3d {
          */
         public touchCount = 0;
 
-        private _startHandler:EventListener = this._handleTouchStart.bind(this);
-        private _endHandler:EventListener = this._handleTouchEnd.bind(this);
-        private _moveHandler:EventListener = this._handleTouchMove.bind(this);
-        private _cancelHandler:EventListener = this._handleTouchCancel.bind(this);
+        private _startHandler: EventListener = this._handleTouchStart.bind(this);
+        private _endHandler: EventListener = this._handleTouchEnd.bind(this);
+        private _moveHandler: EventListener = this._handleTouchMove.bind(this);
+        private _cancelHandler: EventListener = this._handleTouchCancel.bind(this);
 
         private _element: HTMLElement | null = null;
 
@@ -241,7 +249,7 @@ namespace egret3d {
         }
 
         private detach() {
-            if(!this._element) return;
+            if (!this._element) return;
             this._element.removeEventListener('touchstart', this._startHandler, false);
             this._element.removeEventListener('touchend', this._endHandler, false);
             this._element.removeEventListener('touchmove', this._moveHandler, false);
@@ -253,21 +261,21 @@ namespace egret3d {
          *  
          */
         public update() {
-            for(let i in this._touchesMap) {
+            for (let i in this._touchesMap) {
                 let touch = this._touchesMap[i];
 
-                if(touch.phase === TouchPhase.BEGAN) {
+                if (touch.phase === TouchPhase.BEGAN) {
                     touch.phase = TouchPhase.STATIONARY;
                 }
 
-                if(touch.phase === TouchPhase.MOVED) {
+                if (touch.phase === TouchPhase.MOVED) {
                     touch.phase = TouchPhase.STATIONARY;
                 }
 
-                if(touch.phase === TouchPhase.ENDED || touch.phase === TouchPhase.CANCELED) {
+                if (touch.phase === TouchPhase.ENDED || touch.phase === TouchPhase.CANCELED) {
                     delete this._touchesMap[i];
                     let index = this._touches.indexOf(touch);
-                    if(index > -1) {
+                    if (index > -1) {
                         this._touches.splice(index, 1);
                     }
                     this.touchCount--;
@@ -289,13 +297,13 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getTouch(index:number):TouchPoint {
+        public getTouch(index: number): TouchPoint {
             return this._touches[index];
         }
 
-        private _getTouch(identifier:number):TouchPoint {
+        private _getTouch(identifier: number): TouchPoint {
             let touchPoint = this._touchesMap[identifier];
-            if(!touchPoint) {
+            if (!touchPoint) {
                 touchPoint = TouchPoint.create();
                 this._touchesMap[identifier] = touchPoint;
                 this._touches.push(touchPoint);
@@ -305,21 +313,21 @@ namespace egret3d {
             return touchPoint;
         }
 
-        private _handleTouchStart(event:TouchEvent) {
+        private _handleTouchStart(event: TouchEvent) {
             // call preventDefault to avoid issues in Chrome Android:
             // http://wilsonpage.co.uk/touch-events-in-chrome-android/
             if (event["isScroll"] != true && !this._element['userTyping']) {
                 event.preventDefault();
             }
 
-            for(let i = 0; i < event.changedTouches.length; i++) {
+            for (let i = 0; i < event.changedTouches.length; i++) {
                 let touch = event.changedTouches[i];
                 let identifier = touch.identifier;
                 let touchPoint = this._getTouch(identifier);
 
                 touchPoint.set(touch, TouchPhase.BEGAN, this);
 
-                this.dispatchEvent({type: "touchstart", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier});
+                this.dispatchEvent({ type: "touchstart", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier });
             }
 
             if (this.preventDefault) {
@@ -330,15 +338,15 @@ namespace egret3d {
             }
         }
 
-        private _handleTouchEnd(event:TouchEvent) {
-            for(let i = 0; i < event.changedTouches.length; i++) {
+        private _handleTouchEnd(event: TouchEvent) {
+            for (let i = 0; i < event.changedTouches.length; i++) {
                 let touch = event.changedTouches[i];
                 let identifier = touch.identifier;
                 let touchPoint = this._getTouch(identifier);
 
                 touchPoint.set(touch, TouchPhase.ENDED, this);
 
-                this.dispatchEvent({type: "touchend", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier});
+                this.dispatchEvent({ type: "touchend", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier });
             }
 
             if (this.preventDefault) {
@@ -349,21 +357,21 @@ namespace egret3d {
             }
         }
 
-        private _handleTouchMove(event:TouchEvent) {
+        private _handleTouchMove(event: TouchEvent) {
             // call preventDefault to avoid issues in Chrome Android:
             // http://wilsonpage.co.uk/touch-events-in-chrome-android/
             if (event["isScroll"] != true && !this._element['userTyping']) {
                 event.preventDefault();
             }
 
-            for(let i = 0; i < event.changedTouches.length; i++) {
+            for (let i = 0; i < event.changedTouches.length; i++) {
                 let touch = event.changedTouches[i];
                 let identifier = touch.identifier;
                 let touchPoint = this._getTouch(identifier);
 
                 touchPoint.set(touch, TouchPhase.MOVED, this);
 
-                this.dispatchEvent({type: "touchmove", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier});
+                this.dispatchEvent({ type: "touchmove", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier });
             }
 
             if (this.preventDefault) {
@@ -374,15 +382,15 @@ namespace egret3d {
             }
         }
 
-        private _handleTouchCancel(event:TouchEvent) {
-            for(let i = 0; i < event.changedTouches.length; i++) {
+        private _handleTouchCancel(event: TouchEvent) {
+            for (let i = 0; i < event.changedTouches.length; i++) {
                 let touch = event.changedTouches[i];
                 let identifier = touch.identifier;
                 let touchPoint = this._getTouch(identifier);
 
                 touchPoint.set(touch, TouchPhase.CANCELED, this);
 
-                this.dispatchEvent({type: "touchend", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier});
+                this.dispatchEvent({ type: "touchend", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier });
             }
 
             if (this.preventDefault) {

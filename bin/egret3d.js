@@ -5234,9 +5234,9 @@ var egret3d;
             var _this = this;
             this._canvas = canvas;
             window.addEventListener("resize", function () { return _this._resizeDirty = true; }, false);
-            var screenViewport = this.screenViewport;
-            screenViewport.w = options.contentWidth;
-            canvas.width = screenViewport.w;
+            this.isLandscape = options.contentWidth > options.contentHeight;
+            this.contentWidth = options.contentWidth;
+            this.contentHeight = options.contentHeight;
         };
         Stage3D.prototype.update = function () {
             if (this._resizeDirty) {
@@ -5250,16 +5250,54 @@ var egret3d;
             var absolutePosition = this.absolutePosition;
             absolutePosition.w = displayWidth;
             absolutePosition.h = displayHeight;
-            var screenH = Math.ceil(this.screenViewport.w / displayWidth * displayHeight);
-            this.screenViewport.h = screenH;
+            // 计算视口区域
+            var screenViewport = this.screenViewport;
+            var shouldRotate = (this.isLandscape && window.innerHeight > window.innerWidth)
+                || (!this.isLandscape && window.innerWidth > window.innerHeight);
+            if (shouldRotate) {
+                screenViewport.w = this.contentWidth;
+                var screenH = Math.ceil(screenViewport.w / displayHeight * displayWidth);
+                screenViewport.h = screenH;
+            }
+            else {
+                screenViewport.w = this.contentWidth;
+                var screenH = Math.ceil(screenViewport.w / displayWidth * displayHeight);
+                screenViewport.h = screenH;
+            }
             var canvas = this._canvas;
-            canvas.height = this.screenViewport.h;
+            canvas.width = screenViewport.w;
+            canvas.height = screenViewport.h;
+            // 设置canvas.style
             var x = absolutePosition.x, y = absolutePosition.y, w = absolutePosition.w, h = absolutePosition.h;
-            canvas.style.left = x + "px";
             canvas.style.top = y + "px";
-            canvas.style.width = w + "px";
-            canvas.style.height = h + "px";
             canvas.style.position = "absolute";
+            canvas.style[egret.web.getPrefixStyleName("transformOrigin")] = "0% 0% 0px";
+            if (shouldRotate) {
+                canvas.style.width = h + "px";
+                canvas.style.height = w + "px";
+                canvas.style.left = window.innerWidth + "px";
+                var transform = "matrix(0,1,-1,0,0,0)";
+                canvas.style[egret.web.getPrefixStyleName("transform")] = transform;
+            }
+            else {
+                canvas.style.width = w + "px";
+                canvas.style.height = h + "px";
+                canvas.style.left = x + "px";
+                canvas.style[egret.web.getPrefixStyleName("transform")] = null;
+            }
+            // 更新触摸信息
+            var touchScaleX;
+            var touchScaleY;
+            if (shouldRotate) {
+                touchScaleX = egret3d.stage.screenViewport.w / h;
+                touchScaleY = egret3d.stage.screenViewport.h / w;
+            }
+            else {
+                touchScaleX = egret3d.stage.screenViewport.w / w;
+                touchScaleY = egret3d.stage.screenViewport.h / h;
+            }
+            egret3d.InputManager.touch.updateOffsetAndScale(x, y, touchScaleX, touchScaleY, shouldRotate);
+            egret3d.InputManager.mouse.updateOffsetAndScale(x, y, touchScaleX, touchScaleY, shouldRotate);
         };
         return Stage3D;
     }());
@@ -5564,11 +5602,6 @@ var paper;
         StartSystem.prototype.update = function () {
             egret3d.Performance.startCounter("all" /* All */);
             egret3d.stage.update();
-            var _a = egret3d.stage.absolutePosition, x = _a.x, y = _a.y, w = _a.w, h = _a.h;
-            var scaleX = egret3d.stage.screenViewport.w / w;
-            var scaleY = egret3d.stage.screenViewport.h / h;
-            egret3d.InputManager.touch.updateOffsetAndScale(x, y, scaleX, scaleY);
-            egret3d.InputManager.mouse.updateOffsetAndScale(x, y, scaleX, scaleY);
         };
         return StartSystem;
     }(paper.BaseSystem));
@@ -19859,6 +19892,7 @@ var egret3d;
             _this._offsetY = 0;
             _this._scalerX = 1;
             _this._scalerY = 1;
+            _this._rotated = false;
             /**
              * mouse position
              * @version paper 1.0
@@ -19899,18 +19933,25 @@ var egret3d;
         /**
          *
          */
-        MouseDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scalerX, scalerY) {
+        MouseDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scalerX, scalerY, rotated) {
             this._offsetX = offsetX;
             this._offsetY = offsetY;
             this._scalerX = scalerX;
             this._scalerY = scalerY;
+            this._rotated = rotated;
         };
         /**
          *
          */
         MouseDevice.prototype.convertPosition = function (e, out) {
-            out.x = (e.clientX - this._offsetX) * this._scalerX;
-            out.y = (e.clientY - this._offsetY) * this._scalerY;
+            if (this._rotated) {
+                out.y = (window.innerWidth - e.clientX + this._offsetX) * this._scalerX;
+                out.x = (e.clientY - this._offsetY) * this._scalerY;
+            }
+            else {
+                out.x = (e.clientX - this._offsetX) * this._scalerX;
+                out.y = (e.clientY - this._offsetY) * this._scalerY;
+            }
         };
         /**
          * disable right key menu
@@ -20240,6 +20281,7 @@ var egret3d;
             _this._offsetY = 0;
             _this._scalerX = 1;
             _this._scalerY = 1;
+            _this._rotated = false;
             _this._touchesMap = {};
             _this._touches = [];
             /**
@@ -20268,18 +20310,25 @@ var egret3d;
         /**
          *
          */
-        TouchDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scalerX, scalerY) {
+        TouchDevice.prototype.updateOffsetAndScale = function (offsetX, offsetY, scalerX, scalerY, rotated) {
             this._offsetX = offsetX;
             this._offsetY = offsetY;
             this._scalerX = scalerX;
             this._scalerY = scalerY;
+            this._rotated = rotated;
         };
         /**
          *
          */
         TouchDevice.prototype.convertPosition = function (e, out) {
-            out.x = (e.clientX - this._offsetX) * this._scalerX;
-            out.y = (e.clientY - this._offsetY) * this._scalerY;
+            if (this._rotated) {
+                out.y = (window.innerWidth - e.clientX + this._offsetX) * this._scalerX;
+                out.x = (e.clientY - this._offsetY) * this._scalerY;
+            }
+            else {
+                out.x = (e.clientX - this._offsetX) * this._scalerX;
+                out.y = (e.clientY - this._offsetY) * this._scalerY;
+            }
         };
         TouchDevice.prototype.attach = function (element) {
             if (this._element) {

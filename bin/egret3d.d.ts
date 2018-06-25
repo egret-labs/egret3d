@@ -2566,6 +2566,12 @@ declare namespace egret3d {
         screenViewport: Readonly<RectData>;
         absolutePosition: Readonly<RectData>;
         private _canvas;
+        /**
+         * 是否为横屏，需要旋转屏幕
+         */
+        private isLandscape;
+        private contentWidth;
+        private contentHeight;
         private _resizeDirty;
         update(): void;
         private _resize();
@@ -6768,10 +6774,11 @@ declare namespace egret3d {
         private _offsetY;
         private _scalerX;
         private _scalerY;
+        private _rotated;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number, rotated: boolean): void;
         /**
          *
          */
@@ -7031,10 +7038,11 @@ declare namespace egret3d {
         private _offsetY;
         private _scalerX;
         private _scalerY;
+        private _rotated;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number, rotated: boolean): void;
         /**
          *
          */
