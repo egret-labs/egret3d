@@ -6362,39 +6362,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * Asset Bundle
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 资源包.
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class AssetBundle extends paper.Asset {
-        readonly assets: {
-            url: string;
-        }[];
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-        /**
-         *
-         */
-        $parse(json: {
-            assets?: any[];
-        }): void;
-    }
-}
-declare namespace egret3d {
-    /**
      * 射线
      */
     class Ray {

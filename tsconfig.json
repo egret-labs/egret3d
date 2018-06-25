@@ -113,7 +113,6 @@
         "egret3d/Transform.ts",
         "egret3d/asset/resource/shader.ts",
         "egret3d/asset/resource/atlas.ts",
-        "egret3d/asset/resource/AssetBundle.ts",
         "egret3d/math/Ray.ts",
         "egret3d/asset/default/ShaderLib.ts",
         "egret3d/asset/default/ShaderChunk.ts",

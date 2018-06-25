@@ -17040,57 +17040,6 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     * Asset Bundle
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 资源包.
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var AssetBundle = (function (_super) {
-        __extends(AssetBundle, _super);
-        function AssetBundle() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.assets = [];
-            return _this;
-        }
-        /**
-         * @inheritDoc
-         */
-        AssetBundle.prototype.dispose = function () {
-            this.assets.length = 0;
-        };
-        /**
-         * @inheritDoc
-         */
-        AssetBundle.prototype.caclByteLength = function () {
-            return 0;
-        };
-        /**
-         *
-         */
-        AssetBundle.prototype.$parse = function (json) {
-            this.assets.length = 0;
-            if (!json.assets || json.assets.length === 0) {
-                return;
-            }
-            for (var _i = 0, _a = json.assets; _i < _a.length; _i++) {
-                var asset = _a[_i];
-                this.assets.push(asset);
-            }
-        };
-        return AssetBundle;
-    }(paper.Asset));
-    egret3d.AssetBundle = AssetBundle;
-    __reflect(AssetBundle.prototype, "egret3d.AssetBundle");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
     var _helpVector3A = new egret3d.Vector3();
     var _helpVector3B = new egret3d.Vector3();
     var _helpVector3C = new egret3d.Vector3();
