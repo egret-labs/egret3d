@@ -5,8 +5,8 @@ namespace egret3d.ammo {
     export class FixedConstraint extends TypedConstraint {
 
         protected _createConstraint() {
-            const rigidbody = this.gameObject.getComponent(Rigidbody);
-            if (!rigidbody) {
+            this._rigidbody = this.gameObject.getComponent(Rigidbody);
+            if (!this._rigidbody) {
                 console.debug("Never.");
                 return null;
             }
@@ -18,7 +18,7 @@ namespace egret3d.ammo {
             //
             const helpMatrixA = TypedConstraint._helpMatrixA;
             const helpMatrixB = TypedConstraint._helpMatrixB;
-            this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA, helpMatrixB)
+            this._createFrames(helpMatrixA, helpMatrixB)
             const helpVector3A = PhysicsSystem.helpVector3A;
             const helpQuaternionA = PhysicsSystem.helpQuaternionA;
             const helpTransformA = PhysicsSystem.helpTransformA;
@@ -39,7 +39,7 @@ namespace egret3d.ammo {
             helpTransformB.setRotation(helpQuaternionA);
             //
             const btConstraint = new Ammo.btFixedConstraint(
-                rigidbody.btRigidbody, this._connectedBody.btRigidbody,
+                this._rigidbody.btRigidbody, this._connectedBody.btRigidbody,
                 helpTransformA, helpTransformB
             );
             btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);

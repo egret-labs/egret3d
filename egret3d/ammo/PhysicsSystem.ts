@@ -10,7 +10,6 @@ namespace egret3d.ammo {
         private static _helpQuaternionA: Ammo.btQuaternion | null = null;
         private static _helpTransformA: Ammo.btTransform | null = null;
         private static _helpTransformB: Ammo.btTransform | null = null;
-        private static readonly _rayResultPool: Pool<Ammo.ClosestRayResultCallback> = new Pool<Ammo.ClosestRayResultCallback>();
         private static readonly _raycastInfoPool: Pool<RaycastInfo> = new Pool<RaycastInfo>();
 
         /**
@@ -267,7 +266,7 @@ namespace egret3d.ammo {
             from: Readonly<Vector3>, to: Readonly<Vector3>,
             group: Ammo.CollisionFilterGroups = Ammo.CollisionFilterGroups.DefaultFilter, mask: Ammo.CollisionFilterGroups = Ammo.CollisionFilterGroups.AllFilter
         ) {
-            const rayResult = PhysicsSystem._rayResultPool.get() || new Ammo.ClosestRayResultCallback();
+            const rayResult = new Ammo.ClosestRayResultCallback();
             const rayFrom = (rayResult as any).get_m_rayFromWorld() as Ammo.btVector3;
             const rayTo = (rayResult as any).get_m_rayToWorld() as Ammo.btVector3;
             (rayResult as any).set_m_collisionFilterGroup(group);
@@ -275,7 +274,6 @@ namespace egret3d.ammo {
             rayFrom.setValue(from.x, from.y, from.z);
             rayTo.setValue(to.x, to.y, to.z);
             this._btCollisionWorld.rayTest(rayFrom, rayTo, rayResult);
-            PhysicsSystem._rayResultPool.add(rayResult);
 
             if (rayResult.hasHit()) {
                 const raycastInfo = PhysicsSystem._raycastInfoPool.get() || new RaycastInfo();

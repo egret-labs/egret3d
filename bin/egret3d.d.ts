@@ -66,6 +66,7 @@ declare namespace egret3d {
         identity(): this;
         inverse(): this;
         transformVector3(value: Vector3): Vector3;
+        transformNormal(value: Vector3): Vector3;
         static set(n11: number, n21: number, n31: number, n41: number, n12: number, n22: number, n32: number, n42: number, n13: number, n23: number, n33: number, n43: number, n14: number, n24: number, n34: number, n44: number, matrix: Matrix): Matrix;
         static getScale(m: Matrix, out: Vector3): Vector3;
         static getTranslation(m: Matrix, out: Vector3): Vector3;
@@ -1975,17 +1976,22 @@ declare namespace egret3d.ammo {
         protected static readonly _helpMatrixB: Matrix;
         protected static readonly _helpMatrixC: Matrix;
         protected _collisionEnabled: boolean;
+        protected _autoCalculateConnectedAnchor: boolean;
         protected _constraintType: Ammo.ConstraintType;
         protected _overrideNumSolverIterations: int;
         protected _breakingImpulseThreshold: number;
         protected readonly _anchor: Vector3;
         protected readonly _axisX: Vector3;
         protected readonly _axisY: Vector3;
+        protected readonly _connectedAnchor: Vector3;
+        protected readonly _connectedAxisX: Vector3;
+        protected readonly _connectedAxisY: Vector3;
         protected _connectedBody: Rigidbody | null;
+        protected _rigidbody: Rigidbody;
         protected _btTypedConstraint: Ammo.btTypedConstraint | null;
         protected abstract _createConstraint(): Ammo.btTypedConstraint | null;
         protected _createFrame(forward: Vector3, up: Vector3, constraintPoint: Vector3, frame: Matrix): void;
-        protected _createFrames(forwardA: Vector3, upA: Vector3, constraintPointA: Vector3, frameA: Matrix, frameB: Matrix): void;
+        protected _createFrames(frameA: Matrix, frameB: Matrix): void;
         uninitialize(): void;
         /**
          *
@@ -2015,6 +2021,26 @@ declare namespace egret3d.ammo {
          *
          */
         axisY: Vector3;
+        /**
+         *
+         */
+        autoCalculateConnectedAnchor: boolean;
+        /**
+         *
+         */
+        connectedAnchor: Vector3;
+        /**
+         *
+         */
+        connectedAxisX: Vector3;
+        /**
+         *
+         */
+        connectedAxisY: Vector3;
+        /**
+         *
+         */
+        readonly rigidbody: Rigidbody;
         /**
          *
          */
@@ -7591,7 +7617,6 @@ declare namespace egret3d.ammo {
         private static _helpQuaternionA;
         private static _helpTransformA;
         private static _helpTransformB;
-        private static readonly _rayResultPool;
         private static readonly _raycastInfoPool;
         protected readonly _interests: ({
             componentClass: (typeof BoxShape | typeof CapsuleShape | typeof ConeShape | typeof ConvexHullShape | typeof CylinderShape | typeof HeightfieldTerrainShape | typeof SphereShape)[];
@@ -8656,7 +8681,7 @@ declare namespace egret3d.ammo {
         protected _softness: number;
         protected _biasFactor: number;
         protected _relaxationFactor: number;
-        protected _updateLimit(): void;
+        protected _updateLimit(btConstraint: Ammo.btConeTwistConstraint): void;
         protected _createConstraint(): Ammo.btConeTwistConstraint;
         /**
          *

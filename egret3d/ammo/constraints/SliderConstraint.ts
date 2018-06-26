@@ -13,8 +13,8 @@ namespace egret3d.ammo {
         protected _upperAngularLimit: number = Math.PI;
 
         protected _createConstraint() {
-            const rigidbody = this.gameObject.getComponent(Rigidbody);
-            if (!rigidbody) {
+            this._rigidbody = this.gameObject.getComponent(Rigidbody);
+            if (!this._rigidbody) {
                 console.debug("Never.");
                 return null;
             }
@@ -33,7 +33,7 @@ namespace egret3d.ammo {
                     return null;
                 }
 
-                this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA, helpMatrixB);
+                this._createFrames(helpMatrixA, helpMatrixB);
                 //
                 const helpQA = Matrix.getQuaternion(helpMatrixA, TypedConstraint._helpQuaternionA);
                 helpVector3A.setValue(helpMatrixA.rawData[8], helpMatrixA.rawData[9], helpMatrixA.rawData[10]);
@@ -50,7 +50,7 @@ namespace egret3d.ammo {
                 helpTransformB.setRotation(helpQuaternionA);
                 //
                 btConstraint = new Ammo.btSliderConstraint(
-                    rigidbody.btRigidbody, this._connectedBody.btRigidbody,
+                    this._rigidbody.btRigidbody, this._connectedBody.btRigidbody,
                     helpTransformA, helpTransformB,
                     true
                 );
@@ -65,7 +65,7 @@ namespace egret3d.ammo {
                 helpTransformA.setOrigin(helpVector3A);
                 helpTransformA.setRotation(helpQuaternionA);
                 btConstraint = new Ammo.btSliderConstraint(
-                    rigidbody.btRigidbody, helpTransformA as any,
+                    this._rigidbody.btRigidbody, helpTransformA as any,
                     true as any
                 );
             }

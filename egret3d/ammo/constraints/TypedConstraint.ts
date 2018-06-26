@@ -16,6 +16,8 @@ namespace egret3d.ammo {
         @paper.serializedField
         protected _collisionEnabled: boolean = false;
         @paper.serializedField
+        protected _autoCalculateConnectedAnchor: boolean = false;
+        @paper.serializedField
         protected _constraintType: Ammo.ConstraintType = Ammo.ConstraintType.ConstrainToAnotherBody;
         @paper.serializedField
         protected _overrideNumSolverIterations: int = 20;
@@ -28,7 +30,14 @@ namespace egret3d.ammo {
         @paper.serializedField
         protected readonly _axisY: Vector3 = Vector3.UP.clone();
         @paper.serializedField
+        protected readonly _connectedAnchor: Vector3 = Vector3.ZERO.clone();
+        @paper.serializedField
+        protected readonly _connectedAxisX: Vector3 = Vector3.FORWARD.clone();
+        @paper.serializedField
+        protected readonly _connectedAxisY: Vector3 = Vector3.UP.clone();
+        @paper.serializedField
         protected _connectedBody: Rigidbody | null = null;
+        protected _rigidbody: Rigidbody = null as any;
         protected _btTypedConstraint: Ammo.btTypedConstraint | null = null;
 
         protected abstract _createConstraint(): Ammo.btTypedConstraint | null;
@@ -49,36 +58,42 @@ namespace egret3d.ammo {
             frame.setTranslation(constraintPoint);
         }
 
-        protected _createFrames(forwardA: Vector3, upA: Vector3, constraintPointA: Vector3, frameA: Matrix, frameB: Matrix) {
+        protected _createFrames(frameA: Matrix, frameB: Matrix) {
             if (!this._connectedBody) {
                 console.debug("Never.");
                 return;
             }
 
-            this._createFrame(forwardA, upA, constraintPointA, frameA);
-            const thisTransform = this.gameObject.transform;
-            const otherTransform = this._connectedBody.gameObject.transform;
-            const quaternion = Quaternion.multiply(
-                thisTransform.getLocalRotation(),
-                Quaternion.inverse(otherTransform.getLocalRotation(), TypedConstraint._helpQuaternionA),
-                TypedConstraint._helpQuaternionB
-            );
+            this._createFrame(this._axisX, this._axisY, this._anchor, frameA);
 
-            const matrixValues = frameA.rawData;
-            const xx = quaternion.transformVector3(TypedConstraint._helpVector3A.set(matrixValues[0], matrixValues[1], matrixValues[2]));
-            const yy = quaternion.transformVector3(TypedConstraint._helpVector3B.set(matrixValues[4], matrixValues[5], matrixValues[6]));
-            const zz = quaternion.transformVector3(TypedConstraint._helpVector3C.set(matrixValues[8], matrixValues[9], matrixValues[10]));
-            frameB.identity();
-            frameB.set3x3(
-                xx.x, yy.x, zz.x,
-                xx.y, yy.y, zz.y,
-                xx.z, yy.z, zz.z,
-            );
-            frameB.setTranslation(
-                TypedConstraint._helpMatrixC.copy(otherTransform.getWorldMatrix()).inverse().transformVector3(
-                    thisTransform.getWorldMatrix().transformVector3(TypedConstraint._helpVector3D.copy(constraintPointA))
-                )
-            );
+            if (this._autoCalculateConnectedAnchor) {
+                const thisTransform = this.gameObject.transform;
+                const otherTransform = this._connectedBody.gameObject.transform;
+                const quaternion = Quaternion.multiply(
+                    thisTransform.getLocalRotation(),
+                    Quaternion.inverse(otherTransform.getLocalRotation(), TypedConstraint._helpQuaternionA),
+                    TypedConstraint._helpQuaternionB
+                );
+
+                const matrixValues = frameA.rawData;
+                const xx = quaternion.transformVector3(TypedConstraint._helpVector3A.set(matrixValues[0], matrixValues[1], matrixValues[2]));
+                const yy = quaternion.transformVector3(TypedConstraint._helpVector3B.set(matrixValues[4], matrixValues[5], matrixValues[6]));
+                const zz = quaternion.transformVector3(TypedConstraint._helpVector3C.set(matrixValues[8], matrixValues[9], matrixValues[10]));
+                frameB.identity();
+                frameB.set3x3(
+                    xx.x, yy.x, zz.x,
+                    xx.y, yy.y, zz.y,
+                    xx.z, yy.z, zz.z,
+                );
+                frameB.setTranslation(
+                    TypedConstraint._helpMatrixC.copy(otherTransform.getWorldMatrix()).inverse().transformVector3(
+                        thisTransform.getWorldMatrix().transformVector3(TypedConstraint._helpVector3D.copy(this._anchor))
+                    )
+                );
+            }
+            else {
+                this._createFrame(this._connectedAxisX, this._connectedAxisY, this._anchor, frameB);
+            }
         }
 
         public uninitialize() {
@@ -185,7 +200,7 @@ namespace egret3d.ammo {
                 console.warn("Cannot change the axis x after the constraint has been created.");
             }
             else {
-                this._axisX.copy(value);
+                this._axisX.copy(value).normalize();
             }
         }
         /**
@@ -199,8 +214,70 @@ namespace egret3d.ammo {
                 console.warn("Cannot change the axis y after the constraint has been created.");
             }
             else {
-                this._axisY.copy(value);
+                this._axisY.copy(value).normalize();
             }
+        }
+        /**
+         * 
+         */
+        public get autoCalculateConnectedAnchor() {
+            return this._autoCalculateConnectedAnchor;
+        }
+        public set autoCalculateConnectedAnchor(value: boolean) {
+            if (this._btTypedConstraint) {
+                console.warn("Cannot change the axis y after the constraint has been created.");
+            }
+            else {
+                this._autoCalculateConnectedAnchor = value;
+            }
+        }
+        /**
+         * 
+         */
+        public get connectedAnchor() {
+            return this._connectedAnchor;
+        }
+        public set connectedAnchor(value: Vector3) {
+            if (this._btTypedConstraint) {
+                console.warn("Cannot change the anchor after the constraint has been created.");
+            }
+            else {
+                this._connectedAnchor.copy(value);
+            }
+        }
+        /**
+         * 
+         */
+        public get connectedAxisX() {
+            return this._connectedAxisX;
+        }
+        public set connectedAxisX(value: Vector3) {
+            if (this._btTypedConstraint) {
+                console.warn("Cannot change the axis x after the constraint has been created.");
+            }
+            else {
+                this._connectedAxisX.copy(value).normalize();
+            }
+        }
+        /**
+         * 
+         */
+        public get connectedAxisY() {
+            return this._connectedAxisY;
+        }
+        public set connectedAxisY(value: Vector3) {
+            if (this._btTypedConstraint) {
+                console.warn("Cannot change the axis y after the constraint has been created.");
+            }
+            else {
+                this._connectedAxisY.copy(value).normalize();
+            }
+        }
+        /**
+         * 
+         */
+        public get rigidbody() {
+            return this._rigidbody;
         }
         /**
          * 

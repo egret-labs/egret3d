@@ -462,6 +462,15 @@ var egret3d;
             value.z = z / w;
             return value;
         };
+        Matrix.prototype.transformNormal = function (value) {
+            var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]);
+            var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]);
+            var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]);
+            value.x = x;
+            value.y = y;
+            value.z = z;
+            return value;
+        };
         Matrix.set = function (n11, n21, n31, n41, n12, n22, n32, n42, n13, n23, n33, n43, n14, n24, n34, n44, matrix) {
             matrix.rawData[0] = n11;
             matrix.rawData[1] = n12;
@@ -4157,13 +4166,18 @@ var egret3d;
             function TypedConstraint() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this._collisionEnabled = false;
+                _this._autoCalculateConnectedAnchor = false;
                 _this._constraintType = 1 /* ConstrainToAnotherBody */;
                 _this._overrideNumSolverIterations = 20;
                 _this._breakingImpulseThreshold = Infinity;
                 _this._anchor = egret3d.Vector3.ZERO.clone();
                 _this._axisX = egret3d.Vector3.FORWARD.clone();
                 _this._axisY = egret3d.Vector3.UP.clone();
+                _this._connectedAnchor = egret3d.Vector3.ZERO.clone();
+                _this._connectedAxisX = egret3d.Vector3.FORWARD.clone();
+                _this._connectedAxisY = egret3d.Vector3.UP.clone();
                 _this._connectedBody = null;
+                _this._rigidbody = null;
                 _this._btTypedConstraint = null;
                 return _this;
             }
@@ -4176,22 +4190,27 @@ var egret3d;
                 frame.set3x3(forward.x, vU.x, vR.x, forward.y, vU.y, vR.y, forward.z, vU.z, vR.z);
                 frame.setTranslation(constraintPoint);
             };
-            TypedConstraint.prototype._createFrames = function (forwardA, upA, constraintPointA, frameA, frameB) {
+            TypedConstraint.prototype._createFrames = function (frameA, frameB) {
                 if (!this._connectedBody) {
                     console.debug("Never.");
                     return;
                 }
-                this._createFrame(forwardA, upA, constraintPointA, frameA);
-                var thisTransform = this.gameObject.transform;
-                var otherTransform = this._connectedBody.gameObject.transform;
-                var quaternion = egret3d.Quaternion.multiply(thisTransform.getLocalRotation(), egret3d.Quaternion.inverse(otherTransform.getLocalRotation(), TypedConstraint._helpQuaternionA), TypedConstraint._helpQuaternionB);
-                var matrixValues = frameA.rawData;
-                var xx = quaternion.transformVector3(TypedConstraint._helpVector3A.set(matrixValues[0], matrixValues[1], matrixValues[2]));
-                var yy = quaternion.transformVector3(TypedConstraint._helpVector3B.set(matrixValues[4], matrixValues[5], matrixValues[6]));
-                var zz = quaternion.transformVector3(TypedConstraint._helpVector3C.set(matrixValues[8], matrixValues[9], matrixValues[10]));
-                frameB.identity();
-                frameB.set3x3(xx.x, yy.x, zz.x, xx.y, yy.y, zz.y, xx.z, yy.z, zz.z);
-                frameB.setTranslation(TypedConstraint._helpMatrixC.copy(otherTransform.getWorldMatrix()).inverse().transformVector3(thisTransform.getWorldMatrix().transformVector3(TypedConstraint._helpVector3D.copy(constraintPointA))));
+                this._createFrame(this._axisX, this._axisY, this._anchor, frameA);
+                if (this._autoCalculateConnectedAnchor) {
+                    var thisTransform = this.gameObject.transform;
+                    var otherTransform = this._connectedBody.gameObject.transform;
+                    var quaternion = egret3d.Quaternion.multiply(thisTransform.getLocalRotation(), egret3d.Quaternion.inverse(otherTransform.getLocalRotation(), TypedConstraint._helpQuaternionA), TypedConstraint._helpQuaternionB);
+                    var matrixValues = frameA.rawData;
+                    var xx = quaternion.transformVector3(TypedConstraint._helpVector3A.set(matrixValues[0], matrixValues[1], matrixValues[2]));
+                    var yy = quaternion.transformVector3(TypedConstraint._helpVector3B.set(matrixValues[4], matrixValues[5], matrixValues[6]));
+                    var zz = quaternion.transformVector3(TypedConstraint._helpVector3C.set(matrixValues[8], matrixValues[9], matrixValues[10]));
+                    frameB.identity();
+                    frameB.set3x3(xx.x, yy.x, zz.x, xx.y, yy.y, zz.y, xx.z, yy.z, zz.z);
+                    frameB.setTranslation(TypedConstraint._helpMatrixC.copy(otherTransform.getWorldMatrix()).inverse().transformVector3(thisTransform.getWorldMatrix().transformVector3(TypedConstraint._helpVector3D.copy(this._anchor))));
+                }
+                else {
+                    this._createFrame(this._connectedAxisX, this._connectedAxisY, this._anchor, frameB);
+                }
             };
             TypedConstraint.prototype.uninitialize = function () {
                 _super.prototype.uninitialize.call(this);
@@ -4310,7 +4329,7 @@ var egret3d;
                         console.warn("Cannot change the axis x after the constraint has been created.");
                     }
                     else {
-                        this._axisX.copy(value);
+                        this._axisX.copy(value).normalize();
                     }
                 },
                 enumerable: true,
@@ -4328,8 +4347,90 @@ var egret3d;
                         console.warn("Cannot change the axis y after the constraint has been created.");
                     }
                     else {
-                        this._axisY.copy(value);
+                        this._axisY.copy(value).normalize();
                     }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "autoCalculateConnectedAnchor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._autoCalculateConnectedAnchor;
+                },
+                set: function (value) {
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the axis y after the constraint has been created.");
+                    }
+                    else {
+                        this._autoCalculateConnectedAnchor = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "connectedAnchor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._connectedAnchor;
+                },
+                set: function (value) {
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the anchor after the constraint has been created.");
+                    }
+                    else {
+                        this._connectedAnchor.copy(value);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "connectedAxisX", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._connectedAxisX;
+                },
+                set: function (value) {
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the axis x after the constraint has been created.");
+                    }
+                    else {
+                        this._connectedAxisX.copy(value).normalize();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "connectedAxisY", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._connectedAxisY;
+                },
+                set: function (value) {
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the axis y after the constraint has been created.");
+                    }
+                    else {
+                        this._connectedAxisY.copy(value).normalize();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "rigidbody", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._rigidbody;
                 },
                 enumerable: true,
                 configurable: true
@@ -4379,6 +4480,9 @@ var egret3d;
             ], TypedConstraint.prototype, "_collisionEnabled", void 0);
             __decorate([
                 paper.serializedField
+            ], TypedConstraint.prototype, "_autoCalculateConnectedAnchor", void 0);
+            __decorate([
+                paper.serializedField
             ], TypedConstraint.prototype, "_constraintType", void 0);
             __decorate([
                 paper.serializedField
@@ -4395,6 +4499,15 @@ var egret3d;
             __decorate([
                 paper.serializedField
             ], TypedConstraint.prototype, "_axisY", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_connectedAnchor", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_connectedAxisX", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_connectedAxisY", void 0);
             __decorate([
                 paper.serializedField
             ], TypedConstraint.prototype, "_connectedBody", void 0);
@@ -23974,7 +24087,7 @@ var egret3d;
             PhysicsSystem.prototype.rayTest = function (from, to, group, mask) {
                 if (group === void 0) { group = 1 /* DefaultFilter */; }
                 if (mask === void 0) { mask = -1 /* AllFilter */; }
-                var rayResult = PhysicsSystem._rayResultPool.get() || new Ammo.ClosestRayResultCallback();
+                var rayResult = new Ammo.ClosestRayResultCallback();
                 var rayFrom = rayResult.get_m_rayFromWorld();
                 var rayTo = rayResult.get_m_rayToWorld();
                 rayResult.set_m_collisionFilterGroup(group);
@@ -23982,7 +24095,6 @@ var egret3d;
                 rayFrom.setValue(from.x, from.y, from.z);
                 rayTo.setValue(to.x, to.y, to.z);
                 this._btCollisionWorld.rayTest(rayFrom, rayTo, rayResult);
-                PhysicsSystem._rayResultPool.add(rayResult);
                 if (rayResult.hasHit()) {
                     var raycastInfo = PhysicsSystem._raycastInfoPool.get() || new ammo.RaycastInfo();
                     // raycastInfo.clean(); TODO cache
@@ -24043,7 +24155,6 @@ var egret3d;
             PhysicsSystem._helpQuaternionA = null;
             PhysicsSystem._helpTransformA = null;
             PhysicsSystem._helpTransformB = null;
-            PhysicsSystem._rayResultPool = new egret3d.Pool();
             PhysicsSystem._raycastInfoPool = new egret3d.Pool();
             return PhysicsSystem;
         }(paper.BaseSystem));
@@ -29219,8 +29330,8 @@ var egret3d;
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             FixedConstraint.prototype._createConstraint = function () {
-                var rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
-                if (!rigidbody) {
+                this._rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
+                if (!this._rigidbody) {
                     console.debug("Never.");
                     return null;
                 }
@@ -29231,7 +29342,7 @@ var egret3d;
                 //
                 var helpMatrixA = ammo.TypedConstraint._helpMatrixA;
                 var helpMatrixB = ammo.TypedConstraint._helpMatrixB;
-                this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA, helpMatrixB);
+                this._createFrames(helpMatrixA, helpMatrixB);
                 var helpVector3A = ammo.PhysicsSystem.helpVector3A;
                 var helpQuaternionA = ammo.PhysicsSystem.helpQuaternionA;
                 var helpTransformA = ammo.PhysicsSystem.helpTransformA;
@@ -29251,7 +29362,7 @@ var egret3d;
                 helpTransformB.setOrigin(helpVector3A);
                 helpTransformB.setRotation(helpQuaternionA);
                 //
-                var btConstraint = new Ammo.btFixedConstraint(rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpTransformA, helpTransformB);
+                var btConstraint = new Ammo.btFixedConstraint(this._rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpTransformA, helpTransformB);
                 btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
                 // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
                 return btConstraint;
@@ -29280,8 +29391,8 @@ var egret3d;
                 return _this;
             }
             SliderConstraint.prototype._createConstraint = function () {
-                var rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
-                if (!rigidbody) {
+                this._rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
+                if (!this._rigidbody) {
                     console.debug("Never.");
                     return null;
                 }
@@ -29297,7 +29408,7 @@ var egret3d;
                         console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
                         return null;
                     }
-                    this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA, helpMatrixB);
+                    this._createFrames(helpMatrixA, helpMatrixB);
                     //
                     var helpQA = egret3d.Matrix.getQuaternion(helpMatrixA, ammo.TypedConstraint._helpQuaternionA);
                     helpVector3A.setValue(helpMatrixA.rawData[8], helpMatrixA.rawData[9], helpMatrixA.rawData[10]);
@@ -29313,7 +29424,7 @@ var egret3d;
                     helpTransformB.setOrigin(helpVector3A);
                     helpTransformB.setRotation(helpQuaternionA);
                     //
-                    btConstraint = new Ammo.btSliderConstraint(rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpTransformA, helpTransformB, true);
+                    btConstraint = new Ammo.btSliderConstraint(this._rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpTransformA, helpTransformB, true);
                 }
                 else {
                     this._createFrame(this._axisX, this._axisY, this._anchor, helpMatrixA);
@@ -29324,7 +29435,7 @@ var egret3d;
                     helpTransformA.setIdentity();
                     helpTransformA.setOrigin(helpVector3A);
                     helpTransformA.setRotation(helpQuaternionA);
-                    btConstraint = new Ammo.btSliderConstraint(rigidbody.btRigidbody, helpTransformA, true);
+                    btConstraint = new Ammo.btSliderConstraint(this._rigidbody.btRigidbody, helpTransformA, true);
                 }
                 btConstraint.setLowerLinLimit(this._lowerLinearLimit);
                 btConstraint.setUpperLinLimit(this._upperLinearLimit);
@@ -29454,8 +29565,8 @@ var egret3d;
                 this._btTypedConstraint.setLimit(this._lowAngular, this._highAngular, this._softness, this._biasFactor, this._relaxationFactor);
             };
             HingeConstraint.prototype._createConstraint = function () {
-                var rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
-                if (!rigidbody) {
+                this._rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
+                if (!this._rigidbody) {
                     console.debug("Never.");
                     return null;
                 }
@@ -29467,7 +29578,7 @@ var egret3d;
                     }
                     var helpMatrixA_1 = ammo.TypedConstraint._helpMatrixA;
                     var helpMatrixB_1 = ammo.TypedConstraint._helpMatrixB;
-                    this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA_1, helpMatrixB_1);
+                    this._createFrames(helpMatrixA_1, helpMatrixB_1);
                     var helpVertex3A = ammo.PhysicsSystem.helpVector3A;
                     var helpVertex3B = ammo.PhysicsSystem.helpVector3B;
                     var helpVertex3C = ammo.PhysicsSystem.helpVector3C;
@@ -29477,14 +29588,14 @@ var egret3d;
                     helpVertex3C.setValue(helpMatrixA_1.rawData[0], helpMatrixA_1.rawData[4], helpMatrixA_1.rawData[8]);
                     helpVertex3D.setValue(helpMatrixB_1.rawData[0], helpMatrixB_1.rawData[4], helpMatrixB_1.rawData[8]);
                     //
-                    btConstraint = new Ammo.btHingeConstraint(rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpVertex3A, helpVertex3B, helpVertex3C, helpVertex3D, true);
+                    btConstraint = new Ammo.btHingeConstraint(this._rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpVertex3A, helpVertex3B, helpVertex3C, helpVertex3D, true);
                 }
                 else {
                     var helpVertex3A = ammo.PhysicsSystem.helpVector3A;
                     var helpVertex3B = ammo.PhysicsSystem.helpVector3B;
                     helpVertex3A.setValue(this._anchor.x, this._anchor.y, this._anchor.z);
                     helpVertex3B.setValue(this._axisX.x, this._axisX.y, this._axisX.z);
-                    btConstraint = new Ammo.btHingeConstraint(rigidbody.btRigidbody, helpVertex3A, helpVertex3B, true);
+                    btConstraint = new Ammo.btHingeConstraint(this._rigidbody.btRigidbody, helpVertex3A, helpVertex3B, true);
                 }
                 if (this._motorEnabled) {
                     btConstraint.enableAngularMotor(this._motorEnabled, this._targetVelocity, this._maxMotorImpulse);
@@ -29729,8 +29840,11 @@ var egret3d;
                 _this._relaxationFactor = 1.0;
                 return _this;
             }
-            ConeTwistConstraint.prototype._updateLimit = function () {
-                this._btTypedConstraint.setLimit(this._swingSpan1, this._swingSpan2, this._twistSpan, this._softness, this._biasFactor, this._relaxationFactor);
+            ConeTwistConstraint.prototype._updateLimit = function (btConstraint) {
+                btConstraint.setLimit(5, this._swingSpan1);
+                btConstraint.setLimit(4, this._swingSpan2);
+                btConstraint.setLimit(3, this._twistSpan);
+                // btConstraint.setLimit(this._swingSpanX, this._swingSpanY, this._twistSpan, this._softness, this._biasFactor, this._relaxationFactor);
             };
             ConeTwistConstraint.prototype._createConstraint = function () {
                 var rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
@@ -29750,17 +29864,17 @@ var egret3d;
                         console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
                         return null;
                     }
-                    this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA, helpMatrixB);
+                    this._createFrames(helpMatrixA, helpMatrixB);
                     //
                     var helpQA = egret3d.Matrix.getQuaternion(helpMatrixA, ammo.TypedConstraint._helpQuaternionA);
-                    helpVector3A.setValue(helpMatrixA.rawData[8], helpMatrixA.rawData[9], helpMatrixA.rawData[10]);
+                    helpVector3A.setValue(helpMatrixA.rawData[12], helpMatrixA.rawData[13], helpMatrixA.rawData[14]);
                     helpQuaternionA.setValue(helpQA.x, helpQA.y, helpQA.z, helpQA.w);
                     helpTransformA.setIdentity();
                     helpTransformA.setOrigin(helpVector3A);
                     helpTransformA.setRotation(helpQuaternionA);
                     //
                     var helpQB = egret3d.Matrix.getQuaternion(helpMatrixB, ammo.TypedConstraint._helpQuaternionA);
-                    helpVector3A.setValue(helpMatrixB.rawData[8], helpMatrixB.rawData[9], helpMatrixB.rawData[10]);
+                    helpVector3A.setValue(helpMatrixB.rawData[12], helpMatrixB.rawData[13], helpMatrixB.rawData[14]);
                     helpQuaternionA.setValue(helpQB.x, helpQB.y, helpQB.z, helpQB.w);
                     helpTransformB.setIdentity();
                     helpTransformB.setOrigin(helpVector3A);
@@ -29780,9 +29894,9 @@ var egret3d;
                     //
                     btConstraint = new Ammo.btConeTwistConstraint(rigidbody.btRigidbody, helpTransformA);
                 }
-                this._updateLimit();
                 btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
                 // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+                this._updateLimit(btConstraint);
                 return btConstraint;
             };
             Object.defineProperty(ConeTwistConstraint.prototype, "swingSpan1", {
@@ -29793,12 +29907,15 @@ var egret3d;
                     return this._swingSpan1;
                 },
                 set: function (value) {
+                    if (value <= 0.0) {
+                        value = 0.000001;
+                    }
                     if (this._swingSpan1 === value) {
                         return;
                     }
                     this._swingSpan1 = value;
                     if (this._btTypedConstraint) {
-                        this._updateLimit();
+                        this._btTypedConstraint.setLimit(5, this._swingSpan2);
                     }
                 },
                 enumerable: true,
@@ -29812,12 +29929,15 @@ var egret3d;
                     return this._swingSpan2;
                 },
                 set: function (value) {
+                    if (value <= 0.0) {
+                        value = 0.000001;
+                    }
                     if (this._swingSpan2 === value) {
                         return;
                     }
                     this._swingSpan2 = value;
                     if (this._btTypedConstraint) {
-                        this._updateLimit();
+                        this._btTypedConstraint.setLimit(4, this._swingSpan2);
                     }
                 },
                 enumerable: true,
@@ -29831,12 +29951,15 @@ var egret3d;
                     return this._twistSpan;
                 },
                 set: function (value) {
+                    if (value <= 0.0) {
+                        value = 0.000001;
+                    }
                     if (this._twistSpan === value) {
                         return;
                     }
                     this._twistSpan = value;
                     if (this._btTypedConstraint) {
-                        this._updateLimit();
+                        this._btTypedConstraint.setLimit(3, this._swingSpan2);
                     }
                 },
                 enumerable: true,
@@ -29855,7 +29978,7 @@ var egret3d;
                     }
                     this._softness = value;
                     if (this._btTypedConstraint) {
-                        this._updateLimit();
+                        // this._updateLimit(this._btTypedConstraint as Ammo.btConeTwistConstraint);
                     }
                 },
                 enumerable: true,
@@ -29874,7 +29997,7 @@ var egret3d;
                     }
                     this._biasFactor = value;
                     if (this._btTypedConstraint) {
-                        this._updateLimit();
+                        // this._updateLimit(this._btTypedConstraint as Ammo.btConeTwistConstraint);
                     }
                 },
                 enumerable: true,
@@ -29893,7 +30016,7 @@ var egret3d;
                     }
                     this._relaxationFactor = value;
                     if (this._btTypedConstraint) {
-                        this._updateLimit();
+                        // this._updateLimit(this._btTypedConstraint as Ammo.btConeTwistConstraint);
                     }
                 },
                 enumerable: true,
@@ -29936,8 +30059,8 @@ var egret3d;
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             BallSocketConstraint.prototype._createConstraint = function () {
-                var rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
-                if (!rigidbody) {
+                this._rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
+                if (!this._rigidbody) {
                     console.debug("Never.");
                     return null;
                 }
@@ -29950,12 +30073,12 @@ var egret3d;
                         console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
                         return null;
                     }
-                    var pivotInOther = egret3d.helpMatrixA.copy(this._connectedBody.gameObject.transform.getWorldMatrix()).inverse().transformVector3(rigidbody.gameObject.transform.getWorldMatrix().transformVector3(ammo.TypedConstraint._helpVector3A.copy(this._anchor)));
+                    var pivotInOther = egret3d.helpMatrixA.copy(this._connectedBody.gameObject.transform.getWorldMatrix()).inverse().transformVector3(this._rigidbody.gameObject.transform.getWorldMatrix().transformVector3(ammo.TypedConstraint._helpVector3A.copy(this._anchor)));
                     helpVector3B.setValue(pivotInOther.x, pivotInOther.y, pivotInOther.z);
-                    btConstraint = new Ammo.btPoint2PointConstraint(rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpVector3A, helpVector3B);
+                    btConstraint = new Ammo.btPoint2PointConstraint(this._rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpVector3A, helpVector3B);
                 }
                 else {
-                    btConstraint = new Ammo.btPoint2PointConstraint(rigidbody.btRigidbody, helpVector3A);
+                    btConstraint = new Ammo.btPoint2PointConstraint(this._rigidbody.btRigidbody, helpVector3A);
                 }
                 btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
                 // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
@@ -30489,7 +30612,7 @@ var egret3d;
             __extends(RayTest, _super);
             function RayTest() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.distance = 100.0;
+                _this.distance = 10.0;
                 _this.collisionGroups = 8 /* DebrisFilter */;
                 _this.collisionMask = -1 /* AllFilter */;
                 _this._hitted = false;
@@ -30536,12 +30659,12 @@ var egret3d;
                     this._hitted = true;
                     var mesh = this._meshFilter.mesh;
                     if (mesh) {
-                        var v = _helpMatrix.copy(matrix).inverse().transformVector3(raycastInfo.normal).scale(this.distance - raycastInfo.distance);
+                        var v = _helpMatrix.copy(matrix).inverse().transformNormal(raycastInfo.normal).scale(1.0);
                         var vertices = mesh.getVertices();
                         vertices[3] = raycastInfo.distance;
                         vertices[4] = 0.0;
                         vertices[5] = 0.0;
-                        vertices[6] = v.x;
+                        vertices[6] = v.x + raycastInfo.distance;
                         vertices[7] = v.y;
                         vertices[8] = v.z;
                         mesh.uploadSubVertexBuffer("POSITION" /* POSITION */);

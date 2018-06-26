@@ -208,6 +208,18 @@ namespace egret3d {
             return value;
         }
 
+        public transformNormal(value: Vector3): Vector3 {
+            let x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]);
+            let y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]);
+            let z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]);
+
+            value.x = x;
+            value.y = y;
+            value.z = z;
+
+            return value;
+        }
+
         public static set(
             n11: number, n21: number, n31: number, n41: number,
             n12: number, n22: number, n32: number, n42: number,

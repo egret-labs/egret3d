@@ -73,16 +73,14 @@ namespace egret3d.ammo {
 
                 const mesh = this._meshFilter.mesh;
                 if (mesh) {
-                    const v = _helpMatrix.copy(matrix).inverse().transformVector3(raycastInfo.normal).scale(this.distance - raycastInfo.distance);
-
+                    const v = _helpMatrix.copy(matrix).inverse().transformNormal(raycastInfo.normal).scale(1.0);
                     const vertices = mesh.getVertices();
                     vertices[3] = raycastInfo.distance;
                     vertices[4] = 0.0;
                     vertices[5] = 0.0;
-                    vertices[6] = v.x;
+                    vertices[6] = v.x + raycastInfo.distance;
                     vertices[7] = v.y;
                     vertices[8] = v.z;
-
                     mesh.uploadSubVertexBuffer(gltf.MeshAttributeType.POSITION);
                 }
             }
@@ -100,6 +98,7 @@ namespace egret3d.ammo {
                         mesh.uploadSubVertexBuffer(gltf.MeshAttributeType.POSITION);
                     }
                 }
+
                 this._hitted = false;
             }
         }

@@ -4,8 +4,8 @@ namespace egret3d.ammo {
      */
     export class BallSocketConstraint extends TypedConstraint {
         protected _createConstraint() {
-            const rigidbody = this.gameObject.getComponent(Rigidbody);
-            if (!rigidbody) {
+            this._rigidbody = this.gameObject.getComponent(Rigidbody);
+            if (!this._rigidbody) {
                 console.debug("Never.");
                 return null;
             }
@@ -22,16 +22,16 @@ namespace egret3d.ammo {
                 }
 
                 const pivotInOther = helpMatrixA.copy(this._connectedBody.gameObject.transform.getWorldMatrix()).inverse().transformVector3(
-                    rigidbody.gameObject.transform.getWorldMatrix().transformVector3(TypedConstraint._helpVector3A.copy(this._anchor))
+                    this._rigidbody.gameObject.transform.getWorldMatrix().transformVector3(TypedConstraint._helpVector3A.copy(this._anchor))
                 );
                 helpVector3B.setValue(pivotInOther.x, pivotInOther.y, pivotInOther.z);
                 btConstraint = new Ammo.btPoint2PointConstraint(
-                    rigidbody.btRigidbody, this._connectedBody.btRigidbody,
+                    this._rigidbody.btRigidbody, this._connectedBody.btRigidbody,
                     helpVector3A, helpVector3B
                 );
             }
             else {
-                btConstraint = new Ammo.btPoint2PointConstraint(rigidbody.btRigidbody, helpVector3A as any);
+                btConstraint = new Ammo.btPoint2PointConstraint(this._rigidbody.btRigidbody, helpVector3A as any);
             }
 
             btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);

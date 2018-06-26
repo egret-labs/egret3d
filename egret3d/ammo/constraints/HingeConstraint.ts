@@ -27,8 +27,8 @@ namespace egret3d.ammo {
         }
 
         protected _createConstraint() {
-            const rigidbody = this.gameObject.getComponent(Rigidbody);
-            if (!rigidbody) {
+            this._rigidbody = this.gameObject.getComponent(Rigidbody);
+            if (!this._rigidbody) {
                 console.debug("Never.");
                 return null;
             }
@@ -44,7 +44,7 @@ namespace egret3d.ammo {
                 const helpMatrixA = TypedConstraint._helpMatrixA;
                 const helpMatrixB = TypedConstraint._helpMatrixB;
 
-                this._createFrames(this._axisX, this._axisY, this._anchor, helpMatrixA, helpMatrixB);
+                this._createFrames(helpMatrixA, helpMatrixB);
                 const helpVertex3A = PhysicsSystem.helpVector3A;
                 const helpVertex3B = PhysicsSystem.helpVector3B;
                 const helpVertex3C = PhysicsSystem.helpVector3C;
@@ -55,7 +55,7 @@ namespace egret3d.ammo {
                 helpVertex3D.setValue(helpMatrixB.rawData[0], helpMatrixB.rawData[4], helpMatrixB.rawData[8]);
                 //
                 btConstraint = new Ammo.btHingeConstraint(
-                    rigidbody.btRigidbody, this._connectedBody.btRigidbody,
+                    this._rigidbody.btRigidbody, this._connectedBody.btRigidbody,
                     helpVertex3A, helpVertex3B, helpVertex3C, helpVertex3D,
                     true
                 );
@@ -67,7 +67,7 @@ namespace egret3d.ammo {
                 helpVertex3B.setValue(this._axisX.x, this._axisX.y, this._axisX.z);
 
                 btConstraint = new Ammo.btHingeConstraint(
-                    rigidbody.btRigidbody, helpVertex3A as any, helpVertex3B as any,
+                    this._rigidbody.btRigidbody, helpVertex3A as any, helpVertex3B as any,
                     true as any
                 );
             }
