@@ -11,6 +11,7 @@ namespace paper {
         _executeInEditModeComponents.push(target);
     }
 
+    const _triggerAndCollisionHandler: (keyof Behaviour)[] = ["onTriggerEnter", "onTriggerStay", "onTriggerStay", "onTriggerExit", "onCollisionEnter", "onCollisionStay", "onCollisionExit"];
     /**
      * 脚本组件。
      * 生命周期的顺序。
@@ -36,6 +37,14 @@ namespace paper {
          * @internal
          */
         public _isStarted: boolean = false;
+        /**
+         * @internal
+         */
+        public _isTriggerEnabled: boolean = false;
+        /**
+         * @internal
+         */
+        public _isCollisionEnabled: boolean = false;
 
         public initialize(): void {
             super.initialize();
@@ -43,6 +52,16 @@ namespace paper {
             if (!paper.Application.isEditor || _executeInEditModeComponents.indexOf(this.constructor) >= 0) {
                 this.onAwake();
             }
+            // Initialize trigger and collision values.
+            const classPrototype = this.constructor.prototype;
+            this._isTriggerEnabled =
+                classPrototype.hasOwnProperty(_triggerAndCollisionHandler[0]) ||
+                classPrototype.hasOwnProperty(_triggerAndCollisionHandler[1]) ||
+                classPrototype.hasOwnProperty(_triggerAndCollisionHandler[2]);
+            this._isCollisionEnabled =
+                classPrototype.hasOwnProperty(_triggerAndCollisionHandler[3]) ||
+                classPrototype.hasOwnProperty(_triggerAndCollisionHandler[4]) ||
+                classPrototype.hasOwnProperty(_triggerAndCollisionHandler[5]);
         }
 
         public uninitialize(): void {
@@ -90,6 +109,48 @@ namespace paper {
         }
 
         /**
+         * 
+         */
+        public onTriggerEnter(collisionObject: any) {
+
+        }
+
+        /**
+         * 
+         */
+        public onTriggerStay(collisionObject: any) {
+
+        }
+
+        /**
+         * 
+         */
+        public onTriggerExit(collisionObject: any) {
+
+        }
+
+        /**
+         * 
+         */
+        public onCollisionEnter(collisionObject: any) {
+
+        }
+
+        /**
+         * 
+         */
+        public onCollisionStay(collisionObject: any) {
+
+        }
+
+        /**
+         * 
+         */
+        public onCollisionExit(collisionObject: any) {
+
+        }
+
+        /**
          * 当Behaviour启用时,其Update在每一帧被调用
          */
         public onUpdate(delta: number) {
@@ -116,7 +177,7 @@ namespace paper {
         }
 
         /**
-         * 碰撞时调用
+         * @deprecated
          */
         public onCollide(collider: any) {
 

@@ -9,7 +9,7 @@ namespace egret3d.ammo {
     /**
      * 
      */
-    export class RayTest extends paper.Behaviour {
+    export class RayTester extends paper.Behaviour {
         private static readonly _material: Material = new Material("line");
 
         @paper.serializedField
@@ -51,8 +51,8 @@ namespace egret3d.ammo {
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.LineStrip;
             mesh.uploadSubVertexBuffer(_attributes);
 
-            RayTest._material.setShader(DefaultShaders.LINE);
-            this._meshRender.materials = [RayTest._material];
+            RayTester._material.setShader(DefaultShaders.LINE);
+            this._meshRender.materials = [RayTester._material];
             this._meshFilter.mesh = mesh;
         }
 

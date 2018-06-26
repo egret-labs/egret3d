@@ -16,7 +16,7 @@ namespace egret3d.ammo {
         @paper.serializedField
         protected _collisionEnabled: boolean = false;
         @paper.serializedField
-        protected _autoCalculateConnectedAnchor: boolean = false;
+        protected _autoCalculateConnectedAnchor: boolean = true;
         @paper.serializedField
         protected _constraintType: Ammo.ConstraintType = Ammo.ConstraintType.ConstrainToAnotherBody;
         @paper.serializedField
@@ -92,7 +92,7 @@ namespace egret3d.ammo {
                 );
             }
             else {
-                this._createFrame(this._connectedAxisX, this._connectedAxisY, this._anchor, frameB);
+                this._createFrame(this._connectedAxisX, this._connectedAxisY, this._connectedAnchor, frameB);
             }
         }
 

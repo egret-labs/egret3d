@@ -8,15 +8,18 @@ namespace egret3d.ammo {
         @paper.serializedField
         protected _collisionFlags: Ammo.CollisionFlags = Ammo.CollisionFlags.None;
         @paper.serializedField
-        protected _collisionGroups: Ammo.CollisionFilterGroups = Ammo.CollisionFilterGroups.DebrisFilter;
+        protected _collisionGroups: Ammo.CollisionFilterGroups = Ammo.CollisionFilterGroups.DefaultFilter;
         @paper.serializedField
         protected _collisionMask: Ammo.CollisionFilterGroups = Ammo.CollisionFilterGroups.AllFilter;
+        protected readonly _btPointer: Ammo.btVector3 = new Ammo.btVector3();
         protected _btCollisionObject: Ammo.btCollisionObject = null as any;
 
         protected _createCollisionObject(): Ammo.btCollisionObject {
             const btCollisionObject = new Ammo.btCollisionObject();
             btCollisionObject.setWorldTransform(this._getBTTransform());
             btCollisionObject.setCollisionFlags(this._collisionFlags);
+            btCollisionObject.setUserPointer(this._btPointer as any);
+            (this._btPointer as any).egretComponent = this;
 
             return btCollisionObject;
         }
@@ -42,9 +45,34 @@ namespace egret3d.ammo {
 
             if (this._btCollisionObject) {
                 Ammo.destroy(this._btCollisionObject);
+                Ammo.destroy(this._btPointer);
             }
 
             this._btCollisionObject = null as any;
+        }
+        /**
+         * 
+         */
+        public isStatic() {
+            return (this._collisionFlags & Ammo.CollisionFlags.StaticObject) !== Ammo.CollisionFlags.None;
+        }
+        /**
+         * 
+         */
+        public isKinematic() {
+            return (this._collisionFlags & Ammo.CollisionFlags.KinematicObject) !== Ammo.CollisionFlags.None;
+        }
+        /**
+         * 
+         */
+        public isStaticOrKinematic() {
+            return (this._collisionFlags & (Ammo.CollisionFlags.StaticObject | Ammo.CollisionFlags.KinematicObject)) !== Ammo.CollisionFlags.None;
+        }
+        /**
+         * 
+         */
+        public isDynamic() {
+            return (this._collisionFlags & (Ammo.CollisionFlags.StaticObject | Ammo.CollisionFlags.KinematicObject)) === Ammo.CollisionFlags.None;
         }
         /**
          * 

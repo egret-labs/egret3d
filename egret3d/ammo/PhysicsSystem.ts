@@ -241,10 +241,8 @@ namespace egret3d.ammo {
 
                 for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
                     const collisionObject = this._components[i + 1] as CollisionObject;
-                    if (
-                        (collisionObject.collisionObjectType & Ammo.CollisionObjectTypes.RigidBody) &&
-                        (collisionObject as Rigidbody).btRigidbody
-                    ) {
+
+                    if (collisionObject.collisionObjectType & Ammo.CollisionObjectTypes.RigidBody) {
                         const motionState = (collisionObject as Rigidbody).btRigidbody.getMotionState();
                         if (motionState) {
                             const transform = collisionObject.gameObject.transform;
@@ -256,6 +254,48 @@ namespace egret3d.ammo {
                             transform.setRotation(r.x(), r.y(), r.z(), r.w());
                         }
                     }
+
+                    if (collisionObject.collisionObjectType & Ammo.CollisionObjectTypes.GhostObject) {
+                        const ghostObject = collisionObject as GhostObject;
+                        const btGhostObject = (collisionObject as GhostObject).btGhostObject;
+                        const behaviours = collisionObject.gameObject.getComponents(paper.Behaviour, true);
+                        ghostObject._currentCollisionObjects.length = 0;
+
+                        for (let i = 0, l = btGhostObject.getNumOverlappingObjects(); i < l; ++i) {
+                            const btCollisionObject = btGhostObject.getOverlappingObject(i);
+                            const otherCollisionObject = (Ammo as any).castObject(btCollisionObject.getUserPointer(), Ammo.btVector3).egretComponent as CollisionObject;
+                            ghostObject._currentCollisionObjects.push(otherCollisionObject);
+
+                            if (ghostObject._prevCollisionObjects.indexOf(otherCollisionObject) < 0) {
+                                for (const behaviour of behaviours) {
+                                    if (behaviour._isTriggerEnabled) {
+                                        behaviour.onTriggerEnter(otherCollisionObject);
+                                    }
+                                }
+                            }
+                            else {
+                                for (const behaviour of behaviours) {
+                                    if (behaviour._isTriggerEnabled) {
+                                        behaviour.onTriggerStay(otherCollisionObject);
+                                    }
+                                }
+                            }
+                        }
+
+                        for (const otherCollisionObject of ghostObject._prevCollisionObjects) {
+                            if (ghostObject._currentCollisionObjects.indexOf(otherCollisionObject) < 0) {
+                                for (const behaviour of behaviours) {
+                                    if (behaviour._isTriggerEnabled) {
+                                        behaviour.onTriggerExit(otherCollisionObject);
+                                    }
+                                }
+                            }
+                        }
+
+                        const temp = ghostObject._prevCollisionObjects;
+                        ghostObject._prevCollisionObjects = ghostObject._currentCollisionObjects;
+                        ghostObject._currentCollisionObjects = temp;
+                    }
                 }
             }
         }
@@ -264,7 +304,7 @@ namespace egret3d.ammo {
          */
         public rayTest(
             from: Readonly<Vector3>, to: Readonly<Vector3>,
-            group: Ammo.CollisionFilterGroups = Ammo.CollisionFilterGroups.DefaultFilter, mask: Ammo.CollisionFilterGroups = Ammo.CollisionFilterGroups.AllFilter
+            group: Ammo.CollisionFilterGroups = Ammo.CollisionFilterGroups.DefaultFilter, mask: Ammo.CollisionFilterGroups = Ammo.CollisionFilterGroups.AllFilter,
         ) {
             const rayResult = new Ammo.ClosestRayResultCallback();
             const rayFrom = (rayResult as any).get_m_rayFromWorld() as Ammo.btVector3;
@@ -274,7 +314,6 @@ namespace egret3d.ammo {
             rayFrom.setValue(from.x, from.y, from.z);
             rayTo.setValue(to.x, to.y, to.z);
             this._btCollisionWorld.rayTest(rayFrom, rayTo, rayResult);
-
             if (rayResult.hasHit()) {
                 const raycastInfo = PhysicsSystem._raycastInfoPool.get() || new RaycastInfo();
                 // raycastInfo.clean(); TODO cache
@@ -283,23 +322,17 @@ namespace egret3d.ammo {
                 const btCollisionObject = (rayResult as any).get_m_collisionObject() as Ammo.btCollisionObject;
                 const position = (rayResult as any).get_m_hitPointWorld() as Ammo.btVector3;
                 const normal = (rayResult as any).get_m_hitNormalWorld() as Ammo.btVector3;
-
-                // TODO
-                for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
-                    const collisionObject = this._components[i + 1] as CollisionObject;
-                    if ((collisionObject.btCollisionObject as any).a === (btCollisionObject as any).a) {
-                        raycastInfo.transform = collisionObject.gameObject.transform;
-                        raycastInfo.collisionObject = collisionObject;
-                        break;
-                    }
-                }
-
+                raycastInfo.collisionObject = (Ammo as any).castObject(btCollisionObject.getUserPointer(), Ammo.btVector3).egretComponent as CollisionObject;
+                raycastInfo.transform = raycastInfo.collisionObject.gameObject.transform;
                 raycastInfo.position.set(position.x(), position.y(), position.z());
                 raycastInfo.normal.set(normal.x(), normal.y(), normal.z());
                 raycastInfo.distance = from.getDistance(raycastInfo.position); // distance 是否应该惰性计算。
+                Ammo.destroy(rayResult);
 
                 return raycastInfo;
             }
+
+            Ammo.destroy(rayResult);
 
             return null;
         }

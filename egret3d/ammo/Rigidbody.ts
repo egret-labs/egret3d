@@ -41,7 +41,6 @@ namespace egret3d.ammo {
         @paper.serializedField
         private readonly _angularFactor: Vector3 = Vector3.ONE.clone();
         private readonly _localInertia: Vector3 = Vector3.ZERO.clone();
-        private _btRigidbody: Ammo.btRigidBody = null as any;
 
         protected _createCollisionObject() {
             const rigidBodyInfo = new Ammo.btRigidBodyConstructionInfo();
@@ -62,8 +61,8 @@ namespace egret3d.ammo {
             const motionState = new Ammo.btDefaultMotionState(this._getBTTransform()); // TODO 可扩展 的 state。
             btCollisionObject.setCollisionFlags(this._collisionFlags);
             btCollisionObject.setMotionState(motionState);
-            //
-            this._btRigidbody = btCollisionObject as any;
+            btCollisionObject.setUserPointer(this._btPointer as any);
+            (this._btPointer as any).egretComponent = this;
 
             Ammo.destroy(rigidBodyInfo); //
 
@@ -80,22 +79,15 @@ namespace egret3d.ammo {
                 helpVector3A.setValue(this._localInertia.x, this._localInertia.y, this._localInertia.z);
                 collisionShape.btCollisionShape.calculateLocalInertia(this._mass, helpVector3A);
                 this._localInertia.set(helpVector3A.x(), helpVector3A.y(), helpVector3A.z());
-                this._btRigidbody.setMassProps(this._mass, helpVector3A);
-                this._btRigidbody.setActivationState(Ammo.ActivationState.DisableDeactivation);
+                this.btRigidbody.setMassProps(this._mass, helpVector3A);
+                this.btRigidbody.setActivationState(Ammo.ActivationState.DisableDeactivation);
             }
             else {
                 this._localInertia.set(0.0, 0.0, 0.0);
                 helpVector3A.setValue(0.0, 0.0, 0.0);
-                this._btRigidbody.setMassProps(0.0, helpVector3A);
-                this._btRigidbody.setActivationState(Ammo.ActivationState.Undefined);
+                this.btRigidbody.setMassProps(0.0, helpVector3A);
+                this.btRigidbody.setActivationState(Ammo.ActivationState.Undefined);
             }
-        }
-        /**
-         * 
-         */
-        public isDynamic() {
-            return (this._collisionFlags & Ammo.CollisionFlags.StaticObject) !== Ammo.CollisionFlags.StaticObject
-                && (this._collisionFlags & Ammo.CollisionFlags.KinematicObject) !== Ammo.CollisionFlags.KinematicObject;
         }
         /**
          * 
@@ -128,7 +120,7 @@ namespace egret3d.ammo {
 
             this._mass = value;
 
-            if (this._btRigidbody) {
+            if (this._btCollisionObject) {
                 this._updateMass();
             }
         }
@@ -145,8 +137,8 @@ namespace egret3d.ammo {
 
             this._friction = value;
 
-            if (this._btRigidbody) {
-                this._btRigidbody.setFriction(this._friction);
+            if (this._btCollisionObject) {
+                this.btRigidbody.setFriction(this._friction);
             }
         }
         /**
@@ -162,8 +154,8 @@ namespace egret3d.ammo {
 
             this._rollingFriction = value;
 
-            if (this._btRigidbody) {
-                this._btRigidbody.setRollingFriction(this._rollingFriction);
+            if (this._btCollisionObject) {
+                this.btRigidbody.setRollingFriction(this._rollingFriction);
             }
         }
         /**
@@ -179,8 +171,8 @@ namespace egret3d.ammo {
 
             this._linearDamping = value;
 
-            if (this._btRigidbody) {
-                this._btRigidbody.setDamping(this._linearDamping, this._angularDamping);
+            if (this._btCollisionObject) {
+                this.btRigidbody.setDamping(this._linearDamping, this._angularDamping);
             }
         }
         /**
@@ -196,8 +188,8 @@ namespace egret3d.ammo {
 
             this._angularDamping = value;
 
-            if (this._btRigidbody) {
-                this._btRigidbody.setDamping(this._linearDamping, this._angularDamping);
+            if (this._btCollisionObject) {
+                this.btRigidbody.setDamping(this._linearDamping, this._angularDamping);
             }
         }
         /**
@@ -211,7 +203,7 @@ namespace egret3d.ammo {
                 return;
             }
 
-            if (this._btRigidbody) {
+            if (this._btCollisionObject) {
                 console.warn("Cannot change the additionalDamping after the collision object has been created.");
             }
             else {
@@ -229,7 +221,7 @@ namespace egret3d.ammo {
                 return;
             }
 
-            if (this._btRigidbody) {
+            if (this._btCollisionObject) {
                 console.warn("Cannot change the additionalLinearDampingFactor after the collision object has been created.");
             }
             else {
@@ -247,7 +239,7 @@ namespace egret3d.ammo {
                 return;
             }
 
-            if (this._btRigidbody) {
+            if (this._btCollisionObject) {
                 console.warn("Cannot change the additionalLinearDampingThresholdSqr after the collision object has been created.");
             }
             else {
@@ -265,7 +257,7 @@ namespace egret3d.ammo {
                 return;
             }
 
-            if (this._btRigidbody) {
+            if (this._btCollisionObject) {
                 console.warn("Cannot change the additionalAngularDampingFactor after the collision object has been created.");
             }
             else {
@@ -283,7 +275,7 @@ namespace egret3d.ammo {
                 return;
             }
 
-            if (this._btRigidbody) {
+            if (this._btCollisionObject) {
                 console.warn("Cannot change the additionalAngularDampingThresholdSqr after the collision object has been created.");
             }
             else {
@@ -303,8 +295,8 @@ namespace egret3d.ammo {
 
             this._restitution = value;
 
-            if (this._btRigidbody) {
-                this._btRigidbody.setRestitution(this._restitution);
+            if (this._btCollisionObject) {
+                this.btRigidbody.setRestitution(this._restitution);
             }
         }
         /**
@@ -320,8 +312,8 @@ namespace egret3d.ammo {
 
             this._linearSleepingThreshold = value;
 
-            if (this._btRigidbody) {
-                this._btRigidbody.setSleepingThresholds(this._linearSleepingThreshold, this._angularSleepingThreshold);
+            if (this._btCollisionObject) {
+                this.btRigidbody.setSleepingThresholds(this._linearSleepingThreshold, this._angularSleepingThreshold);
             }
         }
         /**
@@ -337,8 +329,8 @@ namespace egret3d.ammo {
 
             this._angularSleepingThreshold = value;
 
-            if (this._btRigidbody) {
-                this._btRigidbody.setSleepingThresholds(this._linearSleepingThreshold, this._angularSleepingThreshold);
+            if (this._btCollisionObject) {
+                this.btRigidbody.setSleepingThresholds(this._linearSleepingThreshold, this._angularSleepingThreshold);
             }
         }
         /**
@@ -350,10 +342,10 @@ namespace egret3d.ammo {
         public set linearFactor(value: Readonly<Vector3>) {
             this._linearFactor.copy(value);
 
-            if (this._btRigidbody) {
+            if (this._btCollisionObject) {
                 const helpVector3A = PhysicsSystem.helpVector3A;
                 helpVector3A.setValue(this._linearFactor.x, this._linearFactor.y, this._linearFactor.z);
-                this._btRigidbody.setLinearFactor(helpVector3A);
+                this.btRigidbody.setLinearFactor(helpVector3A);
             }
         }
         /**
@@ -365,10 +357,10 @@ namespace egret3d.ammo {
         public set angularFactor(value: Readonly<Vector3>) {
             this._angularFactor.copy(value);
 
-            if (this._btRigidbody) {
+            if (this._btCollisionObject) {
                 const helpVector3A = PhysicsSystem.helpVector3A;
                 helpVector3A.setValue(this._angularFactor.x, this._angularFactor.y, this._angularFactor.z);
-                this._btRigidbody.setAngularFactor(helpVector3A);
+                this.btRigidbody.setAngularFactor(helpVector3A);
             }
         }
         /**
@@ -381,7 +373,7 @@ namespace egret3d.ammo {
          * 
          */
         public get btRigidbody() {
-            return this._btRigidbody;
+            return this._btCollisionObject as Ammo.btRigidBody;
         }
     }
 }
