@@ -437,7 +437,14 @@ namespace egret3d {
                         mat.setFloat(i, data.value);
                         break;
                     case UniformTypeEnum.Float4:
-                        mat.setVector4(i, data.value);
+                        if (Array.isArray(data.value)) {
+                            mat.setVector4v(i, data.value as any);
+                        } else {
+                            mat.setVector4(i, data.value);
+                        }
+                        break;
+                    case UniformTypeEnum.Float4v:
+                        mat.setVector4v(i, data.value as any);
                         break;
                     default:
                         break;

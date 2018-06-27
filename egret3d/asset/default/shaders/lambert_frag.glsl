@@ -1,4 +1,4 @@
-#extension GL_OES_standard_derivatives : enable
+// #extension GL_OES_standard_derivatives : enable
 
 uniform sampler2D _MainTex;
 uniform vec4 _Color;         
@@ -26,7 +26,7 @@ void main() {
 
     #include <normal_frag>
     #include <light_frag>
-
+    
     outColor.a = diffuseColor.a;
 
     gl_FragColor = outColor;

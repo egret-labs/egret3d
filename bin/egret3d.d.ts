@@ -1731,6 +1731,127 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
+     * 销毁系统
+     *
+     */
+    class DestroySystem extends BaseSystem<BaseComponent> {
+        private readonly _bufferedComponents;
+        private readonly _bufferedGameObjects;
+        /**
+         * @inheritDoc
+         */
+        update(): void;
+        /**
+         * 将实体缓存到销毁系统，以便在系统运行时销毁。
+         *
+         */
+        bufferComponent(component: BaseComponent): void;
+        /**
+         * 将实体缓存到销毁系统，以便在系统运行时销毁。
+         *
+         */
+        bufferGameObject(gameObject: GameObject): void;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    interface IHashCode {
+        /**
+         *
+         */
+        readonly hashCode: number;
+    }
+    /**
+     *
+     */
+    interface IStruct {
+        /**
+         *
+         */
+        readonly class: string;
+    }
+    /**
+     * 自定义序列化接口。
+     */
+    interface ISerializable {
+        /**
+         *
+         */
+        serialize(): any | IHashCode | ISerializedObject;
+        /**
+         *
+         */
+        deserialize(element: any): void;
+    }
+    /**
+     * 序列化后的数据接口。
+     */
+    interface ISerializedObject extends IHashCode, IStruct {
+        /**
+         *
+         */
+        [key: string]: any | IHashCode;
+    }
+    /**
+     * 序列化数据接口
+     */
+    interface ISerializedData {
+        /**
+         *
+         */
+        readonly objects: ISerializedObject[];
+        /**
+         *
+         */
+        [key: string]: ISerializedObject[];
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class MissComponent extends BaseComponent {
+        /**
+         *
+         */
+        missingObject: MissingObject;
+    }
+}
+declare namespace paper {
+    /**
+     * 序列化方法
+     * 只有 ISerializable (有对应hashCode属性) 参与序列化
+     * 只有被标记的对象属性 参与序列化
+     * 序列化后，输出 ISerializeData
+     * 对象在objects中按生成顺序，root一定是第一个元素。
+     * 允许依赖标记对序列化对象数据分类，以便单独处理一些对象（例如资源等等，但资源的路径这里不做处理，在方法外由开发者自行处理）
+     */
+    function serialize(source: SerializableObject, sourcePath?: string): ISerializedData;
+    /**
+     *
+     */
+    function serializeAsset(source: paper.Asset): any;
+    /**
+     *
+     */
+    function serializeRC(source: SerializableObject): any;
+    /**
+     *
+     */
+    function serializeR(source: SerializableObject): any;
+    /**
+     *
+     */
+    function serializeC(source: SerializableObject): any;
+    /**
+     *
+     */
+    function getTypesFromPrototype(classPrototype: any, typeKey: string, types?: string[] | null): string[];
+}
+declare namespace paper {
+    /**
      * renderer component interface
      * @version paper 1.0
      * @platform Web
@@ -1934,68 +2055,6 @@ declare namespace paper {
         readonly scene: Scene;
     }
 }
-declare namespace paper {
-    /**
-     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
-     * 这个属性可以实现相机的选择性剔除。
-     */
-    const enum Layer {
-        Default = 2,
-        UI = 4,
-        UserLayer1 = 8,
-        UserLayer2 = 16,
-        UserLayer3 = 32,
-        UserLayer4 = 64,
-        UserLayer5 = 128,
-        UserLayer6 = 240,
-        UserLayer7 = 256,
-        UserLayer8 = 512,
-        UserLayer9 = 1024,
-        UserLayer10 = 2048,
-        UserLayer11 = 3840,
-    }
-}
-declare namespace paper {
-    /**
-     * 场景类
-     */
-    class Scene extends SerializableObject {
-        /**
-         * 场景名称。
-         */
-        name: string;
-        /**
-         * 场景的light map列表。
-         */
-        readonly lightmaps: egret3d.Texture[];
-        /**
-         * 当前场景的所有GameObject对象池
-         *
-         */
-        readonly gameObjects: GameObject[];
-        /**
-         * 存储着关联的数据
-         * 场景保存时，将场景快照数据保存至对应的资源中
-         *
-         */
-        $rawScene: egret3d.RawScene | null;
-        constructor();
-        /**
-         * 移除GameObject对象
-         *
-         */
-        $removeGameObject(gameObject: GameObject): void;
-        /**
-         * 添加一个GameObject对象
-         *
-         */
-        $addGameObject(gameObject: GameObject): void;
-        /**
-         * 获取所有根级GameObject对象
-         */
-        getRootGameObjects(): GameObject[];
-    }
-}
 declare namespace egret3d {
     /**
      * 矩形对象
@@ -2041,20 +2100,24 @@ declare namespace egret3d {
     }
 }
 declare namespace paper {
-    class Time {
-        static timeScale: number;
-        private static _frameCount;
-        private static _lastTimer;
-        private static _beginTimer;
-        private static _unscaledTime;
-        private static _unscaledDeltaTime;
-        static initialize(): void;
-        static update(timer?: number): void;
-        static readonly frameCount: number;
-        static readonly time: number;
-        static readonly unscaledTime: number;
-        static readonly deltaTime: number;
-        static readonly unscaledDeltaTime: number;
+    /**
+     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
+     * 这个属性可以实现相机的选择性剔除。
+     */
+    const enum Layer {
+        Default = 2,
+        UI = 4,
+        UserLayer1 = 8,
+        UserLayer2 = 16,
+        UserLayer3 = 32,
+        UserLayer4 = 64,
+        UserLayer5 = 128,
+        UserLayer6 = 240,
+        UserLayer7 = 256,
+        UserLayer8 = 512,
+        UserLayer9 = 1024,
+        UserLayer10 = 2048,
+        UserLayer11 = 3840,
     }
 }
 declare namespace egret3d {
@@ -2317,11 +2380,46 @@ declare namespace egret3d {
         deserialize(element: number[]): void;
     }
 }
-declare namespace paper.editor {
-    const icon_frag: string;
-    const icon_vert: string;
-    const line_frag: string;
-    const line_vert: string;
+declare namespace paper {
+    /**
+     * 场景类
+     */
+    class Scene extends SerializableObject {
+        /**
+         * 场景名称。
+         */
+        name: string;
+        /**
+         * 场景的light map列表。
+         */
+        readonly lightmaps: egret3d.Texture[];
+        /**
+         * 当前场景的所有GameObject对象池
+         *
+         */
+        readonly gameObjects: GameObject[];
+        /**
+         * 存储着关联的数据
+         * 场景保存时，将场景快照数据保存至对应的资源中
+         *
+         */
+        $rawScene: egret3d.RawScene | null;
+        constructor();
+        /**
+         * 移除GameObject对象
+         *
+         */
+        $removeGameObject(gameObject: GameObject): void;
+        /**
+         * 添加一个GameObject对象
+         *
+         */
+        $addGameObject(gameObject: GameObject): void;
+        /**
+         * 获取所有根级GameObject对象
+         */
+        getRootGameObjects(): GameObject[];
+    }
 }
 declare namespace egret3d {
     /**
@@ -2579,6 +2677,44 @@ declare namespace egret3d {
     const stage: Stage3D;
 }
 declare namespace paper {
+    class Time {
+        static timeScale: number;
+        private static _frameCount;
+        private static _lastTimer;
+        private static _beginTimer;
+        private static _unscaledTime;
+        private static _unscaledDeltaTime;
+        static initialize(): void;
+        static update(timer?: number): void;
+        static readonly frameCount: number;
+        static readonly time: number;
+        static readonly unscaledTime: number;
+        static readonly deltaTime: number;
+        static readonly unscaledDeltaTime: number;
+    }
+}
+declare namespace paper.editor {
+    const icon_frag: string;
+    const icon_vert: string;
+    const line_frag: string;
+    const line_vert: string;
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class MissingObject implements ISerializable {
+        /**
+         *
+         */
+        readonly missingData: {
+            [key: string]: any;
+        };
+        serialize(): any | IHashCode | ISerializedObject;
+        deserialize(element: any): void;
+    }
+}
+declare namespace paper {
     /**
      * 反序列化
      * @param data 反序列化数据
@@ -2591,102 +2727,6 @@ declare namespace paper {
      *
      */
     function getDeserializedObject<T extends ISerializable>(source: IHashCode): T;
-}
-declare namespace paper {
-    /**
-     *
-     */
-    interface IHashCode {
-        /**
-         *
-         */
-        readonly hashCode: number;
-    }
-    /**
-     *
-     */
-    interface IStruct {
-        /**
-         *
-         */
-        readonly class: string;
-    }
-    /**
-     * 自定义序列化接口。
-     */
-    interface ISerializable {
-        /**
-         *
-         */
-        serialize(): any | IHashCode | ISerializedObject;
-        /**
-         *
-         */
-        deserialize(element: any): void;
-    }
-    /**
-     * 序列化后的数据接口。
-     */
-    interface ISerializedObject extends IHashCode, IStruct {
-        /**
-         *
-         */
-        [key: string]: any | IHashCode;
-    }
-    /**
-     * 序列化数据接口
-     */
-    interface ISerializedData {
-        /**
-         *
-         */
-        readonly objects: ISerializedObject[];
-        /**
-         *
-         */
-        [key: string]: ISerializedObject[];
-    }
-}
-declare namespace paper {
-    /**
-     * 组件实体系统的主入口
-     */
-    class Application {
-        /**
-         * 系统管理器
-         */
-        static readonly systemManager: SystemManager;
-        /**
-         * 场景管理器
-         */
-        static readonly sceneManager: SceneManager;
-        private static _isEditor;
-        private static _isFocused;
-        private static _isPlaying;
-        private static _isRunning;
-        private static _standDeltaTime;
-        private static _bindUpdate;
-        private static _update();
-        static init({isEditor, isPlaying}?: {
-            isEditor?: boolean;
-            isPlaying?: boolean;
-        }): void;
-        /**
-         *
-         */
-        static pause(): void;
-        static resume(): void;
-        /**
-         *
-         */
-        static callLater(callback: () => void): void;
-        static readonly isEditor: boolean;
-        static readonly isFocused: boolean;
-        static readonly isPlaying: boolean;
-        static readonly isRunning: boolean;
-    }
-}
-declare namespace paper {
 }
 declare namespace egret3d {
     /**
@@ -3908,121 +3948,28 @@ declare namespace egret3d {
         update(light: Light, face?: number): void;
     }
 }
-declare namespace egret3d {
-    /**
-     * Light Type Enum
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 灯光类型的枚举。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    enum LightTypeEnum {
-        /**
-         * direction light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 直射光
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Direction = 1,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 点光源
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Point = 2,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Spot = 3,
-    }
-    /**
-     * light component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 灯光组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class Light extends paper.BaseComponent {
-        /**
-         * light type
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 光源类型
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        type: LightTypeEnum;
-        color: Color;
-        intensity: number;
-        distance: number;
-        decay: number;
-        angle: number;
-        penumbra: number;
-        /**
-         * spot angel cos
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯的开合角度cos值
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        spotAngelCos: number;
-        castShadows: boolean;
-        $directLightShadow: DirectLightShadow;
-        $pointLightShadow: PointLightShadow;
-        $spotLightShadow: SpotLightShadow;
-        shadowBias: number;
-        shadowRadius: number;
-        shadowSize: number;
-        shadowCameraNear: number;
-        shadowCameraFar: number;
-    }
-}
 declare namespace paper {
     /**
      * 克隆
      */
     function clone<T extends paper.SerializableObject>(object: T): T;
+}
+declare namespace egret3d {
+    /**
+     * Light系统
+     */
+    class LightSystem extends paper.BaseSystem<Light> {
+        /**
+         * @inheritDoc
+         */
+        protected readonly _interests: {
+            componentClass: typeof Light;
+        }[];
+        /**
+         * @inheritDoc
+         */
+        update(): void;
+    }
 }
 declare namespace egret3d {
     class PointLightShadow implements ILightShadow {
@@ -5257,18 +5204,41 @@ declare namespace egret3d.particle {
 }
 declare namespace paper {
     /**
-     *
+     * 组件实体系统的主入口
      */
-    class LaterSystem extends paper.BaseSystem<paper.BaseComponent> {
-        private readonly _laterCalls;
+    class Application {
         /**
-         * @inheritDoc
+         * 系统管理器
          */
-        update(): void;
+        static readonly systemManager: SystemManager;
+        /**
+         * 场景管理器
+         */
+        static readonly sceneManager: SceneManager;
+        private static _isEditor;
+        private static _isFocused;
+        private static _isPlaying;
+        private static _isRunning;
+        private static _standDeltaTime;
+        private static _bindUpdate;
+        private static _update();
+        static init({isEditor, isPlaying}?: {
+            isEditor?: boolean;
+            isPlaying?: boolean;
+        }): void;
         /**
          *
          */
-        callLater(callback: () => void): void;
+        static pause(): void;
+        static resume(): void;
+        /**
+         *
+         */
+        static callLater(callback: () => void): void;
+        static readonly isEditor: boolean;
+        static readonly isFocused: boolean;
+        static readonly isPlaying: boolean;
+        static readonly isRunning: boolean;
     }
 }
 declare namespace egret3d.particle {
@@ -6237,6 +6207,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d.ShaderLib {
     const boneeff_vert = "attribute vec4 _glesVertex;   \nattribute vec4 _glesBlendIndex4;\nattribute vec4 _glesBlendWeight4;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 glstate_vec4_bones[110];\nuniform highp vec4 _MainTex_ST; \nvarying highp vec2 xlv_TEXCOORD0;\nmat4 buildMat4(int index)\n{\n vec4 quat = glstate_vec4_bones[index * 2 + 0];\n vec4 translation = glstate_vec4_bones[index * 2 + 1];\n float xy2 = 2.0 * quat.x * quat.y;\n float xz2 = 2.0 * quat.x * quat.z;\n float xw2 = 2.0 * quat.x * quat.w;\n float yz2 = 2.0 * quat.y * quat.z;\n float yw2 = 2.0 * quat.y * quat.w;\n float zw2 = 2.0 * quat.z * quat.w;\n float xx = quat.x * quat.x;\n float yy = quat.y * quat.y;\n float zz = quat.z * quat.z;\n float ww = quat.w * quat.w;\n mat4 matrix = mat4(\n xx - yy - zz + ww, xy2 + zw2, xz2 - yw2, 0,\n xy2 - zw2, -xx + yy - zz + ww, yz2 + xw2, 0,\n xz2 + yw2, yz2 - xw2, -xx - yy + zz + ww, 0,\n translation.x, translation.y, translation.z, 1);\n return matrix;\n}\n\nhighp vec4 calcVertex(highp vec4 srcVertex,highp vec4 blendIndex,highp vec4 blendWeight)\n{\n int i = int(blendIndex.x);  \n    int i2 =int(blendIndex.y);\n int i3 =int(blendIndex.z);\n int i4 =int(blendIndex.w);\n \n    mat4 mat = buildMat4(i)*blendWeight.x \n    + buildMat4(i2)*blendWeight.y \n    + buildMat4(i3)*blendWeight.z \n    + buildMat4(i4)*blendWeight.w;\n return mat* srcVertex;\n}\n\n\nvoid main()\n{                                               \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz;  \n    \n    gl_Position = glstate_matrix_mvp *  tmpvar_1;\n\n xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  \n}";
+    const bonelambert_vert = "attribute vec4 _glesVertex;   \nattribute vec3 _glesNormal; \nattribute vec4 _glesBlendIndex4;\nattribute vec4 _glesBlendWeight4;             \nattribute vec4 _glesMultiTexCoord0;    \n\nuniform mat4 glstate_matrix_mvp;      \nuniform mat4 glstate_matrix_model;\n\nuniform highp vec4 glstate_vec4_bones[110];\nuniform highp vec4 _MainTex_ST; \n\n#include <shadowMap_pars_vert>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#include <transpose>\n#include <inverse>\n\nmat4 buildMat4(int index)\n{\n vec4 quat = glstate_vec4_bones[index * 2 + 0];\n vec4 translation = glstate_vec4_bones[index * 2 + 1];\n float xy2 = 2.0 * quat.x * quat.y;\n float xz2 = 2.0 * quat.x * quat.z;\n float xw2 = 2.0 * quat.x * quat.w;\n float yz2 = 2.0 * quat.y * quat.z;\n float yw2 = 2.0 * quat.y * quat.w;\n float zw2 = 2.0 * quat.z * quat.w;\n float xx = quat.x * quat.x;\n float yy = quat.y * quat.y;\n float zz = quat.z * quat.z;\n float ww = quat.w * quat.w;\n mat4 matrix = mat4(\n xx - yy - zz + ww, xy2 + zw2, xz2 - yw2, 0,\n xy2 - zw2, -xx + yy - zz + ww, yz2 + xw2, 0,\n xz2 + yw2, yz2 - xw2, -xx - yy + zz + ww, 0,\n translation.x, translation.y, translation.z, 1);\n return matrix;\n}\n\nhighp vec4 calcVertex(highp vec4 srcVertex,highp vec4 blendIndex,highp vec4 blendWeight)\n{\n int i = int(blendIndex.x);  \n    int i2 =int(blendIndex.y);\n int i3 =int(blendIndex.z);\n int i4 =int(blendIndex.w);\n \n    mat4 mat = buildMat4(i)*blendWeight.x \n    + buildMat4(i2)*blendWeight.y \n    + buildMat4(i3)*blendWeight.z \n    + buildMat4(i4)*blendWeight.w;\n return mat* srcVertex;\n}\n\nvoid main() {   \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz;                            \n\n    vec3 normal = (transpose(inverse(glstate_matrix_model)) * vec4(_glesNormal, 1.0)).xyz;\n    xlv_NORMAL = normal;\n    #ifdef FLIP_SIDED\n     xlv_NORMAL = - xlv_NORMAL;\n    #endif\n\n    vec3 worldpos = (glstate_matrix_model * tmpvar_1).xyz;\n    xlv_POS = worldpos; \n\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy;\n\n    #include <shadowMap_vert>\n     \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
     const bone_vert = "attribute vec4 _glesVertex;   \nattribute vec4 _glesBlendIndex4;\nattribute vec4 _glesBlendWeight4;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp mat4 glstate_matrix_bones[24];\nuniform highp vec4 _MainTex_ST; \nvarying highp vec2 xlv_TEXCOORD0;\nvoid main()                                     \n{                                               \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = _glesVertex.xyz;  \n \n    int i = int(_glesBlendIndex4.x);  \n    int i2 =int(_glesBlendIndex4.y);\n int i3 =int(_glesBlendIndex4.z);\n int i4 =int(_glesBlendIndex4.w);\n \n    mat4 mat = glstate_matrix_bones[i]*_glesBlendWeight4.x \n    + glstate_matrix_bones[i2]*_glesBlendWeight4.y \n    + glstate_matrix_bones[i3]*_glesBlendWeight4.z \n    + glstate_matrix_bones[i4]*_glesBlendWeight4.w;\n    \n    gl_Position = (glstate_matrix_mvp * mat)* tmpvar_1;\n\n xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;\n}";
     const code2_frag = "void main() {\n    gl_FragData[0] = vec4(1.0, 1.0, 1.0, 1.0);\n}";
     const code_frag = "uniform sampler2D _MainTex;                                                 \nvarying lowp vec4 xlv_COLOR;                                                 \nvarying highp vec2 xlv_TEXCOORD0;   \nvoid main() {\n    lowp vec4 col_1;    \n    mediump vec4 prev_2;\n    lowp vec4 tmpvar_3;\n    tmpvar_3 = (xlv_COLOR * texture2D(_MainTex, xlv_TEXCOORD0));\n    prev_2 = tmpvar_3;\n    mediump vec4 tmpvar_4;\n    tmpvar_4 = mix(vec4(1.0, 1.0, 1.0, 1.0), prev_2, prev_2.wwww);\n    col_1 = tmpvar_4;\n    col_1.x =xlv_TEXCOORD0.x;\n    col_1.y =xlv_TEXCOORD0.y;\n    gl_FragData[0] = col_1;\n}";
@@ -6249,7 +6220,7 @@ declare namespace egret3d.ShaderLib {
     const diffuse_vert = "attribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 _MainTex_ST;  \nvarying highp vec2 xlv_TEXCOORD0;\n\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
     const distancepackage_frag = "#include <packing>\n\nvarying vec3 xlv_POS;\nuniform vec4 glstate_referencePosition;\nuniform float glstate_nearDistance;\nuniform float glstate_farDistance;\n\nvoid main() {\n    float dist = length( xlv_POS - glstate_referencePosition.xyz );\n dist = ( dist - glstate_nearDistance ) / ( glstate_farDistance - glstate_nearDistance );\n dist = saturate( dist ); // clamp to [ 0, 1 ]\n\n gl_FragColor = packDepthToRGBA( dist );\n}";
     const distancepackage_vert = "attribute vec3 _glesVertex;\n\nuniform mat4 glstate_matrix_mvp;\nuniform mat4 glstate_matrix_model;\n\nvarying vec3 xlv_POS;\n\nvoid main() {   \n    xlv_POS = (glstate_matrix_model * vec4(_glesVertex, 1.0)).xyz;\n    gl_Position = glstate_matrix_mvp * vec4(_glesVertex, 1.0);\n}";
-    const lambert_frag = "#extension GL_OES_standard_derivatives : enable\n\nuniform sampler2D _MainTex;\nuniform vec4 _Color;         \n\n#include <bsdfs>\n#include <light_pars_frag>\n#include <shadowMap_pars_frag>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#ifdef USE_NORMAL_MAP\n    #include <tbn>\n    #include <tsn>\n    uniform sampler2D _NormalTex;\n#endif\n\n#include <bumpMap_pars_frag>\n\nvoid main() {\n    vec4 outColor = vec4(0., 0., 0., 1.);\n\n    vec4 diffuseColor = _Color * texture2D(_MainTex, xlv_TEXCOORD0);\n\n    #include <normal_frag>\n    #include <light_frag>\n\n    outColor.a = diffuseColor.a;\n\n    gl_FragColor = outColor;\n}";
+    const lambert_frag = "// #extension GL_OES_standard_derivatives : enable\n\nuniform sampler2D _MainTex;\nuniform vec4 _Color;         \n\n#include <bsdfs>\n#include <light_pars_frag>\n#include <shadowMap_pars_frag>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#ifdef USE_NORMAL_MAP\n    #include <tbn>\n    #include <tsn>\n    uniform sampler2D _NormalTex;\n#endif\n\n#include <bumpMap_pars_frag>\n\nvoid main() {\n    vec4 outColor = vec4(0., 0., 0., 1.);\n\n    vec4 diffuseColor = _Color * texture2D(_MainTex, xlv_TEXCOORD0);\n\n    #include <normal_frag>\n    #include <light_frag>\n    \n    outColor.a = diffuseColor.a;\n\n    gl_FragColor = outColor;\n}";
     const lambert_vert = "attribute vec3 _glesVertex;   \nattribute vec3 _glesNormal;               \nattribute vec4 _glesMultiTexCoord0;    \n\nuniform mat4 glstate_matrix_mvp;      \nuniform mat4 glstate_matrix_model;\n\n#include <shadowMap_pars_vert>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#include <transpose>\n#include <inverse>\n\nvoid main() {   \n    vec4 tmpvar_1 = vec4(_glesVertex.xyz, 1.0);                            \n\n    vec3 normal = (transpose(inverse(glstate_matrix_model)) * vec4(_glesNormal, 1.0)).xyz;\n    xlv_NORMAL = normal;\n    #ifdef FLIP_SIDED\n     xlv_NORMAL = - xlv_NORMAL;\n    #endif\n\n    vec3 worldpos = (glstate_matrix_model * tmpvar_1).xyz;\n    xlv_POS = worldpos; \n\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy;\n\n    #include <shadowMap_vert>\n     \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
     const line_frag = "varying lowp vec4 xlv_COLOR;\nvoid main() {\n    gl_FragData[0] = xlv_COLOR;\n}";
     const line_vert = "attribute vec4 _glesVertex;\nattribute vec4 _glesColor;\nuniform highp mat4 glstate_matrix_mvp;\nvarying lowp vec4 xlv_COLOR;\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_COLOR = _glesColor;\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
@@ -7398,58 +7369,21 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
-     * 销毁系统
      *
      */
-    class DestroySystem extends BaseSystem<BaseComponent> {
-        private readonly _bufferedComponents;
-        private readonly _bufferedGameObjects;
+    class LaterSystem extends paper.BaseSystem<paper.BaseComponent> {
+        private readonly _laterCalls;
         /**
          * @inheritDoc
          */
         update(): void;
         /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
          *
          */
-        bufferComponent(component: BaseComponent): void;
-        /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
-         *
-         */
-        bufferGameObject(gameObject: GameObject): void;
+        callLater(callback: () => void): void;
     }
 }
 declare namespace paper {
-    /**
-     * 序列化方法
-     * 只有 ISerializable (有对应hashCode属性) 参与序列化
-     * 只有被标记的对象属性 参与序列化
-     * 序列化后，输出 ISerializeData
-     * 对象在objects中按生成顺序，root一定是第一个元素。
-     * 允许依赖标记对序列化对象数据分类，以便单独处理一些对象（例如资源等等，但资源的路径这里不做处理，在方法外由开发者自行处理）
-     */
-    function serialize(source: SerializableObject, sourcePath?: string): ISerializedData;
-    /**
-     *
-     */
-    function serializeAsset(source: paper.Asset): any;
-    /**
-     *
-     */
-    function serializeRC(source: SerializableObject): any;
-    /**
-     *
-     */
-    function serializeR(source: SerializableObject): any;
-    /**
-     *
-     */
-    function serializeC(source: SerializableObject): any;
-    /**
-     *
-     */
-    function getTypesFromPrototype(classPrototype: any, typeKey: string, types?: string[] | null): string[];
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
@@ -8029,18 +7963,111 @@ declare namespace paper.editor {
 }
 declare namespace egret3d {
     /**
-     * Light系统
+     * Light Type Enum
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    class LightSystem extends paper.BaseSystem<Light> {
+    /**
+     * 灯光类型的枚举。
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    enum LightTypeEnum {
         /**
-         * @inheritDoc
+         * direction light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        protected readonly _interests: {
-            componentClass: typeof Light;
-        }[];
         /**
-         * @inheritDoc
+         * 直射光
+         * @version paper 1.0
+         * @platform Web
+         * @language
          */
-        update(): void;
+        Direction = 1,
+        /**
+         * point light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 点光源
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        Point = 2,
+        /**
+         * point light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 聚光灯
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        Spot = 3,
+    }
+    /**
+     * light component
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 灯光组件
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    class Light extends paper.BaseComponent {
+        /**
+         * light type
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 光源类型
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        type: LightTypeEnum;
+        color: Color;
+        intensity: number;
+        distance: number;
+        decay: number;
+        angle: number;
+        penumbra: number;
+        /**
+         * spot angel cos
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 聚光灯的开合角度cos值
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        spotAngelCos: number;
+        castShadows: boolean;
+        $directLightShadow: DirectLightShadow;
+        $pointLightShadow: PointLightShadow;
+        $spotLightShadow: SpotLightShadow;
+        shadowBias: number;
+        shadowRadius: number;
+        shadowSize: number;
+        shadowCameraNear: number;
+        shadowCameraFar: number;
     }
 }
