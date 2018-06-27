@@ -37,10 +37,6 @@ namespace paper {
             super();
 
             Application.sceneManager._addScene(this);
-
-            for (const gameObject of Application.sceneManager.globalObjects) {
-                this.$addGameObject(gameObject);
-            }
         }
 
         /**
@@ -48,14 +44,9 @@ namespace paper {
          * @internal
          */
         public $destroy() {
-            const globalObjects = Application.sceneManager.globalObjects;
             let i = this.gameObjects.length;
             while (i--) {
                 const gameObject = this.gameObjects[i];
-                if (globalObjects.indexOf(gameObject) >= 0) {
-                    continue;
-                }
-
                 gameObject.destroy();
             }
 

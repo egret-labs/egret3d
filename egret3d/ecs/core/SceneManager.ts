@@ -3,15 +3,18 @@ namespace paper {
      * 场景管理器
      */
     export class SceneManager {
+        private _globalScene: Scene | null = null;
         private readonly _scenes: Scene[] = [];
-        private readonly _globalObjects: GameObject[] = [];
 
+        /**
+         * @internal
+         */
         public _addScene(scene: Scene) {
             if (this._scenes.indexOf(scene) < 0) {
                 this._scenes.unshift(scene);
             }
             else {
-                console.warn("Add the scene again.", scene.name);
+                console.debug("Add the scene again.", scene.name);
             }
         }
 
@@ -19,7 +22,7 @@ namespace paper {
          * 创建一个空场景并激活 
          */
         public createScene(name: string) {
-            let scene: Scene = new Scene();
+            const scene = new Scene();
             scene.name = name;
             scene.$rawScene = null as any; // 保存的话需要设置一个对应的RawScene文件
 
@@ -59,10 +62,6 @@ namespace paper {
                 scene.$destroy();
                 this._scenes.splice(index, 1);
             }
-
-            if (this._scenes.length === 0) {
-                this.createScene("default");
-            }
         }
 
         /**
@@ -74,35 +73,6 @@ namespace paper {
             }
 
             this._scenes.length = 0;
-
-            if (this._scenes.length === 0) {
-                this.createScene("default");
-            }
-        }
-
-        /**
-         * 
-         */
-        public addGlobalObject(gameObject: GameObject) {
-            if (this._globalObjects.indexOf(gameObject) >= 0) {
-                console.warn("The game object has been added to globals.", gameObject.name, gameObject.hashCode);
-                return;
-            }
-
-            this._globalObjects.push(gameObject);
-        }
-
-        /**
-         * 
-         */
-        public removeGlobalObject(gameObject: GameObject) {
-            const index = this._globalObjects.indexOf(gameObject);
-            if (index < 0) {
-                console.warn("The game object has been removed from globals.", gameObject.name, gameObject.hashCode);
-                return;
-            }
-
-            this._globalObjects.splice(index, 1, gameObject);
         }
 
         /**
@@ -134,14 +104,22 @@ namespace paper {
         /**
          * 
          */
-        public get globalObjects(): ReadonlyArray<GameObject> {
-            return this._globalObjects;
+        public get globalScene() {
+            if (!this._globalScene) {
+                this._globalScene = this.createScene("global");
+            }
+
+            return this._globalScene;
         }
 
         /**
          * 获取当前激活的场景
          */
         public get activeScene() {
+            if (this._scenes.length < 1) {
+                this.createScene("default");
+            }
+
             return this._scenes[0];
         }
 
@@ -149,7 +127,7 @@ namespace paper {
          * @deprecated
          */
         public getActiveScene() {
-            return this._scenes[0];
+            return this.activeScene;
         }
     }
 }

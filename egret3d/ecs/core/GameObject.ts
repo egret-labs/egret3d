@@ -97,7 +97,7 @@ namespace paper {
         private _scene: Scene = null as any;
 
         @paper.serializedField
-        public uuid:string | null = null;
+        public uuid: string | null = null;
 
         /**
          * 创建GameObject，并添加到当前场景中
@@ -105,12 +105,12 @@ namespace paper {
         public constructor(name: string = "NoName", tag: string = "") {
             super();
 
-            this._scene = Application.sceneManager.getActiveScene();
-            this._scene.$addGameObject(this);
             this.name = name;
             this.tag = tag;
-            // 自动创建transform
             this.addComponent(egret3d.Transform);
+
+            this._scene = Application.sceneManager.activeScene;
+            this._scene.$addGameObject(this);
         }
         /**
          * @internal
@@ -168,10 +168,6 @@ namespace paper {
                 return;
             }
 
-            if (Application.sceneManager.globalObjects.indexOf(this) >= 0) {
-                Application.sceneManager.removeGlobalObject(this);
-            }
-
             this._destroyed = true;
             this.removeAllComponents();
             this._scene.$removeGameObject(this);
@@ -198,7 +194,7 @@ namespace paper {
 
             if (component instanceof egret3d.Transform) {
                 this.transform = component;
-            }else if(component instanceof egret3d.MeshRenderer){
+            } else if (component instanceof egret3d.MeshRenderer) {
                 this.renderer = component;
             }
 
