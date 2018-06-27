@@ -6,14 +6,17 @@ namespace egret3d {
      */
     export class Stage3D {
 
-
-
         screenViewport: Readonly<RectData> = { x: 0, y: 0, w: 0, h: 0 };
-
 
         absolutePosition: Readonly<RectData> = { x: 0, y: 0, w: 0, h: 0 }
 
         private _canvas: HTMLCanvasElement;
+        /**
+         * 是否为横屏，需要旋转屏幕
+         */
+        private isLandscape: boolean;
+        private contentWidth: number;
+        private contentHeight: number;
 
         /**
          * @internal
@@ -21,10 +24,9 @@ namespace egret3d {
         public init(canvas: HTMLCanvasElement, options: RequiredRuntimeOptions) {
             this._canvas = canvas;
             window.addEventListener("resize", () => this._resizeDirty = true, false);
-
-            const screenViewport = this.screenViewport as RectData;
-            screenViewport.w = options.contentWidth;
-            canvas.width = screenViewport.w;
+            this.isLandscape = options.contentWidth > options.contentHeight;
+            this.contentWidth = options.contentWidth;
+            this.contentHeight = options.contentHeight;
         }
 
         private _resizeDirty: boolean = true;
@@ -36,34 +38,67 @@ namespace egret3d {
             }
         }
 
-
-
-
         private _resize() {
             const displayWidth = window.innerWidth;
             const displayHeight = window.innerHeight;
-            
+
             const absolutePosition = this.absolutePosition as RectData;
             absolutePosition.w = displayWidth;
             absolutePosition.h = displayHeight;
 
-            let screenH = Math.ceil(this.screenViewport.w / displayWidth * displayHeight);
-            (this.screenViewport  as RectData).h = screenH;
+            // 计算视口区域
+            const screenViewport = this.screenViewport as RectData;
+            let shouldRotate = (this.isLandscape && window.innerHeight > window.innerWidth)
+                || (!this.isLandscape && window.innerWidth > window.innerHeight);
+            if (shouldRotate) {
+                screenViewport.w = this.contentWidth;
+                var screenH = Math.ceil(screenViewport.w / displayHeight * displayWidth);
+                screenViewport.h = screenH;
+            }
+            else {
+                screenViewport.w = this.contentWidth;
+                var screenH = Math.ceil(screenViewport.w / displayWidth * displayHeight);
+                screenViewport.h = screenH;
+            }
 
             const canvas = this._canvas;
-            canvas.height = this.screenViewport.h;
+            canvas.width = screenViewport.w;
+            canvas.height = screenViewport.h;
 
+            // 设置canvas.style
             const { x, y, w, h } = absolutePosition;
-            canvas.style.left = x + "px";
             canvas.style.top = y + "px";
-            canvas.style.width = w + "px";
-            canvas.style.height = h + "px";
             canvas.style.position = "absolute";
+            canvas.style[egret.web.getPrefixStyleName("transformOrigin")] = "0% 0% 0px";
+            if (shouldRotate) {
+                canvas.style.width = h + "px";
+                canvas.style.height = w + "px";
+                canvas.style.left = window.innerWidth + "px";
+                const transform = `matrix(0,1,-1,0,0,0)`;
+                canvas.style[egret.web.getPrefixStyleName("transform")] = transform;
+            }
+            else {
+                canvas.style.width = w + "px";
+                canvas.style.height = h + "px";
+                canvas.style.left = x + "px";
+                canvas.style[egret.web.getPrefixStyleName("transform")] = null;
+            }
 
+            // 更新触摸信息
+            let touchScaleX;
+            let touchScaleY;
+            if (shouldRotate) {
+                touchScaleX = egret3d.stage.screenViewport.w / h;
+                touchScaleY = egret3d.stage.screenViewport.h / w;
+            }
+            else {
+                touchScaleX = egret3d.stage.screenViewport.w / w;
+                touchScaleY = egret3d.stage.screenViewport.h / h;
+            }
+            egret3d.InputManager.touch.updateOffsetAndScale(x, y, touchScaleX, touchScaleY, shouldRotate);
+            egret3d.InputManager.mouse.updateOffsetAndScale(x, y, touchScaleX, touchScaleY, shouldRotate);
         }
     }
 
-
     export const stage = new Stage3D();
-
 }

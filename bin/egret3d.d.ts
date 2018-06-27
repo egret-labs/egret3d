@@ -225,22 +225,9 @@ declare namespace paper {
          */
         url: string;
         /**
-         * get asset name
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 名称。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        name: string;
-        /**
          *
          */
-        constructor(name?: string, url?: string);
+        constructor(url?: string);
         /**
          * @inheritDoc
          */
@@ -1367,23 +1354,6 @@ declare namespace egret3d {
         private notifyListener(event);
     }
 }
-declare namespace egret3d.sound {
-    /**
-     *
-     */
-    class WebAudioChannel2D {
-        protected source: AudioBufferSourceNode;
-        protected gain: GainNode;
-        constructor();
-        protected _init(): void;
-        buffer: AudioBuffer;
-        volume: number;
-        loop: boolean;
-        start(offset?: number): void;
-        stop(): void;
-        dispose(): void;
-    }
-}
 declare namespace egret3d {
     /**
      * Camera系统
@@ -1758,6 +1728,22 @@ declare namespace egret3d {
     const helpVector4D: Vector4;
     const helpVector4E: Vector4;
     const helpVector4F: Vector4;
+}
+declare namespace paper {
+    /**
+     * renderer component interface
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 渲染器组件接口
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    interface IRenderer extends paper.BaseComponent {
+    }
 }
 declare namespace paper {
     /**
@@ -2580,6 +2566,12 @@ declare namespace egret3d {
         screenViewport: Readonly<RectData>;
         absolutePosition: Readonly<RectData>;
         private _canvas;
+        /**
+         * 是否为横屏，需要旋转屏幕
+         */
+        private isLandscape;
+        private contentWidth;
+        private contentHeight;
         private _resizeDirty;
         update(): void;
         private _resize();
@@ -2695,22 +2687,6 @@ declare namespace paper {
     }
 }
 declare namespace paper {
-}
-declare namespace paper {
-    /**
-     *
-     */
-    class LaterSystem extends paper.BaseSystem<paper.BaseComponent> {
-        private readonly _laterCalls;
-        /**
-         * @inheritDoc
-         */
-        update(): void;
-        /**
-         *
-         */
-        callLater(callback: () => void): void;
-    }
 }
 declare namespace egret3d {
     /**
@@ -2854,115 +2830,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 精灵资源。
-     */
-    class Sprite extends paper.Asset {
-        static spriteAnimation(row: number, column: number, index: number, out: Vector4): void;
-        /**
-         * atlas
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 所属图集
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        atlas: string;
-        /**
-         * rect
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 有效区域
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly rect: Rect;
-        /**
-         * border
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 边距
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly border: Border;
-        private _urange;
-        private _vrange;
-        private _texture;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-        /**
-         * u range
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * uv的u范围
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly urange: Vector2;
-        /**
-         * v range
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * uv的v范围
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly vrange: Vector2;
-        /**
-         * current texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前texture
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        /**
-         * current texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前texture
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        texture: Texture | null;
-    }
-}
-declare namespace egret3d {
-    /**
      * textrue asset
      * @version paper 1.0
      * @platform Web
@@ -3044,170 +2911,6 @@ declare namespace egret3d {
         updateShadowCasters(gameObject: paper.GameObject, castShadows: boolean): void;
         removeDrawCalls(gameObject: paper.GameObject): void;
         getDrawCalls(gameObject: paper.GameObject): DrawCall[] | null;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 声音监听组件。目前场景中只允许有一个监听器。对3D声音有效。
-     */
-    class Audio3DListener extends paper.BaseComponent {
-    }
-}
-declare namespace egret3d {
-    /**
-     * Audio系统
-     */
-    class Audio3DListenerSystem extends paper.BaseSystem<Audio3DListener> {
-        /**
-         * @inheritDoc
-         */
-        protected readonly _interests: {
-            componentClass: typeof Audio3DListener;
-        }[];
-        private _updateAudioListener(audioListener);
-        /**
-         * @inheritDoc
-         */
-        update(): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 2d audio source component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 2D音频组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class AudioSource2D extends paper.BaseComponent {
-        private _channel;
-        private _sound;
-        /**
-         * 设置音频资源
-         */
-        sound: Sound;
-        private _volume;
-        /**
-         * 音量
-         */
-        /**
-         * 音量
-         */
-        volume: number;
-        private _loop;
-        /**
-         * 是否循环
-         */
-        /**
-         * 是否循环
-         */
-        loop: boolean;
-        private _playing;
-        /**
-         * 播放音频
-         */
-        play(offset?: number): void;
-        /**
-         * 暂停音频
-         */
-        stop(): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 3D音频组件
-     */
-    class AudioSource3D extends paper.BaseComponent {
-        update(deltaTime: number): void;
-        private _channel;
-        private _sound;
-        /**
-         * 设置音频资源
-         */
-        sound: Sound;
-        private _volume;
-        /**
-         * 音量
-         */
-        /**
-         * 音量
-         */
-        volume: number;
-        private _loop;
-        /**
-         * 是否循环
-         */
-        /**
-         * 是否循环
-         */
-        loop: boolean;
-        private _playing;
-        /**
-         * 播放音频
-         */
-        play(offset?: number): void;
-        /**
-         * 暂停音频
-         */
-        stop(): void;
-        /**
-         * 音频传播最远距离
-         */
-        /**
-         * 音频传播最远距离
-         */
-        maxDistance: number;
-        /**
-         * 音频传播最小距离
-         */
-        /**
-         * 音频传播最小距离
-         */
-        minDistance: number;
-        /**
-         * 音频滚降系数
-         */
-        /**
-         * 音频滚降系数
-         */
-        rollOffFactor: number;
-        /**
-         * 音频滚降系数
-         */
-        /**
-         * 音频衰减模式。支持“linear”，“inverse”，“exponential”三种
-         */
-        distanceModel: string;
-        /**
-         * 速度
-         */
-        getVelocity(): Vector3;
-        /**
-         * 速度
-         */
-        setVelocity(x: number, y: number, z: number): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * Audio系统
-     */
-    class AudioSource3DSystem extends paper.BaseSystem<AudioSource3D> {
-        /**
-         * @inheritDoc
-         */
-        protected readonly _interests: {
-            componentClass: typeof AudioSource3D;
-        }[];
-        /**
-         * @inheritDoc
-         */
-        update(): void;
     }
 }
 declare namespace egret3d {
@@ -3360,7 +3063,7 @@ declare namespace egret3d {
          */
         /**
          * 相机的渲染剔除，对应GameObject的层级
-         * @default CullingMask.Default | CullingMask.UI
+         * @default CullingMask.Everything
          * @version paper 1.0
          * @platform Web
          * @language
@@ -3485,10 +3188,6 @@ declare namespace egret3d {
          *
          */
         _targetAndViewport(target: IRenderTarget | null, withoutClear: boolean): void;
-        /**
-         * @inheritDoc
-         */
-        deserialize(element: any): void;
         /**
          * @inheritDoc
          */
@@ -4209,28 +3908,121 @@ declare namespace egret3d {
         update(light: Light, face?: number): void;
     }
 }
+declare namespace egret3d {
+    /**
+     * Light Type Enum
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 灯光类型的枚举。
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    enum LightTypeEnum {
+        /**
+         * direction light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 直射光
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        Direction = 1,
+        /**
+         * point light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 点光源
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        Point = 2,
+        /**
+         * point light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 聚光灯
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        Spot = 3,
+    }
+    /**
+     * light component
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 灯光组件
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    class Light extends paper.BaseComponent {
+        /**
+         * light type
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 光源类型
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        type: LightTypeEnum;
+        color: Color;
+        intensity: number;
+        distance: number;
+        decay: number;
+        angle: number;
+        penumbra: number;
+        /**
+         * spot angel cos
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 聚光灯的开合角度cos值
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        spotAngelCos: number;
+        castShadows: boolean;
+        $directLightShadow: DirectLightShadow;
+        $pointLightShadow: PointLightShadow;
+        $spotLightShadow: SpotLightShadow;
+        shadowBias: number;
+        shadowRadius: number;
+        shadowSize: number;
+        shadowCameraNear: number;
+        shadowCameraFar: number;
+    }
+}
 declare namespace paper {
     /**
      * 克隆
      */
     function clone<T extends paper.SerializableObject>(object: T): T;
-}
-declare namespace egret3d {
-    /**
-     * Light系统
-     */
-    class LightSystem extends paper.BaseSystem<Light> {
-        /**
-         * @inheritDoc
-         */
-        protected readonly _interests: {
-            componentClass: typeof Light;
-        }[];
-        /**
-         * @inheritDoc
-         */
-        update(): void;
-    }
 }
 declare namespace egret3d {
     class PointLightShadow implements ILightShadow {
@@ -4516,7 +4308,7 @@ declare namespace egret3d {
      * @platform Web
      * @language
      */
-    class TrailRender extends paper.BaseComponent implements paper.IRenderer {
+    class TrailRenderer extends paper.BaseComponent implements paper.IRenderer {
         /**
          * extend direction
          * @version paper 1.0
@@ -4636,15 +4428,15 @@ declare namespace egret3d {
     /**
      * TrailRender系统
      */
-    class TrailRenderSystem extends paper.BaseSystem<TrailRender> {
+    class TrailRendererSystem extends paper.BaseSystem<TrailRenderer> {
         /**
          * @inheritDoc
          */
         readonly _interests: {
-            componentClass: typeof TrailRender;
+            componentClass: typeof TrailRenderer;
             listeners: {
                 type: TrailRenderEventType;
-                listener: (component: TrailRender) => void;
+                listener: (component: TrailRenderer) => void;
             }[];
         }[];
         private readonly _transform;
@@ -4653,11 +4445,11 @@ declare namespace egret3d {
         /**
          * @inheritDoc
          */
-        protected _onAddComponent(component: TrailRender): boolean;
+        protected _onAddComponent(component: TrailRenderer): boolean;
         /**
          * @inheritDoc
          */
-        protected _onRemoveComponent(component: TrailRender): boolean;
+        protected _onRemoveComponent(component: TrailRenderer): boolean;
         /**
          * @inheritDoc
          */
@@ -5464,6 +5256,20 @@ declare namespace egret3d.particle {
     }
 }
 declare namespace paper {
+    /**
+     *
+     */
+    class LaterSystem extends paper.BaseSystem<paper.BaseComponent> {
+        private readonly _laterCalls;
+        /**
+         * @inheritDoc
+         */
+        update(): void;
+        /**
+         *
+         */
+        callLater(callback: () => void): void;
+    }
 }
 declare namespace egret3d.particle {
     class ParticleSystem extends paper.BaseSystem<ParticleComponent | ParticleRenderer> {
@@ -6356,123 +6162,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * atlas asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 图集资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Atlas extends paper.Asset {
-        /**
-         * texture pixel width
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 纹理像素宽度。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        texturewidth: number;
-        /**
-         * texture pixel height
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 纹理像素高度。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        textureheight: number;
-        /**
-         * sprite map
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 精灵字典，key为精灵名称。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        private readonly _sprites;
-        private _texture;
-        /**
-         *
-         */
-        $parse(json: string): void;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-        readonly sprites: Readonly<{
-            [key: string]: Sprite;
-        }>;
-        /**
-         * atlas texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 图集材质。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        texture: Texture | null;
-    }
-}
-declare namespace egret3d {
-    /**
-     * Asset Bundle
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 资源包.
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class AssetBundle extends paper.Asset {
-        readonly assets: {
-            url: string;
-        }[];
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-        /**
-         *
-         */
-        $parse(json: {
-            assets?: any[];
-        }): void;
-    }
-}
-declare namespace egret3d {
-    /**
      * 射线
      */
     class Ray {
@@ -6614,11 +6303,9 @@ declare namespace RES.processor {
     const TextureProcessor: RES.processor.Processor;
     const MaterialProcessor: RES.processor.Processor;
     const GLTFProcessor: RES.processor.Processor;
-    const AtlasProcessor: RES.processor.Processor;
     const PrefabProcessor: RES.processor.Processor;
     const SceneProcessor: RES.processor.Processor;
     const Font3DProcessor: RES.processor.Processor;
-    const Sound3DProcessor: RES.processor.Processor;
     const PathAssetProcessor: RES.processor.Processor;
 }
 declare namespace egret3d {
@@ -6852,74 +6539,6 @@ declare namespace egret3d.utils {
     function caclStringByteLength(value: string): number;
     function getKeyCodeByAscii(ev: KeyboardEvent): number;
 }
-declare namespace egret3d.sound {
-    /**
-     * web audio
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 基于 Web Audio 网络音频模块（单例）
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class WebAudio {
-        private static _instance;
-        /**
-         * web audio instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 基于 Web Audio 网络音频模块单例
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        static readonly instance: WebAudio;
-        private _audioContext;
-        /**
-         *
-         */
-        readonly audioContext: AudioContext;
-        private constructor();
-        /**
-         * is support web audio
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前运行环境是否支持 Web Audio
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        readonly isSupported: boolean;
-        /**
-         * active
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 某些平台中（IOS），需要在用户输入事件监听中调用此方法，音频才能正常播放
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        active(): void;
-        /**
-         *
-         */
-        decodeAudioData(buffer: ArrayBuffer, onSuccess: (buf: AudioBuffer) => void, onError: () => void): void;
-        private audioListener;
-        getAudioListener(): WebAudioListener;
-    }
-}
 declare namespace Stats {
     /**
      * 显示调试面板
@@ -6929,40 +6548,6 @@ declare namespace Stats {
      * 关闭调试面板
      */
     function hide(): void;
-}
-declare namespace egret3d.sound {
-    /**
-     *
-     */
-    class WebAudioChannel3D extends WebAudioChannel2D {
-        private panner;
-        protected _init(): void;
-        maxDistance: number;
-        minDistance: number;
-        rollOffFactor: number;
-        distanceModel: string;
-        private position;
-        setPosition(x: number, y: number, z: number): void;
-        getPosition(): Vector3;
-        private velocity;
-        setVelocity(x: number, y: number, z: number): void;
-        getVelocity(): Vector3;
-    }
-}
-declare namespace egret3d.sound {
-    class WebAudioListener {
-        private readonly listener;
-        private position;
-        private velocity;
-        private orientation;
-        constructor();
-        setPosition(x: number, y: number, z: number): void;
-        getPosition(): Vector3;
-        setVelocity(x: number, y: number, z: number): void;
-        getVelocity(): Vector3;
-        setOrientation(orientation: Matrix): void;
-        getOrientation(): Matrix;
-    }
 }
 declare namespace egret3d {
     /**
@@ -7189,10 +6774,11 @@ declare namespace egret3d {
         private _offsetY;
         private _scalerX;
         private _scalerY;
+        private _rotated;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number, rotated: boolean): void;
         /**
          *
          */
@@ -7452,10 +7038,11 @@ declare namespace egret3d {
         private _offsetY;
         private _scalerX;
         private _scalerY;
+        private _rotated;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number, rotated: boolean): void;
         /**
          *
          */
@@ -7518,28 +7105,6 @@ declare namespace egret3d {
     }
 }
 declare namespace paper {
-    /**
-     * 销毁系统
-     *
-     */
-    class DestroySystem extends BaseSystem<BaseComponent> {
-        private readonly _bufferedComponents;
-        private readonly _bufferedGameObjects;
-        /**
-         * @inheritDoc
-         */
-        update(): void;
-        /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
-         *
-         */
-        bufferComponent(component: BaseComponent): void;
-        /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
-         *
-         */
-        bufferGameObject(gameObject: GameObject): void;
-    }
 }
 declare namespace egret3d {
     class WebGLKit {
@@ -7585,11 +7150,6 @@ declare namespace egret3d {
         static capabilities: WebGLCapabilities;
         static init(canvas: HTMLCanvasElement, options: RequiredRuntimeOptions): void;
     }
-}
-declare namespace egret3d.batchingUtility {
-    function start(): void;
-    function addMaterial(material: egret3d.Material): void;
-    function getList(): any[];
 }
 declare namespace egret3d {
     const MAX_VERTEX_COUNT_PER_BUFFER: number;
@@ -7838,6 +7398,30 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
+     * 销毁系统
+     *
+     */
+    class DestroySystem extends BaseSystem<BaseComponent> {
+        private readonly _bufferedComponents;
+        private readonly _bufferedGameObjects;
+        /**
+         * @inheritDoc
+         */
+        update(): void;
+        /**
+         * 将实体缓存到销毁系统，以便在系统运行时销毁。
+         *
+         */
+        bufferComponent(component: BaseComponent): void;
+        /**
+         * 将实体缓存到销毁系统，以便在系统运行时销毁。
+         *
+         */
+        bufferGameObject(gameObject: GameObject): void;
+    }
+}
+declare namespace paper {
+    /**
      * 序列化方法
      * 只有 ISerializable (有对应hashCode属性) 参与序列化
      * 只有被标记的对象属性 参与序列化
@@ -7866,22 +7450,6 @@ declare namespace paper {
      *
      */
     function getTypesFromPrototype(classPrototype: any, typeKey: string, types?: string[] | null): string[];
-}
-declare namespace paper {
-    /**
-     * renderer component interface
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 渲染器组件接口
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    interface IRenderer extends paper.BaseComponent {
-    }
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
@@ -8461,111 +8029,18 @@ declare namespace paper.editor {
 }
 declare namespace egret3d {
     /**
-     * Light Type Enum
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * Light系统
      */
-    /**
-     * 灯光类型的枚举。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    enum LightTypeEnum {
+    class LightSystem extends paper.BaseSystem<Light> {
         /**
-         * direction light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * @inheritDoc
          */
+        protected readonly _interests: {
+            componentClass: typeof Light;
+        }[];
         /**
-         * 直射光
-         * @version paper 1.0
-         * @platform Web
-         * @language
+         * @inheritDoc
          */
-        Direction = 1,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 点光源
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Point = 2,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Spot = 3,
-    }
-    /**
-     * light component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 灯光组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class Light extends paper.BaseComponent {
-        /**
-         * light type
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 光源类型
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        type: LightTypeEnum;
-        color: Color;
-        intensity: number;
-        distance: number;
-        decay: number;
-        angle: number;
-        penumbra: number;
-        /**
-         * spot angel cos
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯的开合角度cos值
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        spotAngelCos: number;
-        castShadows: boolean;
-        $directLightShadow: DirectLightShadow;
-        $pointLightShadow: PointLightShadow;
-        $spotLightShadow: SpotLightShadow;
-        shadowBias: number;
-        shadowRadius: number;
-        shadowSize: number;
-        shadowCameraNear: number;
-        shadowCameraFar: number;
+        update(): void;
     }
 }

@@ -18,21 +18,29 @@ namespace egret3d {
         private _offsetY:number = 0;
         private _scalerX:number = 1;
         private _scalerY:number = 1;
+        private _rotated: boolean = false;
         /**
          *  
          */
-        public updateOffsetAndScale(offsetX:number, offsetY:number, scalerX:number, scalerY:number) {
+        public updateOffsetAndScale(offsetX:number, offsetY:number, scalerX:number, scalerY:number, rotated:boolean) {
             this._offsetX = offsetX;
             this._offsetY = offsetY;
             this._scalerX = scalerX;
             this._scalerY = scalerY;
+            this._rotated = rotated;
         }
         /**
          *  
          */
         public convertPosition(e:MouseEvent, out:Vector2) {
-            out.x = (e.clientX - this._offsetX) * this._scalerX;
-            out.y = (e.clientY - this._offsetY) * this._scalerY;
+            if (this._rotated) {
+                out.y = (window.innerWidth - e.clientX + this._offsetX) * this._scalerX;
+                out.x = (e.clientY - this._offsetY) * this._scalerY;
+            }
+            else {
+                out.x = (e.clientX - this._offsetX) * this._scalerX;
+                out.y = (e.clientY - this._offsetY) * this._scalerY;
+            }
         }
 
         /**
