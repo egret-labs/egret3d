@@ -140,7 +140,6 @@
         "egret3d/web/input/TouchDevice.ts",
         "egret3d/RunEgret.ts",
         "egret3d/web/render/WebGLKit.ts",
-        "egret3d/components/DynamicBatchingUtility.ts",
         "egret3d/components/StaticBatchingUtility.ts",
         "egret3d/Performance.ts",
         "egret3d/Profile.ts",

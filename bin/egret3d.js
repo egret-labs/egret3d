@@ -6978,12 +6978,12 @@ var egret3d;
              */
             /**
              * 相机的渲染剔除，对应GameObject的层级
-             * @default CullingMask.Default | CullingMask.UI
+             * @default CullingMask.Everything
              * @version paper 1.0
              * @platform Web
              * @language
              */
-            _this.cullingMask = 2 /* Default */ | 4 /* UI */;
+            _this.cullingMask = 16777215 /* Everything */;
             /**
              * camera render order
              * @version paper 1.0
@@ -7208,22 +7208,6 @@ var egret3d;
             }
             else {
             }
-        };
-        /**
-         * @inheritDoc
-         */
-        Camera.prototype.deserialize = function (element) {
-            this.uuid = element.uuid;
-            this.fov = element.fov;
-            this.opvalue = element.opvalue;
-            this._near = element._near;
-            this._far = element._far;
-            this.cullingMask = element.cullingMask;
-            this.order = element.order;
-            this.clearOption_Color = element.clearOption_Color;
-            this.clearOption_Depth = element.clearOption_Depth;
-            this.backgroundColor.deserialize(element.backgroundColor);
-            this.viewport.deserialize(element.viewport);
         };
         /**
          * @inheritDoc
@@ -9389,6 +9373,7 @@ var egret3d;
          * @inheritDoc
          */
         MeshRenderer.prototype.deserialize = function (element) {
+            _super.prototype.deserialize.call(this, element);
             this._receiveShadows = element._receiveShadows || false;
             this._castShadows = element._castShadows || false;
             this._lightmapIndex = element._lightmapIndex;
@@ -9925,6 +9910,7 @@ var egret3d;
          * @inheritDoc
          */
         SkinnedMeshRenderer.prototype.deserialize = function (element) {
+            _super.prototype.deserialize.call(this, element);
             this.center.deserialize(element.center);
             this.size.deserialize(element.size);
             this.uuid = element.uuid;
@@ -16085,7 +16071,15 @@ var egret3d;
                         mat.setFloat(i, data.value);
                         break;
                     case egret3d.UniformTypeEnum.Float4:
-                        mat.setVector4(i, data.value);
+                        if (Array.isArray(data.value)) {
+                            mat.setVector4v(i, data.value);
+                        }
+                        else {
+                            mat.setVector4(i, data.value);
+                        }
+                        break;
+                    case egret3d.UniformTypeEnum.Float4v:
+                        mat.setVector4v(i, data.value);
                         break;
                     default:
                         break;
@@ -17911,6 +17905,7 @@ var egret3d;
     var ShaderLib;
     (function (ShaderLib) {
         ShaderLib.boneeff_vert = "attribute vec4 _glesVertex;   \nattribute vec4 _glesBlendIndex4;\nattribute vec4 _glesBlendWeight4;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 glstate_vec4_bones[110];\nuniform highp vec4 _MainTex_ST; \nvarying highp vec2 xlv_TEXCOORD0;\nmat4 buildMat4(int index)\n{\n vec4 quat = glstate_vec4_bones[index * 2 + 0];\n vec4 translation = glstate_vec4_bones[index * 2 + 1];\n float xy2 = 2.0 * quat.x * quat.y;\n float xz2 = 2.0 * quat.x * quat.z;\n float xw2 = 2.0 * quat.x * quat.w;\n float yz2 = 2.0 * quat.y * quat.z;\n float yw2 = 2.0 * quat.y * quat.w;\n float zw2 = 2.0 * quat.z * quat.w;\n float xx = quat.x * quat.x;\n float yy = quat.y * quat.y;\n float zz = quat.z * quat.z;\n float ww = quat.w * quat.w;\n mat4 matrix = mat4(\n xx - yy - zz + ww, xy2 + zw2, xz2 - yw2, 0,\n xy2 - zw2, -xx + yy - zz + ww, yz2 + xw2, 0,\n xz2 + yw2, yz2 - xw2, -xx - yy + zz + ww, 0,\n translation.x, translation.y, translation.z, 1);\n return matrix;\n}\n\nhighp vec4 calcVertex(highp vec4 srcVertex,highp vec4 blendIndex,highp vec4 blendWeight)\n{\n int i = int(blendIndex.x);  \n    int i2 =int(blendIndex.y);\n int i3 =int(blendIndex.z);\n int i4 =int(blendIndex.w);\n \n    mat4 mat = buildMat4(i)*blendWeight.x \n    + buildMat4(i2)*blendWeight.y \n    + buildMat4(i3)*blendWeight.z \n    + buildMat4(i4)*blendWeight.w;\n return mat* srcVertex;\n}\n\n\nvoid main()\n{                                               \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz;  \n    \n    gl_Position = glstate_matrix_mvp *  tmpvar_1;\n\n xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  \n}";
+        ShaderLib.bonelambert_vert = "attribute vec4 _glesVertex;   \nattribute vec3 _glesNormal; \nattribute vec4 _glesBlendIndex4;\nattribute vec4 _glesBlendWeight4;             \nattribute vec4 _glesMultiTexCoord0;    \n\nuniform mat4 glstate_matrix_mvp;      \nuniform mat4 glstate_matrix_model;\n\nuniform highp vec4 glstate_vec4_bones[110];\nuniform highp vec4 _MainTex_ST; \n\n#include <shadowMap_pars_vert>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#include <transpose>\n#include <inverse>\n\nmat4 buildMat4(int index)\n{\n vec4 quat = glstate_vec4_bones[index * 2 + 0];\n vec4 translation = glstate_vec4_bones[index * 2 + 1];\n float xy2 = 2.0 * quat.x * quat.y;\n float xz2 = 2.0 * quat.x * quat.z;\n float xw2 = 2.0 * quat.x * quat.w;\n float yz2 = 2.0 * quat.y * quat.z;\n float yw2 = 2.0 * quat.y * quat.w;\n float zw2 = 2.0 * quat.z * quat.w;\n float xx = quat.x * quat.x;\n float yy = quat.y * quat.y;\n float zz = quat.z * quat.z;\n float ww = quat.w * quat.w;\n mat4 matrix = mat4(\n xx - yy - zz + ww, xy2 + zw2, xz2 - yw2, 0,\n xy2 - zw2, -xx + yy - zz + ww, yz2 + xw2, 0,\n xz2 + yw2, yz2 - xw2, -xx - yy + zz + ww, 0,\n translation.x, translation.y, translation.z, 1);\n return matrix;\n}\n\nhighp vec4 calcVertex(highp vec4 srcVertex,highp vec4 blendIndex,highp vec4 blendWeight)\n{\n int i = int(blendIndex.x);  \n    int i2 =int(blendIndex.y);\n int i3 =int(blendIndex.z);\n int i4 =int(blendIndex.w);\n \n    mat4 mat = buildMat4(i)*blendWeight.x \n    + buildMat4(i2)*blendWeight.y \n    + buildMat4(i3)*blendWeight.z \n    + buildMat4(i4)*blendWeight.w;\n return mat* srcVertex;\n}\n\nvoid main() {   \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz;                            \n\n    vec3 normal = (transpose(inverse(glstate_matrix_model)) * vec4(_glesNormal, 1.0)).xyz;\n    xlv_NORMAL = normal;\n    #ifdef FLIP_SIDED\n     xlv_NORMAL = - xlv_NORMAL;\n    #endif\n\n    vec3 worldpos = (glstate_matrix_model * tmpvar_1).xyz;\n    xlv_POS = worldpos; \n\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy;\n\n    #include <shadowMap_vert>\n     \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
         ShaderLib.bone_vert = "attribute vec4 _glesVertex;   \nattribute vec4 _glesBlendIndex4;\nattribute vec4 _glesBlendWeight4;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp mat4 glstate_matrix_bones[24];\nuniform highp vec4 _MainTex_ST; \nvarying highp vec2 xlv_TEXCOORD0;\nvoid main()                                     \n{                                               \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = _glesVertex.xyz;  \n \n    int i = int(_glesBlendIndex4.x);  \n    int i2 =int(_glesBlendIndex4.y);\n int i3 =int(_glesBlendIndex4.z);\n int i4 =int(_glesBlendIndex4.w);\n \n    mat4 mat = glstate_matrix_bones[i]*_glesBlendWeight4.x \n    + glstate_matrix_bones[i2]*_glesBlendWeight4.y \n    + glstate_matrix_bones[i3]*_glesBlendWeight4.z \n    + glstate_matrix_bones[i4]*_glesBlendWeight4.w;\n    \n    gl_Position = (glstate_matrix_mvp * mat)* tmpvar_1;\n\n xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;\n}";
         ShaderLib.code2_frag = "void main() {\n    gl_FragData[0] = vec4(1.0, 1.0, 1.0, 1.0);\n}";
         ShaderLib.code_frag = "uniform sampler2D _MainTex;                                                 \nvarying lowp vec4 xlv_COLOR;                                                 \nvarying highp vec2 xlv_TEXCOORD0;   \nvoid main() {\n    lowp vec4 col_1;    \n    mediump vec4 prev_2;\n    lowp vec4 tmpvar_3;\n    tmpvar_3 = (xlv_COLOR * texture2D(_MainTex, xlv_TEXCOORD0));\n    prev_2 = tmpvar_3;\n    mediump vec4 tmpvar_4;\n    tmpvar_4 = mix(vec4(1.0, 1.0, 1.0, 1.0), prev_2, prev_2.wwww);\n    col_1 = tmpvar_4;\n    col_1.x =xlv_TEXCOORD0.x;\n    col_1.y =xlv_TEXCOORD0.y;\n    gl_FragData[0] = col_1;\n}";
@@ -17923,7 +17918,7 @@ var egret3d;
         ShaderLib.diffuse_vert = "attribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 _MainTex_ST;  \nvarying highp vec2 xlv_TEXCOORD0;\n\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
         ShaderLib.distancepackage_frag = "#include <packing>\n\nvarying vec3 xlv_POS;\nuniform vec4 glstate_referencePosition;\nuniform float glstate_nearDistance;\nuniform float glstate_farDistance;\n\nvoid main() {\n    float dist = length( xlv_POS - glstate_referencePosition.xyz );\n dist = ( dist - glstate_nearDistance ) / ( glstate_farDistance - glstate_nearDistance );\n dist = saturate( dist ); // clamp to [ 0, 1 ]\n\n gl_FragColor = packDepthToRGBA( dist );\n}";
         ShaderLib.distancepackage_vert = "attribute vec3 _glesVertex;\n\nuniform mat4 glstate_matrix_mvp;\nuniform mat4 glstate_matrix_model;\n\nvarying vec3 xlv_POS;\n\nvoid main() {   \n    xlv_POS = (glstate_matrix_model * vec4(_glesVertex, 1.0)).xyz;\n    gl_Position = glstate_matrix_mvp * vec4(_glesVertex, 1.0);\n}";
-        ShaderLib.lambert_frag = "#extension GL_OES_standard_derivatives : enable\n\nuniform sampler2D _MainTex;\nuniform vec4 _Color;         \n\n#include <bsdfs>\n#include <light_pars_frag>\n#include <shadowMap_pars_frag>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#ifdef USE_NORMAL_MAP\n    #include <tbn>\n    #include <tsn>\n    uniform sampler2D _NormalTex;\n#endif\n\n#include <bumpMap_pars_frag>\n\nvoid main() {\n    vec4 outColor = vec4(0., 0., 0., 1.);\n\n    vec4 diffuseColor = _Color * texture2D(_MainTex, xlv_TEXCOORD0);\n\n    #include <normal_frag>\n    #include <light_frag>\n\n    outColor.a = diffuseColor.a;\n\n    gl_FragColor = outColor;\n}";
+        ShaderLib.lambert_frag = "// #extension GL_OES_standard_derivatives : enable\n\nuniform sampler2D _MainTex;\nuniform vec4 _Color;         \n\n#include <bsdfs>\n#include <light_pars_frag>\n#include <shadowMap_pars_frag>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#ifdef USE_NORMAL_MAP\n    #include <tbn>\n    #include <tsn>\n    uniform sampler2D _NormalTex;\n#endif\n\n#include <bumpMap_pars_frag>\n\nvoid main() {\n    vec4 outColor = vec4(0., 0., 0., 1.);\n\n    vec4 diffuseColor = _Color * texture2D(_MainTex, xlv_TEXCOORD0);\n\n    #include <normal_frag>\n    #include <light_frag>\n    \n    outColor.a = diffuseColor.a;\n\n    gl_FragColor = outColor;\n}";
         ShaderLib.lambert_vert = "attribute vec3 _glesVertex;   \nattribute vec3 _glesNormal;               \nattribute vec4 _glesMultiTexCoord0;    \n\nuniform mat4 glstate_matrix_mvp;      \nuniform mat4 glstate_matrix_model;\n\n#include <shadowMap_pars_vert>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#include <transpose>\n#include <inverse>\n\nvoid main() {   \n    vec4 tmpvar_1 = vec4(_glesVertex.xyz, 1.0);                            \n\n    vec3 normal = (transpose(inverse(glstate_matrix_model)) * vec4(_glesNormal, 1.0)).xyz;\n    xlv_NORMAL = normal;\n    #ifdef FLIP_SIDED\n     xlv_NORMAL = - xlv_NORMAL;\n    #endif\n\n    vec3 worldpos = (glstate_matrix_model * tmpvar_1).xyz;\n    xlv_POS = worldpos; \n\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy;\n\n    #include <shadowMap_vert>\n     \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
         ShaderLib.line_frag = "varying lowp vec4 xlv_COLOR;\nvoid main() {\n    gl_FragData[0] = xlv_COLOR;\n}";
         ShaderLib.line_vert = "attribute vec4 _glesVertex;\nattribute vec4 _glesColor;\nuniform highp mat4 glstate_matrix_mvp;\nvarying lowp vec4 xlv_COLOR;\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_COLOR = _glesColor;\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
@@ -18588,6 +18583,7 @@ var egret3d;
             var def_diffuse_vs = egret3d.Shader.registerVertShader("def_diffuse", egret3d.ShaderLib.diffuse_vert);
             var def_diffuse_fs = egret3d.Shader.registerFragShader("def_diffuse", egret3d.ShaderLib.diffuse_frag);
             var def_boneeff_vs = egret3d.Shader.registerVertShader("def_boneeff", egret3d.ShaderLib.boneeff_vert);
+            var def_bonelambert_vs = egret3d.Shader.registerVertShader("def_bonelambert_vert", egret3d.ShaderLib.bonelambert_vert);
             var def_diffuselightmap_vs = egret3d.Shader.registerVertShader("def_diffuselightmap", egret3d.ShaderLib.diffuselightmap_vert);
             var def_diffuselightmap_fs = egret3d.Shader.registerFragShader("def_diffuselightmap", egret3d.ShaderLib.diffuselightmap_frag);
             var def_postquad_vs = egret3d.Shader.registerVertShader("def_postquad", egret3d.ShaderLib.postquad_vert);
@@ -18640,6 +18636,14 @@ var egret3d;
                 distancePass.state_showface = egret3d.ShowFaceStateEnum.CCW;
                 distancePass.setAlphaBlend(egret3d.BlendModeEnum.Close);
                 shader.passes["base_distance_package"].push(distancePass);
+                var skinPass = new egret3d.DrawPass(def_bonelambert_vs, def_lambert_fs);
+                shader.passes["skin"] = [];
+                skinPass.state_ztest = true;
+                skinPass.state_ztest_method = egret3d.WebGLKit.LEQUAL;
+                skinPass.state_zwrite = true;
+                skinPass.state_showface = egret3d.ShowFaceStateEnum.CCW;
+                skinPass.setAlphaBlend(egret3d.BlendModeEnum.Close);
+                shader.passes["skin"].push(skinPass);
                 this.LAMBERT = shader;
                 paper.Asset.register(shader);
             }
@@ -18705,7 +18709,7 @@ var egret3d;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
                 sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
-                sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
+                sh.defaultValue["_AlphaCut"] = { type: "Range", value: 1, min: 0, max: 1 };
                 var p = new egret3d.DrawPass(def_diffuse_vs, def_diffuse_fs);
                 sh.passes["base"].push(p);
                 p.state_ztest = true;
@@ -18771,7 +18775,7 @@ var egret3d;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
                 sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
-                sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
+                sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0, min: 0, max: 1 };
                 var p = new egret3d.DrawPass(def_diffuse_vs, def_diffuse_fs);
                 sh.passes["base"].push(p);
                 p.state_ztest = true;
@@ -19104,8 +19108,8 @@ var egret3d;
                 shader.passes["base"] = [];
                 var renderPass = new egret3d.DrawPass(def_particlesystem_vs, def_particlesystem_fs);
                 renderPass.state_ztest = true;
-                renderPass.state_ztest_method = egret3d.WebGLKit.LEQUAL;
-                renderPass.state_zwrite = false;
+                renderPass.state_ztest_method = egret3d.WebGLKit.EQUAL;
+                renderPass.state_zwrite = true;
                 renderPass.state_showface = egret3d.ShowFaceStateEnum.ALL;
                 renderPass.setAlphaBlend(egret3d.BlendModeEnum.Blend);
                 shader.passes["base"].push(renderPass);
@@ -19121,7 +19125,7 @@ var egret3d;
                 shader.passes["base"] = [];
                 var renderPass = new egret3d.DrawPass(def_particlesystem_vs, def_particlesystem_fs);
                 renderPass.state_ztest = true;
-                renderPass.state_ztest_method = egret3d.WebGLKit.LEQUAL;
+                renderPass.state_ztest_method = egret3d.WebGLKit.EQUAL;
                 renderPass.state_zwrite = true;
                 renderPass.state_showface = egret3d.ShowFaceStateEnum.ALL;
                 renderPass.setAlphaBlend(egret3d.BlendModeEnum.Blend_PreMultiply);
@@ -21882,33 +21886,6 @@ var egret3d;
     }());
     egret3d.WebGLKit = WebGLKit;
     __reflect(WebGLKit.prototype, "egret3d.WebGLKit");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var batchingUtility;
-    (function (batchingUtility) {
-        var cacheInstances = {};
-        var list = [];
-        function start() {
-            for (var key in cacheInstances) {
-                delete cacheInstances[key];
-            }
-            list.length = 0;
-        }
-        batchingUtility.start = start;
-        function addMaterial(material) {
-            if (!(material.name in cacheInstances)) {
-                cacheInstances[material.name] = 0;
-                list.push(material.name);
-            }
-            cacheInstances[material.name] = cacheInstances[material.name] + 1;
-        }
-        batchingUtility.addMaterial = addMaterial;
-        function getList() {
-            return list;
-        }
-        batchingUtility.getList = getList;
-    })(batchingUtility = egret3d.batchingUtility || (egret3d.batchingUtility = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
