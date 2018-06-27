@@ -225,22 +225,9 @@ declare namespace paper {
          */
         url: string;
         /**
-         * get asset name
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 名称。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        name: string;
-        /**
          *
          */
-        constructor(name?: string, url?: string);
+        constructor(url?: string);
         /**
          * @inheritDoc
          */
@@ -1367,23 +1354,6 @@ declare namespace egret3d {
         private notifyListener(event);
     }
 }
-declare namespace egret3d.sound {
-    /**
-     *
-     */
-    class WebAudioChannel2D {
-        protected source: AudioBufferSourceNode;
-        protected gain: GainNode;
-        constructor();
-        protected _init(): void;
-        buffer: AudioBuffer;
-        volume: number;
-        loop: boolean;
-        start(offset?: number): void;
-        stop(): void;
-        dispose(): void;
-    }
-}
 declare namespace egret3d {
     /**
      * Camera系统
@@ -1761,6 +1731,143 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
+     * 销毁系统
+     *
+     */
+    class DestroySystem extends BaseSystem<BaseComponent> {
+        private readonly _bufferedComponents;
+        private readonly _bufferedGameObjects;
+        /**
+         * @inheritDoc
+         */
+        update(): void;
+        /**
+         * 将实体缓存到销毁系统，以便在系统运行时销毁。
+         *
+         */
+        bufferComponent(component: BaseComponent): void;
+        /**
+         * 将实体缓存到销毁系统，以便在系统运行时销毁。
+         *
+         */
+        bufferGameObject(gameObject: GameObject): void;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    interface IHashCode {
+        /**
+         *
+         */
+        readonly hashCode: number;
+    }
+    /**
+     *
+     */
+    interface IStruct {
+        /**
+         *
+         */
+        readonly class: string;
+    }
+    /**
+     * 自定义序列化接口。
+     */
+    interface ISerializable {
+        /**
+         *
+         */
+        serialize(): any | IHashCode | ISerializedObject;
+        /**
+         *
+         */
+        deserialize(element: any): void;
+    }
+    /**
+     * 序列化后的数据接口。
+     */
+    interface ISerializedObject extends IHashCode, IStruct {
+        /**
+         *
+         */
+        [key: string]: any | IHashCode;
+    }
+    /**
+     * 序列化数据接口
+     */
+    interface ISerializedData {
+        /**
+         *
+         */
+        readonly objects: ISerializedObject[];
+        /**
+         *
+         */
+        [key: string]: ISerializedObject[];
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class MissComponent extends BaseComponent {
+        /**
+         *
+         */
+        missingObject: MissingObject;
+    }
+}
+declare namespace paper {
+    /**
+     * 序列化方法
+     * 只有 ISerializable (有对应hashCode属性) 参与序列化
+     * 只有被标记的对象属性 参与序列化
+     * 序列化后，输出 ISerializeData
+     * 对象在objects中按生成顺序，root一定是第一个元素。
+     * 允许依赖标记对序列化对象数据分类，以便单独处理一些对象（例如资源等等，但资源的路径这里不做处理，在方法外由开发者自行处理）
+     */
+    function serialize(source: SerializableObject, sourcePath?: string): ISerializedData;
+    /**
+     *
+     */
+    function serializeAsset(source: paper.Asset): any;
+    /**
+     *
+     */
+    function serializeRC(source: SerializableObject): any;
+    /**
+     *
+     */
+    function serializeR(source: SerializableObject): any;
+    /**
+     *
+     */
+    function serializeC(source: SerializableObject): any;
+    /**
+     *
+     */
+    function getTypesFromPrototype(classPrototype: any, typeKey: string, types?: string[] | null): string[];
+}
+declare namespace paper {
+    /**
+     * renderer component interface
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 渲染器组件接口
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    interface IRenderer extends paper.BaseComponent {
+    }
+}
+declare namespace paper {
+    /**
      *
      */
     namespace EventPool {
@@ -1948,68 +2055,6 @@ declare namespace paper {
         readonly scene: Scene;
     }
 }
-declare namespace paper {
-    /**
-     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
-     * 这个属性可以实现相机的选择性剔除。
-     */
-    const enum Layer {
-        Default = 2,
-        UI = 4,
-        UserLayer1 = 8,
-        UserLayer2 = 16,
-        UserLayer3 = 32,
-        UserLayer4 = 64,
-        UserLayer5 = 128,
-        UserLayer6 = 240,
-        UserLayer7 = 256,
-        UserLayer8 = 512,
-        UserLayer9 = 1024,
-        UserLayer10 = 2048,
-        UserLayer11 = 3840,
-    }
-}
-declare namespace paper {
-    /**
-     * 场景类
-     */
-    class Scene extends SerializableObject {
-        /**
-         * 场景名称。
-         */
-        name: string;
-        /**
-         * 场景的light map列表。
-         */
-        readonly lightmaps: egret3d.Texture[];
-        /**
-         * 当前场景的所有GameObject对象池
-         *
-         */
-        readonly gameObjects: GameObject[];
-        /**
-         * 存储着关联的数据
-         * 场景保存时，将场景快照数据保存至对应的资源中
-         *
-         */
-        $rawScene: egret3d.RawScene | null;
-        constructor();
-        /**
-         * 移除GameObject对象
-         *
-         */
-        $removeGameObject(gameObject: GameObject): void;
-        /**
-         * 添加一个GameObject对象
-         *
-         */
-        $addGameObject(gameObject: GameObject): void;
-        /**
-         * 获取所有根级GameObject对象
-         */
-        getRootGameObjects(): GameObject[];
-    }
-}
 declare namespace egret3d {
     /**
      * 矩形对象
@@ -2055,20 +2100,24 @@ declare namespace egret3d {
     }
 }
 declare namespace paper {
-    class Time {
-        static timeScale: number;
-        private static _frameCount;
-        private static _lastTimer;
-        private static _beginTimer;
-        private static _unscaledTime;
-        private static _unscaledDeltaTime;
-        static initialize(): void;
-        static update(timer?: number): void;
-        static readonly frameCount: number;
-        static readonly time: number;
-        static readonly unscaledTime: number;
-        static readonly deltaTime: number;
-        static readonly unscaledDeltaTime: number;
+    /**
+     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
+     * 这个属性可以实现相机的选择性剔除。
+     */
+    const enum Layer {
+        Default = 2,
+        UI = 4,
+        UserLayer1 = 8,
+        UserLayer2 = 16,
+        UserLayer3 = 32,
+        UserLayer4 = 64,
+        UserLayer5 = 128,
+        UserLayer6 = 240,
+        UserLayer7 = 256,
+        UserLayer8 = 512,
+        UserLayer9 = 1024,
+        UserLayer10 = 2048,
+        UserLayer11 = 3840,
     }
 }
 declare namespace egret3d {
@@ -2331,11 +2380,46 @@ declare namespace egret3d {
         deserialize(element: number[]): void;
     }
 }
-declare namespace paper.editor {
-    const icon_frag: string;
-    const icon_vert: string;
-    const line_frag: string;
-    const line_vert: string;
+declare namespace paper {
+    /**
+     * 场景类
+     */
+    class Scene extends SerializableObject {
+        /**
+         * 场景名称。
+         */
+        name: string;
+        /**
+         * 场景的light map列表。
+         */
+        readonly lightmaps: egret3d.Texture[];
+        /**
+         * 当前场景的所有GameObject对象池
+         *
+         */
+        readonly gameObjects: GameObject[];
+        /**
+         * 存储着关联的数据
+         * 场景保存时，将场景快照数据保存至对应的资源中
+         *
+         */
+        $rawScene: egret3d.RawScene | null;
+        constructor();
+        /**
+         * 移除GameObject对象
+         *
+         */
+        $removeGameObject(gameObject: GameObject): void;
+        /**
+         * 添加一个GameObject对象
+         *
+         */
+        $addGameObject(gameObject: GameObject): void;
+        /**
+         * 获取所有根级GameObject对象
+         */
+        getRootGameObjects(): GameObject[];
+    }
 }
 declare namespace egret3d {
     /**
@@ -2580,11 +2664,55 @@ declare namespace egret3d {
         screenViewport: Readonly<RectData>;
         absolutePosition: Readonly<RectData>;
         private _canvas;
+        /**
+         * 是否为横屏，需要旋转屏幕
+         */
+        private isLandscape;
+        private contentWidth;
+        private contentHeight;
         private _resizeDirty;
         update(): void;
         private _resize();
     }
     const stage: Stage3D;
+}
+declare namespace paper {
+    class Time {
+        static timeScale: number;
+        private static _frameCount;
+        private static _lastTimer;
+        private static _beginTimer;
+        private static _unscaledTime;
+        private static _unscaledDeltaTime;
+        static initialize(): void;
+        static update(timer?: number): void;
+        static readonly frameCount: number;
+        static readonly time: number;
+        static readonly unscaledTime: number;
+        static readonly deltaTime: number;
+        static readonly unscaledDeltaTime: number;
+    }
+}
+declare namespace paper.editor {
+    const icon_frag: string;
+    const icon_vert: string;
+    const line_frag: string;
+    const line_vert: string;
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class MissingObject implements ISerializable {
+        /**
+         *
+         */
+        readonly missingData: {
+            [key: string]: any;
+        };
+        serialize(): any | IHashCode | ISerializedObject;
+        deserialize(element: any): void;
+    }
 }
 declare namespace paper {
     /**
@@ -2599,118 +2727,6 @@ declare namespace paper {
      *
      */
     function getDeserializedObject<T extends ISerializable>(source: IHashCode): T;
-}
-declare namespace paper {
-    /**
-     *
-     */
-    interface IHashCode {
-        /**
-         *
-         */
-        readonly hashCode: number;
-    }
-    /**
-     *
-     */
-    interface IStruct {
-        /**
-         *
-         */
-        readonly class: string;
-    }
-    /**
-     * 自定义序列化接口。
-     */
-    interface ISerializable {
-        /**
-         *
-         */
-        serialize(): any | IHashCode | ISerializedObject;
-        /**
-         *
-         */
-        deserialize(element: any): void;
-    }
-    /**
-     * 序列化后的数据接口。
-     */
-    interface ISerializedObject extends IHashCode, IStruct {
-        /**
-         *
-         */
-        [key: string]: any | IHashCode;
-    }
-    /**
-     * 序列化数据接口
-     */
-    interface ISerializedData {
-        /**
-         *
-         */
-        readonly objects: ISerializedObject[];
-        /**
-         *
-         */
-        [key: string]: ISerializedObject[];
-    }
-}
-declare namespace paper {
-    /**
-     * 组件实体系统的主入口
-     */
-    class Application {
-        /**
-         * 系统管理器
-         */
-        static readonly systemManager: SystemManager;
-        /**
-         * 场景管理器
-         */
-        static readonly sceneManager: SceneManager;
-        private static _isEditor;
-        private static _isFocused;
-        private static _isPlaying;
-        private static _isRunning;
-        private static _standDeltaTime;
-        private static _bindUpdate;
-        private static _update();
-        static init({isEditor, isPlaying}?: {
-            isEditor?: boolean;
-            isPlaying?: boolean;
-        }): void;
-        /**
-         *
-         */
-        static pause(): void;
-        static resume(): void;
-        /**
-         *
-         */
-        static callLater(callback: () => void): void;
-        static readonly isEditor: boolean;
-        static readonly isFocused: boolean;
-        static readonly isPlaying: boolean;
-        static readonly isRunning: boolean;
-    }
-}
-declare namespace paper {
-}
-declare namespace paper {
-    /**
-     *
-     */
-    class LaterSystem extends paper.BaseSystem<paper.BaseComponent> {
-        private readonly _laterCalls;
-        /**
-         * @inheritDoc
-         */
-        update(): void;
-        /**
-         *
-         */
-        callLater(callback: () => void): void;
-    }
 }
 declare namespace egret3d {
     /**
@@ -2854,115 +2870,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 精灵资源。
-     */
-    class Sprite extends paper.Asset {
-        static spriteAnimation(row: number, column: number, index: number, out: Vector4): void;
-        /**
-         * atlas
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 所属图集
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        atlas: string;
-        /**
-         * rect
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 有效区域
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly rect: Rect;
-        /**
-         * border
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 边距
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly border: Border;
-        private _urange;
-        private _vrange;
-        private _texture;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-        /**
-         * u range
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * uv的u范围
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly urange: Vector2;
-        /**
-         * v range
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * uv的v范围
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly vrange: Vector2;
-        /**
-         * current texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前texture
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        /**
-         * current texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前texture
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        texture: Texture | null;
-    }
-}
-declare namespace egret3d {
-    /**
      * textrue asset
      * @version paper 1.0
      * @platform Web
@@ -3044,170 +2951,6 @@ declare namespace egret3d {
         updateShadowCasters(gameObject: paper.GameObject, castShadows: boolean): void;
         removeDrawCalls(gameObject: paper.GameObject): void;
         getDrawCalls(gameObject: paper.GameObject): DrawCall[] | null;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 声音监听组件。目前场景中只允许有一个监听器。对3D声音有效。
-     */
-    class Audio3DListener extends paper.BaseComponent {
-    }
-}
-declare namespace egret3d {
-    /**
-     * Audio系统
-     */
-    class Audio3DListenerSystem extends paper.BaseSystem<Audio3DListener> {
-        /**
-         * @inheritDoc
-         */
-        protected readonly _interests: {
-            componentClass: typeof Audio3DListener;
-        }[];
-        private _updateAudioListener(audioListener);
-        /**
-         * @inheritDoc
-         */
-        update(): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 2d audio source component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 2D音频组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class AudioSource2D extends paper.BaseComponent {
-        private _channel;
-        private _sound;
-        /**
-         * 设置音频资源
-         */
-        sound: Sound;
-        private _volume;
-        /**
-         * 音量
-         */
-        /**
-         * 音量
-         */
-        volume: number;
-        private _loop;
-        /**
-         * 是否循环
-         */
-        /**
-         * 是否循环
-         */
-        loop: boolean;
-        private _playing;
-        /**
-         * 播放音频
-         */
-        play(offset?: number): void;
-        /**
-         * 暂停音频
-         */
-        stop(): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 3D音频组件
-     */
-    class AudioSource3D extends paper.BaseComponent {
-        update(deltaTime: number): void;
-        private _channel;
-        private _sound;
-        /**
-         * 设置音频资源
-         */
-        sound: Sound;
-        private _volume;
-        /**
-         * 音量
-         */
-        /**
-         * 音量
-         */
-        volume: number;
-        private _loop;
-        /**
-         * 是否循环
-         */
-        /**
-         * 是否循环
-         */
-        loop: boolean;
-        private _playing;
-        /**
-         * 播放音频
-         */
-        play(offset?: number): void;
-        /**
-         * 暂停音频
-         */
-        stop(): void;
-        /**
-         * 音频传播最远距离
-         */
-        /**
-         * 音频传播最远距离
-         */
-        maxDistance: number;
-        /**
-         * 音频传播最小距离
-         */
-        /**
-         * 音频传播最小距离
-         */
-        minDistance: number;
-        /**
-         * 音频滚降系数
-         */
-        /**
-         * 音频滚降系数
-         */
-        rollOffFactor: number;
-        /**
-         * 音频滚降系数
-         */
-        /**
-         * 音频衰减模式。支持“linear”，“inverse”，“exponential”三种
-         */
-        distanceModel: string;
-        /**
-         * 速度
-         */
-        getVelocity(): Vector3;
-        /**
-         * 速度
-         */
-        setVelocity(x: number, y: number, z: number): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * Audio系统
-     */
-    class AudioSource3DSystem extends paper.BaseSystem<AudioSource3D> {
-        /**
-         * @inheritDoc
-         */
-        protected readonly _interests: {
-            componentClass: typeof AudioSource3D;
-        }[];
-        /**
-         * @inheritDoc
-         */
-        update(): void;
     }
 }
 declare namespace egret3d {
@@ -4512,7 +4255,7 @@ declare namespace egret3d {
      * @platform Web
      * @language
      */
-    class TrailRender extends paper.BaseComponent implements paper.IRenderer {
+    class TrailRenderer extends paper.BaseComponent implements paper.IRenderer {
         /**
          * extend direction
          * @version paper 1.0
@@ -4632,15 +4375,15 @@ declare namespace egret3d {
     /**
      * TrailRender系统
      */
-    class TrailRenderSystem extends paper.BaseSystem<TrailRender> {
+    class TrailRendererSystem extends paper.BaseSystem<TrailRenderer> {
         /**
          * @inheritDoc
          */
         readonly _interests: {
-            componentClass: typeof TrailRender;
+            componentClass: typeof TrailRenderer;
             listeners: {
                 type: TrailRenderEventType;
-                listener: (component: TrailRender) => void;
+                listener: (component: TrailRenderer) => void;
             }[];
         }[];
         private readonly _transform;
@@ -4649,11 +4392,11 @@ declare namespace egret3d {
         /**
          * @inheritDoc
          */
-        protected _onAddComponent(component: TrailRender): boolean;
+        protected _onAddComponent(component: TrailRenderer): boolean;
         /**
          * @inheritDoc
          */
-        protected _onRemoveComponent(component: TrailRender): boolean;
+        protected _onRemoveComponent(component: TrailRenderer): boolean;
         /**
          * @inheritDoc
          */
@@ -5460,6 +5203,43 @@ declare namespace egret3d.particle {
     }
 }
 declare namespace paper {
+    /**
+     * 组件实体系统的主入口
+     */
+    class Application {
+        /**
+         * 系统管理器
+         */
+        static readonly systemManager: SystemManager;
+        /**
+         * 场景管理器
+         */
+        static readonly sceneManager: SceneManager;
+        private static _isEditor;
+        private static _isFocused;
+        private static _isPlaying;
+        private static _isRunning;
+        private static _standDeltaTime;
+        private static _bindUpdate;
+        private static _update();
+        static init({isEditor, isPlaying}?: {
+            isEditor?: boolean;
+            isPlaying?: boolean;
+        }): void;
+        /**
+         *
+         */
+        static pause(): void;
+        static resume(): void;
+        /**
+         *
+         */
+        static callLater(callback: () => void): void;
+        static readonly isEditor: boolean;
+        static readonly isFocused: boolean;
+        static readonly isPlaying: boolean;
+        static readonly isRunning: boolean;
+    }
 }
 declare namespace egret3d.particle {
     class ParticleSystem extends paper.BaseSystem<ParticleComponent | ParticleRenderer> {
@@ -6352,123 +6132,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * atlas asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 图集资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Atlas extends paper.Asset {
-        /**
-         * texture pixel width
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 纹理像素宽度。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        texturewidth: number;
-        /**
-         * texture pixel height
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 纹理像素高度。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        textureheight: number;
-        /**
-         * sprite map
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 精灵字典，key为精灵名称。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        private readonly _sprites;
-        private _texture;
-        /**
-         *
-         */
-        $parse(json: string): void;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-        readonly sprites: Readonly<{
-            [key: string]: Sprite;
-        }>;
-        /**
-         * atlas texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 图集材质。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        texture: Texture | null;
-    }
-}
-declare namespace egret3d {
-    /**
-     * Asset Bundle
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 资源包.
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class AssetBundle extends paper.Asset {
-        readonly assets: {
-            url: string;
-        }[];
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-        /**
-         *
-         */
-        $parse(json: {
-            assets?: any[];
-        }): void;
-    }
-}
-declare namespace egret3d {
-    /**
      * 射线
      */
     class Ray {
@@ -6611,11 +6274,9 @@ declare namespace RES.processor {
     const TextureProcessor: RES.processor.Processor;
     const MaterialProcessor: RES.processor.Processor;
     const GLTFProcessor: RES.processor.Processor;
-    const AtlasProcessor: RES.processor.Processor;
     const PrefabProcessor: RES.processor.Processor;
     const SceneProcessor: RES.processor.Processor;
     const Font3DProcessor: RES.processor.Processor;
-    const Sound3DProcessor: RES.processor.Processor;
     const PathAssetProcessor: RES.processor.Processor;
 }
 declare namespace egret3d {
@@ -6849,74 +6510,6 @@ declare namespace egret3d.utils {
     function caclStringByteLength(value: string): number;
     function getKeyCodeByAscii(ev: KeyboardEvent): number;
 }
-declare namespace egret3d.sound {
-    /**
-     * web audio
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 基于 Web Audio 网络音频模块（单例）
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class WebAudio {
-        private static _instance;
-        /**
-         * web audio instance
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 基于 Web Audio 网络音频模块单例
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        static readonly instance: WebAudio;
-        private _audioContext;
-        /**
-         *
-         */
-        readonly audioContext: AudioContext;
-        private constructor();
-        /**
-         * is support web audio
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前运行环境是否支持 Web Audio
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        readonly isSupported: boolean;
-        /**
-         * active
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 某些平台中（IOS），需要在用户输入事件监听中调用此方法，音频才能正常播放
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        active(): void;
-        /**
-         *
-         */
-        decodeAudioData(buffer: ArrayBuffer, onSuccess: (buf: AudioBuffer) => void, onError: () => void): void;
-        private audioListener;
-        getAudioListener(): WebAudioListener;
-    }
-}
 declare namespace Stats {
     /**
      * 显示调试面板
@@ -6926,40 +6519,6 @@ declare namespace Stats {
      * 关闭调试面板
      */
     function hide(): void;
-}
-declare namespace egret3d.sound {
-    /**
-     *
-     */
-    class WebAudioChannel3D extends WebAudioChannel2D {
-        private panner;
-        protected _init(): void;
-        maxDistance: number;
-        minDistance: number;
-        rollOffFactor: number;
-        distanceModel: string;
-        private position;
-        setPosition(x: number, y: number, z: number): void;
-        getPosition(): Vector3;
-        private velocity;
-        setVelocity(x: number, y: number, z: number): void;
-        getVelocity(): Vector3;
-    }
-}
-declare namespace egret3d.sound {
-    class WebAudioListener {
-        private readonly listener;
-        private position;
-        private velocity;
-        private orientation;
-        constructor();
-        setPosition(x: number, y: number, z: number): void;
-        getPosition(): Vector3;
-        setVelocity(x: number, y: number, z: number): void;
-        getVelocity(): Vector3;
-        setOrientation(orientation: Matrix): void;
-        getOrientation(): Matrix;
-    }
 }
 declare namespace egret3d {
     /**
@@ -7186,10 +6745,11 @@ declare namespace egret3d {
         private _offsetY;
         private _scalerX;
         private _scalerY;
+        private _rotated;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number, rotated: boolean): void;
         /**
          *
          */
@@ -7449,10 +7009,11 @@ declare namespace egret3d {
         private _offsetY;
         private _scalerX;
         private _scalerY;
+        private _rotated;
         /**
          *
          */
-        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number): void;
+        updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number, rotated: boolean): void;
         /**
          *
          */
@@ -7515,28 +7076,6 @@ declare namespace egret3d {
     }
 }
 declare namespace paper {
-    /**
-     * 销毁系统
-     *
-     */
-    class DestroySystem extends BaseSystem<BaseComponent> {
-        private readonly _bufferedComponents;
-        private readonly _bufferedGameObjects;
-        /**
-         * @inheritDoc
-         */
-        update(): void;
-        /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
-         *
-         */
-        bufferComponent(component: BaseComponent): void;
-        /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
-         *
-         */
-        bufferGameObject(gameObject: GameObject): void;
-    }
 }
 declare namespace egret3d {
     class WebGLKit {
@@ -7830,50 +7369,21 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
-     * 序列化方法
-     * 只有 ISerializable (有对应hashCode属性) 参与序列化
-     * 只有被标记的对象属性 参与序列化
-     * 序列化后，输出 ISerializeData
-     * 对象在objects中按生成顺序，root一定是第一个元素。
-     * 允许依赖标记对序列化对象数据分类，以便单独处理一些对象（例如资源等等，但资源的路径这里不做处理，在方法外由开发者自行处理）
-     */
-    function serialize(source: SerializableObject, sourcePath?: string): ISerializedData;
-    /**
      *
      */
-    function serializeAsset(source: paper.Asset): any;
-    /**
-     *
-     */
-    function serializeRC(source: SerializableObject): any;
-    /**
-     *
-     */
-    function serializeR(source: SerializableObject): any;
-    /**
-     *
-     */
-    function serializeC(source: SerializableObject): any;
-    /**
-     *
-     */
-    function getTypesFromPrototype(classPrototype: any, typeKey: string, types?: string[] | null): string[];
+    class LaterSystem extends paper.BaseSystem<paper.BaseComponent> {
+        private readonly _laterCalls;
+        /**
+         * @inheritDoc
+         */
+        update(): void;
+        /**
+         *
+         */
+        callLater(callback: () => void): void;
+    }
 }
 declare namespace paper {
-    /**
-     * renderer component interface
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 渲染器组件接口
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    interface IRenderer extends paper.BaseComponent {
-    }
 }
 declare namespace paper.editor {
     const context: EventDispatcher;

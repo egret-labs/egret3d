@@ -55,7 +55,7 @@ namespace egret3d {
 
         private _defines: Array<string> = new Array();
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.SHADER,{set:"setShader"})
+        @paper.editor.property(paper.editor.EditType.SHADER, { set: "setShader" })
         private shader: Shader;
         @paper.serializedField
         @paper.deserializedIgnore
@@ -134,11 +134,11 @@ namespace egret3d {
                         this.setTexture(key, uniform.value);
                         break;
                     case "Vector4":
-                        if(Array.isArray(uniform.value)){
+                        if (Array.isArray(uniform.value)) {
                             this.setVector4v(key, uniform.value as any);
-                        }else{
+                        } else {
                             this.setVector4(key, uniform.value);
-                        }                        
+                        }
                         break;
                     case "Range":
                         this.setFloat(key, uniform.value);
@@ -424,7 +424,7 @@ namespace egret3d {
          * @language zh_CN
          */
         public clone(): Material {
-            let mat: Material = new Material(this.name);
+            let mat: Material = new Material();
             mat.setShader(this.shader);
             for (let i in this.$uniforms) {
                 let data = this.$uniforms[i];

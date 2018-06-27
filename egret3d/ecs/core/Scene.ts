@@ -52,7 +52,7 @@ namespace paper {
             let i = this.gameObjects.length;
             while (i--) {
                 const gameObject = this.gameObjects[i];
-                if (globalObjects.indexOf(gameObject) >= 0) {
+                if (!gameObject || gameObject.transform.parent || globalObjects.indexOf(gameObject) >= 0) {
                     continue;
                 }
 

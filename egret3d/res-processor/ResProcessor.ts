@@ -88,21 +88,6 @@ namespace RES.processor {
         })
     }
 
-    async function promisifySoundDecode(arrayBuffer: ArrayBuffer, resource: RES.ResourceInfo): Promise<any> {
-
-        return new Promise((resolve, reject) => {
-            let onSuccess = (audioBuffer) => {
-                resolve(audioBuffer);
-            }
-
-            let onError = () => {
-                let e = new RES.ResourceManagerError(1001, resource.url);
-                reject(e);
-            }
-            egret3d.sound.WebAudio.instance.decodeAudioData(arrayBuffer, onSuccess, onError);
-        })
-    }
-
     export const GLVertexShaderProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
@@ -144,8 +129,7 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             let data = await host.load(resource, "json");
             let url = getUrl(resource);
-            let filename = getFileName(url);
-            let shader = new egret3d.Shader(filename, url);
+            let shader = new egret3d.Shader(url);
             shader.$parse(data);
             paper.Asset.register(shader, true);
 
@@ -194,7 +178,7 @@ namespace RES.processor {
             let loader = new egret.ImageLoader();
             loader.load(textureUrl);
             let image = await promisify(loader, resource);
-            let texture = new egret3d.Texture(filename, url);
+            let texture = new egret3d.Texture(url);
             texture.realName = _name;
             const gl = egret3d.WebGLKit.webgl;
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
@@ -217,11 +201,10 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             let gl = egret3d.WebGLKit.webgl;
             let url = getUrl(resource);
-            let filename = getFileName(url);
             let loader = new egret.ImageLoader();
             loader.load(url);
             let image = await promisify(loader, resource);
-            let _texture = new egret3d.Texture(filename, url);
+            let _texture = new egret3d.Texture(url);
             let _textureFormat = egret3d.TextureFormatEnum.RGBA;
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
             t2d.uploadImage(image.source, true, true, true, true);
@@ -242,8 +225,7 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             let data = await host.load(resource, "json");
             let url = getUrl(resource);
-            let filename = getFileName(url);
-            let material = new egret3d.Material(filename, url);
+            let material = new egret3d.Material(url);
             material.$parse(data);
             paper.Asset.register(material, true);
             return material;
@@ -261,8 +243,7 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, "bin");
             const url = getUrl(resource);
-            const filename = getFileName(url, true);
-            const glTF = new egret3d.GLTFAsset(filename, url);
+            const glTF = new egret3d.GLTFAsset(url);
 
             glTF.parseFromBinary(new Uint32Array(result));
             paper.Asset.register(glTF, true);
@@ -277,31 +258,11 @@ namespace RES.processor {
 
     };
 
-    export const AtlasProcessor: RES.processor.Processor = {
-
-        async onLoadStart(host, resource) {
-            const data = await host.load(resource, "json");
-            const url = getUrl(resource);
-            const filename = getFileName(url);
-            let atlas = new egret3d.Atlas(filename, url);
-            atlas.$parse(data);
-            paper.Asset.register(atlas, true);
-            return atlas;
-        },
-
-        async onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-        }
-
-    };
-
     export const PrefabProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
             const data: egret3d.PrefabConfig = await host.load(resource, "json");
             const url = getUrl(resource);
-            const filename = getFileName(url);
             // load ref assets
             const assets = data.assets;
             if (assets) {
@@ -314,7 +275,7 @@ namespace RES.processor {
                 }
             }
 
-            const prefab = new egret3d.Prefab(filename, url);
+            const prefab = new egret3d.Prefab(url);
             prefab.$parse(data);
             paper.Asset.register(prefab, true);
 
@@ -333,7 +294,6 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             const data = await host.load(resource, "json");
             const url = getUrl(resource);
-            const filename = getFileName(url);
 
             // load ref assets
             const assets = data.assets;
@@ -347,7 +307,7 @@ namespace RES.processor {
                 }
             }
 
-            const scene = new egret3d.RawScene(filename, url);
+            const scene = new egret3d.RawScene(url);
             scene.$parse(data);
             paper.Asset.register(scene, true);
 
@@ -366,31 +326,10 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             const data = await host.load(resource, "json");
             const url = getUrl(resource);
-            const filename = getFileName(url);
-            const font = new egret3d.Font(filename, url);
+            const font = new egret3d.Font(url);
             font.$parse(data);
             paper.Asset.register(font, true);
             return font;
-        },
-
-        async onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-        }
-
-    };
-
-    export const Sound3DProcessor: RES.processor.Processor = {
-
-        async onLoadStart(host, resource) {
-            let arrayBuffer: ArrayBuffer = await host.load(resource, "bin");
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-            let audioBuffer: AudioBuffer = await promisifySoundDecode(arrayBuffer, resource);
-            let sound = new egret3d.Sound(filename, url);
-            sound.buffer = audioBuffer;
-            paper.Asset.register(sound, true);
-            return sound;
         },
 
         async onRemoveStart(host, resource) {
@@ -405,8 +344,7 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             const data = await host.load(resource, "json");
             const url = getUrl(resource);
-            const filename = getFileName(url);
-            const pathAsset = new egret3d.PathAsset(filename, url);
+            const pathAsset = new egret3d.PathAsset(url);
             pathAsset.$parse(data);
             paper.Asset.register(pathAsset, true);
             return pathAsset;
@@ -428,8 +366,6 @@ namespace RES.processor {
     RES.processor.map("GLTFBinary", GLTFProcessor);
     RES.processor.map("Prefab", PrefabProcessor);
     RES.processor.map("Scene", SceneProcessor);
-    RES.processor.map("Atlas", AtlasProcessor);
     RES.processor.map("Font", Font3DProcessor);
     RES.processor.map("pathAsset", PathAssetProcessor);
-    RES.processor.map("Sound", Sound3DProcessor);
 }

@@ -97,7 +97,7 @@ namespace paper {
         private _scene: Scene = null as any;
 
         @paper.serializedField
-        public uuid:string | null = null;
+        public uuid: string | null = null;
 
         /**
          * 创建GameObject，并添加到当前场景中
@@ -198,7 +198,7 @@ namespace paper {
 
             if (component instanceof egret3d.Transform) {
                 this.transform = component;
-            }else if(component instanceof egret3d.MeshRenderer){
+            } else if (component instanceof egret3d.MeshRenderer) {
                 this.renderer = component;
             }
 
@@ -411,10 +411,15 @@ namespace paper {
         public set components(value: ReadonlyArray<BaseComponent>) {
             this._components.length = 0;
             for (const component of value) {
-                this._components.push(component);
+                if (component instanceof MissingObject) {
+                    this.addComponent(MissComponent).missingObject = component;
+                }
+                else {
+                    this._components.push(component);
+                }
             }
-            // Transform 必须存在。
-            this.transform = this.getComponent(egret3d.Transform) as any;
+
+            this.transform = this.getComponent(egret3d.Transform) || this.addComponent(egret3d.Transform);
         }
 
         /**
