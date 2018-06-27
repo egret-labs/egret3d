@@ -412,7 +412,7 @@ namespace paper {
             this._components.length = 0;
             for (const component of value) {
                 if (component instanceof MissingObject) {
-                    this.addComponent(MissComponent).missObj = component;
+                    this.addComponent(MissComponent).missingObject = component;
                 }
                 else {
                     this._components.push(component);
