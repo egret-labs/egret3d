@@ -4829,6 +4829,10 @@ declare namespace egret3d {
          */
         private _frameRate;
         /**
+         * 起始帧。
+         */
+        private _frameStart;
+        /**
          * 总帧数。
          */
         private _frameCount;
@@ -4911,7 +4915,7 @@ declare namespace egret3d {
          */
         update(globalTime: number): void;
         fadeIn(animationName: string | null, fadeTime: number, playTimes?: number, layer?: number, additive?: boolean): AnimationState | null;
-        play(animationName?: string | null, playTimes?: number): AnimationState | null;
+        play(animationNameOrNames?: string | string[] | null, playTimes?: number): AnimationState | null;
         readonly lastAnimationnName: string;
         /**
          * 动画数据列表。
@@ -7172,6 +7176,7 @@ declare namespace egret3d {
         startTime: number;
         time: number;
         group: number;
+        maxTime: number;
     };
     type ProfileList = {
         keys: string[];

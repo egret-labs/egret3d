@@ -7736,7 +7736,7 @@ var egret;
                         }
                         break;
                     case 6 /* ACT_BUFFER */:
-                        this.activateBuffer(data.buffer);
+                        this.activateBuffer(data.buffer, data.width, data.height);
                         break;
                     case 7 /* ENABLE_SCISSOR */:
                         var buffer = this.activatedBuffer;
@@ -7815,14 +7815,14 @@ var egret;
             /**
              * 启用RenderBuffer
              */
-            Renderer.prototype.activateBuffer = function (buffer) {
+            Renderer.prototype.activateBuffer = function (buffer, width, height) {
                 buffer.rootRenderTarget.activate();
                 if (!this.bindIndices) {
                     this.uploadIndicesArray(this.vao.getIndices());
                 }
                 buffer.restoreStencil();
                 buffer.restoreScissor();
-                this.onResize(buffer.width, buffer.height);
+                this.onResize(width, height);
             };
             Renderer.prototype.onResize = function (width, height) {
                 this.projectionX = width / 2;
@@ -11295,6 +11295,10 @@ var egret3d;
              */
             _this._frameRate = 0;
             /**
+             * 起始帧。
+             */
+            _this._frameStart = 0;
+            /**
              * 总帧数。
              */
             _this._frameCount = 0;
@@ -11482,7 +11486,8 @@ var egret3d;
             var dataAccessor = this.animationAsset.getAccessor(paperAnimation.data);
             //
             this._frameRate = paperAnimation.frameRate;
-            this._frameCount = paperAnimation.frameCount;
+            this._frameStart = Math.floor(this.animationClip.position * paperAnimation.frameRate);
+            this._frameCount = Math.floor(this.animationClip.duration * paperAnimation.frameRate); // ceil.
             this._fadeTimeStart = globalTime;
             this._playTimeStart = globalTime;
             this._animationComponent = animationComponent;
@@ -11598,13 +11603,13 @@ var egret3d;
             var prevPlayTimes = this.currentPlayTimes;
             var prevPlayState = this._playState;
             var timeScale = this.timeScale * this._animationComponent.timeScale;
-            var r = timeScale === 0.0 ? 0.0 : 1.0 / timeScale;
+            var timeScaleR = timeScale === 0.0 ? 0.0 : 1.0 / timeScale;
             var position = this.animationClip.position;
             var duration = this.animationClip.duration;
             var totalTime = this.playTimes * duration;
-            var localPlayTime = (globalTime - this._playTimeStart) * r;
+            var localPlayTime = (globalTime - this._playTimeStart) * timeScaleR;
             var currentTime = 0.0;
-            if (this.playTimes > 0 && (localPlayTime >= totalTime || localPlayTime <= 0.0)) {
+            if (this.playTimes > 0 && (timeScale >= 0.0 ? localPlayTime >= totalTime : localPlayTime <= 0.0)) {
                 if (this._playState <= 0 && this._isPlaying) {
                     this._playState = 1;
                 }
@@ -11646,9 +11651,9 @@ var egret3d;
                     (this._playState <= 0 && this.currentPlayTimes !== prevPlayTimes)) {
                     this._frameOffset = -1;
                 }
-                if (this._frameCount > 0) {
+                if (this._frameCount > 1) {
                     var frameIndexF = this._playTime * this._frameRate;
-                    var frameIndex = Math.min(Math.floor(frameIndexF), this._frameCount - 1);
+                    var frameIndex = Math.min(Math.floor(frameIndexF), this._frameStart + this._frameCount - 1);
                     var frameOffset = this._frameOffsets[frameIndex];
                     if (this._frameOffset !== frameOffset) {
                         this._frameOffset = frameOffset;
@@ -11664,10 +11669,17 @@ var egret3d;
                     this._onArriveAtFrame();
                 }
             }
+            if (this._playState === 1 && this._fadeState === 0) {
+                var animationNames = this._animationComponent._animationNames;
+                if (animationNames.length > 0) {
+                    var animationName = animationNames.shift();
+                    this._animationComponent.play(animationName);
+                }
+            }
         };
         AnimationState.prototype.fateOut = function () {
             this._fadeState = 1;
-            this._subFadeState = 1;
+            this._subFadeState = -1;
         };
         return AnimationState;
     }(BlendNode));
@@ -11701,6 +11713,10 @@ var egret3d;
              * 混合节点列表。
              */
             _this._blendNodes = [];
+            /**
+             * @internal
+             */
+            _this._animationNames = [];
             /**
              * 最后一个播放的动画状态。
              * 当进行动画混合时，该值通常没有任何意义。
@@ -11856,10 +11872,21 @@ var egret3d;
             this._lastAnimationState = animationState;
             return animationState;
         };
-        Animation.prototype.play = function (animationName, playTimes) {
-            if (animationName === void 0) { animationName = null; }
+        Animation.prototype.play = function (animationNameOrNames, playTimes) {
+            if (animationNameOrNames === void 0) { animationNameOrNames = null; }
             if (playTimes === void 0) { playTimes = -1; }
-            return this.fadeIn(animationName, 0.0, playTimes);
+            this._animationNames.length = 0;
+            if (Array.isArray(animationNameOrNames)) {
+                if (animationNameOrNames.length > 0) {
+                    for (var _i = 0, animationNameOrNames_1 = animationNameOrNames; _i < animationNameOrNames_1.length; _i++) {
+                        var animationName = animationNameOrNames_1[_i];
+                        this._animationNames.push(animationName);
+                    }
+                    return this.fadeIn(this._animationNames.shift(), 0.0, playTimes);
+                }
+                return this.fadeIn(null, 0.0, playTimes);
+            }
+            return this.fadeIn(animationNameOrNames, 0.0, playTimes);
         };
         Object.defineProperty(Animation.prototype, "lastAnimationnName", {
             get: function () {
@@ -14780,7 +14807,7 @@ var egret3d;
                                 gameObject: gameObject,
                                 transform: gameObject.transform,
                                 frustumTest: false,
-                                zdist: 3
+                                zdist: -1
                             });
                             subMeshIndex++;
                         }
@@ -15517,6 +15544,9 @@ var egret3d;
         Material.prototype.setVector4 = function (_id, _vector4) {
             if (this.$uniforms[_id] !== undefined) {
                 this.$uniforms[_id].value = _vector4;
+                if (this.$uniforms[_id].type !== egret3d.UniformTypeEnum.Float4) {
+                    console.error("设置setVector4类型错误，类型不匹配");
+                }
             }
             else {
                 this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4, value: _vector4 };
@@ -15526,6 +15556,9 @@ var egret3d;
         Material.prototype.setVector4v = function (_id, _vector4v) {
             if (this.$uniforms[_id] !== undefined) {
                 this.$uniforms[_id].value = _vector4v;
+                if (this.$uniforms[_id].type !== egret3d.UniformTypeEnum.Float4v) {
+                    console.error("设置setVector4v类型错误，类型不匹配");
+                }
             }
             else {
                 this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4v, value: _vector4v };
@@ -18364,6 +18397,24 @@ var egret3d;
                 renderPass.setAlphaBlend(egret3d.BlendModeEnum.Add_PreMultiply);
                 shader.passes["base"].push(renderPass);
                 this.PARTICLE_ADDITIVE_PREMYLTIPLY = shader;
+                paper.Asset.register(shader);
+            }
+            {
+                //TODO
+                var shader = new egret3d.Shader("particles_blend1.shader.json");
+                shader.url = "particles_blend1.shader.json";
+                shader.renderQueue = egret3d.RenderQueue.Transparent;
+                shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
+                shader.passes["base"] = [];
+                var renderPass = new egret3d.DrawPass(def_particlesystem_vs, def_particlesystem_fs);
+                renderPass.state_ztest = true;
+                renderPass.state_ztest_method = egret3d.WebGLKit.LEQUAL;
+                renderPass.state_zwrite = true;
+                renderPass.state_showface = egret3d.ShowFaceStateEnum.ALL;
+                renderPass.setAlphaBlend(egret3d.BlendModeEnum.Blend);
+                shader.passes["base"].push(renderPass);
+                this.PARTICLE_BLEND = shader;
                 paper.Asset.register(shader);
             }
             {
@@ -21322,7 +21373,7 @@ var egret3d;
             console.log("------------------------");
             for (var _a = 0, list_4 = list; _a < list_4.length; _a++) {
                 var item = list_4[_a];
-                console.log(item.key + ":用时" + item.time + "平均:" + (item.time / item.count) + " 权重:" + (Math.round(item.time / totalTime * 100)) + "%");
+                console.log(item.key + ":用时" + item.time + "平均:" + (item.time / item.count) + "最大值:" + item.maxTime + " 权重:" + (Math.round(item.time / totalTime * 100)) + "%");
             }
         };
         Profile.clear = function () {
@@ -21338,7 +21389,7 @@ var egret3d;
             if (index < 0) {
                 this.profileList.keys.push(key);
                 index = this.profileList.values.length;
-                this.profileList.values.push({ key: key, count: 0, startTime: 0, time: 0, group: group });
+                this.profileList.values.push({ key: key, count: 0, startTime: 0, time: 0, group: group, maxTime: 0 });
             }
             var item = this.profileList.values[index];
             item.count++;
@@ -21354,7 +21405,9 @@ var egret3d;
             }
             else {
                 var item = this.profileList.values[index];
-                item.time += this._getNow() - item.startTime;
+                var d = this._getNow() - item.startTime;
+                item.time += d;
+                item.maxTime = item.maxTime > d ? item.maxTime : d;
             }
         };
         Profile.printAll = function () {
