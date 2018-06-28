@@ -612,6 +612,7 @@ namespace egret3d {
                 paper.Asset.register(shader);
             }
             {
+                //TODO
                 const shader = new Shader("particles_blend1.shader.json");
                 shader.url = "particles_blend1.shader.json";
                 shader.renderQueue = RenderQueue.Transparent;
