@@ -22,7 +22,6 @@
     "files": [
         "libs/egret.d.ts",
         "libs/resourcemanager.d.ts",
-
         "egret3d/ecs/core/Decorators.ts",
         "egret3d/ecs/serialize/SerializeClassMap.ts",
         "egret3d/ecs/serialize/Clone.ts",
@@ -51,7 +50,6 @@
         "egret3d/ecs/systems/LaterUpdateSystem.ts",
         "egret3d/ecs/systems/EndSystem.ts",
         "egret3d/ecs/systems/DestroySystem.ts",
-
         "egret3d/math/Vector2.ts",
         "egret3d/math/Vector3.ts",
         "egret3d/math/Vector4.ts",
@@ -62,10 +60,8 @@
         "egret3d/math/OBB.ts",
         "egret3d/math/Curve.ts",
         "egret3d/math/Color.ts",
-        "egret3d/math/Matrix3x2.ts",
         "egret3d/math/Matrix.ts",
         "egret3d/math/Math.ts",
-
         "egret3d/web/render/Stage3D.ts",
         "egret3d/web/render/WebGLCapabilities.ts",
         "egret3d/EventDispatcher.ts",
@@ -73,7 +69,6 @@
         "egret3d/asset/resource/prefab.ts",
         "egret3d/asset/resource/pathasset.ts",
         "egret3d/asset/resource/rawscene.ts",
-        "egret3d/asset/resource/sound.ts",
         "egret3d/asset/resource/texture.ts",
         "egret3d/components/Pool.ts",
         "egret3d/components/DrawCallList.ts",
@@ -109,9 +104,7 @@
         "egret3d/components/particles/ParticleComponent.ts",
         "egret3d/components/particles/ParticleRenderer.ts",
         "egret3d/components/particles/ParticleSystem.ts",
-
         "egret3d/web/render/resource/WebGLUniform.ts",
-
         "egret3d/asset/resource/material.ts",
         "egret3d/asset/resource/font.ts",
         "egret3d/asset/resource/DrawPass.ts",
@@ -153,7 +146,6 @@
         "egret3d/editor/gizmo/Gizmo.ts",
         "egret3d/editor/gizmo/GizmoShader.ts",
         "egret3d/editor/gizmo/GizmoShaderLibs.ts",
-
         "libs/ammo.d.ts",
         "egret3d/ammo/shapes/CollisionShape.ts",
         "egret3d/ammo/shapes/BoxShape.ts",
