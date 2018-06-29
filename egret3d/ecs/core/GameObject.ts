@@ -5,49 +5,6 @@ namespace paper {
      */
     export class GameObject extends SerializableObject {
         /**
-         * 返回当前激活场景中查找对应名称的GameObject
-         * @param name 
-         */
-        public static find(name: string, scene: Scene | null = null): GameObject | null {
-            for (const gameObject of (scene || Application.sceneManager.activeScene).gameObjects) {
-                if (gameObject.name === name) {
-                    return gameObject;
-                }
-            }
-
-            return null;
-        }
-
-        /**
-         * 返回一个在当前激活场景中查找对应tag的GameObject
-         * @param tag 
-         */
-        public static findWithTag(tag: string, scene: Scene | null = null): GameObject | null {
-            for (const gameObject of (scene || Application.sceneManager.activeScene).gameObjects) {
-                if (gameObject.tag === tag) {
-                    return gameObject;
-                }
-            }
-
-            return null;
-        }
-
-        /**
-         * 返回所有在当前激活场景中查找对应tag的GameObject
-         * @param name 
-         */
-        public static findGameObjectsWithTag(tag: string, scene: Scene | null = null): GameObject[] {
-            const gameObjects: GameObject[] = [];
-            for (const gameObject of (scene || Application.sceneManager.activeScene).gameObjects) {
-                if (gameObject.tag === tag) {
-                    gameObjects.push(gameObject);
-                }
-            }
-
-            return gameObjects;
-        }
-
-        /**
          * 是否是静态，启用这个属性可以提升性能
          */
         @serializedField
@@ -73,12 +30,6 @@ namespace paper {
          */
         @serializedField
         public tag: string = "";
-
-        /**
-         * @internal
-         */
-        @serializedField
-        public uuid: string | null = null;
 
         /**
          * 变换组件
@@ -178,12 +129,12 @@ namespace paper {
          */
         public destroy() {
             if (!this._scene) {
-                console.warn("The game object has been destroyed.", this.name, this.hashCode);
+                console.warn("The game object has been destroyed.", this.name, this.uuid);
                 return;
             }
 
             if (this === Application.sceneManager.globalGameObject) {
-                console.warn("Cannot destroy global game object.", this.name, this.hashCode);
+                console.warn("Cannot destroy global game object.", this.name, this.uuid);
                 return;
             }
 
@@ -475,7 +426,7 @@ namespace paper {
             this._components.length = 0;
             for (const component of value) {
                 if (component instanceof MissingObject) {
-                    this.addComponent(MissComponent).missingObject = component;
+                    this.addComponent(MissingComponent).missingObject = component;
                 }
                 else {
                     if (component instanceof paper.BaseRenderer) {
@@ -494,6 +445,28 @@ namespace paper {
          */
         public get scene(): Scene {
             return this._scene;
+        }
+
+        /**
+         * @deprecated
+         * @see paper.Scene#find()
+         */
+        public static find(name: string, scene: Scene | null = null) {
+            return (scene || Application.sceneManager.activeScene).find(name);
+        }
+        /**
+         * @deprecated
+         * @see paper.Scene#findWithTag()
+         */
+        public static findWithTag(tag: string, scene: Scene | null = null) {
+            return (scene || Application.sceneManager.activeScene).findWithTag(tag);
+        }
+        /**
+         * @deprecated
+         * @see paper.Scene#findGameObjectsWithTag()
+         */
+        public static findGameObjectsWithTag(tag: string, scene: Scene | null = null) {
+            return (scene || Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
         }
     }
 }

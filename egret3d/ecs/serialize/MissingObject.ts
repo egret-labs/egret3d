@@ -8,7 +8,7 @@ namespace paper {
          */
         public readonly missingData: { [key: string]: any } = {};
 
-        public serialize(): any | IHashCode | ISerializedObject {
+        public serialize(): any | IUUID | ISerializedObject {
             return this.missingData;
         }
 

@@ -60,7 +60,6 @@ namespace egret3d {
             this._receiveShadows = element._receiveShadows || false;
             this._castShadows = element._castShadows || false;
             this._lightmapIndex = element._lightmapIndex;
-            this.uuid = element.uuid;
 
             if (element._materials) {
                 this._materials.length = 0;

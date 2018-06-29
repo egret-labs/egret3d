@@ -240,7 +240,7 @@ namespace paper.editor {
             for (let i = 0; i < lights.length; i++)
                 this.lightPool.push(lights[i].gameObject);
             this.cameraPool = [];
-            let allGameObj = Application.sceneManager.getActiveScene().gameObjects;
+            let allGameObj = Application.sceneManager.activeScene.gameObjects;
             for (let i = 0; i < allGameObj.length; i++) {
                 if (allGameObj[i].getComponent(egret3d.Camera)) {
                     if (allGameObj[i].tag != "EditorCamera")

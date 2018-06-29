@@ -6,7 +6,7 @@ namespace egret3d {
     const helpVec3_2: Vector3 = new Vector3();
     const helpInverseMatrix: Matrix = new Matrix();
     //缓存已经校验过的对象，用于过滤
-    const cacheInstances: number[] = [];
+    const cacheInstances: string[] = [];
 
     let beforeCombineCount: number = 0;
     /**
@@ -50,11 +50,11 @@ namespace egret3d {
      */
     function _colletCombineInstance(target: paper.GameObject, out: { [key: string]: CombineInstance[] }, root?: paper.GameObject) {
         //过滤重复的对象
-        if (cacheInstances.indexOf(target.hashCode) >= 0) {
+        if (cacheInstances.indexOf(target.uuid) >= 0) {
             return;
         }
 
-        cacheInstances.push(target.hashCode);
+        cacheInstances.push(target.uuid);
         //
         for (const child of target.transform.children) {
             if (child) {
@@ -79,7 +79,7 @@ namespace egret3d {
 
         //合并筛选的条件:光照贴图_材质0_材质1... ：0_234_532...
         let key: string = meshRenderer.lightmapIndex + "_";
-        materials.forEach(element => { key = key + "_" + element.hashCode; });
+        materials.forEach(element => { key = key + "_" + element.uuid; });
 
         if (!out[key]) {
             out[key] = [];

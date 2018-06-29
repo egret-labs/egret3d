@@ -5,6 +5,7 @@ namespace egret3d {
         startTime: number;
         time: number;
         group: number;
+        maxTime: number;
     }
 
     export type ProfileList = { keys: string[], values: ProfileItem[] };
@@ -28,7 +29,7 @@ namespace egret3d {
             }
             console.log("------------------------");
             for (const item of list) {
-                console.log(item.key + ":用时" + item.time + "平均:" + (item.time / item.count) + " 权重:" + (Math.round(item.time / totalTime * 100)) + "%");
+                console.log(item.key + ":用时" + item.time + "平均:" + (item.time / item.count) + "最大值:" + item.maxTime + " 权重:" + (Math.round(item.time / totalTime * 100)) + "%");
             }
         }
 
@@ -45,7 +46,7 @@ namespace egret3d {
             if (index < 0) {
                 this.profileList.keys.push(key);
                 index = this.profileList.values.length;
-                this.profileList.values.push({ key, count: 0, startTime: 0, time: 0, group });
+                this.profileList.values.push({ key, count: 0, startTime: 0, time: 0, group, maxTime: 0 });
             }
 
             const item = this.profileList.values[index];
@@ -61,7 +62,9 @@ namespace egret3d {
                 console.log("invalid key error.", this);
             } else {
                 const item = this.profileList.values[index];
-                item.time += this._getNow() - item.startTime;
+                const d = this._getNow() - item.startTime;
+                item.time += d;
+                item.maxTime = item.maxTime > d ? item.maxTime : d;
             }
         }
 

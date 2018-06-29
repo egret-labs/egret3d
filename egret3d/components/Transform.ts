@@ -861,7 +861,5 @@ namespace egret3d {
         }
     }
 
-    // export type SerializeObject = { hashCode: number, class: string, localPosition: number[], localRotation: number[], localScale: number[], _parent: {}, children: Array<any> };
     export type ImmutableVector4 = Readonly<Float32Array>;
-
 }

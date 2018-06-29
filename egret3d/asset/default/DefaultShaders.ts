@@ -41,6 +41,7 @@ namespace egret3d {
             const def_diffuse_vs = Shader.registerVertShader("def_diffuse", ShaderLib.diffuse_vert);
             const def_diffuse_fs = Shader.registerFragShader("def_diffuse", ShaderLib.diffuse_frag);
             const def_boneeff_vs = Shader.registerVertShader("def_boneeff", ShaderLib.boneeff_vert);
+            const def_bonelambert_vs = Shader.registerVertShader("def_bonelambert_vert", ShaderLib.bonelambert_vert);
             const def_diffuselightmap_vs = Shader.registerVertShader("def_diffuselightmap", ShaderLib.diffuselightmap_vert);
             const def_diffuselightmap_fs = Shader.registerFragShader("def_diffuselightmap", ShaderLib.diffuselightmap_frag);
             const def_postquad_vs = Shader.registerVertShader("def_postquad", ShaderLib.postquad_vert);
@@ -103,6 +104,15 @@ namespace egret3d {
                 distancePass.state_showface = ShowFaceStateEnum.CCW;
                 distancePass.setAlphaBlend(BlendModeEnum.Close);
                 shader.passes["base_distance_package"].push(distancePass);
+
+                const skinPass = new DrawPass(def_bonelambert_vs, def_lambert_fs);
+                shader.passes["skin"] = [];
+                skinPass.state_ztest = true;
+                skinPass.state_ztest_method = WebGLKit.LEQUAL;
+                skinPass.state_zwrite = true;
+                skinPass.state_showface = ShowFaceStateEnum.CCW;
+                skinPass.setAlphaBlend(BlendModeEnum.Close);
+                shader.passes["skin"].push(skinPass);
 
                 this.LAMBERT = shader;
 
@@ -602,6 +612,27 @@ namespace egret3d {
                 paper.Asset.register(shader);
             }
             {
+                //TODO
+                const shader = new Shader("particles_blend1.shader.json");
+                shader.url = "particles_blend1.shader.json";
+                shader.renderQueue = RenderQueue.Transparent;
+                shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
+
+                shader.passes["base"] = [];
+                const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
+                renderPass.state_ztest = true;
+                renderPass.state_ztest_method = WebGLKit.LEQUAL;
+                renderPass.state_zwrite = true;
+                renderPass.state_showface = ShowFaceStateEnum.ALL;
+                renderPass.setAlphaBlend(BlendModeEnum.Blend);
+                shader.passes["base"].push(renderPass);
+
+                this.PARTICLE_BLEND = shader;
+
+                paper.Asset.register(shader);
+            }
+            {
                 const shader = new Shader("particles_blend.shader.json");
                 shader.url = "particles_blend.shader.json";
                 shader.renderQueue = RenderQueue.Transparent;
@@ -611,8 +642,8 @@ namespace egret3d {
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
                 renderPass.state_ztest = true;
-                renderPass.state_ztest_method = WebGLKit.LEQUAL;
-                renderPass.state_zwrite = false;
+                renderPass.state_ztest_method = WebGLKit.EQUAL;
+                renderPass.state_zwrite = true;
                 renderPass.state_showface = ShowFaceStateEnum.ALL;
                 renderPass.setAlphaBlend(BlendModeEnum.Blend);
                 shader.passes["base"].push(renderPass);
@@ -632,7 +663,7 @@ namespace egret3d {
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
                 renderPass.state_ztest = true;
-                renderPass.state_ztest_method = WebGLKit.LEQUAL;
+                renderPass.state_ztest_method = WebGLKit.EQUAL;
                 renderPass.state_zwrite = true;
                 renderPass.state_showface = ShowFaceStateEnum.ALL;
                 renderPass.setAlphaBlend(BlendModeEnum.Blend_PreMultiply);

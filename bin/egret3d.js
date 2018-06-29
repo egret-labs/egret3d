@@ -2,18 +2,18 @@
 var __reflect = (this && this.__reflect) || function (p, c, t) {
     p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
 };
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 var __extends = this && this.__extends || function __extends(t, e) { 
  function r() { 
  this.constructor = t;
 }
 for (var i in e) e.hasOwnProperty(i) && (t[i] = e[i]);
 r.prototype = e.prototype, t.prototype = new r();
-};
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -58,6 +58,79 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
     }
     return t;
 };
+var paper;
+(function (paper) {
+    var _tagA = [];
+    var _tagB = [];
+    var _tagC = [];
+    /**
+     * @internal
+     */
+    paper._executeInEditModeComponents = [];
+    /**
+     * 标记序列化分类
+     * 如果没有标记序列化分类，序列化后的对象只会收集在objects中
+     * 如果被标记了某种序列化分类，序列化后的对象还会被单独收集到一个新的数组中，key即为类名
+     * TODO 不能发布给开发者使用。
+     */
+    function serializedType(type) {
+        return function (clazz) {
+            var classPrototype = clazz.prototype;
+            if (_tagA.indexOf(classPrototype) >= 0) {
+                var types = classPrototype["__serializedType" /* SerializedType */];
+                if (types.indexOf(type) < 0) {
+                    types.push(type);
+                }
+            }
+            else {
+                classPrototype["__serializedType" /* SerializedType */] = [type];
+                _tagA.push(classPrototype);
+            }
+        };
+    }
+    paper.serializedType = serializedType;
+    /**
+     * 标记序列化属性
+     * 通过装饰器标记需要序列化的属性
+     */
+    function serializedField(classPrototype, type) {
+        if (_tagB.indexOf(classPrototype) >= 0) {
+            var types = classPrototype["__serialized" /* Serialized */];
+            if (types.indexOf(type) < 0) {
+                types.push(type);
+            }
+        }
+        else {
+            classPrototype["__serialized" /* Serialized */] = [type];
+            _tagB.push(classPrototype);
+        }
+    }
+    paper.serializedField = serializedField;
+    /**
+     * 标记反序列化时需要忽略的属性
+     * 通过装饰器标记反序列化时需要被忽略的属性（但属性中引用的对象依然会被实例化）
+     */
+    function deserializedIgnore(classPrototype, type) {
+        if (_tagC.indexOf(classPrototype) >= 0) {
+            var types = classPrototype["__deserializedIgnore" /* DeserializedIgnore */];
+            if (types.indexOf(type) < 0) {
+                types.push(type);
+            }
+        }
+        else {
+            classPrototype["__deserializedIgnore" /* DeserializedIgnore */] = [type];
+            _tagC.push(classPrototype);
+        }
+    }
+    paper.deserializedIgnore = deserializedIgnore;
+    /**
+     * 标记脚本组件是否在编辑模式也拥有生命周期。
+     */
+    function executeInEditMode(target) {
+        paper._executeInEditModeComponents.push(target);
+    }
+    paper.executeInEditMode = executeInEditMode;
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     var Vector3 = (function () {
@@ -297,86 +370,19 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
-    var _tagA = [];
-    var _tagB = [];
-    var _tagC = [];
-    /**
-     * @internal
-     */
-    paper._executeInEditModeComponents = [];
-    /**
-     * 标记序列化分类
-     * 如果没有标记序列化分类，序列化后的对象只会收集在objects中
-     * 如果被标记了某种序列化分类，序列化后的对象还会被单独收集到一个新的数组中，key即为类名
-     * TODO 不能发布给开发者使用。
-     */
-    function serializedType(type) {
-        return function (clazz) {
-            var classPrototype = clazz.prototype;
-            if (_tagA.indexOf(classPrototype) >= 0) {
-                var types = classPrototype["__serializedType" /* SerializedType */];
-                if (types.indexOf(type) < 0) {
-                    types.push(type);
-                }
-            }
-            else {
-                classPrototype["__serializedType" /* SerializedType */] = [type];
-                _tagA.push(classPrototype);
-            }
-        };
-    }
-    paper.serializedType = serializedType;
-    /**
-     * 标记序列化属性
-     * 通过装饰器标记需要序列化的属性
-     */
-    function serializedField(classPrototype, type) {
-        if (_tagB.indexOf(classPrototype) >= 0) {
-            var types = classPrototype["__serialized" /* Serialized */];
-            if (types.indexOf(type) < 0) {
-                types.push(type);
-            }
-        }
-        else {
-            classPrototype["__serialized" /* Serialized */] = [type];
-            _tagB.push(classPrototype);
-        }
-    }
-    paper.serializedField = serializedField;
-    /**
-     * 标记反序列化时需要忽略的属性
-     * 通过装饰器标记反序列化时需要被忽略的属性（但属性中引用的对象依然会被实例化）
-     */
-    function deserializedIgnore(classPrototype, type) {
-        if (_tagC.indexOf(classPrototype) >= 0) {
-            var types = classPrototype["__deserializedIgnore" /* DeserializedIgnore */];
-            if (types.indexOf(type) < 0) {
-                types.push(type);
-            }
-        }
-        else {
-            classPrototype["__deserializedIgnore" /* DeserializedIgnore */] = [type];
-            _tagC.push(classPrototype);
-        }
-    }
-    paper.deserializedIgnore = deserializedIgnore;
-    /**
-     * 标记脚本组件是否在编辑模式也拥有生命周期。
-     */
-    function executeInEditMode(target) {
-        paper._executeInEditModeComponents.push(target);
-    }
-    paper.executeInEditMode = executeInEditMode;
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
     var _hashCount = 1;
     /**
-     * 可序列化对象
+     * 生成 uuid 的方式。
+     */
+    paper.createUUID = function () {
+        return (_hashCount++).toString();
+    };
+    /**
+     * 可序列化对象。
      */
     var SerializableObject = (function () {
         function SerializableObject() {
-            this.hashCode = _hashCount++;
+            this.uuid = paper.createUUID();
         }
         SerializableObject.prototype.serialize = function () {
             console.warn("Unimplemented serialize method.");
@@ -384,10 +390,13 @@ var paper;
         SerializableObject.prototype.deserialize = function (element) {
             console.warn("Unimplemented deserialize method.");
         };
+        __decorate([
+            paper.serializedField
+        ], SerializableObject.prototype, "uuid", void 0);
         return SerializableObject;
     }());
     paper.SerializableObject = SerializableObject;
-    __reflect(SerializableObject.prototype, "paper.SerializableObject", ["paper.IHashCode", "paper.ISerializable"]);
+    __reflect(SerializableObject.prototype, "paper.SerializableObject", ["paper.IUUID", "paper.ISerializable"]);
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -534,10 +543,6 @@ var paper;
              * 组件挂载的 GameObject
              */
             _this.gameObject = BaseComponent._injectGameObject;
-            /**
-             * @internal
-             */
-            _this.uuid = null;
             _this._enabled = true;
             return _this;
         }
@@ -561,7 +566,9 @@ var paper;
         };
         BaseComponent.prototype.deserialize = function (element) {
             this._enabled = element._enabled === false ? false : true;
-            this.uuid = element.uuid;
+            if (element.uuid) {
+                this.uuid = element.uuid;
+            }
         };
         Object.defineProperty(BaseComponent.prototype, "enabled", {
             /**
@@ -595,9 +602,6 @@ var paper;
             enumerable: true,
             configurable: true
         });
-        __decorate([
-            paper.serializedField
-        ], BaseComponent.prototype, "uuid", void 0);
         __decorate([
             paper.serializedField
         ], BaseComponent.prototype, "_enabled", void 0);
@@ -1832,9 +1836,9 @@ var paper;
          */
         BaseSystem.prototype._onAddComponent = function (component) {
             var gameObject = component.gameObject;
-            var hashCode = gameObject.hashCode;
-            if (hashCode in this._gameObjectOffsets ||
-                hashCode in this._waittingComponents) {
+            var uuid = gameObject.uuid;
+            if (uuid in this._gameObjectOffsets ||
+                uuid in this._waittingComponents) {
                 return;
             }
             var components = new Array();
@@ -1859,19 +1863,19 @@ var paper;
                 components.push(insterestComponent); // ts 不能推断。
             }
             this._bufferedCount++;
-            this._waittingComponents[hashCode] = components;
+            this._waittingComponents[uuid] = components;
         };
         /**
          * 当关心的组件被移除时。
          */
         BaseSystem.prototype._onRemoveComponent = function (component) {
             var gameObject = component.gameObject;
-            var hashCode = gameObject.hashCode;
-            if (hashCode in this._gameObjectOffsets) {
+            var uuid = gameObject.uuid;
+            if (uuid in this._gameObjectOffsets) {
                 var interestCount = this._interestComponentCount;
                 var components = this._components;
                 var backupLength = components.length;
-                var gameObjectOffset = this._gameObjectOffsets[gameObject.hashCode];
+                var gameObjectOffset = this._gameObjectOffsets[gameObject.uuid];
                 if (backupLength > interestCount) {
                     var lastGameObject = null;
                     for (var i = 0; i < interestCount; ++i) {
@@ -1881,30 +1885,30 @@ var paper;
                         components[gameObjectOffset + i] = components[backupLength - interestCount + i];
                     }
                     if (lastGameObject) {
-                        this._gameObjectOffsets[lastGameObject.hashCode] = gameObjectOffset;
+                        this._gameObjectOffsets[lastGameObject.uuid] = gameObjectOffset;
                     }
                 }
                 components.length -= interestCount;
-                delete this._gameObjectOffsets[gameObject.hashCode];
+                delete this._gameObjectOffsets[gameObject.uuid];
                 this.onRemoveGameObject && this.onRemoveGameObject(gameObject);
             }
-            else if (hashCode in this._waittingComponents) {
+            else if (uuid in this._waittingComponents) {
                 this._bufferedCount++;
-                delete this._waittingComponents[hashCode];
+                delete this._waittingComponents[uuid];
             }
         };
         /**
          * 判断实体是否在系统内。
          */
         BaseSystem.prototype._hasGameObject = function (gameObject) {
-            return gameObject.hashCode in this._gameObjectOffsets;
+            return gameObject.uuid in this._gameObjectOffsets;
         };
         /**
          * 根据关心列表的顺序快速查找指定组件。
          */
         BaseSystem.prototype._getComponent = function (gameObject, componentOffset) {
-            if (gameObject.hashCode in this._gameObjectOffsets) {
-                return this._components[this._gameObjectOffsets[gameObject.hashCode] + componentOffset];
+            if (gameObject.uuid in this._gameObjectOffsets) {
+                return this._components[this._gameObjectOffsets[gameObject.uuid] + componentOffset];
             }
             return null;
         };
@@ -2080,19 +2084,19 @@ var egret3d;
      */
     function runEgret(options) {
         if (options === void 0) { options = { antialias: false }; }
-        Ammo().then(function () {
-            var requiredOptions = getOptions(options);
-            var canvas = getMainCanvas();
-            egret3d.WebGLKit.init(canvas, requiredOptions);
-            egret3d.InputManager.init(canvas);
-            egret3d.DefaultMeshes.init();
-            egret3d.DefaultTextures.init();
-            egret3d.DefaultShaders.init();
-            egret3d.stage.init(canvas, requiredOptions);
-            paper.Application.init(options);
-            //
-            paper.Application.sceneManager.createScene("default");
-        });
+        // (Ammo as any)().then(() => { // TODO WebAssembly load
+        var requiredOptions = getOptions(options);
+        var canvas = getMainCanvas();
+        egret3d.WebGLKit.init(canvas, requiredOptions);
+        egret3d.InputManager.init(canvas);
+        egret3d.DefaultMeshes.init();
+        egret3d.DefaultTextures.init();
+        egret3d.DefaultShaders.init();
+        egret3d.stage.init(canvas, requiredOptions);
+        paper.Application.init(options);
+        //
+        paper.Application.sceneManager.createScene("default");
+        // });
     }
     egret3d.runEgret = runEgret;
     function getMainCanvas() {
@@ -2445,7 +2449,7 @@ var paper;
                     this._scenes.unshift(value);
                 }
                 else {
-                    console.debug("Active scene error.", value.name, value.hashCode);
+                    console.debug("Active scene error.", value.name, value.uuid);
                 }
             },
             enumerable: true,
@@ -2964,7 +2968,7 @@ var egret3d;
                 for (var _i = 0, _a = this._raw.assets; _i < _a.length; _i++) {
                     var item = _a[_i];
                     if (item.url.indexOf("shader.json") < 0) {
-                        this._assets[item.hashCode] = paper.Asset.find(egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", item.url));
+                        this._assets[item.uuid || item.hashCode] = paper.Asset.find(egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", item.url)); // 兼容 hashCode 。
                     }
                 }
             }
@@ -3652,6 +3656,9 @@ var egret3d;
         Material.prototype.setVector4 = function (_id, _vector4) {
             if (this.$uniforms[_id] !== undefined) {
                 this.$uniforms[_id].value = _vector4;
+                if (this.$uniforms[_id].type !== egret3d.UniformTypeEnum.Float4) {
+                    console.error("设置setVector4类型错误，类型不匹配");
+                }
             }
             else {
                 this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4, value: _vector4 };
@@ -3661,6 +3668,9 @@ var egret3d;
         Material.prototype.setVector4v = function (_id, _vector4v) {
             if (this.$uniforms[_id] !== undefined) {
                 this.$uniforms[_id].value = _vector4v;
+                if (this.$uniforms[_id].type !== egret3d.UniformTypeEnum.Float4v) {
+                    console.error("设置setVector4v类型错误，类型不匹配");
+                }
             }
             else {
                 this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4v, value: _vector4v };
@@ -3763,7 +3773,15 @@ var egret3d;
                         mat.setFloat(i, data.value);
                         break;
                     case egret3d.UniformTypeEnum.Float4:
-                        mat.setVector4(i, data.value);
+                        if (Array.isArray(data.value)) {
+                            mat.setVector4v(i, data.value);
+                        }
+                        else {
+                            mat.setVector4(i, data.value);
+                        }
+                        break;
+                    case egret3d.UniformTypeEnum.Float4v:
+                        mat.setVector4v(i, data.value);
                         break;
                     default:
                         break;
@@ -4693,20 +4711,21 @@ var paper;
         var root = null;
         for (var _i = 0, _a = data.objects; _i < _a.length; _i++) {
             var source = _a[_i];
+            var uuid = source.uuid || source.hashCode; // hashCode 兼容。
             var target = void 0;
-            if (source.hashCode in _deserializedObjects) {
-                target = _deserializedObjects[source.hashCode];
+            if (uuid in _deserializedObjects) {
+                target = _deserializedObjects[uuid];
             }
             else {
                 var className = paper.serializeClassMap[source.class] || source.class;
                 var clazz = egret.getDefinitionByName(className);
                 if (clazz) {
                     target = new clazz();
-                    _deserializedObjects[source.hashCode] = target;
+                    _deserializedObjects[uuid] = target;
                 }
                 else {
                     target = new paper.MissingObject();
-                    _deserializedObjects[source.hashCode] = target;
+                    _deserializedObjects[uuid] = target;
                     console.error("Class " + source.class + " not defined.");
                 }
             }
@@ -4714,10 +4733,11 @@ var paper;
         }
         for (var _b = 0, _c = data.objects; _b < _c.length; _b++) {
             var source = _c[_b];
-            if (source.hashCode in expandMap) {
+            var uuid = source.uuid || source.hashCode; // hashCode 兼容。
+            if (uuid in expandMap) {
                 continue;
             }
-            var target = _deserializedObjects[source.hashCode];
+            var target = _deserializedObjects[uuid];
             _deserializeObject(source, target);
             if (target instanceof paper.GameObject) {
                 for (var _d = 0, _e = target.components; _d < _e.length; _d++) {
@@ -4728,7 +4748,8 @@ var paper;
         }
         for (var _f = 0, _g = data.objects; _f < _g.length; _f++) {
             var source = _g[_f];
-            var target = _deserializedObjects[source.hashCode];
+            var uuid = source.uuid || source.hashCode; // hashCode 兼容。
+            var target = _deserializedObjects[uuid];
             if (target instanceof paper.BaseComponent) {
                 target.initialize();
                 if (target.isActiveAndEnabled) {
@@ -4744,7 +4765,7 @@ var paper;
      *
      */
     function getDeserializedObject(source) {
-        return _deserializedObjects[source.hashCode];
+        return _deserializedObjects[source.uuid || source.hashCode]; // hashCode 兼容。
     }
     paper.getDeserializedObject = getDeserializedObject;
     function _deserializeObject(source, target) {
@@ -4753,7 +4774,7 @@ var paper;
         }
         else {
             for (var k in source) {
-                if (k === "hashCode" || k === "class") {
+                if (k === "uuid" || k === "hashCode" || k === "class") {
                     continue;
                 }
                 if ("__deserializedIgnore" /* DeserializedIgnore */ in target &&
@@ -4783,11 +4804,11 @@ var paper;
                     }
                     return target;
                 }
-                var hashCode = source.hashCode; // TODO 字符串依赖。
+                var uuid = (source.uuid || source.hashCode); // TODO 字符串依赖， hashCode 兼容。
                 var classCodeOrName = source.class; // TODO 字符串依赖。
-                if (hashCode) {
-                    if (hashCode in _deserializedObjects) {
-                        return _deserializedObjects[hashCode];
+                if (uuid) {
+                    if (uuid in _deserializedObjects) {
+                        return _deserializedObjects[uuid];
                     }
                     else if (classCodeOrName) {
                         if (classCodeOrName === paper.findClassCodeFrom(paper.Scene)) {
@@ -4796,7 +4817,7 @@ var paper;
                         else if (classCodeOrName === paper.findClassCodeFrom(paper.GameObject)) {
                             for (var _i = 0, _a = paper.Application.sceneManager.activeScene.gameObjects; _i < _a.length; _i++) {
                                 var gameObject = _a[_i];
-                                if (gameObject.hashCode === hashCode) {
+                                if (gameObject.uuid === uuid) {
                                     return gameObject;
                                 }
                             }
@@ -4806,7 +4827,7 @@ var paper;
                                 var gameObject = _c[_b];
                                 for (var _d = 0, _e = gameObject.components; _d < _e.length; _d++) {
                                     var component = _e[_d];
-                                    if (component.hashCode === hashCode) {
+                                    if (component.uuid === uuid) {
                                         return component;
                                     }
                                 }
@@ -4885,11 +4906,11 @@ var paper;
     var KEY_SERIALIZE = "serialize";
     var KEY_DESERIALIZE = "deserialize";
     var _sourcePath = "";
-    var _hashCodes = []; // 缓存序列化记录，提高查找效率
+    var _serializeds = []; // 缓存序列化记录，提高查找效率
     var _serializeData = null;
     /**
      * 序列化方法
-     * 只有 ISerializable (有对应hashCode属性) 参与序列化
+     * 只有 ISerializable 参与序列化
      * 只有被标记的对象属性 参与序列化
      * 序列化后，输出 ISerializeData
      * 对象在objects中按生成顺序，root一定是第一个元素。
@@ -4904,7 +4925,7 @@ var paper;
             _sourcePath = rawScene ? rawScene.url : "";
         }
         _serializeObject(source);
-        _hashCodes.length = 0;
+        _serializeds.length = 0;
         var data = _serializeData;
         _serializeData = null;
         return data;
@@ -4929,14 +4950,14 @@ var paper;
      */
     function serializeRC(source) {
         var className = egret.getQualifiedClassName(source);
-        return { hashCode: source.hashCode, class: paper.findClassCode(className) || className };
+        return { uuid: source.uuid, class: paper.findClassCode(className) || className };
     }
     paper.serializeRC = serializeRC;
     /**
      *
      */
     function serializeR(source) {
-        return { hashCode: source.hashCode };
+        return { uuid: source.uuid };
     }
     paper.serializeR = serializeR;
     /**
@@ -4968,10 +4989,7 @@ var paper;
     function _serializeObject(source, isStruct, parentHasCustomDeserialize) {
         if (isStruct === void 0) { isStruct = false; }
         if (parentHasCustomDeserialize === void 0) { parentHasCustomDeserialize = false; }
-        if (_hashCodes.indexOf(source.hashCode) >= 0) {
-            // if (!(source instanceof Asset)) {
-            //     console.warn("Serialize object again.", source.hashCode);
-            // }
+        if (_serializeds.indexOf(source.uuid) >= 0) {
             return serializeR(source);
         }
         var classPrototype = source.constructor.prototype;
@@ -4980,7 +4998,7 @@ var paper;
             classPrototype[KEY_SERIALIZE].apply(source) :
             (parentHasCustomDeserialize ? {} : (isStruct ? serializeC(source) : serializeRC(source)));
         if (!isStruct && _serializeData) {
-            _hashCodes.push(source.hashCode);
+            _serializeds.push(source.uuid);
             // Add to custom.
             if ("__serializedType" /* SerializedType */ in source) {
                 for (var _i = 0, _a = source["__serializedType" /* SerializedType */]; _i < _a.length; _i++) {
@@ -6154,10 +6172,6 @@ var paper;
              */
             _this.tag = "";
             /**
-             * @internal
-             */
-            _this.uuid = null;
-            /**
              * 变换组件
              */
             _this.transform = null;
@@ -6186,49 +6200,6 @@ var paper;
             _this._addToScene(paper.Application.sceneManager.activeScene);
             return _this;
         }
-        /**
-         * 返回当前激活场景中查找对应名称的GameObject
-         * @param name
-         */
-        GameObject.find = function (name, scene) {
-            if (scene === void 0) { scene = null; }
-            for (var _i = 0, _a = (scene || paper.Application.sceneManager.activeScene).gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.name === name) {
-                    return gameObject;
-                }
-            }
-            return null;
-        };
-        /**
-         * 返回一个在当前激活场景中查找对应tag的GameObject
-         * @param tag
-         */
-        GameObject.findWithTag = function (tag, scene) {
-            if (scene === void 0) { scene = null; }
-            for (var _i = 0, _a = (scene || paper.Application.sceneManager.activeScene).gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.tag === tag) {
-                    return gameObject;
-                }
-            }
-            return null;
-        };
-        /**
-         * 返回所有在当前激活场景中查找对应tag的GameObject
-         * @param name
-         */
-        GameObject.findGameObjectsWithTag = function (tag, scene) {
-            if (scene === void 0) { scene = null; }
-            var gameObjects = [];
-            for (var _i = 0, _a = (scene || paper.Application.sceneManager.activeScene).gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.tag === tag) {
-                    gameObjects.push(gameObject);
-                }
-            }
-            return gameObjects;
-        };
         /**
          * @internal
          */
@@ -6281,11 +6252,11 @@ var paper;
          */
         GameObject.prototype.destroy = function () {
             if (!this._scene) {
-                console.warn("The game object has been destroyed.", this.name, this.hashCode);
+                console.warn("The game object has been destroyed.", this.name, this.uuid);
                 return;
             }
             if (this === paper.Application.sceneManager.globalGameObject) {
-                console.warn("Cannot destroy global game object.", this.name, this.hashCode);
+                console.warn("Cannot destroy global game object.", this.name, this.uuid);
                 return;
             }
             var destroySystem = paper.Application.systemManager.getSystem(paper.DestroySystem);
@@ -6565,7 +6536,7 @@ var paper;
                 for (var _i = 0, value_2 = value; _i < value_2.length; _i++) {
                     var component = value_2[_i];
                     if (component instanceof paper.MissingObject) {
-                        this.addComponent(paper.MissComponent).missingObject = component;
+                        this.addComponent(paper.MissingComponent).missingObject = component;
                     }
                     else {
                         if (component instanceof paper.BaseRenderer) {
@@ -6589,6 +6560,30 @@ var paper;
             enumerable: true,
             configurable: true
         });
+        /**
+         * @deprecated
+         * @see paper.Scene#find()
+         */
+        GameObject.find = function (name, scene) {
+            if (scene === void 0) { scene = null; }
+            return (scene || paper.Application.sceneManager.activeScene).find(name);
+        };
+        /**
+         * @deprecated
+         * @see paper.Scene#findWithTag()
+         */
+        GameObject.findWithTag = function (tag, scene) {
+            if (scene === void 0) { scene = null; }
+            return (scene || paper.Application.sceneManager.activeScene).findWithTag(tag);
+        };
+        /**
+         * @deprecated
+         * @see paper.Scene#findGameObjectsWithTag()
+         */
+        GameObject.findGameObjectsWithTag = function (tag, scene) {
+            if (scene === void 0) { scene = null; }
+            return (scene || paper.Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
+        };
         __decorate([
             paper.serializedField,
             paper.editor.property(paper.editor.EditType.CHECKBOX)
@@ -6604,9 +6599,6 @@ var paper;
         __decorate([
             paper.serializedField
         ], GameObject.prototype, "tag", void 0);
-        __decorate([
-            paper.serializedField
-        ], GameObject.prototype, "uuid", void 0);
         __decorate([
             paper.serializedField
         ], GameObject.prototype, "prefab", void 0);
@@ -6854,7 +6846,7 @@ var paper;
                 this._gameObjects.splice(index, 1);
             }
             else {
-                console.debug("Remove game object again.", gameObject.hashCode);
+                console.debug("Remove game object again.", gameObject.name, gameObject.uuid);
             }
         };
         /**
@@ -6865,8 +6857,61 @@ var paper;
                 this._gameObjects.push(gameObject);
             }
             else {
-                console.debug("Add game object again.", gameObject.hashCode);
+                console.debug("Add game object again.", gameObject.name, gameObject.uuid);
             }
+        };
+        /**
+         * 返回当前激活场景中查找对应名称的GameObject
+         * @param name
+         */
+        Scene.prototype.find = function (name) {
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.name === name) {
+                    return gameObject;
+                }
+            }
+            return null;
+        };
+        /**
+         * 返回一个在当前激活场景中查找对应tag的GameObject
+         * @param tag
+         */
+        Scene.prototype.findWithTag = function (tag) {
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.tag === tag) {
+                    return gameObject;
+                }
+            }
+            return null;
+        };
+        /**
+         * 返回一个在当前激活场景中查找对应 uuid 的GameObject
+         * @param uuid
+         */
+        Scene.prototype.findWithUUID = function (uuid) {
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.uuid === uuid) {
+                    return gameObject;
+                }
+            }
+            return null;
+        };
+        /**
+         * 返回所有在当前激活场景中查找对应tag的GameObject
+         * @param name
+         */
+        Scene.prototype.findGameObjectsWithTag = function (tag) {
+            var gameObjects = [];
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.tag === tag) {
+                    gameObjects.push(gameObject);
+                }
+            }
+            return gameObjects;
         };
         /**
          * 获取所有根级GameObject对象
@@ -7765,7 +7810,7 @@ var egret3d;
             this.removeDrawCalls(gameObject);
             var drawCalls = this._createDrawCalls(gameObject);
             if (drawCalls) {
-                this._drawCalls[gameObject.hashCode] = drawCalls;
+                this._drawCalls[gameObject.uuid] = drawCalls;
                 egret3d.Pool.drawCall.add(drawCalls);
                 if (castShadows) {
                     egret3d.Pool.shadowCaster.add(drawCalls);
@@ -7773,8 +7818,8 @@ var egret3d;
             }
         };
         DrawCallList.prototype.updateShadowCasters = function (gameObject, castShadows) {
-            if (gameObject.hashCode in this._drawCalls) {
-                var drawCalls = this._drawCalls[gameObject.hashCode];
+            if (gameObject.uuid in this._drawCalls) {
+                var drawCalls = this._drawCalls[gameObject.uuid];
                 if (castShadows) {
                     for (var _i = 0, drawCalls_1 = drawCalls; _i < drawCalls_1.length; _i++) {
                         var drawCall = drawCalls_1[_i];
@@ -7790,16 +7835,16 @@ var egret3d;
             }
         };
         DrawCallList.prototype.removeDrawCalls = function (gameObject) {
-            if (gameObject.hashCode in this._drawCalls) {
-                var drawCalls = this._drawCalls[gameObject.hashCode];
+            if (gameObject.uuid in this._drawCalls) {
+                var drawCalls = this._drawCalls[gameObject.uuid];
                 egret3d.Pool.drawCall.remove(drawCalls);
                 egret3d.Pool.shadowCaster.remove(drawCalls);
-                delete this._drawCalls[gameObject.hashCode];
+                delete this._drawCalls[gameObject.uuid];
             }
         };
         DrawCallList.prototype.getDrawCalls = function (gameObject) {
-            if (gameObject.hashCode in this._drawCalls) {
-                return this._drawCalls[gameObject.hashCode];
+            if (gameObject.uuid in this._drawCalls) {
+                return this._drawCalls[gameObject.uuid];
             }
             return null;
         };
@@ -9891,7 +9936,7 @@ var egret;
                         }
                         break;
                     case 6 /* ACT_BUFFER */:
-                        this.activateBuffer(data.buffer);
+                        this.activateBuffer(data.buffer, data.width, data.height);
                         break;
                     case 7 /* ENABLE_SCISSOR */:
                         var buffer = this.activatedBuffer;
@@ -9970,14 +10015,14 @@ var egret;
             /**
              * 启用RenderBuffer
              */
-            Renderer.prototype.activateBuffer = function (buffer) {
+            Renderer.prototype.activateBuffer = function (buffer, width, height) {
                 buffer.rootRenderTarget.activate();
                 if (!this.bindIndices) {
                     this.uploadIndicesArray(this.vao.getIndices());
                 }
                 buffer.restoreStencil();
                 buffer.restoreScissor();
-                this.onResize(buffer.width, buffer.height);
+                this.onResize(width, height);
             };
             Renderer.prototype.onResize = function (width, height) {
                 this.projectionX = width / 2;
@@ -11124,7 +11169,6 @@ var egret3d;
             this._receiveShadows = element._receiveShadows || false;
             this._castShadows = element._castShadows || false;
             this._lightmapIndex = element._lightmapIndex;
-            this.uuid = element.uuid;
             if (element._materials) {
                 this._materials.length = 0;
                 for (var i = 0, l = element._materials.length; i < l; i++) {
@@ -11621,7 +11665,7 @@ var egret3d;
             target._materials = [];
             target.uuid = this.uuid;
             if (this.rootBone) {
-                target.rootBone = { hashCode: this.rootBone.hashCode };
+                target.rootBone = { uuid: this.rootBone.uuid };
             }
             var materials = this._materials;
             target._materials.length = materials.length;
@@ -11633,7 +11677,7 @@ var egret3d;
             target._bones.length = bones.length;
             for (var i = 0, l = bones.length; i < l; i++) {
                 var bone = bones[i];
-                target._bones[i] = { hashCode: bone.hashCode };
+                target._bones[i] = { uuid: bone.uuid };
             }
             return target;
         };
@@ -11644,7 +11688,6 @@ var egret3d;
             _super.prototype.deserialize.call(this, element);
             this.center.deserialize(element.center);
             this.size.deserialize(element.size);
-            this.uuid = element.uuid;
             if (element._mesh) {
                 this._mesh = new egret3d.Mesh(); //
                 this._mesh.deserialize(element._mesh);
@@ -13501,6 +13544,10 @@ var egret3d;
              */
             _this._frameRate = 0;
             /**
+             * 起始帧。
+             */
+            _this._frameStart = 0;
+            /**
              * 总帧数。
              */
             _this._frameCount = 0;
@@ -13688,7 +13735,8 @@ var egret3d;
             var dataAccessor = this.animationAsset.getAccessor(paperAnimation.data);
             //
             this._frameRate = paperAnimation.frameRate;
-            this._frameCount = paperAnimation.frameCount;
+            this._frameStart = Math.floor(this.animationClip.position * paperAnimation.frameRate);
+            this._frameCount = Math.floor(this.animationClip.duration * paperAnimation.frameRate); // ceil.
             this._fadeTimeStart = globalTime;
             this._playTimeStart = globalTime;
             this._animationComponent = animationComponent;
@@ -13804,13 +13852,13 @@ var egret3d;
             var prevPlayTimes = this.currentPlayTimes;
             var prevPlayState = this._playState;
             var timeScale = this.timeScale * this._animationComponent.timeScale;
-            var r = timeScale === 0.0 ? 0.0 : 1.0 / timeScale;
+            var timeScaleR = timeScale === 0.0 ? 0.0 : 1.0 / timeScale;
             var position = this.animationClip.position;
             var duration = this.animationClip.duration;
             var totalTime = this.playTimes * duration;
-            var localPlayTime = (globalTime - this._playTimeStart) * r;
+            var localPlayTime = (globalTime - this._playTimeStart) * timeScaleR;
             var currentTime = 0.0;
-            if (this.playTimes > 0 && (localPlayTime >= totalTime || localPlayTime <= 0.0)) {
+            if (this.playTimes > 0 && (timeScale >= 0.0 ? localPlayTime >= totalTime : localPlayTime <= 0.0)) {
                 if (this._playState <= 0 && this._isPlaying) {
                     this._playState = 1;
                 }
@@ -13852,9 +13900,9 @@ var egret3d;
                     (this._playState <= 0 && this.currentPlayTimes !== prevPlayTimes)) {
                     this._frameOffset = -1;
                 }
-                if (this._frameCount > 0) {
+                if (this._frameCount > 1) {
                     var frameIndexF = this._playTime * this._frameRate;
-                    var frameIndex = Math.min(Math.floor(frameIndexF), this._frameCount - 1);
+                    var frameIndex = Math.min(Math.floor(frameIndexF), this._frameStart + this._frameCount - 1);
                     var frameOffset = this._frameOffsets[frameIndex];
                     if (this._frameOffset !== frameOffset) {
                         this._frameOffset = frameOffset;
@@ -13870,10 +13918,17 @@ var egret3d;
                     this._onArriveAtFrame();
                 }
             }
+            if (this._playState === 1 && this._fadeState === 0) {
+                var animationNames = this._animationComponent._animationNames;
+                if (animationNames.length > 0) {
+                    var animationName = animationNames.shift();
+                    this._animationComponent.play(animationName);
+                }
+            }
         };
         AnimationState.prototype.fateOut = function () {
             this._fadeState = 1;
-            this._subFadeState = 1;
+            this._subFadeState = -1;
         };
         return AnimationState;
     }(BlendNode));
@@ -13907,6 +13962,10 @@ var egret3d;
              * 混合节点列表。
              */
             _this._blendNodes = [];
+            /**
+             * @internal
+             */
+            _this._animationNames = [];
             /**
              * 最后一个播放的动画状态。
              * 当进行动画混合时，该值通常没有任何意义。
@@ -14062,10 +14121,21 @@ var egret3d;
             this._lastAnimationState = animationState;
             return animationState;
         };
-        Animation.prototype.play = function (animationName, playTimes) {
-            if (animationName === void 0) { animationName = null; }
+        Animation.prototype.play = function (animationNameOrNames, playTimes) {
+            if (animationNameOrNames === void 0) { animationNameOrNames = null; }
             if (playTimes === void 0) { playTimes = -1; }
-            return this.fadeIn(animationName, 0.0, playTimes);
+            this._animationNames.length = 0;
+            if (Array.isArray(animationNameOrNames)) {
+                if (animationNameOrNames.length > 0) {
+                    for (var _i = 0, animationNameOrNames_1 = animationNameOrNames; _i < animationNameOrNames_1.length; _i++) {
+                        var animationName = animationNameOrNames_1[_i];
+                        this._animationNames.push(animationName);
+                    }
+                    return this.fadeIn(this._animationNames.shift(), 0.0, playTimes);
+                }
+                return this.fadeIn(null, 0.0, playTimes);
+            }
+            return this.fadeIn(animationNameOrNames, 0.0, playTimes);
         };
         Object.defineProperty(Animation.prototype, "lastAnimationnName", {
             get: function () {
@@ -16371,7 +16441,7 @@ var paper;
         if ("assets" in data) {
             for (var _i = 0, _a = data["assets"]; _i < _a.length; _i++) {
                 var asset = _a[_i];
-                assets[asset.hashCode] = paper.Asset.find(asset.url); // 获取资源引用
+                assets[asset.uuid] = paper.Asset.find(asset.url); // 获取资源引用
             }
         }
         return paper.deserialize(data, assets);
@@ -16897,7 +16967,7 @@ var paper;
             var _b = _a === void 0 ? {} : _a, _c = _b.isEditor, isEditor = _c === void 0 ? false : _c, _d = _b.isPlaying, isPlaying = _d === void 0 ? true : _d;
             var systemClasses = [
                 paper.StartSystem,
-                egret3d.ammo.PhysicsSystem,
+                // egret3d.ammo.PhysicsSystem, // TODO 分离
                 paper.UpdateSystem,
                 egret3d.GuidpathSystem,
                 egret3d.AnimationSystem,
@@ -17728,7 +17798,7 @@ var egret3d;
             if (pickAll === void 0) { pickAll = false; }
             if (isPickMesh === void 0) { isPickMesh = false; }
             var pickedList = [];
-            for (var _i = 0, _a = paper.Application.sceneManager.getActiveScene().getRootGameObjects(); _i < _a.length; _i++) {
+            for (var _i = 0, _a = paper.Application.sceneManager.activeScene.getRootGameObjects(); _i < _a.length; _i++) {
                 var gameObject = _a[_i];
                 if (gameObject.layer & layerMask) {
                     if (isPickMesh) {
@@ -17822,6 +17892,7 @@ var egret3d;
     var ShaderLib;
     (function (ShaderLib) {
         ShaderLib.boneeff_vert = "attribute vec4 _glesVertex;   \nattribute vec4 _glesBlendIndex4;\nattribute vec4 _glesBlendWeight4;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 glstate_vec4_bones[110];\nuniform highp vec4 _MainTex_ST; \nvarying highp vec2 xlv_TEXCOORD0;\nmat4 buildMat4(int index)\n{\n vec4 quat = glstate_vec4_bones[index * 2 + 0];\n vec4 translation = glstate_vec4_bones[index * 2 + 1];\n float xy2 = 2.0 * quat.x * quat.y;\n float xz2 = 2.0 * quat.x * quat.z;\n float xw2 = 2.0 * quat.x * quat.w;\n float yz2 = 2.0 * quat.y * quat.z;\n float yw2 = 2.0 * quat.y * quat.w;\n float zw2 = 2.0 * quat.z * quat.w;\n float xx = quat.x * quat.x;\n float yy = quat.y * quat.y;\n float zz = quat.z * quat.z;\n float ww = quat.w * quat.w;\n mat4 matrix = mat4(\n xx - yy - zz + ww, xy2 + zw2, xz2 - yw2, 0,\n xy2 - zw2, -xx + yy - zz + ww, yz2 + xw2, 0,\n xz2 + yw2, yz2 - xw2, -xx - yy + zz + ww, 0,\n translation.x, translation.y, translation.z, 1);\n return matrix;\n}\n\nhighp vec4 calcVertex(highp vec4 srcVertex,highp vec4 blendIndex,highp vec4 blendWeight)\n{\n int i = int(blendIndex.x);  \n    int i2 =int(blendIndex.y);\n int i3 =int(blendIndex.z);\n int i4 =int(blendIndex.w);\n \n    mat4 mat = buildMat4(i)*blendWeight.x \n    + buildMat4(i2)*blendWeight.y \n    + buildMat4(i3)*blendWeight.z \n    + buildMat4(i4)*blendWeight.w;\n return mat* srcVertex;\n}\n\n\nvoid main()\n{                                               \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz;  \n    \n    gl_Position = glstate_matrix_mvp *  tmpvar_1;\n\n xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  \n}";
+        ShaderLib.bonelambert_vert = "attribute vec4 _glesVertex;   \nattribute vec3 _glesNormal; \nattribute vec4 _glesBlendIndex4;\nattribute vec4 _glesBlendWeight4;             \nattribute vec4 _glesMultiTexCoord0;    \n\nuniform mat4 glstate_matrix_mvp;      \nuniform mat4 glstate_matrix_model;\n\nuniform highp vec4 glstate_vec4_bones[110];\nuniform highp vec4 _MainTex_ST; \n\n#include <shadowMap_pars_vert>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#include <transpose>\n#include <inverse>\n\nmat4 buildMat4(int index)\n{\n vec4 quat = glstate_vec4_bones[index * 2 + 0];\n vec4 translation = glstate_vec4_bones[index * 2 + 1];\n float xy2 = 2.0 * quat.x * quat.y;\n float xz2 = 2.0 * quat.x * quat.z;\n float xw2 = 2.0 * quat.x * quat.w;\n float yz2 = 2.0 * quat.y * quat.z;\n float yw2 = 2.0 * quat.y * quat.w;\n float zw2 = 2.0 * quat.z * quat.w;\n float xx = quat.x * quat.x;\n float yy = quat.y * quat.y;\n float zz = quat.z * quat.z;\n float ww = quat.w * quat.w;\n mat4 matrix = mat4(\n xx - yy - zz + ww, xy2 + zw2, xz2 - yw2, 0,\n xy2 - zw2, -xx + yy - zz + ww, yz2 + xw2, 0,\n xz2 + yw2, yz2 - xw2, -xx - yy + zz + ww, 0,\n translation.x, translation.y, translation.z, 1);\n return matrix;\n}\n\nhighp vec4 calcVertex(highp vec4 srcVertex,highp vec4 blendIndex,highp vec4 blendWeight)\n{\n int i = int(blendIndex.x);  \n    int i2 =int(blendIndex.y);\n int i3 =int(blendIndex.z);\n int i4 =int(blendIndex.w);\n \n    mat4 mat = buildMat4(i)*blendWeight.x \n    + buildMat4(i2)*blendWeight.y \n    + buildMat4(i3)*blendWeight.z \n    + buildMat4(i4)*blendWeight.w;\n return mat* srcVertex;\n}\n\nvoid main() {   \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz;                            \n\n    vec3 normal = (transpose(inverse(glstate_matrix_model)) * vec4(_glesNormal, 1.0)).xyz;\n    xlv_NORMAL = normal;\n    #ifdef FLIP_SIDED\n     xlv_NORMAL = - xlv_NORMAL;\n    #endif\n\n    vec3 worldpos = (glstate_matrix_model * tmpvar_1).xyz;\n    xlv_POS = worldpos; \n\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy;\n\n    #include <shadowMap_vert>\n     \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
         ShaderLib.bone_vert = "attribute vec4 _glesVertex;   \nattribute vec4 _glesBlendIndex4;\nattribute vec4 _glesBlendWeight4;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp mat4 glstate_matrix_bones[24];\nuniform highp vec4 _MainTex_ST; \nvarying highp vec2 xlv_TEXCOORD0;\nvoid main()                                     \n{                                               \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = _glesVertex.xyz;  \n \n    int i = int(_glesBlendIndex4.x);  \n    int i2 =int(_glesBlendIndex4.y);\n int i3 =int(_glesBlendIndex4.z);\n int i4 =int(_glesBlendIndex4.w);\n \n    mat4 mat = glstate_matrix_bones[i]*_glesBlendWeight4.x \n    + glstate_matrix_bones[i2]*_glesBlendWeight4.y \n    + glstate_matrix_bones[i3]*_glesBlendWeight4.z \n    + glstate_matrix_bones[i4]*_glesBlendWeight4.w;\n    \n    gl_Position = (glstate_matrix_mvp * mat)* tmpvar_1;\n\n xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;\n}";
         ShaderLib.code2_frag = "void main() {\n    gl_FragData[0] = vec4(1.0, 1.0, 1.0, 1.0);\n}";
         ShaderLib.code_frag = "uniform sampler2D _MainTex;                                                 \nvarying lowp vec4 xlv_COLOR;                                                 \nvarying highp vec2 xlv_TEXCOORD0;   \nvoid main() {\n    lowp vec4 col_1;    \n    mediump vec4 prev_2;\n    lowp vec4 tmpvar_3;\n    tmpvar_3 = (xlv_COLOR * texture2D(_MainTex, xlv_TEXCOORD0));\n    prev_2 = tmpvar_3;\n    mediump vec4 tmpvar_4;\n    tmpvar_4 = mix(vec4(1.0, 1.0, 1.0, 1.0), prev_2, prev_2.wwww);\n    col_1 = tmpvar_4;\n    col_1.x =xlv_TEXCOORD0.x;\n    col_1.y =xlv_TEXCOORD0.y;\n    gl_FragData[0] = col_1;\n}";
@@ -17834,7 +17905,7 @@ var egret3d;
         ShaderLib.diffuse_vert = "attribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 _MainTex_ST;  \nvarying highp vec2 xlv_TEXCOORD0;\n\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
         ShaderLib.distancepackage_frag = "#include <packing>\n\nvarying vec3 xlv_POS;\nuniform vec4 glstate_referencePosition;\nuniform float glstate_nearDistance;\nuniform float glstate_farDistance;\n\nvoid main() {\n    float dist = length( xlv_POS - glstate_referencePosition.xyz );\n dist = ( dist - glstate_nearDistance ) / ( glstate_farDistance - glstate_nearDistance );\n dist = saturate( dist ); // clamp to [ 0, 1 ]\n\n gl_FragColor = packDepthToRGBA( dist );\n}";
         ShaderLib.distancepackage_vert = "attribute vec3 _glesVertex;\n\nuniform mat4 glstate_matrix_mvp;\nuniform mat4 glstate_matrix_model;\n\nvarying vec3 xlv_POS;\n\nvoid main() {   \n    xlv_POS = (glstate_matrix_model * vec4(_glesVertex, 1.0)).xyz;\n    gl_Position = glstate_matrix_mvp * vec4(_glesVertex, 1.0);\n}";
-        ShaderLib.lambert_frag = "#extension GL_OES_standard_derivatives : enable\n\nuniform sampler2D _MainTex;\nuniform vec4 _Color;         \n\n#include <bsdfs>\n#include <light_pars_frag>\n#include <shadowMap_pars_frag>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#ifdef USE_NORMAL_MAP\n    #include <tbn>\n    #include <tsn>\n    uniform sampler2D _NormalTex;\n#endif\n\n#include <bumpMap_pars_frag>\n\nvoid main() {\n    vec4 outColor = vec4(0., 0., 0., 1.);\n\n    vec4 diffuseColor = _Color * texture2D(_MainTex, xlv_TEXCOORD0);\n\n    #include <normal_frag>\n    #include <light_frag>\n\n    outColor.a = diffuseColor.a;\n\n    gl_FragColor = outColor;\n}";
+        ShaderLib.lambert_frag = "// #extension GL_OES_standard_derivatives : enable\n\nuniform sampler2D _MainTex;\nuniform vec4 _Color;         \n\n#include <bsdfs>\n#include <light_pars_frag>\n#include <shadowMap_pars_frag>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#ifdef USE_NORMAL_MAP\n    #include <tbn>\n    #include <tsn>\n    uniform sampler2D _NormalTex;\n#endif\n\n#include <bumpMap_pars_frag>\n\nvoid main() {\n    vec4 outColor = vec4(0., 0., 0., 1.);\n\n    vec4 diffuseColor = _Color * texture2D(_MainTex, xlv_TEXCOORD0);\n\n    #include <normal_frag>\n    #include <light_frag>\n    \n    outColor.a = diffuseColor.a;\n\n    gl_FragColor = outColor;\n}";
         ShaderLib.lambert_vert = "attribute vec3 _glesVertex;   \nattribute vec3 _glesNormal;               \nattribute vec4 _glesMultiTexCoord0;    \n\nuniform mat4 glstate_matrix_mvp;      \nuniform mat4 glstate_matrix_model;\n\n#include <shadowMap_pars_vert>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#include <transpose>\n#include <inverse>\n\nvoid main() {   \n    vec4 tmpvar_1 = vec4(_glesVertex.xyz, 1.0);                            \n\n    vec3 normal = (transpose(inverse(glstate_matrix_model)) * vec4(_glesNormal, 1.0)).xyz;\n    xlv_NORMAL = normal;\n    #ifdef FLIP_SIDED\n     xlv_NORMAL = - xlv_NORMAL;\n    #endif\n\n    vec3 worldpos = (glstate_matrix_model * tmpvar_1).xyz;\n    xlv_POS = worldpos; \n\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy;\n\n    #include <shadowMap_vert>\n     \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
         ShaderLib.line_frag = "varying lowp vec4 xlv_COLOR;\nvoid main() {\n    gl_FragData[0] = xlv_COLOR;\n}";
         ShaderLib.line_vert = "attribute vec4 _glesVertex;\nattribute vec4 _glesColor;\nuniform highp mat4 glstate_matrix_mvp;\nvarying lowp vec4 xlv_COLOR;\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_COLOR = _glesColor;\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
@@ -18410,6 +18481,7 @@ var egret3d;
             var def_diffuse_vs = egret3d.Shader.registerVertShader("def_diffuse", egret3d.ShaderLib.diffuse_vert);
             var def_diffuse_fs = egret3d.Shader.registerFragShader("def_diffuse", egret3d.ShaderLib.diffuse_frag);
             var def_boneeff_vs = egret3d.Shader.registerVertShader("def_boneeff", egret3d.ShaderLib.boneeff_vert);
+            var def_bonelambert_vs = egret3d.Shader.registerVertShader("def_bonelambert_vert", egret3d.ShaderLib.bonelambert_vert);
             var def_diffuselightmap_vs = egret3d.Shader.registerVertShader("def_diffuselightmap", egret3d.ShaderLib.diffuselightmap_vert);
             var def_diffuselightmap_fs = egret3d.Shader.registerFragShader("def_diffuselightmap", egret3d.ShaderLib.diffuselightmap_frag);
             var def_postquad_vs = egret3d.Shader.registerVertShader("def_postquad", egret3d.ShaderLib.postquad_vert);
@@ -18462,6 +18534,14 @@ var egret3d;
                 distancePass.state_showface = egret3d.ShowFaceStateEnum.CCW;
                 distancePass.setAlphaBlend(egret3d.BlendModeEnum.Close);
                 shader.passes["base_distance_package"].push(distancePass);
+                var skinPass = new egret3d.DrawPass(def_bonelambert_vs, def_lambert_fs);
+                shader.passes["skin"] = [];
+                skinPass.state_ztest = true;
+                skinPass.state_ztest_method = egret3d.WebGLKit.LEQUAL;
+                skinPass.state_zwrite = true;
+                skinPass.state_showface = egret3d.ShowFaceStateEnum.CCW;
+                skinPass.setAlphaBlend(egret3d.BlendModeEnum.Close);
+                shader.passes["skin"].push(skinPass);
                 this.LAMBERT = shader;
                 paper.Asset.register(shader);
             }
@@ -18918,6 +18998,24 @@ var egret3d;
                 paper.Asset.register(shader);
             }
             {
+                //TODO
+                var shader = new egret3d.Shader("particles_blend1.shader.json");
+                shader.url = "particles_blend1.shader.json";
+                shader.renderQueue = egret3d.RenderQueue.Transparent;
+                shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
+                shader.passes["base"] = [];
+                var renderPass = new egret3d.DrawPass(def_particlesystem_vs, def_particlesystem_fs);
+                renderPass.state_ztest = true;
+                renderPass.state_ztest_method = egret3d.WebGLKit.LEQUAL;
+                renderPass.state_zwrite = true;
+                renderPass.state_showface = egret3d.ShowFaceStateEnum.ALL;
+                renderPass.setAlphaBlend(egret3d.BlendModeEnum.Blend);
+                shader.passes["base"].push(renderPass);
+                this.PARTICLE_BLEND = shader;
+                paper.Asset.register(shader);
+            }
+            {
                 var shader = new egret3d.Shader("particles_blend.shader.json");
                 shader.url = "particles_blend.shader.json";
                 shader.renderQueue = egret3d.RenderQueue.Transparent;
@@ -18926,8 +19024,8 @@ var egret3d;
                 shader.passes["base"] = [];
                 var renderPass = new egret3d.DrawPass(def_particlesystem_vs, def_particlesystem_fs);
                 renderPass.state_ztest = true;
-                renderPass.state_ztest_method = egret3d.WebGLKit.LEQUAL;
-                renderPass.state_zwrite = false;
+                renderPass.state_ztest_method = egret3d.WebGLKit.EQUAL;
+                renderPass.state_zwrite = true;
                 renderPass.state_showface = egret3d.ShowFaceStateEnum.ALL;
                 renderPass.setAlphaBlend(egret3d.BlendModeEnum.Blend);
                 shader.passes["base"].push(renderPass);
@@ -18943,7 +19041,7 @@ var egret3d;
                 shader.passes["base"] = [];
                 var renderPass = new egret3d.DrawPass(def_particlesystem_vs, def_particlesystem_fs);
                 renderPass.state_ztest = true;
-                renderPass.state_ztest_method = egret3d.WebGLKit.LEQUAL;
+                renderPass.state_ztest_method = egret3d.WebGLKit.EQUAL;
                 renderPass.state_zwrite = true;
                 renderPass.state_showface = egret3d.ShowFaceStateEnum.ALL;
                 renderPass.setAlphaBlend(egret3d.BlendModeEnum.Blend_PreMultiply);
@@ -21208,7 +21306,7 @@ var paper;
                 return;
             }
             var gameObject = component.gameObject;
-            console.debug("StartSystem add behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
+            console.debug("StartSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
         };
         StartSystem.prototype._onRemoveComponent = function (component) {
             var index = this._components.indexOf(component);
@@ -21217,7 +21315,7 @@ var paper;
                 return;
             }
             var gameObject = component.gameObject;
-            console.debug("StartSystem remove behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
+            console.debug("StartSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
         };
         StartSystem.prototype.onUpdate = function () {
             //
@@ -21541,10 +21639,10 @@ var egret3d;
      */
     function _colletCombineInstance(target, out, root) {
         //过滤重复的对象
-        if (cacheInstances.indexOf(target.hashCode) >= 0) {
+        if (cacheInstances.indexOf(target.uuid) >= 0) {
             return;
         }
-        cacheInstances.push(target.hashCode);
+        cacheInstances.push(target.uuid);
         //
         for (var _i = 0, _a = target.transform.children; _i < _a.length; _i++) {
             var child = _a[_i];
@@ -21567,7 +21665,7 @@ var egret3d;
         var meshData = meshFilter.mesh;
         //合并筛选的条件:光照贴图_材质0_材质1... ：0_234_532...
         var key = meshRenderer.lightmapIndex + "_";
-        materials.forEach(function (element) { key = key + "_" + element.hashCode; });
+        materials.forEach(function (element) { key = key + "_" + element.uuid; });
         if (!out[key]) {
             out[key] = [];
             out[key].push(new CombineInstance());
@@ -21933,7 +22031,7 @@ var egret3d;
             console.log("------------------------");
             for (var _a = 0, list_4 = list; _a < list_4.length; _a++) {
                 var item = list_4[_a];
-                console.log(item.key + ":用时" + item.time + "平均:" + (item.time / item.count) + " 权重:" + (Math.round(item.time / totalTime * 100)) + "%");
+                console.log(item.key + ":用时" + item.time + "平均:" + (item.time / item.count) + "最大值:" + item.maxTime + " 权重:" + (Math.round(item.time / totalTime * 100)) + "%");
             }
         };
         Profile.clear = function () {
@@ -21949,7 +22047,7 @@ var egret3d;
             if (index < 0) {
                 this.profileList.keys.push(key);
                 index = this.profileList.values.length;
-                this.profileList.values.push({ key: key, count: 0, startTime: 0, time: 0, group: group });
+                this.profileList.values.push({ key: key, count: 0, startTime: 0, time: 0, group: group, maxTime: 0 });
             }
             var item = this.profileList.values[index];
             item.count++;
@@ -21965,7 +22063,9 @@ var egret3d;
             }
             else {
                 var item = this.profileList.values[index];
-                item.time += this._getNow() - item.startTime;
+                var d = this._getNow() - item.startTime;
+                item.time += d;
+                item.maxTime = item.maxTime > d ? item.maxTime : d;
             }
         };
         Profile.printAll = function () {
@@ -23222,6 +23322,8 @@ var paper;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
+                                // 覆盖生成 uuid 的方式。
+                                paper.createUUID = editor.generateUuid;
                                 //启动egret3编辑环境
                                 this.runEgret();
                                 //初始化编辑模型
@@ -23269,7 +23371,7 @@ var paper;
                 return;
             }
             var gameObject = component.gameObject;
-            console.debug("UpdateSystem add behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
+            console.debug("UpdateSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
         };
         UpdateSystem.prototype._onRemoveComponent = function (component) {
             var index = this._components.indexOf(component);
@@ -23278,7 +23380,7 @@ var paper;
                 return;
             }
             var gameObject = component.gameObject;
-            console.debug("UpdateSystem remove behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
+            console.debug("UpdateSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
         };
         UpdateSystem.prototype.onUpdate = function () {
             var index = 0;
@@ -23727,7 +23829,7 @@ var paper;
                 var assetsMap = {};
                 if (serializeData["assets"]) {
                     serializeData["assets"].forEach(function (item) {
-                        assetsMap[item.hashCode] = paper_1.Asset.find(item["url"]);
+                        assetsMap[item.uuid] = paper_1.Asset.find(item["url"]);
                     });
                 }
                 var data = {
@@ -23921,7 +24023,7 @@ var paper;
                     var assetsMap = {};
                     if (serializeData["assets"]) {
                         serializeData["assets"].forEach(function (item) {
-                            assetsMap[item.hashCode] = paper_1.Asset.find(item["url"]); // 获取资源引用
+                            assetsMap[item.uuid] = paper_1.Asset.find(item["url"]); // 获取资源引用
                         });
                     }
                     one["assetsMap"] = assetsMap;
@@ -24129,13 +24231,12 @@ var paper;
                 }
             };
             EditorModel.prototype.resetUUid = function (gameObj, uuids) {
-                var uuid = uuids.shift();
-                if (uuid) {
-                    gameObj.uuid = uuid;
-                }
-                else {
-                    throw new Error("no match hashcode!");
-                }
+                // let uuid = uuids.shift();
+                // if (uuid) {
+                //    gameObj.uuid = uuid;
+                // } else {
+                //     throw new Error("no match hashcode!")
+                // }
                 for (var index = 0; index < gameObj.transform.children.length; index++) {
                     var element = gameObj.transform.children[index];
                     var obj = element.gameObject;
@@ -24157,13 +24258,12 @@ var paper;
                 for (var i = 0; i < gameObject.components.length; i++) {
                     var comp = gameObject.components[i];
                     comp.gameObject = gameObject;
-                    var uuid = uuids.shift();
-                    if (uuid) {
-                        comp.uuid = uuid;
-                    }
-                    else {
-                        throw new Error("no match uuid!");
-                    }
+                    // let uuid = uuids.shift();
+                    // if (uuid) {
+                    //     comp.uuid = uuid;
+                    // } else {
+                    //     throw new Error("no match uuid!")
+                    // }
                 }
                 for (var index = 0; index < gameObject.transform.children.length; index++) {
                     var element = gameObject.transform.children[index];
@@ -24176,10 +24276,10 @@ var paper;
              * @param instance
              */
             EditorModel.prototype.generateGameobjectUUids = function (instance) {
-                instance.uuid = editor.generateUuid();
-                instance.components.forEach(function (component) {
-                    component.uuid = editor.generateUuid();
-                });
+                // instance.uuid = generateUuid();
+                // instance.components.forEach((component) => {
+                //     component.uuid = generateUuid();
+                // })
                 for (var index = 0; index < instance.transform.children.length; index++) {
                     var element = instance.transform.children[index];
                     var obj = element.gameObject;
@@ -26028,7 +26128,7 @@ var paper;
             function ModifyPrefabProperty() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.getGameObjectsByPrefab = function (prefab) {
-                    var objects = paper.Application.sceneManager.activeScene.gameObjects;
+                    var objects = paper.Application.sceneManager.getActiveScene().gameObjects;
                     var result = [];
                     objects.forEach(function (obj) {
                         if (obj.prefab && obj.prefab.url === prefab.url && obj.___isRootPrefab____) {
@@ -27036,7 +27136,7 @@ var paper;
                 for (var i = 0; i < lights.length; i++)
                     this.lightPool.push(lights[i].gameObject);
                 this.cameraPool = [];
-                var allGameObj = paper.Application.sceneManager.getActiveScene().gameObjects;
+                var allGameObj = paper.Application.sceneManager.activeScene.gameObjects;
                 for (var i = 0; i < allGameObj.length; i++) {
                     if (allGameObj[i].getComponent(egret3d.Camera)) {
                         if (allGameObj[i].tag != "EditorCamera")
@@ -27387,7 +27487,7 @@ var paper;
                 return;
             }
             var gameObject = component.gameObject;
-            console.debug("EndSystem remove behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
+            console.debug("EndSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
         };
         EndSystem.prototype._onRemoveComponent = function (component) {
             if (this._components.indexOf(component) < 0) {
@@ -27395,7 +27495,7 @@ var paper;
                 return;
             }
             var gameObject = component.gameObject;
-            console.debug("EndSystem add behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
+            console.debug("EndSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
         };
         EndSystem.prototype.onUpdate = function () {
             if (this._isEditorUpdate()) {
@@ -28147,7 +28247,7 @@ var egret3d;
                     return null;
                 }
                 if (!this._connectedBody) {
-                    console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
+                    console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.uuid);
                     return null;
                 }
                 //
@@ -28216,7 +28316,7 @@ var egret3d;
                 var btConstraint;
                 if (this._constraintType === 1 /* ConstrainToAnotherBody */) {
                     if (!this._connectedBody) {
-                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
+                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.uuid);
                         return null;
                     }
                     this._createFrames(helpMatrixA, helpMatrixB);
@@ -28384,7 +28484,7 @@ var egret3d;
                 var btConstraint;
                 if (this._constraintType === 1 /* ConstrainToAnotherBody */) {
                     if (!this._connectedBody) {
-                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
+                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.uuid);
                         return null;
                     }
                     var helpMatrixA_1 = ammo.TypedConstraint._helpMatrixA;
@@ -28672,7 +28772,7 @@ var egret3d;
                 var btConstraint;
                 if (this._constraintType === 1 /* ConstrainToAnotherBody */) {
                     if (!this._connectedBody) {
-                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
+                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.uuid);
                         return null;
                     }
                     this._createFrames(helpMatrixA, helpMatrixB);
@@ -28881,7 +28981,7 @@ var egret3d;
                 helpVector3A.setValue(this._anchor.x, this._anchor.y, this._anchor.z);
                 if (this._constraintType === 1 /* ConstrainToAnotherBody */) {
                     if (!this._connectedBody) {
-                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
+                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.uuid);
                         return null;
                     }
                     var pivotInOther = egret3d.helpMatrixA.copy(this._connectedBody.gameObject.transform.getWorldMatrix()).inverse().transformVector3(this._rigidbody.gameObject.transform.getWorldMatrix().transformVector3(ammo.TypedConstraint._helpVector3A.copy(this._anchor)));
@@ -28906,18 +29006,18 @@ var paper;
     /**
      *
      */
-    var MissComponent = (function (_super) {
-        __extends(MissComponent, _super);
-        function MissComponent() {
+    var MissingComponent = (function (_super) {
+        __extends(MissingComponent, _super);
+        function MissingComponent() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
         __decorate([
             paper.serializedField
-        ], MissComponent.prototype, "missingObject", void 0);
-        return MissComponent;
+        ], MissingComponent.prototype, "missingObject", void 0);
+        return MissingComponent;
     }(paper.BaseComponent));
-    paper.MissComponent = MissComponent;
-    __reflect(MissComponent.prototype, "paper.MissComponent");
+    paper.MissingComponent = MissingComponent;
+    __reflect(MissingComponent.prototype, "paper.MissingComponent");
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {

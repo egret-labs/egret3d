@@ -217,6 +217,10 @@ namespace egret3d {
          */
         private _frameRate: number = 0;
         /**
+         * 起始帧。
+         */
+        private _frameStart: number = 0;
+        /**
          * 总帧数。
          */
         private _frameCount: number = 0;
@@ -445,7 +449,8 @@ namespace egret3d {
             const dataAccessor = this.animationAsset.getAccessor(paperAnimation.data);
             //
             this._frameRate = paperAnimation.frameRate;
-            this._frameCount = paperAnimation.frameCount;
+            this._frameStart = Math.floor(this.animationClip.position * paperAnimation.frameRate);
+            this._frameCount = Math.floor(this.animationClip.duration * paperAnimation.frameRate); // ceil.
             this._fadeTimeStart = globalTime;
             this._playTimeStart = globalTime;
             this._animationComponent = animationComponent;
@@ -571,15 +576,15 @@ namespace egret3d {
             const prevPlayTimes = this.currentPlayTimes;
             const prevPlayState = this._playState;
             const timeScale = this.timeScale * this._animationComponent.timeScale;
-            const r = timeScale === 0.0 ? 0.0 : 1.0 / timeScale;
+            const timeScaleR = timeScale === 0.0 ? 0.0 : 1.0 / timeScale;
             const position = this.animationClip.position;
             const duration = this.animationClip.duration;
             const totalTime = this.playTimes * duration;
-            let localPlayTime = (globalTime - this._playTimeStart) * r;
+            let localPlayTime = (globalTime - this._playTimeStart) * timeScaleR;
 
             let currentTime = 0.0;
 
-            if (this.playTimes > 0 && (localPlayTime >= totalTime || localPlayTime <= 0.0)) {
+            if (this.playTimes > 0 && (timeScale >= 0.0 ? localPlayTime >= totalTime : localPlayTime <= 0.0)) {
                 if (this._playState <= 0 && this._isPlaying) {
                     this._playState = 1;
                 }
@@ -628,9 +633,9 @@ namespace egret3d {
                     this._frameOffset = -1;
                 }
 
-                if (this._frameCount > 0) {
+                if (this._frameCount > 1) {
                     const frameIndexF = this._playTime * this._frameRate;
-                    const frameIndex = Math.min(Math.floor(frameIndexF), this._frameCount - 1);
+                    const frameIndex = Math.min(Math.floor(frameIndexF), this._frameStart + this._frameCount - 1);
                     const frameOffset = this._frameOffsets[frameIndex];
                     if (this._frameOffset !== frameOffset) {
                         this._frameOffset = frameOffset;
@@ -647,11 +652,19 @@ namespace egret3d {
                     this._onArriveAtFrame();
                 }
             }
+
+            if (this._playState === 1 && this._fadeState === 0) {
+                const animationNames = this._animationComponent._animationNames;
+                if (animationNames.length > 0) {
+                    const animationName = animationNames.shift();
+                    this._animationComponent.play(animationName);
+                }
+            }
         }
 
         public fateOut(): void {
             this._fadeState = 1;
-            this._subFadeState = 1;
+            this._subFadeState = -1;
         }
     }
     /**
@@ -681,6 +694,10 @@ namespace egret3d {
          * 混合节点列表。
          */
         private readonly _blendNodes: BlendNode[] = [];
+        /**
+         * @internal
+         */
+        public readonly _animationNames: string[] = [];
         /**
          * 最后一个播放的动画状态。
          * 当进行动画混合时，该值通常没有任何意义。
@@ -855,8 +872,22 @@ namespace egret3d {
             return animationState;
         }
 
-        public play(animationName: string | null = null, playTimes: number = -1): AnimationState | null {
-            return this.fadeIn(animationName, 0.0, playTimes);
+        public play(animationNameOrNames: string | string[] | null = null, playTimes: number = -1): AnimationState | null {
+            this._animationNames.length = 0;
+
+            if (Array.isArray(animationNameOrNames)) {
+                if (animationNameOrNames.length > 0) {
+                    for (const animationName of animationNameOrNames) {
+                        this._animationNames.push(animationName);
+                    }
+
+                    return this.fadeIn(this._animationNames.shift(), 0.0, playTimes);
+                }
+
+                return this.fadeIn(null, 0.0, playTimes);
+            }
+
+            return this.fadeIn(animationNameOrNames, 0.0, playTimes);
         }
 
         public get lastAnimationnName(): string {

@@ -11,11 +11,6 @@ namespace paper {
          * 组件挂载的 GameObject
          */
         public readonly gameObject: GameObject = BaseComponent._injectGameObject;
-        /**
-         * @internal
-         */
-        @serializedField
-        public uuid: string | null = null;
 
         @serializedField
         protected _enabled: boolean = true;
@@ -42,7 +37,10 @@ namespace paper {
 
         public deserialize(element: any) {
             this._enabled = element._enabled === false ? false : true;
-            this.uuid = element.uuid;
+
+            if (element.uuid) {
+                (this as any).uuid = element.uuid;
+            }
         }
         /**
          * 组件的激活状态。

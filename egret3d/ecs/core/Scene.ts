@@ -28,7 +28,6 @@ namespace paper {
 
             Application.sceneManager._addScene(this);
         }
-
         /**
          * @internal
          */
@@ -47,7 +46,6 @@ namespace paper {
             this._gameObjects.length = 0;
             this.rawScene = null as any;
         }
-
         /**
          * @internal
          */
@@ -57,10 +55,9 @@ namespace paper {
                 this._gameObjects.splice(index, 1);
             }
             else {
-                console.debug("Remove game object again.", gameObject.hashCode);
+                console.debug("Remove game object again.", gameObject.name, gameObject.uuid);
             }
         }
-
         /**
          * @internal
          */
@@ -69,10 +66,62 @@ namespace paper {
                 this._gameObjects.push(gameObject);
             }
             else {
-                console.debug("Add game object again.", gameObject.hashCode);
+                console.debug("Add game object again.", gameObject.name, gameObject.uuid);
             }
         }
+        /**
+         * 返回当前激活场景中查找对应名称的GameObject
+         * @param name 
+         */
+        public find(name: string) {
+            for (const gameObject of this._gameObjects) {
+                if (gameObject.name === name) {
+                    return gameObject;
+                }
+            }
 
+            return null;
+        }
+        /**
+         * 返回一个在当前激活场景中查找对应tag的GameObject
+         * @param tag 
+         */
+        public findWithTag(tag: string) {
+            for (const gameObject of this._gameObjects) {
+                if (gameObject.tag === tag) {
+                    return gameObject;
+                }
+            }
+
+            return null;
+        }
+        /**
+         * 返回一个在当前激活场景中查找对应 uuid 的GameObject
+         * @param uuid 
+         */
+        public findWithUUID(uuid: string) {
+            for (const gameObject of this._gameObjects) {
+                if (gameObject.uuid === uuid) {
+                    return gameObject;
+                }
+            }
+
+            return null;
+        }
+        /**
+         * 返回所有在当前激活场景中查找对应tag的GameObject
+         * @param name 
+         */
+        public findGameObjectsWithTag(tag: string) {
+            const gameObjects: GameObject[] = [];
+            for (const gameObject of this._gameObjects) {
+                if (gameObject.tag === tag) {
+                    gameObjects.push(gameObject);
+                }
+            }
+
+            return gameObjects;
+        }
         /**
          * 获取所有根级GameObject对象
          */
@@ -86,7 +135,6 @@ namespace paper {
 
             return gameObjects;
         }
-
         /**
          * 当前场景的所有GameObject对象池
          */

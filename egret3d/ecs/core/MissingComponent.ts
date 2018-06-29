@@ -2,7 +2,7 @@ namespace paper {
     /**
      * 
      */
-    export class MissComponent extends BaseComponent {
+    export class MissingComponent extends BaseComponent {
         /**
          * 
          */

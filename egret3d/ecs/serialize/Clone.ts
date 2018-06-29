@@ -29,7 +29,7 @@ namespace paper {
         const assets: any = {};
         if ("assets" in data) { // 认为此时所有资源已经正确加载
             for (const asset of data["assets"]) {
-                assets[asset.hashCode] = Asset.find((<any>asset as Asset).url); // 获取资源引用
+                assets[asset.uuid] = Asset.find((<any>asset as Asset).url); // 获取资源引用
             }
         }
 

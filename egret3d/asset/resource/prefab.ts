@@ -1,8 +1,8 @@
 namespace egret3d {
 
     export type PrefabConfig = {
-        assets: { hashCode: number, class: string, url: string }[]
-        objects: any[]
+        assets: { uuid: string, hashCode: string, class: string, url: string }[]; // 兼容 hashCode 。
+        objects: any[];
     }
 
     /**
@@ -18,7 +18,7 @@ namespace egret3d {
             if (this._raw) {
                 for (const item of this._raw.assets) {
                     if (item.url.indexOf("shader.json") < 0) {
-                        this._assets[item.hashCode] = paper.Asset.find(utils.combinePath(utils.getPathByUrl(this.url) + "/", item.url));
+                        this._assets[item.uuid || item.hashCode] = paper.Asset.find(utils.combinePath(utils.getPathByUrl(this.url) + "/", item.url)); // 兼容 hashCode 。
                     }
                 }
             }

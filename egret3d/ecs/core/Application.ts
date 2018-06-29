@@ -35,7 +35,7 @@ namespace paper {
         public static init({ isEditor = false, isPlaying = true } = {}) {
             const systemClasses = [
                 StartSystem,
-                egret3d.ammo.PhysicsSystem, // TODO 分离
+                // egret3d.ammo.PhysicsSystem, // TODO 分离
                 UpdateSystem,
                 egret3d.GuidpathSystem,
                 egret3d.AnimationSystem,

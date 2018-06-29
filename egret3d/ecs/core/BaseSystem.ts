@@ -79,11 +79,11 @@ namespace paper {
          */
         protected _onAddComponent(component: T) {
             const gameObject = component.gameObject;
-            const hashCode = gameObject.hashCode;
+            const uuid = gameObject.uuid;
 
             if (
-                hashCode in this._gameObjectOffsets ||
-                hashCode in this._waittingComponents
+                uuid in this._gameObjectOffsets ||
+                uuid in this._waittingComponents
             ) {
                 return;
             }
@@ -113,20 +113,20 @@ namespace paper {
             }
 
             this._bufferedCount++;
-            this._waittingComponents[hashCode] = components;
+            this._waittingComponents[uuid] = components;
         }
         /**
          * 当关心的组件被移除时。
          */
         protected _onRemoveComponent(component: T) {
             const gameObject = component.gameObject;
-            const hashCode = gameObject.hashCode;
+            const uuid = gameObject.uuid;
 
-            if (hashCode in this._gameObjectOffsets) {
+            if (uuid in this._gameObjectOffsets) {
                 const interestCount = this._interestComponentCount;
                 const components = this._components;
                 const backupLength = components.length;
-                const gameObjectOffset = this._gameObjectOffsets[gameObject.hashCode];
+                const gameObjectOffset = this._gameObjectOffsets[gameObject.uuid];
 
                 if (backupLength > interestCount) {
                     let lastGameObject: GameObject | null = null;
@@ -140,32 +140,32 @@ namespace paper {
                     }
 
                     if (lastGameObject) {
-                        this._gameObjectOffsets[lastGameObject.hashCode] = gameObjectOffset;
+                        this._gameObjectOffsets[lastGameObject.uuid] = gameObjectOffset;
                     }
                 }
 
                 components.length -= interestCount;
-                delete this._gameObjectOffsets[gameObject.hashCode];
+                delete this._gameObjectOffsets[gameObject.uuid];
 
                 this.onRemoveGameObject && this.onRemoveGameObject(gameObject);
             }
-            else if (hashCode in this._waittingComponents) {
+            else if (uuid in this._waittingComponents) {
                 this._bufferedCount++;
-                delete this._waittingComponents[hashCode];
+                delete this._waittingComponents[uuid];
             }
         }
         /**
          * 判断实体是否在系统内。
          */
         protected _hasGameObject(gameObject: GameObject) {
-            return gameObject.hashCode in this._gameObjectOffsets;
+            return gameObject.uuid in this._gameObjectOffsets;
         }
         /**
          * 根据关心列表的顺序快速查找指定组件。
          */
         protected _getComponent(gameObject: GameObject, componentOffset: number) {
-            if (gameObject.hashCode in this._gameObjectOffsets) {
-                return this._components[this._gameObjectOffsets[gameObject.hashCode] + componentOffset];
+            if (gameObject.uuid in this._gameObjectOffsets) {
+                return this._components[this._gameObjectOffsets[gameObject.uuid] + componentOffset];
             }
 
             return null;

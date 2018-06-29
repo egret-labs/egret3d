@@ -160,7 +160,7 @@ namespace paper {
                 this._scenes.unshift(value);
             }
             else {
-                console.debug("Active scene error.", value.name, value.hashCode);
+                console.debug("Active scene error.", value.name, value.uuid);
             }
         }
 
