@@ -48,7 +48,7 @@ namespace egret3d {
 
             const drawCalls = this._createDrawCalls(gameObject);
             if (drawCalls) {
-                this._drawCalls[gameObject.hashCode] = drawCalls;
+                this._drawCalls[gameObject.uuid] = drawCalls;
                 Pool.drawCall.add(drawCalls);
 
                 if (castShadows) {
@@ -58,8 +58,8 @@ namespace egret3d {
         }
 
         public updateShadowCasters(gameObject: paper.GameObject, castShadows: boolean) {
-            if (gameObject.hashCode in this._drawCalls) {
-                const drawCalls = this._drawCalls[gameObject.hashCode];
+            if (gameObject.uuid in this._drawCalls) {
+                const drawCalls = this._drawCalls[gameObject.uuid];
                 if (castShadows) {
                     for (const drawCall of drawCalls) {
                         Pool.shadowCaster.add(drawCall);
@@ -74,17 +74,17 @@ namespace egret3d {
         }
 
         public removeDrawCalls(gameObject: paper.GameObject) {
-            if (gameObject.hashCode in this._drawCalls) {
-                const drawCalls = this._drawCalls[gameObject.hashCode];
+            if (gameObject.uuid in this._drawCalls) {
+                const drawCalls = this._drawCalls[gameObject.uuid];
                 Pool.drawCall.remove(drawCalls);
                 Pool.shadowCaster.remove(drawCalls);
-                delete this._drawCalls[gameObject.hashCode];
+                delete this._drawCalls[gameObject.uuid];
             }
         }
 
         public getDrawCalls(gameObject: paper.GameObject): DrawCall[] | null {
-            if (gameObject.hashCode in this._drawCalls) {
-                return this._drawCalls[gameObject.hashCode];
+            if (gameObject.uuid in this._drawCalls) {
+                return this._drawCalls[gameObject.uuid];
             }
 
             return null;

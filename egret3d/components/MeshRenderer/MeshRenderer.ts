@@ -11,7 +11,7 @@ namespace egret3d {
     /**
      * mesh的渲染组件
      */
-    export class MeshRenderer extends paper.BaseComponent implements paper.IRenderer {
+    export class MeshRenderer extends paper.BaseRenderer {
         @paper.serializedField
         private _receiveShadows: boolean = false;
         @paper.serializedField
@@ -60,7 +60,6 @@ namespace egret3d {
             this._receiveShadows = element._receiveShadows || false;
             this._castShadows = element._castShadows || false;
             this._lightmapIndex = element._lightmapIndex;
-            this.uuid = element.uuid;
 
             if (element._materials) {
                 this._materials.length = 0;

@@ -6,9 +6,9 @@ namespace egret3d {
      */
     export class Stage3D {
 
-        screenViewport: Readonly<RectData> = { x: 0, y: 0, w: 0, h: 0 };
+        screenViewport: Readonly<IRectangle> = { x: 0, y: 0, w: 0, h: 0 };
 
-        absolutePosition: Readonly<RectData> = { x: 0, y: 0, w: 0, h: 0 }
+        absolutePosition: Readonly<IRectangle> = { x: 0, y: 0, w: 0, h: 0 }
 
         private _canvas: HTMLCanvasElement;
         /**
@@ -42,12 +42,12 @@ namespace egret3d {
             const displayWidth = window.innerWidth;
             const displayHeight = window.innerHeight;
 
-            const absolutePosition = this.absolutePosition as RectData;
+            const absolutePosition = this.absolutePosition as IRectangle;
             absolutePosition.w = displayWidth;
             absolutePosition.h = displayHeight;
 
             // 计算视口区域
-            const screenViewport = this.screenViewport as RectData;
+            const screenViewport = this.screenViewport as IRectangle;
             let shouldRotate = (this.isLandscape && window.innerHeight > window.innerWidth)
                 || (!this.isLandscape && window.innerWidth > window.innerHeight);
             if (shouldRotate) {

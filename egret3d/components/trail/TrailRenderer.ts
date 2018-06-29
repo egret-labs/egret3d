@@ -29,7 +29,7 @@ namespace egret3d {
      * @platform Web
      * @language
      */
-    export class TrailRenderer extends paper.BaseComponent implements paper.IRenderer {
+    export class TrailRenderer extends paper.BaseRenderer {
         /**
          * extend direction
          * @version paper 1.0

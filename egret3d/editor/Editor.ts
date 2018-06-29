@@ -6,9 +6,12 @@ namespace paper.editor {
         public static get editorModel(): EditorModel {
             return this._editorModel;
         }
+
         private static _editorModel: EditorModel;
         /**初始化 */
         public static async init() {
+            // 覆盖生成 uuid 的方式。
+            createUUID = generateUuid;
             //启动egret3编辑环境
             this.runEgret();
             //初始化编辑模型

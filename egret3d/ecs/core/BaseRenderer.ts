@@ -11,7 +11,7 @@ namespace paper {
      * @platform Web
      * @language zh_CN
      */
-    export interface IRenderer extends paper.BaseComponent {
+    export abstract class BaseRenderer extends BaseComponent {
 
     }
 }

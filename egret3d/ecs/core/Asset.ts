@@ -44,7 +44,7 @@ namespace paper {
          * 
          * 资源的原始URL
          */
-        @paper.serializedField
+        @serializedField
         @deserializedIgnore
         public url: string = "";
 

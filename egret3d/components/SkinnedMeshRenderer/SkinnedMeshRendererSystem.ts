@@ -3,9 +3,7 @@ namespace egret3d {
      * TODO 需要完善
      */
     export class SkinnedMeshRendererSystem extends paper.BaseSystem<SkinnedMeshRenderer> {
-        /**
-         * @inheritDoc
-         */
+
         protected readonly _interests = [
             {
                 componentClass: SkinnedMeshRenderer,
@@ -13,25 +11,18 @@ namespace egret3d {
                     {
                         type: SkinnedMeshRendererEventType.Mesh,
                         listener: (component: SkinnedMeshRenderer) => {
-                            const renderer = this._getComponent(component.gameObject, 0);
-                            if (renderer) {
-                                this._updateDrawCalls(component);
-                            }
+                            this._updateDrawCalls(component.gameObject);
                         }
                     },
                     {
                         type: SkinnedMeshRendererEventType.Materials,
                         listener: (component: SkinnedMeshRenderer) => {
-                            const renderer = this._getComponent(component.gameObject, 0);
-                            if (renderer) {
-                                this._updateDrawCalls(component);
-                            }
+                            this._updateDrawCalls(component.gameObject);
                         }
                     },
                 ]
             }
         ];
-
         private readonly _createDrawCalls = ((gameObject: paper.GameObject) => {
             const renderer = this._getComponent(gameObject, 0) as SkinnedMeshRenderer;
 
@@ -62,8 +53,12 @@ namespace egret3d {
         });
         private readonly _drawCallList: DrawCallList = new DrawCallList(this._createDrawCalls);
 
-        private _updateDrawCalls(component: SkinnedMeshRenderer) {
-            const gameObject = component.gameObject;
+        private _updateDrawCalls(gameObject: paper.GameObject) {
+            if (!this._hasGameObject(gameObject)) { // 保持 listener 的代码简洁。
+                return;
+            }
+
+            const component = this._getComponent(gameObject, 0);
             this._drawCallList.updateDrawCalls(gameObject, false);
             //
             const drawCalls = this._drawCallList.getDrawCalls(gameObject);
@@ -74,34 +69,24 @@ namespace egret3d {
             }
         }
 
-        /**
-         * @inheritDoc
-         */
-        protected _onAddComponent(component: SkinnedMeshRenderer) {
-            if (!super._onAddComponent(component)) {
-                return false;
-            }
-
-            this._updateDrawCalls(component);
-
-            return true;
+        public onEnable() {
+            // TODO
         }
-        /**
-         * @inheritDoc
-         */
-        protected _onRemoveComponent(component: SkinnedMeshRenderer) {
-            if (!super._onRemoveComponent(component)) {
-                return false;
-            }
 
-            this._drawCallList.removeDrawCalls(component.gameObject);
-
-            return true;
+        public onAddGameObject(gameObject: paper.GameObject) {
+            this._updateDrawCalls(gameObject);
         }
-        /**
-         * @inheritDoc
-         */
-        public update() {
+
+        public onRemoveGameObject(gameObject: paper.GameObject) {
+            this._drawCallList.removeDrawCalls(gameObject);
+        }
+
+        public onUpdate() {
+            // TODO
+        }
+
+        public onDisable() {
+            // TODO
         }
     }
 }

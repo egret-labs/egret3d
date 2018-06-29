@@ -25,57 +25,43 @@ namespace egret3d {
      * @language zh_CN
      */
     export class Transform extends paper.BaseComponent {
-        /**
-         * children list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 子物体列表
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        @paper.serializedField
-        public readonly children: Transform[] = [];
-
         private _dirtyAABB: boolean = true;
         private _dirtyLocal: boolean = true;
         private _dirtyWorld: boolean = true;
         /**
          * 世界矩阵的行列式，如果小于0，说明进行了反转
-         * 
+         * @internal
          */
         public _worldMatrixDeterminant: number = 0.0;
         private readonly localMatrix: Matrix = new Matrix();
         private readonly worldMatrix: Matrix = new Matrix();
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.VECTOR3,{set:"setLocalPosition"})
+        @paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalPosition" })
         private readonly localPosition: Vector3 = new Vector3();
-        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3,{set:"setPosition"})
+        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setPosition" })
         private readonly position: Vector3 = new Vector3();
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.QUATERNION,{set:"setLocalRotation"})
+        @paper.editor.property(paper.editor.EditType.QUATERNION, { set: "setLocalRotation" })
         private readonly localRotation: Quaternion = new Quaternion();
-        @paper.editor.extraProperty(paper.editor.EditType.QUATERNION,{set:"setRotation"})
+        @paper.editor.extraProperty(paper.editor.EditType.QUATERNION, { set: "setRotation" })
         private readonly rotation: Quaternion = new Quaternion();
-        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3,{set:"setLocalEulerAngles"})
+        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setLocalEulerAngles" })
         private readonly localEulerAngles: Vector3 = new Vector3();
         private readonly eulerAngles: Vector3 = new Vector3();
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.VECTOR3,{set:"setLocalScale"})
+        @paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalScale" })
         private readonly localScale: Vector3 = new Vector3(1.0, 1.0, 1.0);
-        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3,{set:"setScale"})
+        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setScale" })
         private readonly scale: Vector3 = new Vector3(1.0, 1.0, 1.0);
+        private readonly _children: Transform[] = [];
         private _aabb: AABB = null as any;
         private _parent: Transform | null = null;
 
         private _removeFromChildren(value: Transform) {
             let index = 0;
-            for (const child of this.children) {
+            for (const child of this._children) {
                 if (child === value) {
-                    this.children.splice(index, 1);
+                    this._children.splice(index, 1);
                     break;
                 }
 
@@ -167,16 +153,29 @@ namespace egret3d {
             }
             if (!this._dirtyWorld) {
                 this._dirtyWorld = true;
-                let i = this.children.length;
+                let i = this._children.length;
                 while (i--) {
-                    if (this.children[i]._dirtyWorld) {
+                    if (this._children[i]._dirtyWorld) {
                         continue;
                     }
-                    this.children[i]._dirtify();
+                    this._children[i]._dirtify();
                 }
             }
             // transform dirty
             this._dirtyAABB = true;
+        }
+
+        /**
+         * 父节点发生改变的回调方法
+         * 子类可通过重载此方法进行标脏状态传递
+         */
+        protected _onParentChange(newParent: Transform | null, oldParent: Transform | null) {
+            const prevActive = oldParent ? oldParent.gameObject.activeInHierarchy : this.gameObject.activeSelf;
+            if ((newParent ? newParent.gameObject.activeInHierarchy : this.gameObject.activeSelf) !== prevActive) {
+                this.gameObject._activeInHierarchyDirty(prevActive);
+            }
+
+            this._dirtify();
         }
 
         /**
@@ -187,22 +186,6 @@ namespace egret3d {
             return new Float32Array([position.x, position.y, position.z, 1]);
         }
 
-        /**
-         * 父节点发生改变的回调方法
-         * 子类可通过重载此方法进行标脏状态传递
-         */
-        protected _onParentChange(newParent: Transform | null, oldParent: Transform | null) {
-            const prevEnabled = oldParent ? oldParent.isActiveAndEnabled : this.gameObject.activeSelf;
-            if ((newParent ? newParent.isActiveAndEnabled : this.gameObject.activeSelf) !== prevEnabled) {
-                this.gameObject._activeInHierarchyDirty(prevEnabled);
-            }
-
-            this._dirtify();
-        }
-
-        /**
-         * @inheritDoc
-         */
         public deserialize(element: any) {
             super.deserialize(element); // TODO
 
@@ -210,13 +193,13 @@ namespace egret3d {
             this.localRotation.deserialize(element.localRotation);
             this.localScale.deserialize(element.localScale);
 
-            this.children.length = 0;
+            this._children.length = 0;
             if (element.children) {
                 for (let i = 0, l = element.children.length; i < l; i++) {
                     const child = paper.getDeserializedObject<Transform>(element.children[i]);
                     if (child) {
                         child._parent = this;
-                        this.children.push(child);
+                        this._children.push(child);
                     }
                 }
             }
@@ -241,7 +224,7 @@ namespace egret3d {
             }
 
             if (newParent) {
-                newParent.children.push(this);
+                newParent._children.push(this);
             }
 
             this._parent = newParent;
@@ -257,7 +240,7 @@ namespace egret3d {
          * @param index 
          */
         public getChild(index: number) {
-            return 0 <= index && index < this.children.length ? this.children[index] : null;
+            return 0 <= index && index < this._children.length ? this._children[index] : null;
         }
 
         /**
@@ -361,7 +344,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getPosition(): Vector3 {
+        public getPosition(): Readonly<Vector3> {
             Matrix.getTranslation(this.getWorldMatrix(), this.position);
             return this.position;
         }
@@ -380,7 +363,7 @@ namespace egret3d {
          */
         public setPosition(v: Vector3): void;
         public setPosition(x: number, y: number, z: number): void;
-        public setPosition(p1: Vector3 | number, p2?: number, p3?: number): void {
+        public setPosition(p1: Readonly<Vector3> | number, p2?: number, p3?: number): void {
             if (p1.hasOwnProperty("x")) {
                 Vector3.copy(<Vector3>p1, helpVec3);
             } else {
@@ -411,7 +394,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getLocalRotation(): Quaternion {
+        public getLocalRotation(): Readonly<Quaternion> {
             return this.localRotation;
         }
 
@@ -455,7 +438,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getRotation(): Quaternion {
+        public getRotation(): Readonly<Quaternion> {
             Quaternion.fromMatrix(this.getWorldMatrix(), this.rotation);
             return this.rotation;
         }
@@ -489,8 +472,7 @@ namespace egret3d {
             } else {
                 let parentRot = this._parent.getRotation();
                 Quaternion.copy(parentRot, helpQuat4_2);
-                Quaternion.inverse(helpQuat4_2);
-                Quaternion.multiply(helpQuat4_2, helpQuat4, this.localRotation);
+                Quaternion.multiply(helpQuat4_2.inverse(), helpQuat4, this.localRotation);
             }
 
             if (!this._dirtyLocal) {
@@ -510,7 +492,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getLocalEulerAngles(): Vector3 {
+        public getLocalEulerAngles(): Readonly<Vector3> {
             Quaternion.toEulerAngles(this.localRotation, this.localEulerAngles);
             return this.localEulerAngles;
         }
@@ -553,7 +535,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getEulerAngles() {
+        public getEulerAngles(): Readonly<Vector3> {
             Matrix.toEulerAngles(this.getWorldMatrix(), this.eulerAngles);
             return this.eulerAngles;
         }
@@ -585,8 +567,7 @@ namespace egret3d {
             } else {
                 let parentRot = this._parent.getRotation();
                 Quaternion.copy(parentRot, helpQuat4_2);
-                Quaternion.inverse(helpQuat4_2);
-                Quaternion.multiply(helpQuat4_2, helpQuat4, this.localRotation);
+                Quaternion.multiply(helpQuat4_2.inverse(), helpQuat4, this.localRotation);
             }
 
             if (!this._dirtyLocal) {
@@ -606,7 +587,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getLocalScale(): Vector3 {
+        public getLocalScale(): Readonly<Vector3> {
             return this.localScale;
         }
 
@@ -649,7 +630,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getScale(): Vector3 {
+        public getScale(): Readonly<Vector3> {
             Matrix.getScale(this.getWorldMatrix(), this.scale);
             return this.scale;
         }
@@ -777,7 +758,7 @@ namespace egret3d {
             let result: Transform | null = null;
 
             for (const name of names) {
-                for (const child of ancestor.children) {
+                for (const child of ancestor._children) {
                     if (child.gameObject.name === name) {
                         result = child;
                         break;
@@ -805,7 +786,7 @@ namespace egret3d {
         }
 
         private _getAllChildren(children: Transform[]) {
-            for (const child of this.children) {
+            for (const child of this._children) {
                 children.push(child);
                 child._getAllChildren(children);
             }
@@ -815,7 +796,7 @@ namespace egret3d {
          * 当前子集对象的数量
          */
         public get childCount(): number {
-            return this.children.length;
+            return this._children.length;
         }
 
         /**
@@ -834,6 +815,32 @@ namespace egret3d {
             return this._aabb;
         }
 
+        /**
+         * children list
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 子物体列表
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        @paper.serializedField
+        public get children(): ReadonlyArray<Transform> {
+            return this._children;
+        };
+        /**
+         * 仅用于反序列化。
+         * @internal
+         */
+        public set children(value: ReadonlyArray<Transform>) {
+            this._children.length = 0;
+            for (const component of value) {
+                this._children.push(component);
+            }
+        };
         /**
          * instance of parent transform
          * @version paper 1.0
@@ -854,7 +861,5 @@ namespace egret3d {
         }
     }
 
-    // export type SerializeObject = { hashCode: number, class: string, localPosition: number[], localRotation: number[], localScale: number[], _parent: {}, children: Array<any> };
     export type ImmutableVector4 = Readonly<Float32Array>;
-
 }

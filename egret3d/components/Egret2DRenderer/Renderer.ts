@@ -204,7 +204,7 @@ module egret.web {
                     }
                     break;
                 case DRAWABLE_TYPE.ACT_BUFFER:
-                    this.activateBuffer(data.buffer);
+                    this.activateBuffer(data.buffer, data.width, data.height);
                     break;
                 case DRAWABLE_TYPE.ENABLE_SCISSOR:
                     let buffer = this.activatedBuffer;
@@ -288,7 +288,7 @@ module egret.web {
         /**
          * 启用RenderBuffer
          */
-        private activateBuffer(buffer: WebGLRenderBuffer): void {
+        private activateBuffer(buffer: WebGLRenderBuffer, width:number, height:number): void {
 
             buffer.rootRenderTarget.activate();
 
@@ -300,7 +300,7 @@ module egret.web {
 
             buffer.restoreScissor();
 
-            this.onResize(buffer.width, buffer.height);
+            this.onResize(width, height);
         }
 
         public onResize(width: number, height: number): void {

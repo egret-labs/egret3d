@@ -1,10 +1,10 @@
 namespace paper {
     /**
-     * 
+     * 组件事件。
      */
     export namespace EventPool {
         /**
-         * 
+         * @internal
          */
         export const enum EventType {
             Enabled = "__enabled__",
@@ -15,8 +15,24 @@ namespace paper {
          * 事件回调类型
          */
         export type EventListener<T extends BaseComponent> = (component: T, extend?: any) => void;
-
+        const _behaviourComponentType = egret.getQualifiedClassName(Behaviour);
         const _componentListeners: { [componentType: string]: { [eventType: string]: EventListener<any>[] } } = {};
+
+        function _dispatchEvent<T extends BaseComponent>(type: string, componentType: string, component: T, extend?: any) {
+            const componentListeners = _componentListeners[componentType];
+            if (type in componentListeners) {
+                const eventListeners = componentListeners[type];
+                for (const listener of eventListeners) {
+                    // 监听直接派发，所以监听都应注意 bind 问题。
+                    if (extend) {
+                        listener(component, extend);
+                    }
+                    else {
+                        listener(component);
+                    }
+                }
+            }
+        }
 
         /**
          * 添加事件监听
@@ -54,8 +70,13 @@ namespace paper {
             const componentType = egret.getQualifiedClassName(componentClass);
             if (componentType in _componentListeners) {
                 const componentListeners = _componentListeners[componentType];
-                if (eventType in componentListeners) {
-                    componentListeners[eventType].length = 0;
+                if (eventType) {
+                    if (eventType in componentListeners) {
+                        componentListeners[eventType].length = 0;
+                    }
+                }
+                else {
+                    delete _componentListeners[componentType];
                 }
             }
         }
@@ -66,31 +87,16 @@ namespace paper {
          * @param component component
          */
         export function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any) {
-            const behaviourType = "paper.Behaviour"; // TODO 字符串依赖需要注意
-            let componentType = "";
-            if (
-                (type === EventType.Enabled || type === EventType.Disabled) &&
-                egret.is(component, behaviourType)
-            ) { // 如果是组件的添加或删除事件，并且该组件派生自 Behaviour 组件，则需要使用基类的组件类型，这些组件发出的添加或删除事件都能被 BehaviourSystem 收到。 
-                componentType = behaviourType;
-            }
-            else {
-                componentType = egret.getQualifiedClassName(component.constructor);
+            // 如果是组件的添加或删除事件，并且该组件派生自 Behaviour 组件，则需要使用基类的组件类型，这些组件发出的添加或删除事件都能被生命周期系统收到。 
+            if (type === EventType.Enabled || type === EventType.Disabled) {
+                if (egret.is(component, _behaviourComponentType)) {
+                    _dispatchEvent(type, _behaviourComponentType, component);
+                }
             }
 
+            const componentType = egret.getQualifiedClassName(component.constructor);
             if (componentType in _componentListeners) {
-                const componentListeners = _componentListeners[componentType];
-                if (type in componentListeners) {
-                    const eventListeners = componentListeners[type];
-                    for (const listener of eventListeners) {
-                        // 监听直接派发，所以监听都应注意 bind 问题。
-                        if (extend) {
-                            listener(component, extend);
-                        } else {
-                            listener(component);
-                        }
-                    }
-                }
+                _dispatchEvent(type, componentType, component, extend);
             }
         }
     }

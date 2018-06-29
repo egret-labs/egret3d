@@ -45,7 +45,7 @@ namespace egret3d {
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
 
-        public readonly viewPortPixel: RectData = { x: 0, y: 0, w: 0, h: 0 };
+        public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
 
         //
         public readonly cameraPosition: Vector3 = new Vector3();

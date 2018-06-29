@@ -3,9 +3,6 @@ namespace egret3d {
      * 
      */
     export class MeshRendererSystem extends paper.BaseSystem<MeshRenderer | MeshFilter> {
-        /**
-         * @inheritDoc
-         */
         protected readonly _interests = [
             {
                 componentClass: MeshRenderer,
@@ -13,8 +10,7 @@ namespace egret3d {
                     {
                         type: MeshRendererEventType.CastShadows,
                         listener: (component: MeshRenderer) => {
-                            const filter = this._getComponent(component.gameObject, 1);
-                            if (filter) {
+                            if (this._hasGameObject(component.gameObject)) {
                                 this._drawCallList.updateDrawCalls(component.gameObject, component.castShadows);
                                 this._drawCallList.updateShadowCasters(component.gameObject, component.castShadows);
                             }
@@ -23,8 +19,7 @@ namespace egret3d {
                     {
                         type: MeshRendererEventType.LightmapIndex,
                         listener: (component: MeshRenderer) => {
-                            const filter = this._getComponent(component.gameObject, 1);
-                            if (filter) {
+                            if (this._hasGameObject(component.gameObject)) {
                                 this._updateLightMap(component);
                             }
                         }
@@ -32,8 +27,7 @@ namespace egret3d {
                     {
                         type: MeshRendererEventType.LightmapScaleOffset,
                         listener: (component: MeshRenderer) => {
-                            const filter = this._getComponent(component.gameObject, 1);
-                            if (filter) {
+                            if (this._hasGameObject(component.gameObject)) {
                                 this._updateLightMap(component);
                             }
                         }
@@ -41,8 +35,7 @@ namespace egret3d {
                     {
                         type: MeshRendererEventType.Materials,
                         listener: (component: MeshRenderer) => {
-                            const filter = this._getComponent(component.gameObject, 1);
-                            if (filter) {
+                            if (this._hasGameObject(component.gameObject)) {
                                 this._drawCallList.updateDrawCalls(component.gameObject, component.castShadows);
                             }
                         }
@@ -64,7 +57,6 @@ namespace egret3d {
                 ]
             },
         ];
-
         private readonly _createDrawCalls = ((gameObject: paper.GameObject) => {
             const renderer = this._getComponent(gameObject, 0) as MeshRenderer;
             const filter = this._getComponent(gameObject, 1) as MeshFilter;
@@ -96,31 +88,6 @@ namespace egret3d {
             return null;
         });
         private readonly _drawCallList: DrawCallList = new DrawCallList(this._createDrawCalls);
-        /**
-         * @inheritDoc
-         */
-        protected _onAddComponent(component: MeshRenderer | MeshFilter) {
-            if (!super._onAddComponent(component)) {
-                return false;
-            }
-
-            const renderer = this._getComponent(component.gameObject, 0) as MeshRenderer;
-            this._drawCallList.updateDrawCalls(renderer.gameObject, renderer.castShadows);
-
-            return true;
-        }
-        /**
-         * @inheritDoc
-         */
-        protected _onRemoveComponent(component: MeshRenderer | MeshFilter) {
-            if (!super._onRemoveComponent(component)) {
-                return false;
-            }
-
-            this._drawCallList.removeDrawCalls(component.gameObject);
-
-            return true;
-        }
 
         private _updateLightMap(component: MeshRenderer) {
             const drawCalls = this._drawCallList.getDrawCalls(component.gameObject);
@@ -131,10 +98,24 @@ namespace egret3d {
                 }
             }
         }
-        /**
-         * @inheritDoc
-         */
-        public update() {
+
+        public onEnable() {
+            // TODO 重新生成 drawcall
+        }
+
+        public onAddGameObject(gameObject: paper.GameObject) {
+            const renderer = this._getComponent(gameObject, 0) as MeshRenderer;
+            this._drawCallList.updateDrawCalls(gameObject, renderer.castShadows);
+        }
+
+        public onRemoveGameObject(gameObject: paper.GameObject) {
+            this._drawCallList.removeDrawCalls(gameObject);
+        }
+
+        public onDisable() {
+            for (const component of this._components) {
+                this._drawCallList.removeDrawCalls(component.gameObject);
+            }
         }
     }
 }

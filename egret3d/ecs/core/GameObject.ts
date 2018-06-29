@@ -3,76 +3,32 @@ namespace paper {
     /**
      * 可以挂载Component的实体类。
      */
-    export class GameObject extends paper.SerializableObject {
-        /**
-         * 返回当前激活场景中查找对应名称的GameObject
-         * @param name 
-         */
-        public static find(name: string): GameObject | null {
-            for (const gameObject of Application.sceneManager.getActiveScene().gameObjects) {
-                if (gameObject.name === name) {
-                    return gameObject;
-                }
-            }
-
-            return null;
-        }
-
-        /**
-         * 返回一个在当前激活场景中查找对应tag的GameObject
-         * @param tag 
-         */
-        public static findWithTag(tag: string): GameObject | null {
-            for (const gameObject of Application.sceneManager.getActiveScene().gameObjects) {
-                if (gameObject.tag === tag) {
-                    return gameObject;
-                }
-            }
-
-            return null;
-        }
-
-        /**
-         * 返回所有在当前激活场景中查找对应tag的GameObject
-         * @param name 
-         */
-        public static findGameObjectsWithTag(tag: string): GameObject[] {
-            const gameObjects: GameObject[] = [];
-            for (const gameObject of Application.sceneManager.getActiveScene().gameObjects) {
-                if (gameObject.tag === tag) {
-                    gameObjects.push(gameObject);
-                }
-            }
-
-            return gameObjects;
-        }
-
+    export class GameObject extends SerializableObject {
         /**
          * 是否是静态，启用这个属性可以提升性能
          */
-        @paper.serializedField
+        @serializedField
         @editor.property(editor.EditType.CHECKBOX)
         public isStatic: boolean = false;
-
 
         /**
          * 层级
          */
-        @paper.serializedField
+        @serializedField
         @deserializedIgnore
         public layer: Layer = Layer.Default;
 
         /**
          * 名称
          */
-        @paper.serializedField
+        @serializedField
         @editor.property(editor.EditType.TEXT)
         public name: string = "";
 
         /**
          * 标签
          */
-        @paper.serializedField
+        @serializedField
         public tag: string = "";
 
         /**
@@ -80,24 +36,29 @@ namespace paper {
          */
         public transform: egret3d.Transform = null as any;
 
-        public renderer: egret3d.MeshRenderer = null as any;
+        /**
+         * 
+         */
+        public renderer: paper.BaseRenderer | null = null as any;
 
         /**
          * 预制体
          */
-        @paper.serializedField
-        public readonly prefab: egret3d.Prefab | null = null;
+        @serializedField
+        public prefab: egret3d.Prefab | null = null;
 
-        private _destroyed = false;
-        @paper.serializedField
-        private _activeSelf = true;
-        private _activeInHierarchy = true;
-        private _activeDirty = true;
+        @serializedField
+        private _activeSelf: boolean = true;
+        /**
+         * @internal
+         */
+        public _activeInHierarchy: boolean = true;
+        /**
+         * @internal
+         */
+        public _activeDirty: boolean = true;
         private readonly _components: BaseComponent[] = [];
         private _scene: Scene = null as any;
-
-        @paper.serializedField
-        public uuid: string | null = null;
 
         /**
          * 创建GameObject，并添加到当前场景中
@@ -105,28 +66,23 @@ namespace paper {
         public constructor(name: string = "NoName", tag: string = "") {
             super();
 
-            this._scene = Application.sceneManager.getActiveScene();
-            this._scene.$addGameObject(this);
             this.name = name;
             this.tag = tag;
-            // 自动创建transform
             this.addComponent(egret3d.Transform);
+
+            this._addToScene(Application.sceneManager.activeScene);
         }
         /**
          * @internal
          */
         public _activeInHierarchyDirty(prevActive: boolean) {
-            // if (this._activeDirty) {
-            //     return;
-            // }
-
             this._activeDirty = true;
             const currentActive = this.activeInHierarchy;
 
             if (currentActive !== prevActive) {
                 for (const component of this._components) {
                     if (component.enabled) {
-                        paper.EventPool.dispatchEvent(currentActive ? paper.EventPool.EventType.Enabled : paper.EventPool.EventType.Disabled, component);
+                        EventPool.dispatchEvent(currentActive ? EventPool.EventType.Enabled : EventPool.EventType.Disabled, component);
                     }
                 }
             }
@@ -136,26 +92,35 @@ namespace paper {
             }
         }
 
+        private _addToScene(value: Scene): any {
+            if (this._scene) {
+                this._scene._removeGameObject(this);
+            }
+
+            this._scene = value;
+            this._scene._addGameObject(this);
+        }
+
         private _removeComponentReference(component: BaseComponent) {
             component.enabled = false; // TODO remove flag.
 
-            const destroySystem = paper.Application.systemManager.getSystem(paper.DestroySystem);
+            const destroySystem = Application.systemManager.getSystem(DestroySystem);
             if (destroySystem) {
                 destroySystem.bufferComponent(component);
             }
         }
 
-        private _getComponentsInChildren<T extends paper.BaseComponent>(componentClass: { new(gameObject: GameObject): T }, child: GameObject, array: T[]) {
+        private _getComponentsInChildren<T extends BaseComponent>(componentClass: { new(): T }, child: GameObject, array: T[], isExtends: boolean = false) {
             const components = child._components;
 
             for (const component of components) {
-                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
+                if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentClass)) : component.constructor === componentClass) {
                     array.push(component as T);
                 }
             }
 
             for (const childOfChild of child.transform.children) {
-                this._getComponentsInChildren(componentClass, childOfChild.gameObject, array);
+                this._getComponentsInChildren(componentClass, childOfChild.gameObject, array, isExtends);
             }
         }
 
@@ -163,49 +128,52 @@ namespace paper {
          * 
          */
         public destroy() {
-            if (this._destroyed) {
-                console.warn("The game object has been destroyed.", this.name, this.hashCode);
+            if (!this._scene) {
+                console.warn("The game object has been destroyed.", this.name, this.uuid);
                 return;
             }
 
-            if (Application.sceneManager.globalObjects.indexOf(this) >= 0) {
-                Application.sceneManager.removeGlobalObject(this);
+            if (this === Application.sceneManager.globalGameObject) {
+                console.warn("Cannot destroy global game object.", this.name, this.uuid);
+                return;
             }
 
-            this._destroyed = true;
-            this.removeAllComponents();
-            this._scene.$removeGameObject(this);
-            this._scene = null as any;
-
-            const destroySystem = paper.Application.systemManager.getSystem(paper.DestroySystem);
+            const destroySystem = Application.systemManager.getSystem(DestroySystem);
             if (destroySystem) {
                 destroySystem.bufferGameObject(this);
             }
-        }
-        /**
-         * 
-         */
-        public dontDestroy() {
-            Application.sceneManager.addGlobalObject(this);
+
+            for (const component of this._components) {
+                this._removeComponentReference(component);
+            }
+
+            this.transform = null as any;
+            this.renderer = null;
+
+            this._components.length = 0;
+            this._scene._removeGameObject(this);
+            this._scene = null as any;
         }
 
         /**
          * 根据类型名获取组件
          */
-        public addComponent<T extends paper.BaseComponent>(componentClass: { new(): T }): T {
-            paper.BaseComponent._injectGameObject = this;
+        public addComponent<T extends BaseComponent>(componentClass: { new(): T }): T {
+            BaseComponent._injectGameObject = this;
             const component = new componentClass();
 
             if (component instanceof egret3d.Transform) {
                 this.transform = component;
-            } else if (component instanceof egret3d.MeshRenderer) {
+            }
+            else if (component instanceof paper.BaseRenderer) {
                 this.renderer = component;
             }
 
             this._components.push(component);
             component.initialize();
+
             if (component.isActiveAndEnabled) {
-                paper.EventPool.dispatchEvent(paper.EventPool.EventType.Enabled, component);
+                EventPool.dispatchEvent(EventPool.EventType.Enabled, component);
             }
 
             return component;
@@ -214,8 +182,8 @@ namespace paper {
         /**
          * 移除组件
          */
-        public removeComponent<T extends paper.BaseComponent>(componentInstanceOrClass: { new(): T } | T) {
-            if (componentInstanceOrClass instanceof paper.BaseComponent) {
+        public removeComponent<T extends BaseComponent>(componentInstanceOrClass: { new(): T } | T, isExtends: boolean = false, isAll: boolean = false) {
+            if (componentInstanceOrClass instanceof BaseComponent) {
                 if (componentInstanceOrClass === this.transform as any) {
                     return;
                 }
@@ -225,6 +193,10 @@ namespace paper {
                     if (component === componentInstanceOrClass) {
                         this._removeComponentReference(component);
                         this._components.splice(index, 1);
+
+                        if (component === this.renderer) {
+                            this.renderer = null;
+                        }
 
                         return;
                     }
@@ -237,53 +209,72 @@ namespace paper {
                     return;
                 }
 
-                let index = 0;
-                for (const component of this._components) {
-                    if (egret.is(component, egret.getQualifiedClassName(componentInstanceOrClass))) {
+                let i = this._components.length;
+                while (i--) {
+                    const component = this._components[i];
+                    if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentInstanceOrClass)) : component.constructor === componentInstanceOrClass) {
                         this._removeComponentReference(component);
-                        this._components.splice(index, 1);
+                        this._components.splice(i, 1);
 
-                        return;
+                        if (component === this.renderer) {
+                            this.renderer = null;
+                        }
+
+                        if (!isAll) {
+                            return;
+                        }
                     }
-
-                    index++;
                 }
             }
         }
-
 
         /**
          * 移除自身的所有组件
          */
         public removeAllComponents() {
             for (const component of this._components) {
+                if (component instanceof egret3d.Transform) {
+                    continue;
+                }
+
+                if (component === this.renderer) {
+                    this.renderer = null;
+                }
+
                 this._removeComponentReference(component);
             }
 
             this._components.length = 0;
+            this._components.push(this.transform);
         }
 
         /**
          * 根据类型名获取组件
          */
-        public getComponent<T extends paper.BaseComponent>(componentClass: { new(): T }) {
-            for (const component of this._components) {
-                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
-                    return component as T;
+        public getComponent<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
+            if (isExtends) {
+                for (const component of this._components) {
+                    if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
+                        return component as T;
+                    }
+                }
+            }
+            else {
+                for (const component of this._components) {
+                    if (component.constructor === componentClass) {
+                        return component as T;
+                    }
                 }
             }
 
             return null;
         }
 
-        /**
-         * 根据类型名获取所有组件
-         */
-        public getComponents<T extends paper.BaseComponent>(componentClass: { new(): T }) {
-            let components: T[] = [];
+        public getComponents<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
+            const components: T[] = [];
             for (const component of this._components) {
-                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
-                    components.push(component as T);
+                if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentClass)) : component.constructor === componentClass) {
+                    components.push(component as any);
                 }
             }
 
@@ -293,12 +284,12 @@ namespace paper {
         /**
          * 搜索自己和父节点中所有特定类型的组件
          */
-        public getComponentInParent<T extends paper.BaseComponent>(componentClass: { new(): T }) {
+        public getComponentInParent<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
             let result: T | null = null;
             let parent = this.transform.parent;
 
             while (!result && parent) {
-                result = parent.gameObject.getComponent(componentClass);
+                result = parent.gameObject.getComponent(componentClass, isExtends);
                 parent = parent.parent;
             }
 
@@ -308,9 +299,9 @@ namespace paper {
         /**
          * 搜索自己和子节点中所有特定类型的组件
          */
-        public getComponentsInChildren<T extends paper.BaseComponent>(componentClass: { new(): T }) {
+        public getComponentsInChildren<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
             const components: T[] = [];
-            this._getComponentsInChildren(componentClass, this, components);
+            this._getComponentsInChildren(componentClass, this, components, isExtends);
 
             return components;
         }
@@ -322,7 +313,7 @@ namespace paper {
          */
         public sendMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {
-                if (component.isActiveAndEnabled && component.constructor instanceof paper.Behaviour) {
+                if (component.isActiveAndEnabled && component.constructor instanceof Behaviour) {
                     if (methodName in component) {
                         (component as any)[methodName](parameter);
                     }
@@ -361,6 +352,24 @@ namespace paper {
                 }
             }
         }
+        /**
+         * 
+         */
+        public get dontDestroy() {
+            return this._scene === Application.sceneManager.globalScene;
+        }
+        public set dontDestroy(value: boolean) {
+            if (this.dontDestroy === value) {
+                return;
+            }
+
+            if (value) {
+                this._addToScene(Application.sceneManager.globalScene);
+            }
+            else {
+                this._addToScene(Application.sceneManager.activeScene);
+            }
+        }
 
         /**
          * 当前GameObject对象自身激活状态
@@ -369,8 +378,13 @@ namespace paper {
             return this._activeSelf;
         }
         public set activeSelf(value: boolean) {
-            if (this._activeSelf !== value) {
-                const prevActive = this.activeInHierarchy;
+            if (this._activeSelf === value) {
+                return;
+            }
+
+            const parent = this.transform.parent;
+            if (!parent || parent.gameObject.activeInHierarchy) {
+                const prevActive = this._activeSelf;
                 this._activeSelf = value;
                 this._activeInHierarchyDirty(prevActive);
             }
@@ -384,11 +398,11 @@ namespace paper {
             if (this._activeDirty) {
                 const parent = this.transform.parent;
 
-                if (parent && !parent.gameObject.activeInHierarchy) {
-                    this._activeInHierarchy = false;
+                if (!parent || parent.gameObject.activeInHierarchy) {
+                    this._activeInHierarchy = this._activeSelf;
                 }
                 else {
-                    this._activeInHierarchy = this._activeSelf;
+                    this._activeInHierarchy = false;
                 }
 
                 this._activeDirty = false;
@@ -400,7 +414,7 @@ namespace paper {
         /**
          * 组件列表
          */
-        @paper.serializedField
+        @serializedField
         public get components(): ReadonlyArray<BaseComponent> {
             return this._components;
         }
@@ -412,9 +426,13 @@ namespace paper {
             this._components.length = 0;
             for (const component of value) {
                 if (component instanceof MissingObject) {
-                    this.addComponent(MissComponent).missingObject = component;
+                    this.addComponent(MissingComponent).missingObject = component;
                 }
                 else {
+                    if (component instanceof paper.BaseRenderer) {
+                        this.renderer = component;
+                    }
+
                     this._components.push(component);
                 }
             }
@@ -427,6 +445,28 @@ namespace paper {
          */
         public get scene(): Scene {
             return this._scene;
+        }
+
+        /**
+         * @deprecated
+         * @see paper.Scene#find()
+         */
+        public static find(name: string, scene: Scene | null = null) {
+            return (scene || Application.sceneManager.activeScene).find(name);
+        }
+        /**
+         * @deprecated
+         * @see paper.Scene#findWithTag()
+         */
+        public static findWithTag(tag: string, scene: Scene | null = null) {
+            return (scene || Application.sceneManager.activeScene).findWithTag(tag);
+        }
+        /**
+         * @deprecated
+         * @see paper.Scene#findGameObjectsWithTag()
+         */
+        public static findGameObjectsWithTag(tag: string, scene: Scene | null = null) {
+            return (scene || Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
         }
     }
 }

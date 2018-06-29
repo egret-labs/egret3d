@@ -413,15 +413,11 @@ namespace egret3d {
 
             return null;
         }
-        /**
-         * @inheritDoc
-         */
+
         public caclByteLength() {
             return 0; // TODO
         }
-        /**
-         * @inheritDoc
-         */
+        
         public dispose() {
             this.buffers.length = 0;
         }

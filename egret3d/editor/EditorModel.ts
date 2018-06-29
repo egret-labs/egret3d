@@ -369,7 +369,7 @@ namespace paper.editor {
             let assetsMap = {};
             if (serializeData["assets"]) {
                 (<ISerializedObject[]>serializeData["assets"]).forEach(item => {
-                    assetsMap[item.hashCode] = Asset.find(item["url"]);
+                    assetsMap[item.uuid] = Asset.find(item["url"]);
                 });
             }
 
@@ -581,7 +581,7 @@ namespace paper.editor {
                 let assetsMap = {};
                 if (serializeData["assets"]) { // 认为此时所有资源已经正确加载
                     (<ISerializedObject[]>serializeData["assets"]).forEach(item => {
-                        assetsMap[item.hashCode] = Asset.find(item["url"]); // 获取资源引用
+                        assetsMap[item.uuid] = Asset.find(item["url"]); // 获取资源引用
                     });
                 }
                 one["assetsMap"] = assetsMap;
@@ -754,7 +754,7 @@ namespace paper.editor {
 
         public getGameObjectByUUid(uuid: string): GameObject | null {
             let paper = this.backRunTime.paper;
-            let objects = paper.Application.sceneManager.getActiveScene().gameObjects;
+            let objects = paper.Application.sceneManager.activeScene.gameObjects;
             for (let i: number = 0; i < objects.length; i++) {
                 if (objects[i].uuid === uuid) {
                     return objects[i];
@@ -762,7 +762,7 @@ namespace paper.editor {
             }
 
             paper = __global['paper'];
-            objects = paper.Application.sceneManager.getActiveScene().gameObjects;
+            objects = paper.Application.sceneManager.activeScene.gameObjects;
             for (let i: number = 0; i < objects.length; i++) {
                 if (objects[i].uuid === uuid) {
                     return objects[i];
@@ -785,7 +785,7 @@ namespace paper.editor {
          * @param uuids unique id
          */
         public getGameObjectsByUUids(uuids: string[]): GameObject[] {
-            let objects = Application.sceneManager.getActiveScene().gameObjects;
+            let objects = Application.sceneManager.activeScene.gameObjects;
             let obj: GameObject;
             let result: GameObject[] = [];
             let idIndex: number;
@@ -815,12 +815,13 @@ namespace paper.editor {
         }
 
         public resetUUid(gameObj: GameObject, uuids: string[]):void {
-            let uuid = uuids.shift();
-            if (uuid) {
-               gameObj.uuid = uuid;
-            } else {
-                throw new Error("no match hashcode!")
-            }
+            // let uuid = uuids.shift();
+            // if (uuid) {
+            //    gameObj.uuid = uuid;
+            // } else {
+            //     throw new Error("no match hashcode!")
+            // }
+
             for (let index = 0; index < gameObj.transform.children.length; index++) {
                 const element = gameObj.transform.children[index];
                 const obj: GameObject = element.gameObject;
@@ -844,12 +845,12 @@ namespace paper.editor {
             for (let i: number = 0; i < gameObject.components.length; i++) {
                 let comp = gameObject.components[i];
                 (comp as any).gameObject = gameObject;
-                let uuid = uuids.shift();
-                if (uuid) {
-                    comp.uuid = uuid;
-                } else {
-                    throw new Error("no match uuid!")
-                }
+                // let uuid = uuids.shift();
+                // if (uuid) {
+                //     comp.uuid = uuid;
+                // } else {
+                //     throw new Error("no match uuid!")
+                // }
             }
             for (let index = 0; index < gameObject.transform.children.length; index++) {
                 const element = gameObject.transform.children[index];
@@ -864,10 +865,10 @@ namespace paper.editor {
          */
         public  generateGameobjectUUids(instance:paper.GameObject):void
         {
-            instance.uuid = generateUuid();
-            instance.components.forEach((component) => {
-                component.uuid = generateUuid();
-            })
+            // instance.uuid = generateUuid();
+            // instance.components.forEach((component) => {
+            //     component.uuid = generateUuid();
+            // })
     
             for (let index = 0; index < instance.transform.children.length; index++) {
                 const element = instance.transform.children[index];
@@ -982,25 +983,25 @@ namespace paper.editor {
          * 序列化场景
          */
         public serializeActiveScene(): string {
-            let scene = Application.sceneManager.getActiveScene();
+            let scene = Application.sceneManager.activeScene;
 
             if (this._editCamera) {
-                scene.$removeGameObject(this._editCamera);
+                scene._removeGameObject(this._editCamera);
             }
             let len = this.geoController.controllerPool.length;
             if (len > 0) {
                 for (let i = 0; i < len; i++) {
-                    scene.$removeGameObject(this.geoController.controllerPool[i]);
+                    scene._removeGameObject(this.geoController.controllerPool[i]);
                 }
             }
             let data = serialize(scene);
             if (len > 0) {
                 for (let i = 0; i < len; i++) {
-                    scene.$addGameObject(this.geoController.controllerPool[i]);
+                    scene._addGameObject(this.geoController.controllerPool[i]);
                 }
             }
             if (this._editCamera) {
-                scene.$addGameObject(this._editCamera);
+                scene._addGameObject(this._editCamera);
             }
             let jsonData = JSON.stringify(data);
             return jsonData;

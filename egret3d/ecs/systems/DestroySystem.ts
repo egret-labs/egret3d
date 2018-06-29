@@ -1,7 +1,6 @@
 namespace paper {
     /**
-     * 销毁系统
-     * 
+     * @internal
      */
     export class DestroySystem extends BaseSystem<BaseComponent> {
         private readonly _bufferedComponents: BaseComponent[] = [];
@@ -9,18 +8,19 @@ namespace paper {
         /**
          * @inheritDoc
          */
-        public update() {
+        public onUpdate() {
             for (const component of this._bufferedComponents) {
                 component.uninitialize();
             }
 
-
             this._bufferedComponents.length = 0;
             this._bufferedGameObjects.length = 0;
+            //
+            egret3d.InputManager.update(Time.deltaTime);
+            egret3d.Performance.endCounter(egret3d.PerformanceType.All);
         }
         /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
-         * 
+         * @internal
          */
         public bufferComponent(component: BaseComponent) {
             if (this._bufferedComponents.indexOf(component) >= 0) {
@@ -30,8 +30,7 @@ namespace paper {
             this._bufferedComponents.push(component);
         }
         /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
-         * 
+         * @internal
          */
         public bufferGameObject(gameObject: GameObject) {
             if (this._bufferedGameObjects.indexOf(gameObject) >= 0) {
@@ -42,11 +41,6 @@ namespace paper {
 
             if (gameObject.transform) {
                 for (const child of gameObject.transform.children) {
-                    if (Application.sceneManager.globalObjects.indexOf(child.gameObject) >= 0) {
-                        child.parent = null;
-                        continue;
-                    }
-
                     child.gameObject.destroy();
                 }
             }

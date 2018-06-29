@@ -1,5 +1,7 @@
-namespace paper {
+type int = number;
+type uint = number;
 
+namespace paper {
     /**
      * 组件实体系统的主入口
      */
@@ -7,18 +9,17 @@ namespace paper {
         /**
          * 系统管理器
          */
-        public static readonly systemManager: SystemManager = new SystemManager();
+        public static readonly systemManager: SystemManager = SystemManager.getInstance();
 
         /**
          * 场景管理器
          */
-        public static readonly sceneManager: SceneManager = new SceneManager();
+        public static readonly sceneManager: SceneManager = SceneManager.getInstance();
 
         private static _isEditor = false;
         private static _isFocused = false;
         private static _isPlaying = false;
         private static _isRunning = false;
-        private static _standDeltaTime = -1;
         private static _bindUpdate: FrameRequestCallback = null as any;
 
         private static _update() {
@@ -32,14 +33,13 @@ namespace paper {
         }
 
         public static init({ isEditor = false, isPlaying = true } = {}) {
-            const systemManager = this.systemManager;
             const systemClasses = [
                 StartSystem,
-                BehaviourSystem,
+                // egret3d.ammo.PhysicsSystem, // TODO 分离
+                UpdateSystem,
                 egret3d.GuidpathSystem,
-                egret3d.BoxColliderSystem,
                 egret3d.AnimationSystem,
-                LaterSystem,
+                LaterUpdateSystem,
                 egret3d.TrailRendererSystem,
                 egret3d.MeshRendererSystem,
                 egret3d.SkinnedMeshRendererSystem,
@@ -47,13 +47,13 @@ namespace paper {
                 egret3d.Egret2DRendererSystem,
                 egret3d.LightSystem,
                 egret3d.CameraSystem,
-                DestroySystem,
                 EndSystem,
+                DestroySystem,
             ];
 
             let level = 0;
             for (const systemClass of systemClasses) {
-                systemManager.register(systemClass, level++);
+                this.systemManager.register(systemClass, level++);
             }
 
             Time.initialize();
@@ -82,12 +82,6 @@ namespace paper {
 
             this._update();
         }
-        /**
-         * 
-         */
-        public static callLater(callback: () => void): void {
-            this.systemManager.getSystem(LaterSystem).callLater(callback);
-        }
 
         public static get isEditor() {
             return this._isEditor;
@@ -103,6 +97,16 @@ namespace paper {
 
         public static get isRunning() {
             return this._isRunning;
+        }
+
+        /**
+         * @deprecated
+         */
+        public static callLater(callback: () => void): void {
+            (this.systemManager.getSystem(LaterUpdateSystem) as LaterUpdateSystem).callLater(callback);
+        }
+
+        private constructor() {
         }
     }
 }

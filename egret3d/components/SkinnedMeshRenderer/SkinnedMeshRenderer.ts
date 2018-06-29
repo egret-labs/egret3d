@@ -37,7 +37,7 @@ namespace egret3d {
      * @platform Web
      * @language
      */
-    export class SkinnedMeshRenderer extends paper.BaseComponent implements paper.IRenderer {
+    export class SkinnedMeshRenderer extends paper.BaseRenderer {
         /**
          * 
          */
@@ -178,10 +178,10 @@ namespace egret3d {
                 const mat2 = helpMatrixC;
                 const mat3 = helpMatrixD;
 
-                egret3d.Matrix.fromRTS(vec30p, Vector3.ONE, vec40r, mat0);
-                egret3d.Matrix.fromRTS(vec31p, Vector3.ONE, vec41r, mat1);
-                egret3d.Matrix.fromRTS(vec32p, Vector3.ONE, vec42r, mat2);
-                egret3d.Matrix.fromRTS(vec33p, Vector3.ONE, vec43r, mat3);
+                egret3d.Matrix.fromRTS(vec30p, Vector3.ONE, vec40r as any, mat0);
+                egret3d.Matrix.fromRTS(vec31p, Vector3.ONE, vec41r as any, mat1);
+                egret3d.Matrix.fromRTS(vec32p, Vector3.ONE, vec42r as any, mat2);
+                egret3d.Matrix.fromRTS(vec33p, Vector3.ONE, vec43r as any, mat3);
 
                 egret3d.Matrix.scale(blendWeights.x, mat0);
                 egret3d.Matrix.scale(blendWeights.y, mat1);
@@ -193,23 +193,24 @@ namespace egret3d {
                 egret3d.Matrix.add(out, mat3, out);
             }
             else {
-                const mat0 = helpMatrixA;
-                const mat1 = helpMatrixB;
-                const mat2 = helpMatrixC;
-                const mat3 = helpMatrixD;
-                mat0.rawData = this._skeletonMatrixData.slice(16 * blendIndices.x, 16 * blendIndices.x + 16);
-                mat1.rawData = this._skeletonMatrixData.slice(16 * blendIndices.y, 16 * blendIndices.y + 16);
-                mat2.rawData = this._skeletonMatrixData.slice(16 * blendIndices.z, 16 * blendIndices.z + 16);
-                mat3.rawData = this._skeletonMatrixData.slice(16 * blendIndices.w, 16 * blendIndices.w + 16);
+                // TODO
+                // const mat0 = helpMatrixA;
+                // const mat1 = helpMatrixB;
+                // const mat2 = helpMatrixC;
+                // const mat3 = helpMatrixD;
+                // mat0.rawData = this._skeletonMatrixData.slice(16 * blendIndices.x, 16 * blendIndices.x + 16);
+                // mat1.rawData = this._skeletonMatrixData.slice(16 * blendIndices.y, 16 * blendIndices.y + 16);
+                // mat2.rawData = this._skeletonMatrixData.slice(16 * blendIndices.z, 16 * blendIndices.z + 16);
+                // mat3.rawData = this._skeletonMatrixData.slice(16 * blendIndices.w, 16 * blendIndices.w + 16);
 
-                egret3d.Matrix.scale(blendWeights.x, mat0);
-                egret3d.Matrix.scale(blendWeights.y, mat1);
-                egret3d.Matrix.scale(blendWeights.z, mat2);
-                egret3d.Matrix.scale(blendWeights.w, mat3);
+                // egret3d.Matrix.scale(blendWeights.x, mat0);
+                // egret3d.Matrix.scale(blendWeights.y, mat1);
+                // egret3d.Matrix.scale(blendWeights.z, mat2);
+                // egret3d.Matrix.scale(blendWeights.w, mat3);
 
-                egret3d.Matrix.add(mat0, mat1, out);
-                egret3d.Matrix.add(out, mat2, out);
-                egret3d.Matrix.add(out, mat3, out);
+                // egret3d.Matrix.add(mat0, mat1, out);
+                // egret3d.Matrix.add(out, mat2, out);
+                // egret3d.Matrix.add(out, mat3, out);
             }
 
             return out;
@@ -291,13 +292,13 @@ namespace egret3d {
             target.center = [this.center.x, this.center.y, this.center.z];
             target.size = [this.size.x, this.size.y, this.size.z];
             target.rootBone = null;
-            target._bones = [] as paper.IHashCode[];
+            target._bones = [] as paper.IUUID[];
             target._mesh = this._mesh ? this._mesh.serialize() : null;
-            target._materials = [] as paper.IHashCode[];
+            target._materials = [] as paper.IUUID[];
             target.uuid = this.uuid;
 
             if (this.rootBone) {
-                target.rootBone = { hashCode: this.rootBone.hashCode };
+                target.rootBone = { uuid: this.rootBone.uuid };
             }
 
             const materials = this._materials;
@@ -311,7 +312,7 @@ namespace egret3d {
             target._bones.length = bones.length;
             for (let i = 0, l = bones.length; i < l; i++) {
                 const bone = bones[i];
-                target._bones[i] = { hashCode: bone.hashCode };
+                target._bones[i] = { uuid: bone.uuid };
             }
 
             return target;
@@ -321,10 +322,9 @@ namespace egret3d {
          */
         public deserialize(element: any) {
             super.deserialize(element);
-            
+
             this.center.deserialize(element.center);
             this.size.deserialize(element.size);
-            this.uuid = element.uuid;
 
             if (element._mesh) {
                 this._mesh = new (Mesh as any)(); //

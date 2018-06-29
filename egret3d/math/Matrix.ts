@@ -1,25 +1,223 @@
 namespace egret3d {
 
-    let helpVec3_1: Vector3 = new Vector3();
+    const _helpVectorA: Vector3 = new Vector3();
 
     export class Matrix {
+        public readonly rawData: Float32Array;
 
-        public rawData: Float32Array;
-
-        constructor(datas: Float32Array | null = null) {
-            if (datas) {
-                this.rawData = datas;
+        public constructor(rawData: Float32Array | null = null) {
+            if (rawData) {
+                this.rawData = rawData;
             }
             else {
                 this.rawData = new Float32Array(
                     [
-                        1, 0, 0, 0,
-                        0, 1, 0, 0,
-                        0, 0, 1, 0,
-                        0, 0, 0, 1
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0
                     ]
                 );
             }
+        }
+
+        public copy(value: Readonly<Matrix>) {
+            this.rawData[0] = value.rawData[0];
+            this.rawData[1] = value.rawData[1];
+            this.rawData[2] = value.rawData[2];
+            this.rawData[3] = value.rawData[3];
+
+            this.rawData[4] = value.rawData[4];
+            this.rawData[5] = value.rawData[5];
+            this.rawData[6] = value.rawData[6];
+            this.rawData[7] = value.rawData[7];
+
+            this.rawData[8] = value.rawData[8];
+            this.rawData[9] = value.rawData[9];
+            this.rawData[10] = value.rawData[10];
+            this.rawData[11] = value.rawData[11];
+
+            this.rawData[12] = value.rawData[12];
+            this.rawData[13] = value.rawData[13];
+            this.rawData[14] = value.rawData[14];
+            this.rawData[15] = value.rawData[15];
+
+            return this;
+        }
+
+        public clone() {
+            const value = new Matrix();
+            value.copy(this);
+
+            return value;
+        }
+
+        public set(
+            n11: number, n21: number, n31: number, n41: number,
+            n12: number, n22: number, n32: number, n42: number,
+            n13: number, n23: number, n33: number, n43: number,
+            n14: number, n24: number, n34: number, n44: number,
+        ) {
+            this.rawData[0] = n11;
+            this.rawData[1] = n12;
+            this.rawData[2] = n13;
+            this.rawData[3] = n14;
+
+            this.rawData[4] = n21;
+            this.rawData[5] = n22;
+            this.rawData[6] = n23;
+            this.rawData[7] = n24;
+
+            this.rawData[8] = n31;
+            this.rawData[9] = n32;
+            this.rawData[10] = n33;
+            this.rawData[11] = n34;
+
+            this.rawData[12] = n41;
+            this.rawData[13] = n42;
+            this.rawData[14] = n43;
+            this.rawData[15] = n44;
+
+            return this;
+        }
+
+        public set3x3(
+            n11: number, n21: number, n31: number,
+            n12: number, n22: number, n32: number,
+            n13: number, n23: number, n33: number,
+        ) {
+            this.rawData[0] = n11;
+            this.rawData[1] = n12;
+            this.rawData[2] = n13;
+
+            this.rawData[4] = n21;
+            this.rawData[5] = n22;
+            this.rawData[6] = n23;
+
+            this.rawData[8] = n31;
+            this.rawData[9] = n32;
+            this.rawData[10] = n33;
+
+            return this;
+        }
+
+        public setTranslation(translation: Readonly<Vector3>) {
+            this.rawData[12] = translation.x;
+            this.rawData[13] = translation.y;
+            this.rawData[14] = translation.z;
+            this.rawData[15] = 1.0;
+
+            return this;
+        }
+
+        public identity() {
+            this.rawData[0] = 1.0;
+            this.rawData[1] = 0.0;
+            this.rawData[2] = 0.0;
+            this.rawData[3] = 0.0;
+
+            this.rawData[4] = 0.0;
+            this.rawData[5] = 1.0;
+            this.rawData[6] = 0.0;
+            this.rawData[7] = 0.0;
+
+            this.rawData[8] = 0.0;
+            this.rawData[9] = 0.0;
+            this.rawData[10] = 1.0;
+            this.rawData[11] = 0.0;
+
+            this.rawData[12] = 0.0;
+            this.rawData[13] = 0.0;
+            this.rawData[14] = 0.0;
+            this.rawData[15] = 1.0;
+
+            return this;
+        }
+
+        public inverse() {
+            const l1 = this.rawData[0];
+            const l2 = this.rawData[1];
+            const l3 = this.rawData[2];
+            const l4 = this.rawData[3];
+            const l5 = this.rawData[4];
+            const l6 = this.rawData[5];
+            const l7 = this.rawData[6];
+            const l8 = this.rawData[7];
+            const l9 = this.rawData[8];
+            const l10 = this.rawData[9];
+            const l11 = this.rawData[10];
+            const l12 = this.rawData[11];
+            const l13 = this.rawData[12];
+            const l14 = this.rawData[13];
+            const l15 = this.rawData[14];
+            const l16 = this.rawData[15];
+            const l17 = (l11 * l16) - (l12 * l15);
+            const l18 = (l10 * l16) - (l12 * l14);
+            const l19 = (l10 * l15) - (l11 * l14);
+            const l20 = (l9 * l16) - (l12 * l13);
+            const l21 = (l9 * l15) - (l11 * l13);
+            const l22 = (l9 * l14) - (l10 * l13);
+            const l23 = ((l6 * l17) - (l7 * l18)) + (l8 * l19);
+            const l24 = -(((l5 * l17) - (l7 * l20)) + (l8 * l21));
+            const l25 = ((l5 * l18) - (l6 * l20)) + (l8 * l22);
+            const l26 = -(((l5 * l19) - (l6 * l21)) + (l7 * l22));
+            const l27 = 1.0 / ((((l1 * l23) + (l2 * l24)) + (l3 * l25)) + (l4 * l26));
+            const l28 = (l7 * l16) - (l8 * l15);
+            const l29 = (l6 * l16) - (l8 * l14);
+            const l30 = (l6 * l15) - (l7 * l14);
+            const l31 = (l5 * l16) - (l8 * l13);
+            const l32 = (l5 * l15) - (l7 * l13);
+            const l33 = (l5 * l14) - (l6 * l13);
+            const l34 = (l7 * l12) - (l8 * l11);
+            const l35 = (l6 * l12) - (l8 * l10);
+            const l36 = (l6 * l11) - (l7 * l10);
+            const l37 = (l5 * l12) - (l8 * l9);
+            const l38 = (l5 * l11) - (l7 * l9);
+            const l39 = (l5 * l10) - (l6 * l9);
+
+            this.rawData[0] = l23 * l27;
+            this.rawData[4] = l24 * l27;
+            this.rawData[8] = l25 * l27;
+            this.rawData[12] = l26 * l27;
+            this.rawData[1] = -(((l2 * l17) - (l3 * l18)) + (l4 * l19)) * l27;
+            this.rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
+            this.rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
+            this.rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
+            this.rawData[2] = (((l2 * l28) - (l3 * l29)) + (l4 * l30)) * l27;
+            this.rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
+            this.rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
+            this.rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
+            this.rawData[3] = -(((l2 * l34) - (l3 * l35)) + (l4 * l36)) * l27;
+            this.rawData[7] = (((l1 * l34) - (l3 * l37)) + (l4 * l38)) * l27;
+            this.rawData[11] = -(((l1 * l35) - (l2 * l37)) + (l4 * l39)) * l27;
+            this.rawData[15] = (((l1 * l36) - (l2 * l38)) + (l3 * l39)) * l27;
+
+            return this;
+        }
+
+        public transformVector3(value: Vector3) {
+            const x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]) + this.rawData[12];
+            const y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]) + this.rawData[13];
+            const z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]) + this.rawData[14];
+            const w = (value.x * this.rawData[3]) + (value.y * this.rawData[7]) + (value.z * this.rawData[11]) + this.rawData[15];
+
+            value.x = x / w;
+            value.y = y / w;
+            value.z = z / w;
+
+            return value;
+        }
+
+        public transformNormal(value: Vector3): Vector3 {
+            let x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]);
+            let y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]);
+            let z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]);
+
+            value.x = x;
+            value.y = y;
+            value.z = z;
+
+            return value;
         }
 
         public static set(
@@ -498,7 +696,7 @@ namespace egret3d {
 
         public static toEulerAngles(matrix: Matrix, out: Vector3): Vector3 {
             var x, y, z, sx, sy, sz, m, halfPi;
-            var scale = helpVec3_1;
+            var scale = _helpVectorA;
 
             Matrix.getScale(matrix, scale);
 

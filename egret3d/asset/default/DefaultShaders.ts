@@ -612,6 +612,27 @@ namespace egret3d {
                 paper.Asset.register(shader);
             }
             {
+                //TODO
+                const shader = new Shader("particles_blend1.shader.json");
+                shader.url = "particles_blend1.shader.json";
+                shader.renderQueue = RenderQueue.Transparent;
+                shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
+
+                shader.passes["base"] = [];
+                const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
+                renderPass.state_ztest = true;
+                renderPass.state_ztest_method = WebGLKit.LEQUAL;
+                renderPass.state_zwrite = true;
+                renderPass.state_showface = ShowFaceStateEnum.ALL;
+                renderPass.setAlphaBlend(BlendModeEnum.Blend);
+                shader.passes["base"].push(renderPass);
+
+                this.PARTICLE_BLEND = shader;
+
+                paper.Asset.register(shader);
+            }
+            {
                 const shader = new Shader("particles_blend.shader.json");
                 shader.url = "particles_blend.shader.json";
                 shader.renderQueue = RenderQueue.Transparent;

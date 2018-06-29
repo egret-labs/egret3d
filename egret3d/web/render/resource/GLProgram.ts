@@ -348,8 +348,8 @@ namespace egret3d {
                     if (accessorIndex !== undefined) {
                         const accessor = glTFAsset.getAccessor(accessorIndex);
                         const bufferOffset = glTFAsset.getBufferOffset(accessor);
-                        const vertexCount = GLTFAsset.getAccessorTypeCount(accessor.type);
-                        gl.vertexAttribPointer(location, vertexCount, webGLAttribute.format, attributeInfo.normalized, 0, bufferOffset);
+                        const typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
+                        gl.vertexAttribPointer(location, typeCount, webGLAttribute.format, attributeInfo.normalized, 0, bufferOffset);
                         gl.enableVertexAttribArray(location);
                     }
                     else {

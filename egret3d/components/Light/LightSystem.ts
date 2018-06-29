@@ -3,16 +3,11 @@ namespace egret3d {
      * Light系统
      */
     export class LightSystem extends paper.BaseSystem<Light> {
-        /**
-         * @inheritDoc
-         */
         protected readonly _interests = [
             { componentClass: Light }
         ];
-        /**
-         * @inheritDoc
-         */
-        public update() {
+
+        public onUpdate() {
             for (const light of this._components) {
                 let shadow: ILightShadow;
                 let face = 1;

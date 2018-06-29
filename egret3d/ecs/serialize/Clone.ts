@@ -2,7 +2,7 @@ namespace paper {
     /**
      * 克隆
      */
-    export function clone<T extends paper.SerializableObject>(object: T): T {
+    export function clone<T extends SerializableObject>(object: T): T {
 
         let cacheParent: any = null;
 
@@ -17,7 +17,7 @@ namespace paper {
             (object as any)._parent = null; // TODO
         }
 
-        const data = paper.serialize(object);
+        const data = serialize(object);
 
         if (object instanceof GameObject) {
             (object.transform as any)._parent = cacheParent; // TODO
@@ -29,10 +29,10 @@ namespace paper {
         const assets: any = {};
         if ("assets" in data) { // 认为此时所有资源已经正确加载
             for (const asset of data["assets"]) {
-                assets[asset.hashCode] = Asset.find((<any>asset as Asset).url); // 获取资源引用
+                assets[asset.uuid] = Asset.find((<any>asset as Asset).url); // 获取资源引用
             }
         }
 
-        return paper.deserialize<T>(data, assets);
+        return deserialize<T>(data, assets);
     }
 }

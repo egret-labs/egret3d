@@ -1,5 +1,4 @@
 namespace egret3d {
-
     egret.RuntimeType = {} as any;
     export type RunEgretOptions = {
         antialias: boolean;
@@ -8,14 +7,13 @@ namespace egret3d {
         isPlaying?: boolean;
     }
 
-
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number }
 
     /**
      * 引擎启动入口
      */
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
-        //
+        // (Ammo as any)().then(() => { // TODO WebAssembly load
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas();
         WebGLKit.init(canvas, requiredOptions);
@@ -27,6 +25,7 @@ namespace egret3d {
         paper.Application.init(options);
         //
         paper.Application.sceneManager.createScene("default");
+        // });
     }
 
     function getMainCanvas() {

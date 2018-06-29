@@ -7,26 +7,22 @@ namespace paper {
          * @internal
          */
         public static _injectGameObject: GameObject;
-
         /**
          * 组件挂载的 GameObject
          */
         public readonly gameObject: GameObject = BaseComponent._injectGameObject;
 
-        @paper.serializedField
-        public uuid:string | null = null;
-
-        @paper.serializedField
+        @serializedField
         protected _enabled: boolean = true;
-
         /**
-         * 添加组件后，内部初始化，在反序列化后被调用。
+         * 添加组件后，组件内部初始化。
+         * - 重载此方法时，必须调用 `super.initialize()`。
          */
         public initialize() {
         }
-
         /**
-         * 移除组件后调用。
+         * 移除组件后，组件内部卸载。
+         * - 重载此方法时，必须调用 `super.uninitialize()`。
          */
         public uninitialize() {
             (this as any).gameObject = null;
@@ -39,37 +35,41 @@ namespace paper {
             return target;
         }
 
-        public deserialize(element: any): void {
+        public deserialize(element: any) {
             this._enabled = element._enabled === false ? false : true;
-            this.uuid = element.uuid;
-        }
 
+            if (element.uuid) {
+                (this as any).uuid = element.uuid;
+            }
+        }
         /**
-         * 组件自身的激活状态
+         * 组件的激活状态。
          */
         public get enabled() {
             return this._enabled;
         }
         public set enabled(value: boolean) {
-            if (this._enabled !== value) {
-                const prevActiveAndEnabled = this.isActiveAndEnabled;
-                this._enabled = value;
-                const currentActiveAndEnabled = this.isActiveAndEnabled;
+            if (this._enabled === value) {
+                return;
+            }
 
-                if (currentActiveAndEnabled !== prevActiveAndEnabled) {
-                    paper.EventPool.dispatchEvent(
-                        currentActiveAndEnabled ? paper.EventPool.EventType.Enabled : paper.EventPool.EventType.Disabled,
-                        this
-                    );
-                }
+            const prevEnabled = this.isActiveAndEnabled;
+            this._enabled = value;
+            const currentEnabled = this.isActiveAndEnabled;
+
+            if (currentEnabled !== prevEnabled) {
+                EventPool.dispatchEvent(
+                    currentEnabled ? EventPool.EventType.Enabled : EventPool.EventType.Disabled,
+                    this
+                );
             }
         }
-
         /**
-         * 获取组件在场景中的激活状态
+         * 组件在场景的激活状态。
          */
         public get isActiveAndEnabled() {
-            return this._enabled && this.gameObject.activeInHierarchy;
+            // return this._enabled && this.gameObject.activeInHierarchy;
+            return this._enabled && (this.gameObject._activeDirty ? this.gameObject.activeInHierarchy : this.gameObject._activeInHierarchy);
         }
     }
 }

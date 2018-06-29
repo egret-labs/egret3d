@@ -7,7 +7,7 @@ namespace paper.editor {
         /**
          * @inheritDoc
          */
-        public update() {
+        public onUpdate() {
         }
     }
 }

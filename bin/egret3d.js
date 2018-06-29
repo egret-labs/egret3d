@@ -2,18 +2,18 @@
 var __reflect = (this && this.__reflect) || function (p, c, t) {
     p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
 };
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 var __extends = this && this.__extends || function __extends(t, e) { 
  function r() { 
  this.constructor = t;
 }
 for (var i in e) e.hasOwnProperty(i) && (t[i] = e[i]);
 r.prototype = e.prototype, t.prototype = new r();
-};
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -58,6 +58,79 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
     }
     return t;
 };
+var paper;
+(function (paper) {
+    var _tagA = [];
+    var _tagB = [];
+    var _tagC = [];
+    /**
+     * @internal
+     */
+    paper._executeInEditModeComponents = [];
+    /**
+     * 标记序列化分类
+     * 如果没有标记序列化分类，序列化后的对象只会收集在objects中
+     * 如果被标记了某种序列化分类，序列化后的对象还会被单独收集到一个新的数组中，key即为类名
+     * TODO 不能发布给开发者使用。
+     */
+    function serializedType(type) {
+        return function (clazz) {
+            var classPrototype = clazz.prototype;
+            if (_tagA.indexOf(classPrototype) >= 0) {
+                var types = classPrototype["__serializedType" /* SerializedType */];
+                if (types.indexOf(type) < 0) {
+                    types.push(type);
+                }
+            }
+            else {
+                classPrototype["__serializedType" /* SerializedType */] = [type];
+                _tagA.push(classPrototype);
+            }
+        };
+    }
+    paper.serializedType = serializedType;
+    /**
+     * 标记序列化属性
+     * 通过装饰器标记需要序列化的属性
+     */
+    function serializedField(classPrototype, type) {
+        if (_tagB.indexOf(classPrototype) >= 0) {
+            var types = classPrototype["__serialized" /* Serialized */];
+            if (types.indexOf(type) < 0) {
+                types.push(type);
+            }
+        }
+        else {
+            classPrototype["__serialized" /* Serialized */] = [type];
+            _tagB.push(classPrototype);
+        }
+    }
+    paper.serializedField = serializedField;
+    /**
+     * 标记反序列化时需要忽略的属性
+     * 通过装饰器标记反序列化时需要被忽略的属性（但属性中引用的对象依然会被实例化）
+     */
+    function deserializedIgnore(classPrototype, type) {
+        if (_tagC.indexOf(classPrototype) >= 0) {
+            var types = classPrototype["__deserializedIgnore" /* DeserializedIgnore */];
+            if (types.indexOf(type) < 0) {
+                types.push(type);
+            }
+        }
+        else {
+            classPrototype["__deserializedIgnore" /* DeserializedIgnore */] = [type];
+            _tagC.push(classPrototype);
+        }
+    }
+    paper.deserializedIgnore = deserializedIgnore;
+    /**
+     * 标记脚本组件是否在编辑模式也拥有生命周期。
+     */
+    function executeInEditMode(target) {
+        paper._executeInEditModeComponents.push(target);
+    }
+    paper.executeInEditMode = executeInEditMode;
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     var Vector3 = (function () {
@@ -107,6 +180,58 @@ var egret3d;
                 this.z = 0.0;
             }
             return this;
+        };
+        Vector3.prototype.scale = function (scale) {
+            this.x *= scale;
+            this.y *= scale;
+            this.z *= scale;
+            return this;
+        };
+        Vector3.prototype.add = function (value) {
+            this.x += value.x;
+            this.y += value.y;
+            this.z += value.z;
+            return this;
+        };
+        Vector3.prototype.subtract = function (value) {
+            this.x -= value.x;
+            this.y -= value.y;
+            this.z -= value.z;
+            return this;
+        };
+        Vector3.prototype.multiply = function (value) {
+            this.x *= value.x;
+            this.y *= value.y;
+            this.z *= value.z;
+            return this;
+        };
+        Vector3.prototype.cross = function (rhs) {
+            var x = this.x;
+            var y = this.y;
+            var z = this.z;
+            this.x = y * rhs.z - z * rhs.y;
+            this.y = z * rhs.x - x * rhs.z;
+            this.z = x * rhs.y - y * rhs.x;
+            return this;
+        };
+        Vector3.prototype.dot = function (value) {
+            return this.x * value.x + this.y * value.y + this.z * value.z;
+        };
+        Vector3.prototype.equal = function (value, threshold) {
+            if (threshold === void 0) { threshold = 0.00001; }
+            if (Math.abs(this.x - value.x) > threshold) {
+                return false;
+            }
+            if (Math.abs(this.y - value.y) > threshold) {
+                return false;
+            }
+            if (Math.abs(this.z - value.z) > threshold) {
+                return false;
+            }
+            return true;
+        };
+        Vector3.prototype.getDistance = function (value) {
+            return egret3d.helpVector3H.copy(this).subtract(value).length;
         };
         Object.defineProperty(Vector3.prototype, "length", {
             get: function () {
@@ -224,6 +349,12 @@ var egret3d;
         };
         Vector3.ZERO = new Vector3(0.0, 0.0, 0.0);
         Vector3.ONE = new Vector3(1.0, 1.0, 1.0);
+        Vector3.UP = new Vector3(0.0, 1.0, 0.0);
+        Vector3.DOWN = new Vector3(0.0, -1.0, 0.0);
+        Vector3.LEFT = new Vector3(-1.0, 0.0, 0.0);
+        Vector3.RIGHT = new Vector3(1.0, 0.0, 0.0);
+        Vector3.FORWARD = new Vector3(0.0, 0.0, 1.0);
+        Vector3.BACK = new Vector3(0.0, 0.0, -1.0);
         return Vector3;
     }());
     egret3d.Vector3 = Vector3;
@@ -239,147 +370,422 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
-    paper.serializeClassMap = {
-        0: "paper.Scene",
-        1: "paper.GameObject",
-        2: "egret3d.AniPlayer",
-        3: "egret3d.BoxCollider",
-        4: "egret3d.Camera",
-        5: "egret3d.MeshFilter",
-        6: "egret3d.MeshRenderer",
-        7: "egret3d.particle.ParticleComponent",
-        8: "egret3d.particle.ParticleRenderer",
-        9: "egret3d.SkinnedMeshRenderer",
-        10: "egret3d.SphereCollider",
-        11: "egret3d.Transform",
-        12: "egret3d.Shader",
-        13: "egret3d.Mesh",
-        14: "egret3d.Material",
-        15: "egret3d.AnimationClip",
-        16: "egret3d.TPoseInfo",
-        17: "egret3d.PoseBoneMatrix",
-        18: "egret3d.Texture",
-        19: "egret3d.Texture",
-        20: "egret3d.Vector2",
-        21: "egret3d.Vector3",
-        22: "egret3d.Vector4",
-        23: "egret3d.Quaternion",
-        24: "egret3d.Color",
-        25: "egret3d.Gradient",
-        26: "egret3d.Curve",
-        27: "egret3d.Keyframe",
-        28: "egret3d.Rect",
-        29: "egret3d.MainModule",
-        30: "egret3d.EmissionModule",
-        31: "egret3d.ShapeModule",
-        32: "egret3d.VelocityOverLifetimeModule",
-        33: "egret3d.RotationOverLifetimeModule",
-        34: "egret3d.ColorOverLifetimeModule",
-        35: "egret3d.SizeOverLifetimeModule",
-        36: "egret3d.MinMaxCurve",
-        37: "egret3d.MinMaxGradient",
-        38: "egret3d.alphaKey",
-        39: "egret3d.colorKey",
-        40: "egret3d.Animation",
-        41: "egret3d.GLTFAsset",
+    var _hashCount = 1;
+    /**
+     * 生成 uuid 的方式。
+     */
+    paper.createUUID = function () {
+        return (_hashCount++).toString();
     };
-    function findClassCode(name) {
-        for (var key in paper.serializeClassMap) {
-            if (paper.serializeClassMap[key] === name) {
-                return key;
-            }
-        }
-        return "";
-    }
-    paper.findClassCode = findClassCode;
-    function findClassCodeFrom(target) {
-        var proto = target.__proto__;
-        var classTypeOrigin = proto.__class__;
-        var classType = paper.findClassCode(classTypeOrigin);
-        return classType;
-    }
-    paper.findClassCodeFrom = findClassCodeFrom;
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var _tagA = [];
-    var _tagB = [];
-    var _tagC = [];
     /**
-     * 标记序列化分类
-     * 如果没有标记序列化分类，序列化后的对象只会收集在objects中
-     * 如果被标记了某种序列化分类，序列化后的对象还会被单独收集到一个新的数组中，key即为类名
-     * TODO 不能发布给开发者使用。
+     * 可序列化对象。
      */
-    function serializedType(type) {
-        return function (clazz) {
-            var classPrototype = clazz.prototype;
-            if (_tagA.indexOf(classPrototype) >= 0) {
-                var types = classPrototype["__serializedType" /* SerializedType */];
-                if (types.indexOf(type) < 0) {
-                    types.push(type);
-                }
-            }
-            else {
-                classPrototype["__serializedType" /* SerializedType */] = [type];
-                _tagA.push(classPrototype);
-            }
+    var SerializableObject = (function () {
+        function SerializableObject() {
+            this.uuid = paper.createUUID();
+        }
+        SerializableObject.prototype.serialize = function () {
+            console.warn("Unimplemented serialize method.");
         };
-    }
-    paper.serializedType = serializedType;
-    /**
-     * 标记序列化属性
-     * 通过装饰器标记需要序列化的属性
-     */
-    function serializedField(classPrototype, type) {
-        if (_tagB.indexOf(classPrototype) >= 0) {
-            var types = classPrototype["__serialized" /* Serialized */];
-            if (types.indexOf(type) < 0) {
-                types.push(type);
-            }
-        }
-        else {
-            classPrototype["__serialized" /* Serialized */] = [type];
-            _tagB.push(classPrototype);
-        }
-    }
-    paper.serializedField = serializedField;
-    /**
-     * 标记反序列化时需要忽略的属性
-     * 通过装饰器标记反序列化时需要被忽略的属性（但属性中引用的对象依然会被实例化）
-     */
-    function deserializedIgnore(classPrototype, type) {
-        if (_tagC.indexOf(classPrototype) >= 0) {
-            var types = classPrototype["__deserializedIgnore" /* DeserializedIgnore */];
-            if (types.indexOf(type) < 0) {
-                types.push(type);
-            }
-        }
-        else {
-            classPrototype["__deserializedIgnore" /* DeserializedIgnore */] = [type];
-            _tagC.push(classPrototype);
-        }
-    }
-    paper.deserializedIgnore = deserializedIgnore;
+        SerializableObject.prototype.deserialize = function (element) {
+            console.warn("Unimplemented deserialize method.");
+        };
+        __decorate([
+            paper.serializedField
+        ], SerializableObject.prototype, "uuid", void 0);
+        return SerializableObject;
+    }());
+    paper.SerializableObject = SerializableObject;
+    __reflect(SerializableObject.prototype, "paper.SerializableObject", ["paper.IUUID", "paper.ISerializable"]);
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
-    var helpVec3_1 = new egret3d.Vector3();
+    var Vector2 = (function () {
+        function Vector2(x, y) {
+            if (x === void 0) { x = 0.0; }
+            if (y === void 0) { y = 0.0; }
+            this.x = x;
+            this.y = y;
+        }
+        Vector2.prototype.serialize = function () {
+            return [this.x, this.y];
+        };
+        Vector2.prototype.deserialize = function (element) {
+            this.x = element[0];
+            this.y = element[1];
+        };
+        Vector2.prototype.copy = function (value) {
+            this.x = value.x;
+            this.y = value.y;
+            return this;
+        };
+        Vector2.prototype.clone = function () {
+            var value = new Vector2();
+            value.copy(this);
+            return value;
+        };
+        Vector2.prototype.set = function (x, y) {
+            this.x = x;
+            this.y = y;
+            return this;
+        };
+        Vector2.prototype.normalize = function () {
+            var l = this.length;
+            if (l > Number.MIN_VALUE) {
+                this.x /= l;
+                this.y /= l;
+            }
+            else {
+                this.x = 1.0;
+                this.y = 0.0;
+            }
+            return this;
+        };
+        Object.defineProperty(Vector2.prototype, "length", {
+            get: function () {
+                return Math.sqrt(this.sqrtLength);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Vector2.prototype, "sqrtLength", {
+            get: function () {
+                return this.x * this.x + this.y * this.y;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Vector2.set = function (x, y, out) {
+            out.x = x;
+            out.y = y;
+            return out;
+        };
+        Vector2.normalize = function (v) {
+            var num = this.getLength(v);
+            if (num > Number.MIN_VALUE) {
+                v.x = v.x / num;
+                v.y = v.y / num;
+            }
+            else {
+                v.x = 1.0;
+                v.y = 0.0;
+            }
+            return v;
+        };
+        Vector2.add = function (v1, v2, out) {
+            out.x = v1.x + v2.x;
+            out.y = v1.y + v2.y;
+            return out;
+        };
+        Vector2.subtract = function (v1, v2, out) {
+            out.x = v1.x - v2.x;
+            out.y = v1.y - v2.y;
+            return out;
+        };
+        Vector2.multiply = function (v1, v2, out) {
+            out.x = v1.x * v2.x;
+            out.y = v1.y * v2.y;
+            return out;
+        };
+        Vector2.dot = function (v1, v2) {
+            return v1.x * v2.x + v1.y * v2.y;
+        };
+        Vector2.scale = function (v, scaler) {
+            v.x = v.x * scaler;
+            v.y = v.y * scaler;
+            return v;
+        };
+        Vector2.getLength = function (v) {
+            return Math.sqrt(v.x * v.x + v.y * v.y);
+        };
+        Vector2.getDistance = function (v1, v2) {
+            this.subtract(v1, v2, _helpVector2A);
+            return this.getLength(_helpVector2A);
+        };
+        Vector2.copy = function (v, out) {
+            out.x = v.x;
+            out.y = v.y;
+            return out;
+        };
+        Vector2.equal = function (v1, v2, threshold) {
+            if (threshold === void 0) { threshold = 0.00001; }
+            if (Math.abs(v1.x - v2.x) > threshold) {
+                return false;
+            }
+            if (Math.abs(v1.y - v2.y) > threshold) {
+                return false;
+            }
+            return true;
+        };
+        Vector2.lerp = function (v1, v2, value, out) {
+            out.x = v1.x * (1 - value) + v2.x * value;
+            out.y = v1.y * (1 - value) + v2.y * value;
+            return out;
+        };
+        Vector2.ZERO = new Vector2(0.0, 0.0);
+        Vector2.ONE = new Vector2(1.0, 1.0);
+        return Vector2;
+    }());
+    egret3d.Vector2 = Vector2;
+    __reflect(Vector2.prototype, "egret3d.Vector2", ["paper.ISerializable"]);
+    var _helpVector2A = new Vector2();
+})(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     * 组件基类
+     */
+    var BaseComponent = (function (_super) {
+        __extends(BaseComponent, _super);
+        function BaseComponent() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             * 组件挂载的 GameObject
+             */
+            _this.gameObject = BaseComponent._injectGameObject;
+            _this._enabled = true;
+            return _this;
+        }
+        /**
+         * 添加组件后，组件内部初始化。
+         * - 重载此方法时，必须调用 `super.initialize()`。
+         */
+        BaseComponent.prototype.initialize = function () {
+        };
+        /**
+         * 移除组件后，组件内部卸载。
+         * - 重载此方法时，必须调用 `super.uninitialize()`。
+         */
+        BaseComponent.prototype.uninitialize = function () {
+            this.gameObject = null;
+        };
+        BaseComponent.prototype.serialize = function () {
+            var target = paper.serializeRC(this);
+            target._enabled = this._enabled;
+            return target;
+        };
+        BaseComponent.prototype.deserialize = function (element) {
+            this._enabled = element._enabled === false ? false : true;
+            if (element.uuid) {
+                this.uuid = element.uuid;
+            }
+        };
+        Object.defineProperty(BaseComponent.prototype, "enabled", {
+            /**
+             * 组件的激活状态。
+             */
+            get: function () {
+                return this._enabled;
+            },
+            set: function (value) {
+                if (this._enabled === value) {
+                    return;
+                }
+                var prevEnabled = this.isActiveAndEnabled;
+                this._enabled = value;
+                var currentEnabled = this.isActiveAndEnabled;
+                if (currentEnabled !== prevEnabled) {
+                    paper.EventPool.dispatchEvent(currentEnabled ? "__enabled__" /* Enabled */ : "__disabled__" /* Disabled */, this);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(BaseComponent.prototype, "isActiveAndEnabled", {
+            /**
+             * 组件在场景的激活状态。
+             */
+            get: function () {
+                // return this._enabled && this.gameObject.activeInHierarchy;
+                return this._enabled && (this.gameObject._activeDirty ? this.gameObject.activeInHierarchy : this.gameObject._activeInHierarchy);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        __decorate([
+            paper.serializedField
+        ], BaseComponent.prototype, "_enabled", void 0);
+        return BaseComponent;
+    }(paper.SerializableObject));
+    paper.BaseComponent = BaseComponent;
+    __reflect(BaseComponent.prototype, "paper.BaseComponent");
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    var _helpVectorA = new egret3d.Vector3();
     var Matrix = (function () {
-        function Matrix(datas) {
-            if (datas === void 0) { datas = null; }
-            if (datas) {
-                this.rawData = datas;
+        function Matrix(rawData) {
+            if (rawData === void 0) { rawData = null; }
+            if (rawData) {
+                this.rawData = rawData;
             }
             else {
                 this.rawData = new Float32Array([
-                    1, 0, 0, 0,
-                    0, 1, 0, 0,
-                    0, 0, 1, 0,
-                    0, 0, 0, 1
+                    1.0, 0.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0
                 ]);
             }
         }
+        Matrix.prototype.copy = function (value) {
+            this.rawData[0] = value.rawData[0];
+            this.rawData[1] = value.rawData[1];
+            this.rawData[2] = value.rawData[2];
+            this.rawData[3] = value.rawData[3];
+            this.rawData[4] = value.rawData[4];
+            this.rawData[5] = value.rawData[5];
+            this.rawData[6] = value.rawData[6];
+            this.rawData[7] = value.rawData[7];
+            this.rawData[8] = value.rawData[8];
+            this.rawData[9] = value.rawData[9];
+            this.rawData[10] = value.rawData[10];
+            this.rawData[11] = value.rawData[11];
+            this.rawData[12] = value.rawData[12];
+            this.rawData[13] = value.rawData[13];
+            this.rawData[14] = value.rawData[14];
+            this.rawData[15] = value.rawData[15];
+            return this;
+        };
+        Matrix.prototype.clone = function () {
+            var value = new Matrix();
+            value.copy(this);
+            return value;
+        };
+        Matrix.prototype.set = function (n11, n21, n31, n41, n12, n22, n32, n42, n13, n23, n33, n43, n14, n24, n34, n44) {
+            this.rawData[0] = n11;
+            this.rawData[1] = n12;
+            this.rawData[2] = n13;
+            this.rawData[3] = n14;
+            this.rawData[4] = n21;
+            this.rawData[5] = n22;
+            this.rawData[6] = n23;
+            this.rawData[7] = n24;
+            this.rawData[8] = n31;
+            this.rawData[9] = n32;
+            this.rawData[10] = n33;
+            this.rawData[11] = n34;
+            this.rawData[12] = n41;
+            this.rawData[13] = n42;
+            this.rawData[14] = n43;
+            this.rawData[15] = n44;
+            return this;
+        };
+        Matrix.prototype.set3x3 = function (n11, n21, n31, n12, n22, n32, n13, n23, n33) {
+            this.rawData[0] = n11;
+            this.rawData[1] = n12;
+            this.rawData[2] = n13;
+            this.rawData[4] = n21;
+            this.rawData[5] = n22;
+            this.rawData[6] = n23;
+            this.rawData[8] = n31;
+            this.rawData[9] = n32;
+            this.rawData[10] = n33;
+            return this;
+        };
+        Matrix.prototype.setTranslation = function (translation) {
+            this.rawData[12] = translation.x;
+            this.rawData[13] = translation.y;
+            this.rawData[14] = translation.z;
+            this.rawData[15] = 1.0;
+            return this;
+        };
+        Matrix.prototype.identity = function () {
+            this.rawData[0] = 1.0;
+            this.rawData[1] = 0.0;
+            this.rawData[2] = 0.0;
+            this.rawData[3] = 0.0;
+            this.rawData[4] = 0.0;
+            this.rawData[5] = 1.0;
+            this.rawData[6] = 0.0;
+            this.rawData[7] = 0.0;
+            this.rawData[8] = 0.0;
+            this.rawData[9] = 0.0;
+            this.rawData[10] = 1.0;
+            this.rawData[11] = 0.0;
+            this.rawData[12] = 0.0;
+            this.rawData[13] = 0.0;
+            this.rawData[14] = 0.0;
+            this.rawData[15] = 1.0;
+            return this;
+        };
+        Matrix.prototype.inverse = function () {
+            var l1 = this.rawData[0];
+            var l2 = this.rawData[1];
+            var l3 = this.rawData[2];
+            var l4 = this.rawData[3];
+            var l5 = this.rawData[4];
+            var l6 = this.rawData[5];
+            var l7 = this.rawData[6];
+            var l8 = this.rawData[7];
+            var l9 = this.rawData[8];
+            var l10 = this.rawData[9];
+            var l11 = this.rawData[10];
+            var l12 = this.rawData[11];
+            var l13 = this.rawData[12];
+            var l14 = this.rawData[13];
+            var l15 = this.rawData[14];
+            var l16 = this.rawData[15];
+            var l17 = (l11 * l16) - (l12 * l15);
+            var l18 = (l10 * l16) - (l12 * l14);
+            var l19 = (l10 * l15) - (l11 * l14);
+            var l20 = (l9 * l16) - (l12 * l13);
+            var l21 = (l9 * l15) - (l11 * l13);
+            var l22 = (l9 * l14) - (l10 * l13);
+            var l23 = ((l6 * l17) - (l7 * l18)) + (l8 * l19);
+            var l24 = -(((l5 * l17) - (l7 * l20)) + (l8 * l21));
+            var l25 = ((l5 * l18) - (l6 * l20)) + (l8 * l22);
+            var l26 = -(((l5 * l19) - (l6 * l21)) + (l7 * l22));
+            var l27 = 1.0 / ((((l1 * l23) + (l2 * l24)) + (l3 * l25)) + (l4 * l26));
+            var l28 = (l7 * l16) - (l8 * l15);
+            var l29 = (l6 * l16) - (l8 * l14);
+            var l30 = (l6 * l15) - (l7 * l14);
+            var l31 = (l5 * l16) - (l8 * l13);
+            var l32 = (l5 * l15) - (l7 * l13);
+            var l33 = (l5 * l14) - (l6 * l13);
+            var l34 = (l7 * l12) - (l8 * l11);
+            var l35 = (l6 * l12) - (l8 * l10);
+            var l36 = (l6 * l11) - (l7 * l10);
+            var l37 = (l5 * l12) - (l8 * l9);
+            var l38 = (l5 * l11) - (l7 * l9);
+            var l39 = (l5 * l10) - (l6 * l9);
+            this.rawData[0] = l23 * l27;
+            this.rawData[4] = l24 * l27;
+            this.rawData[8] = l25 * l27;
+            this.rawData[12] = l26 * l27;
+            this.rawData[1] = -(((l2 * l17) - (l3 * l18)) + (l4 * l19)) * l27;
+            this.rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
+            this.rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
+            this.rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
+            this.rawData[2] = (((l2 * l28) - (l3 * l29)) + (l4 * l30)) * l27;
+            this.rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
+            this.rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
+            this.rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
+            this.rawData[3] = -(((l2 * l34) - (l3 * l35)) + (l4 * l36)) * l27;
+            this.rawData[7] = (((l1 * l34) - (l3 * l37)) + (l4 * l38)) * l27;
+            this.rawData[11] = -(((l1 * l35) - (l2 * l37)) + (l4 * l39)) * l27;
+            this.rawData[15] = (((l1 * l36) - (l2 * l38)) + (l3 * l39)) * l27;
+            return this;
+        };
+        Matrix.prototype.transformVector3 = function (value) {
+            var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]) + this.rawData[12];
+            var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]) + this.rawData[13];
+            var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]) + this.rawData[14];
+            var w = (value.x * this.rawData[3]) + (value.y * this.rawData[7]) + (value.z * this.rawData[11]) + this.rawData[15];
+            value.x = x / w;
+            value.y = y / w;
+            value.z = z / w;
+            return value;
+        };
+        Matrix.prototype.transformNormal = function (value) {
+            var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]);
+            var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]);
+            var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]);
+            value.x = x;
+            value.y = y;
+            value.z = z;
+            return value;
+        };
         Matrix.set = function (n11, n21, n31, n41, n12, n22, n32, n42, n13, n23, n33, n43, n14, n24, n34, n44, matrix) {
             matrix.rawData[0] = n11;
             matrix.rawData[1] = n12;
@@ -791,7 +1197,7 @@ var egret3d;
         };
         Matrix.toEulerAngles = function (matrix, out) {
             var x, y, z, sx, sy, sz, m, halfPi;
-            var scale = helpVec3_1;
+            var scale = _helpVectorA;
             Matrix.getScale(matrix, scale);
             sx = scale.x;
             sy = scale.y;
@@ -866,235 +1272,27 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
-    var _hashCount = 1;
     /**
-     * 可序列化对象
+     * renderer component interface
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    var SerializableObject = (function () {
-        function SerializableObject() {
-            /**
-             * @inheritDoc
-             */
-            this.hashCode = _hashCount++;
-        }
-        /**
-         * @inheritDoc
-         */
-        SerializableObject.prototype.serialize = function () {
-            console.warn("Unimplemented serialize method.");
-        };
-        /**
-         * @inheritDoc
-         */
-        SerializableObject.prototype.deserialize = function (element) {
-            console.warn("Unimplemented deserialize method.");
-        };
-        return SerializableObject;
-    }());
-    paper.SerializableObject = SerializableObject;
-    __reflect(SerializableObject.prototype, "paper.SerializableObject", ["paper.IHashCode", "paper.ISerializable"]);
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
     /**
-     * 组件基类
+     * 渲染器组件接口
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
      */
-    var BaseComponent = (function (_super) {
-        __extends(BaseComponent, _super);
-        function BaseComponent() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * 组件挂载的 GameObject
-             */
-            _this.gameObject = BaseComponent._injectGameObject;
-            _this.uuid = null;
-            _this._enabled = true;
-            return _this;
+    var BaseRenderer = (function (_super) {
+        __extends(BaseRenderer, _super);
+        function BaseRenderer() {
+            return _super !== null && _super.apply(this, arguments) || this;
         }
-        /**
-         * 添加组件后，内部初始化，在反序列化后被调用。
-         */
-        BaseComponent.prototype.initialize = function () {
-        };
-        /**
-         * 移除组件后调用。
-         */
-        BaseComponent.prototype.uninitialize = function () {
-            this.gameObject = null;
-        };
-        BaseComponent.prototype.serialize = function () {
-            var target = paper.serializeRC(this);
-            target._enabled = this._enabled;
-            return target;
-        };
-        BaseComponent.prototype.deserialize = function (element) {
-            this._enabled = element._enabled === false ? false : true;
-            this.uuid = element.uuid;
-        };
-        Object.defineProperty(BaseComponent.prototype, "enabled", {
-            /**
-             * 组件自身的激活状态
-             */
-            get: function () {
-                return this._enabled;
-            },
-            set: function (value) {
-                if (this._enabled !== value) {
-                    var prevActiveAndEnabled = this.isActiveAndEnabled;
-                    this._enabled = value;
-                    var currentActiveAndEnabled = this.isActiveAndEnabled;
-                    if (currentActiveAndEnabled !== prevActiveAndEnabled) {
-                        paper.EventPool.dispatchEvent(currentActiveAndEnabled ? "__enabled__" /* Enabled */ : "__disabled__" /* Disabled */, this);
-                    }
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(BaseComponent.prototype, "isActiveAndEnabled", {
-            /**
-             * 获取组件在场景中的激活状态
-             */
-            get: function () {
-                return this._enabled && this.gameObject.activeInHierarchy;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        __decorate([
-            paper.serializedField
-        ], BaseComponent.prototype, "uuid", void 0);
-        __decorate([
-            paper.serializedField
-        ], BaseComponent.prototype, "_enabled", void 0);
-        return BaseComponent;
-    }(paper.SerializableObject));
-    paper.BaseComponent = BaseComponent;
-    __reflect(BaseComponent.prototype, "paper.BaseComponent");
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     * 基础系统。
-     */
-    var BaseSystem = (function () {
-        /**
-         * @internal
-         */
-        function BaseSystem() {
-            /**
-             * 是否更新该系统。
-             */
-            this.enabled = true;
-            /**
-             * @internal
-             */
-            this._level = 0;
-            /**
-             * 系统对于每个实体关心的组件总数。
-             */
-            this._interestComponentCount = 0;
-            /**
-             * 关心列表。
-             */
-            this._interests = [];
-            this._components = [];
-            this._gameObjectOffsets = {};
-            if (!BaseSystem._createEnabled) {
-                throw new Error("Create an instance of a system is not allowed.");
-            }
-            BaseSystem._createEnabled = false;
-        }
-        BaseSystem.prototype._onAddComponent = function (component) {
-            var components = this._components;
-            var backupLength = components.length;
-            var gameObject = component.gameObject;
-            for (var _i = 0, _a = this._interests; _i < _a.length; _i++) {
-                var config = _a[_i];
-                var insterestComponent = gameObject.getComponent(config.componentClass); // TODO 更快的查找方式
-                if (!insterestComponent || components.indexOf(insterestComponent) >= 0) {
-                    components.length = backupLength;
-                    return false;
-                }
-                components.push(insterestComponent);
-            }
-            this._gameObjectOffsets[gameObject.hashCode] = backupLength;
-            return true;
-        };
-        BaseSystem.prototype._onRemoveComponent = function (component) {
-            var gameObject = component.gameObject;
-            if (!(gameObject.hashCode in this._gameObjectOffsets)) {
-                return false;
-            }
-            var interestCount = this._interestComponentCount;
-            var components = this._components;
-            var backupLength = components.length;
-            var gameObjectOffset = this._gameObjectOffsets[gameObject.hashCode];
-            if (backupLength > interestCount) {
-                var lastGameObject = null;
-                for (var i = 0; i < interestCount; ++i) {
-                    if (!lastGameObject) {
-                        lastGameObject = components[backupLength - interestCount].gameObject;
-                    }
-                    components[gameObjectOffset + i] = components[backupLength - interestCount + i];
-                }
-                if (lastGameObject) {
-                    this._gameObjectOffsets[lastGameObject.hashCode] = gameObjectOffset;
-                }
-            }
-            components.length -= interestCount;
-            delete this._gameObjectOffsets[gameObject.hashCode];
-            return true;
-        };
-        /**
-         * 系统内部根据关心列表的顺序快速查找指定组件。
-         */
-        BaseSystem.prototype._getComponent = function (gameObject, componentOffset) {
-            if (gameObject.hashCode in this._gameObjectOffsets) {
-                return this._components[this._gameObjectOffsets[gameObject.hashCode] + componentOffset];
-            }
-            return null;
-        };
-        BaseSystem.prototype.initialize = function () {
-            var _this = this;
-            for (var _i = 0, _a = this._interests; _i < _a.length; _i++) {
-                var config = _a[_i];
-                if (config.listeners) {
-                    for (var _b = 0, _c = config.listeners; _b < _c.length; _b++) {
-                        var listenerConfig = _c[_b];
-                        paper.EventPool.addEventListener(listenerConfig.type, config.componentClass, listenerConfig.listener);
-                    }
-                }
-                this._interestComponentCount++;
-                paper.EventPool.addEventListener("__enabled__" /* Enabled */, config.componentClass, function (component) { _this._onAddComponent(component); });
-                paper.EventPool.addEventListener("__disabled__" /* Disabled */, config.componentClass, function (component) { _this._onRemoveComponent(component); });
-            }
-        };
-        BaseSystem.prototype.uninitialize = function () {
-            this._components.length = 0;
-            for (var k in this._gameObjectOffsets) {
-                delete this._gameObjectOffsets[k];
-            }
-        };
-        Object.defineProperty(BaseSystem.prototype, "components", {
-            /**
-             * 该系统所关心的所有组件。
-             */
-            get: function () {
-                return this._components;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * 防止生成未经管理的系统实例。
-         * @internal
-         */
-        BaseSystem._createEnabled = false;
-        return BaseSystem;
-    }());
-    paper.BaseSystem = BaseSystem;
-    __reflect(BaseSystem.prototype, "paper.BaseSystem");
+        return BaseRenderer;
+    }(paper.BaseComponent));
+    paper.BaseRenderer = BaseRenderer;
+    __reflect(BaseRenderer.prototype, "paper.BaseRenderer");
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -1176,785 +1374,6 @@ var paper;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
-    egret.RuntimeType = {};
-    /**
-     * 引擎启动入口
-     */
-    function runEgret(options) {
-        if (options === void 0) { options = { antialias: false }; }
-        //
-        var requiredOptions = getOptions(options);
-        var canvas = getMainCanvas();
-        egret3d.WebGLKit.init(canvas, requiredOptions);
-        egret3d.InputManager.init(canvas);
-        egret3d.DefaultMeshes.init();
-        egret3d.DefaultTextures.init();
-        egret3d.DefaultShaders.init();
-        egret3d.stage.init(canvas, requiredOptions);
-        paper.Application.init(options);
-        //
-        paper.Application.sceneManager.createScene("default");
-    }
-    egret3d.runEgret = runEgret;
-    function getMainCanvas() {
-        if (window.canvas) {
-            return window.canvas;
-        }
-        else {
-            var div = document.getElementsByClassName("egret-player")[0];
-            var canvas = document.createElement("canvas");
-            div.appendChild(canvas);
-            return canvas;
-        }
-    }
-    function getOptions(options) {
-        if (window.canvas) {
-            return {
-                antialias: options.antialias,
-                antialiasSamples: 4,
-                contentWidth: 640,
-                contentHeight: 1136
-            };
-        }
-        else {
-            var div = document.getElementsByClassName("egret-player")[0];
-            return {
-                antialias: options.antialias,
-                antialiasSamples: 4,
-                contentWidth: parseInt(div.getAttribute("data-content-width")),
-                contentHeight: parseInt(div.getAttribute("data-content-height"))
-            };
-            ;
-        }
-    }
-})(egret3d || (egret3d = {}));
-window.paper = paper;
-window.egret3d = egret3d;
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        /**属性信息 */
-        var PropertyInfo = (function () {
-            function PropertyInfo(name, editType, option) {
-                this.name = name;
-                this.editType = editType;
-                this.option = option;
-            }
-            return PropertyInfo;
-        }());
-        editor.PropertyInfo = PropertyInfo;
-        __reflect(PropertyInfo.prototype, "paper.editor.PropertyInfo");
-        /**编辑类型 */
-        var EditType;
-        (function (EditType) {
-            /**数字输入 */
-            EditType[EditType["NUMBER"] = 0] = "NUMBER";
-            /**文本输入 */
-            EditType[EditType["TEXT"] = 1] = "TEXT";
-            /**选中框 */
-            EditType[EditType["CHECKBOX"] = 2] = "CHECKBOX";
-            /**vertor2 */
-            EditType[EditType["VECTOR2"] = 3] = "VECTOR2";
-            /**vertor3 */
-            EditType[EditType["VECTOR3"] = 4] = "VECTOR3";
-            /**vertor4 */
-            EditType[EditType["VECTOR4"] = 5] = "VECTOR4";
-            /**Quaternion */
-            EditType[EditType["QUATERNION"] = 6] = "QUATERNION";
-            /**颜色选择器 */
-            EditType[EditType["COLOR"] = 7] = "COLOR";
-            /**下拉 */
-            EditType[EditType["LIST"] = 8] = "LIST";
-            /**Rect */
-            EditType[EditType["RECT"] = 9] = "RECT";
-            /**材质 */
-            EditType[EditType["MATERIAL"] = 10] = "MATERIAL";
-            /**材质数组 */
-            EditType[EditType["MATERIAL_ARRAY"] = 11] = "MATERIAL_ARRAY";
-            /**游戏对象 */
-            EditType[EditType["GAMEOBJECT"] = 12] = "GAMEOBJECT";
-            /**变换 */
-            EditType[EditType["TRANSFROM"] = 13] = "TRANSFROM";
-            /**声音 */
-            EditType[EditType["SOUND"] = 14] = "SOUND";
-            /**Mesh */
-            EditType[EditType["MESH"] = 15] = "MESH";
-            /**shader */
-            EditType[EditType["SHADER"] = 16] = "SHADER";
-            /**数组 */
-            EditType[EditType["ARRAY"] = 17] = "ARRAY";
-        })(EditType = editor.EditType || (editor.EditType = {}));
-        var customMap = {};
-        /**
-         * 装饰器:自定义
-         */
-        function custom() {
-            return function (target) {
-                customMap[target.name] = true;
-            };
-        }
-        editor.custom = custom;
-        var propertyMap = {};
-        /**
-         * 装饰器:属性
-         * @param editType 编辑类型
-         */
-        function property(editType, option) {
-            return function (target, property) {
-                if (!propertyMap[target.constructor.name]) {
-                    propertyMap[target.constructor.name] = {
-                        extends: target.__proto__.constructor.name,
-                        propertyList: [],
-                    };
-                }
-                if (editType !== undefined) {
-                    propertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
-                }
-                else {
-                    //TODO:自动分析编辑类型
-                }
-            };
-        }
-        editor.property = property;
-        /**
-         * 检测一个实例对象是否为已被自定义
-         * @param classInstance 实例对象
-         */
-        function isCustom(classInstance) {
-            return customMap[classInstance.constructor.name] ? true : false;
-        }
-        editor.isCustom = isCustom;
-        /**
-         * 获取一个实例对象的编辑信息
-         * @param classInstance 实例对象
-         */
-        function getEditInfo(classInstance) {
-            var className = classInstance.constructor.name;
-            function _getEditInfo(className) {
-                var classInfo = propertyMap[className];
-                if (classInfo) {
-                    var extendsInfo = _getEditInfo(classInfo.extends);
-                    extendsInfo = extendsInfo.concat(classInfo.propertyList);
-                    return extendsInfo;
-                }
-                return [];
-            }
-            return _getEditInfo(className);
-        }
-        editor.getEditInfo = getEditInfo;
-        var extraPropertyMap = {};
-        /**
-         * 装饰器:属性
-         * @param editType 编辑类型
-         */
-        function extraProperty(editType, option) {
-            return function (target, property) {
-                if (!extraPropertyMap[target.constructor.name]) {
-                    extraPropertyMap[target.constructor.name] = {
-                        extends: target.__proto__.constructor.name,
-                        propertyList: [],
-                    };
-                }
-                if (editType !== undefined) {
-                    extraPropertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
-                }
-                else {
-                    //TODO:自动分析编辑类型
-                }
-            };
-        }
-        editor.extraProperty = extraProperty;
-        /**
-         * 额外信息
-         * @param classInstance 实例对象
-         */
-        function getExtraInfo(classInstance) {
-            var className = classInstance.constructor.name;
-            function _getExtraInfo(className) {
-                var classInfo = extraPropertyMap[className];
-                if (classInfo) {
-                    var extendsInfo = _getExtraInfo(classInfo.extends);
-                    extendsInfo = extendsInfo.concat(classInfo.propertyList);
-                    return extendsInfo;
-                }
-                return [];
-            }
-            return _getExtraInfo(className);
-        }
-        editor.getExtraInfo = getExtraInfo;
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
-     */
-    var SystemManager = (function () {
-        function SystemManager() {
-            this._systems = [];
-            this._unregisterSystems = [];
-        }
-        SystemManager.prototype._checkRegistered = function (systemClass) {
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system && system.constructor === systemClass) {
-                    console.warn("The system has been registed.", egret.getQualifiedClassName(systemClass));
-                    return true;
-                }
-            }
-            return false;
-        };
-        /**
-         * 注册一个系统到管理器中
-         * @param systemClass 要注册的系统
-         * @param level 系统的优先级，越小越早执行。
-         */
-        SystemManager.prototype.register = function (systemClass, level) {
-            if (level === void 0) { level = 0; }
-            if (this._checkRegistered(systemClass)) {
-                return;
-            }
-            var isAdded = false;
-            paper.BaseSystem._createEnabled = true;
-            var system = new systemClass();
-            system._level = level;
-            for (var i = 0, l = this._systems.length; i < l; ++i) {
-                var eachSystem = this._systems[i];
-                if (eachSystem._level > system._level) {
-                    isAdded = true;
-                    this._systems.splice(i, 0, system);
-                    break;
-                }
-            }
-            if (!isAdded) {
-                this._systems.push(system);
-            }
-            //
-            system.initialize();
-        };
-        /**
-         * 注册一个系统到管理器中
-         * @param systemClass 要注册的系统
-         * @param target 加入到目标系统的前面。
-         */
-        SystemManager.prototype.registerBefore = function (systemClass, target) {
-            if (this._checkRegistered(systemClass)) {
-                return;
-            }
-            var isAdded = false;
-            paper.BaseSystem._createEnabled = true;
-            var system = new systemClass();
-            for (var i = 0, l = this._systems.length; i < l; ++i) {
-                var eachSystem = this._systems[i];
-                if (eachSystem.constructor === target) {
-                    isAdded = true;
-                    this._systems.splice(i, 0, system);
-                    break;
-                }
-            }
-            if (!isAdded) {
-                this._systems.push(system);
-            }
-            //
-            system.initialize();
-        };
-        /**
-         * 注册一个系统到管理器中
-         * @param systemClass 要注册的系统
-         * @param target 加入到目标系统的后面。
-         */
-        SystemManager.prototype.registerAfter = function (systemClass, target) {
-            if (this._checkRegistered(systemClass)) {
-                return;
-            }
-            var isAdded = false;
-            paper.BaseSystem._createEnabled = true;
-            var system = new systemClass();
-            for (var i = 0, l = this._systems.length; i < l; ++i) {
-                var eachSystem = this._systems[i];
-                if (eachSystem.constructor === target) {
-                    isAdded = true;
-                    this._systems.splice(i + 1, 0, system);
-                    break;
-                }
-            }
-            if (!isAdded) {
-                this._systems.push(system);
-            }
-            //
-            system.initialize();
-        };
-        /**
-         * 注销一个管理器中的系统
-         * @param systemClass 要注销的系统
-         */
-        SystemManager.prototype.unregister = function (systemClass) {
-            var index = 0;
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system && system.constructor === systemClass) {
-                    this._unregisterSystems.push(system);
-                    this._systems[index] = null;
-                    return;
-                }
-                index++;
-            }
-        };
-        /**
-         *
-         */
-        SystemManager.prototype.enableSystem = function (systemClass) {
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system && system.constructor === systemClass) {
-                    system.enabled = true;
-                }
-            }
-        };
-        /**
-         *
-         */
-        SystemManager.prototype.disableSystem = function (systemClass) {
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system && system.constructor === systemClass) {
-                    system.enabled = false;
-                }
-            }
-        };
-        /**
-         *
-         */
-        SystemManager.prototype.getSystemEnabled = function (systemClass) {
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system && system.constructor === systemClass) {
-                    return system.enabled;
-                }
-            }
-            return false;
-        };
-        /**
-         * 获取一个管理器中指定的系统实例。
-         */
-        SystemManager.prototype.getSystem = function (systemClass) {
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system && system.constructor === systemClass) {
-                    return system;
-                }
-            }
-            return null;
-        };
-        /**
-         *
-         */
-        SystemManager.prototype.update = function () {
-            var index = 0;
-            var removeCount = 0;
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system) {
-                    var systemName = system.constructor.name;
-                    egret3d.Profile.startTime(systemName);
-                    if (removeCount > 0) {
-                        this._systems[index - removeCount] = system;
-                        this._systems[index] = null;
-                    }
-                    if (system.enabled) {
-                        system.update();
-                    }
-                    egret3d.Profile.endTime(systemName);
-                }
-                else {
-                    removeCount++;
-                }
-                index++;
-            }
-            if (removeCount > 0) {
-                this._systems.length -= removeCount;
-                if (this._unregisterSystems.length > 0) {
-                    for (var _b = 0, _c = this._unregisterSystems; _b < _c.length; _b++) {
-                        var system = _c[_b];
-                        system.uninitialize();
-                    }
-                    this._unregisterSystems.length = 0;
-                }
-            }
-        };
-        return SystemManager;
-    }());
-    paper.SystemManager = SystemManager;
-    __reflect(SystemManager.prototype, "paper.SystemManager");
-})(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    var Vector2 = (function () {
-        function Vector2(x, y) {
-            if (x === void 0) { x = 0.0; }
-            if (y === void 0) { y = 0.0; }
-            this.x = x;
-            this.y = y;
-        }
-        Vector2.prototype.serialize = function () {
-            return [this.x, this.y];
-        };
-        Vector2.prototype.deserialize = function (element) {
-            this.x = element[0];
-            this.y = element[1];
-        };
-        Vector2.prototype.copy = function (value) {
-            this.x = value.x;
-            this.y = value.y;
-            return this;
-        };
-        Vector2.prototype.clone = function () {
-            var value = new Vector2();
-            value.copy(this);
-            return value;
-        };
-        Vector2.prototype.set = function (x, y) {
-            this.x = x;
-            this.y = y;
-            return this;
-        };
-        Vector2.prototype.normalize = function () {
-            var l = this.length;
-            if (l > Number.MIN_VALUE) {
-                this.x /= l;
-                this.y /= l;
-            }
-            else {
-                this.x = 1.0;
-                this.y = 0.0;
-            }
-            return this;
-        };
-        Object.defineProperty(Vector2.prototype, "length", {
-            get: function () {
-                return Math.sqrt(this.sqrtLength);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Vector2.prototype, "sqrtLength", {
-            get: function () {
-                return this.x * this.x + this.y * this.y;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Vector2.set = function (x, y, out) {
-            out.x = x;
-            out.y = y;
-            return out;
-        };
-        Vector2.normalize = function (v) {
-            var num = this.getLength(v);
-            if (num > Number.MIN_VALUE) {
-                v.x = v.x / num;
-                v.y = v.y / num;
-            }
-            else {
-                v.x = 1.0;
-                v.y = 0.0;
-            }
-            return v;
-        };
-        Vector2.add = function (v1, v2, out) {
-            out.x = v1.x + v2.x;
-            out.y = v1.y + v2.y;
-            return out;
-        };
-        Vector2.subtract = function (v1, v2, out) {
-            out.x = v1.x - v2.x;
-            out.y = v1.y - v2.y;
-            return out;
-        };
-        Vector2.multiply = function (v1, v2, out) {
-            out.x = v1.x * v2.x;
-            out.y = v1.y * v2.y;
-            return out;
-        };
-        Vector2.dot = function (v1, v2) {
-            return v1.x * v2.x + v1.y * v2.y;
-        };
-        Vector2.scale = function (v, scaler) {
-            v.x = v.x * scaler;
-            v.y = v.y * scaler;
-            return v;
-        };
-        Vector2.getLength = function (v) {
-            return Math.sqrt(v.x * v.x + v.y * v.y);
-        };
-        Vector2.getDistance = function (v1, v2) {
-            this.subtract(v1, v2, _helpVector2A);
-            return this.getLength(_helpVector2A);
-        };
-        Vector2.copy = function (v, out) {
-            out.x = v.x;
-            out.y = v.y;
-            return out;
-        };
-        Vector2.equal = function (v1, v2, threshold) {
-            if (threshold === void 0) { threshold = 0.00001; }
-            if (Math.abs(v1.x - v2.x) > threshold) {
-                return false;
-            }
-            if (Math.abs(v1.y - v2.y) > threshold) {
-                return false;
-            }
-            return true;
-        };
-        Vector2.lerp = function (v1, v2, value, out) {
-            out.x = v1.x * (1 - value) + v2.x * value;
-            out.y = v1.y * (1 - value) + v2.y * value;
-            return out;
-        };
-        Vector2.ZERO = new Vector2(0.0, 0.0);
-        Vector2.ONE = new Vector2(1.0, 1.0);
-        return Vector2;
-    }());
-    egret3d.Vector2 = Vector2;
-    __reflect(Vector2.prototype, "egret3d.Vector2", ["paper.ISerializable"]);
-    var _helpVector2A = new Vector2();
-})(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
-    /**
-     * 场景管理器
-     */
-    var SceneManager = (function () {
-        function SceneManager() {
-            this._scenes = [];
-            this._globalObjects = [];
-        }
-        SceneManager.prototype._addScene = function (scene) {
-            if (this._scenes.indexOf(scene) < 0) {
-                this._scenes.unshift(scene);
-            }
-            else {
-                console.warn("Add the scene again.", scene.name);
-            }
-        };
-        /**
-         * 创建一个空场景并激活
-         */
-        SceneManager.prototype.createScene = function (name) {
-            var scene = new paper.Scene();
-            scene.name = name;
-            scene.$rawScene = null; // 保存的话需要设置一个对应的RawScene文件
-            return scene;
-        };
-        /**
-         * load scene 加载场景
-         * @param rawScene url
-         */
-        SceneManager.prototype.loadScene = function (url) {
-            var rawScene = paper.Asset.find(url);
-            if (rawScene) {
-                var scene = rawScene.createInstance();
-                if (scene) {
-                    scene.$rawScene = rawScene;
-                    if (paper.Application.isPlaying) {
-                        egret3d.autoCombine();
-                    }
-                    return scene;
-                }
-            }
-            return null;
-        };
-        /**
-         * 卸载指定场景，如果创建列表为空，则创建一个空场景。
-         */
-        SceneManager.prototype.unloadScene = function (scene) {
-            var index = this._scenes.indexOf(scene);
-            if (index >= 0) {
-                scene.$destroy();
-                this._scenes.splice(index, 1);
-            }
-            if (this._scenes.length === 0) {
-                this.createScene("default");
-            }
-        };
-        /**
-         * 卸载所有场景，并创建一个默认场景。
-         */
-        SceneManager.prototype.unloadAllScene = function () {
-            for (var _i = 0, _a = this._scenes; _i < _a.length; _i++) {
-                var scene = _a[_i];
-                scene.$destroy();
-            }
-            this._scenes.length = 0;
-            if (this._scenes.length === 0) {
-                this.createScene("default");
-            }
-        };
-        /**
-         *
-         */
-        SceneManager.prototype.addGlobalObject = function (gameObject) {
-            if (this._globalObjects.indexOf(gameObject) >= 0) {
-                console.warn("The game object has been added to globals.", gameObject.name, gameObject.hashCode);
-                return;
-            }
-            this._globalObjects.push(gameObject);
-        };
-        /**
-         *
-         */
-        SceneManager.prototype.removeGlobalObject = function (gameObject) {
-            var index = this._globalObjects.indexOf(gameObject);
-            if (index < 0) {
-                console.warn("The game object has been removed from globals.", gameObject.name, gameObject.hashCode);
-                return;
-            }
-            this._globalObjects.splice(index, 1, gameObject);
-        };
-        /**
-         *
-         */
-        SceneManager.prototype.getSceneByName = function (name) {
-            for (var _i = 0, _a = this._scenes; _i < _a.length; _i++) {
-                var scene = _a[_i];
-                if (scene.name === name) {
-                    return scene;
-                }
-            }
-            return null;
-        };
-        /**
-         *
-         */
-        SceneManager.prototype.getSceneByURL = function (url) {
-            for (var _i = 0, _a = this._scenes; _i < _a.length; _i++) {
-                var scene = _a[_i];
-                if (scene.$rawScene && scene.$rawScene.url === url) {
-                    return scene;
-                }
-            }
-            return null;
-        };
-        Object.defineProperty(SceneManager.prototype, "globalObjects", {
-            /**
-             *
-             */
-            get: function () {
-                return this._globalObjects;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(SceneManager.prototype, "activeScene", {
-            /**
-             * 获取当前激活的场景
-             */
-            get: function () {
-                return this._scenes[0];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * @deprecated
-         */
-        SceneManager.prototype.getActiveScene = function () {
-            return this._scenes[0];
-        };
-        return SceneManager;
-    }());
-    paper.SceneManager = SceneManager;
-    __reflect(SceneManager.prototype, "paper.SceneManager");
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        /**
-         * 事件派发器
-         */
-        var EventDispatcher = (function () {
-            function EventDispatcher() {
-                this.__z_e_listeners = {};
-            }
-            EventDispatcher.prototype.addEventListener = function (type, fun, thisObj, level) {
-                if (level === void 0) { level = 0; }
-                var list = this.__z_e_listeners[type];
-                if (list === undefined) {
-                    list = [];
-                    this.__z_e_listeners[type] = list;
-                }
-                var item = {
-                    func: fun,
-                    context: thisObj,
-                    level: level
-                };
-                list.push(item);
-                list.sort(function (a, b) {
-                    return b.level - a.level;
-                });
-            };
-            EventDispatcher.prototype.removeEventListener = function (type, fun, thisObj) {
-                var list = this.__z_e_listeners[type];
-                if (list !== undefined) {
-                    var size = list.length;
-                    for (var i = 0; i < size; i++) {
-                        var obj = list[i];
-                        if (obj.func === fun && obj.context === thisObj) {
-                            list.splice(i, 1);
-                            return;
-                        }
-                    }
-                }
-            };
-            EventDispatcher.prototype.dispatchEvent = function (event) {
-                var list = this.__z_e_listeners[event.type];
-                if (list !== undefined) {
-                    list.forEach(function (ef) {
-                        ef['___dirty___'] = true;
-                    });
-                    var size = list.length;
-                    for (var i = 0; i < size; i++) {
-                        var ef = list[i];
-                        if (ef['___dirty___']) {
-                            var fun = ef.func;
-                            var context = ef.context;
-                            if (context) {
-                                fun.call(context, event);
-                            }
-                            else {
-                                fun(event);
-                            }
-                            ef['___dirty___'] = false;
-                        }
-                        if (size != list.length) {
-                            size = list.length;
-                            i = 0;
-                        }
-                    }
-                }
-            };
-            return EventDispatcher;
-        }());
-        editor.EventDispatcher = EventDispatcher;
-        __reflect(EventDispatcher.prototype, "paper.editor.EventDispatcher", ["paper.editor.IEventDispatcher"]);
-        /**
-         * 事件
-         */
-        var BaseEvent = (function () {
-            function BaseEvent(type, data) {
-                this.type = type;
-                this.data = data;
-            }
-            return BaseEvent;
-        }());
-        editor.BaseEvent = BaseEvent;
-        __reflect(BaseEvent.prototype, "paper.editor.BaseEvent");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
     var helpVec3_1 = new egret3d.Vector3();
     var helpVec3_2 = new egret3d.Vector3();
     var helpVec3_3 = new egret3d.Vector3();
@@ -1999,7 +1418,7 @@ var egret3d;
             return this;
         };
         Quaternion.prototype.normalize = function () {
-            var l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+            var l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
             if (l > Number.MIN_VALUE) {
                 this.x /= l;
                 this.y /= l;
@@ -2013,6 +1432,38 @@ var egret3d;
                 this.w = 1.0;
             }
             return this;
+        };
+        Quaternion.prototype.inverse = function () {
+            var ll = this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z;
+            if (ll > 0.0) {
+                var ill = 1.0 / ll;
+                this.x = -this.x * ill;
+                this.y = -this.y * ill;
+                this.z = -this.z * ill;
+                this.w = this.w * ill;
+            }
+            return this;
+        };
+        Quaternion.prototype.multiply = function (value) {
+            var w1 = this.w, x1 = this.x, y1 = this.y, z1 = this.z;
+            var w2 = value.w, x2 = value.x, y2 = value.y, z2 = value.z;
+            this.x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2;
+            this.y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2;
+            this.z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2;
+            this.w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2;
+            this.normalize();
+            return this;
+        };
+        Quaternion.prototype.transformVector3 = function (value) {
+            var x2 = value.x, y2 = value.y, z2 = value.z;
+            var x1 = this.w * x2 + this.y * z2 - this.z * y2;
+            var y1 = this.w * y2 - this.x * z2 + this.z * x2;
+            var z1 = this.w * z2 + this.x * y2 - this.y * x2;
+            var w1 = -this.x * x2 - this.y * y2 - this.z * z2;
+            value.x = -w1 * this.x + x1 * this.w - y1 * this.z + z1 * this.y;
+            value.y = -w1 * this.y + x1 * this.z + y1 * this.w - z1 * this.x;
+            value.z = -w1 * this.z - x1 * this.y + y1 * this.x + z1 * this.w;
+            return value;
         };
         Quaternion.set = function (x, y, z, w, out) {
             out.x = x;
@@ -2213,16 +1664,16 @@ var egret3d;
             out.w = q.w;
             return out;
         };
-        Quaternion.inverse = function (q) {
+        Quaternion.inverse = function (q, out) {
             var norm = q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z;
             if (norm > 0.0) {
                 var invNorm = 1.0 / norm;
-                q.w = q.w * invNorm;
-                q.x = -q.x * invNorm;
-                q.y = -q.y * invNorm;
-                q.z = -q.z * invNorm;
+                out.w = q.w * invNorm;
+                out.x = -q.x * invNorm;
+                out.y = -q.y * invNorm;
+                out.z = -q.z * invNorm;
             }
-            return q;
+            return out;
         };
         Quaternion.toEulerAngles = function (q, out) {
             var temp = 2.0 * (q.w * q.x - q.y * q.z);
@@ -2339,72 +1790,947 @@ var egret3d;
     egret3d.Quaternion = Quaternion;
     __reflect(Quaternion.prototype, "egret3d.Quaternion", ["paper.ISerializable"]);
 })(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     * 系统基类。
+     */
+    var BaseSystem = (function () {
+        /**
+         * @internal
+         */
+        function BaseSystem() {
+            this._enabled = true;
+            this._bufferedCount = 0;
+            /**
+             * @internal
+             */
+            this._level = 0;
+            /**
+             * 系统对于每个实体关心的组件总数。
+             */
+            this._interestComponentCount = 0;
+            /**
+             * 关心列表。
+             */
+            this._interests = [];
+            /**
+             * 系统根据关心列表收集的组件列表。
+             */
+            this._components = [];
+            /**
+             * 系统收集的实体。
+             */
+            this._gameObjectOffsets = {};
+            /**
+             * 缓冲的实体组件，将在下个逻辑循环中加入到系统。
+             */
+            this._waittingComponents = {};
+            if (!BaseSystem._createEnabled) {
+                throw new Error("Create an instance of a system is not allowed.");
+            }
+            BaseSystem._createEnabled = false;
+        }
+        /**
+         * 当关心的组件被添加时。
+         */
+        BaseSystem.prototype._onAddComponent = function (component) {
+            var gameObject = component.gameObject;
+            var uuid = gameObject.uuid;
+            if (uuid in this._gameObjectOffsets ||
+                uuid in this._waittingComponents) {
+                return;
+            }
+            var components = new Array();
+            for (var _i = 0, _a = this._interests; _i < _a.length; _i++) {
+                var config = _a[_i];
+                var insterestComponent = null;
+                if (Array.isArray(config.componentClass)) {
+                    for (var _b = 0, _c = config.componentClass; _b < _c.length; _b++) {
+                        var componentClass = _c[_b];
+                        insterestComponent = gameObject.getComponent(componentClass, config.isExtends); // TODO 更快的查找方式
+                        if (insterestComponent) {
+                            break;
+                        }
+                    }
+                }
+                else {
+                    insterestComponent = gameObject.getComponent(config.componentClass, config.isExtends); // TODO 更快的查找方式
+                }
+                if (config.isExclude ? insterestComponent : !insterestComponent) {
+                    return;
+                }
+                components.push(insterestComponent); // ts 不能推断。
+            }
+            this._bufferedCount++;
+            this._waittingComponents[uuid] = components;
+        };
+        /**
+         * 当关心的组件被移除时。
+         */
+        BaseSystem.prototype._onRemoveComponent = function (component) {
+            var gameObject = component.gameObject;
+            var uuid = gameObject.uuid;
+            if (uuid in this._gameObjectOffsets) {
+                var interestCount = this._interestComponentCount;
+                var components = this._components;
+                var backupLength = components.length;
+                var gameObjectOffset = this._gameObjectOffsets[gameObject.uuid];
+                if (backupLength > interestCount) {
+                    var lastGameObject = null;
+                    for (var i = 0; i < interestCount; ++i) {
+                        if (!lastGameObject) {
+                            lastGameObject = components[backupLength - interestCount].gameObject;
+                        }
+                        components[gameObjectOffset + i] = components[backupLength - interestCount + i];
+                    }
+                    if (lastGameObject) {
+                        this._gameObjectOffsets[lastGameObject.uuid] = gameObjectOffset;
+                    }
+                }
+                components.length -= interestCount;
+                delete this._gameObjectOffsets[gameObject.uuid];
+                this.onRemoveGameObject && this.onRemoveGameObject(gameObject);
+            }
+            else if (uuid in this._waittingComponents) {
+                this._bufferedCount++;
+                delete this._waittingComponents[uuid];
+            }
+        };
+        /**
+         * 判断实体是否在系统内。
+         */
+        BaseSystem.prototype._hasGameObject = function (gameObject) {
+            return gameObject.uuid in this._gameObjectOffsets;
+        };
+        /**
+         * 根据关心列表的顺序快速查找指定组件。
+         */
+        BaseSystem.prototype._getComponent = function (gameObject, componentOffset) {
+            if (gameObject.uuid in this._gameObjectOffsets) {
+                return this._components[this._gameObjectOffsets[gameObject.uuid] + componentOffset];
+            }
+            return null;
+        };
+        /**
+         * @internal
+         */
+        BaseSystem.prototype._isEditorUpdate = function () {
+            return paper.Application.isEditor && !paper.Application.isPlaying;
+        };
+        /**
+         * 系统内部初始化。
+         * @internal
+         */
+        BaseSystem.prototype.initialize = function () {
+            this._onAddComponent = this._onAddComponent.bind(this);
+            this._onRemoveComponent = this._onRemoveComponent.bind(this);
+            for (var _i = 0, _a = this._interests; _i < _a.length; _i++) {
+                var config = _a[_i];
+                if (config.listeners) {
+                    for (var _b = 0, _c = config.listeners; _b < _c.length; _b++) {
+                        var listenerConfig = _c[_b];
+                        if (Array.isArray(config.componentClass)) {
+                            for (var _d = 0, _e = config.componentClass; _d < _e.length; _d++) {
+                                var componentClass = _e[_d];
+                                paper.EventPool.addEventListener(listenerConfig.type, componentClass, listenerConfig.listener);
+                            }
+                        }
+                        else {
+                            paper.EventPool.addEventListener(listenerConfig.type, config.componentClass, listenerConfig.listener);
+                        }
+                    }
+                }
+                this._interestComponentCount++;
+                if (Array.isArray(config.componentClass)) {
+                    for (var _f = 0, _g = config.componentClass; _f < _g.length; _f++) {
+                        var componentClass = _g[_f];
+                        paper.EventPool.addEventListener("__enabled__" /* Enabled */, componentClass, this._onAddComponent);
+                        paper.EventPool.addEventListener("__disabled__" /* Disabled */, componentClass, this._onRemoveComponent);
+                    }
+                }
+                else {
+                    paper.EventPool.addEventListener("__enabled__" /* Enabled */, config.componentClass, this._onAddComponent);
+                    paper.EventPool.addEventListener("__disabled__" /* Disabled */, config.componentClass, this._onRemoveComponent);
+                }
+            }
+            this.onAwake && this.onAwake();
+            this.onEnable && this.onEnable();
+        };
+        /**
+         * 系统内部卸载。
+         * @internal
+         */
+        BaseSystem.prototype.uninitialize = function () {
+            this.onDestroy && this.onDestroy();
+            for (var _i = 0, _a = this._interests; _i < _a.length; _i++) {
+                var config = _a[_i];
+                if (config.listeners) {
+                    for (var _b = 0, _c = config.listeners; _b < _c.length; _b++) {
+                        var listenerConfig = _c[_b];
+                        if (Array.isArray(config.componentClass)) {
+                            for (var _d = 0, _e = config.componentClass; _d < _e.length; _d++) {
+                                var componentClass = _e[_d];
+                                paper.EventPool.removeEventListener(listenerConfig.type, componentClass, listenerConfig.listener);
+                            }
+                        }
+                        else {
+                            paper.EventPool.removeEventListener(listenerConfig.type, config.componentClass, listenerConfig.listener);
+                        }
+                    }
+                }
+                this._interestComponentCount++;
+                if (Array.isArray(config.componentClass)) {
+                    for (var _f = 0, _g = config.componentClass; _f < _g.length; _f++) {
+                        var componentClass = _g[_f];
+                        paper.EventPool.removeEventListener("__enabled__" /* Enabled */, componentClass, this._onAddComponent);
+                        paper.EventPool.removeEventListener("__disabled__" /* Disabled */, componentClass, this._onRemoveComponent);
+                    }
+                }
+                else {
+                    paper.EventPool.removeEventListener("__enabled__" /* Enabled */, config.componentClass, this._onAddComponent);
+                    paper.EventPool.removeEventListener("__disabled__" /* Disabled */, config.componentClass, this._onRemoveComponent);
+                }
+            }
+            this._components.length = 0;
+            for (var k in this._gameObjectOffsets) {
+                delete this._gameObjectOffsets[k];
+            }
+            for (var k in this._waittingComponents) {
+                delete this._waittingComponents[k];
+            }
+        };
+        /**
+         * 系统内部更新。
+         * @internal
+         */
+        BaseSystem.prototype.update = function () {
+            if (this._bufferedCount > 0) {
+                for (var k in this._waittingComponents) {
+                    var components = this._waittingComponents[k];
+                    var gameObject = components[0].gameObject;
+                    this._gameObjectOffsets[k] = this._components.length;
+                    delete this._waittingComponents[k];
+                    for (var _i = 0, components_1 = components; _i < components_1.length; _i++) {
+                        var component = components_1[_i];
+                        this._components.push(component);
+                    }
+                    this.onAddGameObject && this.onAddGameObject(gameObject);
+                }
+                this._bufferedCount = 0;
+            }
+            if (this._enabled) {
+                this.onUpdate && this.onUpdate();
+            }
+        };
+        Object.defineProperty(BaseSystem.prototype, "enabled", {
+            /**
+             * 该系统是否被激活。
+             * - 当禁用时，仅停止 onUpdate 生命周期。
+             */
+            get: function () {
+                return this._enabled;
+            },
+            set: function (value) {
+                if (this._enabled === value) {
+                    return;
+                }
+                this._enabled = value;
+                if (this._enabled) {
+                    this.onEnable && this.onEnable();
+                }
+                else {
+                    this.onDisable && this.onDisable();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(BaseSystem.prototype, "level", {
+            /**
+             *
+             */
+            get: function () {
+                return this._level;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(BaseSystem.prototype, "components", {
+            /**
+             * 该系统所关心的所有组件。
+             */
+            get: function () {
+                return this._components;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * 防止生成未经管理的系统实例。
+         * @internal
+         */
+        BaseSystem._createEnabled = false;
+        return BaseSystem;
+    }());
+    paper.BaseSystem = BaseSystem;
+    __reflect(BaseSystem.prototype, "paper.BaseSystem");
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
-    var Color = (function () {
-        function Color(r, g, b, a) {
-            if (r === void 0) { r = 1.0; }
-            if (g === void 0) { g = 1.0; }
-            if (b === void 0) { b = 1.0; }
-            if (a === void 0) { a = 1.0; }
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;
+    egret.RuntimeType = {};
+    /**
+     * 引擎启动入口
+     */
+    function runEgret(options) {
+        if (options === void 0) { options = { antialias: false }; }
+        // (Ammo as any)().then(() => { // TODO WebAssembly load
+        var requiredOptions = getOptions(options);
+        var canvas = getMainCanvas();
+        egret3d.WebGLKit.init(canvas, requiredOptions);
+        egret3d.InputManager.init(canvas);
+        egret3d.DefaultMeshes.init();
+        egret3d.DefaultTextures.init();
+        egret3d.DefaultShaders.init();
+        egret3d.stage.init(canvas, requiredOptions);
+        paper.Application.init(options);
+        //
+        paper.Application.sceneManager.createScene("default");
+        // });
+    }
+    egret3d.runEgret = runEgret;
+    function getMainCanvas() {
+        if (window.canvas) {
+            return window.canvas;
         }
-        Color.prototype.serialize = function () {
-            return [this.r, this.g, this.b, this.a];
-        };
-        Color.prototype.deserialize = function (element) {
-            this.r = element[0];
-            this.g = element[1];
-            this.b = element[2];
-            this.a = element[3];
-        };
-        Color.set = function (r, g, b, a, out) {
-            if (r === void 0) { r = 1; }
-            if (g === void 0) { g = 1; }
-            if (b === void 0) { b = 1; }
-            if (a === void 0) { a = 1; }
-            out.r = r;
-            out.g = g;
-            out.b = b;
-            out.a = a;
-            return out;
-        };
-        Color.multiply = function (c1, c2, out) {
-            out.r = c1.r * c2.r;
-            out.g = c1.g * c2.g;
-            out.b = c1.b * c2.b;
-            out.a = c1.a * c2.a;
-            return out;
-        };
-        Color.scale = function (c, scaler) {
-            c.r = c.r * scaler;
-            c.g = c.g * scaler;
-            c.b = c.b * scaler;
-            c.a = c.a * scaler;
-            return c;
-        };
-        Color.copy = function (c, out) {
-            out.r = c.r;
-            out.g = c.g;
-            out.b = c.b;
-            out.a = c.a;
-            return out;
-        };
-        Color.lerp = function (c1, c2, value, out) {
-            out.a = value * (c2.a - c1.a) + c1.a;
-            out.r = value * (c2.r - c1.r) + c1.r;
-            out.g = value * (c2.g - c1.g) + c1.g;
-            out.b = value * (c2.b - c1.b) + c1.b;
-            return out;
-        };
-        return Color;
-    }());
-    egret3d.Color = Color;
-    __reflect(Color.prototype, "egret3d.Color", ["paper.ISerializable"]);
+        else {
+            var div = document.getElementsByClassName("egret-player")[0];
+            var canvas = document.createElement("canvas");
+            div.appendChild(canvas);
+            return canvas;
+        }
+    }
+    function getOptions(options) {
+        if (window.canvas) {
+            return {
+                antialias: options.antialias,
+                antialiasSamples: 4,
+                contentWidth: 640,
+                contentHeight: 1136
+            };
+        }
+        else {
+            var div = document.getElementsByClassName("egret-player")[0];
+            return {
+                antialias: options.antialias,
+                antialiasSamples: 4,
+                contentWidth: parseInt(div.getAttribute("data-content-width")),
+                contentHeight: parseInt(div.getAttribute("data-content-height"))
+            };
+            ;
+        }
+    }
 })(egret3d || (egret3d = {}));
+window.paper = paper;
+window.egret3d = egret3d;
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**属性信息 */
+        var PropertyInfo = (function () {
+            function PropertyInfo(name, editType, option) {
+                this.name = name;
+                this.editType = editType;
+                this.option = option;
+            }
+            return PropertyInfo;
+        }());
+        editor.PropertyInfo = PropertyInfo;
+        __reflect(PropertyInfo.prototype, "paper.editor.PropertyInfo");
+        /**编辑类型 */
+        var EditType;
+        (function (EditType) {
+            /**数字输入 */
+            EditType[EditType["NUMBER"] = 0] = "NUMBER";
+            /**文本输入 */
+            EditType[EditType["TEXT"] = 1] = "TEXT";
+            /**选中框 */
+            EditType[EditType["CHECKBOX"] = 2] = "CHECKBOX";
+            /**vertor2 */
+            EditType[EditType["VECTOR2"] = 3] = "VECTOR2";
+            /**vertor3 */
+            EditType[EditType["VECTOR3"] = 4] = "VECTOR3";
+            /**vertor4 */
+            EditType[EditType["VECTOR4"] = 5] = "VECTOR4";
+            /**Quaternion */
+            EditType[EditType["QUATERNION"] = 6] = "QUATERNION";
+            /**颜色选择器 */
+            EditType[EditType["COLOR"] = 7] = "COLOR";
+            /**下拉 */
+            EditType[EditType["LIST"] = 8] = "LIST";
+            /**Rect */
+            EditType[EditType["RECT"] = 9] = "RECT";
+            /**材质 */
+            EditType[EditType["MATERIAL"] = 10] = "MATERIAL";
+            /**材质数组 */
+            EditType[EditType["MATERIAL_ARRAY"] = 11] = "MATERIAL_ARRAY";
+            /**游戏对象 */
+            EditType[EditType["GAMEOBJECT"] = 12] = "GAMEOBJECT";
+            /**变换 */
+            EditType[EditType["TRANSFROM"] = 13] = "TRANSFROM";
+            /**声音 */
+            EditType[EditType["SOUND"] = 14] = "SOUND";
+            /**Mesh */
+            EditType[EditType["MESH"] = 15] = "MESH";
+            /**shader */
+            EditType[EditType["SHADER"] = 16] = "SHADER";
+            /**数组 */
+            EditType[EditType["ARRAY"] = 17] = "ARRAY";
+        })(EditType = editor.EditType || (editor.EditType = {}));
+        var customMap = {};
+        /**
+         * 装饰器:自定义
+         */
+        function custom() {
+            return function (target) {
+                customMap[target.name] = true;
+            };
+        }
+        editor.custom = custom;
+        var propertyMap = {};
+        /**
+         * 装饰器:属性
+         * @param editType 编辑类型
+         */
+        function property(editType, option) {
+            return function (target, property) {
+                if (!propertyMap[target.constructor.name]) {
+                    propertyMap[target.constructor.name] = {
+                        extends: target.__proto__.constructor.name,
+                        propertyList: [],
+                    };
+                }
+                if (editType !== undefined) {
+                    propertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
+                }
+                else {
+                    //TODO:自动分析编辑类型
+                }
+            };
+        }
+        editor.property = property;
+        /**
+         * 检测一个实例对象是否为已被自定义
+         * @param classInstance 实例对象
+         */
+        function isCustom(classInstance) {
+            return customMap[classInstance.constructor.name] ? true : false;
+        }
+        editor.isCustom = isCustom;
+        /**
+         * 获取一个实例对象的编辑信息
+         * @param classInstance 实例对象
+         */
+        function getEditInfo(classInstance) {
+            var className = classInstance.constructor.name;
+            function _getEditInfo(className) {
+                var classInfo = propertyMap[className];
+                if (classInfo) {
+                    var extendsInfo = _getEditInfo(classInfo.extends);
+                    extendsInfo = extendsInfo.concat(classInfo.propertyList);
+                    return extendsInfo;
+                }
+                return [];
+            }
+            return _getEditInfo(className);
+        }
+        editor.getEditInfo = getEditInfo;
+        var extraPropertyMap = {};
+        /**
+         * 装饰器:属性
+         * @param editType 编辑类型
+         */
+        function extraProperty(editType, option) {
+            return function (target, property) {
+                if (!extraPropertyMap[target.constructor.name]) {
+                    extraPropertyMap[target.constructor.name] = {
+                        extends: target.__proto__.constructor.name,
+                        propertyList: [],
+                    };
+                }
+                if (editType !== undefined) {
+                    extraPropertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
+                }
+                else {
+                    //TODO:自动分析编辑类型
+                }
+            };
+        }
+        editor.extraProperty = extraProperty;
+        /**
+         * 额外信息
+         * @param classInstance 实例对象
+         */
+        function getExtraInfo(classInstance) {
+            var className = classInstance.constructor.name;
+            function _getExtraInfo(className) {
+                var classInfo = extraPropertyMap[className];
+                if (classInfo) {
+                    var extendsInfo = _getExtraInfo(classInfo.extends);
+                    extendsInfo = extendsInfo.concat(classInfo.propertyList);
+                    return extendsInfo;
+                }
+                return [];
+            }
+            return _getExtraInfo(className);
+        }
+        editor.getExtraInfo = getExtraInfo;
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    /**
+     * 场景管理器
+     */
+    var SceneManager = (function () {
+        function SceneManager() {
+            this._scenes = [];
+            this._globalScene = null;
+            this._globalGameObject = null;
+        }
+        SceneManager.getInstance = function () {
+            if (!this._instance) {
+                this._instance = new SceneManager();
+            }
+            return this._instance;
+        };
+        /**
+         * @internal
+         */
+        SceneManager.prototype._addScene = function (scene) {
+            if (this._scenes.indexOf(scene) < 0) {
+                this._scenes.unshift(scene);
+            }
+            else {
+                console.debug("Add the scene again.", scene.name);
+            }
+        };
+        /**
+         * 创建一个空场景并激活
+         */
+        SceneManager.prototype.createScene = function (name) {
+            var scene = new paper.Scene();
+            scene.name = name;
+            scene.rawScene = null; // 保存的话需要设置一个对应的RawScene文件
+            return scene;
+        };
+        /**
+         * load scene 加载场景
+         * @param rawScene url
+         */
+        SceneManager.prototype.loadScene = function (url) {
+            var rawScene = paper.Asset.find(url);
+            if (rawScene) {
+                var scene = rawScene.createInstance();
+                if (scene) {
+                    scene.rawScene = rawScene;
+                    if (paper.Application.isPlaying) {
+                        egret3d.autoCombine(scene);
+                    }
+                    return scene;
+                }
+            }
+            return null;
+        };
+        /**
+         * 卸载指定场景。
+         */
+        SceneManager.prototype.unloadScene = function (scene) {
+            if (scene === this._globalScene) {
+                console.warn("Cannot unload global scene.");
+                return;
+            }
+            var index = this._scenes.indexOf(scene);
+            if (index >= 0) {
+                scene._destroy();
+                this._scenes.splice(index, 1);
+            }
+        };
+        /**
+         * 卸载所有场景。
+         */
+        SceneManager.prototype.unloadAllScene = function () {
+            for (var _i = 0, _a = this._scenes; _i < _a.length; _i++) {
+                var scene = _a[_i];
+                scene._destroy();
+            }
+            this._scenes.length = 0;
+        };
+        /**
+         *
+         */
+        SceneManager.prototype.getSceneByName = function (name) {
+            for (var _i = 0, _a = this._scenes; _i < _a.length; _i++) {
+                var scene = _a[_i];
+                if (scene.name === name) {
+                    return scene;
+                }
+            }
+            return null;
+        };
+        /**
+         *
+         */
+        SceneManager.prototype.getSceneByURL = function (url) {
+            for (var _i = 0, _a = this._scenes; _i < _a.length; _i++) {
+                var scene = _a[_i];
+                if (scene.rawScene && scene.rawScene.url === url) {
+                    return scene;
+                }
+            }
+            return null;
+        };
+        Object.defineProperty(SceneManager.prototype, "scenes", {
+            /**
+             *
+             */
+            get: function () {
+                return this._scenes;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SceneManager.prototype, "globalScene", {
+            /**
+             *
+             */
+            get: function () {
+                if (!this._globalScene) {
+                    this._globalScene = new paper.Scene(); // Global scene are not added to the scenes.
+                    this._globalScene.name = "global";
+                }
+                return this._globalScene;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SceneManager.prototype, "globalGameObject", {
+            /**
+             *
+             */
+            get: function () {
+                if (!this._globalGameObject) {
+                    this._globalGameObject = new paper.GameObject("global", "global");
+                    this._globalGameObject.dontDestroy = true;
+                }
+                return this._globalGameObject;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SceneManager.prototype, "activeScene", {
+            /**
+             * 获取当前激活的场景
+             */
+            get: function () {
+                if (this._scenes.length < 1) {
+                    this.createScene("default");
+                }
+                return this._scenes[0];
+            },
+            set: function (value) {
+                if (this._scenes.length <= 1 || this._scenes[0] === value) {
+                    return;
+                }
+                var index = this._scenes.indexOf(value);
+                if (index >= 0) {
+                    this._scenes.splice(index, 1);
+                    this._scenes.unshift(value);
+                }
+                else {
+                    console.debug("Active scene error.", value.name, value.uuid);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * @deprecated
+         */
+        SceneManager.prototype.getActiveScene = function () {
+            return this.activeScene;
+        };
+        SceneManager._instance = null;
+        return SceneManager;
+    }());
+    paper.SceneManager = SceneManager;
+    __reflect(SceneManager.prototype, "paper.SceneManager");
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * 矩形可序列化对象
+     */
+    var Rectangle = (function () {
+        /**
+         *
+         */
+        function Rectangle(x, y, w, h) {
+            if (x === void 0) { x = 0.0; }
+            if (y === void 0) { y = 0.0; }
+            if (w === void 0) { w = 0.0; }
+            if (h === void 0) { h = 0.0; }
+            this.x = x;
+            this.y = y;
+            this.w = w;
+            this.h = h;
+        }
+        Rectangle.prototype.serialize = function () {
+            return [this.x, this.y, this.w, this.h];
+        };
+        Rectangle.prototype.deserialize = function (element) {
+            this.x = element[0];
+            this.y = element[1];
+            this.w = element[2];
+            this.h = element[3];
+        };
+        return Rectangle;
+    }());
+    egret3d.Rectangle = Rectangle;
+    __reflect(Rectangle.prototype, "egret3d.Rectangle", ["egret3d.IRectangle", "paper.ISerializable"]);
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var CollisionObject = (function (_super) {
+            __extends(CollisionObject, _super);
+            function CollisionObject() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.collisionObjectType = 1 /* CollisionObject */;
+                _this._collisionFlags = 0 /* None */;
+                _this._collisionGroups = 1 /* DefaultFilter */;
+                _this._collisionMask = -1 /* AllFilter */;
+                _this._btPointer = new Ammo.btVector3();
+                _this._btCollisionObject = null;
+                return _this;
+            }
+            CollisionObject.prototype._createCollisionObject = function () {
+                var btCollisionObject = new Ammo.btCollisionObject();
+                btCollisionObject.setWorldTransform(this._getBTTransform());
+                btCollisionObject.setCollisionFlags(this._collisionFlags);
+                btCollisionObject.setUserPointer(this._btPointer);
+                this._btPointer.egretComponent = this;
+                return btCollisionObject;
+            };
+            CollisionObject.prototype._getBTTransform = function () {
+                var transform = this.gameObject.transform;
+                var position = transform.getPosition();
+                var rotation = transform.getRotation();
+                var helpVectorA = ammo.PhysicsSystem.helpVector3A;
+                var helpQuaternionA = ammo.PhysicsSystem.helpQuaternionA;
+                var helpTransformA = ammo.PhysicsSystem.helpTransformA;
+                helpVectorA.setValue(position.x, position.y, position.z);
+                helpQuaternionA.setValue(rotation.x, rotation.y, rotation.z, rotation.w);
+                helpTransformA.setIdentity();
+                helpTransformA.setOrigin(helpVectorA);
+                helpTransformA.setRotation(helpQuaternionA);
+                return helpTransformA;
+            };
+            CollisionObject.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                if (this._btCollisionObject) {
+                    Ammo.destroy(this._btCollisionObject);
+                    Ammo.destroy(this._btPointer);
+                }
+                this._btCollisionObject = null;
+            };
+            /**
+             *
+             */
+            CollisionObject.prototype.isStatic = function () {
+                return (this._collisionFlags & 1 /* StaticObject */) !== 0 /* None */;
+            };
+            /**
+             *
+             */
+            CollisionObject.prototype.isKinematic = function () {
+                return (this._collisionFlags & 2 /* KinematicObject */) !== 0 /* None */;
+            };
+            /**
+             *
+             */
+            CollisionObject.prototype.isStaticOrKinematic = function () {
+                return (this._collisionFlags & (1 /* StaticObject */ | 2 /* KinematicObject */)) !== 0 /* None */;
+            };
+            /**
+             *
+             */
+            CollisionObject.prototype.isDynamic = function () {
+                return (this._collisionFlags & (1 /* StaticObject */ | 2 /* KinematicObject */)) === 0 /* None */;
+            };
+            Object.defineProperty(CollisionObject.prototype, "collisionFlags", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._collisionFlags;
+                },
+                set: function (value) {
+                    if (this._collisionFlags === value) {
+                        return;
+                    }
+                    this._collisionFlags = value;
+                    if (this._btCollisionObject) {
+                        this._btCollisionObject.setCollisionFlags(this._collisionFlags);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(CollisionObject.prototype, "collisionGroups", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._collisionGroups;
+                },
+                set: function (value) {
+                    if (this._collisionGroups === value) {
+                        return;
+                    }
+                    if (this._btCollisionObject) {
+                        console.warn("Cannot change the collision groups after the collision object has been created.");
+                    }
+                    else {
+                        this._collisionGroups = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(CollisionObject.prototype, "collisionMask", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._collisionMask;
+                },
+                set: function (value) {
+                    if (this.collisionMask === value) {
+                        return;
+                    }
+                    if (this._btCollisionObject) {
+                        console.warn("Cannot change the collision mask after the collision object has been created.");
+                    }
+                    else {
+                        this._collisionMask = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(CollisionObject.prototype, "btCollisionObject", {
+                /**
+                 *
+                 */
+                get: function () {
+                    if (!this._btCollisionObject) {
+                        this._btCollisionObject = this._createCollisionObject();
+                    }
+                    return this._btCollisionObject;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], CollisionObject.prototype, "_collisionFlags", void 0);
+            __decorate([
+                paper.serializedField
+            ], CollisionObject.prototype, "_collisionGroups", void 0);
+            __decorate([
+                paper.serializedField
+            ], CollisionObject.prototype, "_collisionMask", void 0);
+            return CollisionObject;
+        }(paper.BaseComponent));
+        ammo.CollisionObject = CollisionObject;
+        __reflect(CollisionObject.prototype, "egret3d.ammo.CollisionObject");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     * 脚本组件。
+     * 生命周期的顺序。
+     * - onAwake();
+     * - onReset();
+     * - onEnable();
+     * - onStart();
+     * - onFixedUpdate();
+     * - onUpdate();
+     * - onLateUpdate();
+     * - onDisable();
+     * - onDestroy();
+     */
+    var Behaviour = (function (_super) {
+        __extends(Behaviour, _super);
+        function Behaviour() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             * @internal
+             */
+            _this._isReseted = false;
+            /**
+             * @internal
+             */
+            _this._isStarted = false;
+            /**
+             * @internal
+             */
+            _this._isTriggerEnabled = false;
+            /**
+             * @internal
+             */
+            _this._isCollisionEnabled = false;
+            return _this;
+        }
+        /**
+         * @internal
+         */
+        Behaviour.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
+            this._isTriggerEnabled = Boolean(this.onTriggerEnter || this.onTriggerStay || this.onTriggerExit);
+            this._isCollisionEnabled = Boolean(this.onCollisionEnter || this.onCollisionStay || this.onCollisionExit);
+            if (!paper.Application.isEditor || paper._executeInEditModeComponents.indexOf(this.constructor) >= 0) {
+                this.onAwake && this.onAwake();
+            }
+        };
+        /**
+         * @internal
+         */
+        Behaviour.prototype.uninitialize = function () {
+            if (!paper.Application.isEditor || paper._executeInEditModeComponents.indexOf(this.constructor) >= 0) {
+                this.onDestroy && this.onDestroy(); // TODO onDestroy 如果不是 enabled 就不派发
+            }
+            _super.prototype.uninitialize.call(this);
+        };
+        /**
+         * @deprecated
+         */
+        Behaviour.prototype.onCollide = function (collider) { };
+        __decorate([
+            paper.serializedField
+        ], Behaviour.prototype, "_isReseted", void 0);
+        return Behaviour;
+    }(paper.BaseComponent));
+    paper.Behaviour = Behaviour;
+    __reflect(Behaviour.prototype, "paper.Behaviour");
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -2525,11 +2851,8 @@ var egret3d;
         __extends(CameraSystem, _super);
         function CameraSystem() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @inheritDoc
-             */
             _this._interests = [
-                { componentClass: egret3d.Camera }
+                { componentClass: egret3d.Camera, isExtends: true }
             ];
             return _this;
         }
@@ -2583,10 +2906,7 @@ var egret3d;
                 }
             }
         };
-        /**
-         * @inheritDoc
-         */
-        CameraSystem.prototype.update = function () {
+        CameraSystem.prototype.onUpdate = function () {
             this._components.sort(function (a, b) {
                 return a.order - b.order;
             });
@@ -2648,7 +2968,7 @@ var egret3d;
                 for (var _i = 0, _a = this._raw.assets; _i < _a.length; _i++) {
                     var item = _a[_i];
                     if (item.url.indexOf("shader.json") < 0) {
-                        this._assets[item.hashCode] = paper.Asset.find(egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", item.url));
+                        this._assets[item.uuid || item.hashCode] = paper.Asset.find(egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", item.url)); // 兼容 hashCode 。
                     }
                 }
             }
@@ -2719,6 +3039,64 @@ var egret3d;
     }(BaseObjectAsset));
     egret3d.Prefab = Prefab;
     __reflect(Prefab.prototype, "egret3d.Prefab");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var Pool = (function () {
+        function Pool() {
+            this._instances = [];
+        }
+        Pool.prototype.add = function (instanceOrInstances) {
+            if (Array.isArray(instanceOrInstances)) {
+                for (var _i = 0, instanceOrInstances_1 = instanceOrInstances; _i < instanceOrInstances_1.length; _i++) {
+                    var instance = instanceOrInstances_1[_i];
+                    if (this._instances.indexOf(instance) < 0) {
+                        this._instances.push(instance);
+                    }
+                }
+            }
+            else {
+                if (this._instances.indexOf(instanceOrInstances) < 0) {
+                    this._instances.push(instanceOrInstances);
+                }
+            }
+        };
+        Pool.prototype.remove = function (instanceOrInstances) {
+            if (Array.isArray(instanceOrInstances)) {
+                for (var _i = 0, instanceOrInstances_2 = instanceOrInstances; _i < instanceOrInstances_2.length; _i++) {
+                    var instance = instanceOrInstances_2[_i];
+                    var index = this._instances.indexOf(instance);
+                    if (index >= 0) {
+                        this._instances.splice(index, 1);
+                    }
+                }
+            }
+            else {
+                var index = this._instances.indexOf(instanceOrInstances);
+                if (index >= 0) {
+                    this._instances.splice(index, 1);
+                }
+            }
+        };
+        Pool.prototype.get = function () {
+            return this._instances.pop() || null;
+        };
+        Pool.prototype.clear = function () {
+            this._instances.length = 0;
+        };
+        Object.defineProperty(Pool.prototype, "instances", {
+            get: function () {
+                return this._instances;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Pool.drawCall = new Pool();
+        Pool.shadowCaster = new Pool();
+        return Pool;
+    }());
+    egret3d.Pool = Pool;
+    __reflect(Pool.prototype, "egret3d.Pool");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -2991,301 +3369,659 @@ var egret3d;
                 paper.editor.property(paper.editor.EditType.ARRAY)
             ], ParticleRenderer.prototype, "materials", null);
             return ParticleRenderer;
-        }(paper.BaseComponent));
+        }(paper.BaseRenderer));
         particle.ParticleRenderer = ParticleRenderer;
-        __reflect(ParticleRenderer.prototype, "egret3d.particle.ParticleRenderer", ["paper.IRenderer"]);
+        __reflect(ParticleRenderer.prototype, "egret3d.particle.ParticleRenderer");
     })(particle = egret3d.particle || (egret3d.particle = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * 渲染排序
+     */
+    var RenderQueue;
+    (function (RenderQueue) {
+        RenderQueue[RenderQueue["Background"] = 1000] = "Background";
+        RenderQueue[RenderQueue["Geometry"] = 2000] = "Geometry";
+        RenderQueue[RenderQueue["AlphaTest"] = 2450] = "AlphaTest";
+        RenderQueue[RenderQueue["Transparent"] = 3000] = "Transparent";
+        RenderQueue[RenderQueue["Overlay"] = 4000] = "Overlay";
+    })(RenderQueue = egret3d.RenderQueue || (egret3d.RenderQueue = {}));
+    /**
+     * 材质资源
+     */
+    var Material = (function (_super) {
+        __extends(Material, _super);
+        function Material() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             */
+            _this.version = 0;
+            _this.$uniforms = {};
+            _this._defines = new Array();
+            _this._textureRef = [];
+            _this._renderQueue = -1;
+            return _this;
+        }
+        /**
+         * 释放资源。
+         */
+        Material.prototype.dispose = function () {
+            delete this.$uniforms;
+            delete this._defines;
+            this.version++;
+        };
+        /**
+         * asset byte length
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 计算资源字节大小。
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Material.prototype.caclByteLength = function () {
+            var total = 0;
+            if (this.shader) {
+                total += this.shader.caclByteLength();
+            }
+            for (var k in this.$uniforms) {
+                var type = this.$uniforms[k].type;
+                var value = this.$uniforms[k].value;
+                switch (type) {
+                    case egret3d.UniformTypeEnum.Float:
+                        total += 4;
+                        break;
+                    case egret3d.UniformTypeEnum.Floatv:
+                        total += value.byteLength;
+                        break;
+                    case egret3d.UniformTypeEnum.Float4:
+                        total += 16;
+                        break;
+                    case egret3d.UniformTypeEnum.Float4v:
+                        total += value.byteLength;
+                        break;
+                    case egret3d.UniformTypeEnum.Float4x4:
+                        total += 64;
+                        break;
+                    case egret3d.UniformTypeEnum.Float4x4v:
+                        total += value.byteLength;
+                        break;
+                    case egret3d.UniformTypeEnum.Texture:
+                        if (value) {
+                            total += value.caclByteLength();
+                        }
+                        break;
+                }
+            }
+            return total;
+        };
+        Material.prototype._setDefaultUniforms = function (shader) {
+            if (!this.shader) {
+                console.log("Shader error.", this);
+                return;
+            }
+            for (var key in shader.defaultValue) {
+                var uniform = shader.defaultValue[key];
+                switch (uniform.type) {
+                    case "Texture":
+                        this.setTexture(key, uniform.value);
+                        break;
+                    case "Vector4":
+                        if (Array.isArray(uniform.value)) {
+                            this.setVector4v(key, uniform.value);
+                        }
+                        else {
+                            this.setVector4(key, uniform.value);
+                        }
+                        break;
+                    case "Range":
+                        this.setFloat(key, uniform.value);
+                        break;
+                }
+            }
+        };
+        /**
+         * set shader
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置着色器，不保留原有数据。
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Material.prototype.setShader = function (shader) {
+            this.shader = shader;
+            this.$uniforms = {};
+            this._setDefaultUniforms(this.shader);
+        };
+        /**
+          * get shader
+          * @version paper 1.0
+          * @platform Web
+          * @language en_US
+          */
+        /**
+         * 获取当前着色器。
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Material.prototype.getShader = function () {
+            return this.shader;
+        };
+        /**
+         * change shader
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 更改着色器，保留原有数据。
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Material.prototype.changeShader = function (shader) {
+            var map = {};
+            for (var key in this.$uniforms) {
+                if (this.$uniforms[key]) {
+                    map[key] = this.$uniforms[key];
+                }
+            }
+            this.setShader(shader);
+            for (var key in map) {
+                if (this.$uniforms[key]) {
+                    this.$uniforms[key] = map[key];
+                }
+            }
+        };
+        Object.defineProperty(Material.prototype, "renderQueue", {
+            get: function () {
+                if (!this.shader) {
+                    console.log("Shader error.", this);
+                    return this._renderQueue;
+                }
+                return this._renderQueue === -1 ? this.shader.renderQueue : this._renderQueue;
+            },
+            set: function (value) {
+                this._renderQueue = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Material.prototype, "shaderDefine", {
+            get: function () {
+                var res = "";
+                for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
+                    var key = _a[_i];
+                    res += "#define " + key + " \n";
+                }
+                return res;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Material.prototype.addDefine = function (key) {
+            if (this._defines.indexOf(key) < 0) {
+                this._defines.push(key);
+            }
+            this.version++;
+        };
+        Material.prototype.removeDefine = function (key) {
+            var delIndex = this._defines.indexOf(key);
+            if (delIndex >= 0) {
+                this._defines.splice(delIndex, 1);
+            }
+            this.version++;
+        };
+        Material.prototype.setBoolean = function (_id, _bool) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _bool;
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Boolean, value: _bool };
+            }
+            this.version++;
+        };
+        Material.prototype.setInt = function (_id, _number) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _number;
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Int, value: _number };
+            }
+            this.version++;
+        };
+        Material.prototype.setFloat = function (_id, _number) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _number;
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float, value: _number };
+            }
+            this.version++;
+        };
+        Material.prototype.setFloatv = function (_id, _numbers) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _numbers;
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Floatv, value: _numbers };
+            }
+            this.version++;
+        };
+        Material.prototype.setVector2 = function (_id, _vector2) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _vector2;
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float2, value: _vector2 };
+            }
+            this.version++;
+        };
+        Material.prototype.setVector2v = function (_id, _vector2v) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _vector2v;
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float2v, value: _vector2v };
+            }
+            this.version++;
+        };
+        Material.prototype.setVector3 = function (_id, _vector3) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _vector3;
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float3, value: _vector3 };
+            }
+            this.version++;
+        };
+        Material.prototype.setVector3v = function (_id, _vector3v) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _vector3v;
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float3v, value: _vector3v };
+            }
+            this.version++;
+        };
+        Material.prototype.setVector4 = function (_id, _vector4) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _vector4;
+                if (this.$uniforms[_id].type !== egret3d.UniformTypeEnum.Float4) {
+                    console.error("设置setVector4类型错误，类型不匹配");
+                }
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4, value: _vector4 };
+            }
+            this.version++;
+        };
+        Material.prototype.setVector4v = function (_id, _vector4v) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _vector4v;
+                if (this.$uniforms[_id].type !== egret3d.UniformTypeEnum.Float4v) {
+                    console.error("设置setVector4v类型错误，类型不匹配");
+                }
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4v, value: _vector4v };
+            }
+            this.version++;
+        };
+        Material.prototype.setMatrix = function (_id, _matrix) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _matrix;
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4x4, value: _matrix };
+            }
+            this.version++;
+        };
+        Material.prototype.setMatrixv = function (_id, _matrixv) {
+            if (this.$uniforms[_id] !== undefined) {
+                this.$uniforms[_id].value = _matrixv;
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4x4v, value: _matrixv };
+            }
+            this.version++;
+        };
+        Material.prototype.setTexture = function (_id, _texture) {
+            if (this.$uniforms[_id] !== undefined) {
+                if (this.$uniforms[_id].value) {
+                    var index = this._textureRef.indexOf(this.$uniforms[_id].value);
+                    if (index > -1) {
+                        this._textureRef.splice(index, 1);
+                    }
+                }
+                this.$uniforms[_id].value = _texture;
+            }
+            else {
+                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Texture, value: _texture };
+            }
+            this.version++;
+            if (_texture) {
+                this._textureRef.push(_texture);
+            }
+        };
+        Material.prototype.$parse = function (json) {
+            var shaderName = json.shader;
+            var shader = paper.Asset.find(shaderName);
+            this.setShader(shader);
+            var mapUniform = json.mapUniform;
+            for (var i in mapUniform) {
+                var jsonChild = mapUniform[i];
+                switch (jsonChild.type) {
+                    case egret3d.UniformTypeEnum.Texture:
+                        var value = jsonChild.value;
+                        var url = egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", value);
+                        var texture = paper.Asset.find(url);
+                        if (!texture) {
+                            texture = egret3d.DefaultTextures.GRID;
+                        }
+                        this.setTexture(i, texture);
+                        break;
+                    case egret3d.UniformTypeEnum.Float:
+                        this.setFloat(i, jsonChild.value);
+                        break;
+                    case egret3d.UniformTypeEnum.Float4:
+                        var tempValue = jsonChild.value;
+                        if (Array.isArray(tempValue)) {
+                            this.setVector4v(i, tempValue);
+                        }
+                        else {
+                            console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级");
+                        }
+                        break;
+                    default:
+                        console.warn("\u4E0D\u652F\u6301\u7684 Uniform \u53C2\u6570\uFF1A" + this.url + "," + i);
+                }
+            }
+        };
+        /**
+         * clone material
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 克隆材质资源。
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Material.prototype.clone = function () {
+            var mat = new Material();
+            mat.setShader(this.shader);
+            for (var i in this.$uniforms) {
+                var data = this.$uniforms[i];
+                var _uniformType = data.type;
+                switch (_uniformType) {
+                    case egret3d.UniformTypeEnum.Texture:
+                        mat.setTexture(i, data.value);
+                        break;
+                    case egret3d.UniformTypeEnum.Float:
+                        mat.setFloat(i, data.value);
+                        break;
+                    case egret3d.UniformTypeEnum.Float4:
+                        if (Array.isArray(data.value)) {
+                            mat.setVector4v(i, data.value);
+                        }
+                        else {
+                            mat.setVector4(i, data.value);
+                        }
+                        break;
+                    case egret3d.UniformTypeEnum.Float4v:
+                        mat.setVector4v(i, data.value);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return mat;
+        };
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.SHADER, { set: "setShader" })
+        ], Material.prototype, "shader", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.deserializedIgnore
+        ], Material.prototype, "_textureRef", void 0);
+        return Material;
+    }(paper.Asset));
+    egret3d.Material = Material;
+    __reflect(Material.prototype, "egret3d.Material");
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     /**
-     * @internal
+     * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
      */
-    paper._executeInEditModeComponents = [];
-    /**
-     * 标记组件是否在编辑模式也拥有生命周期。
-     */
-    function executeInEditMode(target) {
-        paper._executeInEditModeComponents.push(target);
-    }
-    paper.executeInEditMode = executeInEditMode;
-    /**
-     * 脚本系统
-     * 该系统负责执行脚本逻辑代码
-     */
-    var BehaviourSystem = (function (_super) {
-        __extends(BehaviourSystem, _super);
-        function BehaviourSystem() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @inheritDoc
-             */
-            _this._interests = [
-                {
-                    componentClass: paper.Behaviour
-                }
-            ];
-            _this._onResetBehaviours = [];
-            _this._onEnableBehaviours = [];
-            _this._onStartBehaviours = [];
-            _this._onDisableBehaviours = [];
-            return _this;
+    var SystemManager = (function () {
+        function SystemManager() {
+            this._registerSystems = [];
+            this._systems = [];
+            this._unregisterSystems = [];
         }
-        /**
-         * @inheritDoc
-         */
-        BehaviourSystem.prototype._onAddComponent = function (component) {
-            // 所有 Behaviour 均被收集，BehaviourSystem 并不是标准的 ecs，仅用来更新 Behaviour 的生命周期。
-            var index = this._components.indexOf(component);
-            if (index < 0) {
-                this._components.push(component);
-                if (paper.Application.isEditor &&
-                    !paper.Application.isPlaying &&
-                    !component._isReseted) {
-                    this._onResetBehaviours.push(component);
-                }
-                this._onEnableBehaviours.push(component);
-                if (!component._isStarted) {
-                    this._onStartBehaviours.push(component);
-                }
-                index = this._onDisableBehaviours.indexOf(component);
-                if (index >= 0) {
-                    this._onDisableBehaviours[index] = null;
-                }
+        SystemManager.getInstance = function () {
+            if (!this._instance) {
+                this._instance = new SystemManager();
+            }
+            return this._instance;
+        };
+        SystemManager.prototype._preRegister = function (systemClass) {
+            // TODO 移除可能正在注销但并未反初始化的系统。
+            if (this.getSystem(systemClass)) {
+                console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
                 return true;
             }
-            console.debug("Add behaviour error.");
             return false;
         };
         /**
-         * @inheritDoc
+         * 注册一个系统到管理器中
+         * @param systemClass 要注册的系统
+         * @param level 系统的优先级，越小越早执行。
          */
-        BehaviourSystem.prototype._onRemoveComponent = function (component) {
-            var gameObject = component.gameObject;
-            var index = this._components.indexOf(component);
-            if (index >= 0) {
-                this._components[index] = null;
-                this._onDisableBehaviours.push(component);
-                index = this._onResetBehaviours.indexOf(component);
-                if (index >= 0) {
-                    this._onResetBehaviours[index] = null;
-                }
-                index = this._onEnableBehaviours.indexOf(component);
-                if (index >= 0) {
-                    this._onEnableBehaviours[index] = null;
-                }
-                index = this._onStartBehaviours.indexOf(component);
-                if (index >= 0) {
-                    this._onStartBehaviours[index] = null;
-                }
-                return true;
+        SystemManager.prototype.register = function (systemClass, level) {
+            if (level === void 0) { level = 0; }
+            if (this._preRegister(systemClass)) {
+                return;
             }
-            console.debug("Remove behaviour error.");
-            return false;
+            var isAdded = false;
+            paper.BaseSystem._createEnabled = true;
+            var system = new systemClass();
+            system._level = level;
+            for (var i = 0, l = this._systems.length; i < l; ++i) {
+                var eachSystem = this._systems[i];
+                if (eachSystem && eachSystem._level > system._level) {
+                    isAdded = true;
+                    this._systems.splice(i, 0, system);
+                    break;
+                }
+            }
+            if (!isAdded) {
+                this._systems.push(system);
+            }
+            this._registerSystems.push(system);
         };
         /**
-         * @inheritDoc
+         * 注册一个系统到管理器中
+         * @param systemClass 要注册的系统
+         * @param target 加入到目标系统的前面。
          */
-        BehaviourSystem.prototype.update = function () {
-            var i = 0;
-            var l = 0;
-            if (paper.Application.isEditor && !paper.Application.isPlaying) {
-                if (this._onResetBehaviours.length > 0) {
-                    for (var _i = 0, _a = this._onResetBehaviours; _i < _a.length; _i++) {
-                        var component = _a[_i];
-                        if (component) {
-                            component._isReseted = true;
-                            component.onReset();
-                        }
-                    }
-                    this._onResetBehaviours.length = 0;
+        SystemManager.prototype.registerBefore = function (systemClass, target) {
+            if (this._preRegister(systemClass)) {
+                return;
+            }
+            var isAdded = false;
+            paper.BaseSystem._createEnabled = true;
+            var system = new systemClass();
+            for (var i = 0, l = this._systems.length; i < l; ++i) {
+                var eachSystem = this._systems[i];
+                if (eachSystem && eachSystem.constructor === target) {
+                    isAdded = true;
+                    system._level = eachSystem.level;
+                    this._systems.splice(i, 0, system);
+                    break;
                 }
-                if (this._onEnableBehaviours.length > 0) {
-                    for (var _b = 0, _c = this._onEnableBehaviours; _b < _c.length; _b++) {
-                        var component = _c[_b];
-                        if (component && paper._executeInEditModeComponents.indexOf(component.constructor) >= 0) {
-                            component.onEnable();
-                        }
-                    }
-                    this._onEnableBehaviours.length = 0;
-                }
-                if (this._onStartBehaviours.length > 0) {
-                    for (var _d = 0, _e = this._onStartBehaviours; _d < _e.length; _d++) {
-                        var component = _e[_d];
-                        if (component && paper._executeInEditModeComponents.indexOf(component.constructor) >= 0) {
-                            component._isStarted = true;
-                            component.onStart();
-                        }
-                    }
-                    this._onStartBehaviours.length = 0;
-                }
-                l = this._components.length;
-                for (i = 0; i < l; ++i) {
-                    var component = this._components[i];
-                    if (component && paper._executeInEditModeComponents.indexOf(component.constructor) >= 0) {
-                        component.onUpdate(paper.Time.deltaTime);
+            }
+            if (!isAdded) {
+                if (this._systems.length > 0) {
+                    var lastSystem = this._systems[this._systems.length - 1];
+                    if (lastSystem) {
+                        system._level = lastSystem.level;
                     }
                 }
-                for (i = 0; i < l; ++i) {
-                    var component = this._components[i];
-                    if (component && paper._executeInEditModeComponents.indexOf(component.constructor) >= 0) {
-                        component.onLateUpdate(paper.Time.deltaTime);
+                this._systems.push(system);
+            }
+            this._registerSystems.push(system);
+        };
+        /**
+         * 注册一个系统到管理器中
+         * @param systemClass 要注册的系统
+         * @param target 加入到目标系统的后面。
+         */
+        SystemManager.prototype.registerAfter = function (systemClass, target) {
+            if (this._preRegister(systemClass)) {
+                return;
+            }
+            var isAdded = false;
+            paper.BaseSystem._createEnabled = true;
+            var system = new systemClass();
+            for (var i = 0, l = this._systems.length; i < l; ++i) {
+                var eachSystem = this._systems[i];
+                if (eachSystem && eachSystem.constructor === target) {
+                    isAdded = true;
+                    system._level = eachSystem.level;
+                    this._systems.splice(i + 1, 0, system);
+                    break;
+                }
+            }
+            if (!isAdded) {
+                if (this._systems.length > 0) {
+                    var lastSystem = this._systems[this._systems.length - 1];
+                    if (lastSystem) {
+                        system._level = lastSystem.level;
                     }
                 }
-                if (this._onDisableBehaviours.length > 0) {
-                    for (var _f = 0, _g = this._onDisableBehaviours; _f < _g.length; _f++) {
-                        var component = _g[_f];
-                        if (component && paper._executeInEditModeComponents.indexOf(component.constructor) >= 0) {
-                            component.onDisable();
-                        }
-                    }
-                    this._onDisableBehaviours.length = 0;
+                this._systems.push(system);
+            }
+            this._registerSystems.push(system);
+        };
+        /**
+         * 注销一个管理器中的系统
+         * @param systemClass 要注销的系统
+         */
+        SystemManager.prototype.unregister = function (systemClass) {
+            // TODO 移除可能正在注册但并未初始化的系统。
+            var index = 0;
+            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
+                var system = _a[_i];
+                if (system && system.constructor === systemClass) {
+                    this._unregisterSystems.push(system);
+                    this._systems[index] = null;
+                    return;
                 }
+                index++;
+            }
+            console.warn("The system has not been registered.", egret.getQualifiedClassName(systemClass));
+        };
+        /**
+         *
+         */
+        SystemManager.prototype.enableSystem = function (systemClass) {
+            var system = this.getSystem(systemClass);
+            if (system) {
+                system.enabled = true;
             }
             else {
-                if (this._onEnableBehaviours.length > 0) {
-                    for (var _h = 0, _j = this._onEnableBehaviours; _h < _j.length; _h++) {
-                        var component = _j[_h];
-                        if (component) {
-                            component.onEnable();
+                console.warn("Enable system error.", egret.getQualifiedClassName(systemClass));
+            }
+        };
+        /**
+         *
+         */
+        SystemManager.prototype.disableSystem = function (systemClass) {
+            var system = this.getSystem(systemClass);
+            if (system) {
+                system.enabled = false;
+            }
+            else {
+                console.warn("Disable system error.", egret.getQualifiedClassName(systemClass));
+            }
+        };
+        /**
+         * 获取一个管理器中指定的系统实例。
+         */
+        SystemManager.prototype.getSystem = function (systemClass) {
+            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
+                var system = _a[_i];
+                if (system && system.constructor === systemClass) {
+                    return system;
+                }
+            }
+            return null;
+        };
+        /**
+         * @internal
+         */
+        SystemManager.prototype.update = function () {
+            var index = 0;
+            var removeCount = 0;
+            if (this._registerSystems.length > 0) {
+                for (var _i = 0, _a = this._registerSystems; _i < _a.length; _i++) {
+                    var system = _a[_i];
+                    if (system) {
+                        system.initialize();
+                    }
+                }
+                this._registerSystems.length = 0;
+            }
+            for (var _b = 0, _c = this._systems; _b < _c.length; _b++) {
+                var system = _c[_b];
+                if (system) {
+                    var systemName = system.constructor.name;
+                    egret3d.Profile.startTime(systemName);
+                    if (removeCount > 0) {
+                        this._systems[index - removeCount] = system;
+                        this._systems[index] = null;
+                    }
+                    system.update();
+                    egret3d.Profile.endTime(systemName);
+                }
+                else {
+                    removeCount++;
+                }
+                index++;
+            }
+            if (removeCount > 0) {
+                this._systems.length -= removeCount;
+                if (this._unregisterSystems.length > 0) {
+                    for (var _d = 0, _e = this._unregisterSystems; _d < _e.length; _d++) {
+                        var system = _e[_d];
+                        if (system) {
+                            system.uninitialize();
                         }
                     }
-                    this._onEnableBehaviours.length = 0;
-                }
-                if (this._onStartBehaviours.length > 0) {
-                    for (var _k = 0, _l = this._onStartBehaviours; _k < _l.length; _k++) {
-                        var component = _l[_k];
-                        if (component) {
-                            component._isStarted = true;
-                            component.onStart();
-                        }
-                    }
-                    this._onStartBehaviours.length = 0;
-                }
-                l = this._components.length;
-                for (i = 0; i < l; ++i) {
-                    var component = this._components[i];
-                    if (component) {
-                        component.onUpdate(paper.Time.deltaTime);
-                    }
-                }
-                for (i = 0; i < l; ++i) {
-                    var component = this._components[i];
-                    if (component) {
-                        component.onLateUpdate(paper.Time.deltaTime);
-                    }
-                }
-                if (this._onDisableBehaviours.length > 0) {
-                    for (var _m = 0, _o = this._onDisableBehaviours; _m < _o.length; _m++) {
-                        var component = _o[_m];
-                        if (component) {
-                            component.onDisable();
-                        }
-                    }
-                    this._onDisableBehaviours.length = 0;
+                    this._unregisterSystems.length = 0;
                 }
             }
         };
-        return BehaviourSystem;
-    }(paper.BaseSystem));
-    paper.BehaviourSystem = BehaviourSystem;
-    __reflect(BehaviourSystem.prototype, "paper.BehaviourSystem");
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     * 脚本组件。
-     * 生命周期的顺序。
-     * - onAwake();
-     * - System._onCreateComponent();
-     * - onEnable();
-     * - onReset();
-     * - onStart();
-     * - onFixedUpdate();
-     * - onUpdate();
-     * - onLateUpdate();
-     * - onDisable();
-     * - System._onDestroyComponent();
-     * - onDestroy();
-     */
-    var Behaviour = (function (_super) {
-        __extends(Behaviour, _super);
-        function Behaviour() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @internal
-             */
-            _this._isReseted = false;
-            /**
-             * @internal
-             */
-            _this._isStarted = false;
-            return _this;
-        }
-        Behaviour.prototype.initialize = function () {
-            _super.prototype.initialize.call(this);
-            if (!paper.Application.isEditor || paper._executeInEditModeComponents.indexOf(this.constructor) >= 0) {
-                this.onAwake();
-            }
-        };
-        Behaviour.prototype.uninitialize = function () {
-            if (!paper.Application.isEditor || paper._executeInEditModeComponents.indexOf(this.constructor) >= 0) {
-                this.onDestroy(); // TODO onDestroy 如果不是 enabled 就不派发
-            }
-            _super.prototype.uninitialize.call(this);
-        };
-        /**
-         * 当一个脚本实例被载入时Awake被调用，要先于Start。
-         */
-        Behaviour.prototype.onAwake = function () {
-        };
-        /**
-         * 物体启用时被调用
-         */
-        Behaviour.prototype.onEnable = function () {
-        };
-        Behaviour.prototype.onReset = function () {
-        };
-        /**
-         * Start仅在物体实例化完成后，Update函数第一次被调用前调用。
-         */
-        Behaviour.prototype.onStart = function () {
-        };
-        /**
-         * 这个函数会在每个固定的物理时间片被调用一次.这是放置游戏基本物理行为代码的地方。
-         * （暂未实现）
-         */
-        Behaviour.prototype.onFixedUpdate = function () {
-        };
-        /**
-         * 当Behaviour启用时,其Update在每一帧被调用
-         */
-        Behaviour.prototype.onUpdate = function (delta) {
-        };
-        Behaviour.prototype.onLateUpdate = function (delta) {
-        };
-        /**
-         * 物体被禁用时调用
-         */
-        Behaviour.prototype.onDisable = function () {
-        };
-        /**
-         * 物体被删除时调用
-         */
-        Behaviour.prototype.onDestroy = function () {
-        };
-        /**
-         * 碰撞时调用
-         */
-        Behaviour.prototype.onCollide = function (collider) {
-        };
-        __decorate([
-            paper.serializedField
-        ], Behaviour.prototype, "_isReseted", void 0);
-        return Behaviour;
-    }(paper.BaseComponent));
-    paper.Behaviour = Behaviour;
-    __reflect(Behaviour.prototype, "paper.Behaviour");
+        SystemManager._instance = null;
+        return SystemManager;
+    }());
+    paper.SystemManager = SystemManager;
+    __reflect(SystemManager.prototype, "paper.SystemManager");
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -3371,82 +4107,797 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * 事件派发器
+         */
+        var EventDispatcher = (function () {
+            function EventDispatcher() {
+                this.__z_e_listeners = {};
+            }
+            EventDispatcher.prototype.addEventListener = function (type, fun, thisObj, level) {
+                if (level === void 0) { level = 0; }
+                var list = this.__z_e_listeners[type];
+                if (list === undefined) {
+                    list = [];
+                    this.__z_e_listeners[type] = list;
+                }
+                var item = {
+                    func: fun,
+                    context: thisObj,
+                    level: level
+                };
+                list.push(item);
+                list.sort(function (a, b) {
+                    return b.level - a.level;
+                });
+            };
+            EventDispatcher.prototype.removeEventListener = function (type, fun, thisObj) {
+                var list = this.__z_e_listeners[type];
+                if (list !== undefined) {
+                    var size = list.length;
+                    for (var i = 0; i < size; i++) {
+                        var obj = list[i];
+                        if (obj.func === fun && obj.context === thisObj) {
+                            list.splice(i, 1);
+                            return;
+                        }
+                    }
+                }
+            };
+            EventDispatcher.prototype.dispatchEvent = function (event) {
+                var list = this.__z_e_listeners[event.type];
+                if (list !== undefined) {
+                    list.forEach(function (ef) {
+                        ef['___dirty___'] = true;
+                    });
+                    var size = list.length;
+                    for (var i = 0; i < size; i++) {
+                        var ef = list[i];
+                        if (ef['___dirty___']) {
+                            var fun = ef.func;
+                            var context = ef.context;
+                            if (context) {
+                                fun.call(context, event);
+                            }
+                            else {
+                                fun(event);
+                            }
+                            ef['___dirty___'] = false;
+                        }
+                        if (size != list.length) {
+                            size = list.length;
+                            i = 0;
+                        }
+                    }
+                }
+            };
+            return EventDispatcher;
+        }());
+        editor.EventDispatcher = EventDispatcher;
+        __reflect(EventDispatcher.prototype, "paper.editor.EventDispatcher", ["paper.editor.IEventDispatcher"]);
+        /**
+         * 事件
+         */
+        var BaseEvent = (function () {
+            function BaseEvent(type, data) {
+                this.type = type;
+                this.data = data;
+            }
+            return BaseEvent;
+        }());
+        editor.BaseEvent = BaseEvent;
+        __reflect(BaseEvent.prototype, "paper.editor.BaseEvent");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var CollisionShape = (function (_super) {
+            __extends(CollisionShape, _super);
+            function CollisionShape() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._margin = 0.05;
+                _this._btCollisionShape = null;
+                return _this;
+            }
+            CollisionShape.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                if (this._btCollisionShape) {
+                    Ammo.destroy(this._btCollisionShape);
+                }
+                this._btCollisionShape = null;
+            };
+            Object.defineProperty(CollisionShape.prototype, "margin", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._margin;
+                },
+                set: function (value) {
+                    if (this._margin === value) {
+                        return;
+                    }
+                    this._margin = value;
+                    if (this._btCollisionShape) {
+                        this._btCollisionShape.setMargin(this._margin);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(CollisionShape.prototype, "btCollisionShape", {
+                get: function () {
+                    if (!this._btCollisionShape) {
+                        this._btCollisionShape = this._createCollisionShape();
+                    }
+                    return this._btCollisionShape;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], CollisionShape.prototype, "_margin", void 0);
+            return CollisionShape;
+        }(paper.BaseComponent));
+        ammo.CollisionShape = CollisionShape;
+        __reflect(CollisionShape.prototype, "egret3d.ammo.CollisionShape");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var TypedConstraint = (function (_super) {
+            __extends(TypedConstraint, _super);
+            function TypedConstraint() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._collisionEnabled = false;
+                _this._autoCalculateConnectedAnchor = true;
+                _this._constraintType = 1 /* ConstrainToAnotherBody */;
+                _this._overrideNumSolverIterations = 20;
+                _this._breakingImpulseThreshold = Infinity;
+                _this._anchor = egret3d.Vector3.ZERO.clone();
+                _this._axisX = egret3d.Vector3.FORWARD.clone();
+                _this._axisY = egret3d.Vector3.UP.clone();
+                _this._connectedAnchor = egret3d.Vector3.ZERO.clone();
+                _this._connectedAxisX = egret3d.Vector3.FORWARD.clone();
+                _this._connectedAxisY = egret3d.Vector3.UP.clone();
+                _this._connectedBody = null;
+                _this._rigidbody = null;
+                _this._btTypedConstraint = null;
+                return _this;
+            }
+            TypedConstraint.prototype._createFrame = function (forward, up, constraintPoint, frame) {
+                var vR = egret3d.Vector3.cross(forward, up, TypedConstraint._helpVector3A);
+                var vU = egret3d.Vector3.cross(vR, forward, TypedConstraint._helpVector3B).normalize();
+                vR.normalize();
+                vU.normalize();
+                frame.identity();
+                frame.set3x3(forward.x, vU.x, vR.x, forward.y, vU.y, vR.y, forward.z, vU.z, vR.z);
+                frame.setTranslation(constraintPoint);
+            };
+            TypedConstraint.prototype._createFrames = function (frameA, frameB) {
+                if (!this._connectedBody) {
+                    console.debug("Never.");
+                    return;
+                }
+                this._createFrame(this._axisX, this._axisY, this._anchor, frameA);
+                if (this._autoCalculateConnectedAnchor) {
+                    var thisTransform = this.gameObject.transform;
+                    var otherTransform = this._connectedBody.gameObject.transform;
+                    var quaternion = egret3d.Quaternion.multiply(thisTransform.getLocalRotation(), egret3d.Quaternion.inverse(otherTransform.getLocalRotation(), TypedConstraint._helpQuaternionA), TypedConstraint._helpQuaternionB);
+                    var matrixValues = frameA.rawData;
+                    var xx = quaternion.transformVector3(TypedConstraint._helpVector3A.set(matrixValues[0], matrixValues[1], matrixValues[2]));
+                    var yy = quaternion.transformVector3(TypedConstraint._helpVector3B.set(matrixValues[4], matrixValues[5], matrixValues[6]));
+                    var zz = quaternion.transformVector3(TypedConstraint._helpVector3C.set(matrixValues[8], matrixValues[9], matrixValues[10]));
+                    frameB.identity();
+                    frameB.set3x3(xx.x, yy.x, zz.x, xx.y, yy.y, zz.y, xx.z, yy.z, zz.z);
+                    frameB.setTranslation(TypedConstraint._helpMatrixC.copy(otherTransform.getWorldMatrix()).inverse().transformVector3(thisTransform.getWorldMatrix().transformVector3(TypedConstraint._helpVector3D.copy(this._anchor))));
+                }
+                else {
+                    this._createFrame(this._connectedAxisX, this._connectedAxisY, this._connectedAnchor, frameB);
+                }
+            };
+            TypedConstraint.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                if (this._btTypedConstraint) {
+                    Ammo.destroy(this._btTypedConstraint);
+                }
+                this._btTypedConstraint = null;
+            };
+            Object.defineProperty(TypedConstraint.prototype, "collisionEnabled", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._collisionEnabled;
+                },
+                set: function (value) {
+                    if (this._collisionEnabled === value) {
+                        return;
+                    }
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the disableCollisionsBetweenConstrainedBodies after the constraint has been created.");
+                    }
+                    else {
+                        this._collisionEnabled = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "constraintType", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._constraintType;
+                },
+                set: function (value) {
+                    if (this._constraintType === value) {
+                        return;
+                    }
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the constraint type after the constraint has been created.");
+                    }
+                    else {
+                        this._constraintType = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "overrideNumSolverIterations", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._overrideNumSolverIterations;
+                },
+                set: function (value) {
+                    if (this._overrideNumSolverIterations === value) {
+                        return;
+                    }
+                    this._overrideNumSolverIterations = value;
+                    if (this._btTypedConstraint) {
+                        this._btTypedConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "breakingImpulseThreshold", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._breakingImpulseThreshold;
+                },
+                set: function (value) {
+                    if (this._breakingImpulseThreshold === value) {
+                        return;
+                    }
+                    this._breakingImpulseThreshold = value;
+                    if (this._btTypedConstraint) {
+                        this._btTypedConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "anchor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._anchor;
+                },
+                set: function (value) {
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the anchor after the constraint has been created.");
+                    }
+                    else {
+                        this._anchor.copy(value);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "axisX", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._axisX;
+                },
+                set: function (value) {
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the axis x after the constraint has been created.");
+                    }
+                    else {
+                        this._axisX.copy(value).normalize();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "axisY", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._axisY;
+                },
+                set: function (value) {
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the axis y after the constraint has been created.");
+                    }
+                    else {
+                        this._axisY.copy(value).normalize();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "autoCalculateConnectedAnchor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._autoCalculateConnectedAnchor;
+                },
+                set: function (value) {
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the axis y after the constraint has been created.");
+                    }
+                    else {
+                        this._autoCalculateConnectedAnchor = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "connectedAnchor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._connectedAnchor;
+                },
+                set: function (value) {
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the anchor after the constraint has been created.");
+                    }
+                    else {
+                        this._connectedAnchor.copy(value);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "connectedAxisX", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._connectedAxisX;
+                },
+                set: function (value) {
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the axis x after the constraint has been created.");
+                    }
+                    else {
+                        this._connectedAxisX.copy(value).normalize();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "connectedAxisY", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._connectedAxisY;
+                },
+                set: function (value) {
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the axis y after the constraint has been created.");
+                    }
+                    else {
+                        this._connectedAxisY.copy(value).normalize();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "rigidbody", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._rigidbody;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "connectedBody", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._connectedBody;
+                },
+                set: function (value) {
+                    if (this._connectedBody === value) {
+                        return;
+                    }
+                    if (this._btTypedConstraint) {
+                        console.warn("Cannot change the axis y after the constraint has been created.");
+                    }
+                    else {
+                        this._connectedBody = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TypedConstraint.prototype, "btTypedConstraint", {
+                get: function () {
+                    if (!this._btTypedConstraint) {
+                        this._btTypedConstraint = this._createConstraint();
+                    }
+                    return this._btTypedConstraint;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            TypedConstraint._helpVector3A = new egret3d.Vector3();
+            TypedConstraint._helpVector3B = new egret3d.Vector3();
+            TypedConstraint._helpVector3C = new egret3d.Vector3();
+            TypedConstraint._helpVector3D = new egret3d.Vector3();
+            TypedConstraint._helpQuaternionA = new egret3d.Quaternion();
+            TypedConstraint._helpQuaternionB = new egret3d.Quaternion();
+            TypedConstraint._helpMatrixA = new egret3d.Matrix();
+            TypedConstraint._helpMatrixB = new egret3d.Matrix();
+            TypedConstraint._helpMatrixC = new egret3d.Matrix();
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_collisionEnabled", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_autoCalculateConnectedAnchor", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_constraintType", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_overrideNumSolverIterations", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_breakingImpulseThreshold", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_anchor", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_axisX", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_axisY", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_connectedAnchor", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_connectedAxisX", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_connectedAxisY", void 0);
+            __decorate([
+                paper.serializedField
+            ], TypedConstraint.prototype, "_connectedBody", void 0);
+            return TypedConstraint;
+        }(paper.BaseComponent));
+        ammo.TypedConstraint = TypedConstraint;
+        __reflect(TypedConstraint.prototype, "egret3d.ammo.TypedConstraint");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var Color = (function () {
+        function Color(r, g, b, a) {
+            if (r === void 0) { r = 1.0; }
+            if (g === void 0) { g = 1.0; }
+            if (b === void 0) { b = 1.0; }
+            if (a === void 0) { a = 1.0; }
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
+        }
+        Color.prototype.serialize = function () {
+            return [this.r, this.g, this.b, this.a];
+        };
+        Color.prototype.deserialize = function (element) {
+            this.r = element[0];
+            this.g = element[1];
+            this.b = element[2];
+            this.a = element[3];
+        };
+        Color.set = function (r, g, b, a, out) {
+            if (r === void 0) { r = 1; }
+            if (g === void 0) { g = 1; }
+            if (b === void 0) { b = 1; }
+            if (a === void 0) { a = 1; }
+            out.r = r;
+            out.g = g;
+            out.b = b;
+            out.a = a;
+            return out;
+        };
+        Color.multiply = function (c1, c2, out) {
+            out.r = c1.r * c2.r;
+            out.g = c1.g * c2.g;
+            out.b = c1.b * c2.b;
+            out.a = c1.a * c2.a;
+            return out;
+        };
+        Color.scale = function (c, scaler) {
+            c.r = c.r * scaler;
+            c.g = c.g * scaler;
+            c.b = c.b * scaler;
+            c.a = c.a * scaler;
+            return c;
+        };
+        Color.copy = function (c, out) {
+            out.r = c.r;
+            out.g = c.g;
+            out.b = c.b;
+            out.a = c.a;
+            return out;
+        };
+        Color.lerp = function (c1, c2, value, out) {
+            out.a = value * (c2.a - c1.a) + c1.a;
+            out.r = value * (c2.r - c1.r) + c1.r;
+            out.g = value * (c2.g - c1.g) + c1.g;
+            out.b = value * (c2.b - c1.b) + c1.b;
+            return out;
+        };
+        return Color;
+    }());
+    egret3d.Color = Color;
+    __reflect(Color.prototype, "egret3d.Color", ["paper.ISerializable"]);
+})(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
     /**
-     * 销毁系统
+     * 单例组件基类。
+     */
+    var SingletonComponent = (function (_super) {
+        __extends(SingletonComponent, _super);
+        function SingletonComponent() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        return SingletonComponent;
+    }(paper.BaseComponent));
+    paper.SingletonComponent = SingletonComponent;
+    __reflect(SingletonComponent.prototype, "paper.SingletonComponent");
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var _deserializedObjects;
+    /**
+     * 反序列化
+     * @param data 反序列化数据
+     * @param expandMap 扩展的对象映射，此映射中存在的对象不需要重新序列化，直接使用即可（例如已经加载完成的资源文件）。
+     */
+    function deserialize(data, expandMap) {
+        _deserializedObjects = {};
+        for (var k in expandMap) {
+            _deserializedObjects[k] = expandMap[k];
+        }
+        var root = null;
+        for (var _i = 0, _a = data.objects; _i < _a.length; _i++) {
+            var source = _a[_i];
+            var uuid = source.uuid || source.hashCode; // hashCode 兼容。
+            var target = void 0;
+            if (uuid in _deserializedObjects) {
+                target = _deserializedObjects[uuid];
+            }
+            else {
+                var className = paper.serializeClassMap[source.class] || source.class;
+                var clazz = egret.getDefinitionByName(className);
+                if (clazz) {
+                    target = new clazz();
+                    _deserializedObjects[uuid] = target;
+                }
+                else {
+                    target = new paper.MissingObject();
+                    _deserializedObjects[uuid] = target;
+                    console.error("Class " + source.class + " not defined.");
+                }
+            }
+            root = root || target;
+        }
+        for (var _b = 0, _c = data.objects; _b < _c.length; _b++) {
+            var source = _c[_b];
+            var uuid = source.uuid || source.hashCode; // hashCode 兼容。
+            if (uuid in expandMap) {
+                continue;
+            }
+            var target = _deserializedObjects[uuid];
+            _deserializeObject(source, target);
+            if (target instanceof paper.GameObject) {
+                for (var _d = 0, _e = target.components; _d < _e.length; _d++) {
+                    var component = _e[_d];
+                    component.gameObject = target; // TODO
+                }
+            }
+        }
+        for (var _f = 0, _g = data.objects; _f < _g.length; _f++) {
+            var source = _g[_f];
+            var uuid = source.uuid || source.hashCode; // hashCode 兼容。
+            var target = _deserializedObjects[uuid];
+            if (target instanceof paper.BaseComponent) {
+                target.initialize();
+                if (target.isActiveAndEnabled) {
+                    paper.EventPool.dispatchEvent("__enabled__" /* Enabled */, target);
+                }
+            }
+        }
+        _deserializedObjects = null;
+        return root;
+    }
+    paper.deserialize = deserialize;
+    /**
      *
      */
-    var DestroySystem = (function (_super) {
-        __extends(DestroySystem, _super);
-        function DestroySystem() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._bufferedComponents = [];
-            _this._bufferedGameObjects = [];
-            return _this;
+    function getDeserializedObject(source) {
+        return _deserializedObjects[source.uuid || source.hashCode]; // hashCode 兼容。
+    }
+    paper.getDeserializedObject = getDeserializedObject;
+    function _deserializeObject(source, target) {
+        if (target.constructor.prototype.hasOwnProperty("deserialize")) {
+            target.deserialize(source);
+        }
+        else {
+            for (var k in source) {
+                if (k === "uuid" || k === "hashCode" || k === "class") {
+                    continue;
+                }
+                if ("__deserializedIgnore" /* DeserializedIgnore */ in target &&
+                    target["__deserializedIgnore" /* DeserializedIgnore */].indexOf(k) >= 0) {
+                    continue;
+                }
+                target[k] = _deserializeChild(source[k], target[k]);
+            }
+        }
+    }
+    function _deserializeChild(source, target) {
+        if (source === null || source === undefined) {
+            return source;
+        }
+        switch (typeof source) {
+            case "function":
+                return undefined;
+            case "object": {
+                if (target && target.constructor.prototype.hasOwnProperty("deserialize")) {
+                    target.deserialize(source);
+                    return target;
+                }
+                if (Array.isArray(source)) {
+                    target = [];
+                    for (var i = 0, l = source.length; i < l; ++i) {
+                        target[i] = _deserializeChild(source[i]);
+                    }
+                    return target;
+                }
+                var uuid = (source.uuid || source.hashCode); // TODO 字符串依赖， hashCode 兼容。
+                var classCodeOrName = source.class; // TODO 字符串依赖。
+                if (uuid) {
+                    if (uuid in _deserializedObjects) {
+                        return _deserializedObjects[uuid];
+                    }
+                    else if (classCodeOrName) {
+                        if (classCodeOrName === paper.findClassCodeFrom(paper.Scene)) {
+                            // TODO
+                        }
+                        else if (classCodeOrName === paper.findClassCodeFrom(paper.GameObject)) {
+                            for (var _i = 0, _a = paper.Application.sceneManager.activeScene.gameObjects; _i < _a.length; _i++) {
+                                var gameObject = _a[_i];
+                                if (gameObject.uuid === uuid) {
+                                    return gameObject;
+                                }
+                            }
+                        }
+                        else {
+                            for (var _b = 0, _c = paper.Application.sceneManager.activeScene.gameObjects; _b < _c.length; _b++) {
+                                var gameObject = _c[_b];
+                                for (var _d = 0, _e = gameObject.components; _d < _e.length; _d++) {
+                                    var component = _e[_d];
+                                    if (component.uuid === uuid) {
+                                        return component;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (classCodeOrName) {
+                    classCodeOrName = paper.serializeClassMap[classCodeOrName] || classCodeOrName;
+                    var clazz = egret.getDefinitionByName(classCodeOrName);
+                    if (clazz) {
+                        target = new clazz();
+                        _deserializeObject(source, target);
+                        return target;
+                    }
+                }
+                else {
+                    target = {};
+                    for (var k in source) {
+                        target[k] = _deserializeChild(source[k]);
+                    }
+                    return target;
+                }
+                console.warn("Deserialize error.", source);
+                return null;
+            }
+            default:
+                return source;
+        }
+    }
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     *
+     */
+    var Border = (function () {
+        /**
+         *
+         */
+        function Border(l, t, r, b) {
+            if (l === void 0) { l = 0.0; }
+            if (t === void 0) { t = 0.0; }
+            if (r === void 0) { r = 0.0; }
+            if (b === void 0) { b = 0.0; }
+            this.l = l;
+            this.t = t;
+            this.r = r;
+            this.b = b;
         }
         /**
          * @inheritDoc
          */
-        DestroySystem.prototype.update = function () {
-            for (var _i = 0, _a = this._bufferedComponents; _i < _a.length; _i++) {
-                var component = _a[_i];
-                component.uninitialize();
-            }
-            this._bufferedComponents.length = 0;
-            this._bufferedGameObjects.length = 0;
+        Border.prototype.serialize = function () {
+            return [this.l, this.t, this.r, this.b];
         };
         /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
-         *
+         * @inheritDoc
          */
-        DestroySystem.prototype.bufferComponent = function (component) {
-            if (this._bufferedComponents.indexOf(component) >= 0) {
-                return;
-            }
-            this._bufferedComponents.push(component);
+        Border.prototype.deserialize = function (element) {
+            this.l = element[0];
+            this.t = element[1];
+            this.r = element[2];
+            this.b = element[3];
         };
-        /**
-         * 将实体缓存到销毁系统，以便在系统运行时销毁。
-         *
-         */
-        DestroySystem.prototype.bufferGameObject = function (gameObject) {
-            if (this._bufferedGameObjects.indexOf(gameObject) >= 0) {
-                return;
-            }
-            this._bufferedGameObjects.push(gameObject);
-            if (gameObject.transform) {
-                for (var _i = 0, _a = gameObject.transform.children; _i < _a.length; _i++) {
-                    var child = _a[_i];
-                    if (paper.Application.sceneManager.globalObjects.indexOf(child.gameObject) >= 0) {
-                        child.parent = null;
-                        continue;
-                    }
-                    child.gameObject.destroy();
-                }
-            }
-        };
-        return DestroySystem;
-    }(paper.BaseSystem));
-    paper.DestroySystem = DestroySystem;
-    __reflect(DestroySystem.prototype, "paper.DestroySystem");
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     *
-     */
-    var MissComponent = (function (_super) {
-        __extends(MissComponent, _super);
-        function MissComponent() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        __decorate([
-            paper.serializedField
-        ], MissComponent.prototype, "missingObject", void 0);
-        return MissComponent;
-    }(paper.BaseComponent));
-    paper.MissComponent = MissComponent;
-    __reflect(MissComponent.prototype, "paper.MissComponent");
-})(paper || (paper = {}));
+        return Border;
+    }());
+    egret3d.Border = Border;
+    __reflect(Border.prototype, "egret3d.Border", ["paper.ISerializable"]);
+})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     var KEY_GAMEOBJECTS = "gameObjects";
@@ -3455,11 +4906,11 @@ var paper;
     var KEY_SERIALIZE = "serialize";
     var KEY_DESERIALIZE = "deserialize";
     var _sourcePath = "";
-    var _hashCodes = []; // 缓存序列化记录，提高查找效率
+    var _serializeds = []; // 缓存序列化记录，提高查找效率
     var _serializeData = null;
     /**
      * 序列化方法
-     * 只有 ISerializable (有对应hashCode属性) 参与序列化
+     * 只有 ISerializable 参与序列化
      * 只有被标记的对象属性 参与序列化
      * 序列化后，输出 ISerializeData
      * 对象在objects中按生成顺序，root一定是第一个元素。
@@ -3470,11 +4921,11 @@ var paper;
         _serializeData = { objects: [] };
         _sourcePath = sourcePath;
         if (!_sourcePath && source instanceof paper.Scene) {
-            var rawScene = source.$rawScene;
+            var rawScene = source.rawScene;
             _sourcePath = rawScene ? rawScene.url : "";
         }
         _serializeObject(source);
-        _hashCodes.length = 0;
+        _serializeds.length = 0;
         var data = _serializeData;
         _serializeData = null;
         return data;
@@ -3499,14 +4950,14 @@ var paper;
      */
     function serializeRC(source) {
         var className = egret.getQualifiedClassName(source);
-        return { hashCode: source.hashCode, class: paper.findClassCode(className) || className };
+        return { uuid: source.uuid, class: paper.findClassCode(className) || className };
     }
     paper.serializeRC = serializeRC;
     /**
      *
      */
     function serializeR(source) {
-        return { hashCode: source.hashCode };
+        return { uuid: source.uuid };
     }
     paper.serializeR = serializeR;
     /**
@@ -3538,10 +4989,7 @@ var paper;
     function _serializeObject(source, isStruct, parentHasCustomDeserialize) {
         if (isStruct === void 0) { isStruct = false; }
         if (parentHasCustomDeserialize === void 0) { parentHasCustomDeserialize = false; }
-        if (_hashCodes.indexOf(source.hashCode) >= 0) {
-            // if (!(source instanceof Asset)) {
-            //     console.warn("Serialize object again.", source.hashCode);
-            // }
+        if (_serializeds.indexOf(source.uuid) >= 0) {
             return serializeR(source);
         }
         var classPrototype = source.constructor.prototype;
@@ -3550,7 +4998,7 @@ var paper;
             classPrototype[KEY_SERIALIZE].apply(source) :
             (parentHasCustomDeserialize ? {} : (isStruct ? serializeC(source) : serializeRC(source)));
         if (!isStruct && _serializeData) {
-            _hashCodes.push(source.hashCode);
+            _serializeds.push(source.uuid);
             // Add to custom.
             if ("__serializedType" /* SerializedType */ in source) {
                 for (var _i = 0, _a = source["__serializedType" /* SerializedType */]; _i < _a.length; _i++) {
@@ -3635,588 +5083,6 @@ var paper;
         }
     }
 })(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     *
-     */
-    var EventPool;
-    (function (EventPool) {
-        var _componentListeners = {};
-        /**
-         * 添加事件监听
-         */
-        function addEventListener(eventType, componentClass, callback) {
-            var componentType = egret.getQualifiedClassName(componentClass);
-            var componentListeners = componentType in _componentListeners ? _componentListeners[componentType] : _componentListeners[componentType] = {};
-            var eventListeners = eventType in componentListeners ? componentListeners[eventType] : componentListeners[eventType] = [];
-            eventListeners.push(callback);
-        }
-        EventPool.addEventListener = addEventListener;
-        /**
-         * 移除事件监听
-         */
-        function removeEventListener(eventType, componentClass, callback) {
-            var componentType = egret.getQualifiedClassName(componentClass);
-            if (componentType in _componentListeners) {
-                var componentListeners = _componentListeners[componentType];
-                if (eventType in componentListeners) {
-                    var eventListeners = componentListeners[eventType];
-                    for (var i = 0, l = eventListeners.length; i < l; i++) {
-                        if (eventListeners[i] === callback) {
-                            eventListeners.splice(i, 1);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        EventPool.removeEventListener = removeEventListener;
-        /**
-         * 移除所有该类型的事件监听
-         */
-        function removeAllEventListener(eventType, componentClass) {
-            var componentType = egret.getQualifiedClassName(componentClass);
-            if (componentType in _componentListeners) {
-                var componentListeners = _componentListeners[componentType];
-                if (eventType in componentListeners) {
-                    componentListeners[eventType].length = 0;
-                }
-            }
-        }
-        EventPool.removeAllEventListener = removeAllEventListener;
-        /**
-         * 发送组件事件:
-         * @param type event type:
-         * @param component component
-         */
-        function dispatchEvent(type, component, extend) {
-            var behaviourType = "paper.Behaviour"; // TODO 字符串依赖需要注意
-            var componentType = "";
-            if ((type === "__enabled__" /* Enabled */ || type === "__disabled__" /* Disabled */) &&
-                egret.is(component, behaviourType)) {
-                componentType = behaviourType;
-            }
-            else {
-                componentType = egret.getQualifiedClassName(component.constructor);
-            }
-            if (componentType in _componentListeners) {
-                var componentListeners = _componentListeners[componentType];
-                if (type in componentListeners) {
-                    var eventListeners = componentListeners[type];
-                    for (var _i = 0, eventListeners_1 = eventListeners; _i < eventListeners_1.length; _i++) {
-                        var listener = eventListeners_1[_i];
-                        // 监听直接派发，所以监听都应注意 bind 问题。
-                        if (extend) {
-                            listener(component, extend);
-                        }
-                        else {
-                            listener(component);
-                        }
-                    }
-                }
-            }
-        }
-        EventPool.dispatchEvent = dispatchEvent;
-    })(EventPool = paper.EventPool || (paper.EventPool = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     * 可以挂载Component的实体类。
-     */
-    var GameObject = (function (_super) {
-        __extends(GameObject, _super);
-        /**
-         * 创建GameObject，并添加到当前场景中
-         */
-        function GameObject(name, tag) {
-            if (name === void 0) { name = "NoName"; }
-            if (tag === void 0) { tag = ""; }
-            var _this = _super.call(this) || this;
-            /**
-             * 是否是静态，启用这个属性可以提升性能
-             */
-            _this.isStatic = false;
-            /**
-             * 层级
-             */
-            _this.layer = 2 /* Default */;
-            /**
-             * 名称
-             */
-            _this.name = "";
-            /**
-             * 标签
-             */
-            _this.tag = "";
-            /**
-             * 变换组件
-             */
-            _this.transform = null;
-            _this.renderer = null;
-            /**
-             * 预制体
-             */
-            _this.prefab = null;
-            _this._destroyed = false;
-            _this._activeSelf = true;
-            _this._activeInHierarchy = true;
-            _this._activeDirty = true;
-            _this._components = [];
-            _this._scene = null;
-            _this.uuid = null;
-            _this._scene = paper.Application.sceneManager.getActiveScene();
-            _this._scene.$addGameObject(_this);
-            _this.name = name;
-            _this.tag = tag;
-            // 自动创建transform
-            _this.addComponent(egret3d.Transform);
-            return _this;
-        }
-        /**
-         * 返回当前激活场景中查找对应名称的GameObject
-         * @param name
-         */
-        GameObject.find = function (name) {
-            for (var _i = 0, _a = paper.Application.sceneManager.getActiveScene().gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.name === name) {
-                    return gameObject;
-                }
-            }
-            return null;
-        };
-        /**
-         * 返回一个在当前激活场景中查找对应tag的GameObject
-         * @param tag
-         */
-        GameObject.findWithTag = function (tag) {
-            for (var _i = 0, _a = paper.Application.sceneManager.getActiveScene().gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.tag === tag) {
-                    return gameObject;
-                }
-            }
-            return null;
-        };
-        /**
-         * 返回所有在当前激活场景中查找对应tag的GameObject
-         * @param name
-         */
-        GameObject.findGameObjectsWithTag = function (tag) {
-            var gameObjects = [];
-            for (var _i = 0, _a = paper.Application.sceneManager.getActiveScene().gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.tag === tag) {
-                    gameObjects.push(gameObject);
-                }
-            }
-            return gameObjects;
-        };
-        /**
-         * @internal
-         */
-        GameObject.prototype._activeInHierarchyDirty = function (prevActive) {
-            // if (this._activeDirty) {
-            //     return;
-            // }
-            this._activeDirty = true;
-            var currentActive = this.activeInHierarchy;
-            if (currentActive !== prevActive) {
-                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                    var component = _a[_i];
-                    if (component.enabled) {
-                        paper.EventPool.dispatchEvent(currentActive ? "__enabled__" /* Enabled */ : "__disabled__" /* Disabled */, component);
-                    }
-                }
-            }
-            for (var _b = 0, _c = this.transform.children; _b < _c.length; _b++) {
-                var child = _c[_b];
-                child.gameObject._activeInHierarchyDirty(prevActive);
-            }
-        };
-        GameObject.prototype._removeComponentReference = function (component) {
-            component.enabled = false; // TODO remove flag.
-            var destroySystem = paper.Application.systemManager.getSystem(paper.DestroySystem);
-            if (destroySystem) {
-                destroySystem.bufferComponent(component);
-            }
-        };
-        GameObject.prototype._getComponentsInChildren = function (componentClass, child, array) {
-            var components = child._components;
-            for (var _i = 0, components_1 = components; _i < components_1.length; _i++) {
-                var component = components_1[_i];
-                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
-                    array.push(component);
-                }
-            }
-            for (var _a = 0, _b = child.transform.children; _a < _b.length; _a++) {
-                var childOfChild = _b[_a];
-                this._getComponentsInChildren(componentClass, childOfChild.gameObject, array);
-            }
-        };
-        /**
-         *
-         */
-        GameObject.prototype.destroy = function () {
-            if (this._destroyed) {
-                console.warn("The game object has been destroyed.", this.name, this.hashCode);
-                return;
-            }
-            if (paper.Application.sceneManager.globalObjects.indexOf(this) >= 0) {
-                paper.Application.sceneManager.removeGlobalObject(this);
-            }
-            this._destroyed = true;
-            this.removeAllComponents();
-            this._scene.$removeGameObject(this);
-            this._scene = null;
-            var destroySystem = paper.Application.systemManager.getSystem(paper.DestroySystem);
-            if (destroySystem) {
-                destroySystem.bufferGameObject(this);
-            }
-        };
-        /**
-         *
-         */
-        GameObject.prototype.dontDestroy = function () {
-            paper.Application.sceneManager.addGlobalObject(this);
-        };
-        /**
-         * 根据类型名获取组件
-         */
-        GameObject.prototype.addComponent = function (componentClass) {
-            paper.BaseComponent._injectGameObject = this;
-            var component = new componentClass();
-            if (component instanceof egret3d.Transform) {
-                this.transform = component;
-            }
-            else if (component instanceof egret3d.MeshRenderer) {
-                this.renderer = component;
-            }
-            this._components.push(component);
-            component.initialize();
-            if (component.isActiveAndEnabled) {
-                paper.EventPool.dispatchEvent("__enabled__" /* Enabled */, component);
-            }
-            return component;
-        };
-        /**
-         * 移除组件
-         */
-        GameObject.prototype.removeComponent = function (componentInstanceOrClass) {
-            if (componentInstanceOrClass instanceof paper.BaseComponent) {
-                if (componentInstanceOrClass === this.transform) {
-                    return;
-                }
-                var index = 0;
-                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                    var component = _a[_i];
-                    if (component === componentInstanceOrClass) {
-                        this._removeComponentReference(component);
-                        this._components.splice(index, 1);
-                        return;
-                    }
-                    index++;
-                }
-            }
-            else {
-                if (componentInstanceOrClass === egret3d.Transform) {
-                    return;
-                }
-                var index = 0;
-                for (var _b = 0, _c = this._components; _b < _c.length; _b++) {
-                    var component = _c[_b];
-                    if (egret.is(component, egret.getQualifiedClassName(componentInstanceOrClass))) {
-                        this._removeComponentReference(component);
-                        this._components.splice(index, 1);
-                        return;
-                    }
-                    index++;
-                }
-            }
-        };
-        /**
-         * 移除自身的所有组件
-         */
-        GameObject.prototype.removeAllComponents = function () {
-            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                var component = _a[_i];
-                this._removeComponentReference(component);
-            }
-            this._components.length = 0;
-        };
-        /**
-         * 根据类型名获取组件
-         */
-        GameObject.prototype.getComponent = function (componentClass) {
-            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                var component = _a[_i];
-                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
-                    return component;
-                }
-            }
-            return null;
-        };
-        /**
-         * 根据类型名获取所有组件
-         */
-        GameObject.prototype.getComponents = function (componentClass) {
-            var components = [];
-            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                var component = _a[_i];
-                if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
-                    components.push(component);
-                }
-            }
-            return components;
-        };
-        /**
-         * 搜索自己和父节点中所有特定类型的组件
-         */
-        GameObject.prototype.getComponentInParent = function (componentClass) {
-            var result = null;
-            var parent = this.transform.parent;
-            while (!result && parent) {
-                result = parent.gameObject.getComponent(componentClass);
-                parent = parent.parent;
-            }
-            return result;
-        };
-        /**
-         * 搜索自己和子节点中所有特定类型的组件
-         */
-        GameObject.prototype.getComponentsInChildren = function (componentClass) {
-            var components = [];
-            this._getComponentsInChildren(componentClass, this, components);
-            return components;
-        };
-        /**
-         * 针对同级的组件发送消息
-         * @param methodName
-         * @param parameter
-         */
-        GameObject.prototype.sendMessage = function (methodName, parameter, requireReceiver) {
-            if (requireReceiver === void 0) { requireReceiver = true; }
-            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                var component = _a[_i];
-                if (component.isActiveAndEnabled && component.constructor instanceof paper.Behaviour) {
-                    if (methodName in component) {
-                        component[methodName](parameter);
-                    }
-                    else if (requireReceiver) {
-                        console.warn(this.name, egret.getQualifiedClassName(component), methodName); // TODO
-                    }
-                }
-            }
-        };
-        /**
-         * 针对直接父级发送消息
-         * @param methodName
-         * @param parameter
-         */
-        GameObject.prototype.sendMessageUpwards = function (methodName, parameter, requireReceiver) {
-            if (requireReceiver === void 0) { requireReceiver = true; }
-            this.sendMessage(methodName, parameter, requireReceiver);
-            //
-            var parent = this.transform.parent;
-            if (parent && parent.gameObject.activeInHierarchy) {
-                parent.gameObject.sendMessage(methodName, parameter, requireReceiver);
-            }
-        };
-        /**
-         * 群发消息
-         * @param methodName
-         * @param parameter
-         */
-        GameObject.prototype.broadcastMessage = function (methodName, parameter, requireReceiver) {
-            if (requireReceiver === void 0) { requireReceiver = true; }
-            this.sendMessage(methodName, parameter, requireReceiver);
-            for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
-                var child = _a[_i];
-                if (child.gameObject.activeInHierarchy) {
-                    child.gameObject.broadcastMessage(methodName, parameter, requireReceiver);
-                }
-            }
-        };
-        Object.defineProperty(GameObject.prototype, "activeSelf", {
-            /**
-             * 当前GameObject对象自身激活状态
-             */
-            get: function () {
-                return this._activeSelf;
-            },
-            set: function (value) {
-                if (this._activeSelf !== value) {
-                    var prevActive = this.activeInHierarchy;
-                    this._activeSelf = value;
-                    this._activeInHierarchyDirty(prevActive);
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GameObject.prototype, "activeInHierarchy", {
-            /**
-             * 获取当前GameObject对象在场景中激活状态。
-             * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
-             */
-            get: function () {
-                if (this._activeDirty) {
-                    var parent_1 = this.transform.parent;
-                    if (parent_1 && !parent_1.gameObject.activeInHierarchy) {
-                        this._activeInHierarchy = false;
-                    }
-                    else {
-                        this._activeInHierarchy = this._activeSelf;
-                    }
-                    this._activeDirty = false;
-                }
-                return this._activeInHierarchy;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GameObject.prototype, "components", {
-            /**
-             * 组件列表
-             */
-            get: function () {
-                return this._components;
-            },
-            /**
-             * 仅用于反序列化。
-             * @internal
-             */
-            set: function (value) {
-                this._components.length = 0;
-                for (var _i = 0, value_2 = value; _i < value_2.length; _i++) {
-                    var component = value_2[_i];
-                    if (component instanceof paper.MissingObject) {
-                        this.addComponent(paper.MissComponent).missingObject = component;
-                    }
-                    else {
-                        this._components.push(component);
-                    }
-                }
-                this.transform = this.getComponent(egret3d.Transform) || this.addComponent(egret3d.Transform);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GameObject.prototype, "scene", {
-            /**
-             * 获取物体所在场景实例。
-             */
-            get: function () {
-                return this._scene;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.CHECKBOX)
-        ], GameObject.prototype, "isStatic", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.deserializedIgnore
-        ], GameObject.prototype, "layer", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.TEXT)
-        ], GameObject.prototype, "name", void 0);
-        __decorate([
-            paper.serializedField
-        ], GameObject.prototype, "tag", void 0);
-        __decorate([
-            paper.serializedField
-        ], GameObject.prototype, "prefab", void 0);
-        __decorate([
-            paper.serializedField
-        ], GameObject.prototype, "_activeSelf", void 0);
-        __decorate([
-            paper.serializedField
-        ], GameObject.prototype, "uuid", void 0);
-        __decorate([
-            paper.serializedField
-        ], GameObject.prototype, "components", null);
-        return GameObject;
-    }(paper.SerializableObject));
-    paper.GameObject = GameObject;
-    __reflect(GameObject.prototype, "paper.GameObject");
-})(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 矩形可序列化对象
-     */
-    var Rect = (function () {
-        /**
-         *
-         */
-        function Rect(x, y, w, h) {
-            if (x === void 0) { x = 0.0; }
-            if (y === void 0) { y = 0.0; }
-            if (w === void 0) { w = 0.0; }
-            if (h === void 0) { h = 0.0; }
-            /**
-             *
-             */
-            this.x = 0.0;
-            /**
-             *
-             */
-            this.y = 0.0;
-            /**
-             *
-             */
-            this.w = 0.0;
-            /**
-             *
-             */
-            this.h = 0.0;
-            this.x = x;
-            this.y = y;
-            this.w = w;
-            this.h = h;
-        }
-        /**
-         * @inheritDoc
-         */
-        Rect.prototype.serialize = function () {
-            return [this.x, this.y, this.w, this.h];
-        };
-        /**
-         * @inheritDoc
-         */
-        Rect.prototype.deserialize = function (element) {
-            this.x = element[0];
-            this.y = element[1];
-            this.w = element[2];
-            this.h = element[3];
-        };
-        return Rect;
-    }());
-    egret3d.Rect = Rect;
-    __reflect(Rect.prototype, "egret3d.Rect", ["egret3d.RectData", "paper.ISerializable"]);
-    /**
-     * @internal
-     */
-    egret3d.helpRectA = new Rect();
-    /**
-     * @internal
-     */
-    egret3d.helpRectB = new Rect();
-    /**
-     * @internal
-     */
-    egret3d.helpRectC = new Rect();
-    /**
-     * @internal
-     */
-    egret3d.helpRectD = new Rect();
-})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     var tmpVecA = new egret3d.Vector3();
@@ -4239,21 +5105,21 @@ var egret3d;
     var AABB = (function () {
         /**
          * build a aabb
-         * @param _minimum min point
-         * @param _maximum max point
+         * @param minimum min point
+         * @param maximum max point
          * @version paper 1.0
          * @platform Web
          * @language en_US
          */
         /**
          * 构建轴对称包围盒
-         * @param _minimum 最小点
-         * @param _maximum 最大点
+         * @param minimum 最小点
+         * @param maximum 最大点
          * @version paper 1.0
          * @platform Web
          * @language zh_CN
          */
-        function AABB(_minimum, _maximum) {
+        function AABB(minimum, maximum) {
             /**
              * min point
              * @version paper 1.0
@@ -4286,13 +5152,13 @@ var egret3d;
             this.srcmin = new egret3d.Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
             this.srcmax = new egret3d.Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
             this._center = new egret3d.Vector3();
-            if (_minimum) {
-                egret3d.Vector3.copy(_minimum, this.srcmin);
-                egret3d.Vector3.copy(_minimum, this.minimum);
+            if (minimum) {
+                egret3d.Vector3.copy(minimum, this.srcmin);
+                egret3d.Vector3.copy(minimum, this.minimum);
             }
-            if (_maximum) {
-                egret3d.Vector3.copy(_maximum, this.srcmax);
-                egret3d.Vector3.copy(_maximum, this.maximum);
+            if (maximum) {
+                egret3d.Vector3.copy(maximum, this.srcmax);
+                egret3d.Vector3.copy(maximum, this.maximum);
             }
         }
         /**
@@ -4642,482 +5508,6 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     *
-     */
-    var Border = (function () {
-        /**
-         *
-         */
-        function Border(l, t, r, b) {
-            if (l === void 0) { l = 0.0; }
-            if (t === void 0) { t = 0.0; }
-            if (r === void 0) { r = 0.0; }
-            if (b === void 0) { b = 0.0; }
-            this.l = l;
-            this.t = t;
-            this.r = r;
-            this.b = b;
-        }
-        /**
-         * @inheritDoc
-         */
-        Border.prototype.serialize = function () {
-            return [this.l, this.t, this.r, this.b];
-        };
-        /**
-         * @inheritDoc
-         */
-        Border.prototype.deserialize = function (element) {
-            this.l = element[0];
-            this.t = element[1];
-            this.r = element[2];
-            this.b = element[3];
-        };
-        return Border;
-    }());
-    egret3d.Border = Border;
-    __reflect(Border.prototype, "egret3d.Border", ["paper.ISerializable"]);
-})(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
-    /**
-     * 场景类
-     */
-    var Scene = (function (_super) {
-        __extends(Scene, _super);
-        function Scene() {
-            var _this = _super.call(this) || this;
-            /**
-             * 场景名称。
-             */
-            _this.name = "";
-            /**
-             * 场景的light map列表。
-             */
-            _this.lightmaps = [];
-            /**
-             * 当前场景的所有GameObject对象池
-             *
-             */
-            _this.gameObjects = [];
-            /**
-             * 存储着关联的数据
-             * 场景保存时，将场景快照数据保存至对应的资源中
-             *
-             */
-            _this.$rawScene = null;
-            paper.Application.sceneManager._addScene(_this);
-            for (var _i = 0, _a = paper.Application.sceneManager.globalObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                _this.$addGameObject(gameObject);
-            }
-            return _this;
-        }
-        /**
-         * 销毁
-         * @internal
-         */
-        Scene.prototype.$destroy = function () {
-            var globalObjects = paper.Application.sceneManager.globalObjects;
-            var i = this.gameObjects.length;
-            while (i--) {
-                var gameObject = this.gameObjects[i];
-                if (!gameObject || gameObject.transform.parent || globalObjects.indexOf(gameObject) >= 0) {
-                    continue;
-                }
-                gameObject.destroy();
-            }
-            this.lightmaps.length = 0;
-            this.gameObjects.length = 0;
-            this.$rawScene = null;
-        };
-        /**
-         * 移除GameObject对象
-         *
-         */
-        Scene.prototype.$removeGameObject = function (gameObject) {
-            var index = this.gameObjects.indexOf(gameObject);
-            if (index > -1) {
-                this.gameObjects.splice(index, 1);
-            }
-            else {
-                console.debug("Remove game object again.", gameObject.hashCode);
-            }
-        };
-        /**
-         * 添加一个GameObject对象
-         *
-         */
-        Scene.prototype.$addGameObject = function (gameObject) {
-            if (this.gameObjects.indexOf(gameObject) < 0) {
-                this.gameObjects.push(gameObject);
-            }
-            else {
-                console.debug("Add game object again.", gameObject.hashCode);
-            }
-        };
-        /**
-         * 获取所有根级GameObject对象
-         */
-        Scene.prototype.getRootGameObjects = function () {
-            var gameObjects = [];
-            for (var _i = 0, _a = this.gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (!gameObject.transform.parent) {
-                    gameObjects.push(gameObject);
-                }
-            }
-            return gameObjects;
-        };
-        __decorate([
-            paper.serializedField
-        ], Scene.prototype, "name", void 0);
-        __decorate([
-            paper.serializedField
-        ], Scene.prototype, "lightmaps", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.deserializedIgnore
-        ], Scene.prototype, "gameObjects", void 0);
-        return Scene;
-    }(paper.SerializableObject));
-    paper.Scene = Scene;
-    __reflect(Scene.prototype, "paper.Scene");
-})(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     *
-     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
-     */
-    var Curve3 = (function () {
-        function Curve3(points, nbPoints) {
-            this._beizerPoints = points;
-            this._bezierPointNum = nbPoints;
-        }
-        Object.defineProperty(Curve3.prototype, "beizerPoints", {
-            get: function () {
-                return this._beizerPoints;
-            },
-            set: function (value) {
-                this._beizerPoints = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Curve3.prototype, "bezierPointNum", {
-            get: function () {
-                return this._bezierPointNum;
-            },
-            set: function (value) {
-                this._bezierPointNum = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * 线性贝塞尔曲线
-         */
-        Curve3.CreateLinearBezier = function (start, end, indices) {
-            indices = indices > 2 ? indices : 3;
-            var bez = new Array();
-            var equation = function (t, va10, va11) {
-                var res = (1.0 - t) * va10 + t * va11;
-                return res;
-            };
-            bez.push(start);
-            for (var i = 1; i <= indices; i++) {
-                bez.push(new egret3d.Vector3(equation(i / indices, start.x, end.x), equation(i / indices, start.y, start.y), equation(i / indices, start.z, start.z)));
-            }
-            return new Curve3(bez, indices);
-        };
-        /**
-         * 二次方贝塞尔曲线路径
-         * @param v0 起始点
-         * @param v1 选中的节点
-         * @param v2 结尾点
-         * @param nbPoints 将贝塞尔曲线拆分nbPoints段，一共有nbPoints + 1个点
-         */
-        Curve3.CreateQuadraticBezier = function (v0, v1, v2, bezierPointNum) {
-            bezierPointNum = bezierPointNum > 2 ? bezierPointNum : 3;
-            var beizerPoint = new Array();
-            var equation = function (t, val0, val1, val2) {
-                var res = (1.0 - t) * (1.0 - t) * val0 + 2.0 * t * (1.0 - t) * val1 + t * t * val2;
-                return res;
-            };
-            for (var i = 1; i <= bezierPointNum; i++) {
-                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z)));
-            }
-            return new Curve3(beizerPoint, bezierPointNum);
-        };
-        /**
-         * 三次方贝塞尔曲线路径
-         * @param v0
-         * @param v1
-         * @param v2
-         * @param v3
-         * @param nbPoints
-         */
-        Curve3.CreateCubicBezier = function (v0, v1, v2, v3, bezierPointNum) {
-            bezierPointNum = bezierPointNum > 3 ? bezierPointNum : 4;
-            var beizerPoint = new Array();
-            var equation = function (t, val0, val1, val2, val3) {
-                var res = (1.0 - t) * (1.0 - t) * (1.0 - t) * val0 + 3.0 * t * (1.0 - t) * (1.0 - t) * val1 + 3.0 * t * t * (1.0 - t) * val2 + t * t * t * val3;
-                return res;
-            };
-            for (var i = 1; i <= bezierPointNum; i++) {
-                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x, v3.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y, v3.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z, v3.z)));
-            }
-            return new Curve3(beizerPoint, bezierPointNum);
-        };
-        /**
-         * 贝塞尔曲线上的点
-         */
-        Curve3.prototype.getPoints = function () {
-            return this._beizerPoints;
-        };
-        return Curve3;
-    }());
-    egret3d.Curve3 = Curve3;
-    __reflect(Curve3.prototype, "egret3d.Curve3");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     *
-     */
-    egret3d.RAD_DEG = 180.0 / Math.PI;
-    /**
-     *
-     */
-    egret3d.DEG_RAD = Math.PI / 180.0;
-    function floatClamp(v, min, max) {
-        if (min === void 0) { min = 0; }
-        if (max === void 0) { max = 1; }
-        if (v < min)
-            return min;
-        else if (v > max)
-            return max;
-        else
-            return v;
-    }
-    egret3d.floatClamp = floatClamp;
-    function sign(value) {
-        value = +value; // convert to a number
-        if (value === 0 || isNaN(value))
-            return value;
-        return value > 0 ? 1 : -1;
-    }
-    egret3d.sign = sign;
-    function numberLerp(fromV, toV, v) {
-        return fromV * (1 - v) + toV * v;
-    }
-    egret3d.numberLerp = numberLerp;
-    function calPlaneLineIntersectPoint(planeVector, planePoint, lineVector, linePoint, out) {
-        var vp1 = planeVector.x;
-        var vp2 = planeVector.y;
-        var vp3 = planeVector.z;
-        var n1 = planePoint.x;
-        var n2 = planePoint.y;
-        var n3 = planePoint.z;
-        var v1 = lineVector.x;
-        var v2 = lineVector.y;
-        var v3 = lineVector.z;
-        var m1 = linePoint.x;
-        var m2 = linePoint.y;
-        var m3 = linePoint.z;
-        var vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
-        if (vpt === 0) {
-            out = null;
-        }
-        else {
-            var t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
-            out.x = m1 + v1 * t;
-            out.y = m2 + v2 * t;
-            out.z = m3 + v3 * t;
-        }
-        return out;
-    }
-    egret3d.calPlaneLineIntersectPoint = calPlaneLineIntersectPoint;
-    var helpVec3_1 = new egret3d.Vector3();
-    var helpVec3_2 = new egret3d.Vector3();
-    var helpVec3_3 = new egret3d.Vector3();
-    var helpVec3_4 = new egret3d.Vector3();
-    var helpVec3_5 = new egret3d.Vector3();
-    function getPointAlongCurve(curveStart, curveStartHandle, curveEnd, curveEndHandle, t, out, crease) {
-        if (crease === void 0) { crease = 0.3; }
-        var oneMinT = 1 - t;
-        var oneMinTPow3 = Math.pow(oneMinT, 3);
-        var oneMinTPow2 = Math.pow(oneMinT, 2);
-        var oneMinCrease = 1 - crease;
-        var tempt1 = helpVec3_1;
-        egret3d.Vector3.copy(curveStart, tempt1);
-        egret3d.Vector3.scale(tempt1, oneMinTPow3 * oneMinCrease);
-        var tempt2 = helpVec3_2;
-        egret3d.Vector3.copy(curveStartHandle, tempt2);
-        egret3d.Vector3.scale(tempt2, 3 * oneMinTPow2 * t * crease);
-        var tempt3 = helpVec3_3;
-        egret3d.Vector3.copy(curveEndHandle, tempt3);
-        egret3d.Vector3.scale(tempt3, 3 * oneMinT * Math.pow(t, 2) * crease);
-        var tempt4 = helpVec3_4;
-        egret3d.Vector3.copy(curveEnd, tempt4);
-        egret3d.Vector3.scale(tempt4, Math.pow(t, 3) * oneMinCrease);
-        var tempt5 = helpVec3_5;
-        egret3d.Vector3.add(tempt1, tempt2, tempt5);
-        egret3d.Vector3.add(tempt5, tempt3, tempt5);
-        egret3d.Vector3.add(tempt5, tempt4, tempt5);
-        egret3d.Vector3.copy(tempt5, out);
-        egret3d.Vector3.scale(out, 1 / (oneMinTPow3 * oneMinCrease + 3 * oneMinTPow2 * t * crease + 3 * oneMinT * Math.pow(t, 2) * crease + Math.pow(t, 3) * oneMinCrease));
-    }
-    egret3d.getPointAlongCurve = getPointAlongCurve;
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var Angelref = (function () {
-        function Angelref() {
-        }
-        return Angelref;
-    }());
-    egret3d.Angelref = Angelref;
-    __reflect(Angelref.prototype, "egret3d.Angelref");
-    var Matrix3x2 = (function () {
-        function Matrix3x2(datas) {
-            if (datas === void 0) { datas = null; }
-            if (datas) {
-                this.rawData = datas;
-            }
-            else {
-                this.rawData = new Float32Array([1, 0, 0, 0, 1, 0]);
-            }
-        }
-        Matrix3x2.multiply = function (lhs, rhs, out) {
-            var a00 = lhs.rawData[0], a01 = lhs.rawData[1], a02 = 0;
-            var a10 = lhs.rawData[2], a11 = lhs.rawData[3], a12 = 0;
-            var a30 = lhs.rawData[4], a31 = lhs.rawData[5], a32 = 1;
-            var b0 = rhs.rawData[0], b1 = rhs.rawData[1], b3 = 0;
-            out.rawData[0] = b0 * a00 + b1 * a10 + b3 * a30;
-            out.rawData[1] = b0 * a01 + b1 * a11 + b3 * a31;
-            b0 = rhs.rawData[2];
-            b1 = rhs.rawData[3];
-            b3 = 0;
-            out.rawData[2] = b0 * a00 + b1 * a10 + b3 * a30;
-            out.rawData[3] = b0 * a01 + b1 * a11 + b3 * a31;
-            b0 = rhs.rawData[4];
-            b1 = rhs.rawData[5];
-            b3 = 1;
-            out.rawData[4] = b0 * a00 + b1 * a10 + b3 * a30;
-            out.rawData[5] = b0 * a01 + b1 * a11 + b3 * a31;
-            return out;
-        };
-        Matrix3x2.fromRotate = function (angle, out) {
-            var x = 0, y = 0, z = 1;
-            var s = Math.sin(angle);
-            var c = Math.cos(angle);
-            out.rawData[0] = c;
-            out.rawData[1] = s;
-            out.rawData[2] = -s;
-            out.rawData[3] = c;
-            out.rawData[4] = 0;
-            out.rawData[5] = 0;
-            return out;
-        };
-        Matrix3x2.fromScale = function (xScale, yScale, out) {
-            out.rawData[0] = xScale;
-            out.rawData[1] = 0.0;
-            out.rawData[2] = 0.0;
-            out.rawData[3] = yScale;
-            out.rawData[4] = 0.0;
-            out.rawData[5] = 0.0;
-            return out;
-        };
-        Matrix3x2.fromTranslate = function (x, y, out) {
-            out.rawData[0] = 1.0;
-            out.rawData[1] = 0.0;
-            out.rawData[2] = 0.0;
-            out.rawData[3] = 1.0;
-            out.rawData[4] = x;
-            out.rawData[5] = y;
-            return out;
-        };
-        Matrix3x2.fromRTS = function (pos, scale, rot, out) {
-            var matS = helpMat3x2_1;
-            this.fromScale(scale.x, scale.y, matS);
-            var matR = helpMat3x2_2;
-            this.fromRotate(rot, matR);
-            this.multiply(matR, matS, out);
-            out.rawData[4] = pos.x;
-            out.rawData[5] = pos.y;
-        };
-        Matrix3x2.transformVector2 = function (mat, inp, out) {
-            out.x = inp.x * mat.rawData[0] + inp.y * mat.rawData[2] + mat.rawData[4];
-            out.y = inp.x * mat.rawData[1] + inp.y * mat.rawData[3] + mat.rawData[5];
-            return out;
-        };
-        Matrix3x2.transformNormal = function (mat, inp, out) {
-            out.x = inp.x * mat.rawData[0] + inp.y * mat.rawData[2];
-            out.y = inp.x * mat.rawData[1] + inp.y * mat.rawData[3];
-            return out;
-        };
-        Matrix3x2.inverse = function (src, out) {
-            var l1 = src.rawData[0];
-            var l2 = src.rawData[1];
-            var l5 = src.rawData[2];
-            var l6 = src.rawData[3];
-            var l13 = src.rawData[4];
-            var l14 = src.rawData[5];
-            var l26 = -(((l5 * -l14) - (l6 * -l13)));
-            var l27 = 1.0 / ((((l1 * l6) + (l2 * -l5))));
-            out.rawData[0] = l6 * l27;
-            out.rawData[2] = -l5 * l27;
-            out.rawData[4] = l26 * l27;
-            out.rawData[1] = -(((l2))) * l27;
-            out.rawData[3] = (((l1))) * l27;
-            out.rawData[5] = (((l1 * -l14) - (l2 * -l13))) * l27;
-            return out;
-        };
-        Matrix3x2.identify = function (out) {
-            out.rawData[0] = 1;
-            out.rawData[1] = 0;
-            out.rawData[2] = 0;
-            out.rawData[3] = 1;
-            out.rawData[4] = 0;
-            out.rawData[5] = 0;
-            return out;
-        };
-        Matrix3x2.copy = function (src, out) {
-            for (var i = 0; i < 16; i++) {
-                out.rawData[i] = src.rawData[i];
-            }
-            return out;
-        };
-        Matrix3x2.decompose = function (src, scale, rotation, translation) {
-            translation.x = src.rawData[4];
-            translation.y = src.rawData[5];
-            var xs = egret3d.sign(src.rawData[0] * src.rawData[1]) < 0 ? -1 : 1;
-            var ys = egret3d.sign(src.rawData[2] * src.rawData[3]) < 0 ? -1 : 1;
-            scale.x = xs * Math.sqrt(src.rawData[0] * src.rawData[0] + src.rawData[1] * src.rawData[1]);
-            scale.y = ys * Math.sqrt(src.rawData[2] * src.rawData[2] + src.rawData[3] * src.rawData[3]);
-            if (scale.x === 0 || scale.y === 0) {
-                rotation.v = 0;
-                return false;
-            }
-            var sx = src.rawData[0] / scale.x;
-            var csx = src.rawData[1] / scale.x;
-            var r1 = Math.asin(sx);
-            var r2 = Math.acos(csx);
-            rotation.v = r1;
-            return true;
-        };
-        return Matrix3x2;
-    }());
-    egret3d.Matrix3x2 = Matrix3x2;
-    __reflect(Matrix3x2.prototype, "egret3d.Matrix3x2");
-    var helpMat3x2_1 = new Matrix3x2();
-    var helpMat3x2_2 = new Matrix3x2();
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
     var _helpVector3A = new egret3d.Vector3();
     var _helpVector3B = new egret3d.Vector3();
     /**
@@ -5421,6 +5811,901 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
+     *
+     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
+     */
+    var Curve3 = (function () {
+        function Curve3(points, nbPoints) {
+            this._beizerPoints = points;
+            this._bezierPointNum = nbPoints;
+        }
+        Object.defineProperty(Curve3.prototype, "beizerPoints", {
+            get: function () {
+                return this._beizerPoints;
+            },
+            set: function (value) {
+                this._beizerPoints = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Curve3.prototype, "bezierPointNum", {
+            get: function () {
+                return this._bezierPointNum;
+            },
+            set: function (value) {
+                this._bezierPointNum = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * 线性贝塞尔曲线
+         */
+        Curve3.CreateLinearBezier = function (start, end, indices) {
+            indices = indices > 2 ? indices : 3;
+            var bez = new Array();
+            var equation = function (t, va10, va11) {
+                var res = (1.0 - t) * va10 + t * va11;
+                return res;
+            };
+            bez.push(start);
+            for (var i = 1; i <= indices; i++) {
+                bez.push(new egret3d.Vector3(equation(i / indices, start.x, end.x), equation(i / indices, start.y, start.y), equation(i / indices, start.z, start.z)));
+            }
+            return new Curve3(bez, indices);
+        };
+        /**
+         * 二次方贝塞尔曲线路径
+         * @param v0 起始点
+         * @param v1 选中的节点
+         * @param v2 结尾点
+         * @param nbPoints 将贝塞尔曲线拆分nbPoints段，一共有nbPoints + 1个点
+         */
+        Curve3.CreateQuadraticBezier = function (v0, v1, v2, bezierPointNum) {
+            bezierPointNum = bezierPointNum > 2 ? bezierPointNum : 3;
+            var beizerPoint = new Array();
+            var equation = function (t, val0, val1, val2) {
+                var res = (1.0 - t) * (1.0 - t) * val0 + 2.0 * t * (1.0 - t) * val1 + t * t * val2;
+                return res;
+            };
+            for (var i = 1; i <= bezierPointNum; i++) {
+                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z)));
+            }
+            return new Curve3(beizerPoint, bezierPointNum);
+        };
+        /**
+         * 三次方贝塞尔曲线路径
+         * @param v0
+         * @param v1
+         * @param v2
+         * @param v3
+         * @param nbPoints
+         */
+        Curve3.CreateCubicBezier = function (v0, v1, v2, v3, bezierPointNum) {
+            bezierPointNum = bezierPointNum > 3 ? bezierPointNum : 4;
+            var beizerPoint = new Array();
+            var equation = function (t, val0, val1, val2, val3) {
+                var res = (1.0 - t) * (1.0 - t) * (1.0 - t) * val0 + 3.0 * t * (1.0 - t) * (1.0 - t) * val1 + 3.0 * t * t * (1.0 - t) * val2 + t * t * t * val3;
+                return res;
+            };
+            for (var i = 1; i <= bezierPointNum; i++) {
+                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x, v3.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y, v3.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z, v3.z)));
+            }
+            return new Curve3(beizerPoint, bezierPointNum);
+        };
+        /**
+         * 贝塞尔曲线上的点
+         */
+        Curve3.prototype.getPoints = function () {
+            return this._beizerPoints;
+        };
+        return Curve3;
+    }());
+    egret3d.Curve3 = Curve3;
+    __reflect(Curve3.prototype, "egret3d.Curve3");
+})(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     * 组件事件。
+     */
+    var EventPool;
+    (function (EventPool) {
+        var _behaviourComponentType = egret.getQualifiedClassName(paper.Behaviour);
+        var _componentListeners = {};
+        function _dispatchEvent(type, componentType, component, extend) {
+            var componentListeners = _componentListeners[componentType];
+            if (type in componentListeners) {
+                var eventListeners = componentListeners[type];
+                for (var _i = 0, eventListeners_1 = eventListeners; _i < eventListeners_1.length; _i++) {
+                    var listener = eventListeners_1[_i];
+                    // 监听直接派发，所以监听都应注意 bind 问题。
+                    if (extend) {
+                        listener(component, extend);
+                    }
+                    else {
+                        listener(component);
+                    }
+                }
+            }
+        }
+        /**
+         * 添加事件监听
+         */
+        function addEventListener(eventType, componentClass, callback) {
+            var componentType = egret.getQualifiedClassName(componentClass);
+            var componentListeners = componentType in _componentListeners ? _componentListeners[componentType] : _componentListeners[componentType] = {};
+            var eventListeners = eventType in componentListeners ? componentListeners[eventType] : componentListeners[eventType] = [];
+            eventListeners.push(callback);
+        }
+        EventPool.addEventListener = addEventListener;
+        /**
+         * 移除事件监听
+         */
+        function removeEventListener(eventType, componentClass, callback) {
+            var componentType = egret.getQualifiedClassName(componentClass);
+            if (componentType in _componentListeners) {
+                var componentListeners = _componentListeners[componentType];
+                if (eventType in componentListeners) {
+                    var eventListeners = componentListeners[eventType];
+                    for (var i = 0, l = eventListeners.length; i < l; i++) {
+                        if (eventListeners[i] === callback) {
+                            eventListeners.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        EventPool.removeEventListener = removeEventListener;
+        /**
+         * 移除所有该类型的事件监听
+         */
+        function removeAllEventListener(eventType, componentClass) {
+            var componentType = egret.getQualifiedClassName(componentClass);
+            if (componentType in _componentListeners) {
+                var componentListeners = _componentListeners[componentType];
+                if (eventType) {
+                    if (eventType in componentListeners) {
+                        componentListeners[eventType].length = 0;
+                    }
+                }
+                else {
+                    delete _componentListeners[componentType];
+                }
+            }
+        }
+        EventPool.removeAllEventListener = removeAllEventListener;
+        /**
+         * 发送组件事件:
+         * @param type event type:
+         * @param component component
+         */
+        function dispatchEvent(type, component, extend) {
+            // 如果是组件的添加或删除事件，并且该组件派生自 Behaviour 组件，则需要使用基类的组件类型，这些组件发出的添加或删除事件都能被生命周期系统收到。 
+            if (type === "__enabled__" /* Enabled */ || type === "__disabled__" /* Disabled */) {
+                if (egret.is(component, _behaviourComponentType)) {
+                    _dispatchEvent(type, _behaviourComponentType, component);
+                }
+            }
+            var componentType = egret.getQualifiedClassName(component.constructor);
+            if (componentType in _componentListeners) {
+                _dispatchEvent(type, componentType, component, extend);
+            }
+        }
+        EventPool.dispatchEvent = dispatchEvent;
+    })(EventPool = paper.EventPool || (paper.EventPool = {}));
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    var Angelref = (function () {
+        function Angelref() {
+        }
+        return Angelref;
+    }());
+    egret3d.Angelref = Angelref;
+    __reflect(Angelref.prototype, "egret3d.Angelref");
+    var Matrix3x2 = (function () {
+        function Matrix3x2(datas) {
+            if (datas === void 0) { datas = null; }
+            if (datas) {
+                this.rawData = datas;
+            }
+            else {
+                this.rawData = new Float32Array([1, 0, 0, 0, 1, 0]);
+            }
+        }
+        Matrix3x2.multiply = function (lhs, rhs, out) {
+            var a00 = lhs.rawData[0], a01 = lhs.rawData[1], a02 = 0;
+            var a10 = lhs.rawData[2], a11 = lhs.rawData[3], a12 = 0;
+            var a30 = lhs.rawData[4], a31 = lhs.rawData[5], a32 = 1;
+            var b0 = rhs.rawData[0], b1 = rhs.rawData[1], b3 = 0;
+            out.rawData[0] = b0 * a00 + b1 * a10 + b3 * a30;
+            out.rawData[1] = b0 * a01 + b1 * a11 + b3 * a31;
+            b0 = rhs.rawData[2];
+            b1 = rhs.rawData[3];
+            b3 = 0;
+            out.rawData[2] = b0 * a00 + b1 * a10 + b3 * a30;
+            out.rawData[3] = b0 * a01 + b1 * a11 + b3 * a31;
+            b0 = rhs.rawData[4];
+            b1 = rhs.rawData[5];
+            b3 = 1;
+            out.rawData[4] = b0 * a00 + b1 * a10 + b3 * a30;
+            out.rawData[5] = b0 * a01 + b1 * a11 + b3 * a31;
+            return out;
+        };
+        Matrix3x2.fromRotate = function (angle, out) {
+            var x = 0, y = 0, z = 1;
+            var s = Math.sin(angle);
+            var c = Math.cos(angle);
+            out.rawData[0] = c;
+            out.rawData[1] = s;
+            out.rawData[2] = -s;
+            out.rawData[3] = c;
+            out.rawData[4] = 0;
+            out.rawData[5] = 0;
+            return out;
+        };
+        Matrix3x2.fromScale = function (xScale, yScale, out) {
+            out.rawData[0] = xScale;
+            out.rawData[1] = 0.0;
+            out.rawData[2] = 0.0;
+            out.rawData[3] = yScale;
+            out.rawData[4] = 0.0;
+            out.rawData[5] = 0.0;
+            return out;
+        };
+        Matrix3x2.fromTranslate = function (x, y, out) {
+            out.rawData[0] = 1.0;
+            out.rawData[1] = 0.0;
+            out.rawData[2] = 0.0;
+            out.rawData[3] = 1.0;
+            out.rawData[4] = x;
+            out.rawData[5] = y;
+            return out;
+        };
+        Matrix3x2.fromRTS = function (pos, scale, rot, out) {
+            var matS = helpMat3x2_1;
+            this.fromScale(scale.x, scale.y, matS);
+            var matR = helpMat3x2_2;
+            this.fromRotate(rot, matR);
+            this.multiply(matR, matS, out);
+            out.rawData[4] = pos.x;
+            out.rawData[5] = pos.y;
+        };
+        Matrix3x2.transformVector2 = function (mat, inp, out) {
+            out.x = inp.x * mat.rawData[0] + inp.y * mat.rawData[2] + mat.rawData[4];
+            out.y = inp.x * mat.rawData[1] + inp.y * mat.rawData[3] + mat.rawData[5];
+            return out;
+        };
+        Matrix3x2.transformNormal = function (mat, inp, out) {
+            out.x = inp.x * mat.rawData[0] + inp.y * mat.rawData[2];
+            out.y = inp.x * mat.rawData[1] + inp.y * mat.rawData[3];
+            return out;
+        };
+        Matrix3x2.inverse = function (src, out) {
+            var l1 = src.rawData[0];
+            var l2 = src.rawData[1];
+            var l5 = src.rawData[2];
+            var l6 = src.rawData[3];
+            var l13 = src.rawData[4];
+            var l14 = src.rawData[5];
+            var l26 = -(((l5 * -l14) - (l6 * -l13)));
+            var l27 = 1.0 / ((((l1 * l6) + (l2 * -l5))));
+            out.rawData[0] = l6 * l27;
+            out.rawData[2] = -l5 * l27;
+            out.rawData[4] = l26 * l27;
+            out.rawData[1] = -(((l2))) * l27;
+            out.rawData[3] = (((l1))) * l27;
+            out.rawData[5] = (((l1 * -l14) - (l2 * -l13))) * l27;
+            return out;
+        };
+        Matrix3x2.identify = function (out) {
+            out.rawData[0] = 1;
+            out.rawData[1] = 0;
+            out.rawData[2] = 0;
+            out.rawData[3] = 1;
+            out.rawData[4] = 0;
+            out.rawData[5] = 0;
+            return out;
+        };
+        Matrix3x2.copy = function (src, out) {
+            for (var i = 0; i < 16; i++) {
+                out.rawData[i] = src.rawData[i];
+            }
+            return out;
+        };
+        Matrix3x2.decompose = function (src, scale, rotation, translation) {
+            translation.x = src.rawData[4];
+            translation.y = src.rawData[5];
+            var xs = egret3d.sign(src.rawData[0] * src.rawData[1]) < 0 ? -1 : 1;
+            var ys = egret3d.sign(src.rawData[2] * src.rawData[3]) < 0 ? -1 : 1;
+            scale.x = xs * Math.sqrt(src.rawData[0] * src.rawData[0] + src.rawData[1] * src.rawData[1]);
+            scale.y = ys * Math.sqrt(src.rawData[2] * src.rawData[2] + src.rawData[3] * src.rawData[3]);
+            if (scale.x === 0 || scale.y === 0) {
+                rotation.v = 0;
+                return false;
+            }
+            var sx = src.rawData[0] / scale.x;
+            var csx = src.rawData[1] / scale.x;
+            var r1 = Math.asin(sx);
+            var r2 = Math.acos(csx);
+            rotation.v = r1;
+            return true;
+        };
+        return Matrix3x2;
+    }());
+    egret3d.Matrix3x2 = Matrix3x2;
+    __reflect(Matrix3x2.prototype, "egret3d.Matrix3x2");
+    var helpMat3x2_1 = new Matrix3x2();
+    var helpMat3x2_2 = new Matrix3x2();
+})(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     * 可以挂载Component的实体类。
+     */
+    var GameObject = (function (_super) {
+        __extends(GameObject, _super);
+        /**
+         * 创建GameObject，并添加到当前场景中
+         */
+        function GameObject(name, tag) {
+            if (name === void 0) { name = "NoName"; }
+            if (tag === void 0) { tag = ""; }
+            var _this = _super.call(this) || this;
+            /**
+             * 是否是静态，启用这个属性可以提升性能
+             */
+            _this.isStatic = false;
+            /**
+             * 层级
+             */
+            _this.layer = 2 /* Default */;
+            /**
+             * 名称
+             */
+            _this.name = "";
+            /**
+             * 标签
+             */
+            _this.tag = "";
+            /**
+             * 变换组件
+             */
+            _this.transform = null;
+            /**
+             *
+             */
+            _this.renderer = null;
+            /**
+             * 预制体
+             */
+            _this.prefab = null;
+            _this._activeSelf = true;
+            /**
+             * @internal
+             */
+            _this._activeInHierarchy = true;
+            /**
+             * @internal
+             */
+            _this._activeDirty = true;
+            _this._components = [];
+            _this._scene = null;
+            _this.name = name;
+            _this.tag = tag;
+            _this.addComponent(egret3d.Transform);
+            _this._addToScene(paper.Application.sceneManager.activeScene);
+            return _this;
+        }
+        /**
+         * @internal
+         */
+        GameObject.prototype._activeInHierarchyDirty = function (prevActive) {
+            this._activeDirty = true;
+            var currentActive = this.activeInHierarchy;
+            if (currentActive !== prevActive) {
+                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    if (component.enabled) {
+                        paper.EventPool.dispatchEvent(currentActive ? "__enabled__" /* Enabled */ : "__disabled__" /* Disabled */, component);
+                    }
+                }
+            }
+            for (var _b = 0, _c = this.transform.children; _b < _c.length; _b++) {
+                var child = _c[_b];
+                child.gameObject._activeInHierarchyDirty(prevActive);
+            }
+        };
+        GameObject.prototype._addToScene = function (value) {
+            if (this._scene) {
+                this._scene._removeGameObject(this);
+            }
+            this._scene = value;
+            this._scene._addGameObject(this);
+        };
+        GameObject.prototype._removeComponentReference = function (component) {
+            component.enabled = false; // TODO remove flag.
+            var destroySystem = paper.Application.systemManager.getSystem(paper.DestroySystem);
+            if (destroySystem) {
+                destroySystem.bufferComponent(component);
+            }
+        };
+        GameObject.prototype._getComponentsInChildren = function (componentClass, child, array, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            var components = child._components;
+            for (var _i = 0, components_2 = components; _i < components_2.length; _i++) {
+                var component = components_2[_i];
+                if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentClass)) : component.constructor === componentClass) {
+                    array.push(component);
+                }
+            }
+            for (var _a = 0, _b = child.transform.children; _a < _b.length; _a++) {
+                var childOfChild = _b[_a];
+                this._getComponentsInChildren(componentClass, childOfChild.gameObject, array, isExtends);
+            }
+        };
+        /**
+         *
+         */
+        GameObject.prototype.destroy = function () {
+            if (!this._scene) {
+                console.warn("The game object has been destroyed.", this.name, this.uuid);
+                return;
+            }
+            if (this === paper.Application.sceneManager.globalGameObject) {
+                console.warn("Cannot destroy global game object.", this.name, this.uuid);
+                return;
+            }
+            var destroySystem = paper.Application.systemManager.getSystem(paper.DestroySystem);
+            if (destroySystem) {
+                destroySystem.bufferGameObject(this);
+            }
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                this._removeComponentReference(component);
+            }
+            this.transform = null;
+            this.renderer = null;
+            this._components.length = 0;
+            this._scene._removeGameObject(this);
+            this._scene = null;
+        };
+        /**
+         * 根据类型名获取组件
+         */
+        GameObject.prototype.addComponent = function (componentClass) {
+            paper.BaseComponent._injectGameObject = this;
+            var component = new componentClass();
+            if (component instanceof egret3d.Transform) {
+                this.transform = component;
+            }
+            else if (component instanceof paper.BaseRenderer) {
+                this.renderer = component;
+            }
+            this._components.push(component);
+            component.initialize();
+            if (component.isActiveAndEnabled) {
+                paper.EventPool.dispatchEvent("__enabled__" /* Enabled */, component);
+            }
+            return component;
+        };
+        /**
+         * 移除组件
+         */
+        GameObject.prototype.removeComponent = function (componentInstanceOrClass, isExtends, isAll) {
+            if (isExtends === void 0) { isExtends = false; }
+            if (isAll === void 0) { isAll = false; }
+            if (componentInstanceOrClass instanceof paper.BaseComponent) {
+                if (componentInstanceOrClass === this.transform) {
+                    return;
+                }
+                var index = 0;
+                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    if (component === componentInstanceOrClass) {
+                        this._removeComponentReference(component);
+                        this._components.splice(index, 1);
+                        if (component === this.renderer) {
+                            this.renderer = null;
+                        }
+                        return;
+                    }
+                    index++;
+                }
+            }
+            else {
+                if (componentInstanceOrClass === egret3d.Transform) {
+                    return;
+                }
+                var i = this._components.length;
+                while (i--) {
+                    var component = this._components[i];
+                    if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentInstanceOrClass)) : component.constructor === componentInstanceOrClass) {
+                        this._removeComponentReference(component);
+                        this._components.splice(i, 1);
+                        if (component === this.renderer) {
+                            this.renderer = null;
+                        }
+                        if (!isAll) {
+                            return;
+                        }
+                    }
+                }
+            }
+        };
+        /**
+         * 移除自身的所有组件
+         */
+        GameObject.prototype.removeAllComponents = function () {
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                if (component instanceof egret3d.Transform) {
+                    continue;
+                }
+                if (component === this.renderer) {
+                    this.renderer = null;
+                }
+                this._removeComponentReference(component);
+            }
+            this._components.length = 0;
+            this._components.push(this.transform);
+        };
+        /**
+         * 根据类型名获取组件
+         */
+        GameObject.prototype.getComponent = function (componentClass, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            if (isExtends) {
+                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
+                        return component;
+                    }
+                }
+            }
+            else {
+                for (var _b = 0, _c = this._components; _b < _c.length; _b++) {
+                    var component = _c[_b];
+                    if (component.constructor === componentClass) {
+                        return component;
+                    }
+                }
+            }
+            return null;
+        };
+        GameObject.prototype.getComponents = function (componentClass, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            var components = [];
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentClass)) : component.constructor === componentClass) {
+                    components.push(component);
+                }
+            }
+            return components;
+        };
+        /**
+         * 搜索自己和父节点中所有特定类型的组件
+         */
+        GameObject.prototype.getComponentInParent = function (componentClass, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            var result = null;
+            var parent = this.transform.parent;
+            while (!result && parent) {
+                result = parent.gameObject.getComponent(componentClass, isExtends);
+                parent = parent.parent;
+            }
+            return result;
+        };
+        /**
+         * 搜索自己和子节点中所有特定类型的组件
+         */
+        GameObject.prototype.getComponentsInChildren = function (componentClass, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            var components = [];
+            this._getComponentsInChildren(componentClass, this, components, isExtends);
+            return components;
+        };
+        /**
+         * 针对同级的组件发送消息
+         * @param methodName
+         * @param parameter
+         */
+        GameObject.prototype.sendMessage = function (methodName, parameter, requireReceiver) {
+            if (requireReceiver === void 0) { requireReceiver = true; }
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                if (component.isActiveAndEnabled && component.constructor instanceof paper.Behaviour) {
+                    if (methodName in component) {
+                        component[methodName](parameter);
+                    }
+                    else if (requireReceiver) {
+                        console.warn(this.name, egret.getQualifiedClassName(component), methodName); // TODO
+                    }
+                }
+            }
+        };
+        /**
+         * 针对直接父级发送消息
+         * @param methodName
+         * @param parameter
+         */
+        GameObject.prototype.sendMessageUpwards = function (methodName, parameter, requireReceiver) {
+            if (requireReceiver === void 0) { requireReceiver = true; }
+            this.sendMessage(methodName, parameter, requireReceiver);
+            //
+            var parent = this.transform.parent;
+            if (parent && parent.gameObject.activeInHierarchy) {
+                parent.gameObject.sendMessage(methodName, parameter, requireReceiver);
+            }
+        };
+        /**
+         * 群发消息
+         * @param methodName
+         * @param parameter
+         */
+        GameObject.prototype.broadcastMessage = function (methodName, parameter, requireReceiver) {
+            if (requireReceiver === void 0) { requireReceiver = true; }
+            this.sendMessage(methodName, parameter, requireReceiver);
+            for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
+                var child = _a[_i];
+                if (child.gameObject.activeInHierarchy) {
+                    child.gameObject.broadcastMessage(methodName, parameter, requireReceiver);
+                }
+            }
+        };
+        Object.defineProperty(GameObject.prototype, "dontDestroy", {
+            /**
+             *
+             */
+            get: function () {
+                return this._scene === paper.Application.sceneManager.globalScene;
+            },
+            set: function (value) {
+                if (this.dontDestroy === value) {
+                    return;
+                }
+                if (value) {
+                    this._addToScene(paper.Application.sceneManager.globalScene);
+                }
+                else {
+                    this._addToScene(paper.Application.sceneManager.activeScene);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameObject.prototype, "activeSelf", {
+            /**
+             * 当前GameObject对象自身激活状态
+             */
+            get: function () {
+                return this._activeSelf;
+            },
+            set: function (value) {
+                if (this._activeSelf === value) {
+                    return;
+                }
+                var parent = this.transform.parent;
+                if (!parent || parent.gameObject.activeInHierarchy) {
+                    var prevActive = this._activeSelf;
+                    this._activeSelf = value;
+                    this._activeInHierarchyDirty(prevActive);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameObject.prototype, "activeInHierarchy", {
+            /**
+             * 获取当前GameObject对象在场景中激活状态。
+             * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
+             */
+            get: function () {
+                if (this._activeDirty) {
+                    var parent_1 = this.transform.parent;
+                    if (!parent_1 || parent_1.gameObject.activeInHierarchy) {
+                        this._activeInHierarchy = this._activeSelf;
+                    }
+                    else {
+                        this._activeInHierarchy = false;
+                    }
+                    this._activeDirty = false;
+                }
+                return this._activeInHierarchy;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameObject.prototype, "components", {
+            /**
+             * 组件列表
+             */
+            get: function () {
+                return this._components;
+            },
+            /**
+             * 仅用于反序列化。
+             * @internal
+             */
+            set: function (value) {
+                this._components.length = 0;
+                for (var _i = 0, value_2 = value; _i < value_2.length; _i++) {
+                    var component = value_2[_i];
+                    if (component instanceof paper.MissingObject) {
+                        this.addComponent(paper.MissingComponent).missingObject = component;
+                    }
+                    else {
+                        if (component instanceof paper.BaseRenderer) {
+                            this.renderer = component;
+                        }
+                        this._components.push(component);
+                    }
+                }
+                this.transform = this.getComponent(egret3d.Transform) || this.addComponent(egret3d.Transform);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameObject.prototype, "scene", {
+            /**
+             * 获取物体所在场景实例。
+             */
+            get: function () {
+                return this._scene;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * @deprecated
+         * @see paper.Scene#find()
+         */
+        GameObject.find = function (name, scene) {
+            if (scene === void 0) { scene = null; }
+            return (scene || paper.Application.sceneManager.activeScene).find(name);
+        };
+        /**
+         * @deprecated
+         * @see paper.Scene#findWithTag()
+         */
+        GameObject.findWithTag = function (tag, scene) {
+            if (scene === void 0) { scene = null; }
+            return (scene || paper.Application.sceneManager.activeScene).findWithTag(tag);
+        };
+        /**
+         * @deprecated
+         * @see paper.Scene#findGameObjectsWithTag()
+         */
+        GameObject.findGameObjectsWithTag = function (tag, scene) {
+            if (scene === void 0) { scene = null; }
+            return (scene || paper.Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
+        };
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.CHECKBOX)
+        ], GameObject.prototype, "isStatic", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.deserializedIgnore
+        ], GameObject.prototype, "layer", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.TEXT)
+        ], GameObject.prototype, "name", void 0);
+        __decorate([
+            paper.serializedField
+        ], GameObject.prototype, "tag", void 0);
+        __decorate([
+            paper.serializedField
+        ], GameObject.prototype, "prefab", void 0);
+        __decorate([
+            paper.serializedField
+        ], GameObject.prototype, "_activeSelf", void 0);
+        __decorate([
+            paper.serializedField
+        ], GameObject.prototype, "components", null);
+        return GameObject;
+    }(paper.SerializableObject));
+    paper.GameObject = GameObject;
+    __reflect(GameObject.prototype, "paper.GameObject");
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     *
+     */
+    egret3d.RAD_DEG = 180.0 / Math.PI;
+    /**
+     *
+     */
+    egret3d.DEG_RAD = Math.PI / 180.0;
+    function floatClamp(v, min, max) {
+        if (min === void 0) { min = 0; }
+        if (max === void 0) { max = 1; }
+        if (v < min)
+            return min;
+        else if (v > max)
+            return max;
+        else
+            return v;
+    }
+    egret3d.floatClamp = floatClamp;
+    function sign(value) {
+        value = +value; // convert to a number
+        if (value === 0 || isNaN(value))
+            return value;
+        return value > 0 ? 1 : -1;
+    }
+    egret3d.sign = sign;
+    function numberLerp(fromV, toV, v) {
+        return fromV * (1 - v) + toV * v;
+    }
+    egret3d.numberLerp = numberLerp;
+    function calPlaneLineIntersectPoint(planeVector, planePoint, lineVector, linePoint, out) {
+        var vp1 = planeVector.x;
+        var vp2 = planeVector.y;
+        var vp3 = planeVector.z;
+        var n1 = planePoint.x;
+        var n2 = planePoint.y;
+        var n3 = planePoint.z;
+        var v1 = lineVector.x;
+        var v2 = lineVector.y;
+        var v3 = lineVector.z;
+        var m1 = linePoint.x;
+        var m2 = linePoint.y;
+        var m3 = linePoint.z;
+        var vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
+        if (vpt === 0) {
+            out = null;
+        }
+        else {
+            var t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
+            out.x = m1 + v1 * t;
+            out.y = m2 + v2 * t;
+            out.z = m3 + v3 * t;
+        }
+        return out;
+    }
+    egret3d.calPlaneLineIntersectPoint = calPlaneLineIntersectPoint;
+    var helpVec3_1 = new egret3d.Vector3();
+    var helpVec3_2 = new egret3d.Vector3();
+    var helpVec3_3 = new egret3d.Vector3();
+    var helpVec3_4 = new egret3d.Vector3();
+    var helpVec3_5 = new egret3d.Vector3();
+    function getPointAlongCurve(curveStart, curveStartHandle, curveEnd, curveEndHandle, t, out, crease) {
+        if (crease === void 0) { crease = 0.3; }
+        var oneMinT = 1 - t;
+        var oneMinTPow3 = Math.pow(oneMinT, 3);
+        var oneMinTPow2 = Math.pow(oneMinT, 2);
+        var oneMinCrease = 1 - crease;
+        var tempt1 = helpVec3_1;
+        egret3d.Vector3.copy(curveStart, tempt1);
+        egret3d.Vector3.scale(tempt1, oneMinTPow3 * oneMinCrease);
+        var tempt2 = helpVec3_2;
+        egret3d.Vector3.copy(curveStartHandle, tempt2);
+        egret3d.Vector3.scale(tempt2, 3 * oneMinTPow2 * t * crease);
+        var tempt3 = helpVec3_3;
+        egret3d.Vector3.copy(curveEndHandle, tempt3);
+        egret3d.Vector3.scale(tempt3, 3 * oneMinT * Math.pow(t, 2) * crease);
+        var tempt4 = helpVec3_4;
+        egret3d.Vector3.copy(curveEnd, tempt4);
+        egret3d.Vector3.scale(tempt4, Math.pow(t, 3) * oneMinCrease);
+        var tempt5 = helpVec3_5;
+        egret3d.Vector3.add(tempt1, tempt2, tempt5);
+        egret3d.Vector3.add(tempt5, tempt3, tempt5);
+        egret3d.Vector3.add(tempt5, tempt4, tempt5);
+        egret3d.Vector3.copy(tempt5, out);
+        egret3d.Vector3.scale(out, 1 / (oneMinTPow3 * oneMinCrease + 3 * oneMinTPow2 * t * crease + 3 * oneMinT * Math.pow(t, 2) * crease + Math.pow(t, 3) * oneMinCrease));
+    }
+    egret3d.getPointAlongCurve = getPointAlongCurve;
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
      * WebGL窗口信息
      */
     var Stage3D = (function () {
@@ -5509,6 +6794,165 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
+    /**
+     * 场景类
+     */
+    var Scene = (function (_super) {
+        __extends(Scene, _super);
+        /**
+         * @internal
+         */
+        function Scene() {
+            var _this = _super.call(this) || this;
+            /**
+             * 场景名称。
+             */
+            _this.name = "";
+            /**
+             * 场景的light map列表。
+             */
+            _this.lightmaps = [];
+            /**
+             * 存储着关联的数据
+             * 场景保存时，将场景快照数据保存至对应的资源中
+             */
+            _this.rawScene = null;
+            _this._gameObjects = [];
+            paper.Application.sceneManager._addScene(_this);
+            return _this;
+        }
+        /**
+         * @internal
+         */
+        Scene.prototype._destroy = function () {
+            var i = this._gameObjects.length;
+            while (i--) {
+                var gameObject = this._gameObjects[i];
+                if (!gameObject || gameObject.transform.parent) {
+                    continue;
+                }
+                gameObject.destroy();
+            }
+            this.lightmaps.length = 0;
+            this._gameObjects.length = 0;
+            this.rawScene = null;
+        };
+        /**
+         * @internal
+         */
+        Scene.prototype._removeGameObject = function (gameObject) {
+            var index = this._gameObjects.indexOf(gameObject);
+            if (index > -1) {
+                this._gameObjects.splice(index, 1);
+            }
+            else {
+                console.debug("Remove game object again.", gameObject.name, gameObject.uuid);
+            }
+        };
+        /**
+         * @internal
+         */
+        Scene.prototype._addGameObject = function (gameObject) {
+            if (this._gameObjects.indexOf(gameObject) < 0) {
+                this._gameObjects.push(gameObject);
+            }
+            else {
+                console.debug("Add game object again.", gameObject.name, gameObject.uuid);
+            }
+        };
+        /**
+         * 返回当前激活场景中查找对应名称的GameObject
+         * @param name
+         */
+        Scene.prototype.find = function (name) {
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.name === name) {
+                    return gameObject;
+                }
+            }
+            return null;
+        };
+        /**
+         * 返回一个在当前激活场景中查找对应tag的GameObject
+         * @param tag
+         */
+        Scene.prototype.findWithTag = function (tag) {
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.tag === tag) {
+                    return gameObject;
+                }
+            }
+            return null;
+        };
+        /**
+         * 返回一个在当前激活场景中查找对应 uuid 的GameObject
+         * @param uuid
+         */
+        Scene.prototype.findWithUUID = function (uuid) {
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.uuid === uuid) {
+                    return gameObject;
+                }
+            }
+            return null;
+        };
+        /**
+         * 返回所有在当前激活场景中查找对应tag的GameObject
+         * @param name
+         */
+        Scene.prototype.findGameObjectsWithTag = function (tag) {
+            var gameObjects = [];
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.tag === tag) {
+                    gameObjects.push(gameObject);
+                }
+            }
+            return gameObjects;
+        };
+        /**
+         * 获取所有根级GameObject对象
+         */
+        Scene.prototype.getRootGameObjects = function () {
+            var gameObjects = [];
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (!gameObject.transform.parent) {
+                    gameObjects.push(gameObject);
+                }
+            }
+            return gameObjects;
+        };
+        Object.defineProperty(Scene.prototype, "gameObjects", {
+            /**
+             * 当前场景的所有GameObject对象池
+             */
+            get: function () {
+                return this._gameObjects;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        __decorate([
+            paper.serializedField
+        ], Scene.prototype, "name", void 0);
+        __decorate([
+            paper.serializedField
+        ], Scene.prototype, "lightmaps", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.deserializedIgnore
+        ], Scene.prototype, "gameObjects", null);
+        return Scene;
+    }(paper.SerializableObject));
+    paper.Scene = Scene;
+    __reflect(Scene.prototype, "paper.Scene");
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
     var Time = (function () {
         function Time() {
         }
@@ -5557,7 +7001,9 @@ var paper;
             enumerable: true,
             configurable: true
         });
+        Time.maxFixedSubSteps = 3;
         Time.timeScale = 1.0;
+        Time.fixedTimeStep = 1 / 30.0;
         Time._frameCount = 0;
         Time._lastTimer = 0.0;
         Time._beginTimer = 0.0;
@@ -5568,202 +7014,379 @@ var paper;
     paper.Time = Time;
     __reflect(Time.prototype, "paper.Time");
 })(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        editor.icon_frag = "\n        #ifdef GL_ES\n        precision highp float;\n        #endif\n        uniform sampler2D PointTexture;\n        uniform bool hasColor;\n        uniform vec4 iconColor;\n        void main(void) {\n            vec4 tex = texture2D(PointTexture, gl_PointCoord);\n            gl_FragColor = tex;\n            if (hasColor) {\n                if (gl_FragColor.a >= 0.1) {\n                    gl_FragColor = iconColor;\n                } else {\n                    gl_FragColor.a = 0.0;\n                }\n            }\n        }";
-        editor.icon_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        uniform float pointSize;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n            gl_PointSize = pointSize; \n        }";
-        editor.line_frag = "\n        #ifdef GL_ES\n        precision highp float;\n        #endif\n        uniform vec4 lineColor;\n        void main(void) {\n            gl_FragColor = lineColor;\n        }";
-        editor.line_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n        }";
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     *
-     */
-    var MissingObject = (function () {
-        function MissingObject() {
-            /**
-             *
-             */
-            this.missingData = {};
-        }
-        MissingObject.prototype.serialize = function () {
-            return this.missingData;
-        };
-        MissingObject.prototype.deserialize = function (element) {
-            for (var key in element) {
-                this.missingData[key] = element[key];
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var PhysicsSystem = (function (_super) {
+            __extends(PhysicsSystem, _super);
+            function PhysicsSystem() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._interests = [
+                    {
+                        componentClass: [ammo.BoxShape, ammo.CapsuleShape, ammo.ConeShape, ammo.ConvexHullShape, ammo.CylinderShape, ammo.HeightfieldTerrainShape, ammo.SphereShape]
+                    },
+                    {
+                        componentClass: [ammo.CollisionObject, ammo.Rigidbody]
+                    },
+                ];
+                _this._worldType = 1 /* RigidBodyDynamics */; // TODO
+                _this._collisionType = 0 /* DefaultDynamicsWorldCollisionConf */; // TODO
+                _this._broadphaseType = 0 /* DynamicAABBBroadphase */; // TODO
+                _this._axis3SweepBroadphaseMin = new egret3d.Vector3(-1000.0, -1000.0, -1000.0); // TODO
+                _this._axis3SweepBroadphaseMax = new egret3d.Vector3(1000.0, 1000.0, 1000.0); // TODO
+                _this._gravity = new egret3d.Vector3(0.0, -9.8, 0.0);
+                _this._btCollisionWorld = null;
+                _this._btDynamicsWorld = null;
+                // TODO 完善系统生命周期
+                _this._startGameObjects = [];
+                _this._constraints = [];
+                return _this;
             }
-        };
-        return MissingObject;
-    }());
-    paper.MissingObject = MissingObject;
-    __reflect(MissingObject.prototype, "paper.MissingObject", ["paper.ISerializable"]);
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var _deserializedObjects;
-    /**
-     * 反序列化
-     * @param data 反序列化数据
-     * @param expandMap 扩展的对象映射，此映射中存在的对象不需要重新序列化，直接使用即可（例如已经加载完成的资源文件）。
-     */
-    function deserialize(data, expandMap) {
-        _deserializedObjects = {};
-        for (var k in expandMap) {
-            _deserializedObjects[k] = expandMap[k];
-        }
-        var root = null;
-        for (var _i = 0, _a = data.objects; _i < _a.length; _i++) {
-            var source = _a[_i];
-            var target = void 0;
-            if (source.hashCode in _deserializedObjects) {
-                target = _deserializedObjects[source.hashCode];
-            }
-            else {
-                var className = paper.serializeClassMap[source.class] || source.class;
-                var clazz = egret.getDefinitionByName(className);
-                if (clazz) {
-                    target = new clazz();
-                    _deserializedObjects[source.hashCode] = target;
+            Object.defineProperty(PhysicsSystem, "helpVector3A", {
+                /**
+                 * @internal
+                 */
+                get: function () {
+                    if (!this._helpVector3A) {
+                        this._helpVector3A = new Ammo.btVector3();
+                    }
+                    return this._helpVector3A;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(PhysicsSystem, "helpVector3B", {
+                /**
+                 * @internal
+                 */
+                get: function () {
+                    if (!this._helpVector3B) {
+                        this._helpVector3B = new Ammo.btVector3();
+                    }
+                    return this._helpVector3B;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(PhysicsSystem, "helpVector3C", {
+                /**
+                 * @internal
+                 */
+                get: function () {
+                    if (!this._helpVector3C) {
+                        this._helpVector3C = new Ammo.btVector3();
+                    }
+                    return this._helpVector3C;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(PhysicsSystem, "helpVector3D", {
+                /**
+                 * @internal
+                 */
+                get: function () {
+                    if (!this._helpVector3D) {
+                        this._helpVector3D = new Ammo.btVector3();
+                    }
+                    return this._helpVector3D;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(PhysicsSystem, "helpQuaternionA", {
+                /**
+                 * @internal
+                 */
+                get: function () {
+                    if (!this._helpQuaternionA) {
+                        this._helpQuaternionA = new Ammo.btQuaternion();
+                    }
+                    return this._helpQuaternionA;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(PhysicsSystem, "helpTransformA", {
+                /**
+                 * @internal
+                 */
+                get: function () {
+                    if (!this._helpTransformA) {
+                        this._helpTransformA = new Ammo.btTransform();
+                    }
+                    return this._helpTransformA;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(PhysicsSystem, "helpTransformB", {
+                /**
+                 * @internal
+                 */
+                get: function () {
+                    if (!this._helpTransformB) {
+                        this._helpTransformB = new Ammo.btTransform();
+                    }
+                    return this._helpTransformB;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            PhysicsSystem.prototype._onAddComponent = function (component) {
+                if (!_super.prototype._onAddComponent.call(this, component)) {
+                    return false;
+                }
+                if (this._startGameObjects.indexOf(component.gameObject) < 0) {
+                    this._startGameObjects.push(component.gameObject);
+                }
+                return true;
+            };
+            PhysicsSystem.prototype._onRemoveComponent = function (component) {
+                if (!_super.prototype._onRemoveComponent.call(this, component)) {
+                    return false;
+                }
+                var index = this._startGameObjects.indexOf(component.gameObject);
+                if (index >= 0) {
+                    this._startGameObjects.splice(index, 1);
                 }
                 else {
-                    target = new paper.MissingObject();
-                    _deserializedObjects[source.hashCode] = target;
-                    console.error("Class " + source.class + " not defined.");
+                    var collisionObject = this._getComponent(component.gameObject, 1);
+                    this._btCollisionWorld.removeCollisionObject(collisionObject.btCollisionObject);
                 }
-            }
-            root = root || target;
-        }
-        for (var _b = 0, _c = data.objects; _b < _c.length; _b++) {
-            var source = _c[_b];
-            if (source.hashCode in expandMap) {
-                continue;
-            }
-            var target = _deserializedObjects[source.hashCode];
-            _deserializeObject(source, target);
-            if (target instanceof paper.GameObject) {
-                for (var _d = 0, _e = target.components; _d < _e.length; _d++) {
-                    var component = _e[_d];
-                    component.gameObject = target; // TODO
+                return true;
+            };
+            PhysicsSystem.prototype._updateGravity = function () {
+                var btVector3 = PhysicsSystem.helpVector3A;
+                btVector3.setValue(this._gravity.x, this._gravity.y, this._gravity.z);
+                this._btDynamicsWorld.setGravity(btVector3);
+            };
+            PhysicsSystem.prototype.initialize = function () {
+                var _this = this;
+                _super.prototype.initialize.call(this);
+                var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
+                var dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
+                var broadphase = new Ammo.btDbvtBroadphase();
+                var solver = new Ammo.btSequentialImpulseConstraintSolver();
+                this._btCollisionWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+                // 
+                this._btDynamicsWorld = this._btCollisionWorld;
+                if (this._btDynamicsWorld) {
+                    this._updateGravity();
                 }
-            }
-        }
-        for (var _f = 0, _g = data.objects; _f < _g.length; _f++) {
-            var source = _g[_f];
-            var target = _deserializedObjects[source.hashCode];
-            if (target instanceof paper.BaseComponent) {
-                target.initialize();
-                if (target.isActiveAndEnabled) {
-                    paper.EventPool.dispatchEvent("__enabled__" /* Enabled */, target);
-                }
-            }
-        }
-        _deserializedObjects = null;
-        return root;
-    }
-    paper.deserialize = deserialize;
-    /**
-     *
-     */
-    function getDeserializedObject(source) {
-        return _deserializedObjects[source.hashCode];
-    }
-    paper.getDeserializedObject = getDeserializedObject;
-    function _deserializeObject(source, target) {
-        if (target.constructor.prototype.hasOwnProperty("deserialize")) {
-            target.deserialize(source);
-        }
-        else {
-            for (var k in source) {
-                if (k === "hashCode" || k === "class") {
-                    continue;
-                }
-                if ("__deserializedIgnore" /* DeserializedIgnore */ in target &&
-                    target["__deserializedIgnore" /* DeserializedIgnore */].indexOf(k) >= 0) {
-                    continue;
-                }
-                target[k] = _deserializeChild(source[k], target[k]);
-            }
-        }
-    }
-    function _deserializeChild(source, target) {
-        if (source === null || source === undefined) {
-            return source;
-        }
-        switch (typeof source) {
-            case "function":
-                return undefined;
-            case "object": {
-                if (target && target.constructor.prototype.hasOwnProperty("deserialize")) {
-                    target.deserialize(source);
-                    return target;
-                }
-                if (Array.isArray(source)) {
-                    target = [];
-                    for (var i = 0, l = source.length; i < l; ++i) {
-                        target[i] = _deserializeChild(source[i]);
-                    }
-                    return target;
-                }
-                var hashCode = source.hashCode; // TODO 字符串依赖。
-                var classCodeOrName = source.class; // TODO 字符串依赖。
-                if (hashCode) {
-                    if (hashCode in _deserializedObjects) {
-                        return _deserializedObjects[hashCode];
-                    }
-                    else if (classCodeOrName) {
-                        if (classCodeOrName === paper.findClassCodeFrom(paper.Scene)) {
-                            // TODO
+                // TODO 完善约束初始化机制。
+                var constraintClasses = [
+                    ammo.FixedConstraint,
+                    ammo.SliderConstraint,
+                    ammo.HingeConstraint,
+                    ammo.ConeTwistConstraint,
+                ];
+                for (var _i = 0, constraintClasses_1 = constraintClasses; _i < constraintClasses_1.length; _i++) {
+                    var constraintClass = constraintClasses_1[_i];
+                    paper.EventPool.addEventListener("__enabled__" /* Enabled */, constraintClass, function (component) {
+                        if (_this._constraints.indexOf(component) < 0) {
+                            _this._constraints.push(component);
                         }
-                        else if (classCodeOrName === paper.findClassCodeFrom(paper.GameObject)) {
-                            for (var _i = 0, _a = paper.Application.sceneManager.getActiveScene().gameObjects; _i < _a.length; _i++) {
-                                var gameObject = _a[_i];
-                                if (gameObject.hashCode === hashCode) {
-                                    return gameObject;
+                    });
+                    paper.EventPool.addEventListener("__disabled__" /* Disabled */, constraintClass, function (component) {
+                        var index = _this._constraints.indexOf(component);
+                        var btTypedConstraint = component.btTypedConstraint;
+                        if (index >= 0) {
+                            _this._constraints.splice(index, 1);
+                        }
+                        else if (_this._btDynamicsWorld && btTypedConstraint) {
+                            _this._btDynamicsWorld.removeConstraint(btTypedConstraint);
+                        }
+                    });
+                }
+            };
+            PhysicsSystem.prototype.onUpdate = function () {
+                if (this._startGameObjects.length > 0) {
+                    for (var _i = 0, _a = this._startGameObjects; _i < _a.length; _i++) {
+                        var gameObject = _a[_i];
+                        var collisionObject = this._getComponent(gameObject, 1);
+                        var collisionShape = this._getComponent(gameObject, 0);
+                        var btCollisionObject = collisionObject.btCollisionObject;
+                        var btCollisionShape = collisionShape.btCollisionShape;
+                        btCollisionObject.setCollisionShape(btCollisionShape);
+                        switch (this._worldType) {
+                            case 0 /* CollisionOnly */:
+                                this._btCollisionWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
+                                break;
+                            case 1 /* RigidBodyDynamics */:
+                                if (this._btDynamicsWorld) {
+                                    if (collisionObject.collisionObjectType & 2 /* RigidBody */) {
+                                        collisionObject._updateMass();
+                                        this._btDynamicsWorld.addRigidBody(collisionObject.btRigidbody, collisionObject.collisionGroups, collisionObject.collisionMask);
+                                    }
+                                    else {
+                                        this._btCollisionWorld.addCollisionObject(btCollisionObject, collisionObject.collisionGroups, collisionObject.collisionMask);
+                                    }
                                 }
+                                else {
+                                    throw new Error("Arguments error.");
+                                }
+                                break;
+                            case 2 /* MultiBodyWorld */:
+                                // TODO
+                                break;
+                            case 3 /* SoftBodyAndRigidBody */:
+                                // TODO
+                                break;
+                        }
+                    }
+                    this._startGameObjects.length = 0;
+                }
+                if (this._constraints.length > 0) {
+                    for (var _b = 0, _c = this._constraints; _b < _c.length; _b++) {
+                        var constraint = _c[_b];
+                        var btTypedConstraint = constraint.btTypedConstraint;
+                        if (this._btDynamicsWorld && btTypedConstraint) {
+                            this._btDynamicsWorld.addConstraint(btTypedConstraint, !constraint.collisionEnabled);
+                        }
+                    }
+                    this._constraints.length = 0;
+                }
+                if (this._btDynamicsWorld) {
+                    var helpTransformA = PhysicsSystem.helpTransformA;
+                    this._btDynamicsWorld.stepSimulation(paper.Time.deltaTime, paper.Time.maxFixedSubSteps, paper.Time.fixedTimeStep);
+                    for (var i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
+                        var collisionObject = this._components[i + 1];
+                        if (collisionObject.collisionObjectType & 2 /* RigidBody */) {
+                            var motionState = collisionObject.btRigidbody.getMotionState();
+                            if (motionState) {
+                                var transform = collisionObject.gameObject.transform;
+                                motionState.getWorldTransform(helpTransformA);
+                                var t = helpTransformA.getOrigin();
+                                var r = helpTransformA.getRotation();
+                                transform.setPosition(t.x(), t.y(), t.z());
+                                transform.setRotation(r.x(), r.y(), r.z(), r.w());
                             }
                         }
-                        else {
-                            for (var _b = 0, _c = paper.Application.sceneManager.getActiveScene().gameObjects; _b < _c.length; _b++) {
-                                var gameObject = _c[_b];
-                                for (var _d = 0, _e = gameObject.components; _d < _e.length; _d++) {
-                                    var component = _e[_d];
-                                    if (component.hashCode === hashCode) {
-                                        return component;
+                        if (collisionObject.collisionObjectType & 4 /* GhostObject */) {
+                            var ghostObject = collisionObject;
+                            var btGhostObject = collisionObject.btGhostObject;
+                            var behaviours = collisionObject.gameObject.getComponents(paper.Behaviour, true);
+                            ghostObject._currentCollisionObjects.length = 0;
+                            for (var i_1 = 0, l_1 = btGhostObject.getNumOverlappingObjects(); i_1 < l_1; ++i_1) {
+                                var btCollisionObject = btGhostObject.getOverlappingObject(i_1);
+                                var otherCollisionObject = Ammo.castObject(btCollisionObject.getUserPointer(), Ammo.btVector3).egretComponent;
+                                ghostObject._currentCollisionObjects.push(otherCollisionObject);
+                                if (ghostObject._prevCollisionObjects.indexOf(otherCollisionObject) < 0) {
+                                    for (var _d = 0, behaviours_1 = behaviours; _d < behaviours_1.length; _d++) {
+                                        var behaviour = behaviours_1[_d];
+                                        if (behaviour._isTriggerEnabled) {
+                                            behaviour.onTriggerEnter(otherCollisionObject);
+                                        }
+                                    }
+                                }
+                                else {
+                                    for (var _e = 0, behaviours_2 = behaviours; _e < behaviours_2.length; _e++) {
+                                        var behaviour = behaviours_2[_e];
+                                        if (behaviour._isTriggerEnabled) {
+                                            behaviour.onTriggerStay(otherCollisionObject);
+                                        }
                                     }
                                 }
                             }
+                            for (var _f = 0, _g = ghostObject._prevCollisionObjects; _f < _g.length; _f++) {
+                                var otherCollisionObject = _g[_f];
+                                if (ghostObject._currentCollisionObjects.indexOf(otherCollisionObject) < 0) {
+                                    for (var _h = 0, behaviours_3 = behaviours; _h < behaviours_3.length; _h++) {
+                                        var behaviour = behaviours_3[_h];
+                                        if (behaviour._isTriggerEnabled) {
+                                            behaviour.onTriggerExit(otherCollisionObject);
+                                        }
+                                    }
+                                }
+                            }
+                            var temp = ghostObject._prevCollisionObjects;
+                            ghostObject._prevCollisionObjects = ghostObject._currentCollisionObjects;
+                            ghostObject._currentCollisionObjects = temp;
                         }
                     }
                 }
-                else if (classCodeOrName) {
-                    classCodeOrName = paper.serializeClassMap[classCodeOrName] || classCodeOrName;
-                    var clazz = egret.getDefinitionByName(classCodeOrName);
-                    if (clazz) {
-                        target = new clazz();
-                        _deserializeObject(source, target);
-                        return target;
-                    }
+            };
+            /**
+             *
+             */
+            PhysicsSystem.prototype.rayTest = function (from, to, group, mask) {
+                if (group === void 0) { group = 1 /* DefaultFilter */; }
+                if (mask === void 0) { mask = -1 /* AllFilter */; }
+                var rayResult = new Ammo.ClosestRayResultCallback();
+                var rayFrom = rayResult.get_m_rayFromWorld();
+                var rayTo = rayResult.get_m_rayToWorld();
+                rayResult.set_m_collisionFilterGroup(group);
+                rayResult.set_m_collisionFilterMask(mask);
+                rayFrom.setValue(from.x, from.y, from.z);
+                rayTo.setValue(to.x, to.y, to.z);
+                this._btCollisionWorld.rayTest(rayFrom, rayTo, rayResult);
+                if (rayResult.hasHit()) {
+                    var raycastInfo = PhysicsSystem._raycastInfoPool.get() || new ammo.RaycastInfo();
+                    // raycastInfo.clean(); TODO cache
+                    // PhysicsSystem._raycastInfoPool.add(raycastInfo);
+                    var btCollisionObject = rayResult.get_m_collisionObject();
+                    var position = rayResult.get_m_hitPointWorld();
+                    var normal = rayResult.get_m_hitNormalWorld();
+                    raycastInfo.collisionObject = Ammo.castObject(btCollisionObject.getUserPointer(), Ammo.btVector3).egretComponent;
+                    raycastInfo.transform = raycastInfo.collisionObject.gameObject.transform;
+                    raycastInfo.position.set(position.x(), position.y(), position.z());
+                    raycastInfo.normal.set(normal.x(), normal.y(), normal.z());
+                    raycastInfo.distance = from.getDistance(raycastInfo.position); // distance 是否应该惰性计算。
+                    Ammo.destroy(rayResult);
+                    return raycastInfo;
                 }
-                else {
-                    target = {};
-                    for (var k in source) {
-                        target[k] = _deserializeChild(source[k]);
-                    }
-                    return target;
-                }
-                console.warn("Deserialize error.", source);
+                Ammo.destroy(rayResult);
                 return null;
-            }
-            default:
-                return source;
-        }
-    }
-})(paper || (paper = {}));
+            };
+            Object.defineProperty(PhysicsSystem.prototype, "gravity", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._gravity;
+                },
+                set: function (value) {
+                    this._gravity.copy(value);
+                    if (this._btDynamicsWorld) {
+                        this._updateGravity();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(PhysicsSystem.prototype, "btCollisionWorld", {
+                get: function () {
+                    return this._btCollisionWorld;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(PhysicsSystem.prototype, "btDynamicsWorld", {
+                get: function () {
+                    return this._btDynamicsWorld;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            PhysicsSystem._helpVector3A = null;
+            PhysicsSystem._helpVector3B = null;
+            PhysicsSystem._helpVector3C = null;
+            PhysicsSystem._helpVector3D = null;
+            PhysicsSystem._helpQuaternionA = null;
+            PhysicsSystem._helpTransformA = null;
+            PhysicsSystem._helpTransformB = null;
+            PhysicsSystem._raycastInfoPool = new egret3d.Pool();
+            return PhysicsSystem;
+        }(paper.BaseSystem));
+        ammo.PhysicsSystem = PhysicsSystem;
+        __reflect(PhysicsSystem.prototype, "egret3d.ammo.PhysicsSystem");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -6133,61 +7756,31 @@ var egret3d;
     egret3d.Texture = Texture;
     __reflect(Texture.prototype, "egret3d.Texture");
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var Pool = (function () {
-        function Pool() {
-            this._instances = [];
+var paper;
+(function (paper) {
+    /**
+     *
+     */
+    var MissingObject = (function () {
+        function MissingObject() {
+            /**
+             *
+             */
+            this.missingData = {};
         }
-        Pool.prototype.add = function (instanceOrInstances) {
-            if (Array.isArray(instanceOrInstances)) {
-                for (var _i = 0, instanceOrInstances_1 = instanceOrInstances; _i < instanceOrInstances_1.length; _i++) {
-                    var instance = instanceOrInstances_1[_i];
-                    if (this._instances.indexOf(instance) < 0) {
-                        this._instances.push(instance);
-                    }
-                }
-            }
-            else {
-                if (this._instances.indexOf(instanceOrInstances) < 0) {
-                    this._instances.push(instanceOrInstances);
-                }
+        MissingObject.prototype.serialize = function () {
+            return this.missingData;
+        };
+        MissingObject.prototype.deserialize = function (element) {
+            for (var key in element) {
+                this.missingData[key] = element[key];
             }
         };
-        Pool.prototype.remove = function (instanceOrInstances) {
-            if (Array.isArray(instanceOrInstances)) {
-                for (var _i = 0, instanceOrInstances_2 = instanceOrInstances; _i < instanceOrInstances_2.length; _i++) {
-                    var instance = instanceOrInstances_2[_i];
-                    var index = this._instances.indexOf(instance);
-                    if (index >= 0) {
-                        this._instances.splice(index, 1);
-                    }
-                }
-            }
-            else {
-                var index = this._instances.indexOf(instanceOrInstances);
-                if (index >= 0) {
-                    this._instances.splice(index, 1);
-                }
-            }
-        };
-        Pool.prototype.clear = function () {
-            this._instances.length = 0;
-        };
-        Object.defineProperty(Pool.prototype, "instances", {
-            get: function () {
-                return this._instances;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Pool.drawCall = new Pool();
-        Pool.shadowCaster = new Pool();
-        return Pool;
+        return MissingObject;
     }());
-    egret3d.Pool = Pool;
-    __reflect(Pool.prototype, "egret3d.Pool");
-})(egret3d || (egret3d = {}));
+    paper.MissingObject = MissingObject;
+    __reflect(MissingObject.prototype, "paper.MissingObject", ["paper.ISerializable"]);
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -6217,7 +7810,7 @@ var egret3d;
             this.removeDrawCalls(gameObject);
             var drawCalls = this._createDrawCalls(gameObject);
             if (drawCalls) {
-                this._drawCalls[gameObject.hashCode] = drawCalls;
+                this._drawCalls[gameObject.uuid] = drawCalls;
                 egret3d.Pool.drawCall.add(drawCalls);
                 if (castShadows) {
                     egret3d.Pool.shadowCaster.add(drawCalls);
@@ -6225,8 +7818,8 @@ var egret3d;
             }
         };
         DrawCallList.prototype.updateShadowCasters = function (gameObject, castShadows) {
-            if (gameObject.hashCode in this._drawCalls) {
-                var drawCalls = this._drawCalls[gameObject.hashCode];
+            if (gameObject.uuid in this._drawCalls) {
+                var drawCalls = this._drawCalls[gameObject.uuid];
                 if (castShadows) {
                     for (var _i = 0, drawCalls_1 = drawCalls; _i < drawCalls_1.length; _i++) {
                         var drawCall = drawCalls_1[_i];
@@ -6242,16 +7835,16 @@ var egret3d;
             }
         };
         DrawCallList.prototype.removeDrawCalls = function (gameObject) {
-            if (gameObject.hashCode in this._drawCalls) {
-                var drawCalls = this._drawCalls[gameObject.hashCode];
+            if (gameObject.uuid in this._drawCalls) {
+                var drawCalls = this._drawCalls[gameObject.uuid];
                 egret3d.Pool.drawCall.remove(drawCalls);
                 egret3d.Pool.shadowCaster.remove(drawCalls);
-                delete this._drawCalls[gameObject.hashCode];
+                delete this._drawCalls[gameObject.uuid];
             }
         };
         DrawCallList.prototype.getDrawCalls = function (gameObject) {
-            if (gameObject.hashCode in this._drawCalls) {
-                return this._drawCalls[gameObject.hashCode];
+            if (gameObject.uuid in this._drawCalls) {
+                return this._drawCalls[gameObject.uuid];
             }
             return null;
         };
@@ -6262,137 +7855,750 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    var helpVec3 = new egret3d.Vector3();
+    var helpVec3_2 = new egret3d.Vector3();
+    var helpMat4 = new egret3d.Matrix();
+    var helpQuat4 = new egret3d.Quaternion();
+    var helpQuat4_2 = new egret3d.Quaternion();
+    var helpVector = new egret3d.Vector3();
+    var helpRotation = new egret3d.Quaternion();
+    var helpUp = new egret3d.Vector3(0, 1, 0);
+    var helpRight = new egret3d.Vector3(1, 0, 0);
+    var helpFoward = new egret3d.Vector3(0, 0, 1);
     /**
-     *
+     * Transform Class
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    var BaseCollider = (function (_super) {
-        __extends(BaseCollider, _super);
-        function BaseCollider() {
+    /**
+     * Transform实例可以被添加到3D场景中，并持有一个GameObejct实例
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    var Transform = (function (_super) {
+        __extends(Transform, _super);
+        function Transform() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._bounds = new egret3d.OBB();
+            _this._dirtyAABB = true;
+            _this._dirtyLocal = true;
+            _this._dirtyWorld = true;
+            /**
+             * 世界矩阵的行列式，如果小于0，说明进行了反转
+             * @internal
+             */
+            _this._worldMatrixDeterminant = 0.0;
+            _this.localMatrix = new egret3d.Matrix();
+            _this.worldMatrix = new egret3d.Matrix();
+            _this.localPosition = new egret3d.Vector3();
+            _this.position = new egret3d.Vector3();
+            _this.localRotation = new egret3d.Quaternion();
+            _this.rotation = new egret3d.Quaternion();
+            _this.localEulerAngles = new egret3d.Vector3();
+            _this.eulerAngles = new egret3d.Vector3();
+            _this.localScale = new egret3d.Vector3(1.0, 1.0, 1.0);
+            _this.scale = new egret3d.Vector3(1.0, 1.0, 1.0);
+            _this._children = [];
+            _this._aabb = null;
+            _this._parent = null;
             return _this;
         }
-        Object.defineProperty(BaseCollider.prototype, "bounds", {
+        Transform.prototype._removeFromChildren = function (value) {
+            var index = 0;
+            for (var _i = 0, _a = this._children; _i < _a.length; _i++) {
+                var child = _a[_i];
+                if (child === value) {
+                    this._children.splice(index, 1);
+                    break;
+                }
+                index++;
+            }
+        };
+        Transform.prototype._buildAABB = function () {
+            var vertexPosition = new egret3d.Vector3();
+            var minimum = new egret3d.Vector3();
+            var maximum = new egret3d.Vector3();
+            var filter = this.gameObject.getComponent(egret3d.MeshFilter);
+            if (filter && filter.mesh) {
+                egret3d.Vector3.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, minimum);
+                egret3d.Vector3.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, maximum);
+                var subMeshIndex = 0;
+                for (var _i = 0, _a = filter.mesh.glTFMesh.primitives; _i < _a.length; _i++) {
+                    var _primitive = _a[_i];
+                    var vertices = filter.mesh.getVertices(subMeshIndex);
+                    for (var i = 0, l = vertices.length; i < l; i += 3) {
+                        egret3d.Vector3.set(vertices[i], vertices[i + 1], vertices[i + 2], vertexPosition);
+                        egret3d.Vector3.max(vertexPosition, maximum, maximum);
+                        egret3d.Vector3.min(vertexPosition, minimum, minimum);
+                    }
+                    subMeshIndex++;
+                }
+            }
+            else {
+                var skinmesh = this.gameObject.getComponent(egret3d.SkinnedMeshRenderer);
+                if (skinmesh && skinmesh.mesh) {
+                    egret3d.Vector3.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, minimum);
+                    egret3d.Vector3.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, maximum);
+                    var subMeshIndex = 0;
+                    for (var _b = 0, _c = skinmesh.mesh.glTFMesh.primitives; _b < _c.length; _b++) {
+                        var _primitive = _c[_b];
+                        var vertices = skinmesh.mesh.getVertices(subMeshIndex);
+                        for (var i = 0, l = vertices.length; i < l; i += 3) {
+                            egret3d.Vector3.set(vertices[i], vertices[i + 1], vertices[i + 2], vertexPosition);
+                            egret3d.Vector3.max(vertexPosition, maximum, maximum);
+                            egret3d.Vector3.min(vertexPosition, minimum, minimum);
+                        }
+                        subMeshIndex++;
+                    }
+                }
+                else {
+                    minimum.x = -1;
+                    minimum.y = -1;
+                    minimum.z = -1;
+                    maximum.x = 1;
+                    maximum.y = 1;
+                    maximum.z = 1;
+                }
+            }
+            var aabb = new egret3d.AABB(minimum, maximum);
+            return aabb;
+        };
+        Transform.prototype._sync = function () {
+            if (this._dirtyLocal) {
+                egret3d.Matrix.fromRTS(this.localPosition, this.localScale, this.localRotation, this.localMatrix);
+                this._dirtyLocal = false;
+            }
+            if (this._dirtyWorld) {
+                if (!this._parent) {
+                    egret3d.Matrix.copy(this.localMatrix, this.worldMatrix);
+                }
+                else {
+                    egret3d.Matrix.multiply(this._parent.worldMatrix, this.localMatrix, this.worldMatrix);
+                }
+                this._worldMatrixDeterminant = egret3d.Matrix.determinant(this.worldMatrix);
+                this._dirtyWorld = false;
+            }
+        };
+        Transform.prototype._dirtify = function (local) {
+            if (local === void 0) { local = false; }
+            if ((!local || (local && this._dirtyLocal)) && this._dirtyWorld) {
+                return;
+            }
+            if (local) {
+                this._dirtyLocal = true;
+            }
+            if (!this._dirtyWorld) {
+                this._dirtyWorld = true;
+                var i = this._children.length;
+                while (i--) {
+                    if (this._children[i]._dirtyWorld) {
+                        continue;
+                    }
+                    this._children[i]._dirtify();
+                }
+            }
+            // transform dirty
+            this._dirtyAABB = true;
+        };
+        /**
+         * 父节点发生改变的回调方法
+         * 子类可通过重载此方法进行标脏状态传递
+         */
+        Transform.prototype._onParentChange = function (newParent, oldParent) {
+            var prevActive = oldParent ? oldParent.gameObject.activeInHierarchy : this.gameObject.activeSelf;
+            if ((newParent ? newParent.gameObject.activeInHierarchy : this.gameObject.activeSelf) !== prevActive) {
+                this.gameObject._activeInHierarchyDirty(prevActive);
+            }
+            this._dirtify();
+        };
+        /**
+         *
+         */
+        Transform.prototype.$getGlobalPosition = function () {
+            var position = this.getPosition();
+            return new Float32Array([position.x, position.y, position.z, 1]);
+        };
+        Transform.prototype.deserialize = function (element) {
+            _super.prototype.deserialize.call(this, element); // TODO
+            this.localPosition.deserialize(element.localPosition);
+            this.localRotation.deserialize(element.localRotation);
+            this.localScale.deserialize(element.localScale);
+            this._children.length = 0;
+            if (element.children) {
+                for (var i = 0, l = element.children.length; i < l; i++) {
+                    var child = paper.getDeserializedObject(element.children[i]);
+                    if (child) {
+                        child._parent = this;
+                        this._children.push(child);
+                    }
+                }
+            }
+        };
+        /**
+         * 设置父节点
+         */
+        Transform.prototype.setParent = function (newParent, worldPositionStays) {
+            if (worldPositionStays === void 0) { worldPositionStays = false; }
+            var oldParent = this._parent;
+            if (oldParent === newParent) {
+                return;
+            }
+            if (worldPositionStays) {
+                egret3d.Vector3.copy(this.getPosition(), egret3d.helpVector3A);
+            }
+            if (oldParent) {
+                oldParent._removeFromChildren(this);
+            }
+            if (newParent) {
+                newParent._children.push(this);
+            }
+            this._parent = newParent;
+            this._onParentChange(newParent, oldParent);
+            if (worldPositionStays) {
+                this.setPosition(egret3d.helpVector3A);
+            }
+        };
+        /**
+         * 获取对象下标的子集对象
+         * @param index
+         */
+        Transform.prototype.getChild = function (index) {
+            return 0 <= index && index < this._children.length ? this._children[index] : null;
+        };
+        /**
+         * get local matrix
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获得本地矩阵
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getLocalMatrix = function () {
+            if (this._dirtyLocal) {
+                egret3d.Matrix.fromRTS(this.localPosition, this.localScale, this.localRotation, this.localMatrix);
+                this._dirtyLocal = false;
+            }
+            return this.localMatrix;
+        };
+        /**
+         * get world matrix
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获得世界矩阵
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getWorldMatrix = function () {
+            if (!this._dirtyLocal && !this._dirtyWorld) {
+                return this.worldMatrix;
+            }
+            if (this._parent) {
+                this._parent.getWorldMatrix();
+            }
+            this._sync();
+            return this.worldMatrix;
+        };
+        /**
+         * get local position
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获得本地位置
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getLocalPosition = function () {
+            return this.localPosition;
+        };
+        Transform.prototype.setLocalPosition = function (p1, p2, p3) {
+            if (p1.hasOwnProperty("x")) {
+                egret3d.Vector3.copy(p1, this.localPosition);
+            }
+            else {
+                this.localPosition.x = p1;
+                this.localPosition.y = p2 || 0;
+                this.localPosition.z = p3 || 0;
+            }
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        };
+        /**
+         * get position
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获得位置
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getPosition = function () {
+            egret3d.Matrix.getTranslation(this.getWorldMatrix(), this.position);
+            return this.position;
+        };
+        Transform.prototype.setPosition = function (p1, p2, p3) {
+            if (p1.hasOwnProperty("x")) {
+                egret3d.Vector3.copy(p1, helpVec3);
+            }
+            else {
+                helpVec3.x = p1;
+                helpVec3.y = p2 || 0;
+                helpVec3.z = p3 || 0;
+            }
+            if (!this._parent) {
+                egret3d.Vector3.copy(helpVec3, this.localPosition);
+            }
+            else {
+                egret3d.Matrix.inverse(this._parent.getWorldMatrix(), helpMat4);
+                egret3d.Matrix.transformVector3(helpVec3, helpMat4, this.localPosition); // transform point
+            }
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        };
+        /**
+         * get local rotation
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取本地旋转
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getLocalRotation = function () {
+            return this.localRotation;
+        };
+        Transform.prototype.setLocalRotation = function (p1, p2, p3, p4) {
+            if (p1.hasOwnProperty("x")) {
+                this.localRotation.copy(p1);
+            }
+            else {
+                this.localRotation.x = p1;
+                this.localRotation.y = p2 || 0;
+                this.localRotation.z = p3 || 0;
+                this.localRotation.w = p4 !== undefined ? p4 : 1;
+            }
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        };
+        /**
+         * get rotation
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获得旋转
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getRotation = function () {
+            egret3d.Quaternion.fromMatrix(this.getWorldMatrix(), this.rotation);
+            return this.rotation;
+        };
+        Transform.prototype.setRotation = function (q1, q2, q3, q4) {
+            if (q1.hasOwnProperty("x")) {
+                egret3d.Quaternion.copy(q1, helpQuat4);
+            }
+            else {
+                helpQuat4.x = q1;
+                helpQuat4.y = q2 || 0;
+                helpQuat4.z = q3 || 0;
+                helpQuat4.w = q4 !== undefined ? q4 : 1;
+            }
+            if (!this._parent) {
+                egret3d.Quaternion.copy(helpQuat4, this.localRotation);
+            }
+            else {
+                var parentRot = this._parent.getRotation();
+                egret3d.Quaternion.copy(parentRot, helpQuat4_2);
+                egret3d.Quaternion.multiply(helpQuat4_2.inverse(), helpQuat4, this.localRotation);
+            }
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        };
+        /**
+         * get local euler angles
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取本地欧拉角
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getLocalEulerAngles = function () {
+            egret3d.Quaternion.toEulerAngles(this.localRotation, this.localEulerAngles);
+            return this.localEulerAngles;
+        };
+        Transform.prototype.setLocalEulerAngles = function (p1, p2, p3) {
+            if (p1.hasOwnProperty("x")) {
+                p1 = p1;
+                egret3d.Quaternion.fromEulerAngles(p1.x, p1.y, p1.z, this.localRotation);
+            }
+            else {
+                egret3d.Quaternion.fromEulerAngles(p1, p2, p3, this.localRotation);
+            }
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        };
+        /**
+         * get euler angles
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取欧拉角
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getEulerAngles = function () {
+            egret3d.Matrix.toEulerAngles(this.getWorldMatrix(), this.eulerAngles);
+            return this.eulerAngles;
+        };
+        Transform.prototype.setEulerAngles = function (q1, q2, q3) {
+            if (q1.hasOwnProperty("x")) {
+                q1 = q1;
+                egret3d.Quaternion.fromEulerAngles(q1.x, q1.y, q1.z, helpQuat4);
+            }
+            else {
+                egret3d.Quaternion.fromEulerAngles(q1, q2 || 0, q3 || 0, helpQuat4);
+            }
+            if (!this._parent) {
+                egret3d.Quaternion.copy(helpQuat4, this.localRotation);
+            }
+            else {
+                var parentRot = this._parent.getRotation();
+                egret3d.Quaternion.copy(parentRot, helpQuat4_2);
+                egret3d.Quaternion.multiply(helpQuat4_2.inverse(), helpQuat4, this.localRotation);
+            }
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        };
+        /**
+         * get local scale
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获得本地缩放
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getLocalScale = function () {
+            return this.localScale;
+        };
+        Transform.prototype.setLocalScale = function (p1, p2, p3) {
+            if (p1.hasOwnProperty("x")) {
+                egret3d.Vector3.copy(p1, this.localScale);
+            }
+            else {
+                this.localScale.x = p1;
+                this.localScale.y = p2 !== undefined ? p2 : 1;
+                this.localScale.z = p3 !== undefined ? p3 : 1;
+            }
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        };
+        /**
+         * get scale
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获得缩放
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getScale = function () {
+            egret3d.Matrix.getScale(this.getWorldMatrix(), this.scale);
+            return this.scale;
+        };
+        Transform.prototype.setScale = function (p1, p2, p3) {
+            if (p1.hasOwnProperty("x")) {
+                egret3d.Vector3.copy(p1, helpVec3);
+            }
+            else {
+                helpVec3.x = p1;
+                helpVec3.y = p2 !== undefined ? p2 : 1;
+                helpVec3.z = p3 !== undefined ? p3 : 1;
+            }
+            if (!this._parent) {
+                egret3d.Vector3.copy(helpVec3, this.localScale);
+            }
+            else {
+                egret3d.Matrix.inverse(this._parent.getWorldMatrix(), helpMat4);
+                egret3d.Matrix.transformVector3(helpVec3, helpMat4, this.localScale); // transform vector3
+            }
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        };
+        /**
+         * look at a target
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 旋转当前transform 到指定的目标
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.lookAt = function (target, up) {
+            if (target instanceof Transform) {
+                egret3d.Vector3.copy(target.getPosition(), helpVector);
+            }
+            else {
+                egret3d.Vector3.copy(target, helpVector);
+            }
+            if (up === undefined) {
+                egret3d.Quaternion.lookAt(this.getPosition(), helpVector, helpRotation);
+            }
+            else {
+                egret3d.Quaternion.lookAtWithUp(this.getPosition(), helpVector, up, helpRotation);
+            }
+            this.setRotation(helpRotation);
+        };
+        /**
+         * z-axis towards in world space
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取世界坐标系下当前z轴的朝向
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getForward = function (out) {
+            egret3d.Matrix.transformNormal(helpFoward, this.getWorldMatrix(), out);
+            egret3d.Vector3.normalize(out);
+            return out;
+        };
+        /**
+         * x-axis towards in world space
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取世界坐标系下当前x轴的朝向
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getRight = function (out) {
+            egret3d.Matrix.transformNormal(helpRight, this.getWorldMatrix(), out);
+            egret3d.Vector3.normalize(out);
+        };
+        /**
+         * y-axis towards in world space
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取世界坐标系下当前y轴的朝向
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        Transform.prototype.getUp = function (out) {
+            egret3d.Matrix.transformNormal(helpUp, this.getWorldMatrix(), out);
+            egret3d.Vector3.normalize(out);
+        };
+        /**
+         * Finds a child by name or path and returns it.
+         * @param nameOrPath
+         */
+        Transform.prototype.find = function (nameOrPath) {
+            var names = nameOrPath.split("/");
+            var ancestor = this;
+            var result = null;
+            for (var _i = 0, names_1 = names; _i < names_1.length; _i++) {
+                var name_1 = names_1[_i];
+                for (var _a = 0, _b = ancestor._children; _a < _b.length; _a++) {
+                    var child = _b[_a];
+                    if (child.gameObject.name === name_1) {
+                        result = child;
+                        break;
+                    }
+                }
+                if (result) {
+                    ancestor = result;
+                }
+                else {
+                    break;
+                }
+            }
+            return result;
+        };
+        /**
+         * @internal
+         */
+        Transform.prototype.getAllChildren = function () {
+            var children = [];
+            this._getAllChildren(children);
+            return children;
+        };
+        Transform.prototype._getAllChildren = function (children) {
+            for (var _i = 0, _a = this._children; _i < _a.length; _i++) {
+                var child = _a[_i];
+                children.push(child);
+                child._getAllChildren(children);
+            }
+        };
+        Object.defineProperty(Transform.prototype, "childCount", {
+            /**
+             * 当前子集对象的数量
+             */
+            get: function () {
+                return this._children.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Transform.prototype, "aabb", {
             /**
              *
              */
             get: function () {
-                return this._bounds;
+                if (!this._aabb) {
+                    this._aabb = this._buildAABB();
+                }
+                if (this._dirtyAABB) {
+                    this._aabb.update(this.getWorldMatrix());
+                    this._dirtyAABB = false;
+                }
+                return this._aabb;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Transform.prototype, "children", {
+            /**
+             * children list
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
+             */
+            /**
+             * 子物体列表
+             * @version paper 1.0
+             * @platform Web
+             * @language zh_CN
+             */
+            get: function () {
+                return this._children;
+            },
+            /**
+             * 仅用于反序列化。
+             * @internal
+             */
+            set: function (value) {
+                this._children.length = 0;
+                for (var _i = 0, value_3 = value; _i < value_3.length; _i++) {
+                    var component = value_3[_i];
+                    this._children.push(component);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ;
+        ;
+        Object.defineProperty(Transform.prototype, "parent", {
+            /**
+             * instance of parent transform
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
+             */
+            /**
+             * 父元素实例
+             * @version paper 1.0
+             * @platform Web
+             * @language zh_CN
+             */
+            get: function () {
+                return this._parent;
+            },
+            set: function (value) {
+                this.setParent(value, false);
             },
             enumerable: true,
             configurable: true
         });
         __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalPosition" })
+        ], Transform.prototype, "localPosition", void 0);
+        __decorate([
+            paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setPosition" })
+        ], Transform.prototype, "position", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.QUATERNION, { set: "setLocalRotation" })
+        ], Transform.prototype, "localRotation", void 0);
+        __decorate([
+            paper.editor.extraProperty(paper.editor.EditType.QUATERNION, { set: "setRotation" })
+        ], Transform.prototype, "rotation", void 0);
+        __decorate([
+            paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setLocalEulerAngles" })
+        ], Transform.prototype, "localEulerAngles", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalScale" })
+        ], Transform.prototype, "localScale", void 0);
+        __decorate([
+            paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setScale" })
+        ], Transform.prototype, "scale", void 0);
+        __decorate([
             paper.serializedField
-        ], BaseCollider.prototype, "_bounds", void 0);
-        return BaseCollider;
+        ], Transform.prototype, "children", null);
+        return Transform;
     }(paper.BaseComponent));
-    egret3d.BaseCollider = BaseCollider;
-    __reflect(BaseCollider.prototype, "egret3d.BaseCollider");
-    /**
-     * 矩形碰撞盒组件
-     */
-    var BoxCollider = (function (_super) {
-        __extends(BoxCollider, _super);
-        function BoxCollider() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             *
-             */
-            _this._dirtyMask = 0;
-            return _this;
-        }
-        /**
-         * @inheritDoc
-         */
-        BoxCollider.prototype.initialize = function () {
-            _super.prototype.initialize.call(this);
-            this._dirtyMask |= 1 /* Bounds */;
-            this._center = this._bounds.center;
-            this._size = this._bounds.size;
-        };
-        Object.defineProperty(BoxCollider.prototype, "center", {
-            /**
-             * 碰撞盒中心点
-             */
-            get: function () {
-                return this._center;
-            },
-            set: function (value) {
-                this._dirtyMask |= 1 /* Bounds */;
-                this._center.x = value.x;
-                this._center.y = value.y;
-                this._center.z = value.z;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(BoxCollider.prototype, "size", {
-            /**
-             * 碰撞盒尺寸
-             */
-            get: function () {
-                return this._size;
-            },
-            set: function (value) {
-                this._dirtyMask |= 1 /* Bounds */;
-                this._size.x = value.x;
-                this._size.y = value.y;
-                this._size.z = value.z;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return BoxCollider;
-    }(BaseCollider));
-    egret3d.BoxCollider = BoxCollider;
-    __reflect(BoxCollider.prototype, "egret3d.BoxCollider");
+    egret3d.Transform = Transform;
+    __reflect(Transform.prototype, "egret3d.Transform");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     * BoxCollider系统
-     */
-    var BoxColliderSystem = (function (_super) {
-        __extends(BoxColliderSystem, _super);
-        function BoxColliderSystem() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @inheritDoc
-             */
-            _this._interests = [
-                { componentClass: egret3d.BoxCollider }
-            ];
-            return _this;
-        }
-        /**
-         * @inheritDoc
-         */
-        BoxColliderSystem.prototype.update = function () {
-            for (var i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
-                var component = this._components[i];
-                if (component._dirtyMask !== 0) {
-                    if (component._dirtyMask & 1 /* Bounds */) {
-                        component._dirtyMask &= ~1 /* Bounds */;
-                        var bounds = component.bounds;
-                        if (bounds) {
-                            bounds.setByCenterSize(bounds.center, bounds.size);
-                        }
-                    }
-                }
-                // TODO 是否应该每帧刷新定向包围盒？理论上只有 transform 改变或 自身 数据改变时才需要刷新。
-                // 但是获取 transform 改变也需要花费很多成本
-                var matrix = component.gameObject.transform.getWorldMatrix();
-                component.bounds.update(matrix);
-            }
-        };
-        return BoxColliderSystem;
-    }(paper.BaseSystem));
-    egret3d.BoxColliderSystem = BoxColliderSystem;
-    __reflect(BoxColliderSystem.prototype, "egret3d.BoxColliderSystem");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
+    var helpRectA = new egret3d.Rectangle();
     /**
      * camera component
      * @version paper 1.0
@@ -6526,7 +8732,7 @@ var egret3d;
              * @platform Web
              * @language
              */
-            _this.viewport = new egret3d.Rect(0, 0, 1, 1);
+            _this.viewport = new egret3d.Rectangle(0, 0, 1, 1);
             /**
              * TODO 功能完善后开放此接口
              */
@@ -6584,7 +8790,7 @@ var egret3d;
             get: function () {
                 var entity = paper.GameObject.findWithTag("MainCamera");
                 if (entity) {
-                    return entity.getComponent(Camera);
+                    return entity.getComponent(Camera, true);
                 }
                 return null;
             },
@@ -6595,7 +8801,7 @@ var egret3d;
          * 计算相机视锥区域
          */
         Camera.prototype.calcCameraFrame = function () {
-            var vpp = egret3d.helpRectA;
+            var vpp = helpRectA;
             this.calcViewPortPixel(vpp);
             var farLD = this.frameVecs[0];
             var nearLD = this.frameVecs[1];
@@ -6810,7 +9016,7 @@ var egret3d;
          * @language
          */
         Camera.prototype.calcWorldPosFromScreenPos = function (screenPos, outWorldPos) {
-            var vpp = egret3d.helpRectA;
+            var vpp = helpRectA;
             this.calcViewPortPixel(vpp);
             var vppos = egret3d.helpVector3A;
             vppos.x = screenPos.x / vpp.w * 2.0 - 1.0;
@@ -6846,7 +9052,7 @@ var egret3d;
          * @language
          */
         Camera.prototype.calcScreenPosFromWorldPos = function (worldPos, outScreenPos) {
-            var vpp = egret3d.helpRectA;
+            var vpp = helpRectA;
             this.calcViewPortPixel(vpp);
             var matrixView = egret3d.helpMatrixA;
             var matrixProject = egret3d.helpMatrixB;
@@ -6864,7 +9070,7 @@ var egret3d;
          *
          */
         Camera.prototype.getPosAtXPanelInViewCoordinateByScreenPos = function (screenPos, z, out) {
-            var vpp = egret3d.helpRectA;
+            var vpp = helpRectA;
             this.calcViewPortPixel(vpp);
             var nearpos = egret3d.helpVector3A;
             nearpos.z = -this.near;
@@ -7385,7 +9591,7 @@ var egret3d;
             _this._stageHeight = 0;
             _this._scaler = 1;
             _this.stage = new egret.Stage();
-            _this.stage.maxTouches = 1;
+            _this.stage.maxTouches = 98;
             _this.root = new egret.DisplayObjectContainer();
             _this.stage.addChild(_this.root);
             return _this;
@@ -7525,7 +9731,7 @@ var egret3d;
             egret3d.WebGLKit.resetState(); // 清除3D渲染器中的标脏
         };
         return Egret2DRenderer;
-    }(paper.BaseComponent));
+    }(paper.BaseRenderer));
     egret3d.Egret2DRenderer = Egret2DRenderer;
     __reflect(Egret2DRenderer.prototype, "egret3d.Egret2DRenderer");
 })(egret3d || (egret3d = {}));
@@ -7538,18 +9744,12 @@ var egret3d;
         __extends(Egret2DRendererSystem, _super);
         function Egret2DRendererSystem() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @inheritDoc
-             */
             _this._interests = [
                 { componentClass: egret3d.Egret2DRenderer }
             ];
             return _this;
         }
-        /**
-         * @inheritDoc
-         */
-        Egret2DRendererSystem.prototype.update = function () {
+        Egret2DRendererSystem.prototype.onUpdate = function () {
             var deltaTime = paper.Time.deltaTime;
             for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
                 var component = _a[_i];
@@ -7736,7 +9936,7 @@ var egret;
                         }
                         break;
                     case 6 /* ACT_BUFFER */:
-                        this.activateBuffer(data.buffer);
+                        this.activateBuffer(data.buffer, data.width, data.height);
                         break;
                     case 7 /* ENABLE_SCISSOR */:
                         var buffer = this.activatedBuffer;
@@ -7815,14 +10015,14 @@ var egret;
             /**
              * 启用RenderBuffer
              */
-            Renderer.prototype.activateBuffer = function (buffer) {
+            Renderer.prototype.activateBuffer = function (buffer, width, height) {
                 buffer.rootRenderTarget.activate();
                 if (!this.bindIndices) {
                     this.uploadIndicesArray(this.vao.getIndices());
                 }
                 buffer.restoreStencil();
                 buffer.restoreScissor();
-                this.onResize(buffer.width, buffer.height);
+                this.onResize(width, height);
             };
             Renderer.prototype.onResize = function (width, height) {
                 this.projectionX = width / 2;
@@ -8427,16 +10627,10 @@ var egret3d;
         __extends(GuidpathSystem, _super);
         function GuidpathSystem() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @inheritDoc
-             */
             _this._interests = [{ componentClass: egret3d.Guidpath }];
             return _this;
         }
-        /**
-         * @inheritDoc
-         */
-        GuidpathSystem.prototype.update = function () {
+        GuidpathSystem.prototype.onUpdate = function () {
             var deltaTime = paper.Time.deltaTime;
             for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
                 var component = _a[_i];
@@ -8501,41 +10695,180 @@ var egret3d;
     egret3d.DirectLightShadow = DirectLightShadow;
     __reflect(DirectLightShadow.prototype, "egret3d.DirectLightShadow", ["egret3d.ILightShadow"]);
 })(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
+var egret3d;
+(function (egret3d) {
     /**
-     * 克隆
+     * Light Type Enum
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    function clone(object) {
-        var cacheParent = null;
-        // TODO 太多的字符串依赖。
-        // 将parent设置为空，避免向上引用 // TODO 这并不能根本解决问题，自定义组件依然可能会引用这些，导致错误的序列化和反序列化
-        if (object instanceof paper.GameObject) {
-            cacheParent = object.transform.parent;
-            object.transform._parent = null; // TODO
+    /**
+     * 灯光类型的枚举。
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    var LightTypeEnum;
+    (function (LightTypeEnum) {
+        /**
+         * direction light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 直射光
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        LightTypeEnum[LightTypeEnum["Direction"] = 1] = "Direction";
+        /**
+         * point light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 点光源
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        LightTypeEnum[LightTypeEnum["Point"] = 2] = "Point";
+        /**
+         * point light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 聚光灯
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        LightTypeEnum[LightTypeEnum["Spot"] = 3] = "Spot";
+    })(LightTypeEnum = egret3d.LightTypeEnum || (egret3d.LightTypeEnum = {}));
+    /**
+     * light component
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 灯光组件
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    var Light = (function (_super) {
+        __extends(Light, _super);
+        function Light() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             * light type
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
+             */
+            /**
+             * 光源类型
+             * @version paper 1.0
+             * @platform Web
+             * @language
+             */
+            _this.type = 1;
+            _this.color = new egret3d.Color(1, 1, 1, 1);
+            _this.intensity = 2;
+            _this.distance = 50;
+            _this.decay = 2;
+            _this.angle = Math.PI / 6;
+            _this.penumbra = 0;
+            /**
+             * spot angel cos
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
+             */
+            /**
+             * 聚光灯的开合角度cos值
+             * @version paper 1.0
+             * @platform Web
+             * @language
+             */
+            _this.spotAngelCos = 0.9;
+            _this.castShadows = false;
+            _this.shadowBias = 0.0003;
+            _this.shadowRadius = 2;
+            _this.shadowSize = 16;
+            _this.shadowCameraNear = 0.1;
+            _this.shadowCameraFar = 200;
+            return _this;
+            // TODO 考虑将不同灯光类型拆分成不同的组件
         }
-        else if (object instanceof egret3d.Transform) {
-            cacheParent = object.parent;
-            object._parent = null; // TODO
-        }
-        var data = paper.serialize(object);
-        if (object instanceof paper.GameObject) {
-            object.transform._parent = cacheParent; // TODO
-        }
-        else if (object instanceof egret3d.Transform) {
-            object._parent = cacheParent; // TODO
-        }
-        var assets = {};
-        if ("assets" in data) {
-            for (var _i = 0, _a = data["assets"]; _i < _a.length; _i++) {
-                var asset = _a[_i];
-                assets[asset.hashCode] = paper.Asset.find(asset.url); // 获取资源引用
-            }
-        }
-        return paper.deserialize(data, assets);
-    }
-    paper.clone = clone;
-})(paper || (paper = {}));
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.LIST, { listItems: [{ label: 'Direction', value: 1 }, { label: 'Point', value: 2 }, { label: 'Spot', value: 3 }] })
+        ], Light.prototype, "type", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.COLOR)
+        ], Light.prototype, "color", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], Light.prototype, "intensity", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], Light.prototype, "distance", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], Light.prototype, "decay", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], Light.prototype, "angle", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], Light.prototype, "penumbra", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], Light.prototype, "spotAngelCos", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.CHECKBOX)
+        ], Light.prototype, "castShadows", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], Light.prototype, "shadowBias", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], Light.prototype, "shadowRadius", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], Light.prototype, "shadowSize", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], Light.prototype, "shadowCameraNear", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], Light.prototype, "shadowCameraFar", void 0);
+        return Light;
+    }(paper.BaseComponent));
+    egret3d.Light = Light;
+    __reflect(Light.prototype, "egret3d.Light");
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -8545,18 +10878,12 @@ var egret3d;
         __extends(LightSystem, _super);
         function LightSystem() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @inheritDoc
-             */
             _this._interests = [
                 { componentClass: egret3d.Light }
             ];
             return _this;
         }
-        /**
-         * @inheritDoc
-         */
-        LightSystem.prototype.update = function () {
+        LightSystem.prototype.onUpdate = function () {
             for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
                 var light = _a[_i];
                 var shadow = void 0;
@@ -8842,7 +11169,6 @@ var egret3d;
             this._receiveShadows = element._receiveShadows || false;
             this._castShadows = element._castShadows || false;
             this._lightmapIndex = element._lightmapIndex;
-            this.uuid = element.uuid;
             if (element._materials) {
                 this._materials.length = 0;
                 for (var i = 0, l = element._materials.length; i < l; i++) {
@@ -8937,8 +11263,8 @@ var egret3d;
                     return;
                 }
                 this._materials.length = 0;
-                for (var _i = 0, value_3 = value; _i < value_3.length; _i++) {
-                    var material = value_3[_i];
+                for (var _i = 0, value_4 = value; _i < value_4.length; _i++) {
+                    var material = value_4[_i];
                     this._materials.push(material);
                 }
                 paper.EventPool.dispatchEvent("materials" /* Materials */, this);
@@ -8977,9 +11303,9 @@ var egret3d;
             paper.editor.property(paper.editor.EditType.MATERIAL_ARRAY)
         ], MeshRenderer.prototype, "materials", null);
         return MeshRenderer;
-    }(paper.BaseComponent));
+    }(paper.BaseRenderer));
     egret3d.MeshRenderer = MeshRenderer;
-    __reflect(MeshRenderer.prototype, "egret3d.MeshRenderer", ["paper.IRenderer"]);
+    __reflect(MeshRenderer.prototype, "egret3d.MeshRenderer");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -8990,9 +11316,6 @@ var egret3d;
         __extends(MeshRendererSystem, _super);
         function MeshRendererSystem() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @inheritDoc
-             */
             _this._interests = [
                 {
                     componentClass: egret3d.MeshRenderer,
@@ -9000,8 +11323,7 @@ var egret3d;
                         {
                             type: "castShadows" /* CastShadows */,
                             listener: function (component) {
-                                var filter = _this._getComponent(component.gameObject, 1);
-                                if (filter) {
+                                if (_this._hasGameObject(component.gameObject)) {
                                     _this._drawCallList.updateDrawCalls(component.gameObject, component.castShadows);
                                     _this._drawCallList.updateShadowCasters(component.gameObject, component.castShadows);
                                 }
@@ -9010,8 +11332,7 @@ var egret3d;
                         {
                             type: "lightmapIndex" /* LightmapIndex */,
                             listener: function (component) {
-                                var filter = _this._getComponent(component.gameObject, 1);
-                                if (filter) {
+                                if (_this._hasGameObject(component.gameObject)) {
                                     _this._updateLightMap(component);
                                 }
                             }
@@ -9019,8 +11340,7 @@ var egret3d;
                         {
                             type: "lightmapScaleOffset" /* LightmapScaleOffset */,
                             listener: function (component) {
-                                var filter = _this._getComponent(component.gameObject, 1);
-                                if (filter) {
+                                if (_this._hasGameObject(component.gameObject)) {
                                     _this._updateLightMap(component);
                                 }
                             }
@@ -9028,8 +11348,7 @@ var egret3d;
                         {
                             type: "materials" /* Materials */,
                             listener: function (component) {
-                                var filter = _this._getComponent(component.gameObject, 1);
-                                if (filter) {
+                                if (_this._hasGameObject(component.gameObject)) {
                                     _this._drawCallList.updateDrawCalls(component.gameObject, component.castShadows);
                                 }
                             }
@@ -9080,27 +11399,6 @@ var egret3d;
             _this._drawCallList = new egret3d.DrawCallList(_this._createDrawCalls);
             return _this;
         }
-        /**
-         * @inheritDoc
-         */
-        MeshRendererSystem.prototype._onAddComponent = function (component) {
-            if (!_super.prototype._onAddComponent.call(this, component)) {
-                return false;
-            }
-            var renderer = this._getComponent(component.gameObject, 0);
-            this._drawCallList.updateDrawCalls(renderer.gameObject, renderer.castShadows);
-            return true;
-        };
-        /**
-         * @inheritDoc
-         */
-        MeshRendererSystem.prototype._onRemoveComponent = function (component) {
-            if (!_super.prototype._onRemoveComponent.call(this, component)) {
-                return false;
-            }
-            this._drawCallList.removeDrawCalls(component.gameObject);
-            return true;
-        };
         MeshRendererSystem.prototype._updateLightMap = function (component) {
             var drawCalls = this._drawCallList.getDrawCalls(component.gameObject);
             if (drawCalls) {
@@ -9111,10 +11409,21 @@ var egret3d;
                 }
             }
         };
-        /**
-         * @inheritDoc
-         */
-        MeshRendererSystem.prototype.update = function () {
+        MeshRendererSystem.prototype.onEnable = function () {
+            // TODO 重新生成 drawcall
+        };
+        MeshRendererSystem.prototype.onAddGameObject = function (gameObject) {
+            var renderer = this._getComponent(gameObject, 0);
+            this._drawCallList.updateDrawCalls(gameObject, renderer.castShadows);
+        };
+        MeshRendererSystem.prototype.onRemoveGameObject = function (gameObject) {
+            this._drawCallList.removeDrawCalls(gameObject);
+        };
+        MeshRendererSystem.prototype.onDisable = function () {
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                this._drawCallList.removeDrawCalls(component.gameObject);
+            }
         };
         return MeshRendererSystem;
     }(paper.BaseSystem));
@@ -9265,21 +11574,22 @@ var egret3d;
                 egret3d.Matrix.add(out, mat3, out);
             }
             else {
-                var mat0 = egret3d.helpMatrixA;
-                var mat1 = egret3d.helpMatrixB;
-                var mat2 = egret3d.helpMatrixC;
-                var mat3 = egret3d.helpMatrixD;
-                mat0.rawData = this._skeletonMatrixData.slice(16 * blendIndices.x, 16 * blendIndices.x + 16);
-                mat1.rawData = this._skeletonMatrixData.slice(16 * blendIndices.y, 16 * blendIndices.y + 16);
-                mat2.rawData = this._skeletonMatrixData.slice(16 * blendIndices.z, 16 * blendIndices.z + 16);
-                mat3.rawData = this._skeletonMatrixData.slice(16 * blendIndices.w, 16 * blendIndices.w + 16);
-                egret3d.Matrix.scale(blendWeights.x, mat0);
-                egret3d.Matrix.scale(blendWeights.y, mat1);
-                egret3d.Matrix.scale(blendWeights.z, mat2);
-                egret3d.Matrix.scale(blendWeights.w, mat3);
-                egret3d.Matrix.add(mat0, mat1, out);
-                egret3d.Matrix.add(out, mat2, out);
-                egret3d.Matrix.add(out, mat3, out);
+                // TODO
+                // const mat0 = helpMatrixA;
+                // const mat1 = helpMatrixB;
+                // const mat2 = helpMatrixC;
+                // const mat3 = helpMatrixD;
+                // mat0.rawData = this._skeletonMatrixData.slice(16 * blendIndices.x, 16 * blendIndices.x + 16);
+                // mat1.rawData = this._skeletonMatrixData.slice(16 * blendIndices.y, 16 * blendIndices.y + 16);
+                // mat2.rawData = this._skeletonMatrixData.slice(16 * blendIndices.z, 16 * blendIndices.z + 16);
+                // mat3.rawData = this._skeletonMatrixData.slice(16 * blendIndices.w, 16 * blendIndices.w + 16);
+                // egret3d.Matrix.scale(blendWeights.x, mat0);
+                // egret3d.Matrix.scale(blendWeights.y, mat1);
+                // egret3d.Matrix.scale(blendWeights.z, mat2);
+                // egret3d.Matrix.scale(blendWeights.w, mat3);
+                // egret3d.Matrix.add(mat0, mat1, out);
+                // egret3d.Matrix.add(out, mat2, out);
+                // egret3d.Matrix.add(out, mat3, out);
             }
             return out;
         };
@@ -9355,7 +11665,7 @@ var egret3d;
             target._materials = [];
             target.uuid = this.uuid;
             if (this.rootBone) {
-                target.rootBone = { hashCode: this.rootBone.hashCode };
+                target.rootBone = { uuid: this.rootBone.uuid };
             }
             var materials = this._materials;
             target._materials.length = materials.length;
@@ -9367,7 +11677,7 @@ var egret3d;
             target._bones.length = bones.length;
             for (var i = 0, l = bones.length; i < l; i++) {
                 var bone = bones[i];
-                target._bones[i] = { hashCode: bone.hashCode };
+                target._bones[i] = { uuid: bone.uuid };
             }
             return target;
         };
@@ -9378,7 +11688,6 @@ var egret3d;
             _super.prototype.deserialize.call(this, element);
             this.center.deserialize(element.center);
             this.size.deserialize(element.size);
-            this.uuid = element.uuid;
             if (element._mesh) {
                 this._mesh = new egret3d.Mesh(); //
                 this._mesh.deserialize(element._mesh);
@@ -9499,8 +11808,8 @@ var egret3d;
             },
             set: function (value) {
                 if (value !== this._materials) {
-                    for (var _i = 0, value_4 = value; _i < value_4.length; _i++) {
-                        var material = value_4[_i];
+                    for (var _i = 0, value_5 = value; _i < value_5.length; _i++) {
+                        var material = value_5[_i];
                         this._materials.push(material);
                     }
                 }
@@ -9520,8 +11829,8 @@ var egret3d;
             set: function (value) {
                 if (value !== this._bones) {
                     this._bones.length = 0;
-                    for (var _i = 0, value_5 = value; _i < value_5.length; _i++) {
-                        var bone = value_5[_i];
+                    for (var _i = 0, value_6 = value; _i < value_6.length; _i++) {
+                        var bone = value_6[_i];
                         this._bones.push(bone);
                     }
                 }
@@ -9562,9 +11871,9 @@ var egret3d;
             paper.serializedField
         ], SkinnedMeshRenderer.prototype, "size", void 0);
         return SkinnedMeshRenderer;
-    }(paper.BaseComponent));
+    }(paper.BaseRenderer));
     egret3d.SkinnedMeshRenderer = SkinnedMeshRenderer;
-    __reflect(SkinnedMeshRenderer.prototype, "egret3d.SkinnedMeshRenderer", ["paper.IRenderer"]);
+    __reflect(SkinnedMeshRenderer.prototype, "egret3d.SkinnedMeshRenderer");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -9854,9 +12163,9 @@ var egret3d;
             paper.serializedField
         ], TrailRenderer.prototype, "lookAtCamera", void 0);
         return TrailRenderer;
-    }(paper.BaseComponent));
+    }(paper.BaseRenderer));
     egret3d.TrailRenderer = TrailRenderer;
-    __reflect(TrailRenderer.prototype, "egret3d.TrailRenderer", ["paper.IRenderer"]);
+    __reflect(TrailRenderer.prototype, "egret3d.TrailRenderer");
     /**
      * stick
      */
@@ -9869,97 +12178,69 @@ var egret3d;
     }());
     __reflect(TrailStick.prototype, "TrailStick");
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * TrailRender系统
-     */
-    var TrailRendererSystem = (function (_super) {
-        __extends(TrailRendererSystem, _super);
-        function TrailRendererSystem() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @inheritDoc
-             */
-            _this._interests = [
-                {
-                    componentClass: egret3d.TrailRenderer,
-                    listeners: [
-                        {
-                            type: "material" /* Meterial */,
-                            listener: function (component) {
-                                var renderer = _this._getComponent(component.gameObject, 0);
-                                if (renderer) {
-                                    _this._drawCallList.updateDrawCalls(component.gameObject, false);
-                                }
-                            }
-                        },
-                    ]
-                }
-            ];
-            _this._transform = new egret3d.Transform(); // TODO 不要这样，这是组件
-            _this._createDrawCalls = (function (gameObject) {
-                var renderer = _this._getComponent(gameObject, 0);
-                if (renderer._mesh && renderer._material && renderer.$active) {
-                    var subMeshIndex = 0;
-                    var drawCalls = [];
-                    for (var _i = 0, _a = renderer._mesh.glTFMesh.primitives; _i < _a.length; _i++) {
-                        var primitive = _a[_i];
-                        drawCalls.push({
-                            subMeshInfo: subMeshIndex,
-                            mesh: renderer._mesh,
-                            material: renderer._material,
-                            lightMapIndex: -1,
-                            boneData: null,
-                            gameObject: gameObject,
-                            transform: _this._transform,
-                            frustumTest: false,
-                            zdist: -1
-                        });
-                        subMeshIndex++;
-                    }
-                    return drawCalls;
-                }
-                return null;
-            });
-            _this._drawCallList = new egret3d.DrawCallList(_this._createDrawCalls);
-            return _this;
+var paper;
+(function (paper) {
+    paper.serializeClassMap = {
+        0: "paper.Scene",
+        1: "paper.GameObject",
+        2: "egret3d.AniPlayer",
+        3: "egret3d.BoxCollider",
+        4: "egret3d.Camera",
+        5: "egret3d.MeshFilter",
+        6: "egret3d.MeshRenderer",
+        7: "egret3d.particle.ParticleComponent",
+        8: "egret3d.particle.ParticleRenderer",
+        9: "egret3d.SkinnedMeshRenderer",
+        10: "egret3d.SphereCollider",
+        11: "egret3d.Transform",
+        12: "egret3d.Shader",
+        13: "egret3d.Mesh",
+        14: "egret3d.Material",
+        15: "egret3d.AnimationClip",
+        16: "egret3d.TPoseInfo",
+        17: "egret3d.PoseBoneMatrix",
+        18: "egret3d.Texture",
+        19: "egret3d.Texture",
+        20: "egret3d.Vector2",
+        21: "egret3d.Vector3",
+        22: "egret3d.Vector4",
+        23: "egret3d.Quaternion",
+        24: "egret3d.Color",
+        25: "egret3d.Gradient",
+        26: "egret3d.Curve",
+        27: "egret3d.Keyframe",
+        28: "egret3d.Rect",
+        29: "egret3d.MainModule",
+        30: "egret3d.EmissionModule",
+        31: "egret3d.ShapeModule",
+        32: "egret3d.VelocityOverLifetimeModule",
+        33: "egret3d.RotationOverLifetimeModule",
+        34: "egret3d.ColorOverLifetimeModule",
+        35: "egret3d.SizeOverLifetimeModule",
+        36: "egret3d.MinMaxCurve",
+        37: "egret3d.MinMaxGradient",
+        38: "egret3d.alphaKey",
+        39: "egret3d.colorKey",
+        40: "egret3d.Animation",
+        41: "egret3d.GLTFAsset",
+    };
+    function findClassCode(name) {
+        for (var key in paper.serializeClassMap) {
+            if (paper.serializeClassMap[key] === name) {
+                return key;
+            }
         }
-        /**
-         * @inheritDoc
-         */
-        TrailRendererSystem.prototype._onAddComponent = function (component) {
-            if (!_super.prototype._onAddComponent.call(this, component)) {
-                return false;
-            }
-            this._drawCallList.updateShadowCasters(component.gameObject, false);
-            return true;
-        };
-        /**
-         * @inheritDoc
-         */
-        TrailRendererSystem.prototype._onRemoveComponent = function (component) {
-            if (!_super.prototype._onRemoveComponent.call(this, component)) {
-                return false;
-            }
-            this._drawCallList.removeDrawCalls(component.gameObject);
-            return true;
-        };
-        /**
-         * @inheritDoc
-         */
-        TrailRendererSystem.prototype.update = function () {
-            var deltaTime = paper.Time.deltaTime;
-            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                var component = _a[_i];
-                component.update(deltaTime);
-            }
-        };
-        return TrailRendererSystem;
-    }(paper.BaseSystem));
-    egret3d.TrailRendererSystem = TrailRendererSystem;
-    __reflect(TrailRendererSystem.prototype, "egret3d.TrailRendererSystem");
-})(egret3d || (egret3d = {}));
+        return "";
+    }
+    paper.findClassCode = findClassCode;
+    function findClassCodeFrom(target) {
+        var proto = target.__proto__;
+        var classTypeOrigin = proto.__class__;
+        var classType = paper.findClassCode(classTypeOrigin);
+        return classType;
+    }
+    paper.findClassCodeFrom = findClassCodeFrom;
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -9969,9 +12250,6 @@ var egret3d;
         __extends(SkinnedMeshRendererSystem, _super);
         function SkinnedMeshRendererSystem() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @inheritDoc
-             */
             _this._interests = [
                 {
                     componentClass: egret3d.SkinnedMeshRenderer,
@@ -9979,19 +12257,13 @@ var egret3d;
                         {
                             type: "mesh" /* Mesh */,
                             listener: function (component) {
-                                var renderer = _this._getComponent(component.gameObject, 0);
-                                if (renderer) {
-                                    _this._updateDrawCalls(component);
-                                }
+                                _this._updateDrawCalls(component.gameObject);
                             }
                         },
                         {
                             type: "materials" /* Materials */,
                             listener: function (component) {
-                                var renderer = _this._getComponent(component.gameObject, 0);
-                                if (renderer) {
-                                    _this._updateDrawCalls(component);
-                                }
+                                _this._updateDrawCalls(component.gameObject);
                             }
                         },
                     ]
@@ -10024,8 +12296,11 @@ var egret3d;
             _this._drawCallList = new egret3d.DrawCallList(_this._createDrawCalls);
             return _this;
         }
-        SkinnedMeshRendererSystem.prototype._updateDrawCalls = function (component) {
-            var gameObject = component.gameObject;
+        SkinnedMeshRendererSystem.prototype._updateDrawCalls = function (gameObject) {
+            if (!this._hasGameObject(gameObject)) {
+                return;
+            }
+            var component = this._getComponent(gameObject, 0);
             this._drawCallList.updateDrawCalls(gameObject, false);
             //
             var drawCalls = this._drawCallList.getDrawCalls(gameObject);
@@ -10036,30 +12311,20 @@ var egret3d;
                 }
             }
         };
-        /**
-         * @inheritDoc
-         */
-        SkinnedMeshRendererSystem.prototype._onAddComponent = function (component) {
-            if (!_super.prototype._onAddComponent.call(this, component)) {
-                return false;
-            }
-            this._updateDrawCalls(component);
-            return true;
+        SkinnedMeshRendererSystem.prototype.onEnable = function () {
+            // TODO
         };
-        /**
-         * @inheritDoc
-         */
-        SkinnedMeshRendererSystem.prototype._onRemoveComponent = function (component) {
-            if (!_super.prototype._onRemoveComponent.call(this, component)) {
-                return false;
-            }
-            this._drawCallList.removeDrawCalls(component.gameObject);
-            return true;
+        SkinnedMeshRendererSystem.prototype.onAddGameObject = function (gameObject) {
+            this._updateDrawCalls(gameObject);
         };
-        /**
-         * @inheritDoc
-         */
-        SkinnedMeshRendererSystem.prototype.update = function () {
+        SkinnedMeshRendererSystem.prototype.onRemoveGameObject = function (gameObject) {
+            this._drawCallList.removeDrawCalls(gameObject);
+        };
+        SkinnedMeshRendererSystem.prototype.onUpdate = function () {
+            // TODO
+        };
+        SkinnedMeshRendererSystem.prototype.onDisable = function () {
+            // TODO
         };
         return SkinnedMeshRendererSystem;
     }(paper.BaseSystem));
@@ -10337,15 +12602,9 @@ var egret3d;
             }
             return null;
         };
-        /**
-         * @inheritDoc
-         */
         GLTFAsset.prototype.caclByteLength = function () {
             return 0; // TODO
         };
-        /**
-         * @inheritDoc
-         */
         GLTFAsset.prototype.dispose = function () {
             this.buffers.length = 0;
         };
@@ -10385,23 +12644,26 @@ var egret3d;
             }
             var _this = _super.call(this) || this;
             /**
-             *
+             * @internal
              */
             _this.vertexCount = 0;
             /**
              * true :所有subMesh公用一个buffer; false :每个subMesh使用单独的buffer
-             *
+             * @internal
              */
             _this.isSharedBuffer = true;
             _this._drawMode = 1 /* Static */; // TODO
             /**
-             *
+             * @internal
              */
             _this._version = 0;
             _this._glTFMeshIndex = 0;
             _this._glTFAsset = null;
             _this._glTFMesh = null;
             _this._vertexBuffer = null;
+            /**
+             * 暂时实现在这里，应实现到 gltf material。
+             */
             _this._attributeType = {};
             /**
              * 暂时实现在这里，应该下放到 web，并将此方法抽象。
@@ -10553,9 +12815,6 @@ var egret3d;
             }
             return vertexBuffer.length / vertexPerCount;
         };
-        /**
-         * @inheritDoc
-         */
         Mesh.prototype.serialize = function () {
             if (!this._glTFAsset.url) {
                 return null;
@@ -10565,9 +12824,6 @@ var egret3d;
             target._glTFAsset = paper.serializeAsset(this._glTFAsset);
             return target;
         };
-        /**
-         * @inheritDoc
-         */
         Mesh.prototype.deserialize = function (element) {
             if (element._glTFAsset) {
                 this._glTFMeshIndex = element._glTFMeshIndex;
@@ -10728,18 +12984,15 @@ var egret3d;
         };
         Mesh.prototype.getColors = function (subMeshIndex) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
-            var res = this.getAttributes("COLOR_0" /* COLOR_0 */, subMeshIndex);
-            return res ? res : null;
+            return this.getAttributes("COLOR_0" /* COLOR_0 */, subMeshIndex);
         };
         Mesh.prototype.getNormals = function (subMeshIndex) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
-            var res = this.getAttributes("NORMAL" /* NORMAL */, subMeshIndex);
-            return res ? res : null;
+            return this.getAttributes("NORMAL" /* NORMAL */, subMeshIndex);
         };
         Mesh.prototype.getTangents = function (subMeshIndex) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
-            var res = this.getAttributes("TANGENT" /* TANGENT */, subMeshIndex);
-            return res ? res : null;
+            return this.getAttributes("TANGENT" /* TANGENT */, subMeshIndex);
         };
         Mesh.prototype.getAttributes = function (attributeType, subMeshIndex) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
@@ -10757,7 +13010,10 @@ var egret3d;
         Mesh.prototype.getIndices = function (subMeshIndex) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                var accessorIndex = this._glTFMesh.primitives[subMeshIndex].indices || 0;
+                var accessorIndex = this._glTFMesh.primitives[subMeshIndex].indices;
+                if (accessorIndex === undefined) {
+                    return null;
+                }
                 var accessor = this._glTFAsset.getAccessor(accessorIndex);
                 return this._glTFAsset.createTypeArrayFromAccessor(accessor);
             }
@@ -10812,48 +13068,6 @@ var egret3d;
             }
             console.warn("Error arguments.");
             return result;
-        };
-        Mesh.prototype.setAttribute = function (vertexIndex, attributeType, subMeshIndex) {
-            var args = [];
-            for (var _i = 3; _i < arguments.length; _i++) {
-                args[_i - 3] = arguments[_i];
-            }
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                var attributeIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType];
-                if (attributeIndex !== undefined) {
-                    var accessor = this._glTFAsset.getAccessor(attributeIndex);
-                    if (0 <= vertexIndex && vertexIndex < accessor.count) {
-                        var offset = this._glTFAsset.getBufferOffset(accessor) / egret3d.GLTFAsset.getComponentTypeCount(accessor.componentType) + vertexIndex * egret3d.GLTFAsset.getAccessorTypeCount(accessor.type);
-                        switch (accessor.type) {
-                            case "SCALAR" /* SCALAR */: {
-                                this._vertexBuffer[offset] = args[0];
-                                break;
-                            }
-                            case "VEC2" /* VEC2 */: {
-                                this._vertexBuffer[offset] = args[0];
-                                this._vertexBuffer[offset + 1] = args[1];
-                                break;
-                            }
-                            case "VEC3" /* VEC3 */: {
-                                this._vertexBuffer[offset] = args[0];
-                                this._vertexBuffer[offset + 1] = args[1];
-                                this._vertexBuffer[offset + 2] = args[2];
-                                break;
-                            }
-                            case "VEC4" /* VEC4 */: {
-                                this._vertexBuffer[offset] = args[0];
-                                this._vertexBuffer[offset + 1] = args[1];
-                                this._vertexBuffer[offset + 2] = args[2];
-                                this._vertexBuffer[offset + 3] = args[3];
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            else {
-                console.warn("Error arguments.");
-            }
         };
         Mesh.prototype.uploadVertexSubData = function (uploadAttributes, startVertexIndex, vertexCount, subMeshIndex) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
@@ -11051,16 +13265,51 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Mesh.prototype, "vertexBuffer", {
-            // /**
-            //  * 所有顶点属性。
-            //  */
-            get: function () {
-                return this._vertexBuffer;
-            },
-            enumerable: true,
-            configurable: true
-        });
+        /**
+         * @deprecated
+         */
+        Mesh.prototype.setAttribute = function (vertexIndex, attributeType, subMeshIndex) {
+            var args = [];
+            for (var _i = 3; _i < arguments.length; _i++) {
+                args[_i - 3] = arguments[_i];
+            }
+            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
+                var attributeIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType];
+                if (attributeIndex !== undefined) {
+                    var accessor = this._glTFAsset.getAccessor(attributeIndex);
+                    if (0 <= vertexIndex && vertexIndex < accessor.count) {
+                        var offset = this._glTFAsset.getBufferOffset(accessor) / egret3d.GLTFAsset.getComponentTypeCount(accessor.componentType) + vertexIndex * egret3d.GLTFAsset.getAccessorTypeCount(accessor.type);
+                        switch (accessor.type) {
+                            case "SCALAR" /* SCALAR */: {
+                                this._vertexBuffer[offset] = args[0];
+                                break;
+                            }
+                            case "VEC2" /* VEC2 */: {
+                                this._vertexBuffer[offset] = args[0];
+                                this._vertexBuffer[offset + 1] = args[1];
+                                break;
+                            }
+                            case "VEC3" /* VEC3 */: {
+                                this._vertexBuffer[offset] = args[0];
+                                this._vertexBuffer[offset + 1] = args[1];
+                                this._vertexBuffer[offset + 2] = args[2];
+                                break;
+                            }
+                            case "VEC4" /* VEC4 */: {
+                                this._vertexBuffer[offset] = args[0];
+                                this._vertexBuffer[offset + 1] = args[1];
+                                this._vertexBuffer[offset + 2] = args[2];
+                                this._vertexBuffer[offset + 3] = args[3];
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                console.warn("Error arguments.");
+            }
+        };
         __decorate([
             paper.serializedField
         ], Mesh.prototype, "_drawMode", void 0);
@@ -11295,6 +13544,10 @@ var egret3d;
              */
             _this._frameRate = 0;
             /**
+             * 起始帧。
+             */
+            _this._frameStart = 0;
+            /**
              * 总帧数。
              */
             _this._frameCount = 0;
@@ -11482,7 +13735,8 @@ var egret3d;
             var dataAccessor = this.animationAsset.getAccessor(paperAnimation.data);
             //
             this._frameRate = paperAnimation.frameRate;
-            this._frameCount = paperAnimation.frameCount;
+            this._frameStart = Math.floor(this.animationClip.position * paperAnimation.frameRate);
+            this._frameCount = Math.floor(this.animationClip.duration * paperAnimation.frameRate); // ceil.
             this._fadeTimeStart = globalTime;
             this._playTimeStart = globalTime;
             this._animationComponent = animationComponent;
@@ -11598,13 +13852,13 @@ var egret3d;
             var prevPlayTimes = this.currentPlayTimes;
             var prevPlayState = this._playState;
             var timeScale = this.timeScale * this._animationComponent.timeScale;
-            var r = timeScale === 0.0 ? 0.0 : 1.0 / timeScale;
+            var timeScaleR = timeScale === 0.0 ? 0.0 : 1.0 / timeScale;
             var position = this.animationClip.position;
             var duration = this.animationClip.duration;
             var totalTime = this.playTimes * duration;
-            var localPlayTime = (globalTime - this._playTimeStart) * r;
+            var localPlayTime = (globalTime - this._playTimeStart) * timeScaleR;
             var currentTime = 0.0;
-            if (this.playTimes > 0 && (localPlayTime >= totalTime || localPlayTime <= 0.0)) {
+            if (this.playTimes > 0 && (timeScale >= 0.0 ? localPlayTime >= totalTime : localPlayTime <= 0.0)) {
                 if (this._playState <= 0 && this._isPlaying) {
                     this._playState = 1;
                 }
@@ -11646,9 +13900,9 @@ var egret3d;
                     (this._playState <= 0 && this.currentPlayTimes !== prevPlayTimes)) {
                     this._frameOffset = -1;
                 }
-                if (this._frameCount > 0) {
+                if (this._frameCount > 1) {
                     var frameIndexF = this._playTime * this._frameRate;
-                    var frameIndex = Math.min(Math.floor(frameIndexF), this._frameCount - 1);
+                    var frameIndex = Math.min(Math.floor(frameIndexF), this._frameStart + this._frameCount - 1);
                     var frameOffset = this._frameOffsets[frameIndex];
                     if (this._frameOffset !== frameOffset) {
                         this._frameOffset = frameOffset;
@@ -11664,10 +13918,17 @@ var egret3d;
                     this._onArriveAtFrame();
                 }
             }
+            if (this._playState === 1 && this._fadeState === 0) {
+                var animationNames = this._animationComponent._animationNames;
+                if (animationNames.length > 0) {
+                    var animationName = animationNames.shift();
+                    this._animationComponent.play(animationName);
+                }
+            }
         };
         AnimationState.prototype.fateOut = function () {
             this._fadeState = 1;
-            this._subFadeState = 1;
+            this._subFadeState = -1;
         };
         return AnimationState;
     }(BlendNode));
@@ -11701,6 +13962,10 @@ var egret3d;
              * 混合节点列表。
              */
             _this._blendNodes = [];
+            /**
+             * @internal
+             */
+            _this._animationNames = [];
             /**
              * 最后一个播放的动画状态。
              * 当进行动画混合时，该值通常没有任何意义。
@@ -11856,10 +14121,21 @@ var egret3d;
             this._lastAnimationState = animationState;
             return animationState;
         };
-        Animation.prototype.play = function (animationName, playTimes) {
-            if (animationName === void 0) { animationName = null; }
+        Animation.prototype.play = function (animationNameOrNames, playTimes) {
+            if (animationNameOrNames === void 0) { animationNameOrNames = null; }
             if (playTimes === void 0) { playTimes = -1; }
-            return this.fadeIn(animationName, 0.0, playTimes);
+            this._animationNames.length = 0;
+            if (Array.isArray(animationNameOrNames)) {
+                if (animationNameOrNames.length > 0) {
+                    for (var _i = 0, animationNameOrNames_1 = animationNameOrNames; _i < animationNameOrNames_1.length; _i++) {
+                        var animationName = animationNameOrNames_1[_i];
+                        this._animationNames.push(animationName);
+                    }
+                    return this.fadeIn(this._animationNames.shift(), 0.0, playTimes);
+                }
+                return this.fadeIn(null, 0.0, playTimes);
+            }
+            return this.fadeIn(animationNameOrNames, 0.0, playTimes);
         };
         Object.defineProperty(Animation.prototype, "lastAnimationnName", {
             get: function () {
@@ -11893,16 +14169,10 @@ var egret3d;
     }(paper.BaseComponent));
     egret3d.Animation = Animation;
     __reflect(Animation.prototype, "egret3d.Animation");
-    /**
-     * @private
-     */
     var AnimationSystem = (function (_super) {
         __extends(AnimationSystem, _super);
         function AnimationSystem() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @inheritDoc
-             */
             _this._interests = [
                 {
                     componentClass: Animation
@@ -11910,22 +14180,13 @@ var egret3d;
             ];
             return _this;
         }
-        /**
-         * @inheritDoc
-         */
-        AnimationSystem.prototype._onAddComponent = function (component) {
-            if (!_super.prototype._onAddComponent.call(this, component)) {
-                return false;
-            }
+        AnimationSystem.prototype.onAddGameObject = function (gameObject) {
+            var component = this._getComponent(gameObject, 0);
             if (component.autoPlay) {
                 component.play();
             }
-            return true;
         };
-        /**
-         * @inheritDoc
-         */
-        AnimationSystem.prototype.update = function () {
+        AnimationSystem.prototype.onUpdate = function () {
             var globalTime = paper.Time.time;
             for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
                 var component = _a[_i];
@@ -11937,459 +14198,6 @@ var egret3d;
     egret3d.AnimationSystem = AnimationSystem;
     __reflect(AnimationSystem.prototype, "egret3d.AnimationSystem");
 })(egret3d || (egret3d = {}));
-// namespace paper {
-//     /**
-//      * @private
-//      * 动画混合模式。
-//      */
-//     export const enum BlendType {
-//         E1D,
-//         E2DSD,
-//         E2DFD,
-//         E2DFC,
-//         ED,
-//     }
-//     /**
-//      * @private
-//      * 动画节点数据基类。
-//      */
-//     export abstract class BaseAnimationNodeModel extends SerializableObject {
-//         /**
-//          * 播放速度。
-//          */
-//         @SerializedField
-//         public timeScale: number = 1.0;
-//         /**
-//          * 处于混合空间的水平位置。
-//          */
-//         @SerializedField
-//         public positionX: number = 0.0;
-//         /**
-//          * 处于混合空间的垂直位置。
-//          */
-//         @SerializedField
-//         public positionY: number = 0.0;
-//     }
-//     /**
-//      * @private
-//      * 动画节点数据。
-//      */
-//     export class AnimationNodeModel extends BaseAnimationNodeModel {
-//         // /**
-//         //  * 动画剪辑数据。
-//         //  */
-//         // @SerializedField
-//         // public animation: AnimationClipNew | null = null;
-//     }
-//     /**
-//      * @private
-//      * 混合节点数据。
-//      */
-//     export class AnimationBlendNodeModel extends BaseAnimationNodeModel {
-//         /**
-//          * 混合模式。
-//          */
-//         @SerializedField
-//         public blendType: BlendType = BlendType.E1D;
-//         /**
-//          * 动画节点列表。
-//          */
-//         @SerializedField
-//         public readonly children: BaseAnimationNodeModel[] = [];
-//         /**
-//          * 混合空间的水平混合参数。
-//          */
-//         @SerializedField
-//         public parameterX: Readonly<StateVariable> | null = null;
-//         /**
-//          * 混合空间的垂直混合参数。
-//          */
-//         @SerializedField
-//         public parameterY: Readonly<StateVariable> | null = null;
-//     }
-//     /**
-//      * @private
-//      * 状态变量类型。
-//      */
-//     export const enum StateVariableType {
-//         Bool,
-//         Int,
-//         Float,
-//         Trigger,
-//     }
-//     /**
-//      * @private
-//      * 状态判断类型。
-//      */
-//     export const enum StateConditionType {
-//         Greater,
-//         Less,
-//         Equals,
-//         NotEqual,
-//     }
-//     /**
-//      * @private
-//      * 状态变量。
-//      */
-//     export class StateVariable extends SerializableObject {
-//         /**
-//          * 变量类型。
-//          */
-//         @SerializedField
-//         public readonly type: StateVariableType;
-//         /**
-//          * 变量名。
-//          */
-//         @SerializedField
-//         public readonly key: string;
-//         /**
-//          * 变量值。
-//          */
-//         @SerializedField
-//         public value: boolean | number;
-//         public constructor(
-//             type: StateVariableType = StateVariableType.Bool,
-//             key: string = "",
-//             value: boolean | number = false,
-//         ) {
-//             super();
-//             this.type = type;
-//             this.key = key;
-//             this.value = value;
-//         }
-//     }
-//     /**
-//      * @private
-//      * 状态改变条件。
-//      */
-//     export class StateCondition extends SerializableObject {
-//         /**
-//          * 判断类型。
-//          */
-//         @SerializedField
-//         public type: StateConditionType = StateConditionType.Equals;
-//         /**
-//          * 判断值。
-//          */
-//         @SerializedField
-//         public value: boolean | number = false;
-//         /**
-//          * 变量。
-//          */
-//         @SerializedField
-//         public variable: Readonly<StateVariable> = null as any; //
-//         public check(): boolean {
-//             switch (this.type) {
-//                 case StateConditionType.Equals:
-//                     return this.variable.value === this.value;
-//                 case StateConditionType.NotEqual:
-//                     return this.variable.value !== this.value;
-//                 case StateConditionType.Less:
-//                     return this.variable.value < this.value;
-//                 case StateConditionType.Greater:
-//                     return this.variable.value > this.value;
-//             }
-//         }
-//     }
-//     /**
-//      * @private
-//      * 状态改变。
-//      */
-//     export class StateTransition extends SerializableObject {
-//         /**
-//          * 该条件起效，其他 solo 为 false 的条件都不起作用。
-//          */
-//         @SerializedField
-//         public solo: boolean = false;
-//         /**
-//          * 该条件禁用。
-//          */
-//         @SerializedField
-//         public mute: boolean = false;
-//         /**
-//          * 帮助描述。
-//          */
-//         @SerializedField
-//         public info: string = "";
-//         /**
-//          * 状态改变条件列表。
-//          */
-//         @SerializedField
-//         public readonly conditions: StateCondition[] = [];
-//         /**
-//          * 要改变的状态。
-//          */
-//         @SerializedField
-//         public target: StateModel = null as any;
-//         public check(): boolean {
-//             for (const condition of this.conditions) {
-//                 if (!condition.check()) {
-//                     return false;
-//                 }
-//             }
-//             return true;
-//         }
-//     }
-//     /**
-//      * @private
-//      * 动画状态改变。
-//      */
-//     export class AnimationStateTransition extends StateTransition {
-//         /**
-//          * 当状态改变条件成立或为空时，是否等当前动画状态播放完毕后改变状态。
-//          */
-//         @SerializedField
-//         public changeAfterComplete: boolean = false;
-//         /**
-//          * 淡出动画所需要的时间。（以秒为单位）
-//          */
-//         @SerializedField
-//         public fadeOutTime: number = 0.3;
-//         /**
-//          * 淡入动画所需要的时间。（以秒为单位）
-//          */
-//         @SerializedField
-//         public fadeInTime: number = 0.3;
-//         /**
-//          * 淡入动画开始播放的进度。[0.0 ~ 1.0]（%）
-//          */
-//         @SerializedField
-//         public progress: number = 0.0;
-//     }
-//     /**
-//      * @private
-//      * 状态机状态数据。
-//      */
-//     export class StateModel extends SerializableObject {
-//         /**
-//          * 状态名称。
-//          */
-//         @SerializedField
-//         public name: string = "";
-//         /**
-//          * 状态改变列表。
-//          */
-//         @SerializedField
-//         public readonly transitions: StateTransition[] = [];
-//         /**
-//          * 父状态机。
-//          */
-//         @SerializedField
-//         public parent: StateMachineModel | null = null;
-//         public constructor(name: string = "", parent: StateMachineModel | null = null) {
-//             super();
-//             this.name = name;
-//             this.parent = parent;
-//         }
-//     }
-//     /**
-//      * @private
-//      * 状态机动画状态数据。
-//      */
-//     export class AnimationStateModel extends StateModel {
-//         /**
-//          * 动画数据。
-//          */
-//         @SerializedField
-//         public animation: AnimationNodeModel | AnimationBlendNodeModel | null = null;
-//     }
-//     /**
-//      * @private
-//      * 状态机数据。
-//      */
-//     export class StateMachineModel extends StateModel {
-//         /**
-//          * 进入状态。
-//          */
-//         @SerializedField
-//         public readonly entry: StateModel = new StateModel("entry", this);
-//         /**
-//          * 未知状态。
-//          */
-//         @SerializedField
-//         public readonly any: StateModel = new StateModel("any", this);
-//         /**
-//          * 退出状态。
-//          */
-//         @SerializedField
-//         public readonly exit: Readonly<StateModel> = new StateModel("exit", this);
-//         /**
-//          * 状态列表。
-//          */
-//         @SerializedField
-//         public readonly states: StateModel[] = [];
-//         /**
-//          * 默认状态。
-//          */
-//         @SerializedField
-//         public readonly default: StateModel | null = null;
-//         /**
-//          * 默认改变。
-//          */
-//         @SerializedField
-//         public readonly defaultTransition: StateTransition | null = null;
-//     }
-//     /**
-//      * @private
-//      * 状态机数据资源。
-//      */
-//     export class StateMachineAsset extends Asset {
-//         /**
-//          * 状态机列表。
-//          */
-//         @SerializedField
-//         public readonly machines: StateMachineModel[] = [];
-//         /**
-//          * 变量列表。
-//          */
-//         @SerializedField
-//         public readonly variables: StateVariable[] = [];
-//         /**
-//          * @override
-//          */
-//         public caclByteLength(): number {
-//             return 0;
-//         }
-//         /**
-//          * @override
-//          */
-//         public dispose(): void {
-//         }
-//     }
-//     // /**
-//     //  * @private
-//     //  */
-//     // export class StateMachineOverrideAsset extends StateMachineAsset {
-//     //     public readonly animations: { [key: string]: string } = {};
-//     //     public source: StateMachineOverrideAsset | null;
-//     //     /**
-//     //      * 
-//     //      */
-//     //     public caclByteLength(): number {
-//     //         return 0;
-//     //     }
-//     //     /**
-//     //      * 
-//     //      */
-//     //     public dispose(): void {
-//     //         super.dispose();
-//     //     }
-//     // }
-//     /**
-//      * @private
-//      * 状态实例。
-//      */
-//     export class NormalState {
-//         public model: StateModel;
-//         public parent: StateMachine | null = null;
-//     }
-//     /**
-//      * 状态机实例。
-//      */
-//     export class StateMachine extends NormalState {
-//         /**
-//          * 状态列表。
-//          */
-//         public readonly states: NormalState[] = [];
-//         /**
-//          * 当前状态。
-//          */
-//         private _state: StateModel | null = null;
-//         /**
-//          * 进入指定状态。
-//          */
-//         private _enter(state: StateModel): void {
-//         }
-//         /**
-//          * 执行指定状态。
-//          */
-//         private _execute(state: StateModel): void {
-//             for (const transition of state.transitions) {
-//                 if (transition.check()) {
-//                     this._exit(state);
-//                     this._state = null;
-//                     this._enter(this._state);
-//                     break;
-//                 }
-//             }
-//         }
-//         /**
-//          * 退出指定状态。
-//          */
-//         private _exit(state: StateModel): void {
-//         }
-//         public update(): void {
-//             const model = this.model as StateMachineModel;
-//             if (this._state === null) {
-//                 this._state = model.entry;
-//                 this._enter(this._state);
-//             }
-//             else {
-//             }
-//             this._execute(this._state);
-//         }
-//     }
-//     /**
-//      * 状态机组件。
-//      */
-//     export class StateMachineComponent extends paper.BaseComponent {
-//         /**
-//          *  
-//          */
-//         public readonly componentType = "";
-//         /**
-//          * 状态机列表。
-//          */
-//         public readonly stateMachines: StateMachine[] = [];
-//         /**
-//          * 变量列表。
-//          */
-//         public readonly stateVariables: StateVariable[] = [];
-//         /**
-//          * 状态机数据。
-//          */
-//         private _model: StateMachineAsset | null = null;
-//         /**
-//          * @override
-//          */
-//         public update() {
-//             for (const stateMachine of this.stateMachines) {
-//                 stateMachine.update();
-//             }
-//         }
-//         public setValue(key: string, value: boolean | number) {
-//             for (const variable of this.stateVariables) {
-//                 if (variable.key === key) {
-//                     variable.value = value;
-//                     break;
-//                 }
-//             }
-//         }
-//         @SerializedField
-//         public get model() {
-//             return this._model;
-//         }
-//         public set model(value: StateMachineAsset | null) {
-//             if (this._model === value) {
-//                 return;
-//             }
-//             this._model = value;
-//         }
-//     }
-//     /**
-//      * @private
-//      */
-//     export class StateMachineSystem extends paper.BaseSystem {
-//         public interest: { [componentType: string]: paper.MemberListener[] } = {
-//             "StateMachineComponent": []
-//         };
-//         public update() {
-//             this._componentStore.forEach((component: StateMachineComponent) => {
-//                 component.update();
-//             });
-//         }
-//     }
-// } 
 var egret3d;
 (function (egret3d) {
     var particle;
@@ -14608,116 +16416,37 @@ var egret3d;
 var paper;
 (function (paper) {
     /**
-     * 组件实体系统的主入口
+     * 克隆
      */
-    var Application = (function () {
-        function Application() {
+    function clone(object) {
+        var cacheParent = null;
+        // TODO 太多的字符串依赖。
+        // 将parent设置为空，避免向上引用 // TODO 这并不能根本解决问题，自定义组件依然可能会引用这些，导致错误的序列化和反序列化
+        if (object instanceof paper.GameObject) {
+            cacheParent = object.transform.parent;
+            object.transform._parent = null; // TODO
         }
-        Application._update = function () {
-            paper.Time.update();
-            if (this._isRunning) {
-                requestAnimationFrame(this._bindUpdate);
+        else if (object instanceof egret3d.Transform) {
+            cacheParent = object.parent;
+            object._parent = null; // TODO
+        }
+        var data = paper.serialize(object);
+        if (object instanceof paper.GameObject) {
+            object.transform._parent = cacheParent; // TODO
+        }
+        else if (object instanceof egret3d.Transform) {
+            object._parent = cacheParent; // TODO
+        }
+        var assets = {};
+        if ("assets" in data) {
+            for (var _i = 0, _a = data["assets"]; _i < _a.length; _i++) {
+                var asset = _a[_i];
+                assets[asset.uuid] = paper.Asset.find(asset.url); // 获取资源引用
             }
-            this.systemManager.update();
-        };
-        Application.init = function (_a) {
-            var _b = _a === void 0 ? {} : _a, _c = _b.isEditor, isEditor = _c === void 0 ? false : _c, _d = _b.isPlaying, isPlaying = _d === void 0 ? true : _d;
-            var systemManager = this.systemManager;
-            var systemClasses = [
-                paper.StartSystem,
-                paper.BehaviourSystem,
-                egret3d.GuidpathSystem,
-                egret3d.BoxColliderSystem,
-                egret3d.AnimationSystem,
-                paper.LaterSystem,
-                egret3d.TrailRendererSystem,
-                egret3d.MeshRendererSystem,
-                egret3d.SkinnedMeshRendererSystem,
-                egret3d.particle.ParticleSystem,
-                egret3d.Egret2DRendererSystem,
-                egret3d.LightSystem,
-                egret3d.CameraSystem,
-                paper.DestroySystem,
-                paper.EndSystem,
-            ];
-            var level = 0;
-            for (var _i = 0, systemClasses_1 = systemClasses; _i < systemClasses_1.length; _i++) {
-                var systemClass = systemClasses_1[_i];
-                systemManager.register(systemClass, level++);
-            }
-            paper.Time.initialize();
-            this._isEditor = isEditor;
-            this._isPlaying = isPlaying;
-            this.resume();
-        };
-        /**
-         *
-         */
-        Application.pause = function () {
-            this._isRunning = false;
-        };
-        Application.resume = function () {
-            if (this._isRunning) {
-                return;
-            }
-            this._isRunning = true;
-            if (!this._bindUpdate) {
-                this._bindUpdate = this._update.bind(this);
-            }
-            this._update();
-        };
-        /**
-         *
-         */
-        Application.callLater = function (callback) {
-            this.systemManager.getSystem(paper.LaterSystem).callLater(callback);
-        };
-        Object.defineProperty(Application, "isEditor", {
-            get: function () {
-                return this._isEditor;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Application, "isFocused", {
-            get: function () {
-                return this._isFocused;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Application, "isPlaying", {
-            get: function () {
-                return this._isPlaying;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Application, "isRunning", {
-            get: function () {
-                return this._isRunning;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * 系统管理器
-         */
-        Application.systemManager = new paper.SystemManager();
-        /**
-         * 场景管理器
-         */
-        Application.sceneManager = new paper.SceneManager();
-        Application._isEditor = false;
-        Application._isFocused = false;
-        Application._isPlaying = false;
-        Application._isRunning = false;
-        Application._standDeltaTime = -1;
-        Application._bindUpdate = null;
-        return Application;
-    }());
-    paper.Application = Application;
-    __reflect(Application.prototype, "paper.Application");
+        }
+        return paper.deserialize(data, assets);
+    }
+    paper.clone = clone;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -14747,8 +16476,8 @@ var egret3d;
                     {
                         componentClass: particle.ParticleRenderer,
                         listeners: [
-                            { type: "mesh" /* Mesh */, listener: function (comp) { _this._onUpdateDrawCall(comp.gameObject, _this._drawCallList); } },
-                            { type: "materials" /* Materials */, listener: function (comp) { _this._onUpdateDrawCall(comp.gameObject, _this._drawCallList); } },
+                            { type: "mesh" /* Mesh */, listener: function (comp) { _this._onUpdateDrawCalls(comp.gameObject); } },
+                            { type: "materials" /* Materials */, listener: function (comp) { _this._onUpdateDrawCalls(comp.gameObject); } },
                             { type: "lengthScale" /* LengthScaleChanged */, listener: function (comp) { _this._onRenderUpdate(comp, "lengthScale" /* LengthScaleChanged */); } },
                             { type: "velocityScale" /* VelocityScaleChanged */, listener: function (comp) { _this._onRenderUpdate(comp, "velocityScale" /* VelocityScaleChanged */); } },
                             { type: "renderMode" /* RenderMode */, listener: function (comp) { _this._onRenderUpdate(comp, "renderMode" /* RenderMode */); } },
@@ -14756,9 +16485,9 @@ var egret3d;
                     }
                 ];
                 _this._createDrawCalls = (function (gameObject) {
-                    var renderer = gameObject.getComponent(particle.ParticleRenderer);
+                    var renderer = _this._getComponent(gameObject, 1);
                     //粒子系统不支持多材质
-                    if (renderer && renderer.batchMesh && renderer.batchMaterial) {
+                    if (renderer.batchMesh && renderer.batchMaterial) {
                         var subMeshIndex = 0;
                         var drawCalls = [];
                         var primitives = renderer.batchMesh.glTFMesh.primitives;
@@ -14780,7 +16509,7 @@ var egret3d;
                                 gameObject: gameObject,
                                 transform: gameObject.transform,
                                 frustumTest: false,
-                                zdist: 3
+                                zdist: -1
                             });
                             subMeshIndex++;
                         }
@@ -14791,28 +16520,23 @@ var egret3d;
                 _this._drawCallList = new egret3d.DrawCallList(_this._createDrawCalls);
                 return _this;
             }
-            ParticleSystem.prototype._onUpdateDrawCall = function (gameObject, drawCalls) {
-                var comp = gameObject.getComponent(particle.ParticleComponent);
-                var renderer = gameObject.getComponent(particle.ParticleRenderer);
-                if (comp && renderer) {
-                    if (comp.enabled && renderer.enabled) {
-                        this._onUpdateBatchMesh(comp);
-                        comp.main.playOnAwake && comp.play();
-                    }
-                    else {
-                        comp.stop();
-                    }
+            ParticleSystem.prototype._onUpdateDrawCalls = function (gameObject) {
+                var component = this._getComponent(gameObject, 0);
+                var renderer = this._getComponent(gameObject, 1);
+                if (component.enabled && renderer.enabled) {
+                    this._onUpdateBatchMesh(component);
+                    component.main.playOnAwake && component.play();
                 }
-                drawCalls.updateDrawCalls(gameObject, false);
+                else {
+                    component.stop();
+                }
+                this._drawCallList.updateDrawCalls(gameObject, false);
             };
             /**
             * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
             */
             ParticleSystem.prototype._onUpdateBatchMesh = function (comp) {
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
-                if (!comp || !renderer) {
-                    return;
-                }
+                var renderer = this._getComponent(comp.gameObject, 1);
                 comp.initBatcher();
                 //
                 this._onRenderUpdate(renderer, "renderMode" /* RenderMode */);
@@ -14883,7 +16607,7 @@ var egret3d;
                 }
             };
             ParticleSystem.prototype._onMainUpdate = function (component, type) {
-                var renderer = component.gameObject.getComponent(particle.ParticleRenderer);
+                var renderer = this._getComponent(component.gameObject, 1);
                 var mainModule = component.main;
                 switch (type) {
                     case "rotation3DChanged" /* StartRotation3DChanged */: {
@@ -14905,7 +16629,7 @@ var egret3d;
              * @param component
              */
             ParticleSystem.prototype._onShapeChanged = function (comp) {
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var renderer = this._getComponent(comp.gameObject, 1);
                 renderer._removeShaderDefine("SHAPE" /* SHAPE */);
                 if (comp.shape.enable) {
                     renderer._addShaderDefine("SHAPE" /* SHAPE */);
@@ -14916,7 +16640,7 @@ var egret3d;
              * @param component
              */
             ParticleSystem.prototype._onVelocityOverLifetime = function (comp) {
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var renderer = this._getComponent(comp.gameObject, 1);
                 renderer._removeShaderDefine("VELOCITYCONSTANT" /* VELOCITYCONSTANT */);
                 renderer._removeShaderDefine("VELOCITYCURVE" /* VELOCITYCURVE */);
                 renderer._removeShaderDefine("VELOCITYTWOCONSTANT" /* VELOCITYTWOCONSTANT */);
@@ -14969,7 +16693,7 @@ var egret3d;
              * @param component
              */
             ParticleSystem.prototype._onColorOverLifetime = function (comp) {
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var renderer = this._getComponent(comp.gameObject, 1);
                 renderer._removeShaderDefine("COLOROGRADIENT" /* COLOROGRADIENT */);
                 renderer._removeShaderDefine("COLORTWOGRADIENTS" /* COLORTWOGRADIENTS */);
                 var colorModule = comp.colorOverLifetime;
@@ -15000,7 +16724,7 @@ var egret3d;
              * @param component
              */
             ParticleSystem.prototype._onSizeOverLifetime = function (comp) {
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var renderer = this._getComponent(comp.gameObject, 1);
                 renderer._removeShaderDefine("SIZECURVE" /* SIZECURVE */);
                 renderer._removeShaderDefine("SIZECURVESEPERATE" /* SIZECURVESEPERATE */);
                 renderer._removeShaderDefine("SIZETWOCURVES" /* SIZETWOCURVES */);
@@ -15052,7 +16776,7 @@ var egret3d;
              * @param comp
              */
             ParticleSystem.prototype._onRotationOverLifetime = function (comp) {
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var renderer = this._getComponent(comp.gameObject, 1);
                 renderer._removeShaderDefine("ROTATIONOVERLIFETIME" /* ROTATIONOVERLIFETIME */);
                 renderer._removeShaderDefine("ROTATIONCONSTANT" /* ROTATIONCONSTANT */);
                 renderer._removeShaderDefine("ROTATIONTWOCONSTANTS" /* ROTATIONTWOCONSTANTS */);
@@ -15128,7 +16852,7 @@ var egret3d;
                 }
             };
             ParticleSystem.prototype._onTextureSheetAnimation = function (comp) {
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var renderer = this._getComponent(comp.gameObject, 1);
                 renderer._removeShaderDefine("TEXTURESHEETANIMATIONCURVE" /* TEXTURESHEETANIMATIONCURVE */);
                 renderer._removeShaderDefine("TEXTURESHEETANIMATIONTWOCURVE" /* TEXTURESHEETANIMATIONTWOCURVE */);
                 var module = comp.textureSheetAnimation;
@@ -15155,30 +16879,16 @@ var egret3d;
                     }
                 }
             };
-            /**
-             * @inheritDoc
-             */
-            ParticleSystem.prototype._onAddComponent = function (comp) {
-                if (!_super.prototype._onAddComponent.call(this, comp)) {
-                    return false;
-                }
-                this._onUpdateDrawCall(comp.gameObject, this._drawCallList);
-                return true;
+            ParticleSystem.prototype.onEnable = function () {
+                // TODO
             };
-            /**
-             * @inheritDoc
-             */
-            ParticleSystem.prototype._onRemoveComponent = function (comp) {
-                if (!_super.prototype._onRemoveComponent.call(this, comp)) {
-                    return false;
-                }
-                this._drawCallList.removeDrawCalls(comp.gameObject);
-                return true;
+            ParticleSystem.prototype.onAddGameObject = function (gameObject) {
+                this._onUpdateDrawCalls(gameObject);
             };
-            /**
-                 * @inheritDoc
-                 */
-            ParticleSystem.prototype.update = function () {
+            ParticleSystem.prototype.onRemoveGameObject = function (gameObject) {
+                this._drawCallList.removeDrawCalls(gameObject);
+            };
+            ParticleSystem.prototype.onUpdate = function () {
                 if (this._globalTimer !== this._globalTimer) {
                     this._globalTimer = paper.Time.time;
                 }
@@ -15188,6 +16898,9 @@ var egret3d;
                     particleComp.update(elapsedTime);
                 }
                 this._globalTimer = paper.Time.time;
+            };
+            ParticleSystem.prototype.onDisable = function () {
+                // TODO
             };
             return ParticleSystem;
         }(paper.BaseSystem));
@@ -15235,428 +16948,118 @@ var egret3d;
     egret3d.WebGLUniform = WebGLUniform;
     __reflect(WebGLUniform.prototype, "egret3d.WebGLUniform");
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
+var paper;
+(function (paper) {
     /**
-     * 渲染排序
+     * 组件实体系统的主入口
      */
-    var RenderQueue;
-    (function (RenderQueue) {
-        RenderQueue[RenderQueue["Background"] = 1000] = "Background";
-        RenderQueue[RenderQueue["Geometry"] = 2000] = "Geometry";
-        RenderQueue[RenderQueue["AlphaTest"] = 2450] = "AlphaTest";
-        RenderQueue[RenderQueue["Transparent"] = 3000] = "Transparent";
-        RenderQueue[RenderQueue["Overlay"] = 4000] = "Overlay";
-    })(RenderQueue = egret3d.RenderQueue || (egret3d.RenderQueue = {}));
-    /**
-     * 材质资源
-     */
-    var Material = (function (_super) {
-        __extends(Material, _super);
-        function Material() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             */
-            _this.version = 0;
-            _this.$uniforms = {};
-            _this._defines = new Array();
-            _this._textureRef = [];
-            _this._renderQueue = -1;
-            return _this;
+    var Application = (function () {
+        function Application() {
         }
-        /**
-         * 释放资源。
-         */
-        Material.prototype.dispose = function () {
-            delete this.$uniforms;
-            delete this._defines;
-            this.version++;
+        Application._update = function () {
+            paper.Time.update();
+            if (this._isRunning) {
+                requestAnimationFrame(this._bindUpdate);
+            }
+            this.systemManager.update();
+        };
+        Application.init = function (_a) {
+            var _b = _a === void 0 ? {} : _a, _c = _b.isEditor, isEditor = _c === void 0 ? false : _c, _d = _b.isPlaying, isPlaying = _d === void 0 ? true : _d;
+            var systemClasses = [
+                paper.StartSystem,
+                // egret3d.ammo.PhysicsSystem, // TODO 分离
+                paper.UpdateSystem,
+                egret3d.GuidpathSystem,
+                egret3d.AnimationSystem,
+                paper.LaterUpdateSystem,
+                egret3d.TrailRendererSystem,
+                egret3d.MeshRendererSystem,
+                egret3d.SkinnedMeshRendererSystem,
+                egret3d.particle.ParticleSystem,
+                egret3d.Egret2DRendererSystem,
+                egret3d.LightSystem,
+                egret3d.CameraSystem,
+                paper.EndSystem,
+                paper.DestroySystem,
+            ];
+            var level = 0;
+            for (var _i = 0, systemClasses_1 = systemClasses; _i < systemClasses_1.length; _i++) {
+                var systemClass = systemClasses_1[_i];
+                this.systemManager.register(systemClass, level++);
+            }
+            paper.Time.initialize();
+            this._isEditor = isEditor;
+            this._isPlaying = isPlaying;
+            this.resume();
         };
         /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
-        /**
-         * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Material.prototype.caclByteLength = function () {
-            var total = 0;
-            if (this.shader) {
-                total += this.shader.caclByteLength();
-            }
-            for (var k in this.$uniforms) {
-                var type = this.$uniforms[k].type;
-                var value = this.$uniforms[k].value;
-                switch (type) {
-                    case egret3d.UniformTypeEnum.Float:
-                        total += 4;
-                        break;
-                    case egret3d.UniformTypeEnum.Floatv:
-                        total += value.byteLength;
-                        break;
-                    case egret3d.UniformTypeEnum.Float4:
-                        total += 16;
-                        break;
-                    case egret3d.UniformTypeEnum.Float4v:
-                        total += value.byteLength;
-                        break;
-                    case egret3d.UniformTypeEnum.Float4x4:
-                        total += 64;
-                        break;
-                    case egret3d.UniformTypeEnum.Float4x4v:
-                        total += value.byteLength;
-                        break;
-                    case egret3d.UniformTypeEnum.Texture:
-                        if (value) {
-                            total += value.caclByteLength();
-                        }
-                        break;
-                }
-            }
-            return total;
+        Application.pause = function () {
+            this._isRunning = false;
         };
-        Material.prototype._setDefaultUniforms = function (shader) {
-            if (!this.shader) {
-                console.log("Shader error.", this);
+        Application.resume = function () {
+            if (this._isRunning) {
                 return;
             }
-            for (var key in shader.defaultValue) {
-                var uniform = shader.defaultValue[key];
-                switch (uniform.type) {
-                    case "Texture":
-                        this.setTexture(key, uniform.value);
-                        break;
-                    case "Vector4":
-                        if (Array.isArray(uniform.value)) {
-                            this.setVector4v(key, uniform.value);
-                        }
-                        else {
-                            this.setVector4(key, uniform.value);
-                        }
-                        break;
-                    case "Range":
-                        this.setFloat(key, uniform.value);
-                        break;
-                }
+            this._isRunning = true;
+            if (!this._bindUpdate) {
+                this._bindUpdate = this._update.bind(this);
             }
+            this._update();
         };
-        /**
-         * set shader
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置着色器，不保留原有数据。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Material.prototype.setShader = function (shader) {
-            this.shader = shader;
-            this.$uniforms = {};
-            this._setDefaultUniforms(this.shader);
-        };
-        /**
-          * get shader
-          * @version paper 1.0
-          * @platform Web
-          * @language en_US
-          */
-        /**
-         * 获取当前着色器。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Material.prototype.getShader = function () {
-            return this.shader;
-        };
-        /**
-         * change shader
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 更改着色器，保留原有数据。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Material.prototype.changeShader = function (shader) {
-            var map = {};
-            for (var key in this.$uniforms) {
-                if (this.$uniforms[key]) {
-                    map[key] = this.$uniforms[key];
-                }
-            }
-            this.setShader(shader);
-            for (var key in map) {
-                if (this.$uniforms[key]) {
-                    this.$uniforms[key] = map[key];
-                }
-            }
-        };
-        Object.defineProperty(Material.prototype, "renderQueue", {
+        Object.defineProperty(Application, "isEditor", {
             get: function () {
-                if (!this.shader) {
-                    console.log("Shader error.", this);
-                    return this._renderQueue;
-                }
-                return this._renderQueue === -1 ? this.shader.renderQueue : this._renderQueue;
-            },
-            set: function (value) {
-                this._renderQueue = value;
+                return this._isEditor;
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Material.prototype, "shaderDefine", {
+        Object.defineProperty(Application, "isFocused", {
             get: function () {
-                var res = "";
-                for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
-                    var key = _a[_i];
-                    res += "#define " + key + " \n";
-                }
-                return res;
+                return this._isFocused;
             },
             enumerable: true,
             configurable: true
         });
-        Material.prototype.addDefine = function (key) {
-            if (this._defines.indexOf(key) < 0) {
-                this._defines.push(key);
-            }
-            this.version++;
-        };
-        Material.prototype.removeDefine = function (key) {
-            var delIndex = this._defines.indexOf(key);
-            if (delIndex >= 0) {
-                this._defines.splice(delIndex, 1);
-            }
-            this.version++;
-        };
-        Material.prototype.setBoolean = function (_id, _bool) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _bool;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Boolean, value: _bool };
-            }
-            this.version++;
-        };
-        Material.prototype.setInt = function (_id, _number) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _number;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Int, value: _number };
-            }
-            this.version++;
-        };
-        Material.prototype.setFloat = function (_id, _number) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _number;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float, value: _number };
-            }
-            this.version++;
-        };
-        Material.prototype.setFloatv = function (_id, _numbers) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _numbers;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Floatv, value: _numbers };
-            }
-            this.version++;
-        };
-        Material.prototype.setVector2 = function (_id, _vector2) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _vector2;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float2, value: _vector2 };
-            }
-            this.version++;
-        };
-        Material.prototype.setVector2v = function (_id, _vector2v) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _vector2v;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float2v, value: _vector2v };
-            }
-            this.version++;
-        };
-        Material.prototype.setVector3 = function (_id, _vector3) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _vector3;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float3, value: _vector3 };
-            }
-            this.version++;
-        };
-        Material.prototype.setVector3v = function (_id, _vector3v) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _vector3v;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float3v, value: _vector3v };
-            }
-            this.version++;
-        };
-        Material.prototype.setVector4 = function (_id, _vector4) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _vector4;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4, value: _vector4 };
-            }
-            this.version++;
-        };
-        Material.prototype.setVector4v = function (_id, _vector4v) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _vector4v;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4v, value: _vector4v };
-            }
-            this.version++;
-        };
-        Material.prototype.setMatrix = function (_id, _matrix) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _matrix;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4x4, value: _matrix };
-            }
-            this.version++;
-        };
-        Material.prototype.setMatrixv = function (_id, _matrixv) {
-            if (this.$uniforms[_id] !== undefined) {
-                this.$uniforms[_id].value = _matrixv;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Float4x4v, value: _matrixv };
-            }
-            this.version++;
-        };
-        Material.prototype.setTexture = function (_id, _texture) {
-            if (this.$uniforms[_id] !== undefined) {
-                if (this.$uniforms[_id].value) {
-                    var index = this._textureRef.indexOf(this.$uniforms[_id].value);
-                    if (index > -1) {
-                        this._textureRef.splice(index, 1);
-                    }
-                }
-                this.$uniforms[_id].value = _texture;
-            }
-            else {
-                this.$uniforms[_id] = { type: egret3d.UniformTypeEnum.Texture, value: _texture };
-            }
-            this.version++;
-            if (_texture) {
-                this._textureRef.push(_texture);
-            }
-        };
-        Material.prototype.$parse = function (json) {
-            var shaderName = json.shader;
-            var shader = paper.Asset.find(shaderName);
-            this.setShader(shader);
-            var mapUniform = json.mapUniform;
-            for (var i in mapUniform) {
-                var jsonChild = mapUniform[i];
-                switch (jsonChild.type) {
-                    case egret3d.UniformTypeEnum.Texture:
-                        var value = jsonChild.value;
-                        var url = egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", value);
-                        var texture = paper.Asset.find(url);
-                        if (!texture) {
-                            texture = egret3d.DefaultTextures.GRID;
-                        }
-                        this.setTexture(i, texture);
-                        break;
-                    case egret3d.UniformTypeEnum.Float:
-                        this.setFloat(i, jsonChild.value);
-                        break;
-                    case egret3d.UniformTypeEnum.Float4:
-                        var tempValue = jsonChild.value;
-                        if (Array.isArray(tempValue)) {
-                            this.setVector4v(i, tempValue);
-                        }
-                        else {
-                            console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级");
-                        }
-                        break;
-                    default:
-                        console.warn("\u4E0D\u652F\u6301\u7684 Uniform \u53C2\u6570\uFF1A" + this.url + "," + i);
-                }
-            }
+        Object.defineProperty(Application, "isPlaying", {
+            get: function () {
+                return this._isPlaying;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Application, "isRunning", {
+            get: function () {
+                return this._isRunning;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * @deprecated
+         */
+        Application.callLater = function (callback) {
+            this.systemManager.getSystem(paper.LaterUpdateSystem).callLater(callback);
         };
         /**
-         * clone material
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * 系统管理器
          */
+        Application.systemManager = paper.SystemManager.getInstance();
         /**
-         * 克隆材质资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 场景管理器
          */
-        Material.prototype.clone = function () {
-            var mat = new Material();
-            mat.setShader(this.shader);
-            for (var i in this.$uniforms) {
-                var data = this.$uniforms[i];
-                var _uniformType = data.type;
-                switch (_uniformType) {
-                    case egret3d.UniformTypeEnum.Texture:
-                        mat.setTexture(i, data.value);
-                        break;
-                    case egret3d.UniformTypeEnum.Float:
-                        mat.setFloat(i, data.value);
-                        break;
-                    case egret3d.UniformTypeEnum.Float4:
-                        if (Array.isArray(data.value)) {
-                            mat.setVector4v(i, data.value);
-                        }
-                        else {
-                            mat.setVector4(i, data.value);
-                        }
-                        break;
-                    case egret3d.UniformTypeEnum.Float4v:
-                        mat.setVector4v(i, data.value);
-                        break;
-                    default:
-                        break;
-                }
-            }
-            return mat;
-        };
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.SHADER, { set: "setShader" })
-        ], Material.prototype, "shader", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.deserializedIgnore
-        ], Material.prototype, "_textureRef", void 0);
-        return Material;
-    }(paper.Asset));
-    egret3d.Material = Material;
-    __reflect(Material.prototype, "egret3d.Material");
-})(egret3d || (egret3d = {}));
+        Application.sceneManager = paper.SceneManager.getInstance();
+        Application._isEditor = false;
+        Application._isFocused = false;
+        Application._isPlaying = false;
+        Application._isRunning = false;
+        Application._bindUpdate = null;
+        return Application;
+    }());
+    paper.Application = Application;
+    __reflect(Application.prototype, "paper.Application");
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -15905,734 +17308,6 @@ var egret3d;
     }());
     egret3d.DrawPass = DrawPass;
     __reflect(DrawPass.prototype, "egret3d.DrawPass");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var helpVec3 = new egret3d.Vector3();
-    var helpVec3_2 = new egret3d.Vector3();
-    var helpMat4 = new egret3d.Matrix();
-    var helpQuat4 = new egret3d.Quaternion();
-    var helpQuat4_2 = new egret3d.Quaternion();
-    var helpVector = new egret3d.Vector3();
-    var helpRotation = new egret3d.Quaternion();
-    var helpUp = new egret3d.Vector3(0, 1, 0);
-    var helpRight = new egret3d.Vector3(1, 0, 0);
-    var helpFoward = new egret3d.Vector3(0, 0, 1);
-    /**
-     * Transform Class
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * Transform实例可以被添加到3D场景中，并持有一个GameObejct实例
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var Transform = (function (_super) {
-        __extends(Transform, _super);
-        function Transform() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * children list
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 子物体列表
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            _this.children = [];
-            _this._dirtyAABB = true;
-            _this._dirtyLocal = true;
-            _this._dirtyWorld = true;
-            /**
-             * 世界矩阵的行列式，如果小于0，说明进行了反转
-             *
-             */
-            _this._worldMatrixDeterminant = 0.0;
-            _this.localMatrix = new egret3d.Matrix();
-            _this.worldMatrix = new egret3d.Matrix();
-            _this.localPosition = new egret3d.Vector3();
-            _this.position = new egret3d.Vector3();
-            _this.localRotation = new egret3d.Quaternion();
-            _this.rotation = new egret3d.Quaternion();
-            _this.localEulerAngles = new egret3d.Vector3();
-            _this.eulerAngles = new egret3d.Vector3();
-            _this.localScale = new egret3d.Vector3(1.0, 1.0, 1.0);
-            _this.scale = new egret3d.Vector3(1.0, 1.0, 1.0);
-            _this._aabb = null;
-            _this._parent = null;
-            return _this;
-        }
-        Transform.prototype._removeFromChildren = function (value) {
-            var index = 0;
-            for (var _i = 0, _a = this.children; _i < _a.length; _i++) {
-                var child = _a[_i];
-                if (child === value) {
-                    this.children.splice(index, 1);
-                    break;
-                }
-                index++;
-            }
-        };
-        Transform.prototype._buildAABB = function () {
-            var vertexPosition = new egret3d.Vector3();
-            var minimum = new egret3d.Vector3();
-            var maximum = new egret3d.Vector3();
-            var filter = this.gameObject.getComponent(egret3d.MeshFilter);
-            if (filter && filter.mesh) {
-                egret3d.Vector3.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, minimum);
-                egret3d.Vector3.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, maximum);
-                var subMeshIndex = 0;
-                for (var _i = 0, _a = filter.mesh.glTFMesh.primitives; _i < _a.length; _i++) {
-                    var _primitive = _a[_i];
-                    var vertices = filter.mesh.getVertices(subMeshIndex);
-                    for (var i = 0, l = vertices.length; i < l; i += 3) {
-                        egret3d.Vector3.set(vertices[i], vertices[i + 1], vertices[i + 2], vertexPosition);
-                        egret3d.Vector3.max(vertexPosition, maximum, maximum);
-                        egret3d.Vector3.min(vertexPosition, minimum, minimum);
-                    }
-                    subMeshIndex++;
-                }
-            }
-            else {
-                var skinmesh = this.gameObject.getComponent(egret3d.SkinnedMeshRenderer);
-                if (skinmesh && skinmesh.mesh) {
-                    egret3d.Vector3.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, minimum);
-                    egret3d.Vector3.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, maximum);
-                    var subMeshIndex = 0;
-                    for (var _b = 0, _c = skinmesh.mesh.glTFMesh.primitives; _b < _c.length; _b++) {
-                        var _primitive = _c[_b];
-                        var vertices = skinmesh.mesh.getVertices(subMeshIndex);
-                        for (var i = 0, l = vertices.length; i < l; i += 3) {
-                            egret3d.Vector3.set(vertices[i], vertices[i + 1], vertices[i + 2], vertexPosition);
-                            egret3d.Vector3.max(vertexPosition, maximum, maximum);
-                            egret3d.Vector3.min(vertexPosition, minimum, minimum);
-                        }
-                        subMeshIndex++;
-                    }
-                }
-                else {
-                    minimum.x = -1;
-                    minimum.y = -1;
-                    minimum.z = -1;
-                    maximum.x = 1;
-                    maximum.y = 1;
-                    maximum.z = 1;
-                }
-            }
-            var aabb = new egret3d.AABB(minimum, maximum);
-            return aabb;
-        };
-        Transform.prototype._sync = function () {
-            if (this._dirtyLocal) {
-                egret3d.Matrix.fromRTS(this.localPosition, this.localScale, this.localRotation, this.localMatrix);
-                this._dirtyLocal = false;
-            }
-            if (this._dirtyWorld) {
-                if (!this._parent) {
-                    egret3d.Matrix.copy(this.localMatrix, this.worldMatrix);
-                }
-                else {
-                    egret3d.Matrix.multiply(this._parent.worldMatrix, this.localMatrix, this.worldMatrix);
-                }
-                this._worldMatrixDeterminant = egret3d.Matrix.determinant(this.worldMatrix);
-                this._dirtyWorld = false;
-            }
-        };
-        Transform.prototype._dirtify = function (local) {
-            if (local === void 0) { local = false; }
-            if ((!local || (local && this._dirtyLocal)) && this._dirtyWorld) {
-                return;
-            }
-            if (local) {
-                this._dirtyLocal = true;
-            }
-            if (!this._dirtyWorld) {
-                this._dirtyWorld = true;
-                var i = this.children.length;
-                while (i--) {
-                    if (this.children[i]._dirtyWorld) {
-                        continue;
-                    }
-                    this.children[i]._dirtify();
-                }
-            }
-            // transform dirty
-            this._dirtyAABB = true;
-        };
-        /**
-         *
-         */
-        Transform.prototype.$getGlobalPosition = function () {
-            var position = this.getPosition();
-            return new Float32Array([position.x, position.y, position.z, 1]);
-        };
-        /**
-         * 父节点发生改变的回调方法
-         * 子类可通过重载此方法进行标脏状态传递
-         */
-        Transform.prototype._onParentChange = function (newParent, oldParent) {
-            var prevEnabled = oldParent ? oldParent.isActiveAndEnabled : this.gameObject.activeSelf;
-            if ((newParent ? newParent.isActiveAndEnabled : this.gameObject.activeSelf) !== prevEnabled) {
-                this.gameObject._activeInHierarchyDirty(prevEnabled);
-            }
-            this._dirtify();
-        };
-        /**
-         * @inheritDoc
-         */
-        Transform.prototype.deserialize = function (element) {
-            _super.prototype.deserialize.call(this, element); // TODO
-            this.localPosition.deserialize(element.localPosition);
-            this.localRotation.deserialize(element.localRotation);
-            this.localScale.deserialize(element.localScale);
-            this.children.length = 0;
-            if (element.children) {
-                for (var i = 0, l = element.children.length; i < l; i++) {
-                    var child = paper.getDeserializedObject(element.children[i]);
-                    if (child) {
-                        child._parent = this;
-                        this.children.push(child);
-                    }
-                }
-            }
-        };
-        /**
-         * 设置父节点
-         */
-        Transform.prototype.setParent = function (newParent, worldPositionStays) {
-            if (worldPositionStays === void 0) { worldPositionStays = false; }
-            var oldParent = this._parent;
-            if (oldParent === newParent) {
-                return;
-            }
-            if (worldPositionStays) {
-                egret3d.Vector3.copy(this.getPosition(), egret3d.helpVector3A);
-            }
-            if (oldParent) {
-                oldParent._removeFromChildren(this);
-            }
-            if (newParent) {
-                newParent.children.push(this);
-            }
-            this._parent = newParent;
-            this._onParentChange(newParent, oldParent);
-            if (worldPositionStays) {
-                this.setPosition(egret3d.helpVector3A);
-            }
-        };
-        /**
-         * 获取对象下标的子集对象
-         * @param index
-         */
-        Transform.prototype.getChild = function (index) {
-            return 0 <= index && index < this.children.length ? this.children[index] : null;
-        };
-        /**
-         * get local matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获得本地矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getLocalMatrix = function () {
-            if (this._dirtyLocal) {
-                egret3d.Matrix.fromRTS(this.localPosition, this.localScale, this.localRotation, this.localMatrix);
-                this._dirtyLocal = false;
-            }
-            return this.localMatrix;
-        };
-        /**
-         * get world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获得世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getWorldMatrix = function () {
-            if (!this._dirtyLocal && !this._dirtyWorld) {
-                return this.worldMatrix;
-            }
-            if (this._parent) {
-                this._parent.getWorldMatrix();
-            }
-            this._sync();
-            return this.worldMatrix;
-        };
-        /**
-         * get local position
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获得本地位置
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getLocalPosition = function () {
-            return this.localPosition;
-        };
-        Transform.prototype.setLocalPosition = function (p1, p2, p3) {
-            if (p1.hasOwnProperty("x")) {
-                egret3d.Vector3.copy(p1, this.localPosition);
-            }
-            else {
-                this.localPosition.x = p1;
-                this.localPosition.y = p2 || 0;
-                this.localPosition.z = p3 || 0;
-            }
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
-        };
-        /**
-         * get position
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获得位置
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getPosition = function () {
-            egret3d.Matrix.getTranslation(this.getWorldMatrix(), this.position);
-            return this.position;
-        };
-        Transform.prototype.setPosition = function (p1, p2, p3) {
-            if (p1.hasOwnProperty("x")) {
-                egret3d.Vector3.copy(p1, helpVec3);
-            }
-            else {
-                helpVec3.x = p1;
-                helpVec3.y = p2 || 0;
-                helpVec3.z = p3 || 0;
-            }
-            if (!this._parent) {
-                egret3d.Vector3.copy(helpVec3, this.localPosition);
-            }
-            else {
-                egret3d.Matrix.inverse(this._parent.getWorldMatrix(), helpMat4);
-                egret3d.Matrix.transformVector3(helpVec3, helpMat4, this.localPosition); // transform point
-            }
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
-        };
-        /**
-         * get local rotation
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取本地旋转
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getLocalRotation = function () {
-            return this.localRotation;
-        };
-        Transform.prototype.setLocalRotation = function (p1, p2, p3, p4) {
-            if (p1.hasOwnProperty("x")) {
-                this.localRotation.copy(p1);
-            }
-            else {
-                this.localRotation.x = p1;
-                this.localRotation.y = p2 || 0;
-                this.localRotation.z = p3 || 0;
-                this.localRotation.w = p4 !== undefined ? p4 : 1;
-            }
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
-        };
-        /**
-         * get rotation
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获得旋转
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getRotation = function () {
-            egret3d.Quaternion.fromMatrix(this.getWorldMatrix(), this.rotation);
-            return this.rotation;
-        };
-        Transform.prototype.setRotation = function (q1, q2, q3, q4) {
-            if (q1.hasOwnProperty("x")) {
-                egret3d.Quaternion.copy(q1, helpQuat4);
-            }
-            else {
-                helpQuat4.x = q1;
-                helpQuat4.y = q2 || 0;
-                helpQuat4.z = q3 || 0;
-                helpQuat4.w = q4 !== undefined ? q4 : 1;
-            }
-            if (!this._parent) {
-                egret3d.Quaternion.copy(helpQuat4, this.localRotation);
-            }
-            else {
-                var parentRot = this._parent.getRotation();
-                egret3d.Quaternion.copy(parentRot, helpQuat4_2);
-                egret3d.Quaternion.inverse(helpQuat4_2);
-                egret3d.Quaternion.multiply(helpQuat4_2, helpQuat4, this.localRotation);
-            }
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
-        };
-        /**
-         * get local euler angles
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取本地欧拉角
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getLocalEulerAngles = function () {
-            egret3d.Quaternion.toEulerAngles(this.localRotation, this.localEulerAngles);
-            return this.localEulerAngles;
-        };
-        Transform.prototype.setLocalEulerAngles = function (p1, p2, p3) {
-            if (p1.hasOwnProperty("x")) {
-                p1 = p1;
-                egret3d.Quaternion.fromEulerAngles(p1.x, p1.y, p1.z, this.localRotation);
-            }
-            else {
-                egret3d.Quaternion.fromEulerAngles(p1, p2, p3, this.localRotation);
-            }
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
-        };
-        /**
-         * get euler angles
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取欧拉角
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getEulerAngles = function () {
-            egret3d.Matrix.toEulerAngles(this.getWorldMatrix(), this.eulerAngles);
-            return this.eulerAngles;
-        };
-        Transform.prototype.setEulerAngles = function (q1, q2, q3) {
-            if (q1.hasOwnProperty("x")) {
-                q1 = q1;
-                egret3d.Quaternion.fromEulerAngles(q1.x, q1.y, q1.z, helpQuat4);
-            }
-            else {
-                egret3d.Quaternion.fromEulerAngles(q1, q2 || 0, q3 || 0, helpQuat4);
-            }
-            if (!this._parent) {
-                egret3d.Quaternion.copy(helpQuat4, this.localRotation);
-            }
-            else {
-                var parentRot = this._parent.getRotation();
-                egret3d.Quaternion.copy(parentRot, helpQuat4_2);
-                egret3d.Quaternion.inverse(helpQuat4_2);
-                egret3d.Quaternion.multiply(helpQuat4_2, helpQuat4, this.localRotation);
-            }
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
-        };
-        /**
-         * get local scale
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获得本地缩放
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getLocalScale = function () {
-            return this.localScale;
-        };
-        Transform.prototype.setLocalScale = function (p1, p2, p3) {
-            if (p1.hasOwnProperty("x")) {
-                egret3d.Vector3.copy(p1, this.localScale);
-            }
-            else {
-                this.localScale.x = p1;
-                this.localScale.y = p2 !== undefined ? p2 : 1;
-                this.localScale.z = p3 !== undefined ? p3 : 1;
-            }
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
-        };
-        /**
-         * get scale
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获得缩放
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getScale = function () {
-            egret3d.Matrix.getScale(this.getWorldMatrix(), this.scale);
-            return this.scale;
-        };
-        Transform.prototype.setScale = function (p1, p2, p3) {
-            if (p1.hasOwnProperty("x")) {
-                egret3d.Vector3.copy(p1, helpVec3);
-            }
-            else {
-                helpVec3.x = p1;
-                helpVec3.y = p2 !== undefined ? p2 : 1;
-                helpVec3.z = p3 !== undefined ? p3 : 1;
-            }
-            if (!this._parent) {
-                egret3d.Vector3.copy(helpVec3, this.localScale);
-            }
-            else {
-                egret3d.Matrix.inverse(this._parent.getWorldMatrix(), helpMat4);
-                egret3d.Matrix.transformVector3(helpVec3, helpMat4, this.localScale); // transform vector3
-            }
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
-        };
-        /**
-         * look at a target
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 旋转当前transform 到指定的目标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.lookAt = function (target, up) {
-            if (target instanceof Transform) {
-                egret3d.Vector3.copy(target.getPosition(), helpVector);
-            }
-            else {
-                egret3d.Vector3.copy(target, helpVector);
-            }
-            if (up === undefined) {
-                egret3d.Quaternion.lookAt(this.getPosition(), helpVector, helpRotation);
-            }
-            else {
-                egret3d.Quaternion.lookAtWithUp(this.getPosition(), helpVector, up, helpRotation);
-            }
-            this.setRotation(helpRotation);
-        };
-        /**
-         * z-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前z轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getForward = function (out) {
-            egret3d.Matrix.transformNormal(helpFoward, this.getWorldMatrix(), out);
-            egret3d.Vector3.normalize(out);
-            return out;
-        };
-        /**
-         * x-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前x轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getRight = function (out) {
-            egret3d.Matrix.transformNormal(helpRight, this.getWorldMatrix(), out);
-            egret3d.Vector3.normalize(out);
-        };
-        /**
-         * y-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前y轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        Transform.prototype.getUp = function (out) {
-            egret3d.Matrix.transformNormal(helpUp, this.getWorldMatrix(), out);
-            egret3d.Vector3.normalize(out);
-        };
-        /**
-         * Finds a child by name or path and returns it.
-         * @param nameOrPath
-         */
-        Transform.prototype.find = function (nameOrPath) {
-            var names = nameOrPath.split("/");
-            var ancestor = this;
-            var result = null;
-            for (var _i = 0, names_1 = names; _i < names_1.length; _i++) {
-                var name_1 = names_1[_i];
-                for (var _a = 0, _b = ancestor.children; _a < _b.length; _a++) {
-                    var child = _b[_a];
-                    if (child.gameObject.name === name_1) {
-                        result = child;
-                        break;
-                    }
-                }
-                if (result) {
-                    ancestor = result;
-                }
-                else {
-                    break;
-                }
-            }
-            return result;
-        };
-        /**
-         * @internal
-         */
-        Transform.prototype.getAllChildren = function () {
-            var children = [];
-            this._getAllChildren(children);
-            return children;
-        };
-        Transform.prototype._getAllChildren = function (children) {
-            for (var _i = 0, _a = this.children; _i < _a.length; _i++) {
-                var child = _a[_i];
-                children.push(child);
-                child._getAllChildren(children);
-            }
-        };
-        Object.defineProperty(Transform.prototype, "childCount", {
-            /**
-             * 当前子集对象的数量
-             */
-            get: function () {
-                return this.children.length;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Transform.prototype, "aabb", {
-            /**
-             *
-             */
-            get: function () {
-                if (!this._aabb) {
-                    this._aabb = this._buildAABB();
-                }
-                if (this._dirtyAABB) {
-                    this._aabb.update(this.getWorldMatrix());
-                    this._dirtyAABB = false;
-                }
-                return this._aabb;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Transform.prototype, "parent", {
-            /**
-             * instance of parent transform
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 父元素实例
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            get: function () {
-                return this._parent;
-            },
-            set: function (value) {
-                this.setParent(value, false);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        __decorate([
-            paper.serializedField
-        ], Transform.prototype, "children", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalPosition" })
-        ], Transform.prototype, "localPosition", void 0);
-        __decorate([
-            paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setPosition" })
-        ], Transform.prototype, "position", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.QUATERNION, { set: "setLocalRotation" })
-        ], Transform.prototype, "localRotation", void 0);
-        __decorate([
-            paper.editor.extraProperty(paper.editor.EditType.QUATERNION, { set: "setRotation" })
-        ], Transform.prototype, "rotation", void 0);
-        __decorate([
-            paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setLocalEulerAngles" })
-        ], Transform.prototype, "localEulerAngles", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalScale" })
-        ], Transform.prototype, "localScale", void 0);
-        __decorate([
-            paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setScale" })
-        ], Transform.prototype, "scale", void 0);
-        return Transform;
-    }(paper.BaseComponent));
-    egret3d.Transform = Transform;
-    __reflect(Transform.prototype, "egret3d.Transform");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -16966,49 +17641,6 @@ var egret3d;
             }
         };
         /**
-         * 与碰撞盒相交检测
-         * @param transform 待检测带碰撞盒的transform
-         */
-        Ray.prototype.intersectCollider = function (transform) {
-            var _collider = transform.gameObject.getComponent(egret3d.BaseCollider);
-            var pickinfo = null;
-            if (_collider instanceof egret3d.BoxCollider) {
-                var obb = _collider.bounds;
-                obb.caclWorldVectors(_helpVectors, _collider.gameObject.transform.getWorldMatrix());
-                // let data = MeshData.genBoxByArray(vecs); !!!???
-                for (var index = 0; index < boxIndices.length; index += 3) {
-                    var verindex0 = boxIndices[index];
-                    var verindex1 = boxIndices[index + 1];
-                    var verindex2 = boxIndices[index + 2];
-                    var p0 = _helpVectors[verindex0];
-                    var p1 = _helpVectors[verindex1];
-                    var p2 = _helpVectors[verindex2];
-                    var result = this.intersectsTriangle(p0, p1, p2);
-                    if (result) {
-                        if (result.distance < 0)
-                            continue;
-                        if (!pickinfo || pickinfo.distance > result.distance) {
-                            pickinfo = result;
-                            var tdir = helpVec3_1;
-                            egret3d.Vector3.copy(this.direction, tdir);
-                            egret3d.Vector3.scale(tdir, result.distance);
-                            egret3d.Vector3.add(this.origin, tdir, pickinfo.hitposition);
-                        }
-                    }
-                }
-            }
-            // else if (_collider instanceof MeshCollider) { // TODO
-            //     let mesh = _collider.getBound();
-            //     if (mesh != null) {
-            //         pickinfo = mesh.intersects(this, tran.getWorldMatrix());
-            //     }
-            // }
-            //  else if (_collider instanceof CanvasRenderer) {
-            //     pickinfo = this.intersectPlaneTransform(tran);
-            // }
-            return pickinfo;
-        };
-        /**
          * 与最大最小点表示的box相交检测
          * @param minimum 最小点
          * @param maximum 最大点
@@ -17166,7 +17798,7 @@ var egret3d;
             if (pickAll === void 0) { pickAll = false; }
             if (isPickMesh === void 0) { isPickMesh = false; }
             var pickedList = [];
-            for (var _i = 0, _a = paper.Application.sceneManager.getActiveScene().getRootGameObjects(); _i < _a.length; _i++) {
+            for (var _i = 0, _a = paper.Application.sceneManager.activeScene.getRootGameObjects(); _i < _a.length; _i++) {
                 var gameObject = _a[_i];
                 if (gameObject.layer & layerMask) {
                     if (isPickMesh) {
@@ -17222,11 +17854,11 @@ var egret3d;
         };
         Ray._pickCollider = function (ray, transform, pickInfos) {
             if (transform.gameObject.activeInHierarchy) {
-                var pickInfo = ray.intersectCollider(transform);
-                if (pickInfo) {
-                    pickInfos.push(pickInfo);
-                    pickInfo.transform = transform;
-                }
+                // const pickInfo = ray.intersectCollider(transform);
+                // if (pickInfo) {
+                //     pickInfos.push(pickInfo);
+                //     pickInfo.transform = transform;
+                // }
             }
             for (var _i = 0, _a = transform.children; _i < _a.length; _i++) {
                 var child = _a[_i];
@@ -17249,7 +17881,6 @@ var egret3d;
             this.textureCoordA = new egret3d.Vector2();
             this.textureCoordB = new egret3d.Vector2();
             this.transform = null;
-            this.collider = null;
         }
         return PickInfo;
     }());
@@ -18367,6 +18998,24 @@ var egret3d;
                 paper.Asset.register(shader);
             }
             {
+                //TODO
+                var shader = new egret3d.Shader("particles_blend1.shader.json");
+                shader.url = "particles_blend1.shader.json";
+                shader.renderQueue = egret3d.RenderQueue.Transparent;
+                shader.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("gray") };
+                shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
+                shader.passes["base"] = [];
+                var renderPass = new egret3d.DrawPass(def_particlesystem_vs, def_particlesystem_fs);
+                renderPass.state_ztest = true;
+                renderPass.state_ztest_method = egret3d.WebGLKit.LEQUAL;
+                renderPass.state_zwrite = true;
+                renderPass.state_showface = egret3d.ShowFaceStateEnum.ALL;
+                renderPass.setAlphaBlend(egret3d.BlendModeEnum.Blend);
+                shader.passes["base"].push(renderPass);
+                this.PARTICLE_BLEND = shader;
+                paper.Asset.register(shader);
+            }
+            {
                 var shader = new egret3d.Shader("particles_blend.shader.json");
                 shader.url = "particles_blend.shader.json";
                 shader.renderQueue = egret3d.RenderQueue.Transparent;
@@ -18749,9 +19398,6 @@ var egret3d;
         "NORMAL" /* NORMAL */,
         "TEXCOORD_0" /* TEXCOORD_0 */,
     ];
-    var _attributesC = [
-        "POSITION" /* POSITION */,
-    ];
     var DefaultMeshes = (function () {
         function DefaultMeshes() {
         }
@@ -18773,20 +19419,20 @@ var egret3d;
             var mesh = new egret3d.Mesh(data.vbo, data.ibo, _attributesA);
             return mesh;
         };
-        DefaultMeshes.genBoxByArray = function (array) {
-            var vertexCount = 8;
-            var mesh = new egret3d.Mesh(vertexCount, _box.ibo, _attributesC);
-            var vertices = mesh.getVertices();
-            for (var i = 0; i < vertexCount; ++i) {
-                var iD = i * 3;
-                var vertex = array[i];
-                vertices[iD] = vertex.x;
-                vertices[iD + 1] = vertex.y;
-                vertices[iD + 2] = vertex.z;
-            }
-            mesh.uploadSubVertexBuffer(_attributesC);
-            return mesh;
-        };
+        // public static createBoxMesh(width: number, height: number, depth: number, widthSegments: uint = 1, heightSegments: uint = 1, depthSegments: uint = 1) {
+        //     // const vertexCount = 8;
+        //     // const mesh = new Mesh(vertexCount, _box.ibo, _attributesC);
+        //     // const vertices = mesh.getVertices();
+        //     // for (let i = 0; i < vertexCount; ++i) {
+        //     //     const iD = i * 3;
+        //     //     const vertex = array[i];
+        //     //     vertices[iD] = vertex.x;
+        //     //     vertices[iD + 1] = vertex.y;
+        //     //     vertices[iD + 2] = vertex.z;
+        //     // }
+        //     // mesh.uploadSubVertexBuffer(_attributesC);
+        //     return mesh;
+        // }
         DefaultMeshes.createCylinderCCW = function (height, radius, segment) {
             if (segment === void 0) { segment = 20; }
             var index = 0;
@@ -20640,19 +21286,79 @@ var egret3d;
 var paper;
 (function (paper) {
     /**
-     * @internal
+     *
      */
     var StartSystem = (function (_super) {
         __extends(StartSystem, _super);
         function StartSystem() {
-            return _super !== null && _super.apply(this, arguments) || this;
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._interests = [
+                {
+                    componentClass: paper.Behaviour,
+                    isExtends: true
+                }
+            ];
+            return _this;
         }
-        /**
-         * @inheritDoc
-         */
-        StartSystem.prototype.update = function () {
+        StartSystem.prototype._onAddComponent = function (component) {
+            if (this._components.indexOf(component) < 0) {
+                this._components.push(component);
+                return;
+            }
+            var gameObject = component.gameObject;
+            console.debug("StartSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
+        };
+        StartSystem.prototype._onRemoveComponent = function (component) {
+            var index = this._components.indexOf(component);
+            if (index >= 0) {
+                this._components[index] = null;
+                return;
+            }
+            var gameObject = component.gameObject;
+            console.debug("StartSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
+        };
+        StartSystem.prototype.onUpdate = function () {
+            //
             egret3d.Performance.startCounter("all" /* All */);
             egret3d.stage.update();
+            // Update behaviours.
+            if (this._isEditorUpdate()) {
+                if (this._components.length > 0) {
+                    for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                        var component = _a[_i];
+                        if (!component) {
+                            continue;
+                        }
+                        if (!component._isReseted) {
+                            component._isReseted = true;
+                            component.onReset && component.onReset();
+                        }
+                        if (paper._executeInEditModeComponents.indexOf(component.constructor) < 0) {
+                            continue;
+                        }
+                        component.onEnable && component.onEnable();
+                        if (!component._isStarted && component.isActiveAndEnabled) {
+                            component._isStarted = true;
+                            component.onStart && component.onStart();
+                        }
+                    }
+                    this._components.length = 0;
+                }
+            }
+            else if (this._components.length > 0) {
+                for (var _b = 0, _c = this._components; _b < _c.length; _b++) {
+                    var component = _c[_b];
+                    if (!component) {
+                        continue;
+                    }
+                    component.onEnable && component.onEnable();
+                    if (!component._isStarted && component.isActiveAndEnabled) {
+                        component._isStarted = true;
+                        component.onStart && component.onStart();
+                    }
+                }
+                this._components.length = 0;
+            }
         };
         return StartSystem;
     }(paper.BaseSystem));
@@ -20795,11 +21501,11 @@ var egret3d;
                     var indexAccessor = mesh.glTFAsset.getAccessor(primitive.indices);
                     switch (primitive.mode) {
                         case 1 /* Lines */:
-                            webGL.drawElements(webGL.LINES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset); // TODO CHECK
+                            webGL.drawElements(webGL.LINES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset);
                             break;
                         case 4 /* Triangles */:
                         default:
-                            webGL.drawElements(webGL.TRIANGLES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset); // TODO CHECK
+                            webGL.drawElements(webGL.TRIANGLES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset);
                             break;
                     }
                 }
@@ -20807,6 +21513,12 @@ var egret3d;
                     switch (primitive.mode) {
                         case 1 /* Lines */:
                             webGL.drawArrays(webGL.LINES, bufferOffset, vertexAccessor.count);
+                            break;
+                        case 2 /* LineLoop */:
+                            webGL.drawArrays(webGL.LINE_LOOP, bufferOffset, vertexAccessor.count);
+                            break;
+                        case 3 /* LineStrip */:
+                            webGL.drawArrays(webGL.LINE_STRIP, bufferOffset, vertexAccessor.count);
                             break;
                         case 4 /* Triangles */:
                         default:
@@ -20887,11 +21599,8 @@ var egret3d;
     /**
      * 尝试对场景内所有静态对象合并
      */
-    function autoCombine() {
-        var curScene = paper.Application.sceneManager.getActiveScene();
-        var allObjects = curScene.gameObjects;
-        //
-        combine(allObjects);
+    function autoCombine(scene) {
+        combine(scene.gameObjects);
     }
     egret3d.autoCombine = autoCombine;
     /**
@@ -20930,10 +21639,10 @@ var egret3d;
      */
     function _colletCombineInstance(target, out, root) {
         //过滤重复的对象
-        if (cacheInstances.indexOf(target.hashCode) >= 0) {
+        if (cacheInstances.indexOf(target.uuid) >= 0) {
             return;
         }
-        cacheInstances.push(target.hashCode);
+        cacheInstances.push(target.uuid);
         //
         for (var _i = 0, _a = target.transform.children; _i < _a.length; _i++) {
             var child = _a[_i];
@@ -20956,7 +21665,7 @@ var egret3d;
         var meshData = meshFilter.mesh;
         //合并筛选的条件:光照贴图_材质0_材质1... ：0_234_532...
         var key = meshRenderer.lightmapIndex + "_";
-        materials.forEach(function (element) { key = key + "_" + element.hashCode; });
+        materials.forEach(function (element) { key = key + "_" + element.uuid; });
         if (!out[key]) {
             out[key] = [];
             out[key].push(new CombineInstance());
@@ -21322,7 +22031,7 @@ var egret3d;
             console.log("------------------------");
             for (var _a = 0, list_4 = list; _a < list_4.length; _a++) {
                 var item = list_4[_a];
-                console.log(item.key + ":用时" + item.time + "平均:" + (item.time / item.count) + " 权重:" + (Math.round(item.time / totalTime * 100)) + "%");
+                console.log(item.key + ":用时" + item.time + "平均:" + (item.time / item.count) + "最大值:" + item.maxTime + " 权重:" + (Math.round(item.time / totalTime * 100)) + "%");
             }
         };
         Profile.clear = function () {
@@ -21338,7 +22047,7 @@ var egret3d;
             if (index < 0) {
                 this.profileList.keys.push(key);
                 index = this.profileList.values.length;
-                this.profileList.values.push({ key: key, count: 0, startTime: 0, time: 0, group: group });
+                this.profileList.values.push({ key: key, count: 0, startTime: 0, time: 0, group: group, maxTime: 0 });
             }
             var item = this.profileList.values[index];
             item.count++;
@@ -21354,7 +22063,9 @@ var egret3d;
             }
             else {
                 var item = this.profileList.values[index];
-                item.time += this._getNow() - item.startTime;
+                var d = this._getNow() - item.startTime;
+                item.time += d;
+                item.maxTime = item.maxTime > d ? item.maxTime : d;
             }
         };
         Profile.printAll = function () {
@@ -21697,8 +22408,8 @@ var egret3d;
                     if (accessorIndex !== undefined) {
                         var accessor = glTFAsset.getAccessor(accessorIndex);
                         var bufferOffset = glTFAsset.getBufferOffset(accessor);
-                        var vertexCount = egret3d.GLTFAsset.getAccessorTypeCount(accessor.type);
-                        gl.vertexAttribPointer(location_1, vertexCount, webGLAttribute.format, attributeInfo.normalized, 0, bufferOffset);
+                        var typeCount = egret3d.GLTFAsset.getAccessorTypeCount(accessor.type);
+                        gl.vertexAttribPointer(location_1, typeCount, webGLAttribute.format, attributeInfo.normalized, 0, bufferOffset);
                         gl.enableVertexAttribArray(location_1);
                     }
                     else {
@@ -22611,6 +23322,8 @@ var paper;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
+                                // 覆盖生成 uuid 的方式。
+                                paper.createUUID = editor.generateUuid;
                                 //启动egret3编辑环境
                                 this.runEgret();
                                 //初始化编辑模型
@@ -22640,21 +23353,124 @@ var paper;
     /**
      *
      */
-    var LaterSystem = (function (_super) {
-        __extends(LaterSystem, _super);
-        function LaterSystem() {
+    var UpdateSystem = (function (_super) {
+        __extends(UpdateSystem, _super);
+        function UpdateSystem() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._interests = [
+                {
+                    componentClass: paper.Behaviour,
+                    isExtends: true
+                }
+            ];
+            return _this;
+        }
+        UpdateSystem.prototype._onAddComponent = function (component) {
+            if (this._components.indexOf(component) < 0) {
+                this._components.push(component);
+                return;
+            }
+            var gameObject = component.gameObject;
+            console.debug("UpdateSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
+        };
+        UpdateSystem.prototype._onRemoveComponent = function (component) {
+            var index = this._components.indexOf(component);
+            if (index >= 0) {
+                this._components[index] = null;
+                return;
+            }
+            var gameObject = component.gameObject;
+            console.debug("UpdateSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
+        };
+        UpdateSystem.prototype.onUpdate = function () {
+            var index = 0;
+            var removeCount = 0;
+            var deltaTime = paper.Time.deltaTime;
+            var components = this._components;
+            if (this._isEditorUpdate()) {
+                for (var _i = 0, components_3 = components; _i < components_3.length; _i++) {
+                    var component = components_3[_i];
+                    if (component) {
+                        if (component._isStarted && paper._executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                            component.onUpdate && component.onUpdate(deltaTime);
+                        }
+                        if (removeCount > 0) {
+                            components[index - removeCount] = component;
+                            components[index] = null;
+                        }
+                    }
+                    else {
+                        removeCount++;
+                    }
+                    index++;
+                }
+            }
+            else {
+                for (var _a = 0, components_4 = components; _a < components_4.length; _a++) {
+                    var component = components_4[_a];
+                    if (component) {
+                        if (component._isStarted) {
+                            component.onUpdate && component.onUpdate(deltaTime);
+                        }
+                        if (removeCount > 0) {
+                            components[index - removeCount] = component;
+                            components[index] = null;
+                        }
+                    }
+                    else {
+                        removeCount++;
+                    }
+                    index++;
+                }
+            }
+            if (removeCount > 0) {
+                components.length -= removeCount;
+            }
+        };
+        return UpdateSystem;
+    }(paper.BaseSystem));
+    paper.UpdateSystem = UpdateSystem;
+    __reflect(UpdateSystem.prototype, "paper.UpdateSystem");
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    /**
+     *
+     */
+    var LaterUpdateSystem = (function (_super) {
+        __extends(LaterUpdateSystem, _super);
+        function LaterUpdateSystem() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._interests = [{ componentClass: paper.Behaviour, isExtends: true }];
             _this._laterCalls = [];
             return _this;
         }
-        /**
-         * @inheritDoc
-         */
-        LaterSystem.prototype.update = function () {
+        LaterUpdateSystem.prototype.onUpdate = function () {
+            // Update behaviours.
+            var deltaTime = paper.Time.deltaTime;
+            var components = paper.Application.systemManager.getSystem(paper.UpdateSystem).components;
+            if (this._isEditorUpdate()) {
+                for (var _i = 0, components_5 = components; _i < components_5.length; _i++) {
+                    var component = components_5[_i];
+                    if (component && component._isStarted && paper._executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                        component.onLateUpdate && component.onLateUpdate(deltaTime);
+                    }
+                }
+            }
+            else {
+                for (var _a = 0, components_6 = components; _a < components_6.length; _a++) {
+                    var component = components_6[_a];
+                    if (component && component._isStarted) {
+                        component.onLateUpdate && component.onLateUpdate(deltaTime);
+                    }
+                }
+            }
+            //
             egret.ticker.update(); // TODO 帧频
+            //
             if (this._laterCalls.length > 0) {
-                for (var _i = 0, _a = this._laterCalls; _i < _a.length; _i++) {
-                    var callback = _a[_i];
+                for (var _b = 0, _c = this._laterCalls; _b < _c.length; _b++) {
+                    var callback = _c[_b];
                     callback();
                 }
                 this._laterCalls.length = 0;
@@ -22663,35 +23479,13 @@ var paper;
         /**
          *
          */
-        LaterSystem.prototype.callLater = function (callback) {
+        LaterUpdateSystem.prototype.callLater = function (callback) {
             this._laterCalls.push(callback);
         };
-        return LaterSystem;
+        return LaterUpdateSystem;
     }(paper.BaseSystem));
-    paper.LaterSystem = LaterSystem;
-    __reflect(LaterSystem.prototype, "paper.LaterSystem");
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     * @internal
-     */
-    var EndSystem = (function (_super) {
-        __extends(EndSystem, _super);
-        function EndSystem() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        /**
-         * @inheritDoc
-         */
-        EndSystem.prototype.update = function () {
-            egret3d.InputManager.update(paper.Time.deltaTime);
-            egret3d.Performance.endCounter("all" /* All */);
-        };
-        return EndSystem;
-    }(paper.BaseSystem));
-    paper.EndSystem = EndSystem;
-    __reflect(EndSystem.prototype, "paper.EndSystem");
+    paper.LaterUpdateSystem = LaterUpdateSystem;
+    __reflect(LaterUpdateSystem.prototype, "paper.LaterUpdateSystem");
 })(paper || (paper = {}));
 /// <reference path="./EventDispatcher.ts" />
 var paper;
@@ -23035,7 +23829,7 @@ var paper;
                 var assetsMap = {};
                 if (serializeData["assets"]) {
                     serializeData["assets"].forEach(function (item) {
-                        assetsMap[item.hashCode] = paper_1.Asset.find(item["url"]);
+                        assetsMap[item.uuid] = paper_1.Asset.find(item["url"]);
                     });
                 }
                 var data = {
@@ -23229,7 +24023,7 @@ var paper;
                     var assetsMap = {};
                     if (serializeData["assets"]) {
                         serializeData["assets"].forEach(function (item) {
-                            assetsMap[item.hashCode] = paper_1.Asset.find(item["url"]); // 获取资源引用
+                            assetsMap[item.uuid] = paper_1.Asset.find(item["url"]); // 获取资源引用
                         });
                     }
                     one["assetsMap"] = assetsMap;
@@ -23390,14 +24184,14 @@ var paper;
             };
             EditorModel.prototype.getGameObjectByUUid = function (uuid) {
                 var paper = this.backRunTime.paper;
-                var objects = paper.Application.sceneManager.getActiveScene().gameObjects;
+                var objects = paper.Application.sceneManager.activeScene.gameObjects;
                 for (var i = 0; i < objects.length; i++) {
                     if (objects[i].uuid === uuid) {
                         return objects[i];
                     }
                 }
                 paper = __global['paper'];
-                objects = paper.Application.sceneManager.getActiveScene().gameObjects;
+                objects = paper.Application.sceneManager.activeScene.gameObjects;
                 for (var i = 0; i < objects.length; i++) {
                     if (objects[i].uuid === uuid) {
                         return objects[i];
@@ -23410,7 +24204,7 @@ var paper;
              * @param uuids unique id
              */
             EditorModel.prototype.getGameObjectsByUUids = function (uuids) {
-                var objects = paper_1.Application.sceneManager.getActiveScene().gameObjects;
+                var objects = paper_1.Application.sceneManager.activeScene.gameObjects;
                 var obj;
                 var result = [];
                 var idIndex;
@@ -23437,13 +24231,12 @@ var paper;
                 }
             };
             EditorModel.prototype.resetUUid = function (gameObj, uuids) {
-                var uuid = uuids.shift();
-                if (uuid) {
-                    gameObj.uuid = uuid;
-                }
-                else {
-                    throw new Error("no match hashcode!");
-                }
+                // let uuid = uuids.shift();
+                // if (uuid) {
+                //    gameObj.uuid = uuid;
+                // } else {
+                //     throw new Error("no match hashcode!")
+                // }
                 for (var index = 0; index < gameObj.transform.children.length; index++) {
                     var element = gameObj.transform.children[index];
                     var obj = element.gameObject;
@@ -23465,13 +24258,12 @@ var paper;
                 for (var i = 0; i < gameObject.components.length; i++) {
                     var comp = gameObject.components[i];
                     comp.gameObject = gameObject;
-                    var uuid = uuids.shift();
-                    if (uuid) {
-                        comp.uuid = uuid;
-                    }
-                    else {
-                        throw new Error("no match uuid!");
-                    }
+                    // let uuid = uuids.shift();
+                    // if (uuid) {
+                    //     comp.uuid = uuid;
+                    // } else {
+                    //     throw new Error("no match uuid!")
+                    // }
                 }
                 for (var index = 0; index < gameObject.transform.children.length; index++) {
                     var element = gameObject.transform.children[index];
@@ -23484,10 +24276,10 @@ var paper;
              * @param instance
              */
             EditorModel.prototype.generateGameobjectUUids = function (instance) {
-                instance.uuid = editor.generateUuid();
-                instance.components.forEach(function (component) {
-                    component.uuid = editor.generateUuid();
-                });
+                // instance.uuid = generateUuid();
+                // instance.components.forEach((component) => {
+                //     component.uuid = generateUuid();
+                // })
                 for (var index = 0; index < instance.transform.children.length; index++) {
                     var element = instance.transform.children[index];
                     var obj = element.gameObject;
@@ -23603,24 +24395,24 @@ var paper;
              * 序列化场景
              */
             EditorModel.prototype.serializeActiveScene = function () {
-                var scene = paper_1.Application.sceneManager.getActiveScene();
+                var scene = paper_1.Application.sceneManager.activeScene;
                 if (this._editCamera) {
-                    scene.$removeGameObject(this._editCamera);
+                    scene._removeGameObject(this._editCamera);
                 }
                 var len = this.geoController.controllerPool.length;
                 if (len > 0) {
                     for (var i = 0; i < len; i++) {
-                        scene.$removeGameObject(this.geoController.controllerPool[i]);
+                        scene._removeGameObject(this.geoController.controllerPool[i]);
                     }
                 }
                 var data = paper_1.serialize(scene);
                 if (len > 0) {
                     for (var i = 0; i < len; i++) {
-                        scene.$addGameObject(this.geoController.controllerPool[i]);
+                        scene._addGameObject(this.geoController.controllerPool[i]);
                     }
                 }
                 if (this._editCamera) {
-                    scene.$addGameObject(this._editCamera);
+                    scene._addGameObject(this._editCamera);
                 }
                 var jsonData = JSON.stringify(data);
                 return jsonData;
@@ -25795,7 +26587,7 @@ var paper;
             /**
              * @inheritDoc
              */
-            EditorCameraSystem.prototype.update = function () {
+            EditorCameraSystem.prototype.onUpdate = function () {
                 this._components.sort(function (a, b) {
                     return a.order - b.order;
                 });
@@ -25845,7 +26637,7 @@ var paper;
             /**
              * @inheritDoc
              */
-            GizmosSystem.prototype.update = function () {
+            GizmosSystem.prototype.onUpdate = function () {
             };
             return GizmosSystem;
         }(paper.BaseSystem));
@@ -26344,7 +27136,7 @@ var paper;
                 for (var i = 0; i < lights.length; i++)
                     this.lightPool.push(lights[i].gameObject);
                 this.cameraPool = [];
-                var allGameObj = paper.Application.sceneManager.getActiveScene().gameObjects;
+                var allGameObj = paper.Application.sceneManager.activeScene.gameObjects;
                 for (var i = 0; i < allGameObj.length; i++) {
                     if (allGameObj[i].getComponent(egret3d.Camera)) {
                         if (allGameObj[i].tag != "EditorCamera")
@@ -26666,177 +27458,2291 @@ var paper;
         __reflect(GizmoShader.prototype, "paper.editor.GizmoShader");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        editor.icon_frag = "\n        #ifdef GL_ES\n        precision highp float;\n        #endif\n        uniform sampler2D PointTexture;\n        uniform bool hasColor;\n        uniform vec4 iconColor;\n        void main(void) {\n            vec4 tex = texture2D(PointTexture, gl_PointCoord);\n            gl_FragColor = tex;\n            if (hasColor) {\n                if (gl_FragColor.a >= 0.1) {\n                    gl_FragColor = iconColor;\n                } else {\n                    gl_FragColor.a = 0.0;\n                }\n            }\n        }";
+        editor.icon_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        uniform float pointSize;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n            gl_PointSize = pointSize; \n        }";
+        editor.line_frag = "\n        #ifdef GL_ES\n        precision highp float;\n        #endif\n        uniform vec4 lineColor;\n        void main(void) {\n            gl_FragColor = lineColor;\n        }";
+        editor.line_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n        }";
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    /**
+     *
+     */
+    var EndSystem = (function (_super) {
+        __extends(EndSystem, _super);
+        function EndSystem() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._interests = [{ componentClass: paper.Behaviour, isExtends: true }];
+            return _this;
+        }
+        EndSystem.prototype._onAddComponent = function (component) {
+            var index = this._components.indexOf(component);
+            if (index >= 0) {
+                this._components[index] = null;
+                return;
+            }
+            var gameObject = component.gameObject;
+            console.debug("EndSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
+        };
+        EndSystem.prototype._onRemoveComponent = function (component) {
+            if (this._components.indexOf(component) < 0) {
+                this._components.push(component);
+                return;
+            }
+            var gameObject = component.gameObject;
+            console.debug("EndSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
+        };
+        EndSystem.prototype.onUpdate = function () {
+            if (this._isEditorUpdate()) {
+                if (this._components.length > 0) {
+                    for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                        var component = _a[_i];
+                        if (component && paper._executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                            component.onDisable && component.onDisable();
+                        }
+                    }
+                    this._components.length = 0;
+                }
+            }
+            else if (this._components.length > 0) {
+                for (var _b = 0, _c = this._components; _b < _c.length; _b++) {
+                    var component = _c[_b];
+                    if (component) {
+                        component.onDisable && component.onDisable();
+                    }
+                }
+                this._components.length = 0;
+            }
+        };
+        return EndSystem;
+    }(paper.BaseSystem));
+    paper.EndSystem = EndSystem;
+    __reflect(EndSystem.prototype, "paper.EndSystem");
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var BoxShape = (function (_super) {
+            __extends(BoxShape, _super);
+            function BoxShape() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._size = egret3d.Vector3.ONE.clone();
+                _this._scale = egret3d.Vector3.ONE.clone();
+                return _this;
+            }
+            BoxShape.prototype._createCollisionShape = function () {
+                var btVector3 = ammo.PhysicsSystem.helpVector3A;
+                btVector3.setValue(this._size.x * 0.5, this._size.y * 0.5, this._size.z * 0.5);
+                var btCollisionShape = new Ammo.btBoxShape(btVector3);
+                btCollisionShape.setMargin(this._margin);
+                this._updateScale(btCollisionShape);
+                return btCollisionShape;
+            };
+            BoxShape.prototype._updateScale = function (btCollisionShape) {
+                var btVector3 = ammo.PhysicsSystem.helpVector3A;
+                btVector3.setValue(this._scale.x, this._scale.y, this._scale.z);
+                btCollisionShape.setLocalScaling(btVector3);
+            };
+            Object.defineProperty(BoxShape.prototype, "size", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._size;
+                },
+                set: function (value) {
+                    if (this._btCollisionShape) {
+                        console.warn("Cannot change the size after the collision shape has been created.\nSize is only the initial value.\nUse scale to change the shape of a collision shape.");
+                    }
+                    else {
+                        this._size.copy(value);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(BoxShape.prototype, "scale", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._scale;
+                },
+                set: function (value) {
+                    this._scale.copy(value);
+                    if (this._btCollisionShape) {
+                        this._updateScale(this._btCollisionShape);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], BoxShape.prototype, "_size", void 0);
+            __decorate([
+                paper.serializedField
+            ], BoxShape.prototype, "_scale", void 0);
+            return BoxShape;
+        }(ammo.CollisionShape));
+        ammo.BoxShape = BoxShape;
+        __reflect(BoxShape.prototype, "egret3d.ammo.BoxShape");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var CapsuleShape = (function (_super) {
+            __extends(CapsuleShape, _super);
+            function CapsuleShape() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._upAxis = 1 /* Y */;
+                _this._radius = 1.0;
+                _this._height = 1.0;
+                _this._scale = egret3d.Vector3.ONE.clone();
+                return _this;
+            }
+            CapsuleShape.prototype._createCollisionShape = function () {
+                var btCollisionShape;
+                switch (this._upAxis) {
+                    case 0 /* X */:
+                        btCollisionShape = new Ammo.btCapsuleShapeX(this._radius, this._height);
+                        break;
+                    case 1 /* Y */:
+                    default:
+                        btCollisionShape = new Ammo.btCapsuleShape(this._radius, this._height);
+                        break;
+                    case 2 /* Z */:
+                        btCollisionShape = new Ammo.btCapsuleShapeZ(this._radius, this._height);
+                        break;
+                }
+                btCollisionShape.setMargin(this._margin);
+                this._updateScale(btCollisionShape);
+                return btCollisionShape;
+            };
+            CapsuleShape.prototype._updateScale = function (btCollisionShape) {
+                var btVector3 = ammo.PhysicsSystem.helpVector3A;
+                btVector3.setValue(this._scale.x, this._scale.y, this._scale.z);
+                btCollisionShape.setLocalScaling(btVector3);
+            };
+            Object.defineProperty(CapsuleShape.prototype, "upAxis", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._upAxis;
+                },
+                set: function (value) {
+                    if (this._upAxis === value) {
+                        return;
+                    }
+                    if (this._btCollisionShape) {
+                        console.warn("Cannot change the up axis after the collision shape has been created.");
+                    }
+                    else {
+                        this._upAxis = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(CapsuleShape.prototype, "radius", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._radius;
+                },
+                set: function (value) {
+                    if (this._radius === value) {
+                        return;
+                    }
+                    if (this._btCollisionShape) {
+                        console.warn("Cannot change the radius after the collision shape has been created.");
+                    }
+                    else {
+                        this._radius = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(CapsuleShape.prototype, "height", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._height;
+                },
+                set: function (value) {
+                    if (this._height === value) {
+                        return;
+                    }
+                    if (this._btCollisionShape) {
+                        console.warn("Cannot change the height after the collision shape has been created.");
+                    }
+                    else {
+                        this._height = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(CapsuleShape.prototype, "scale", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._scale;
+                },
+                set: function (value) {
+                    this._scale.copy(value);
+                    if (this._btCollisionShape) {
+                        this._updateScale(this._btCollisionShape);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], CapsuleShape.prototype, "_upAxis", void 0);
+            __decorate([
+                paper.serializedField
+            ], CapsuleShape.prototype, "_radius", void 0);
+            __decorate([
+                paper.serializedField
+            ], CapsuleShape.prototype, "_height", void 0);
+            __decorate([
+                paper.serializedField
+            ], CapsuleShape.prototype, "_scale", void 0);
+            return CapsuleShape;
+        }(ammo.CollisionShape));
+        ammo.CapsuleShape = CapsuleShape;
+        __reflect(CapsuleShape.prototype, "egret3d.ammo.CapsuleShape");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var ConeShape = (function (_super) {
+            __extends(ConeShape, _super);
+            function ConeShape() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._upAxis = 1 /* Y */;
+                _this._radius = 1.0;
+                _this._height = 1.0;
+                _this._scale = egret3d.Vector3.ONE.clone();
+                return _this;
+            }
+            ConeShape.prototype._createCollisionShape = function () {
+                var btCollisionShape;
+                switch (this._upAxis) {
+                    case 0 /* X */:
+                        btCollisionShape = new Ammo.btConeShapeX(this._radius, this._height);
+                        break;
+                    case 1 /* Y */:
+                    default:
+                        btCollisionShape = new Ammo.btConeShape(this._radius, this._height);
+                        break;
+                    case 2 /* Z */:
+                        btCollisionShape = new Ammo.btConeShapeZ(this._radius, this._height);
+                        break;
+                }
+                btCollisionShape.setMargin(this._margin);
+                this._updateScale(btCollisionShape);
+                return btCollisionShape;
+            };
+            ConeShape.prototype._updateScale = function (btCollisionShape) {
+                var btVector3 = ammo.PhysicsSystem.helpVector3A;
+                btVector3.setValue(this._scale.x, this._scale.y, this._scale.z);
+                btCollisionShape.setLocalScaling(btVector3);
+            };
+            Object.defineProperty(ConeShape.prototype, "upAxis", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._upAxis;
+                },
+                set: function (value) {
+                    if (this._upAxis === value) {
+                        return;
+                    }
+                    if (this._btCollisionShape) {
+                        console.warn("Cannot change the up axis after the collision shape has been created.");
+                    }
+                    else {
+                        this._upAxis = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(ConeShape.prototype, "radius", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._radius;
+                },
+                set: function (value) {
+                    if (this._radius === value) {
+                        return;
+                    }
+                    if (this._btCollisionShape) {
+                        console.warn("Cannot change the radius after the collision shape has been created.");
+                    }
+                    else {
+                        this._radius = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(ConeShape.prototype, "height", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._height;
+                },
+                set: function (value) {
+                    if (this._height === value) {
+                        return;
+                    }
+                    if (this._btCollisionShape) {
+                        console.warn("Cannot change the height after the collision shape has been created.");
+                    }
+                    else {
+                        this._height = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(ConeShape.prototype, "scale", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._scale;
+                },
+                set: function (value) {
+                    this._scale.copy(value);
+                    if (this._btCollisionShape) {
+                        this._updateScale(this._btCollisionShape);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], ConeShape.prototype, "_upAxis", void 0);
+            __decorate([
+                paper.serializedField
+            ], ConeShape.prototype, "_radius", void 0);
+            __decorate([
+                paper.serializedField
+            ], ConeShape.prototype, "_height", void 0);
+            __decorate([
+                paper.serializedField
+            ], ConeShape.prototype, "_scale", void 0);
+            return ConeShape;
+        }(ammo.CollisionShape));
+        ammo.ConeShape = ConeShape;
+        __reflect(ConeShape.prototype, "egret3d.ammo.ConeShape");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var ConvexHullShape = (function (_super) {
+            __extends(ConvexHullShape, _super);
+            function ConvexHullShape() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._scale = egret3d.Vector3.ONE.clone();
+                return _this;
+            }
+            ConvexHullShape.prototype._createCollisionShape = function () {
+                var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
+                if (meshFilter && meshFilter.mesh) {
+                    var btVector3 = ammo.PhysicsSystem.helpVector3A;
+                    var btCollisionShape = new Ammo.btConvexHullShape();
+                    var vertices = meshFilter.mesh.getVertices();
+                    for (var i = 0, l = vertices.length; i < l; i += 3) {
+                        btVector3.setValue(vertices[i], vertices[i + 1], vertices[i + 2]);
+                        btCollisionShape.addPoint(btVector3, i === l - 1);
+                    }
+                    btCollisionShape.setMargin(this._margin);
+                    this._updateScale(btCollisionShape);
+                    return btCollisionShape;
+                }
+                throw new Error("Arguments error.");
+            };
+            ConvexHullShape.prototype._updateScale = function (btCollisionShape) {
+                var btVector3 = ammo.PhysicsSystem.helpVector3A;
+                btVector3.setValue(this._scale.x, this._scale.y, this._scale.z);
+                btCollisionShape.setLocalScaling(btVector3);
+            };
+            Object.defineProperty(ConvexHullShape.prototype, "scale", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._scale;
+                },
+                set: function (value) {
+                    this._scale.copy(value);
+                    if (this._btCollisionShape) {
+                        this._updateScale(this._btCollisionShape);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], ConvexHullShape.prototype, "_scale", void 0);
+            return ConvexHullShape;
+        }(ammo.CollisionShape));
+        ammo.ConvexHullShape = ConvexHullShape;
+        __reflect(ConvexHullShape.prototype, "egret3d.ammo.ConvexHullShape");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var CylinderShape = (function (_super) {
+            __extends(CylinderShape, _super);
+            function CylinderShape() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._upAxis = 1 /* Y */;
+                _this._size = egret3d.Vector3.ONE.clone();
+                _this._scale = egret3d.Vector3.ONE.clone();
+                return _this;
+            }
+            CylinderShape.prototype._createCollisionShape = function () {
+                var btVector3 = ammo.PhysicsSystem.helpVector3A;
+                btVector3.setValue(this._size.x * 0.5, this._size.y * 0.5, this._size.z * 0.5);
+                var btCollisionShape;
+                switch (this._upAxis) {
+                    case 0 /* X */:
+                        btCollisionShape = new Ammo.btCylinderShapeX(btVector3);
+                        break;
+                    case 1 /* Y */:
+                    default:
+                        btCollisionShape = new Ammo.btCylinderShape(btVector3);
+                        break;
+                    case 2 /* Z */:
+                        btCollisionShape = new Ammo.btCylinderShapeZ(btVector3);
+                        break;
+                }
+                btCollisionShape.setMargin(this._margin);
+                this._updateScale(btCollisionShape);
+                return btCollisionShape;
+            };
+            CylinderShape.prototype._updateScale = function (btCollisionShape) {
+                var btVector3 = ammo.PhysicsSystem.helpVector3A;
+                btVector3.setValue(this._scale.x, this._scale.y, this._scale.z);
+                btCollisionShape.setLocalScaling(btVector3);
+            };
+            Object.defineProperty(CylinderShape.prototype, "upAxis", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._upAxis;
+                },
+                set: function (value) {
+                    if (this._upAxis === value) {
+                        return;
+                    }
+                    if (this._btCollisionShape) {
+                        console.warn("Cannot change the up axis after the collision shape has been created.");
+                    }
+                    else {
+                        this._upAxis = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(CylinderShape.prototype, "size", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._size;
+                },
+                set: function (value) {
+                    if (this._btCollisionShape) {
+                        console.warn("Cannot change the size after the collision shape has been created.\nSize is only the initial value.\nUse scale to change the shape of a collision shape.");
+                    }
+                    else {
+                        this._size.copy(value);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(CylinderShape.prototype, "scale", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._scale;
+                },
+                set: function (value) {
+                    this._scale.copy(value);
+                    if (this._btCollisionShape) {
+                        this._updateScale(this._btCollisionShape);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], CylinderShape.prototype, "_upAxis", void 0);
+            __decorate([
+                paper.serializedField
+            ], CylinderShape.prototype, "_size", void 0);
+            __decorate([
+                paper.serializedField
+            ], CylinderShape.prototype, "_scale", void 0);
+            return CylinderShape;
+        }(ammo.CollisionShape));
+        ammo.CylinderShape = CylinderShape;
+        __reflect(CylinderShape.prototype, "egret3d.ammo.CylinderShape");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var SphereShape = (function (_super) {
+            __extends(SphereShape, _super);
+            function SphereShape() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._radius = 1.0;
+                _this._scale = egret3d.Vector3.ONE.clone();
+                return _this;
+            }
+            SphereShape.prototype._createCollisionShape = function () {
+                var btCollisionShape = new Ammo.btSphereShape(this._radius);
+                btCollisionShape.setMargin(this._margin);
+                this._updateScale(btCollisionShape);
+                return btCollisionShape;
+            };
+            SphereShape.prototype._updateScale = function (btCollisionShape) {
+                var btVector3 = ammo.PhysicsSystem.helpVector3A;
+                btVector3.setValue(this._scale.x, this._scale.y, this._scale.z);
+                btCollisionShape.setLocalScaling(btVector3);
+            };
+            Object.defineProperty(SphereShape.prototype, "radius", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._radius;
+                },
+                set: function (value) {
+                    if (this._radius === value) {
+                        return;
+                    }
+                    if (this._btCollisionShape) {
+                        console.warn("Cannot change the radius after the collision shape has been created.");
+                    }
+                    else {
+                        this._radius = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SphereShape.prototype, "scale", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._scale;
+                },
+                set: function (value) {
+                    this._scale.copy(value);
+                    if (this._btCollisionShape) {
+                        this._updateScale(this._btCollisionShape);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], SphereShape.prototype, "_radius", void 0);
+            __decorate([
+                paper.serializedField
+            ], SphereShape.prototype, "_scale", void 0);
+            return SphereShape;
+        }(ammo.CollisionShape));
+        ammo.SphereShape = SphereShape;
+        __reflect(SphereShape.prototype, "egret3d.ammo.SphereShape");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         * TODO
+         */
+        var HeightfieldTerrainShape = (function (_super) {
+            __extends(HeightfieldTerrainShape, _super);
+            function HeightfieldTerrainShape() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._upAxis = 1 /* Y */;
+                return _this;
+            }
+            HeightfieldTerrainShape.prototype._createCollisionShape = function () {
+                var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
+                if (meshFilter && meshFilter.mesh) {
+                    var vertices = meshFilter.mesh.getVertices();
+                    var btCollisionShape = new Ammo.btHeightfieldTerrainShape(0, 0, null, 1.0, 0.0, 1.0, this._upAxis, "PHY_FLOAT", false);
+                    btCollisionShape.setMargin(this._margin);
+                    return btCollisionShape;
+                }
+                throw new Error("Arguments error.");
+            };
+            Object.defineProperty(HeightfieldTerrainShape.prototype, "upAxis", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._upAxis;
+                },
+                set: function (value) {
+                    if (this._upAxis === value) {
+                        return;
+                    }
+                    if (this._btCollisionShape) {
+                        console.warn("Cannot change the up axis after the collision shape has been created.");
+                    }
+                    else {
+                        this._upAxis = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], HeightfieldTerrainShape.prototype, "_upAxis", void 0);
+            return HeightfieldTerrainShape;
+        }(ammo.CollisionShape));
+        ammo.HeightfieldTerrainShape = HeightfieldTerrainShape;
+        __reflect(HeightfieldTerrainShape.prototype, "egret3d.ammo.HeightfieldTerrainShape");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     * @internal
+     */
+    var DestroySystem = (function (_super) {
+        __extends(DestroySystem, _super);
+        function DestroySystem() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._bufferedComponents = [];
+            _this._bufferedGameObjects = [];
+            return _this;
+        }
+        /**
+         * @inheritDoc
+         */
+        DestroySystem.prototype.onUpdate = function () {
+            for (var _i = 0, _a = this._bufferedComponents; _i < _a.length; _i++) {
+                var component = _a[_i];
+                component.uninitialize();
+            }
+            this._bufferedComponents.length = 0;
+            this._bufferedGameObjects.length = 0;
+            //
+            egret3d.InputManager.update(paper.Time.deltaTime);
+            egret3d.Performance.endCounter("all" /* All */);
+        };
+        /**
+         * @internal
+         */
+        DestroySystem.prototype.bufferComponent = function (component) {
+            if (this._bufferedComponents.indexOf(component) >= 0) {
+                return;
+            }
+            this._bufferedComponents.push(component);
+        };
+        /**
+         * @internal
+         */
+        DestroySystem.prototype.bufferGameObject = function (gameObject) {
+            if (this._bufferedGameObjects.indexOf(gameObject) >= 0) {
+                return;
+            }
+            this._bufferedGameObjects.push(gameObject);
+            if (gameObject.transform) {
+                for (var _i = 0, _a = gameObject.transform.children; _i < _a.length; _i++) {
+                    var child = _a[_i];
+                    child.gameObject.destroy();
+                }
+            }
+        };
+        return DestroySystem;
+    }(paper.BaseSystem));
+    paper.DestroySystem = DestroySystem;
+    __reflect(DestroySystem.prototype, "paper.DestroySystem");
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var FixedConstraint = (function (_super) {
+            __extends(FixedConstraint, _super);
+            function FixedConstraint() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            FixedConstraint.prototype._createConstraint = function () {
+                this._rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
+                if (!this._rigidbody) {
+                    console.debug("Never.");
+                    return null;
+                }
+                if (!this._connectedBody) {
+                    console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.uuid);
+                    return null;
+                }
+                //
+                var helpMatrixA = ammo.TypedConstraint._helpMatrixA;
+                var helpMatrixB = ammo.TypedConstraint._helpMatrixB;
+                this._createFrames(helpMatrixA, helpMatrixB);
+                var helpVector3A = ammo.PhysicsSystem.helpVector3A;
+                var helpQuaternionA = ammo.PhysicsSystem.helpQuaternionA;
+                var helpTransformA = ammo.PhysicsSystem.helpTransformA;
+                var helpTransformB = ammo.PhysicsSystem.helpTransformB;
+                //
+                var helpQA = egret3d.Matrix.getQuaternion(helpMatrixA, ammo.TypedConstraint._helpQuaternionA);
+                helpVector3A.setValue(helpMatrixA.rawData[12], helpMatrixA.rawData[13], helpMatrixA.rawData[14]);
+                helpQuaternionA.setValue(helpQA.x, helpQA.y, helpQA.z, helpQA.w);
+                helpTransformA.setIdentity();
+                helpTransformA.setOrigin(helpVector3A);
+                helpTransformA.setRotation(helpQuaternionA);
+                //
+                var helpQB = egret3d.Matrix.getQuaternion(helpMatrixB, ammo.TypedConstraint._helpQuaternionA);
+                helpVector3A.setValue(helpMatrixB.rawData[12], helpMatrixB.rawData[13], helpMatrixB.rawData[14]);
+                helpQuaternionA.setValue(helpQB.x, helpQB.y, helpQB.z, helpQB.w);
+                helpTransformB.setIdentity();
+                helpTransformB.setOrigin(helpVector3A);
+                helpTransformB.setRotation(helpQuaternionA);
+                //
+                var btConstraint = new Ammo.btFixedConstraint(this._rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpTransformA, helpTransformB);
+                btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
+                // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+                return btConstraint;
+            };
+            return FixedConstraint;
+        }(ammo.TypedConstraint));
+        ammo.FixedConstraint = FixedConstraint;
+        __reflect(FixedConstraint.prototype, "egret3d.ammo.FixedConstraint");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var SliderConstraint = (function (_super) {
+            __extends(SliderConstraint, _super);
+            function SliderConstraint() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._lowerLinearLimit = -10.0;
+                _this._upperLinearLimit = 10.0;
+                _this._lowerAngularLimit = -Math.PI;
+                _this._upperAngularLimit = Math.PI;
+                return _this;
+            }
+            SliderConstraint.prototype._createConstraint = function () {
+                this._rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
+                if (!this._rigidbody) {
+                    console.debug("Never.");
+                    return null;
+                }
+                var helpVector3A = ammo.PhysicsSystem.helpVector3A;
+                var helpQuaternionA = ammo.PhysicsSystem.helpQuaternionA;
+                var helpTransformA = ammo.PhysicsSystem.helpTransformA;
+                var helpTransformB = ammo.PhysicsSystem.helpTransformB;
+                var helpMatrixA = ammo.TypedConstraint._helpMatrixA;
+                var helpMatrixB = ammo.TypedConstraint._helpMatrixB;
+                var btConstraint;
+                if (this._constraintType === 1 /* ConstrainToAnotherBody */) {
+                    if (!this._connectedBody) {
+                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.uuid);
+                        return null;
+                    }
+                    this._createFrames(helpMatrixA, helpMatrixB);
+                    //
+                    var helpQA = egret3d.Matrix.getQuaternion(helpMatrixA, ammo.TypedConstraint._helpQuaternionA);
+                    helpVector3A.setValue(helpMatrixA.rawData[8], helpMatrixA.rawData[9], helpMatrixA.rawData[10]);
+                    helpQuaternionA.setValue(helpQA.x, helpQA.y, helpQA.z, helpQA.w);
+                    helpTransformA.setIdentity();
+                    helpTransformA.setOrigin(helpVector3A);
+                    helpTransformA.setRotation(helpQuaternionA);
+                    //
+                    var helpQB = egret3d.Matrix.getQuaternion(helpMatrixB, ammo.TypedConstraint._helpQuaternionA);
+                    helpVector3A.setValue(helpMatrixB.rawData[8], helpMatrixB.rawData[9], helpMatrixB.rawData[10]);
+                    helpQuaternionA.setValue(helpQB.x, helpQB.y, helpQB.z, helpQB.w);
+                    helpTransformB.setIdentity();
+                    helpTransformB.setOrigin(helpVector3A);
+                    helpTransformB.setRotation(helpQuaternionA);
+                    //
+                    btConstraint = new Ammo.btSliderConstraint(this._rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpTransformA, helpTransformB, true);
+                }
+                else {
+                    this._createFrame(this._axisX, this._axisY, this._anchor, helpMatrixA);
+                    //
+                    var helpQA = egret3d.Matrix.getQuaternion(helpMatrixA, ammo.TypedConstraint._helpQuaternionA);
+                    helpVector3A.setValue(helpMatrixA.rawData[8], helpMatrixA.rawData[9], helpMatrixA.rawData[10]);
+                    helpQuaternionA.setValue(helpQA.x, helpQA.y, helpQA.z, helpQA.w);
+                    helpTransformA.setIdentity();
+                    helpTransformA.setOrigin(helpVector3A);
+                    helpTransformA.setRotation(helpQuaternionA);
+                    btConstraint = new Ammo.btSliderConstraint(this._rigidbody.btRigidbody, helpTransformA, true);
+                }
+                btConstraint.setLowerLinLimit(this._lowerLinearLimit);
+                btConstraint.setUpperLinLimit(this._upperLinearLimit);
+                btConstraint.setLowerAngLimit(this._lowerAngularLimit);
+                btConstraint.setUpperAngLimit(this._upperAngularLimit);
+                btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
+                // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+                return btConstraint;
+            };
+            Object.defineProperty(SliderConstraint.prototype, "lowerLinearLimit", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._lowerLinearLimit;
+                },
+                set: function (value) {
+                    if (this._lowerLinearLimit === value) {
+                        return;
+                    }
+                    this._lowerLinearLimit = value;
+                    if (this._btTypedConstraint) {
+                        this._btTypedConstraint.setLowerLinLimit(this._lowerLinearLimit);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SliderConstraint.prototype, "upperLinearLimit", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._upperLinearLimit;
+                },
+                set: function (value) {
+                    if (this._upperLinearLimit === value) {
+                        return;
+                    }
+                    this._upperLinearLimit = value;
+                    if (this._btTypedConstraint) {
+                        this._btTypedConstraint.setUpperLinLimit(this._upperLinearLimit);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SliderConstraint.prototype, "lowerAngularLimit", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._lowerAngularLimit;
+                },
+                set: function (value) {
+                    if (this._lowerAngularLimit === value) {
+                        return;
+                    }
+                    this._lowerAngularLimit = value;
+                    if (this._btTypedConstraint) {
+                        this._btTypedConstraint.setLowerAngLimit(this._lowerAngularLimit);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SliderConstraint.prototype, "upperAngularLimit", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._upperAngularLimit;
+                },
+                set: function (value) {
+                    if (this._upperAngularLimit === value) {
+                        return;
+                    }
+                    this._upperAngularLimit = value;
+                    if (this._btTypedConstraint) {
+                        this._btTypedConstraint.setUpperAngLimit(this._upperAngularLimit);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], SliderConstraint.prototype, "_lowerLinearLimit", void 0);
+            __decorate([
+                paper.serializedField
+            ], SliderConstraint.prototype, "_upperLinearLimit", void 0);
+            __decorate([
+                paper.serializedField
+            ], SliderConstraint.prototype, "_lowerAngularLimit", void 0);
+            __decorate([
+                paper.serializedField
+            ], SliderConstraint.prototype, "_upperAngularLimit", void 0);
+            return SliderConstraint;
+        }(ammo.TypedConstraint));
+        ammo.SliderConstraint = SliderConstraint;
+        __reflect(SliderConstraint.prototype, "egret3d.ammo.SliderConstraint");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var HingeConstraint = (function (_super) {
+            __extends(HingeConstraint, _super);
+            function HingeConstraint() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._motorEnabled = false;
+                _this._limitEnabled = false;
+                _this._targetVelocity = 0.0;
+                _this._maxMotorImpulse = 0.0;
+                _this._lowAngular = 0.0;
+                _this._highAngular = 0.0;
+                _this._softness = 0.9;
+                _this._biasFactor = 0.3;
+                _this._relaxationFactor = 0.0;
+                return _this;
+            }
+            HingeConstraint.prototype._updateLimit = function () {
+                this._btTypedConstraint.setLimit(this._lowAngular, this._highAngular, this._softness, this._biasFactor, this._relaxationFactor);
+            };
+            HingeConstraint.prototype._createConstraint = function () {
+                this._rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
+                if (!this._rigidbody) {
+                    console.debug("Never.");
+                    return null;
+                }
+                var btConstraint;
+                if (this._constraintType === 1 /* ConstrainToAnotherBody */) {
+                    if (!this._connectedBody) {
+                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.uuid);
+                        return null;
+                    }
+                    var helpMatrixA_1 = ammo.TypedConstraint._helpMatrixA;
+                    var helpMatrixB_1 = ammo.TypedConstraint._helpMatrixB;
+                    this._createFrames(helpMatrixA_1, helpMatrixB_1);
+                    var helpVertex3A = ammo.PhysicsSystem.helpVector3A;
+                    var helpVertex3B = ammo.PhysicsSystem.helpVector3B;
+                    var helpVertex3C = ammo.PhysicsSystem.helpVector3C;
+                    var helpVertex3D = ammo.PhysicsSystem.helpVector3D;
+                    helpVertex3A.setValue(helpMatrixA_1.rawData[12], helpMatrixA_1.rawData[13], helpMatrixA_1.rawData[14]);
+                    helpVertex3B.setValue(helpMatrixB_1.rawData[12], helpMatrixB_1.rawData[13], helpMatrixB_1.rawData[14]);
+                    helpVertex3C.setValue(helpMatrixA_1.rawData[0], helpMatrixA_1.rawData[4], helpMatrixA_1.rawData[8]);
+                    helpVertex3D.setValue(helpMatrixB_1.rawData[0], helpMatrixB_1.rawData[4], helpMatrixB_1.rawData[8]);
+                    //
+                    btConstraint = new Ammo.btHingeConstraint(this._rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpVertex3A, helpVertex3B, helpVertex3C, helpVertex3D, true);
+                }
+                else {
+                    var helpVertex3A = ammo.PhysicsSystem.helpVector3A;
+                    var helpVertex3B = ammo.PhysicsSystem.helpVector3B;
+                    helpVertex3A.setValue(this._anchor.x, this._anchor.y, this._anchor.z);
+                    helpVertex3B.setValue(this._axisX.x, this._axisX.y, this._axisX.z);
+                    btConstraint = new Ammo.btHingeConstraint(this._rigidbody.btRigidbody, helpVertex3A, helpVertex3B, true);
+                }
+                if (this._motorEnabled) {
+                    btConstraint.enableAngularMotor(this._motorEnabled, this._targetVelocity, this._maxMotorImpulse);
+                }
+                if (this._limitEnabled) {
+                    this._updateLimit();
+                }
+                btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
+                // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+                return btConstraint;
+            };
+            Object.defineProperty(HingeConstraint.prototype, "motorEnabled", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._motorEnabled;
+                },
+                set: function (value) {
+                    if (this._motorEnabled === value) {
+                        return;
+                    }
+                    this._motorEnabled = value;
+                    if (this._btTypedConstraint) {
+                        this._btTypedConstraint.enableMotor(this._motorEnabled);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(HingeConstraint.prototype, "targetVelocity", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._targetVelocity;
+                },
+                set: function (value) {
+                    if (this._targetVelocity === value) {
+                        return;
+                    }
+                    this._targetVelocity = value;
+                    if (this._btTypedConstraint && this._motorEnabled) {
+                        this._btTypedConstraint.enableAngularMotor(this._motorEnabled, this._targetVelocity, this._maxMotorImpulse);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(HingeConstraint.prototype, "maxMotorImpulse", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._maxMotorImpulse;
+                },
+                set: function (value) {
+                    if (this._maxMotorImpulse === value) {
+                        return;
+                    }
+                    this._maxMotorImpulse = value;
+                    if (this._btTypedConstraint && this._motorEnabled) {
+                        this._btTypedConstraint.setMaxMotorImpulse(this._maxMotorImpulse);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(HingeConstraint.prototype, "limitEnabled", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._limitEnabled;
+                },
+                set: function (value) {
+                    if (this._limitEnabled === value) {
+                        return;
+                    }
+                    this._limitEnabled = value;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(HingeConstraint.prototype, "lowAngularLimit", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._lowAngular;
+                },
+                set: function (value) {
+                    if (this._lowAngular === value) {
+                        return;
+                    }
+                    this._lowAngular = value;
+                    if (this._btTypedConstraint && this._limitEnabled) {
+                        this._updateLimit();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(HingeConstraint.prototype, "highAngularLimit", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._highAngular;
+                },
+                set: function (value) {
+                    if (this._highAngular === value) {
+                        return;
+                    }
+                    this._highAngular = value;
+                    if (this._btTypedConstraint && this._limitEnabled) {
+                        this._updateLimit();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(HingeConstraint.prototype, "softnessLimit", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._softness;
+                },
+                set: function (value) {
+                    if (this._softness === value) {
+                        return;
+                    }
+                    this._softness = value;
+                    if (this._btTypedConstraint && this._limitEnabled) {
+                        this._updateLimit();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(HingeConstraint.prototype, "biasFactorLimit", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._biasFactor;
+                },
+                set: function (value) {
+                    if (this._biasFactor === value) {
+                        return;
+                    }
+                    this._biasFactor = value;
+                    if (this._btTypedConstraint && this._limitEnabled) {
+                        this._updateLimit();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(HingeConstraint.prototype, "relaxationFactor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._relaxationFactor;
+                },
+                set: function (value) {
+                    if (this._relaxationFactor === value) {
+                        return;
+                    }
+                    this._relaxationFactor = value;
+                    if (this._btTypedConstraint && this._limitEnabled) {
+                        this._updateLimit();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(HingeConstraint.prototype, "hingeAngle", {
+                /**
+                 *
+                 */
+                get: function () {
+                    if (this._btTypedConstraint) {
+                        return this._btTypedConstraint.getHingeAngle();
+                    }
+                    return 0.0;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], HingeConstraint.prototype, "_motorEnabled", void 0);
+            __decorate([
+                paper.serializedField
+            ], HingeConstraint.prototype, "_limitEnabled", void 0);
+            __decorate([
+                paper.serializedField
+            ], HingeConstraint.prototype, "_targetVelocity", void 0);
+            __decorate([
+                paper.serializedField
+            ], HingeConstraint.prototype, "_maxMotorImpulse", void 0);
+            __decorate([
+                paper.serializedField
+            ], HingeConstraint.prototype, "_lowAngular", void 0);
+            __decorate([
+                paper.serializedField
+            ], HingeConstraint.prototype, "_highAngular", void 0);
+            __decorate([
+                paper.serializedField
+            ], HingeConstraint.prototype, "_softness", void 0);
+            __decorate([
+                paper.serializedField
+            ], HingeConstraint.prototype, "_biasFactor", void 0);
+            __decorate([
+                paper.serializedField
+            ], HingeConstraint.prototype, "_relaxationFactor", void 0);
+            return HingeConstraint;
+        }(ammo.TypedConstraint));
+        ammo.HingeConstraint = HingeConstraint;
+        __reflect(HingeConstraint.prototype, "egret3d.ammo.HingeConstraint");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var ConeTwistConstraint = (function (_super) {
+            __extends(ConeTwistConstraint, _super);
+            function ConeTwistConstraint() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._swingSpan1 = Math.PI;
+                _this._swingSpan2 = Math.PI;
+                _this._twistSpan = Math.PI;
+                _this._softness = 0.5;
+                _this._biasFactor = 0.3;
+                _this._relaxationFactor = 1.0;
+                return _this;
+            }
+            ConeTwistConstraint.prototype._updateLimit = function (btConstraint) {
+                btConstraint.setLimit(5, this._swingSpan1);
+                btConstraint.setLimit(4, this._swingSpan2);
+                btConstraint.setLimit(3, this._twistSpan);
+                // btConstraint.setLimit(this._swingSpanX, this._swingSpanY, this._twistSpan, this._softness, this._biasFactor, this._relaxationFactor);
+            };
+            ConeTwistConstraint.prototype._createConstraint = function () {
+                var rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
+                if (!rigidbody) {
+                    console.debug("Never.");
+                    return null;
+                }
+                var helpVector3A = ammo.PhysicsSystem.helpVector3A;
+                var helpQuaternionA = ammo.PhysicsSystem.helpQuaternionA;
+                var helpTransformA = ammo.PhysicsSystem.helpTransformA;
+                var helpTransformB = ammo.PhysicsSystem.helpTransformB;
+                var helpMatrixA = ammo.TypedConstraint._helpMatrixA;
+                var helpMatrixB = ammo.TypedConstraint._helpMatrixB;
+                var btConstraint;
+                if (this._constraintType === 1 /* ConstrainToAnotherBody */) {
+                    if (!this._connectedBody) {
+                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.uuid);
+                        return null;
+                    }
+                    this._createFrames(helpMatrixA, helpMatrixB);
+                    //
+                    var helpQA = egret3d.Matrix.getQuaternion(helpMatrixA, ammo.TypedConstraint._helpQuaternionA);
+                    helpVector3A.setValue(helpMatrixA.rawData[12], helpMatrixA.rawData[13], helpMatrixA.rawData[14]);
+                    helpQuaternionA.setValue(helpQA.x, helpQA.y, helpQA.z, helpQA.w);
+                    helpTransformA.setIdentity();
+                    helpTransformA.setOrigin(helpVector3A);
+                    helpTransformA.setRotation(helpQuaternionA);
+                    //
+                    var helpQB = egret3d.Matrix.getQuaternion(helpMatrixB, ammo.TypedConstraint._helpQuaternionA);
+                    helpVector3A.setValue(helpMatrixB.rawData[12], helpMatrixB.rawData[13], helpMatrixB.rawData[14]);
+                    helpQuaternionA.setValue(helpQB.x, helpQB.y, helpQB.z, helpQB.w);
+                    helpTransformB.setIdentity();
+                    helpTransformB.setOrigin(helpVector3A);
+                    helpTransformB.setRotation(helpQuaternionA);
+                    //
+                    btConstraint = new Ammo.btConeTwistConstraint(rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpTransformA, helpTransformB);
+                }
+                else {
+                    this._createFrame(this._axisX, this._axisY, this._anchor, helpMatrixA);
+                    //
+                    var helpQA = egret3d.Matrix.getQuaternion(helpMatrixA, ammo.TypedConstraint._helpQuaternionA);
+                    helpVector3A.setValue(helpMatrixA.rawData[8], helpMatrixA.rawData[9], helpMatrixA.rawData[10]);
+                    helpQuaternionA.setValue(helpQA.x, helpQA.y, helpQA.z, helpQA.w);
+                    helpTransformA.setIdentity();
+                    helpTransformA.setOrigin(helpVector3A);
+                    helpTransformA.setRotation(helpQuaternionA);
+                    //
+                    btConstraint = new Ammo.btConeTwistConstraint(rigidbody.btRigidbody, helpTransformA);
+                }
+                btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
+                // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+                this._updateLimit(btConstraint);
+                return btConstraint;
+            };
+            Object.defineProperty(ConeTwistConstraint.prototype, "swingSpan1", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._swingSpan1;
+                },
+                set: function (value) {
+                    if (value <= 0.0) {
+                        value = 0.000001;
+                    }
+                    if (this._swingSpan1 === value) {
+                        return;
+                    }
+                    this._swingSpan1 = value;
+                    if (this._btTypedConstraint) {
+                        this._btTypedConstraint.setLimit(5, this._swingSpan1);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(ConeTwistConstraint.prototype, "swingSpan2", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._swingSpan2;
+                },
+                set: function (value) {
+                    if (value <= 0.0) {
+                        value = 0.000001;
+                    }
+                    if (this._swingSpan2 === value) {
+                        return;
+                    }
+                    this._swingSpan2 = value;
+                    if (this._btTypedConstraint) {
+                        this._btTypedConstraint.setLimit(4, this._swingSpan2);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(ConeTwistConstraint.prototype, "twistSpan", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._twistSpan;
+                },
+                set: function (value) {
+                    if (value <= 0.0) {
+                        value = 0.000001;
+                    }
+                    if (this._twistSpan === value) {
+                        return;
+                    }
+                    this._twistSpan = value;
+                    if (this._btTypedConstraint) {
+                        this._btTypedConstraint.setLimit(3, this._twistSpan);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(ConeTwistConstraint.prototype, "softness", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._softness;
+                },
+                set: function (value) {
+                    if (this.softness === value) {
+                        return;
+                    }
+                    this._softness = value;
+                    if (this._btTypedConstraint) {
+                        // this._updateLimit(this._btTypedConstraint as Ammo.btConeTwistConstraint);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(ConeTwistConstraint.prototype, "biasFactor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._biasFactor;
+                },
+                set: function (value) {
+                    if (this._biasFactor === value) {
+                        return;
+                    }
+                    this._biasFactor = value;
+                    if (this._btTypedConstraint) {
+                        // this._updateLimit(this._btTypedConstraint as Ammo.btConeTwistConstraint);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(ConeTwistConstraint.prototype, "relaxationFactor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._relaxationFactor;
+                },
+                set: function (value) {
+                    if (this._relaxationFactor === value) {
+                        return;
+                    }
+                    this._relaxationFactor = value;
+                    if (this._btTypedConstraint) {
+                        // this._updateLimit(this._btTypedConstraint as Ammo.btConeTwistConstraint);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], ConeTwistConstraint.prototype, "_swingSpan1", void 0);
+            __decorate([
+                paper.serializedField
+            ], ConeTwistConstraint.prototype, "_swingSpan2", void 0);
+            __decorate([
+                paper.serializedField
+            ], ConeTwistConstraint.prototype, "_twistSpan", void 0);
+            __decorate([
+                paper.serializedField
+            ], ConeTwistConstraint.prototype, "_softness", void 0);
+            __decorate([
+                paper.serializedField
+            ], ConeTwistConstraint.prototype, "_biasFactor", void 0);
+            __decorate([
+                paper.serializedField
+            ], ConeTwistConstraint.prototype, "_relaxationFactor", void 0);
+            return ConeTwistConstraint;
+        }(ammo.TypedConstraint));
+        ammo.ConeTwistConstraint = ConeTwistConstraint;
+        __reflect(ConeTwistConstraint.prototype, "egret3d.ammo.ConeTwistConstraint");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var BallSocketConstraint = (function (_super) {
+            __extends(BallSocketConstraint, _super);
+            function BallSocketConstraint() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            BallSocketConstraint.prototype._createConstraint = function () {
+                this._rigidbody = this.gameObject.getComponent(ammo.Rigidbody);
+                if (!this._rigidbody) {
+                    console.debug("Never.");
+                    return null;
+                }
+                var helpVector3A = ammo.PhysicsSystem.helpVector3A;
+                var helpVector3B = ammo.PhysicsSystem.helpVector3B;
+                var btConstraint;
+                helpVector3A.setValue(this._anchor.x, this._anchor.y, this._anchor.z);
+                if (this._constraintType === 1 /* ConstrainToAnotherBody */) {
+                    if (!this._connectedBody) {
+                        console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.uuid);
+                        return null;
+                    }
+                    var pivotInOther = egret3d.helpMatrixA.copy(this._connectedBody.gameObject.transform.getWorldMatrix()).inverse().transformVector3(this._rigidbody.gameObject.transform.getWorldMatrix().transformVector3(ammo.TypedConstraint._helpVector3A.copy(this._anchor)));
+                    helpVector3B.setValue(pivotInOther.x, pivotInOther.y, pivotInOther.z);
+                    btConstraint = new Ammo.btPoint2PointConstraint(this._rigidbody.btRigidbody, this._connectedBody.btRigidbody, helpVector3A, helpVector3B);
+                }
+                else {
+                    btConstraint = new Ammo.btPoint2PointConstraint(this._rigidbody.btRigidbody, helpVector3A);
+                }
+                btConstraint.setBreakingImpulseThreshold(this._breakingImpulseThreshold);
+                // btConstraint.setOverrideNumSolverIterations(this._overrideNumSolverIterations);
+                return btConstraint;
+            };
+            return BallSocketConstraint;
+        }(ammo.TypedConstraint));
+        ammo.BallSocketConstraint = BallSocketConstraint;
+        __reflect(BallSocketConstraint.prototype, "egret3d.ammo.BallSocketConstraint");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     *
+     */
+    var MissingComponent = (function (_super) {
+        __extends(MissingComponent, _super);
+        function MissingComponent() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        __decorate([
+            paper.serializedField
+        ], MissingComponent.prototype, "missingObject", void 0);
+        return MissingComponent;
+    }(paper.BaseComponent));
+    paper.MissingComponent = MissingComponent;
+    __reflect(MissingComponent.prototype, "paper.MissingComponent");
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var GhostObject = (function (_super) {
+            __extends(GhostObject, _super);
+            function GhostObject() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.collisionObjectType = 4 /* GhostObject */;
+                /**
+                 * @internal
+                 */
+                _this._prevCollisionObjects = [];
+                /**
+                 * @internal
+                 */
+                _this._currentCollisionObjects = [];
+                return _this;
+            }
+            GhostObject.prototype._createCollisionObject = function () {
+                var btCollisionObject = new Ammo.btGhostObject();
+                btCollisionObject.setWorldTransform(this._getBTTransform());
+                btCollisionObject.setCollisionFlags(this._collisionFlags);
+                btCollisionObject.setUserPointer(this._btPointer);
+                this._btPointer.egretComponent = this;
+                return btCollisionObject;
+            };
+            GhostObject.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._collisionFlags = 4 /* NoContactResponse */;
+            };
+            Object.defineProperty(GhostObject.prototype, "collisionFlags", {
+                set: function (_value) {
+                    console.warn("Cannot set the collision flags of ghost gbject.");
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(GhostObject.prototype, "btGhostObject", {
+                get: function () {
+                    return this._btCollisionObject;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            return GhostObject;
+        }(ammo.CollisionObject));
+        ammo.GhostObject = GhostObject;
+        __reflect(GhostObject.prototype, "egret3d.ammo.GhostObject");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        /**
+         *
+         */
+        var Rigidbody = (function (_super) {
+            __extends(Rigidbody, _super);
+            function Rigidbody() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.collisionObjectType = 1 /* CollisionObject */ | 2 /* RigidBody */;
+                _this._mass = 1.0;
+                _this._friction = 0.5;
+                _this._rollingFriction = 0.0;
+                _this._linearDamping = 0.1;
+                _this._angularDamping = 0.1;
+                _this._additionalDamping = false;
+                _this._additionalLinearDampingFactor = 0.005;
+                _this._additionalLinearDampingThresholdSqr = 0.01;
+                _this._additionalAngularDampingFactor = 0.01;
+                _this._additionalAngularDampingThresholdSqr = 0.01;
+                _this._restitution = 0.0;
+                _this._linearSleepingThreshold = 0.8;
+                _this._angularSleepingThreshold = 1.0;
+                _this._linearFactor = egret3d.Vector3.ONE.clone();
+                _this._angularFactor = egret3d.Vector3.ONE.clone();
+                _this._localInertia = egret3d.Vector3.ZERO.clone();
+                return _this;
+            }
+            Rigidbody.prototype._createCollisionObject = function () {
+                var rigidBodyInfo = new Ammo.btRigidBodyConstructionInfo();
+                rigidBodyInfo.set_m_friction(this._friction);
+                rigidBodyInfo.set_m_rollingFriction(this._rollingFriction);
+                rigidBodyInfo.set_m_linearDamping(this._linearDamping);
+                rigidBodyInfo.set_m_angularDamping(this._angularDamping);
+                rigidBodyInfo.set_m_restitution(this._restitution);
+                rigidBodyInfo.set_m_linearSleepingThreshold(this._linearSleepingThreshold);
+                rigidBodyInfo.set_m_angularSleepingThreshold(this._angularSleepingThreshold);
+                rigidBodyInfo.set_m_additionalDamping(this._additionalDamping);
+                rigidBodyInfo.set_m_additionalDampingFactor(this._additionalLinearDampingFactor);
+                rigidBodyInfo.set_m_additionalLinearDampingThresholdSqr(this._additionalLinearDampingThresholdSqr);
+                rigidBodyInfo.set_m_additionalAngularDampingFactor(this._additionalAngularDampingFactor);
+                rigidBodyInfo.set_m_additionalAngularDampingThresholdSqr(this._additionalAngularDampingThresholdSqr);
+                //
+                var btCollisionObject = new Ammo.btRigidBody(rigidBodyInfo);
+                var motionState = new Ammo.btDefaultMotionState(this._getBTTransform()); // TODO 可扩展 的 state。
+                btCollisionObject.setCollisionFlags(this._collisionFlags);
+                btCollisionObject.setMotionState(motionState);
+                btCollisionObject.setUserPointer(this._btPointer);
+                this._btPointer.egretComponent = this;
+                Ammo.destroy(rigidBodyInfo); //
+                return btCollisionObject;
+            };
+            /**
+             * @internal
+             */
+            Rigidbody.prototype._updateMass = function () {
+                var helpVector3A = ammo.PhysicsSystem.helpVector3A;
+                if (this._mass > 0.0 && this.isDynamic()) {
+                    var collisionShape = this.gameObject.getComponent(ammo.CollisionShape, true);
+                    helpVector3A.setValue(this._localInertia.x, this._localInertia.y, this._localInertia.z);
+                    collisionShape.btCollisionShape.calculateLocalInertia(this._mass, helpVector3A);
+                    this._localInertia.set(helpVector3A.x(), helpVector3A.y(), helpVector3A.z());
+                    this.btRigidbody.setMassProps(this._mass, helpVector3A);
+                    this.btRigidbody.setActivationState(4 /* DisableDeactivation */);
+                }
+                else {
+                    this._localInertia.set(0.0, 0.0, 0.0);
+                    helpVector3A.setValue(0.0, 0.0, 0.0);
+                    this.btRigidbody.setMassProps(0.0, helpVector3A);
+                    this.btRigidbody.setActivationState(0 /* Undefined */);
+                }
+            };
+            Object.defineProperty(Rigidbody.prototype, "collisionFlags", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._collisionFlags;
+                },
+                set: function (value) {
+                    if (this._collisionFlags === value) {
+                        return;
+                    }
+                    this._collisionFlags = value;
+                    if (this._btCollisionObject) {
+                        this._btCollisionObject.setCollisionFlags(this._collisionFlags);
+                        this._updateMass();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "mass", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._mass;
+                },
+                set: function (value) {
+                    if (this._mass === value) {
+                        return;
+                    }
+                    this._mass = value;
+                    if (this._btCollisionObject) {
+                        this._updateMass();
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "friction", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._friction;
+                },
+                set: function (value) {
+                    if (this._friction === value) {
+                        return;
+                    }
+                    this._friction = value;
+                    if (this._btCollisionObject) {
+                        this.btRigidbody.setFriction(this._friction);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "rollingFriction", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._rollingFriction;
+                },
+                set: function (value) {
+                    if (this._rollingFriction === value) {
+                        return;
+                    }
+                    this._rollingFriction = value;
+                    if (this._btCollisionObject) {
+                        this.btRigidbody.setRollingFriction(this._rollingFriction);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "linearDamping", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._linearDamping;
+                },
+                set: function (value) {
+                    if (this._linearDamping === value) {
+                        return;
+                    }
+                    this._linearDamping = value;
+                    if (this._btCollisionObject) {
+                        this.btRigidbody.setDamping(this._linearDamping, this._angularDamping);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "angularDamping", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._angularDamping;
+                },
+                set: function (value) {
+                    if (this._angularDamping === value) {
+                        return;
+                    }
+                    this._angularDamping = value;
+                    if (this._btCollisionObject) {
+                        this.btRigidbody.setDamping(this._linearDamping, this._angularDamping);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "additionalDamping", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._additionalDamping;
+                },
+                set: function (value) {
+                    if (this._additionalDamping === value) {
+                        return;
+                    }
+                    if (this._btCollisionObject) {
+                        console.warn("Cannot change the additionalDamping after the collision object has been created.");
+                    }
+                    else {
+                        this._additionalDamping = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "additionalLinearDampingFactor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._additionalLinearDampingFactor;
+                },
+                set: function (value) {
+                    if (this._additionalLinearDampingFactor === value) {
+                        return;
+                    }
+                    if (this._btCollisionObject) {
+                        console.warn("Cannot change the additionalLinearDampingFactor after the collision object has been created.");
+                    }
+                    else {
+                        this._additionalLinearDampingFactor = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "additionalLinearDampingThresholdSqr", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._additionalLinearDampingThresholdSqr;
+                },
+                set: function (value) {
+                    if (this._additionalLinearDampingThresholdSqr === value) {
+                        return;
+                    }
+                    if (this._btCollisionObject) {
+                        console.warn("Cannot change the additionalLinearDampingThresholdSqr after the collision object has been created.");
+                    }
+                    else {
+                        this._additionalLinearDampingThresholdSqr = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "additionalAngularDampingFactor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._additionalAngularDampingFactor;
+                },
+                set: function (value) {
+                    if (this._additionalAngularDampingFactor === value) {
+                        return;
+                    }
+                    if (this._btCollisionObject) {
+                        console.warn("Cannot change the additionalAngularDampingFactor after the collision object has been created.");
+                    }
+                    else {
+                        this._additionalAngularDampingFactor = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "additionalAngularDampingThresholdSqr", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._additionalAngularDampingThresholdSqr;
+                },
+                set: function (value) {
+                    if (this._additionalAngularDampingThresholdSqr === value) {
+                        return;
+                    }
+                    if (this._btCollisionObject) {
+                        console.warn("Cannot change the additionalAngularDampingThresholdSqr after the collision object has been created.");
+                    }
+                    else {
+                        this._additionalAngularDampingThresholdSqr = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "restitution", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._restitution;
+                },
+                set: function (value) {
+                    if (this._restitution === value) {
+                        return;
+                    }
+                    this._restitution = value;
+                    if (this._btCollisionObject) {
+                        this.btRigidbody.setRestitution(this._restitution);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "linearSleepingThreshold", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._linearSleepingThreshold;
+                },
+                set: function (value) {
+                    if (this._linearSleepingThreshold === value) {
+                        return;
+                    }
+                    this._linearSleepingThreshold = value;
+                    if (this._btCollisionObject) {
+                        this.btRigidbody.setSleepingThresholds(this._linearSleepingThreshold, this._angularSleepingThreshold);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "angularSleepingThreshold", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._angularSleepingThreshold;
+                },
+                set: function (value) {
+                    if (this._angularSleepingThreshold === value) {
+                        return;
+                    }
+                    this._angularSleepingThreshold = value;
+                    if (this._btCollisionObject) {
+                        this.btRigidbody.setSleepingThresholds(this._linearSleepingThreshold, this._angularSleepingThreshold);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "linearFactor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._linearFactor;
+                },
+                set: function (value) {
+                    this._linearFactor.copy(value);
+                    if (this._btCollisionObject) {
+                        var helpVector3A_1 = ammo.PhysicsSystem.helpVector3A;
+                        helpVector3A_1.setValue(this._linearFactor.x, this._linearFactor.y, this._linearFactor.z);
+                        this.btRigidbody.setLinearFactor(helpVector3A_1);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "angularFactor", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._angularFactor;
+                },
+                set: function (value) {
+                    this._angularFactor.copy(value);
+                    if (this._btCollisionObject) {
+                        var helpVector3A_2 = ammo.PhysicsSystem.helpVector3A;
+                        helpVector3A_2.setValue(this._angularFactor.x, this._angularFactor.y, this._angularFactor.z);
+                        this.btRigidbody.setAngularFactor(helpVector3A_2);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "localInertia", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._localInertia;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Rigidbody.prototype, "btRigidbody", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._btCollisionObject;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_mass", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_friction", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_rollingFriction", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_linearDamping", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_angularDamping", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_additionalDamping", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_additionalLinearDampingFactor", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_additionalLinearDampingThresholdSqr", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_additionalAngularDampingFactor", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_additionalAngularDampingThresholdSqr", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_restitution", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_linearSleepingThreshold", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_angularSleepingThreshold", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_linearFactor", void 0);
+            __decorate([
+                paper.serializedField
+            ], Rigidbody.prototype, "_angularFactor", void 0);
+            return Rigidbody;
+        }(ammo.CollisionObject));
+        ammo.Rigidbody = Rigidbody;
+        __reflect(Rigidbody.prototype, "egret3d.ammo.Rigidbody");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        var _helpVector3A = new egret3d.Vector3();
+        var _helpMatrix = new egret3d.Matrix();
+        var _attributes = [
+            "POSITION" /* POSITION */,
+            "COLOR_0" /* COLOR_0 */,
+        ];
+        /**
+         *
+         */
+        var RayTester = (function (_super) {
+            __extends(RayTester, _super);
+            function RayTester() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.distance = 10.0;
+                _this.collisionGroups = 8 /* DebrisFilter */;
+                _this.collisionMask = -1 /* AllFilter */;
+                _this._hitted = false;
+                return _this;
+            }
+            RayTester.prototype.onStart = function () {
+                this._meshFilter = this.gameObject.getComponent(egret3d.MeshFilter) || this.gameObject.addComponent(egret3d.MeshFilter);
+                this._meshRender = this.gameObject.getComponent(egret3d.MeshRenderer) || this.gameObject.addComponent(egret3d.MeshRenderer);
+                var mesh = new egret3d.Mesh(3, null, _attributes);
+                var vertices = mesh.getVertices();
+                var colors = mesh.getColors();
+                vertices[0] = 0.0;
+                vertices[1] = 0.0;
+                vertices[2] = 0.0;
+                vertices[3] = this.distance;
+                vertices[4] = 0.0;
+                vertices[5] = 0.0;
+                vertices[6] = this.distance;
+                vertices[7] = 0.0;
+                vertices[8] = 0.0;
+                for (var i = 0, l = colors.length; i < l; i += 4) {
+                    colors[i + 0] = 0.0;
+                    colors[i + 1] = 1.0;
+                    colors[i + 2] = 0.0;
+                    colors[i + 3] = 1.0;
+                }
+                mesh.glTFMesh.primitives[0].mode = 3 /* LineStrip */;
+                mesh.uploadSubVertexBuffer(_attributes);
+                RayTester._material.setShader(egret3d.DefaultShaders.LINE);
+                this._meshRender.materials = [RayTester._material];
+                this._meshFilter.mesh = mesh;
+            };
+            RayTester.prototype.onUpdate = function () {
+                var physicsSystem = paper.Application.systemManager.getSystem(ammo.PhysicsSystem);
+                if (!physicsSystem || !physicsSystem.enabled) {
+                    return;
+                }
+                var transform = this.gameObject.transform;
+                var matrix = transform.getWorldMatrix();
+                var from = transform.getPosition();
+                var to = matrix.transformVector3(_helpVector3A.set(this.distance, 0.0, 0.0));
+                var raycastInfo = physicsSystem.rayTest(from, to, this.collisionGroups, this.collisionMask);
+                if (raycastInfo) {
+                    this._hitted = true;
+                    var mesh = this._meshFilter.mesh;
+                    if (mesh) {
+                        var v = _helpMatrix.copy(matrix).inverse().transformNormal(raycastInfo.normal).scale(1.0);
+                        var vertices = mesh.getVertices();
+                        vertices[3] = raycastInfo.distance;
+                        vertices[4] = 0.0;
+                        vertices[5] = 0.0;
+                        vertices[6] = v.x + raycastInfo.distance;
+                        vertices[7] = v.y;
+                        vertices[8] = v.z;
+                        mesh.uploadSubVertexBuffer("POSITION" /* POSITION */);
+                    }
+                }
+                else {
+                    if (this._hitted) {
+                        var mesh = this._meshFilter.mesh;
+                        if (mesh) {
+                            var vertices = mesh.getVertices();
+                            vertices[3] = this.distance;
+                            vertices[4] = 0.0;
+                            vertices[5] = 0.0;
+                            vertices[6] = this.distance;
+                            vertices[7] = 0.0;
+                            vertices[8] = 0.0;
+                            mesh.uploadSubVertexBuffer("POSITION" /* POSITION */);
+                        }
+                    }
+                    this._hitted = false;
+                }
+            };
+            RayTester._material = new egret3d.Material("line");
+            __decorate([
+                paper.serializedField
+            ], RayTester.prototype, "distance", void 0);
+            __decorate([
+                paper.serializedField
+            ], RayTester.prototype, "collisionGroups", void 0);
+            __decorate([
+                paper.serializedField
+            ], RayTester.prototype, "collisionMask", void 0);
+            return RayTester;
+        }(paper.Behaviour));
+        ammo.RayTester = RayTester;
+        __reflect(RayTester.prototype, "egret3d.ammo.RayTester");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var ammo;
+    (function (ammo) {
+        var RaycastInfo = (function () {
+            function RaycastInfo() {
+                this.position = new egret3d.Vector3();
+                this.normal = new egret3d.Vector3();
+            }
+            /**
+             * @internal
+             */
+            RaycastInfo.prototype.clean = function () {
+                this.distance = 0.0;
+                this.position.x = 0.0;
+                this.position.y = 0.0;
+                this.position.z = 0.0;
+                this.normal.x = 0.0;
+                this.normal.y = 0.0;
+                this.normal.z = 0.0;
+                this.transform = null;
+                this.collisionObject = null;
+            };
+            return RaycastInfo;
+        }());
+        ammo.RaycastInfo = RaycastInfo;
+        __reflect(RaycastInfo.prototype, "egret3d.ammo.RaycastInfo");
+    })(ammo = egret3d.ammo || (egret3d.ammo = {}));
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
-     * Light Type Enum
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * TrailRender系统
      */
-    /**
-     * 灯光类型的枚举。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    var LightTypeEnum;
-    (function (LightTypeEnum) {
-        /**
-         * direction light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 直射光
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        LightTypeEnum[LightTypeEnum["Direction"] = 1] = "Direction";
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 点光源
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        LightTypeEnum[LightTypeEnum["Point"] = 2] = "Point";
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        LightTypeEnum[LightTypeEnum["Spot"] = 3] = "Spot";
-    })(LightTypeEnum = egret3d.LightTypeEnum || (egret3d.LightTypeEnum = {}));
-    /**
-     * light component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 灯光组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    var Light = (function (_super) {
-        __extends(Light, _super);
-        function Light() {
+    var TrailRendererSystem = (function (_super) {
+        __extends(TrailRendererSystem, _super);
+        function TrailRendererSystem() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * light type
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 光源类型
-             * @version paper 1.0
-             * @platform Web
-             * @language
-             */
-            _this.type = 1;
-            _this.color = new egret3d.Color(1, 1, 1, 1);
-            _this.intensity = 2;
-            _this.distance = 50;
-            _this.decay = 2;
-            _this.angle = Math.PI / 6;
-            _this.penumbra = 0;
-            /**
-             * spot angel cos
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 聚光灯的开合角度cos值
-             * @version paper 1.0
-             * @platform Web
-             * @language
-             */
-            _this.spotAngelCos = 0.9;
-            _this.castShadows = false;
-            _this.shadowBias = 0.0003;
-            _this.shadowRadius = 2;
-            _this.shadowSize = 16;
-            _this.shadowCameraNear = 0.1;
-            _this.shadowCameraFar = 200;
+            _this._interests = [
+                {
+                    componentClass: egret3d.TrailRenderer,
+                    listeners: [
+                        {
+                            type: "material" /* Meterial */,
+                            listener: function (component) {
+                                var gameObject = component.gameObject;
+                                if (_this._hasGameObject(gameObject)) {
+                                    _this._drawCallList.updateDrawCalls(gameObject, false);
+                                }
+                            }
+                        },
+                    ]
+                }
+            ];
+            _this._transform = new egret3d.Transform(); // TODO 不要这样，这是组件
+            _this._createDrawCalls = (function (gameObject) {
+                var renderer = _this._getComponent(gameObject, 0);
+                if (renderer._mesh && renderer._material && renderer.$active) {
+                    var subMeshIndex = 0;
+                    var drawCalls = [];
+                    for (var _i = 0, _a = renderer._mesh.glTFMesh.primitives; _i < _a.length; _i++) {
+                        var primitive = _a[_i];
+                        drawCalls.push({
+                            subMeshInfo: subMeshIndex,
+                            mesh: renderer._mesh,
+                            material: renderer._material,
+                            lightMapIndex: -1,
+                            boneData: null,
+                            gameObject: gameObject,
+                            transform: _this._transform,
+                            frustumTest: false,
+                            zdist: -1
+                        });
+                        subMeshIndex++;
+                    }
+                    return drawCalls;
+                }
+                return null;
+            });
+            _this._drawCallList = new egret3d.DrawCallList(_this._createDrawCalls);
             return _this;
-            // TODO 考虑将不同灯光类型拆分成不同的组件
         }
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.LIST, { listItems: [{ label: 'Direction', value: 1 }, { label: 'Point', value: 2 }, { label: 'Spot', value: 3 }] })
-        ], Light.prototype, "type", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.COLOR)
-        ], Light.prototype, "color", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.NUMBER)
-        ], Light.prototype, "intensity", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.NUMBER)
-        ], Light.prototype, "distance", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.NUMBER)
-        ], Light.prototype, "decay", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.NUMBER)
-        ], Light.prototype, "angle", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.NUMBER)
-        ], Light.prototype, "penumbra", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.NUMBER)
-        ], Light.prototype, "spotAngelCos", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.CHECKBOX)
-        ], Light.prototype, "castShadows", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.NUMBER)
-        ], Light.prototype, "shadowBias", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.NUMBER)
-        ], Light.prototype, "shadowRadius", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.NUMBER)
-        ], Light.prototype, "shadowSize", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.NUMBER)
-        ], Light.prototype, "shadowCameraNear", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.NUMBER)
-        ], Light.prototype, "shadowCameraFar", void 0);
-        return Light;
-    }(paper.BaseComponent));
-    egret3d.Light = Light;
-    __reflect(Light.prototype, "egret3d.Light");
+        TrailRendererSystem.prototype.onEnable = function () {
+            // TODO
+        };
+        TrailRendererSystem.prototype.onAddGameObject = function (gameObject) {
+            this._drawCallList.updateDrawCalls(gameObject, false);
+            this._drawCallList.updateShadowCasters(gameObject, false);
+        };
+        TrailRendererSystem.prototype.onRemoveGameObject = function (gameObject) {
+            this._drawCallList.removeDrawCalls(gameObject);
+        };
+        TrailRendererSystem.prototype.onUpdate = function () {
+            var deltaTime = paper.Time.deltaTime;
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                component.update(deltaTime);
+            }
+        };
+        TrailRendererSystem.prototype.onDisable = function () {
+            // TODO
+        };
+        return TrailRendererSystem;
+    }(paper.BaseSystem));
+    egret3d.TrailRendererSystem = TrailRendererSystem;
+    __reflect(TrailRendererSystem.prototype, "egret3d.TrailRendererSystem");
 })(egret3d || (egret3d = {}));

@@ -105,53 +105,6 @@ namespace egret3d {
         }
 
         /**
-         * 与碰撞盒相交检测
-         * @param transform 待检测带碰撞盒的transform
-         */
-        public intersectCollider(transform: Transform): PickInfo {
-            let _collider = transform.gameObject.getComponent(BaseCollider);
-
-            let pickinfo = null;
-            if (_collider instanceof BoxCollider) {
-                let obb = _collider.bounds;
-                obb.caclWorldVectors(_helpVectors, _collider.gameObject.transform.getWorldMatrix());
-                // let data = MeshData.genBoxByArray(vecs); !!!???
-
-                for (let index = 0; index < boxIndices.length; index += 3) {
-                    const verindex0 = boxIndices[index];
-                    const verindex1 = boxIndices[index + 1];
-                    const verindex2 = boxIndices[index + 2];
-
-                    const p0 = _helpVectors[verindex0];
-                    const p1 = _helpVectors[verindex1];
-                    const p2 = _helpVectors[verindex2];
-
-                    let result = this.intersectsTriangle(p0, p1, p2);
-                    if (result) {
-                        if (result.distance < 0) continue;
-                        if (!pickinfo || pickinfo.distance > result.distance) {
-                            pickinfo = result;
-                            let tdir = helpVec3_1;
-                            Vector3.copy(this.direction, tdir);
-                            Vector3.scale(tdir, result.distance);
-                            Vector3.add(this.origin, tdir, pickinfo.hitposition);
-                        }
-                    }
-                }
-            }
-            // else if (_collider instanceof MeshCollider) { // TODO
-            //     let mesh = _collider.getBound();
-            //     if (mesh != null) {
-            //         pickinfo = mesh.intersects(this, tran.getWorldMatrix());
-            //     }
-            // }
-            //  else if (_collider instanceof CanvasRenderer) {
-            //     pickinfo = this.intersectPlaneTransform(tran);
-            // }
-            return pickinfo;
-        }
-
-        /**
          * 与最大最小点表示的box相交检测
          * @param minimum 最小点
          * @param maximum 最大点
@@ -334,7 +287,7 @@ namespace egret3d {
         private static _doPick(ray: Ray, maxDistance: number = Number.MAX_VALUE, layerMask: paper.Layer, pickAll: boolean = false, isPickMesh: boolean = false) {
             const pickedList: PickInfo[] = [];
 
-            for (const gameObject of paper.Application.sceneManager.getActiveScene().getRootGameObjects()) {
+            for (const gameObject of paper.Application.sceneManager.activeScene.getRootGameObjects()) {
                 if (gameObject.layer & layerMask) {
                     if (isPickMesh) {
                         this._pickMesh(ray, gameObject.transform, pickedList);
@@ -396,11 +349,11 @@ namespace egret3d {
 
         private static _pickCollider(ray: Ray, transform: Transform, pickInfos: PickInfo[]) {
             if (transform.gameObject.activeInHierarchy) {
-                const pickInfo = ray.intersectCollider(transform);
-                if (pickInfo) {
-                    pickInfos.push(pickInfo);
-                    pickInfo.transform = transform;
-                }
+                // const pickInfo = ray.intersectCollider(transform);
+                // if (pickInfo) {
+                //     pickInfos.push(pickInfo);
+                //     pickInfo.transform = transform;
+                // }
             }
 
             for (const child of transform.children) {
@@ -421,6 +374,5 @@ namespace egret3d {
         public readonly textureCoordA: Vector2 = new Vector2();
         public readonly textureCoordB: Vector2 = new Vector2();
         public transform: Transform | null = null;
-        public collider: BaseCollider | null = null;
     }
 }
