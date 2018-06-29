@@ -2,20 +2,22 @@ namespace paper {
     /**
      * 
      */
-    export class UpdateSystem extends paper.BaseSystem<Behaviour> {
-        protected readonly _interests = [{ componentClass: Behaviour as any, isExtends: true }];
+    export class UpdateSystem extends BaseSystem<Behaviour> {
+        protected readonly _interests: ReadonlyArray<InterestConfig<Behaviour>> = [
+            {
+                componentClass: Behaviour as any,
+                isExtends: true
+            }
+        ];
 
         protected _onAddComponent(component: Behaviour) {
             if (this._components.indexOf(component) < 0) {
                 this._components.push(component);
-
-                return true;
+                return;
             }
 
             const gameObject = component.gameObject;
             console.debug("UpdateSystem add behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
-
-            return false;
         }
 
         protected _onRemoveComponent(component: Behaviour) {
@@ -23,16 +25,14 @@ namespace paper {
             if (index >= 0) {
                 this._components[index] = null as any;
 
-                return true;
+                return;
             }
 
             const gameObject = component.gameObject;
             console.debug("UpdateSystem remove behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
-
-            return false;
         }
 
-        public update() {
+        public onUpdate() {
             let index = 0;
             let removeCount = 0;
             const deltaTime = Time.deltaTime;
@@ -41,8 +41,8 @@ namespace paper {
             if (this._isEditorUpdate()) {
                 for (const component of components) {
                     if (component) {
-                        if (_executeInEditModeComponents.indexOf(component.constructor) >= 0) {
-                            component.onUpdate(deltaTime);
+                        if (component._isStarted && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                            component.onUpdate && component.onUpdate(deltaTime);
                         }
 
                         if (removeCount > 0) {
@@ -60,7 +60,9 @@ namespace paper {
             else {
                 for (const component of components) {
                     if (component) {
-                        component.onUpdate(deltaTime);
+                        if (component._isStarted) {
+                            component.onUpdate && component.onUpdate(deltaTime);
+                        }
 
                         if (removeCount > 0) {
                             components[index - removeCount] = component;

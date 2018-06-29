@@ -732,7 +732,7 @@ namespace paper.editor {
 
         public getGameObjectByUUid(uuid: string): GameObject | null {
             let paper = this.backRunTime.paper;
-            let objects = paper.Application.sceneManager.getActiveScene().gameObjects;
+            let objects = paper.Application.sceneManager.activeScene.gameObjects;
             for (let i: number = 0; i < objects.length; i++) {
                 if (objects[i].uuid === uuid) {
                     return objects[i];
@@ -740,7 +740,7 @@ namespace paper.editor {
             }
 
             paper = __global['paper'];
-            objects = paper.Application.sceneManager.getActiveScene().gameObjects;
+            objects = paper.Application.sceneManager.activeScene.gameObjects;
             for (let i: number = 0; i < objects.length; i++) {
                 if (objects[i].uuid === uuid) {
                     return objects[i];
@@ -754,7 +754,7 @@ namespace paper.editor {
          * @param uuids unique id
          */
         public getGameObjectsByUUids(uuids: string[]): GameObject[] {
-            let objects = Application.sceneManager.getActiveScene().gameObjects;
+            let objects = Application.sceneManager.activeScene.gameObjects;
             let obj: GameObject;
             let result: GameObject[] = [];
             let idIndex: number;
@@ -951,25 +951,25 @@ namespace paper.editor {
          * 序列化场景
          */
         public serializeActiveScene(): string {
-            let scene = Application.sceneManager.getActiveScene();
+            let scene = Application.sceneManager.activeScene;
 
             if (this._editCamera) {
-                scene.$removeGameObject(this._editCamera);
+                scene._removeGameObject(this._editCamera);
             }
             let len = this.geoController.controllerPool.length;
             if (len > 0) {
                 for (let i = 0; i < len; i++) {
-                    scene.$removeGameObject(this.geoController.controllerPool[i]);
+                    scene._removeGameObject(this.geoController.controllerPool[i]);
                 }
             }
             let data = serialize(scene);
             if (len > 0) {
                 for (let i = 0; i < len; i++) {
-                    scene.$addGameObject(this.geoController.controllerPool[i]);
+                    scene._addGameObject(this.geoController.controllerPool[i]);
                 }
             }
             if (this._editCamera) {
-                scene.$addGameObject(this._editCamera);
+                scene._addGameObject(this._editCamera);
             }
             let jsonData = JSON.stringify(data);
             return jsonData;

@@ -13,8 +13,8 @@ namespace paper {
 
         let root: ISerializable | null = null;
 
-        for (const source of data.objects) {
-            let target: ISerializable | null = null;
+        for (const source of data.objects) { // 实例化。
+            let target: ISerializable;
 
             if (source.hashCode in _deserializedObjects) {
                 target = _deserializedObjects[source.hashCode];
@@ -28,6 +28,8 @@ namespace paper {
                     _deserializedObjects[source.hashCode] = target;
                 }
                 else {
+                    target = new MissingObject();
+                    _deserializedObjects[source.hashCode] = target;
                     console.error(`Class ${source.class} not defined.`);
                 }
             }
@@ -35,34 +37,28 @@ namespace paper {
             root = root || target;
         }
 
-        for (const source of data.objects) {
-            if (source.hashCode in expandMap) { // 如果是外部插入的对象，则跳过属性赋值操作
+        for (const source of data.objects) { // 属性赋值。
+            if (source.hashCode in expandMap) { // 跳过外部插入对象。
                 continue;
             }
 
             const target = _deserializedObjects[source.hashCode];
-            if (target) {
-                _deserializeObject(source, target);
 
-                if (target instanceof GameObject) {
-                    for (const component of target.components) {
-                        (component as any).gameObject = target; // TODO
-                    }
+            _deserializeObject(source, target);
+
+            if (target instanceof GameObject) {
+                for (const component of target.components) {
+                    (component as any).gameObject = target; // TODO
                 }
-            }
-            else {
-                console.warn("Deserialize error.", source.hashCode);
             }
         }
 
-        for (const element of data.objects) { // TODO
-            const object = _deserializedObjects[element.hashCode];
-            if (object instanceof GameObject) {
-                for (const component of object.components) {
-                    component.initialize();
-                    if (component.isActiveAndEnabled) {
-                        paper.EventPool.dispatchEvent(paper.EventPool.EventType.Enabled, component);
-                    }
+        for (const source of data.objects) { // 组件初始化。 TODO
+            const target = _deserializedObjects[source.hashCode];
+            if (target instanceof BaseComponent) {
+                target.initialize();
+                if (target.isActiveAndEnabled) {
+                    paper.EventPool.dispatchEvent(paper.EventPool.EventType.Enabled, target);
                 }
             }
         }
@@ -137,14 +133,14 @@ namespace paper {
                             // TODO
                         }
                         else if (classCodeOrName === findClassCodeFrom(GameObject)) {
-                            for (const gameObject of Application.sceneManager.getActiveScene().gameObjects) { // TODO 暂时是搜索当前场景。
+                            for (const gameObject of Application.sceneManager.activeScene.gameObjects) { // TODO 暂时是搜索当前场景。
                                 if (gameObject.hashCode === hashCode) {
                                     return gameObject;
                                 }
                             }
                         }
                         else {
-                            for (const gameObject of Application.sceneManager.getActiveScene().gameObjects) { // TODO 暂时是搜索当前场景。
+                            for (const gameObject of Application.sceneManager.activeScene.gameObjects) { // TODO 暂时是搜索当前场景。
                                 for (const component of gameObject.components) {
                                     if (component.hashCode === hashCode) {
                                         return component;
@@ -160,6 +156,7 @@ namespace paper {
                     if (clazz) {
                         target = new clazz();
                         _deserializeObject(source, target);
+
                         return target;
                     }
                 }

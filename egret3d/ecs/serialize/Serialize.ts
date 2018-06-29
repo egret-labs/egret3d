@@ -22,7 +22,7 @@ namespace paper {
         _sourcePath = sourcePath;
 
         if (!_sourcePath && source instanceof Scene) {
-            const rawScene = (<Scene>source).$rawScene;
+            const rawScene = (<Scene>source).rawScene;
             _sourcePath = rawScene ? rawScene.url : "";
         }
 
@@ -37,7 +37,7 @@ namespace paper {
     /**
      * 
      */
-    export function serializeAsset(source: paper.Asset) {
+    export function serializeAsset(source: Asset) {
         const target = _serializeObject(source);
 
         if (_sourcePath && source._isLoad) {

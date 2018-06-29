@@ -55,7 +55,7 @@ namespace egret3d {
         component: paper.BaseComponent;
         inputBuffer: Float32Array;
         outputBuffer: Float32Array;
-        update: (channel: AnimationChannel) => void | null = null;
+        update: ((channel: AnimationChannel) => void) | null = null;
     }
     /**
      * 动画混合节点。
@@ -875,36 +875,23 @@ namespace egret3d {
             return this._animations;
         }
     }
-    /**
-     * @private
-     */
+
     export class AnimationSystem extends paper.BaseSystem<Animation> {
-        /**
-         * @inheritDoc
-         */
         protected readonly _interests = [
             {
                 componentClass: Animation
             }
         ];
-        /**
-         * @inheritDoc
-         */
-        protected _onAddComponent(component: Animation) {
-            if (!super._onAddComponent(component)) {
-                return false;
-            }
+
+        public onAddGameObject(gameObject: paper.GameObject) {
+            const component = this._getComponent(gameObject, 0);
 
             if (component.autoPlay) {
                 component.play();
             }
-
-            return true;
         }
-        /**
-         * @inheritDoc
-         */
-        public update() { // TODO 应将组件功能尽量移到系统
+
+        public onUpdate() { // TODO 应将组件功能尽量移到系统
             const globalTime = paper.Time.time;
             for (const component of this._components) {
                 component.update(globalTime);

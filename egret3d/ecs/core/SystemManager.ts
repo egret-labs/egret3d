@@ -3,6 +3,18 @@ namespace paper {
      * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
      */
     export class SystemManager {
+        private static _instance: SystemManager | null = null;
+        public static getInstance() {
+            if (!this._instance) {
+                this._instance = new SystemManager();
+            }
+
+            return this._instance;
+        }
+
+        private constructor() {
+        }
+
         private readonly _registerSystems: (BaseSystem<any> | null)[] = [];
         private readonly _systems: (BaseSystem<any> | null)[] = [];
         private readonly _unregisterSystems: (BaseSystem<any> | null)[] = [];
@@ -203,9 +215,8 @@ namespace paper {
                         this._systems[index] = null;
                     }
 
-                    if (system.enabled) {
-                        system.update();
-                    }
+                    system.update();
+
                     egret3d.Profile.endTime(systemName);
                 }
                 else {

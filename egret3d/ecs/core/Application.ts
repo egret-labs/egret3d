@@ -9,12 +9,12 @@ namespace paper {
         /**
          * 系统管理器
          */
-        public static readonly systemManager: SystemManager = new SystemManager();
+        public static readonly systemManager: SystemManager = SystemManager.getInstance();
 
         /**
          * 场景管理器
          */
-        public static readonly sceneManager: SceneManager = new SceneManager();
+        public static readonly sceneManager: SceneManager = SceneManager.getInstance();
 
         private static _isEditor = false;
         private static _isFocused = false;
@@ -40,14 +40,13 @@ namespace paper {
                 egret3d.GuidpathSystem,
                 egret3d.AnimationSystem,
                 LaterUpdateSystem,
-                egret3d.TrailRenderSystem,
+                egret3d.TrailRendererSystem,
                 egret3d.MeshRendererSystem,
                 egret3d.SkinnedMeshRendererSystem,
                 egret3d.particle.ParticleSystem,
                 egret3d.Egret2DRendererSystem,
                 egret3d.LightSystem,
                 egret3d.CameraSystem,
-                egret3d.AudioSource3DSystem,
                 EndSystem,
                 DestroySystem,
             ];
@@ -105,6 +104,9 @@ namespace paper {
          */
         public static callLater(callback: () => void): void {
             (this.systemManager.getSystem(LaterUpdateSystem) as LaterUpdateSystem).callLater(callback);
+        }
+
+        private constructor() {
         }
     }
 }

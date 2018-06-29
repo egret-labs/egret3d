@@ -7,7 +7,7 @@ namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    export class Egret2DRenderer extends paper.BaseComponent {
+    export class Egret2DRenderer extends paper.BaseRenderer {
         private renderer: egret.web.Renderer;
 
 
@@ -20,7 +20,7 @@ namespace egret3d {
             super();
 
             this.stage = new egret.Stage();
-            this.stage.maxTouches = 99;
+            this.stage.maxTouches = 98;
             this.root = new egret.DisplayObjectContainer();
             this.stage.addChild(this.root);
         }

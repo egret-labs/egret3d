@@ -931,7 +931,7 @@ namespace paper.editor {
 
     export class ModifyPrefabProperty extends BaseState {
         protected getGameObjectsByPrefab = (prefab: egret3d.Prefab): GameObject[] => {
-            let objects = Application.sceneManager.getActiveScene().gameObjects;
+            let objects = Application.sceneManager.activeScene.gameObjects;
             let result: GameObject[] = [];
             objects.forEach(obj => {
                 if (obj.prefab && obj.prefab.url === prefab.url && (obj as any).___isRootPrefab____) {

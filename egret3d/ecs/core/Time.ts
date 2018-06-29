@@ -43,5 +43,8 @@ namespace paper {
         public static get unscaledDeltaTime() {
             return this._unscaledDeltaTime;
         }
+
+        private constructor() {
+        }
     }
 }

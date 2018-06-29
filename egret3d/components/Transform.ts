@@ -25,27 +25,12 @@ namespace egret3d {
      * @language zh_CN
      */
     export class Transform extends paper.BaseComponent {
-        /**
-         * children list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 子物体列表
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        @paper.serializedField
-        public readonly children: Transform[] = [];
-
         private _dirtyAABB: boolean = true;
         private _dirtyLocal: boolean = true;
         private _dirtyWorld: boolean = true;
         /**
          * 世界矩阵的行列式，如果小于0，说明进行了反转
-         * 
+         * @internal
          */
         public _worldMatrixDeterminant: number = 0.0;
         private readonly localMatrix: Matrix = new Matrix();
@@ -68,14 +53,15 @@ namespace egret3d {
         private readonly localScale: Vector3 = new Vector3(1.0, 1.0, 1.0);
         @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setScale" })
         private readonly scale: Vector3 = new Vector3(1.0, 1.0, 1.0);
+        private readonly _children: Transform[] = [];
         private _aabb: AABB = null as any;
         private _parent: Transform | null = null;
 
         private _removeFromChildren(value: Transform) {
             let index = 0;
-            for (const child of this.children) {
+            for (const child of this._children) {
                 if (child === value) {
-                    this.children.splice(index, 1);
+                    this._children.splice(index, 1);
                     break;
                 }
 
@@ -167,16 +153,29 @@ namespace egret3d {
             }
             if (!this._dirtyWorld) {
                 this._dirtyWorld = true;
-                let i = this.children.length;
+                let i = this._children.length;
                 while (i--) {
-                    if (this.children[i]._dirtyWorld) {
+                    if (this._children[i]._dirtyWorld) {
                         continue;
                     }
-                    this.children[i]._dirtify();
+                    this._children[i]._dirtify();
                 }
             }
             // transform dirty
             this._dirtyAABB = true;
+        }
+
+        /**
+         * 父节点发生改变的回调方法
+         * 子类可通过重载此方法进行标脏状态传递
+         */
+        protected _onParentChange(newParent: Transform | null, oldParent: Transform | null) {
+            const prevActive = oldParent ? oldParent.gameObject.activeInHierarchy : this.gameObject.activeSelf;
+            if ((newParent ? newParent.gameObject.activeInHierarchy : this.gameObject.activeSelf) !== prevActive) {
+                this.gameObject._activeInHierarchyDirty(prevActive);
+            }
+
+            this._dirtify();
         }
 
         /**
@@ -187,19 +186,6 @@ namespace egret3d {
             return new Float32Array([position.x, position.y, position.z, 1]);
         }
 
-        /**
-         * 父节点发生改变的回调方法
-         * 子类可通过重载此方法进行标脏状态传递
-         */
-        protected _onParentChange(newParent: Transform | null, oldParent: Transform | null) {
-            const prevEnabled = oldParent ? oldParent.isActiveAndEnabled : this.gameObject.activeSelf;
-            if ((newParent ? newParent.isActiveAndEnabled : this.gameObject.activeSelf) !== prevEnabled) {
-                this.gameObject._activeInHierarchyDirty(prevEnabled);
-            }
-
-            this._dirtify();
-        }
-
         public deserialize(element: any) {
             super.deserialize(element); // TODO
 
@@ -207,13 +193,13 @@ namespace egret3d {
             this.localRotation.deserialize(element.localRotation);
             this.localScale.deserialize(element.localScale);
 
-            this.children.length = 0;
+            this._children.length = 0;
             if (element.children) {
                 for (let i = 0, l = element.children.length; i < l; i++) {
                     const child = paper.getDeserializedObject<Transform>(element.children[i]);
                     if (child) {
                         child._parent = this;
-                        this.children.push(child);
+                        this._children.push(child);
                     }
                 }
             }
@@ -238,7 +224,7 @@ namespace egret3d {
             }
 
             if (newParent) {
-                newParent.children.push(this);
+                newParent._children.push(this);
             }
 
             this._parent = newParent;
@@ -254,7 +240,7 @@ namespace egret3d {
          * @param index 
          */
         public getChild(index: number) {
-            return 0 <= index && index < this.children.length ? this.children[index] : null;
+            return 0 <= index && index < this._children.length ? this._children[index] : null;
         }
 
         /**
@@ -772,7 +758,7 @@ namespace egret3d {
             let result: Transform | null = null;
 
             for (const name of names) {
-                for (const child of ancestor.children) {
+                for (const child of ancestor._children) {
                     if (child.gameObject.name === name) {
                         result = child;
                         break;
@@ -800,7 +786,7 @@ namespace egret3d {
         }
 
         private _getAllChildren(children: Transform[]) {
-            for (const child of this.children) {
+            for (const child of this._children) {
                 children.push(child);
                 child._getAllChildren(children);
             }
@@ -810,7 +796,7 @@ namespace egret3d {
          * 当前子集对象的数量
          */
         public get childCount(): number {
-            return this.children.length;
+            return this._children.length;
         }
 
         /**
@@ -829,6 +815,32 @@ namespace egret3d {
             return this._aabb;
         }
 
+        /**
+         * children list
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 子物体列表
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        @paper.serializedField
+        public get children(): ReadonlyArray<Transform> {
+            return this._children;
+        };
+        /**
+         * 仅用于反序列化。
+         * @internal
+         */
+        public set children(value: ReadonlyArray<Transform>) {
+            this._children.length = 0;
+            for (const component of value) {
+                this._children.push(component);
+            }
+        };
         /**
          * instance of parent transform
          * @version paper 1.0

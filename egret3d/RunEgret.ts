@@ -7,7 +7,6 @@ namespace egret3d {
         isPlaying?: boolean;
     }
 
-
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number }
 
     /**
@@ -15,7 +14,7 @@ namespace egret3d {
      */
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
         (Ammo as any)().then(() => { // TODO WebAssembly load
-            const requiredOptions = getOptions();
+            const requiredOptions = getOptions(options);
             const canvas = getMainCanvas();
             WebGLKit.init(canvas, requiredOptions);
             InputManager.init(canvas);
@@ -41,21 +40,23 @@ namespace egret3d {
         }
     }
 
-    function getOptions(): RequiredRuntimeOptions {
+    function getOptions(options: RunEgretOptions): RequiredRuntimeOptions {
         if (window.canvas) {
             return {
-                antialias: false,
+                antialias: options.antialias,
+                antialiasSamples: 4,
                 contentWidth: 640,
                 contentHeight: 1136
-            }
+            } as RequiredRuntimeOptions;
         }
         else {
             const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
             return {
-                antialias: false,
+                antialias: options.antialias,
+                antialiasSamples: 4,
                 contentWidth: parseInt(div.getAttribute("data-content-width")),
                 contentHeight: parseInt(div.getAttribute("data-content-height"))
-            }
+            } as RequiredRuntimeOptions;;
         }
     }
 }

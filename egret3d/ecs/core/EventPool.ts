@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * 
+     * 组件事件。
      */
     export namespace EventPool {
         /**
@@ -26,7 +26,8 @@ namespace paper {
                     // 监听直接派发，所以监听都应注意 bind 问题。
                     if (extend) {
                         listener(component, extend);
-                    } else {
+                    }
+                    else {
                         listener(component);
                     }
                 }
@@ -69,8 +70,13 @@ namespace paper {
             const componentType = egret.getQualifiedClassName(componentClass);
             if (componentType in _componentListeners) {
                 const componentListeners = _componentListeners[componentType];
-                if (eventType in componentListeners) {
-                    componentListeners[eventType].length = 0;
+                if (eventType) {
+                    if (eventType in componentListeners) {
+                        componentListeners[eventType].length = 0;
+                    }
+                }
+                else {
+                    delete _componentListeners[componentType];
                 }
             }
         }

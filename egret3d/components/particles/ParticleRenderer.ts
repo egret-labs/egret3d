@@ -170,7 +170,7 @@ namespace egret3d.particle {
         { key: ParticleMaterialAttribute.WORLD_ROTATION, type: gltf.AccessorType.VEC4 },
     ];
 
-    export class ParticleRenderer extends paper.BaseComponent implements paper.IRenderer {
+    export class ParticleRenderer extends paper.BaseRenderer {
         @paper.serializedField
         private _mesh: egret3d.Mesh | null;
         @paper.serializedField

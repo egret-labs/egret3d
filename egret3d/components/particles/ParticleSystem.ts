@@ -20,8 +20,8 @@ namespace egret3d.particle {
             {
                 componentClass: ParticleRenderer,
                 listeners: [
-                    { type: ParticleRendererEventType.Mesh, listener: (comp: ParticleRenderer) => { this._onUpdateDrawCall(comp.gameObject, this._drawCallList); } },
-                    { type: ParticleRendererEventType.Materials, listener: (comp: ParticleRenderer) => { this._onUpdateDrawCall(comp.gameObject, this._drawCallList); } },
+                    { type: ParticleRendererEventType.Mesh, listener: (comp: ParticleRenderer) => { this._onUpdateDrawCalls(comp.gameObject); } },
+                    { type: ParticleRendererEventType.Materials, listener: (comp: ParticleRenderer) => { this._onUpdateDrawCalls(comp.gameObject); } },
                     { type: ParticleRendererEventType.LengthScaleChanged, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.LengthScaleChanged); } },
                     { type: ParticleRendererEventType.VelocityScaleChanged, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.VelocityScaleChanged); } },
                     { type: ParticleRendererEventType.RenderMode, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.RenderMode); } },
@@ -30,9 +30,9 @@ namespace egret3d.particle {
         ];
 
         private readonly _createDrawCalls = ((gameObject: paper.GameObject) => {
-            const renderer = gameObject.getComponent(ParticleRenderer);
+            const renderer = this._getComponent(gameObject, 1) as ParticleRenderer;
             //粒子系统不支持多材质
-            if (renderer && renderer.batchMesh && renderer.batchMaterial) {
+            if (renderer.batchMesh && renderer.batchMaterial) {
                 let subMeshIndex = 0;
                 const drawCalls: DrawCall[] = [];
                 const primitives = renderer.batchMesh.glTFMesh.primitives;
@@ -71,28 +71,25 @@ namespace egret3d.particle {
         private readonly _drawCallList: DrawCallList = new DrawCallList(this._createDrawCalls);
         private _globalTimer: number;
 
-        private _onUpdateDrawCall(gameObject: paper.GameObject, drawCalls: DrawCallList) {
-            const comp = gameObject.getComponent(ParticleComponent);
-            const renderer = gameObject.getComponent(ParticleRenderer);
-            if (comp && renderer) {
-                if (comp.enabled && renderer.enabled) {
-                    this._onUpdateBatchMesh(comp);
-                    comp.main.playOnAwake && comp.play();
-                } else {
-                    comp.stop();
-                }
+        private _onUpdateDrawCalls(gameObject: paper.GameObject) {
+            const component = this._getComponent(gameObject, 0) as ParticleComponent;
+            const renderer = this._getComponent(gameObject, 1) as ParticleRenderer;
+
+            if (component.enabled && renderer.enabled) { // TODO 是否应使用 isActiveAndEnabled
+                this._onUpdateBatchMesh(component);
+                component.main.playOnAwake && component.play();
             }
-            drawCalls.updateDrawCalls(gameObject, false);
+            else {
+                component.stop();
+            }
+
+            this._drawCallList.updateDrawCalls(gameObject, false);
         }
         /**
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */
         private _onUpdateBatchMesh(comp: ParticleComponent) {
-            const renderer = comp.gameObject.getComponent(ParticleRenderer);
-            if (!comp || !renderer) {
-                return;
-            }
-
+            const renderer = this._getComponent(comp.gameObject, 1) as ParticleRenderer;
             comp.initBatcher();
             //
             this._onRenderUpdate(renderer, ParticleRendererEventType.RenderMode);
@@ -167,7 +164,7 @@ namespace egret3d.particle {
             }
         }
         private _onMainUpdate(component: ParticleComponent, type: ParticleCompEventType) {
-            const renderer = component.gameObject.getComponent(ParticleRenderer);
+            const renderer = this._getComponent(component.gameObject, 1) as ParticleRenderer;
             const mainModule = component.main;
             switch (type) {
                 case ParticleCompEventType.StartRotation3DChanged: {
@@ -189,7 +186,7 @@ namespace egret3d.particle {
          * @param component 
          */
         private _onShapeChanged(comp: ParticleComponent) {
-            const renderer = comp.gameObject.getComponent(ParticleRenderer);
+            const renderer = this._getComponent(comp.gameObject, 1) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.SHAPE);
             if (comp.shape.enable) {
                 renderer._addShaderDefine(ParticleMaterialDefine.SHAPE);
@@ -200,7 +197,7 @@ namespace egret3d.particle {
          * @param component 
          */
         private _onVelocityOverLifetime(comp: ParticleComponent) {
-            const renderer = comp.gameObject.getComponent(ParticleRenderer);
+            const renderer = this._getComponent(comp.gameObject, 1) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.VELOCITYCONSTANT);
             renderer._removeShaderDefine(ParticleMaterialDefine.VELOCITYCURVE);
             renderer._removeShaderDefine(ParticleMaterialDefine.VELOCITYTWOCONSTANT);
@@ -253,7 +250,7 @@ namespace egret3d.particle {
          * @param component 
          */
         private _onColorOverLifetime(comp: ParticleComponent) {
-            const renderer = comp.gameObject.getComponent(ParticleRenderer);
+            const renderer = this._getComponent(comp.gameObject, 1) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.COLOROGRADIENT);
             renderer._removeShaderDefine(ParticleMaterialDefine.COLORTWOGRADIENTS);
 
@@ -286,7 +283,7 @@ namespace egret3d.particle {
          * @param component
          */
         private _onSizeOverLifetime(comp: ParticleComponent) {
-            const renderer = comp.gameObject.getComponent(ParticleRenderer);
+            const renderer = this._getComponent(comp.gameObject, 1) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.SIZECURVE);
             renderer._removeShaderDefine(ParticleMaterialDefine.SIZECURVESEPERATE);
             renderer._removeShaderDefine(ParticleMaterialDefine.SIZETWOCURVES);
@@ -337,7 +334,7 @@ namespace egret3d.particle {
          * @param comp
          */
         private _onRotationOverLifetime(comp: ParticleComponent) {
-            const renderer = comp.gameObject.getComponent(ParticleRenderer);
+            const renderer = this._getComponent(comp.gameObject, 1) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONOVERLIFETIME);
             renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONCONSTANT);
             renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONTWOCONSTANTS);
@@ -410,7 +407,7 @@ namespace egret3d.particle {
             }
         }
         private _onTextureSheetAnimation(comp: ParticleComponent) {
-            const renderer = comp.gameObject.getComponent(ParticleRenderer);
+            const renderer = this._getComponent(comp.gameObject, 1) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONCURVE);
             renderer._removeShaderDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONTWOCURVE);
 
@@ -439,34 +436,20 @@ namespace egret3d.particle {
                 }
             }
         }
-        /**
-         * @inheritDoc
-         */
-        protected _onAddComponent(comp: ParticleComponent | ParticleRenderer) {
-            if (!super._onAddComponent(comp)) {
-                return false;
-            }
 
-            this._onUpdateDrawCall(comp.gameObject, this._drawCallList);
-            return true;
+        public onEnable() {
+            // TODO
         }
 
-        /**
-         * @inheritDoc
-         */
-        protected _onRemoveComponent(comp: ParticleComponent | ParticleRenderer) {
-            if (!super._onRemoveComponent(comp)) {
-                return false;
-            }
-
-            this._drawCallList.removeDrawCalls(comp.gameObject);
-            return true;
+        public onAddGameObject(gameObject: paper.GameObject) {
+            this._onUpdateDrawCalls(gameObject);
         }
 
-        /**
-             * @inheritDoc
-             */
-        public update() {
+        public onRemoveGameObject(gameObject: paper.GameObject) {
+            this._drawCallList.removeDrawCalls(gameObject);
+        }
+
+        public onUpdate() {
             if (this._globalTimer !== this._globalTimer) {
                 this._globalTimer = paper.Time.time;
             }
@@ -478,6 +461,10 @@ namespace egret3d.particle {
             }
 
             this._globalTimer = paper.Time.time;
+        }
+
+        public onDisable() {
+            // TODO
         }
     }
 }

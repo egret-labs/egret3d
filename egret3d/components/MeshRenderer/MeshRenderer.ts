@@ -11,7 +11,7 @@ namespace egret3d {
     /**
      * mesh的渲染组件
      */
-    export class MeshRenderer extends paper.BaseComponent implements paper.IRenderer {
+    export class MeshRenderer extends paper.BaseRenderer {
         @paper.serializedField
         private _receiveShadows: boolean = false;
         @paper.serializedField
