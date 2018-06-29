@@ -61,6 +61,8 @@ namespace paper.editor {
         public static REMOVE_PREFAB_COMPONENT = "REMOVE_PREFAB_COMPONENT";
         /**修改asset属性 */
         public static MODIFY_ASSET_PROPERTY = "MODIFY_ASSET_PROPERTY";
+        /**创建prefab */
+        public static CREATE_PREFAB = "CREATE_PREFAB";
     }
 
     /**
@@ -206,15 +208,27 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createModifyAssetPropertyState(target: Asset, newValueList: any[], preValueCopylist: any[]) {
+        public createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]) {
             const data = {
                 cmdType: CmdType.MODIFY_ASSET_PROPERTY,
-                target,
+                assetUrl,
                 newValueList,
                 preValueCopylist,
             }
 
             const state = ModifyAssetPropertyState.create(data);
+            this.addState(state);
+        }
+
+        public createPrefabState(prefab:any,selectIds:string[])
+        {
+            const data = {
+                cmdType: CmdType.CREATE_PREFAB,
+                prefab,
+                selectIds
+            }
+
+            const state = CreatePrefabState.create(data);
             this.addState(state);
         }
 
@@ -237,8 +251,12 @@ namespace paper.editor {
                     return value.url;
                 case editor.EditType.LIST:
                     return value;
-                case editor.EditType.MATERIAL:
                 case editor.EditType.MATERIAL_ARRAY:
+                    const data = value.map((item) => {
+                        return {name:item.url,url:item.url};
+                    })
+                    return data;
+                case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
                 case editor.EditType.TRANSFROM:
                 case editor.EditType.SOUND:
@@ -252,7 +270,7 @@ namespace paper.editor {
             }
         }
 
-        public deserializeProperty(serializeData: any, editType: editor.EditType): any {
+        public async deserializeProperty(serializeData: any, editType: editor.EditType): Promise<any> {
             switch (editType) {
                 case editor.EditType.NUMBER:
                 case editor.EditType.TEXT:
@@ -273,16 +291,22 @@ namespace paper.editor {
                     return target;
                 case editor.EditType.SHADER:
                      const url = serializeData;
-                     const asset = paper.Asset.find<egret3d.Shader>(url);
+                     const asset = await RES.getResAsync(url);
                      return asset;
                 case editor.EditType.LIST:
                     return serializeData;
-                case editor.EditType.MATERIAL:
                 case editor.EditType.MATERIAL_ARRAY:
+                    const materials:egret3d.Material[] = [];
+                    for (const matrial of serializeData) {
+                        const asset = await RES.getResAsync(matrial.url);
+                        materials.push(asset);
+                    }
+                    return materials;
+                case editor.EditType.MESH: 
+                case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
                 case editor.EditType.TRANSFROM:
                 case editor.EditType.SOUND:
-                case editor.EditType.MESH:
                 case editor.EditType.ARRAY:
                     //TODO
                     console.error("not supported!")
@@ -458,8 +482,6 @@ namespace paper.editor {
                 const rootObj:GameObject | null = this.getPrefabRootObjByChild(gameObj);
                 if (rootObj !== null) {
                     (gameObj as any).___prefabRoot____ = rootObj;
-                }else{
-                    throw new Error("root obj can't find")
                 }
             } else {
                 (gameObj as any).prefab = null;
@@ -745,6 +767,15 @@ namespace paper.editor {
                 if (objects[i].uuid === uuid) {
                     return objects[i];
                 }
+            }
+            return null;
+        }
+
+        public async getAssetByAssetUrl(url:string):Promise<any>{
+            const RES = this.backRunTime.RES;
+            let asset = await RES.getResAsync(url);
+            if (asset) {
+                return asset;
             }
             return null;
         }
