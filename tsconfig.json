@@ -54,7 +54,6 @@
         "egret3d/math/Vector3.ts",
         "egret3d/math/Vector4.ts",
         "egret3d/math/Quaternion.ts",
-        "egret3d/math/Border.ts",
         "egret3d/math/Rectangle.ts",
         "egret3d/math/AABB.ts",
         "egret3d/math/OBB.ts",
