@@ -87,7 +87,7 @@ namespace egret3d.ammo {
                 );
                 frameB.setTranslation(
                     TypedConstraint._helpMatrixC.copy(otherTransform.getWorldMatrix()).inverse().transformVector3(
-                        thisTransform.getWorldMatrix().transformVector3(TypedConstraint._helpVector3D.copy(this._anchor))
+                        thisTransform.getWorldMatrix().transformVector3(TypedConstraint._helpVector3D.copy(this._connectedAnchor))
                     )
                 );
             }
@@ -187,6 +187,7 @@ namespace egret3d.ammo {
             }
             else {
                 this._anchor.copy(value);
+                this._autoCalculateConnectedAnchor = false;
             }
         }
         /**
@@ -201,6 +202,7 @@ namespace egret3d.ammo {
             }
             else {
                 this._axisX.copy(value).normalize();
+                this._autoCalculateConnectedAnchor = false;
             }
         }
         /**
@@ -215,6 +217,7 @@ namespace egret3d.ammo {
             }
             else {
                 this._axisY.copy(value).normalize();
+                this._autoCalculateConnectedAnchor = false;
             }
         }
         /**
@@ -243,6 +246,7 @@ namespace egret3d.ammo {
             }
             else {
                 this._connectedAnchor.copy(value);
+                this._autoCalculateConnectedAnchor = false;
             }
         }
         /**
@@ -257,6 +261,7 @@ namespace egret3d.ammo {
             }
             else {
                 this._connectedAxisX.copy(value).normalize();
+                this._autoCalculateConnectedAnchor = false;
             }
         }
         /**
@@ -271,6 +276,7 @@ namespace egret3d.ammo {
             }
             else {
                 this._connectedAxisY.copy(value).normalize();
+                this._autoCalculateConnectedAnchor = false;
             }
         }
         /**

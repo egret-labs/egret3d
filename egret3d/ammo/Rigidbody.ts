@@ -44,7 +44,7 @@ namespace egret3d.ammo {
 
         protected _createCollisionObject() {
             const rigidBodyInfo = new Ammo.btRigidBodyConstructionInfo();
-            (rigidBodyInfo as any).set_m_friction(this._friction);
+            /*(rigidBodyInfo as any).set_m_friction(this._friction);
             (rigidBodyInfo as any).set_m_rollingFriction(this._rollingFriction);
             (rigidBodyInfo as any).set_m_linearDamping(this._linearDamping);
             (rigidBodyInfo as any).set_m_angularDamping(this._angularDamping);
@@ -55,7 +55,7 @@ namespace egret3d.ammo {
             (rigidBodyInfo as any).set_m_additionalDampingFactor(this._additionalLinearDampingFactor);
             (rigidBodyInfo as any).set_m_additionalLinearDampingThresholdSqr(this._additionalLinearDampingThresholdSqr);
             (rigidBodyInfo as any).set_m_additionalAngularDampingFactor(this._additionalAngularDampingFactor);
-            (rigidBodyInfo as any).set_m_additionalAngularDampingThresholdSqr(this._additionalAngularDampingThresholdSqr);
+            (rigidBodyInfo as any).set_m_additionalAngularDampingThresholdSqr(this._additionalAngularDampingThresholdSqr);*/
             //
             const btCollisionObject = new Ammo.btRigidBody(rigidBodyInfo as any);
             const motionState = new Ammo.btDefaultMotionState(this._getBTTransform()); // TODO 可扩展 的 state。
@@ -87,6 +87,7 @@ namespace egret3d.ammo {
                 helpVector3A.setValue(0.0, 0.0, 0.0);
                 this.btRigidbody.setMassProps(0.0, helpVector3A);
                 this.btRigidbody.setActivationState(Ammo.ActivationState.Undefined);
+                this.btRigidbody.updateInertiaTensor();
             }
         }
         /**

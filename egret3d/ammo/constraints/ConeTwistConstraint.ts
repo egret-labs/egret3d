@@ -103,7 +103,7 @@ namespace egret3d.ammo {
             this._swingSpan1 = value;
 
             if (this._btTypedConstraint) {
-                (this._btTypedConstraint as Ammo.btConeTwistConstraint).setLimit(5, this._swingSpan2);
+                (this._btTypedConstraint as Ammo.btConeTwistConstraint).setLimit(5, this._swingSpan1);
             }
         }
         /**
@@ -145,7 +145,7 @@ namespace egret3d.ammo {
             this._twistSpan = value;
 
             if (this._btTypedConstraint) {
-                (this._btTypedConstraint as Ammo.btConeTwistConstraint).setLimit(3, this._swingSpan2);
+                (this._btTypedConstraint as Ammo.btConeTwistConstraint).setLimit(3, this._twistSpan);
             }
         }
         /**
