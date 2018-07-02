@@ -167,7 +167,7 @@ declare namespace egret3d {
         inverse(): this;
         transformVector3(value: Vector3): Vector3;
         transformNormal(value: Vector3): Vector3;
-        static set(n11: number, n21: number, n31: number, n41: number, n12: number, n22: number, n32: number, n42: number, n13: number, n23: number, n33: number, n43: number, n14: number, n24: number, n34: number, n44: number, matrix: Matrix): Matrix;
+        static set(n11: number, n21: number, n31: number, n41: number, n12: number, n22: number, n32: number, n42: number, n13: number, n23: number, n33: number, n43: number, n14: number, n24: number, n34: number, n44: number, result: Matrix): Matrix;
         static getScale(m: Matrix, out: Vector3): Vector3;
         static getTranslation(m: Matrix, out: Vector3): Vector3;
         static getQuaternion(m: Matrix, out: Quaternion): Quaternion;
@@ -184,8 +184,8 @@ declare namespace egret3d {
         static fromTranslate(x: number, y: number, z: number, out: Matrix): Matrix;
         static fromRTS(p: Vector3, s: Vector3, q: Quaternion, out: Matrix): Matrix;
         static getVector3ByOffset(src: Matrix, offset: number, result: Vector3): Vector3;
-        static transformVector3(vector: Vector3, transformation: Matrix, result: Vector3): Vector3;
-        static transformNormal(vector: Vector3, transformation: Matrix, result: Vector3): Vector3;
+        static transformVector3(vector: Vector3, transformMatrix: Matrix, result: Vector3): Vector3;
+        static transformNormal(vector: Vector3, transformMatrix: Matrix, result: Vector3): Vector3;
         static lerp(left: Matrix, right: Matrix, v: number, out: Matrix): Matrix;
         static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix): Matrix;
         static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix): Matrix;
@@ -197,7 +197,104 @@ declare namespace egret3d {
     const helpMatrixC: Matrix;
     const helpMatrixD: Matrix;
 }
+declare namespace paper.editor {
+    /**属性信息 */
+    class PropertyInfo {
+        /**属性名称 */
+        name: string;
+        /**编辑类型 */
+        editType: EditType;
+        /**属性配置 */
+        option: PropertyOption;
+        constructor(name?: string, editType?: EditType, option?: PropertyOption);
+    }
+    /**属性配置 */
+    type PropertyOption = {
+        /**赋值函数*/
+        set?: string;
+        /**下拉项*/
+        listItems?: {
+            label: string;
+            value: any;
+        }[];
+    };
+    /**编辑类型 */
+    enum EditType {
+        /**数字输入 */
+        NUMBER = 0,
+        /**文本输入 */
+        TEXT = 1,
+        /**选中框 */
+        CHECKBOX = 2,
+        /**vertor2 */
+        VECTOR2 = 3,
+        /**vertor3 */
+        VECTOR3 = 4,
+        /**vertor4 */
+        VECTOR4 = 5,
+        /**Quaternion */
+        QUATERNION = 6,
+        /**颜色选择器 */
+        COLOR = 7,
+        /**下拉 */
+        LIST = 8,
+        /**Rect */
+        RECT = 9,
+        /**材质 */
+        MATERIAL = 10,
+        /**材质数组 */
+        MATERIAL_ARRAY = 11,
+        /**游戏对象 */
+        GAMEOBJECT = 12,
+        /**变换 */
+        TRANSFROM = 13,
+        /**声音 */
+        SOUND = 14,
+        /**Mesh */
+        MESH = 15,
+        /**shader */
+        SHADER = 16,
+        /**数组 */
+        ARRAY = 17,
+    }
+    /**
+     * 装饰器:自定义
+     */
+    function custom(): (target: any) => void;
+    /**
+     * 装饰器:属性
+     * @param editType 编辑类型
+     */
+    function property(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
+    /**
+     * 检测一个实例对象是否为已被自定义
+     * @param classInstance 实例对象
+     */
+    function isCustom(classInstance: any): boolean;
+    /**
+     * 获取一个实例对象的编辑信息
+     * @param classInstance 实例对象
+     */
+    function getEditInfo(classInstance: any): PropertyInfo[];
+    /**
+     * 装饰器:属性
+     * @param editType 编辑类型
+     */
+    function extraProperty(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
+    /**
+     * 额外信息
+     * @param classInstance 实例对象
+     */
+    function getExtraInfo(classInstance: any): PropertyInfo[];
+}
 declare namespace paper {
+    const enum RendererEventType {
+        ReceiveShadows = "receiveShadows",
+        CastShadows = "castShadows",
+        LightmapIndex = "lightmapIndex",
+        LightmapScaleOffset = "lightmapScaleOffset",
+        Materials = "materials",
+    }
     /**
      * renderer component interface
      * @version paper 1.0
@@ -211,6 +308,15 @@ declare namespace paper {
      * @language zh_CN
      */
     abstract class BaseRenderer extends BaseComponent {
+        protected _receiveShadows: boolean;
+        protected _castShadows: boolean;
+        protected _lightmapIndex: number;
+        protected readonly _lightmapScaleOffset: Float32Array;
+        receiveShadows: boolean;
+        castShadows: boolean;
+        lightmapIndex: number;
+        readonly lightmapScaleOffset: Float32Array;
+        setLightmapScaleOffset(scaleX: number, scaleY: number, offsetX: number, offsetY: number): void;
     }
 }
 declare namespace paper {
@@ -357,6 +463,7 @@ declare namespace paper {
      */
     abstract class BaseSystem<T extends BaseComponent> {
         protected _enabled: boolean;
+        protected _started: boolean;
         protected _bufferedCount: number;
         /**
          * 系统对于每个实体关心的组件总数。
@@ -1192,96 +1299,6 @@ declare namespace gltf {
         extras?: any;
     }
 }
-declare namespace paper.editor {
-    /**属性信息 */
-    class PropertyInfo {
-        /**属性名称 */
-        name: string;
-        /**编辑类型 */
-        editType: EditType;
-        /**属性配置 */
-        option: PropertyOption;
-        constructor(name?: string, editType?: EditType, option?: PropertyOption);
-    }
-    /**属性配置 */
-    type PropertyOption = {
-        /**赋值函数*/
-        set?: string;
-        /**下拉项*/
-        listItems?: {
-            label: string;
-            value: any;
-        }[];
-    };
-    /**编辑类型 */
-    enum EditType {
-        /**数字输入 */
-        NUMBER = 0,
-        /**文本输入 */
-        TEXT = 1,
-        /**选中框 */
-        CHECKBOX = 2,
-        /**vertor2 */
-        VECTOR2 = 3,
-        /**vertor3 */
-        VECTOR3 = 4,
-        /**vertor4 */
-        VECTOR4 = 5,
-        /**Quaternion */
-        QUATERNION = 6,
-        /**颜色选择器 */
-        COLOR = 7,
-        /**下拉 */
-        LIST = 8,
-        /**Rect */
-        RECT = 9,
-        /**材质 */
-        MATERIAL = 10,
-        /**材质数组 */
-        MATERIAL_ARRAY = 11,
-        /**游戏对象 */
-        GAMEOBJECT = 12,
-        /**变换 */
-        TRANSFROM = 13,
-        /**声音 */
-        SOUND = 14,
-        /**Mesh */
-        MESH = 15,
-        /**shader */
-        SHADER = 16,
-        /**数组 */
-        ARRAY = 17,
-    }
-    /**
-     * 装饰器:自定义
-     */
-    function custom(): (target: any) => void;
-    /**
-     * 装饰器:属性
-     * @param editType 编辑类型
-     */
-    function property(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
-    /**
-     * 检测一个实例对象是否为已被自定义
-     * @param classInstance 实例对象
-     */
-    function isCustom(classInstance: any): boolean;
-    /**
-     * 获取一个实例对象的编辑信息
-     * @param classInstance 实例对象
-     */
-    function getEditInfo(classInstance: any): PropertyInfo[];
-    /**
-     * 装饰器:属性
-     * @param editType 编辑类型
-     */
-    function extraProperty(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
-    /**
-     * 额外信息
-     * @param classInstance 实例对象
-     */
-    function getExtraInfo(classInstance: any): PropertyInfo[];
-}
 declare namespace paper {
     /**
      * 场景管理器
@@ -1296,7 +1313,7 @@ declare namespace paper {
         /**
          * 创建一个空场景并激活
          */
-        createScene(name: string): Scene;
+        createScene(name: string, isActive?: boolean): Scene;
         /**
          * load scene 加载场景
          * @param rawScene url
@@ -1516,48 +1533,12 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
-    class WebGLCapabilities {
-        version: number;
-        precision: string;
-        maxPrecision: string;
-        maxTextures: number;
-        maxVertexTextures: number;
-        maxTextureSize: number;
-        maxCubemapSize: number;
-        maxVertexUniformVectors: number;
-        floatTextures: boolean;
-        anisotropyExt: EXT_texture_filter_anisotropic;
-        shaderTextureLOD: any;
-        maxAnisotropy: number;
-        maxRenderTextureSize: number;
-        standardDerivatives: boolean;
-        s3tc: WEBGL_compressed_texture_s3tc;
-        textureFloat: boolean;
-        textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
-        initialize(gl: WebGLRenderingContext): void;
-    }
-}
-declare namespace egret3d {
     class EventDispatcher {
         private _eventMap;
         addEventListener(type: string, listener: Function, thisObject: any): void;
         removeEventListener(type: string, listener: Function, thisObject: any): void;
         dispatchEvent(event: any): void;
         private notifyListener(event);
-    }
-}
-declare namespace egret3d {
-    /**
-     * Camera系统
-     */
-    class CameraSystem extends paper.BaseSystem<Camera> {
-        protected readonly _interests: {
-            componentClass: typeof Camera;
-            isExtends: boolean;
-        }[];
-        private _applyDrawCall(context, draw);
-        $renderCamera(camera: Camera): void;
-        onUpdate(): void;
     }
 }
 declare namespace egret3d {
@@ -1619,15 +1600,32 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    /**
+     *
+     */
     class Pool<T> {
         static readonly drawCall: Pool<DrawCall>;
         static readonly shadowCaster: Pool<DrawCall>;
         private readonly _instances;
+        clear(): void;
         add(instanceOrInstances: T | (T[])): void;
         remove(instanceOrInstances: T | (T[])): void;
         get(): T;
-        clear(): void;
         readonly instances: T[];
+    }
+}
+declare namespace egret3d {
+    /**
+     * Camera系统
+     */
+    class CameraSystem extends paper.BaseSystem<Camera> {
+        protected readonly _interests: {
+            componentClass: typeof Camera;
+            isExtends: boolean;
+        }[];
+        private _applyDrawCall(context, draw);
+        $renderCamera(camera: Camera): void;
+        onUpdate(): void;
     }
 }
 declare namespace egret3d.particle {
@@ -1812,6 +1810,28 @@ declare namespace egret3d.particle {
          */
         materials: ReadonlyArray<Material>;
         renderMode: ParticleRenderMode;
+    }
+}
+declare namespace egret3d {
+    class WebGLCapabilities {
+        version: number;
+        precision: string;
+        maxPrecision: string;
+        maxTextures: number;
+        maxVertexTextures: number;
+        maxTextureSize: number;
+        maxCubemapSize: number;
+        maxVertexUniformVectors: number;
+        floatTextures: boolean;
+        anisotropyExt: EXT_texture_filter_anisotropic;
+        shaderTextureLOD: any;
+        maxAnisotropy: number;
+        maxRenderTextureSize: number;
+        standardDerivatives: boolean;
+        s3tc: WEBGL_compressed_texture_s3tc;
+        textureFloat: boolean;
+        textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
+        initialize(gl: WebGLRenderingContext): void;
     }
 }
 declare namespace egret3d {
@@ -2201,7 +2221,7 @@ declare namespace paper {
      */
     function deserialize<T extends ISerializable>(data: ISerializedData, expandMap: {
         [k: string]: ISerializable;
-    }): T | null;
+    }, isClone?: boolean): T | null;
     /**
      *
      */
@@ -2260,41 +2280,6 @@ declare namespace paper {
          *
          */
         [key: string]: ISerializedObject[];
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    class Border implements paper.ISerializable {
-        /**
-         *
-         */
-        l: number;
-        /**
-         *
-         */
-        t: number;
-        /**
-         *
-         */
-        r: number;
-        /**
-         *
-         */
-        b: number;
-        /**
-         *
-         */
-        constructor(l?: number, t?: number, r?: number, b?: number);
-        /**
-         * @inheritDoc
-         */
-        serialize(): number[];
-        /**
-         * @inheritDoc
-         */
-        deserialize(element: number[]): void;
     }
 }
 declare namespace paper {
@@ -2788,26 +2773,6 @@ declare namespace paper {
         function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any): void;
     }
 }
-declare namespace egret3d {
-    class Angelref {
-        v: number;
-    }
-    class Matrix3x2 {
-        rawData: Float32Array;
-        constructor(datas?: Float32Array);
-        static multiply(lhs: Matrix3x2, rhs: Matrix3x2, out: Matrix3x2): Matrix3x2;
-        static fromRotate(angle: number, out: Matrix3x2): Matrix3x2;
-        static fromScale(xScale: number, yScale: number, out: Matrix3x2): Matrix3x2;
-        static fromTranslate(x: number, y: number, out: Matrix3x2): Matrix3x2;
-        static fromRTS(pos: Vector2, scale: Vector2, rot: number, out: Matrix3x2): void;
-        static transformVector2(mat: Matrix, inp: Vector2, out: Vector2): Vector2;
-        static transformNormal(mat: Matrix, inp: Vector2, out: Vector2): Vector2;
-        static inverse(src: Matrix3x2, out: Matrix3x2): Matrix3x2;
-        static identify(out: Matrix3x2): Matrix3x2;
-        static copy(src: Matrix3x2, out: Matrix3x2): Matrix3x2;
-        static decompose(src: Matrix3x2, scale: Vector2, rotation: Angelref, translation: Vector2): boolean;
-    }
-}
 declare namespace paper {
     /**
      * 可以挂载Component的实体类。
@@ -2967,26 +2932,6 @@ declare namespace egret3d {
     function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3;
     function getPointAlongCurve(curveStart: Vector3, curveStartHandle: Vector3, curveEnd: Vector3, curveEndHandle: Vector3, t: number, out: Vector3, crease?: number): void;
 }
-declare namespace egret3d {
-    /**
-     * WebGL窗口信息
-     */
-    class Stage3D {
-        screenViewport: Readonly<IRectangle>;
-        absolutePosition: Readonly<IRectangle>;
-        private _canvas;
-        /**
-         * 是否为横屏，需要旋转屏幕
-         */
-        private isLandscape;
-        private contentWidth;
-        private contentHeight;
-        private _resizeDirty;
-        update(): void;
-        private _resize();
-    }
-    const stage: Stage3D;
-}
 declare namespace paper {
     /**
      * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
@@ -3086,71 +3031,6 @@ declare namespace paper {
          * 当前场景的所有GameObject对象池
          */
         readonly gameObjects: ReadonlyArray<GameObject>;
-    }
-}
-declare namespace paper {
-    class Time {
-        static maxFixedSubSteps: number;
-        static timeScale: number;
-        static fixedTimeStep: number;
-        private static _frameCount;
-        private static _lastTimer;
-        private static _beginTimer;
-        private static _unscaledTime;
-        private static _unscaledDeltaTime;
-        static initialize(): void;
-        static update(timer?: number): void;
-        static readonly frameCount: number;
-        static readonly time: number;
-        static readonly unscaledTime: number;
-        static readonly deltaTime: number;
-        static readonly unscaledDeltaTime: number;
-        private constructor();
-    }
-}
-declare namespace egret3d.ammo {
-    /**
-     *
-     */
-    class PhysicsSystem extends paper.BaseSystem<CollisionShape | CollisionObject> {
-        private static _helpVector3A;
-        private static _helpVector3B;
-        private static _helpVector3C;
-        private static _helpVector3D;
-        private static _helpQuaternionA;
-        private static _helpTransformA;
-        private static _helpTransformB;
-        private static readonly _raycastInfoPool;
-        protected readonly _interests: ({
-            componentClass: (typeof BoxShape | typeof CapsuleShape | typeof ConeShape | typeof ConvexHullShape | typeof CylinderShape | typeof HeightfieldTerrainShape | typeof SphereShape)[];
-        } | {
-            componentClass: typeof CollisionObject[];
-        })[];
-        private _worldType;
-        private _collisionType;
-        private _broadphaseType;
-        private readonly _axis3SweepBroadphaseMin;
-        private readonly _axis3SweepBroadphaseMax;
-        private readonly _gravity;
-        private _btCollisionWorld;
-        private _btDynamicsWorld;
-        private readonly _startGameObjects;
-        private readonly _constraints;
-        protected _onAddComponent(component: CollisionShape | CollisionObject): boolean;
-        protected _onRemoveComponent(component: CollisionShape | CollisionObject): boolean;
-        protected _updateGravity(): void;
-        initialize(): void;
-        onUpdate(): void;
-        /**
-         *
-         */
-        rayTest(from: Readonly<Vector3>, to: Readonly<Vector3>, group?: Ammo.CollisionFilterGroups, mask?: Ammo.CollisionFilterGroups): RaycastInfo;
-        /**
-         *
-         */
-        gravity: Readonly<Vector3>;
-        readonly btCollisionWorld: Ammo.btCollisionWorld;
-        readonly btDynamicsWorld: Ammo.btDynamicsWorld;
     }
 }
 declare namespace egret3d {
@@ -3267,34 +3147,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * audio asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 声音资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Sound extends paper.Asset {
-        /**
-         *
-         */
-        buffer: AudioBuffer;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-    }
-}
-declare namespace egret3d {
-    /**
      * textrue asset
      * @version paper 1.0
      * @platform Web
@@ -3335,19 +3187,296 @@ declare namespace egret3d {
         realName: string;
     }
 }
-declare namespace paper {
+declare namespace egret3d {
     /**
-     *
+     * @private
      */
-    class MissingObject implements ISerializable {
+    interface GLTFAnimation extends gltf.Animation {
+        extensions: {
+            paper: {
+                /**
+                 * 动画帧率。
+                 */
+                frameRate: number;
+                /**
+                 * 动画帧数。
+                 */
+                frameCount: number;
+                /**
+                 * 整个帧数据访问器索引。
+                 */
+                data: number;
+                /**
+                 * 采样帧访问器索引列表。
+                 */
+                frames: number[];
+                /**
+                 * 骨骼名称列表。
+                 */
+                joints: string[];
+                /**
+                 * 动画重定向。
+                 */
+                retarget?: {
+                    joints: string[];
+                };
+                /**
+                 * 动画剪辑列表。
+                 */
+                clips: GLTFAnimationClip[];
+            };
+        };
+    }
+    /**
+     * 动画剪辑反序列化。
+     */
+    interface GLTFAnimationClip {
+        /**
+         * 动画剪辑名称。
+         */
+        name: string;
+        /**
+         * 播放次数。
+         */
+        playTimes?: number;
+        /**
+         * 开始时间。（以秒为单位）
+         */
+        position: number;
+        /**
+         * 持续时间。（以秒为单位）
+         */
+        duration: number;
+        /**
+         * 遮罩名称列表。
+         */
+        mask: number[];
+        /**
+         * 事件列表。
+         */
+        events: GLTFFrameEvent[];
+    }
+    interface GLTFAnimationChannel extends gltf.AnimationChannel {
+        extensions?: {
+            paper: {
+                type: string;
+                property: string;
+            };
+        };
+    }
+    /**
+     * 帧事件反序列化。
+     */
+    interface GLTFFrameEvent {
+        /**
+         * 事件名称。
+         */
+        name: string;
+        /**
+         * 事件位置。（%）
+         */
+        position: number;
+        /**
+         * 事件 int 变量。
+         */
+        intVariable: number;
+        /**
+         * 事件 float 变量。
+         */
+        floatVariable: number;
+        /**
+         * 事件 string 变量。
+         */
+        stringVariable: string;
+    }
+    /**
+     * glTF 资源。
+     */
+    class GLTFAsset extends paper.Asset {
         /**
          *
          */
-        readonly missingData: {
-            [key: string]: any;
+        static getComponentTypeCount(type: gltf.ComponentType): number;
+        /**
+         *
+         */
+        static getAccessorTypeCount(type: gltf.AccessorType): number;
+        /**
+         * 自定义 Mesh 的属性枚举。
+         */
+        static getMeshAttributeType(type: gltf.MeshAttribute): gltf.AccessorType;
+        /**
+         *
+         */
+        static createGLTFAsset(): GLTFAsset;
+        /**
+         * Buffer 列表。
+         */
+        readonly buffers: (Float32Array | Uint32Array | Uint16Array)[];
+        /**
+         * 配置。
+         */
+        config: gltf.GLTF;
+        /**
+         * 从二进制数据中解析资源。
+         */
+        parseFromBinary(array: Uint32Array): void;
+        /**
+         * 根据指定 BufferView 创建二进制数组。
+         */
+        createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): Uint8Array;
+        /**
+         * 根据指定 Accessor 创建二进制数组。
+         */
+        createTypeArrayFromAccessor(accessor: gltf.Accessor): Uint8Array;
+        /**
+         * 通过 Accessor 获取指定 BufferLength。
+         */
+        getBufferLength(accessor: gltf.Accessor): number;
+        /**
+         * 通过 Accessor 获取指定 BufferOffset。
+         */
+        getBufferOffset(accessor: gltf.Accessor): number;
+        /**
+         * 通过 Accessor 获取指定 Buffer。
+         */
+        getBuffer(accessor: gltf.Accessor): Float32Array | Uint16Array | Uint32Array;
+        /**
+         * 通过 Accessor 获取指定 BufferView。
+         */
+        getBufferView(accessor: gltf.Accessor): gltf.BufferView;
+        /**
+         * 通过 Accessor 索引，获取指定 Accessor。
+         */
+        getAccessor(index: gltf.GLTFIndex): gltf.Accessor;
+        /**
+         * 获取节点。
+         */
+        getNode(index: gltf.GLTFIndex): gltf.Node;
+        getAnimationClip(name: string): any;
+        caclByteLength(): number;
+        dispose(): void;
+    }
+}
+declare namespace egret3d {
+    const enum MeshDrawMode {
+        Static = 1,
+        Dynamic = 2,
+        Stream = 3,
+    }
+    /**
+     * Mesh.
+     * @version egret3D 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 网格模型。
+     * @version egret3D 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    class Mesh extends paper.SerializableObject {
+        protected _drawMode: MeshDrawMode;
+        protected _glTFMeshIndex: number;
+        protected _glTFAsset: GLTFAsset;
+        protected _glTFMesh: gltf.Mesh;
+        protected _vertexBuffer: Float32Array;
+        /**
+         * 暂时实现在这里，应实现到 gltf material。
+         */
+        protected _attributeType: {
+            [key: string]: gltf.AccessorType;
         };
-        serialize(): any | IUUID | ISerializedObject;
+        /**
+         * 暂时实现在这里，应该下放到 web，并将此方法抽象。
+         */
+        readonly ibos: (WebGLBuffer | null)[];
+        vbo: WebGLBuffer;
+        protected _getDrawMode(mode: MeshDrawMode): number;
+        protected _cacheVertexCount(): void;
+        protected _cacheMeshAttributeType(attributeNames: gltf.MeshAttribute[], attributeTypes: gltf.AccessorType[]): void;
+        protected _getMeshAttributeType(attributeName: string): gltf.AccessorType;
+        constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, firstIndexCount: number, attributeNames: gltf.MeshAttribute[], attributeType: gltf.AccessorType[], drawMode?: MeshDrawMode);
+        constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, firstIndexCount: number, attributeNames: gltf.MeshAttribute[], drawMode?: MeshDrawMode);
+        constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, attributeNames: gltf.MeshAttribute[], drawMode?: MeshDrawMode);
+        constructor(gltfAsset: GLTFAsset, gltfMeshIndex: number, drawMode?: MeshDrawMode);
+        private _getVertexCountFromBuffer(vertexBuffer, attributeNames);
+        serialize(): any;
         deserialize(element: any): void;
+        /**
+         * @inheritDoc
+         */
+        dispose(): void;
+        /**
+         * @inheritDoc
+         */
+        caclByteLength(): number;
+        /**
+         *
+         */
+        initialize(drawMode?: MeshDrawMode): void;
+        getVertexCount(subMeshIndex?: number): number;
+        getVertices(subMeshIndex?: number): Float32Array;
+        getUVs(subMeshIndex?: number): Float32Array;
+        getColors(subMeshIndex?: number): Float32Array;
+        getNormals(subMeshIndex?: number): Float32Array;
+        getTangents(subMeshIndex?: number): Float32Array;
+        getAttributes(attributeType: gltf.MeshAttribute, subMeshIndex?: number): Uint8Array;
+        getIndices(subMeshIndex?: number): Uint16Array;
+        getAttribute<T extends (Vector4 | Vector3 | Vector2)>(vertexIndex: number, attributeType: gltf.MeshAttribute, subMeshIndex?: number, result?: T): T;
+        uploadVertexSubData(uploadAttributes: gltf.MeshAttribute[], startVertexIndex: number, vertexCount: number, subMeshIndex?: number): void;
+        /**
+         * 暂时实现在这里，应该下放到 web，并将此方法抽象。
+         */
+        uploadSubVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]), subMeshIndex?: number): void;
+        /**
+         * 暂时实现在这里，应该下放到 web，并将此方法抽象。
+         */
+        uploadSubIndexBuffer(subMeshIndex?: number): void;
+        /**
+         * 检测射线碰撞
+         * @param ray 射线
+         * @param matrix 所在transform的矩阵
+         *
+         */
+        intersects(ray: Ray, matrix: Matrix): PickInfo;
+        /**
+         * 获取子网格数量。
+         */
+        readonly subMeshCount: number;
+        /**
+         * 获取 mesh 数据所属的 glTF 资源。
+         */
+        readonly glTFAsset: GLTFAsset;
+        /**
+         * 获取 glTFMesh 数据。
+         */
+        readonly glTFMesh: gltf.Mesh;
+        /**
+         * @deprecated
+         */
+        setAttribute(vertexIndex: number, attributeType: gltf.MeshAttribute, subMeshIndex: number, ...args: number[]): void;
+    }
+}
+declare namespace paper {
+    class Time {
+        static maxFixedSubSteps: number;
+        static timeScale: number;
+        static fixedTimeStep: number;
+        private static _frameCount;
+        private static _lastTimer;
+        private static _beginTimer;
+        private static _unscaledTime;
+        private static _unscaledDeltaTime;
+        static initialize(): void;
+        static update(timer?: number): void;
+        static readonly frameCount: number;
+        static readonly time: number;
+        static readonly unscaledTime: number;
+        static readonly deltaTime: number;
+        static readonly unscaledDeltaTime: number;
+        private constructor();
     }
 }
 declare namespace egret3d {
@@ -3360,9 +3489,9 @@ declare namespace egret3d {
         mesh: Mesh;
         material: Material;
         lightMapIndex: number;
-        lightMapScaleOffset?: Readonly<Vector4>;
+        lightMapScaleOffset?: Float32Array;
         boneData: Float32Array | null;
-        gameObject: paper.GameObject;
+        renderer: paper.BaseRenderer;
         transform: Transform;
         frustumTest: boolean;
         zdist: number;
@@ -3775,6 +3904,51 @@ declare namespace egret3d {
         parent: Transform | null;
     }
     type ImmutableVector4 = Readonly<Float32Array>;
+}
+declare namespace egret3d.ammo {
+    /**
+     *
+     */
+    class PhysicsSystem extends paper.BaseSystem<CollisionShape | CollisionObject> {
+        private static _helpVector3A;
+        private static _helpVector3B;
+        private static _helpVector3C;
+        private static _helpVector3D;
+        private static _helpQuaternionA;
+        private static _helpTransformA;
+        private static _helpTransformB;
+        private static readonly _raycastInfoPool;
+        protected readonly _interests: ({
+            componentClass: (typeof BoxShape | typeof CapsuleShape | typeof ConeShape | typeof ConvexHullShape | typeof CylinderShape | typeof HeightfieldTerrainShape | typeof SphereShape)[];
+        } | {
+            componentClass: typeof CollisionObject[];
+        })[];
+        private _worldType;
+        private _collisionType;
+        private _broadphaseType;
+        private readonly _axis3SweepBroadphaseMin;
+        private readonly _axis3SweepBroadphaseMax;
+        private readonly _gravity;
+        private _btCollisionWorld;
+        private _btDynamicsWorld;
+        private readonly _startGameObjects;
+        private readonly _constraints;
+        protected _onAddComponent(component: CollisionShape | CollisionObject): boolean;
+        protected _onRemoveComponent(component: CollisionShape | CollisionObject): boolean;
+        protected _updateGravity(): void;
+        initialize(): void;
+        onUpdate(): void;
+        /**
+         *
+         */
+        rayTest(from: Readonly<Vector3>, to: Readonly<Vector3>, group?: Ammo.CollisionFilterGroups, mask?: Ammo.CollisionFilterGroups): RaycastInfo;
+        /**
+         *
+         */
+        gravity: Readonly<Vector3>;
+        readonly btCollisionWorld: Ammo.btCollisionWorld;
+        readonly btDynamicsWorld: Ammo.btDynamicsWorld;
+    }
 }
 declare namespace egret3d {
     /**
@@ -4194,8 +4368,8 @@ declare namespace egret3d {
         /**
          *
          */
-        readonly lightmapOffset: Float32Array;
-        updateLightmap(texture: Texture, uv: number, offset: Vector4): void;
+        lightmapOffset: Float32Array | null;
+        updateLightmap(texture: Texture, uv: number, offset: Float32Array): void;
         updateCamera(camera: Camera): void;
         updateLights(lights: ReadonlyArray<Light>): void;
         updateOverlay(): void;
@@ -4846,21 +5020,10 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    const enum MeshRendererEventType {
-        ReceiveShadows = "receiveShadows",
-        CastShadows = "castShadows",
-        LightmapIndex = "lightmapIndex",
-        LightmapScaleOffset = "lightmapScaleOffset",
-        Materials = "materials",
-    }
     /**
      * mesh的渲染组件
      */
     class MeshRenderer extends paper.BaseRenderer {
-        private _receiveShadows;
-        private _castShadows;
-        private _lightmapIndex;
-        private readonly _lightmapScaleOffset;
         private readonly _materials;
         /**
          *
@@ -4878,10 +5041,6 @@ declare namespace egret3d {
          * @inheritDoc
          */
         uninitialize(): void;
-        receiveShadows: boolean;
-        castShadows: boolean;
-        lightmapIndex: number;
-        lightmapScaleOffset: Readonly<Vector4>;
         /**
          * material list
          * @version paper 1.0
@@ -4905,7 +5064,7 @@ declare namespace egret3d {
         protected readonly _interests: ({
             componentClass: typeof MeshRenderer;
             listeners: {
-                type: MeshRendererEventType;
+                type: paper.RendererEventType;
                 listener: (component: MeshRenderer) => void;
             }[];
         } | {
@@ -5180,12 +5339,27 @@ declare namespace egret3d {
         private _updateTrailData();
     }
 }
-declare namespace paper {
-    const serializeClassMap: {
-        [key: string]: string;
-    };
-    function findClassCode(name: string): string;
-    function findClassCodeFrom(target: any): string;
+declare namespace egret3d {
+    /**
+     * TrailRender系统
+     */
+    class TrailRendererSystem extends paper.BaseSystem<TrailRenderer> {
+        readonly _interests: {
+            componentClass: typeof TrailRenderer;
+            listeners: {
+                type: TrailRenderEventType;
+                listener: (component: TrailRenderer) => void;
+            }[];
+        }[];
+        private readonly _transform;
+        private readonly _createDrawCalls;
+        private readonly _drawCallList;
+        onEnable(): void;
+        onAddGameObject(gameObject: paper.GameObject): void;
+        onRemoveGameObject(gameObject: paper.GameObject): void;
+        onUpdate(): void;
+        onDisable(): void;
+    }
 }
 declare namespace egret3d {
     /**
@@ -5209,277 +5383,12 @@ declare namespace egret3d {
         onDisable(): void;
     }
 }
-declare namespace egret3d {
-    /**
-     * @private
-     */
-    interface GLTFAnimation extends gltf.Animation {
-        extensions: {
-            paper: {
-                /**
-                 * 动画帧率。
-                 */
-                frameRate: number;
-                /**
-                 * 动画帧数。
-                 */
-                frameCount: number;
-                /**
-                 * 整个帧数据访问器索引。
-                 */
-                data: number;
-                /**
-                 * 采样帧访问器索引列表。
-                 */
-                frames: number[];
-                /**
-                 * 骨骼名称列表。
-                 */
-                joints: string[];
-                /**
-                 * 动画重定向。
-                 */
-                retarget?: {
-                    joints: string[];
-                };
-                /**
-                 * 动画剪辑列表。
-                 */
-                clips: GLTFAnimationClip[];
-            };
-        };
-    }
-    /**
-     * 动画剪辑反序列化。
-     */
-    interface GLTFAnimationClip {
-        /**
-         * 动画剪辑名称。
-         */
-        name: string;
-        /**
-         * 播放次数。
-         */
-        playTimes?: number;
-        /**
-         * 开始时间。（以秒为单位）
-         */
-        position: number;
-        /**
-         * 持续时间。（以秒为单位）
-         */
-        duration: number;
-        /**
-         * 遮罩名称列表。
-         */
-        mask: number[];
-        /**
-         * 事件列表。
-         */
-        events: GLTFFrameEvent[];
-    }
-    interface GLTFAnimationChannel extends gltf.AnimationChannel {
-        extensions?: {
-            paper: {
-                type: string;
-                property: string;
-            };
-        };
-    }
-    /**
-     * 帧事件反序列化。
-     */
-    interface GLTFFrameEvent {
-        /**
-         * 事件名称。
-         */
-        name: string;
-        /**
-         * 事件位置。（%）
-         */
-        position: number;
-        /**
-         * 事件 int 变量。
-         */
-        intVariable: number;
-        /**
-         * 事件 float 变量。
-         */
-        floatVariable: number;
-        /**
-         * 事件 string 变量。
-         */
-        stringVariable: string;
-    }
-    /**
-     * glTF 资源。
-     */
-    class GLTFAsset extends paper.Asset {
-        /**
-         *
-         */
-        static getComponentTypeCount(type: gltf.ComponentType): number;
-        /**
-         *
-         */
-        static getAccessorTypeCount(type: gltf.AccessorType): number;
-        /**
-         * 自定义 Mesh 的属性枚举。
-         */
-        static getMeshAttributeType(type: gltf.MeshAttribute): gltf.AccessorType;
-        /**
-         *
-         */
-        static createGLTFAsset(): GLTFAsset;
-        /**
-         * Buffer 列表。
-         */
-        readonly buffers: (Float32Array | Uint32Array | Uint16Array)[];
-        /**
-         * 配置。
-         */
-        config: gltf.GLTF;
-        /**
-         * 从二进制数据中解析资源。
-         */
-        parseFromBinary(array: Uint32Array): void;
-        /**
-         * 根据指定 BufferView 创建二进制数组。
-         */
-        createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): Uint8Array;
-        /**
-         * 根据指定 Accessor 创建二进制数组。
-         */
-        createTypeArrayFromAccessor(accessor: gltf.Accessor): Uint8Array;
-        /**
-         * 通过 Accessor 获取指定 BufferLength。
-         */
-        getBufferLength(accessor: gltf.Accessor): number;
-        /**
-         * 通过 Accessor 获取指定 BufferOffset。
-         */
-        getBufferOffset(accessor: gltf.Accessor): number;
-        /**
-         * 通过 Accessor 获取指定 Buffer。
-         */
-        getBuffer(accessor: gltf.Accessor): Float32Array | Uint16Array | Uint32Array;
-        /**
-         * 通过 Accessor 获取指定 BufferView。
-         */
-        getBufferView(accessor: gltf.Accessor): gltf.BufferView;
-        /**
-         * 通过 Accessor 索引，获取指定 Accessor。
-         */
-        getAccessor(index: gltf.GLTFIndex): gltf.Accessor;
-        /**
-         * 获取节点。
-         */
-        getNode(index: gltf.GLTFIndex): gltf.Node;
-        getAnimationClip(name: string): any;
-        caclByteLength(): number;
-        dispose(): void;
-    }
-}
-declare namespace egret3d {
-    const enum MeshDrawMode {
-        Static = 1,
-        Dynamic = 2,
-        Stream = 3,
-    }
-    /**
-     * Mesh.
-     * @version egret3D 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 网格模型。
-     * @version egret3D 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Mesh extends paper.SerializableObject {
-        protected _drawMode: MeshDrawMode;
-        protected _glTFMeshIndex: number;
-        protected _glTFAsset: GLTFAsset;
-        protected _glTFMesh: gltf.Mesh;
-        protected _vertexBuffer: Float32Array;
-        /**
-         * 暂时实现在这里，应实现到 gltf material。
-         */
-        protected _attributeType: {
-            [key: string]: gltf.AccessorType;
-        };
-        /**
-         * 暂时实现在这里，应该下放到 web，并将此方法抽象。
-         */
-        readonly ibos: (WebGLBuffer | null)[];
-        vbo: WebGLBuffer;
-        protected _getDrawMode(mode: MeshDrawMode): number;
-        protected _cacheVertexCount(): void;
-        protected _cacheMeshAttributeType(attributeNames: gltf.MeshAttribute[], attributeTypes: gltf.AccessorType[]): void;
-        protected _getMeshAttributeType(attributeName: string): gltf.AccessorType;
-        constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, firstIndexCount: number, attributeNames: gltf.MeshAttribute[], attributeType: gltf.AccessorType[], drawMode?: MeshDrawMode);
-        constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, firstIndexCount: number, attributeNames: gltf.MeshAttribute[], drawMode?: MeshDrawMode);
-        constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, attributeNames: gltf.MeshAttribute[], drawMode?: MeshDrawMode);
-        constructor(gltfAsset: GLTFAsset, gltfMeshIndex: number, drawMode?: MeshDrawMode);
-        private _getVertexCountFromBuffer(vertexBuffer, attributeNames);
-        serialize(): any;
-        deserialize(element: any): void;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-        /**
-         *
-         */
-        initialize(drawMode?: MeshDrawMode): void;
-        getVertexCount(subMeshIndex?: number): number;
-        getVertices(subMeshIndex?: number): Float32Array;
-        getUVs(subMeshIndex?: number): Float32Array;
-        getColors(subMeshIndex?: number): Float32Array;
-        getNormals(subMeshIndex?: number): Float32Array;
-        getTangents(subMeshIndex?: number): Float32Array;
-        getAttributes(attributeType: gltf.MeshAttribute, subMeshIndex?: number): Uint8Array;
-        getIndices(subMeshIndex?: number): Uint16Array;
-        getAttribute<T extends (Vector4 | Vector3 | Vector2)>(vertexIndex: number, attributeType: gltf.MeshAttribute, subMeshIndex?: number, result?: T): T;
-        uploadVertexSubData(uploadAttributes: gltf.MeshAttribute[], startVertexIndex: number, vertexCount: number, subMeshIndex?: number): void;
-        /**
-         * 暂时实现在这里，应该下放到 web，并将此方法抽象。
-         */
-        uploadSubVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]), subMeshIndex?: number): void;
-        /**
-         * 暂时实现在这里，应该下放到 web，并将此方法抽象。
-         */
-        uploadSubIndexBuffer(subMeshIndex?: number): void;
-        /**
-         * 检测射线碰撞
-         * @param ray 射线
-         * @param matrix 所在transform的矩阵
-         *
-         */
-        intersects(ray: Ray, matrix: Matrix): PickInfo;
-        /**
-         * 获取子网格数量。
-         */
-        readonly subMeshCount: number;
-        /**
-         * 获取 mesh 数据所属的 glTF 资源。
-         */
-        readonly glTFAsset: GLTFAsset;
-        /**
-         * 获取 glTFMesh 数据。
-         */
-        readonly glTFMesh: gltf.Mesh;
-        /**
-         * @deprecated
-         */
-        setAttribute(vertexIndex: number, attributeType: gltf.MeshAttribute, subMeshIndex: number, ...args: number[]): void;
-    }
+declare namespace paper {
+    const serializeClassMap: {
+        [key: string]: string;
+    };
+    function findClassCode(name: string): string;
+    function findClassCodeFrom(target: any): string;
 }
 declare namespace egret3d {
     /**
@@ -5950,9 +5859,13 @@ declare namespace egret3d.particle {
 }
 declare namespace paper {
     /**
-     * 克隆
+     *
      */
-    function clone<T extends SerializableObject>(object: T): T;
+    class MissingObject implements ISerializable {
+        [k: string]: any;
+        serialize(): any | IUUID | ISerializedObject;
+        deserialize(element: any): void;
+    }
 }
 declare namespace egret3d.particle {
     class ParticleSystem extends paper.BaseSystem<ParticleComponent | ParticleRenderer> {
@@ -6054,6 +5967,32 @@ declare namespace egret3d {
         value: any;
         constructor(gl: WebGLRenderingContext, program: WebGLProgram, uniformData: WebGLActiveInfo);
     }
+}
+declare namespace egret3d {
+    /**
+     * WebGL窗口信息
+     */
+    class Stage3D {
+        screenViewport: Readonly<IRectangle>;
+        absolutePosition: Readonly<IRectangle>;
+        private _canvas;
+        /**
+         * 是否为横屏，需要旋转屏幕
+         */
+        private isLandscape;
+        private contentWidth;
+        private contentHeight;
+        private _resizeDirty;
+        update(): void;
+        private _resize();
+    }
+    const stage: Stage3D;
+}
+declare namespace paper {
+    /**
+     * 克隆
+     */
+    function clone<T extends SerializableObject>(object: T): T;
 }
 declare type int = number;
 declare type uint = number;
@@ -8641,27 +8580,5 @@ declare namespace egret3d.ammo {
         readonly normal: Vector3;
         transform: Transform | null;
         collisionObject: CollisionObject | null;
-    }
-}
-declare namespace egret3d {
-    /**
-     * TrailRender系统
-     */
-    class TrailRendererSystem extends paper.BaseSystem<TrailRenderer> {
-        readonly _interests: {
-            componentClass: typeof TrailRenderer;
-            listeners: {
-                type: TrailRenderEventType;
-                listener: (component: TrailRenderer) => void;
-            }[];
-        }[];
-        private readonly _transform;
-        private readonly _createDrawCalls;
-        private readonly _drawCallList;
-        onEnable(): void;
-        onAddGameObject(gameObject: paper.GameObject): void;
-        onRemoveGameObject(gameObject: paper.GameObject): void;
-        onUpdate(): void;
-        onDisable(): void;
     }
 }
