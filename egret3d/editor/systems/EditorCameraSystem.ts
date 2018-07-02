@@ -6,7 +6,7 @@ namespace paper.editor {
         /**
          * @inheritDoc
          */
-        public update() {
+        public onUpdate() {
             this._components.sort((a, b) => {
                 return a.order - b.order;
             });

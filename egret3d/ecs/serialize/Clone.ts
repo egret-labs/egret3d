@@ -2,7 +2,7 @@ namespace paper {
     /**
      * 克隆
      */
-    export function clone<T extends paper.SerializableObject>(object: T): T {
+    export function clone<T extends SerializableObject>(object: T): T {
 
         let cacheParent: any = null;
 
@@ -17,7 +17,7 @@ namespace paper {
             (object as any)._parent = null; // TODO
         }
 
-        const data = paper.serialize(object);
+        const data = serialize(object);
 
         if (object instanceof GameObject) {
             (object.transform as any)._parent = cacheParent; // TODO
@@ -33,6 +33,6 @@ namespace paper {
             }
         }
 
-        return paper.deserialize<T>(data, assets);
+        return deserialize<T>(data, assets);
     }
 }

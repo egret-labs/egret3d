@@ -2,7 +2,7 @@ namespace paper {
     /**
      * 
      */
-    export class EndSystem extends paper.BaseSystem<Behaviour> {
+    export class EndSystem extends BaseSystem<Behaviour> {
         protected readonly _interests = [{ componentClass: Behaviour as any, isExtends: true }];
 
         protected _onAddComponent(component: Behaviour) {
@@ -10,50 +10,44 @@ namespace paper {
             if (index >= 0) {
                 this._components[index] = null as any;
 
-                return true;
+                return;
             }
 
             const gameObject = component.gameObject;
             console.debug("EndSystem remove behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
-
-            return false;
         }
 
         protected _onRemoveComponent(component: Behaviour) {
             if (this._components.indexOf(component) < 0) {
                 this._components.push(component);
 
-                return true;
+                return;
             }
 
             const gameObject = component.gameObject;
             console.debug("EndSystem add behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
-
-            return false;
         }
 
-        public update() {
-            if (paper.Application.isEditor && !paper.Application.isPlaying) {
+        public onUpdate() {
+            if (this._isEditorUpdate()) {
                 if (this._components.length > 0) {
                     for (const component of this._components) {
                         if (component && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
-                            component.onDisable();
+                            component.onDisable && component.onDisable();
                         }
                     }
 
                     this._components.length = 0;
                 }
             }
-            else {
-                if (this._components.length > 0) {
-                    for (const component of this._components) {
-                        if (component) {
-                            component.onDisable();
-                        }
+            else if (this._components.length > 0) {
+                for (const component of this._components) {
+                    if (component) {
+                        component.onDisable && component.onDisable();
                     }
-
-                    this._components.length = 0;
                 }
+
+                this._components.length = 0;
             }
         }
     }

@@ -182,7 +182,7 @@ namespace egret3d.ammo {
             }
         }
 
-        public update() {
+        public onUpdate() {
             if (this._startGameObjects.length > 0) {
                 for (const gameObject of this._startGameObjects) {
                     const collisionObject = this._getComponent(gameObject, 1) as CollisionObject;

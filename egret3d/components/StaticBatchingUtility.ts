@@ -12,18 +12,15 @@ namespace egret3d {
     /**
      * 尝试对场景内所有静态对象合并
      */
-    export function autoCombine(): void {    
-        const curScene = paper.Application.sceneManager.getActiveScene();
-        const allObjects = curScene.gameObjects;
-        //
-        combine(allObjects);
+    export function autoCombine(scene: paper.Scene): void {
+        combine(scene.gameObjects);
     }
     /**
      * 尝试合并静态对象列表。
      * @param instances 
      * @param root 
      */
-    export function combine(instances: Readonly<paper.GameObject[]>): void {
+    export function combine(instances: ReadonlyArray<paper.GameObject>): void {
         cacheInstances.length = 0;
         beforeCombineCount = 0;
         const allCombines: { [key: string]: CombineInstance[] } = {};

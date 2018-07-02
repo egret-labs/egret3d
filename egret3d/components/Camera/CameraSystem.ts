@@ -1,14 +1,10 @@
 namespace egret3d {
-
     /**
      * Camera系统
      */
     export class CameraSystem extends paper.BaseSystem<Camera> {
-        /**
-         * @inheritDoc
-         */
         protected readonly _interests = [
-            { componentClass: Camera }
+            { componentClass: Camera, isExtends: true }
         ];
 
         private _applyDrawCall(context: RenderContext, draw: DrawCall): void {
@@ -71,11 +67,9 @@ namespace egret3d {
                 }
             }
         }
-        /**
-         * @inheritDoc
-         */
-        public update() {
-            this._components.sort((a, b) => {
+
+        public onUpdate() {
+            this._components.sort((a, b) => { // TODO 不应每次产生函数实例。
                 return a.order - b.order;
             });
 
@@ -94,7 +88,6 @@ namespace egret3d {
 
             if (this._components.length > 0) {
                 for (const component of this._components) {
-
                     if (component.postQueues.length === 0) {
                         component.context.drawtype = "";
                         component._targetAndViewport(component.renderTarget, false);

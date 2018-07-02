@@ -44,23 +44,9 @@ namespace paper {
          * 
          * 资源的原始URL
          */
-        @paper.serializedField
+        @serializedField
         @deserializedIgnore
         public url: string = "";
-
-        /**
-         * get asset name
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 名称。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public name: string = "";
 
         /**
          * @internal
@@ -69,10 +55,8 @@ namespace paper {
         /**
          * 
          */
-        public constructor(name: string = "", url: string = "") {
+        constructor(url: string = "") {
             super();
-
-            this.name = name;
             this.url = url;
         }
         /**
