@@ -8,9 +8,9 @@ namespace egret3d {
         mesh: Mesh,
         material: Material,
         lightMapIndex: number,
-        lightMapScaleOffset?: Readonly<Vector4>,
+        lightMapScaleOffset?: Float32Array,
         boneData: Float32Array | null,
-        gameObject: paper.GameObject,
+        renderer: paper.BaseRenderer,
         transform: Transform,
         frustumTest: boolean,
         zdist: number

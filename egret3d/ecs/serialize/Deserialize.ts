@@ -1,11 +1,13 @@
 namespace paper {
+    let _isClone: boolean = false;
     let _deserializedObjects: { [key: string]: ISerializable };
     /**
      * 反序列化
      * @param data 反序列化数据
      * @param expandMap 扩展的对象映射，此映射中存在的对象不需要重新序列化，直接使用即可（例如已经加载完成的资源文件）。
      */
-    export function deserialize<T extends ISerializable>(data: ISerializedData, expandMap: { [k: string]: ISerializable }): T | null {
+    export function deserialize<T extends ISerializable>(data: ISerializedData, expandMap: { [k: string]: ISerializable }, isClone: boolean = false): T | null {
+        _isClone = isClone;
         _deserializedObjects = {};
         for (const k in expandMap) {
             _deserializedObjects[k] = expandMap[k];
@@ -14,11 +16,11 @@ namespace paper {
         let root: ISerializable | null = null;
 
         for (const source of data.objects) { // 实例化。
-            const uuid = source.uuid || source.hashCode; // hashCode 兼容。
+            const k = source.hashCode || source.uuid; // hashCode 兼容。
             let target: ISerializable;
 
-            if (uuid in _deserializedObjects) {
-                target = _deserializedObjects[uuid];
+            if (k in _deserializedObjects) {
+                target = _deserializedObjects[k];
             }
             else {
                 const className = serializeClassMap[source.class] || source.class;
@@ -26,11 +28,11 @@ namespace paper {
 
                 if (clazz) {
                     target = new clazz();
-                    _deserializedObjects[uuid] = target;
+                    _deserializedObjects[k] = target;
                 }
                 else {
                     target = new MissingObject();
-                    _deserializedObjects[uuid] = target;
+                    _deserializedObjects[k] = target;
                     console.error(`Class ${source.class} not defined.`);
                 }
             }
@@ -39,12 +41,12 @@ namespace paper {
         }
 
         for (const source of data.objects) { // 属性赋值。
-            const uuid = source.uuid || source.hashCode; // hashCode 兼容。
-            if (uuid in expandMap) { // 跳过外部插入对象。
+            const k = source.hashCode || source.uuid; // hashCode 兼容。
+            if (k in expandMap) { // 跳过外部插入对象。
                 continue;
             }
 
-            const target = _deserializedObjects[uuid];
+            const target = _deserializedObjects[k];
             _deserializeObject(source, target);
 
             if (target instanceof GameObject) {
@@ -55,8 +57,8 @@ namespace paper {
         }
 
         for (const source of data.objects) { // 组件初始化。 TODO
-            const uuid = source.uuid || source.hashCode; // hashCode 兼容。
-            const target = _deserializedObjects[uuid];
+            const k = source.hashCode || source.uuid; // hashCode 兼容。
+            const target = _deserializedObjects[k];
             if (target instanceof BaseComponent) {
                 target.initialize();
                 if (target.isActiveAndEnabled) {
@@ -73,7 +75,8 @@ namespace paper {
      * 
      */
     export function getDeserializedObject<T extends ISerializable>(source: ISerializedObject): T {
-        return _deserializedObjects[source.uuid || source.hashCode] as T; // hashCode 兼容。
+        const k = source.hashCode || source.uuid; // hashCode 兼容。
+        return _deserializedObjects[k] as T;
     }
 
     function _deserializeObject(source: any, target: ISerializable) {
@@ -82,7 +85,11 @@ namespace paper {
         }
         else {
             for (const k in source) {
-                if (k === "uuid" || k === "hashCode" || k === "class") { // TODO 字符串依赖。
+                if (k === "hashCode" || k === "class") { // TODO 字符串依赖。
+                    continue;
+                }
+
+                if (_isClone && k === "uuid") { // TODO 字符串依赖。
                     continue;
                 }
 
@@ -123,7 +130,7 @@ namespace paper {
                     return target;
                 }
 
-                const uuid = (source.uuid || source.hashCode) as string; // TODO 字符串依赖， hashCode 兼容。
+                const uuid = (source.hashCode || source.uuid) as string; // TODO 字符串依赖， hashCode 兼容。
                 let classCodeOrName = source.class as string; // TODO 字符串依赖。
 
                 if (uuid) {
@@ -141,7 +148,7 @@ namespace paper {
                                 }
                             }
                         }
-                        else {
+                        else { // Component
                             for (const gameObject of Application.sceneManager.activeScene.gameObjects) {
                                 for (const component of gameObject.components) {
                                     if (component.uuid === uuid) {

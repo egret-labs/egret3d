@@ -18,17 +18,19 @@ namespace egret3d {
             }
 
             if (draw.lightMapIndex >= 0) {
-                if (draw.gameObject.scene.lightmaps.length > draw.lightMapIndex) { // TODO scene 不应从 gameObject 获取。
+                const activeScene = paper.Application.sceneManager.activeScene;
+
+                if (activeScene.lightmaps.length > draw.lightMapIndex) {
                     context.updateLightmap(
-                        draw.gameObject.scene.lightmaps[draw.lightMapIndex],
+                        activeScene.lightmaps[draw.lightMapIndex],
                         draw.mesh.glTFMesh.primitives[draw.subMeshInfo].attributes.TEXCOORD_1 ? 1 : 0,
-                        draw.lightMapScaleOffset as any
+                        draw.lightMapScaleOffset
                     );
                     drawType = "lightmap";
                 }
             }
 
-            const renderer = draw.gameObject.getComponent(MeshRenderer);
+            const renderer = draw.renderer;
             if (renderer && renderer.receiveShadows) {
                 context.receiveShadow = true;
             }
@@ -51,8 +53,10 @@ namespace egret3d {
                 //     }
                 // }
 
-                if (camera.cullingMask & drawCall.gameObject.layer) {
-                    if (drawCall.gameObject.activeInHierarchy) {
+                const gameObject = drawCall.renderer.gameObject;
+
+                if (camera.cullingMask & gameObject.layer) {
+                    if (gameObject.activeInHierarchy) {
                         this._applyDrawCall(camera.context, drawCall);
                     }
                 }

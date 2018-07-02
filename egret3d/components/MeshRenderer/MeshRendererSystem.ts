@@ -8,7 +8,7 @@ namespace egret3d {
                 componentClass: MeshRenderer,
                 listeners: [
                     {
-                        type: MeshRendererEventType.CastShadows,
+                        type: paper.RendererEventType.CastShadows,
                         listener: (component: MeshRenderer) => {
                             if (this._hasGameObject(component.gameObject)) {
                                 this._drawCallList.updateDrawCalls(component.gameObject, component.castShadows);
@@ -17,7 +17,7 @@ namespace egret3d {
                         }
                     },
                     {
-                        type: MeshRendererEventType.LightmapIndex,
+                        type: paper.RendererEventType.LightmapIndex,
                         listener: (component: MeshRenderer) => {
                             if (this._hasGameObject(component.gameObject)) {
                                 this._updateLightMap(component);
@@ -25,7 +25,7 @@ namespace egret3d {
                         }
                     },
                     {
-                        type: MeshRendererEventType.LightmapScaleOffset,
+                        type: paper.RendererEventType.LightmapScaleOffset,
                         listener: (component: MeshRenderer) => {
                             if (this._hasGameObject(component.gameObject)) {
                                 this._updateLightMap(component);
@@ -33,7 +33,7 @@ namespace egret3d {
                         }
                     },
                     {
-                        type: MeshRendererEventType.Materials,
+                        type: paper.RendererEventType.Materials,
                         listener: (component: MeshRenderer) => {
                             if (this._hasGameObject(component.gameObject)) {
                                 this._drawCallList.updateDrawCalls(component.gameObject, component.castShadows);
@@ -73,7 +73,7 @@ namespace egret3d {
                         lightMapIndex: renderer.lightmapIndex,
                         lightMapScaleOffset: renderer.lightmapScaleOffset,
                         boneData: null,
-                        gameObject: gameObject,
+                        renderer: renderer,
                         transform: gameObject.transform,
                         frustumTest: false,
                         zdist: -1

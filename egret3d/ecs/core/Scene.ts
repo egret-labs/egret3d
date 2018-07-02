@@ -23,10 +23,10 @@ namespace paper {
         /**
          * @internal
          */
-        public constructor() {
+        public constructor(isActive: boolean = true) {
             super();
 
-            Application.sceneManager._addScene(this);
+            Application.sceneManager._addScene(this, isActive);
         }
         /**
          * @internal
