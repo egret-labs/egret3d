@@ -63,15 +63,12 @@ namespace egret3d {
         /**
          * 
          */
-        public readonly lightmapOffset: Float32Array = new Float32Array([1, 1, 0, 0]);
+        public lightmapOffset: Float32Array | null = null;
 
-        public updateLightmap(texture: Texture, uv: number, offset: Vector4) {
+        public updateLightmap(texture: Texture, uv: number, offset: Float32Array) {
             this.lightmap = texture;
             this.lightmapUV = uv;
-            this.lightmapOffset[0] = offset.x;
-            this.lightmapOffset[1] = offset.y;
-            this.lightmapOffset[2] = offset.z;
-            this.lightmapOffset[3] = offset.w;
+            this.lightmapOffset = offset;
 
             this.version++;
         }

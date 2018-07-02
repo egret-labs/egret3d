@@ -62,7 +62,7 @@ namespace egret3d {
                         context.updateLightDepth(light);
 
                         for (const drawCall of Pool.shadowCaster.instances) {
-                            if (drawCall.gameObject.activeInHierarchy) {
+                            if (drawCall.renderer.gameObject.activeInHierarchy) {
                                 context.updateModel(drawCall.transform);
                                 let drawType = "base";
 

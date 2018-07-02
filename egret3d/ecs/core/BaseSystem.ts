@@ -39,6 +39,7 @@ namespace paper {
          */
         public static _createEnabled: boolean = false;
         protected _enabled: boolean = true;
+        protected _started: boolean = false;
         protected _bufferedCount: number = 0;
         /**
          * @internal
@@ -280,6 +281,11 @@ namespace paper {
                 }
 
                 this._bufferedCount = 0;
+            }
+
+            if (!this._started) {
+                this._started = true;
+                this.onStart && this.onStart();
             }
 
             if (this._enabled) {

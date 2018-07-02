@@ -14,7 +14,7 @@ namespace paper {
         let root: ISerializable | null = null;
 
         for (const source of data.objects) { // 实例化。
-            const uuid = source.uuid || source.hashCode; // hashCode 兼容。
+            const uuid = source.hashCode || source.uuid; // hashCode 兼容。
             let target: ISerializable;
 
             if (uuid in _deserializedObjects) {
@@ -39,7 +39,7 @@ namespace paper {
         }
 
         for (const source of data.objects) { // 属性赋值。
-            const uuid = source.uuid || source.hashCode; // hashCode 兼容。
+            const uuid = source.hashCode || source.uuid; // hashCode 兼容。
             if (uuid in expandMap) { // 跳过外部插入对象。
                 continue;
             }
@@ -55,7 +55,7 @@ namespace paper {
         }
 
         for (const source of data.objects) { // 组件初始化。 TODO
-            const uuid = source.uuid || source.hashCode; // hashCode 兼容。
+            const uuid = source.hashCode || source.uuid; // hashCode 兼容。
             const target = _deserializedObjects[uuid];
             if (target instanceof BaseComponent) {
                 target.initialize();
@@ -73,7 +73,7 @@ namespace paper {
      * 
      */
     export function getDeserializedObject<T extends ISerializable>(source: ISerializedObject): T {
-        return _deserializedObjects[source.uuid || source.hashCode] as T; // hashCode 兼容。
+        return _deserializedObjects[source.hashCode || source.uuid] as T; // hashCode 兼容。
     }
 
     function _deserializeObject(source: any, target: ISerializable) {
@@ -82,7 +82,7 @@ namespace paper {
         }
         else {
             for (const k in source) {
-                if (k === "uuid" || k === "hashCode" || k === "class") { // TODO 字符串依赖。
+                if (k === "hashCode" || k === "class") { // TODO 字符串依赖。
                     continue;
                 }
 
@@ -123,7 +123,7 @@ namespace paper {
                     return target;
                 }
 
-                const uuid = (source.uuid || source.hashCode) as string; // TODO 字符串依赖， hashCode 兼容。
+                const uuid = (source.hashCode || source.uuid) as string; // TODO 字符串依赖， hashCode 兼容。
                 let classCodeOrName = source.class as string; // TODO 字符串依赖。
 
                 if (uuid) {

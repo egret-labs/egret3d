@@ -433,7 +433,12 @@ namespace egret3d {
                         this.setTexture(key, context.lightmap);
                         break;
                     case "glstate_lightmapOffset":
-                        this.setVector4_2(key, context.lightmapOffset);
+                        if (context.lightmapOffset) {
+                            this.setVector4_2(key, context.lightmapOffset);
+                        }
+                        else {
+                            console.debug("Error light map scale and offset.");
+                        }
                         break;
                     case "glstate_lightmapUV":
                         this.setFloat(key, context.lightmapUV);
