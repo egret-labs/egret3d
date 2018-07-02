@@ -43,36 +43,36 @@ namespace egret3d {
         }
     }
 
-    /**
-     * framebuffer绘制通道
-     * TODO 完善后public给开发者
-     */
-    export class CameraPostQueueQuad implements ICameraPostQueue {
-        /**
-         * shader & uniform
-         */
-        public readonly material: Material = new Material();
-        /**
-         * @inheritDoc
-         */
-        public renderTarget: GlRenderTarget = null as any;
-        /**
-         * @inheritDoc
-         */
-        public render(camera: Camera, _renderSystem: CameraSystem) {
-            const webgl = WebGLKit.webgl;
-            camera._targetAndViewport(this.renderTarget, true);
-            WebGLKit.zWrite(true);
-            // webgl.depthMask(true); // 开启 zwrite 以便正常 clear depth
-            webgl.clearColor(0, 0.3, 0, 0);
-            webgl.clearDepth(1.0);
-            webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
+    // /**
+    //  * framebuffer绘制通道
+    //  * TODO 完善后public给开发者
+    //  */
+    // export class CameraPostQueueQuad implements ICameraPostQueue {
+    //     /**
+    //      * shader & uniform
+    //      */
+    //     public readonly material: Material = new Material();
+    //     /**
+    //      * @inheritDoc
+    //      */
+    //     public renderTarget: GlRenderTarget = null as any;
+    //     /**
+    //      * @inheritDoc
+    //      */
+    //     public render(camera: Camera, _renderSystem: CameraSystem) {
+    //         const webgl = WebGLKit.webgl;
+    //         camera._targetAndViewport(this.renderTarget, true);
+    //         WebGLKit.zWrite(true);
+    //         // webgl.depthMask(true); // 开启 zwrite 以便正常 clear depth
+    //         webgl.clearColor(0, 0.3, 0, 0);
+    //         webgl.clearDepth(1.0);
+    //         webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
 
-            const mesh = DefaultMeshes.QUAD;
-            camera.context.drawtype = "";
-            WebGLKit.draw(camera.context, this.material, mesh, 0, "quad");
-        }
-    }
+    //         const mesh = DefaultMeshes.QUAD;
+    //         camera.context.drawtype = "";
+    //         WebGLKit.draw(camera.context, this.material, mesh, 0, "quad");
+    //     }
+    // }
 
     /**
      * 颜色绘制通道

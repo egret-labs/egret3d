@@ -113,7 +113,7 @@ namespace egret3d {
                 defines += "#define USE_SPOT_LIGHT " + context.spotLightCount + "\n";
             }
 
-            if (context.receiveShadow) {
+            if (context.drawCall.renderer.receiveShadows) {
                 defines += "#define USE_SHADOW \n";
                 defines += "#define USE_PCF_SOFT_SHADOW \n";
             }

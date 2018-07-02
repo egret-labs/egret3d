@@ -7,61 +7,60 @@ namespace egret3d {
             {
                 componentClass: TrailRenderer,
                 listeners: [
-                    {
-                        type: TrailRenderEventType.Meterial,
-                        listener: (component: TrailRenderer) => {
-                            const gameObject = component.gameObject;
-                            if (this._hasGameObject(gameObject)) {
-                                this._drawCallList.updateDrawCalls(gameObject, false);
-                            }
-                        }
-                    },
+                    { type: paper.RendererEventType.Materials, listener: (component: TrailRenderer) => { this._updateDrawCalls(component.gameObject); } }
                 ]
             }
         ];
 
-        private readonly _transform: Transform = new Transform(); // TODO 不要这样，这是组件
-        private readonly _createDrawCalls = ((gameObject: paper.GameObject) => {
-            const renderer = this._getComponent(gameObject, 0) as TrailRenderer;
+        private readonly _matrix: Matrix = new Matrix();
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
 
-            if (renderer._mesh && renderer._material && renderer.$active) {
-                let subMeshIndex = 0;
-                const drawCalls: DrawCall[] = [];
-
-                for (const primitive of renderer._mesh.glTFMesh.primitives) {
-                    drawCalls.push({
-                        subMeshInfo: subMeshIndex,
-                        mesh: renderer._mesh,
-                        material: renderer._material,
-                        lightMapIndex: -1,
-                        boneData: null,
-                        renderer: renderer,
-                        transform: this._transform,
-                        frustumTest: false,
-                        zdist: -1
-                    });
-
-                    subMeshIndex++;
-                }
-
-                return drawCalls;
+        private _updateDrawCalls(gameObject: paper.GameObject) {
+            if (!this._enabled) {
+                return;
             }
 
-            return null;
-        });
-        private readonly _drawCallList: DrawCallList = new DrawCallList(this._createDrawCalls);
+            const renderer = gameObject.renderer as TrailRenderer;
+            if (!renderer.material) {
+                return;
+            }
+
+            this._drawCalls.renderers.push(renderer);
+            //
+            let subMeshIndex = 0;
+            for (const primitive of renderer._mesh.glTFMesh.primitives) {
+                const drawCall: DrawCall = {
+                    renderer: renderer,
+                    matrix: this._matrix,
+
+                    subMeshIndex: subMeshIndex++,
+                    mesh: renderer._mesh, // TODO
+                    material: renderer.material,
+
+                    frustumTest: false,
+                    zdist: -1,
+                };
+
+                this._drawCalls.drawCalls.push(drawCall);
+            }
+        }
 
         public onEnable() {
-            // TODO
+            for (const renderer of this._components) {
+                this._updateDrawCalls(renderer.gameObject);
+            }
         }
 
         public onAddGameObject(gameObject: paper.GameObject) {
-            this._drawCallList.updateDrawCalls(gameObject, false);
-            this._drawCallList.updateShadowCasters(gameObject, false);
+            this._updateDrawCalls(gameObject);
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCallList.removeDrawCalls(gameObject);
+            if (!this._enabled) {
+                return;
+            }
+
+            this._drawCalls.removeDrawCalls(gameObject.renderer as TrailRenderer);
         }
 
         public onUpdate() { // TODO 应将组件功能尽量移到系统
@@ -72,7 +71,9 @@ namespace egret3d {
         }
 
         public onDisable() {
-            // TODO
+            for (const renderer of this._components) {
+                this._drawCalls.removeDrawCalls(renderer);
+            }
         }
     }
 }

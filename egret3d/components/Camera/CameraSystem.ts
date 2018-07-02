@@ -6,46 +6,43 @@ namespace egret3d {
         protected readonly _interests = [
             { componentClass: Camera, isExtends: true }
         ];
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
 
-        private _applyDrawCall(context: RenderContext, draw: DrawCall): void {
-            context.updateModel(draw.transform);
+        private _applyDrawCall(context: RenderContext, drawCall: DrawCall): void {
+            const renderer = drawCall.renderer;
+            const lightmapIndex = renderer.lightmapIndex;
 
-            let drawType: string = "base";
+            context.drawCall = drawCall;
 
-            if (draw.boneData) {
-                context.updateBones(draw.boneData);
+            context.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
+
+            let drawType: string = "base"; // TODO
+
+            if (drawCall.boneData) {
+                context.updateBones(drawCall.boneData);
                 drawType = "skin";
             }
 
-            if (draw.lightMapIndex >= 0) {
+            if (lightmapIndex >= 0) {
                 const activeScene = paper.Application.sceneManager.activeScene;
-
-                if (activeScene.lightmaps.length > draw.lightMapIndex) {
+                if (activeScene.lightmaps.length > lightmapIndex) {
                     context.updateLightmap(
-                        activeScene.lightmaps[draw.lightMapIndex],
-                        draw.mesh.glTFMesh.primitives[draw.subMeshInfo].attributes.TEXCOORD_1 ? 1 : 0,
-                        draw.lightMapScaleOffset
+                        activeScene.lightmaps[lightmapIndex],
+                        drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0,
+                        renderer.lightmapScaleOffset
                     );
                     drawType = "lightmap";
                 }
             }
 
-            const renderer = draw.renderer;
-            if (renderer && renderer.receiveShadows) {
-                context.receiveShadow = true;
-            }
-            else {
-                context.receiveShadow = false;
-            }
-
-            WebGLKit.draw(context, draw.material, draw.mesh, draw.subMeshInfo, drawType, draw.transform._worldMatrixDeterminant < 0);
+            WebGLKit.draw(context, drawType);
         }
 
         public $renderCamera(camera: Camera) {
-            DrawCallList.updateZdist(camera);
-            DrawCallList.sort();
+            // this._drawCalls.updateZdist(camera);
+            this._drawCalls.sort();
 
-            for (const drawCall of Pool.drawCall.instances) {
+            for (const drawCall of this._drawCalls.drawCalls) {
                 // 视锥剔除
                 // if(drawCall.frustumTest) {
                 //     if(!camera.testFrustumCulling(drawCall.gameObject.transform)) {

@@ -102,47 +102,47 @@ namespace egret3d {
             }
         }
 
-        static draw(context: RenderContext, material: Material, mesh: Mesh, subMeshIndex: number, basetype: string = "base", frontFaceCW: boolean = false) {
+        static draw(context: RenderContext, basetype: string = "base") {
+            const drawCall = context.drawCall;
+            const renderer = drawCall.renderer;
+            const material = drawCall.material;
+
             if (!material) {
+                console.warn("Material error.", renderer.gameObject.name, renderer.gameObject.uuid);
                 return;
             }
-            let shader = material.getShader();
+
+            const shader = material.getShader();
             if (!shader) {
+                console.warn("Shader error.", renderer.gameObject.name, renderer.gameObject.uuid);
                 return;
             }
+
             let drawPasses = shader.passes[basetype + context.drawtype];
             if (!drawPasses) {
                 drawPasses = shader.passes["base" + context.drawtype];
             }
+
             if (!drawPasses) {
+                console.warn("draw passes error.", renderer.gameObject.name, renderer.gameObject.uuid);
                 return;
             }
 
+            // WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
+            const frontFaceCW = renderer.gameObject.transform._worldMatrixDeterminant < 0;
             const webGL = this.webgl;
+            const mesh = drawCall.mesh;
 
             for (let i = 0; i < drawPasses.length; i++) {
-                let pass = drawPasses[i];
-                let program: GlProgram = GlProgram.get(pass, context, material);
+                const pass = drawPasses[i];
+                const program = GlProgram.get(pass, context, material);
                 this.setStates(pass, frontFaceCW);
-                let force = WebGLKit.useProgram(program.program);
-                program.uploadUniforms(material, context, force);
-                program.bindAttributes(mesh, subMeshIndex, force);
-                // MD Mesh
-                // if (sm.useVertexIndex < 0) {
-                //     if (sm.line) {
-                //         WebGLKit.drawArrayLines(sm.start, sm.size);
-                //     } else {
-                //         WebGLKit.drawArrayTris(sm.start, sm.size);
-                //     }
-                // } else {
-                //     if (sm.line) {
-                //         WebGLKit.drawElementLines(sm.start, sm.size);
-                //     } else {
-                //         WebGLKit.drawElementTris(sm.start, sm.size);
-                //     }
-                // }
 
-                const primitive = mesh.glTFMesh.primitives[subMeshIndex];
+                const force = WebGLKit.useProgram(program.program);
+                program.uploadUniforms(material, context, force);
+                program.bindAttributes(drawCall.mesh, drawCall.subMeshIndex, force);
+
+                const primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
                 const vertexAccessor = mesh.glTFAsset.getAccessor(primitive.attributes.POSITION);
                 const bufferOffset = mesh.glTFAsset.getBufferOffset(vertexAccessor);
 

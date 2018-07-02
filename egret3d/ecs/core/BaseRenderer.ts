@@ -1,9 +1,5 @@
 namespace paper {
     export const enum RendererEventType {
-        ReceiveShadows = "receiveShadows",
-        CastShadows = "castShadows",
-        LightmapIndex = "lightmapIndex",
-        LightmapScaleOffset = "lightmapScaleOffset",
         Materials = "materials",
     }
 
@@ -39,7 +35,6 @@ namespace paper {
             }
 
             this._receiveShadows = value;
-            paper.EventPool.dispatchEvent(RendererEventType.ReceiveShadows, this);
         }
 
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
@@ -52,7 +47,6 @@ namespace paper {
             }
 
             this._castShadows = value;
-            paper.EventPool.dispatchEvent(RendererEventType.CastShadows, this);
         }
 
         @paper.editor.property(paper.editor.EditType.NUMBER)
@@ -65,7 +59,6 @@ namespace paper {
             }
 
             this._lightmapIndex = value;
-            paper.EventPool.dispatchEvent(RendererEventType.LightmapIndex, this);
         }
 
         // @paper.editor.property(paper.editor.EditType.VECTOR4) TODO
@@ -78,7 +71,6 @@ namespace paper {
             this._lightmapScaleOffset[1] = scaleY;
             this._lightmapScaleOffset[2] = offsetX;
             this._lightmapScaleOffset[3] = offsetY;
-            paper.EventPool.dispatchEvent(RendererEventType.LightmapScaleOffset, this);
         }
     }
 }

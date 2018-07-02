@@ -6,6 +6,7 @@ namespace egret3d {
         protected readonly _interests = [
             { componentClass: Light }
         ];
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
 
         public onUpdate() {
             for (const light of this._components) {
@@ -61,17 +62,23 @@ namespace egret3d {
                         context.updateCamera(shadow.camera);
                         context.updateLightDepth(light);
 
-                        for (const drawCall of Pool.shadowCaster.instances) {
-                            if (drawCall.renderer.gameObject.activeInHierarchy) {
-                                context.updateModel(drawCall.transform);
-                                let drawType = "base";
+                        for (const drawCall of this._drawCalls.drawCalls) {
+                            if (!drawCall.renderer.castShadows) {
+                                continue;
+                            }
 
+                            const gameObject = drawCall.renderer.gameObject;
+                            if (gameObject.activeInHierarchy) {
+                                context.drawCall = drawCall;
+                                context.updateModel(drawCall.matrix || gameObject.transform.getWorldMatrix());
+                                //
+                                let drawType = "base";
                                 if (drawCall.boneData) {
                                     context.updateBones(drawCall.boneData);
                                     drawType = "skin";
                                 }
 
-                                WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshInfo, drawType);
+                                WebGLKit.draw(context, drawType);
                             }
                         }
                     }
