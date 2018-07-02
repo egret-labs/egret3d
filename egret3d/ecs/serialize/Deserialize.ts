@@ -81,6 +81,10 @@ namespace paper {
 
     function _deserializeObject(source: any, target: ISerializable) {
         if (target.constructor.prototype.hasOwnProperty("deserialize")) { // TODO 字符串依赖。
+            if (_isClone) {
+                delete source.uuid; // TODO 字符串依赖。
+            }
+
             (target as ISerializable).deserialize(source);
         }
         else {
@@ -115,9 +119,15 @@ namespace paper {
                 return undefined;
 
             case "object": {
-                if (target && target.constructor.prototype.hasOwnProperty("deserialize")) { // TODO 字符串依赖。
-                    (target as ISerializable).deserialize(source);
-                    return target;
+                if (target) {
+                    if (target.constructor.prototype.hasOwnProperty("deserialize")) { // TODO 字符串依赖。
+                        // _deserializeObject(source, target);
+                        (target as ISerializable).deserialize(source);
+                        return target;
+                    }
+                    else {
+                        console.info("Deserialize can be optimized.");
+                    }
                 }
 
                 if (Array.isArray(source)) {
