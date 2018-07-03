@@ -47,8 +47,16 @@ namespace paper {
         @serializedField
         public prefab: egret3d.Prefab | null = null;
 
+        /**
+         * 用于确定整个预制体结构
+         * true:prefabroot,string:root uuid
+         */
+        @serializedField
+        private prefabEditInfo:boolean | string | null = null;
+
         @serializedField
         private _activeSelf: boolean = true;
+
         /**
          * @internal
          */
