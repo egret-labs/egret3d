@@ -629,22 +629,24 @@ var egret3d;
             }
         }
         Matrix.prototype.copy = function (value) {
-            this.rawData[0] = value.rawData[0];
-            this.rawData[1] = value.rawData[1];
-            this.rawData[2] = value.rawData[2];
-            this.rawData[3] = value.rawData[3];
-            this.rawData[4] = value.rawData[4];
-            this.rawData[5] = value.rawData[5];
-            this.rawData[6] = value.rawData[6];
-            this.rawData[7] = value.rawData[7];
-            this.rawData[8] = value.rawData[8];
-            this.rawData[9] = value.rawData[9];
-            this.rawData[10] = value.rawData[10];
-            this.rawData[11] = value.rawData[11];
-            this.rawData[12] = value.rawData[12];
-            this.rawData[13] = value.rawData[13];
-            this.rawData[14] = value.rawData[14];
-            this.rawData[15] = value.rawData[15];
+            var fromRawData = value.rawData;
+            var toRawData = this.rawData;
+            toRawData[0] = fromRawData[0];
+            toRawData[1] = fromRawData[1];
+            toRawData[2] = fromRawData[2];
+            toRawData[3] = fromRawData[3];
+            toRawData[4] = fromRawData[4];
+            toRawData[5] = fromRawData[5];
+            toRawData[6] = fromRawData[6];
+            toRawData[7] = fromRawData[7];
+            toRawData[8] = fromRawData[8];
+            toRawData[9] = fromRawData[9];
+            toRawData[10] = fromRawData[10];
+            toRawData[11] = fromRawData[11];
+            toRawData[12] = fromRawData[12];
+            toRawData[13] = fromRawData[13];
+            toRawData[14] = fromRawData[14];
+            toRawData[15] = fromRawData[15];
             return this;
         };
         Matrix.prototype.clone = function () {
@@ -750,20 +752,20 @@ var egret3d;
             var l38 = (l5 * l11) - (l7 * l9);
             var l39 = (l5 * l10) - (l6 * l9);
             this.rawData[0] = l23 * l27;
-            this.rawData[4] = l24 * l27;
-            this.rawData[8] = l25 * l27;
-            this.rawData[12] = l26 * l27;
             this.rawData[1] = -(((l2 * l17) - (l3 * l18)) + (l4 * l19)) * l27;
-            this.rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
-            this.rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
-            this.rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
             this.rawData[2] = (((l2 * l28) - (l3 * l29)) + (l4 * l30)) * l27;
-            this.rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
-            this.rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
-            this.rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
             this.rawData[3] = -(((l2 * l34) - (l3 * l35)) + (l4 * l36)) * l27;
+            this.rawData[4] = l24 * l27;
+            this.rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
+            this.rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
             this.rawData[7] = (((l1 * l34) - (l3 * l37)) + (l4 * l38)) * l27;
+            this.rawData[8] = l25 * l27;
+            this.rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
+            this.rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
             this.rawData[11] = -(((l1 * l35) - (l2 * l37)) + (l4 * l39)) * l27;
+            this.rawData[12] = l26 * l27;
+            this.rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
+            this.rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
             this.rawData[15] = (((l1 * l36) - (l2 * l38)) + (l3 * l39)) * l27;
             return this;
         };
@@ -786,24 +788,25 @@ var egret3d;
             value.z = z;
             return value;
         };
-        Matrix.set = function (n11, n21, n31, n41, n12, n22, n32, n42, n13, n23, n33, n43, n14, n24, n34, n44, matrix) {
-            matrix.rawData[0] = n11;
-            matrix.rawData[1] = n12;
-            matrix.rawData[2] = n13;
-            matrix.rawData[3] = n14;
-            matrix.rawData[4] = n21;
-            matrix.rawData[5] = n22;
-            matrix.rawData[6] = n23;
-            matrix.rawData[7] = n24;
-            matrix.rawData[8] = n31;
-            matrix.rawData[9] = n32;
-            matrix.rawData[10] = n33;
-            matrix.rawData[11] = n34;
-            matrix.rawData[12] = n41;
-            matrix.rawData[13] = n42;
-            matrix.rawData[14] = n43;
-            matrix.rawData[15] = n44;
-            return matrix;
+        Matrix.set = function (n11, n21, n31, n41, n12, n22, n32, n42, n13, n23, n33, n43, n14, n24, n34, n44, result) {
+            var rawData = result.rawData;
+            rawData[0] = n11;
+            rawData[1] = n12;
+            rawData[2] = n13;
+            rawData[3] = n14;
+            rawData[4] = n21;
+            rawData[5] = n22;
+            rawData[6] = n23;
+            rawData[7] = n24;
+            rawData[8] = n31;
+            rawData[9] = n32;
+            rawData[10] = n33;
+            rawData[11] = n34;
+            rawData[12] = n41;
+            rawData[13] = n42;
+            rawData[14] = n43;
+            rawData[15] = n44;
+            return result;
         };
         Matrix.getScale = function (m, out) {
             out.x = m.rawData[0];
@@ -983,22 +986,23 @@ var egret3d;
             var l37 = (l5 * l12) - (l8 * l9);
             var l38 = (l5 * l11) - (l7 * l9);
             var l39 = (l5 * l10) - (l6 * l9);
-            out.rawData[0] = l23 * l27;
-            out.rawData[4] = l24 * l27;
-            out.rawData[8] = l25 * l27;
-            out.rawData[12] = l26 * l27;
-            out.rawData[1] = -(((l2 * l17) - (l3 * l18)) + (l4 * l19)) * l27;
-            out.rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
-            out.rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
-            out.rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
-            out.rawData[2] = (((l2 * l28) - (l3 * l29)) + (l4 * l30)) * l27;
-            out.rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
-            out.rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
-            out.rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
-            out.rawData[3] = -(((l2 * l34) - (l3 * l35)) + (l4 * l36)) * l27;
-            out.rawData[7] = (((l1 * l34) - (l3 * l37)) + (l4 * l38)) * l27;
-            out.rawData[11] = -(((l1 * l35) - (l2 * l37)) + (l4 * l39)) * l27;
-            out.rawData[15] = (((l1 * l36) - (l2 * l38)) + (l3 * l39)) * l27;
+            var rawData = out.rawData;
+            rawData[0] = l23 * l27;
+            rawData[1] = -(((l2 * l17) - (l3 * l18)) + (l4 * l19)) * l27;
+            rawData[2] = (((l2 * l28) - (l3 * l29)) + (l4 * l30)) * l27;
+            rawData[3] = -(((l2 * l34) - (l3 * l35)) + (l4 * l36)) * l27;
+            rawData[4] = l24 * l27;
+            rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
+            rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
+            rawData[7] = (((l1 * l34) - (l3 * l37)) + (l4 * l38)) * l27;
+            rawData[8] = l25 * l27;
+            rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
+            rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
+            rawData[11] = -(((l1 * l35) - (l2 * l37)) + (l4 * l39)) * l27;
+            rawData[12] = l26 * l27;
+            rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
+            rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
+            rawData[15] = (((l1 * l36) - (l2 * l38)) + (l3 * l39)) * l27;
             return out;
         };
         Matrix.decompose = function (m, scale, rotation, translation) {
@@ -1134,20 +1138,22 @@ var egret3d;
             result.z = src.rawData[offset + 2];
             return result;
         };
-        Matrix.transformVector3 = function (vector, transformation, result) {
-            var x = (vector.x * transformation.rawData[0]) + (vector.y * transformation.rawData[4]) + (vector.z * transformation.rawData[8]) + transformation.rawData[12];
-            var y = (vector.x * transformation.rawData[1]) + (vector.y * transformation.rawData[5]) + (vector.z * transformation.rawData[9]) + transformation.rawData[13];
-            var z = (vector.x * transformation.rawData[2]) + (vector.y * transformation.rawData[6]) + (vector.z * transformation.rawData[10]) + transformation.rawData[14];
-            var w = (vector.x * transformation.rawData[3]) + (vector.y * transformation.rawData[7]) + (vector.z * transformation.rawData[11]) + transformation.rawData[15];
+        Matrix.transformVector3 = function (vector, transformMatrix, result) {
+            var transformMatrixRawdata = transformMatrix.rawData;
+            var x = (vector.x * transformMatrixRawdata[0]) + (vector.y * transformMatrixRawdata[4]) + (vector.z * transformMatrixRawdata[8]) + transformMatrixRawdata[12];
+            var y = (vector.x * transformMatrixRawdata[1]) + (vector.y * transformMatrixRawdata[5]) + (vector.z * transformMatrixRawdata[9]) + transformMatrixRawdata[13];
+            var z = (vector.x * transformMatrixRawdata[2]) + (vector.y * transformMatrixRawdata[6]) + (vector.z * transformMatrixRawdata[10]) + transformMatrixRawdata[14];
+            var w = (vector.x * transformMatrixRawdata[3]) + (vector.y * transformMatrixRawdata[7]) + (vector.z * transformMatrixRawdata[11]) + transformMatrixRawdata[15];
             result.x = x / w;
             result.y = y / w;
             result.z = z / w;
             return result;
         };
-        Matrix.transformNormal = function (vector, transformation, result) {
-            var x = (vector.x * transformation.rawData[0]) + (vector.y * transformation.rawData[4]) + (vector.z * transformation.rawData[8]);
-            var y = (vector.x * transformation.rawData[1]) + (vector.y * transformation.rawData[5]) + (vector.z * transformation.rawData[9]);
-            var z = (vector.x * transformation.rawData[2]) + (vector.y * transformation.rawData[6]) + (vector.z * transformation.rawData[10]);
+        Matrix.transformNormal = function (vector, transformMatrix, result) {
+            var transformMatrixRawdata = transformMatrix.rawData;
+            var x = (vector.x * transformMatrixRawdata[0]) + (vector.y * transformMatrixRawdata[4]) + (vector.z * transformMatrixRawdata[8]);
+            var y = (vector.x * transformMatrixRawdata[1]) + (vector.y * transformMatrixRawdata[5]) + (vector.z * transformMatrixRawdata[9]);
+            var z = (vector.x * transformMatrixRawdata[2]) + (vector.y * transformMatrixRawdata[6]) + (vector.z * transformMatrixRawdata[10]);
             result.x = x;
             result.y = y;
             result.z = z;
@@ -4859,45 +4865,6 @@ var paper;
         }
     }
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     *
-     */
-    var Border = (function () {
-        /**
-         *
-         */
-        function Border(l, t, r, b) {
-            if (l === void 0) { l = 0.0; }
-            if (t === void 0) { t = 0.0; }
-            if (r === void 0) { r = 0.0; }
-            if (b === void 0) { b = 0.0; }
-            this.l = l;
-            this.t = t;
-            this.r = r;
-            this.b = b;
-        }
-        /**
-         * @inheritDoc
-         */
-        Border.prototype.serialize = function () {
-            return [this.l, this.t, this.r, this.b];
-        };
-        /**
-         * @inheritDoc
-         */
-        Border.prototype.deserialize = function (element) {
-            this.l = element[0];
-            this.t = element[1];
-            this.r = element[2];
-            this.b = element[3];
-        };
-        return Border;
-    }());
-    egret3d.Border = Border;
-    __reflect(Border.prototype, "egret3d.Border", ["paper.ISerializable"]);
-})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     var KEY_GAMEOBJECTS = "gameObjects";
@@ -5997,150 +5964,6 @@ var paper;
         EventPool.dispatchEvent = dispatchEvent;
     })(EventPool = paper.EventPool || (paper.EventPool = {}));
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    var Angelref = (function () {
-        function Angelref() {
-        }
-        return Angelref;
-    }());
-    egret3d.Angelref = Angelref;
-    __reflect(Angelref.prototype, "egret3d.Angelref");
-    var Matrix3x2 = (function () {
-        function Matrix3x2(datas) {
-            if (datas === void 0) { datas = null; }
-            if (datas) {
-                this.rawData = datas;
-            }
-            else {
-                this.rawData = new Float32Array([1, 0, 0, 0, 1, 0]);
-            }
-        }
-        Matrix3x2.multiply = function (lhs, rhs, out) {
-            var a00 = lhs.rawData[0], a01 = lhs.rawData[1], a02 = 0;
-            var a10 = lhs.rawData[2], a11 = lhs.rawData[3], a12 = 0;
-            var a30 = lhs.rawData[4], a31 = lhs.rawData[5], a32 = 1;
-            var b0 = rhs.rawData[0], b1 = rhs.rawData[1], b3 = 0;
-            out.rawData[0] = b0 * a00 + b1 * a10 + b3 * a30;
-            out.rawData[1] = b0 * a01 + b1 * a11 + b3 * a31;
-            b0 = rhs.rawData[2];
-            b1 = rhs.rawData[3];
-            b3 = 0;
-            out.rawData[2] = b0 * a00 + b1 * a10 + b3 * a30;
-            out.rawData[3] = b0 * a01 + b1 * a11 + b3 * a31;
-            b0 = rhs.rawData[4];
-            b1 = rhs.rawData[5];
-            b3 = 1;
-            out.rawData[4] = b0 * a00 + b1 * a10 + b3 * a30;
-            out.rawData[5] = b0 * a01 + b1 * a11 + b3 * a31;
-            return out;
-        };
-        Matrix3x2.fromRotate = function (angle, out) {
-            var x = 0, y = 0, z = 1;
-            var s = Math.sin(angle);
-            var c = Math.cos(angle);
-            out.rawData[0] = c;
-            out.rawData[1] = s;
-            out.rawData[2] = -s;
-            out.rawData[3] = c;
-            out.rawData[4] = 0;
-            out.rawData[5] = 0;
-            return out;
-        };
-        Matrix3x2.fromScale = function (xScale, yScale, out) {
-            out.rawData[0] = xScale;
-            out.rawData[1] = 0.0;
-            out.rawData[2] = 0.0;
-            out.rawData[3] = yScale;
-            out.rawData[4] = 0.0;
-            out.rawData[5] = 0.0;
-            return out;
-        };
-        Matrix3x2.fromTranslate = function (x, y, out) {
-            out.rawData[0] = 1.0;
-            out.rawData[1] = 0.0;
-            out.rawData[2] = 0.0;
-            out.rawData[3] = 1.0;
-            out.rawData[4] = x;
-            out.rawData[5] = y;
-            return out;
-        };
-        Matrix3x2.fromRTS = function (pos, scale, rot, out) {
-            var matS = helpMat3x2_1;
-            this.fromScale(scale.x, scale.y, matS);
-            var matR = helpMat3x2_2;
-            this.fromRotate(rot, matR);
-            this.multiply(matR, matS, out);
-            out.rawData[4] = pos.x;
-            out.rawData[5] = pos.y;
-        };
-        Matrix3x2.transformVector2 = function (mat, inp, out) {
-            out.x = inp.x * mat.rawData[0] + inp.y * mat.rawData[2] + mat.rawData[4];
-            out.y = inp.x * mat.rawData[1] + inp.y * mat.rawData[3] + mat.rawData[5];
-            return out;
-        };
-        Matrix3x2.transformNormal = function (mat, inp, out) {
-            out.x = inp.x * mat.rawData[0] + inp.y * mat.rawData[2];
-            out.y = inp.x * mat.rawData[1] + inp.y * mat.rawData[3];
-            return out;
-        };
-        Matrix3x2.inverse = function (src, out) {
-            var l1 = src.rawData[0];
-            var l2 = src.rawData[1];
-            var l5 = src.rawData[2];
-            var l6 = src.rawData[3];
-            var l13 = src.rawData[4];
-            var l14 = src.rawData[5];
-            var l26 = -(((l5 * -l14) - (l6 * -l13)));
-            var l27 = 1.0 / ((((l1 * l6) + (l2 * -l5))));
-            out.rawData[0] = l6 * l27;
-            out.rawData[2] = -l5 * l27;
-            out.rawData[4] = l26 * l27;
-            out.rawData[1] = -(((l2))) * l27;
-            out.rawData[3] = (((l1))) * l27;
-            out.rawData[5] = (((l1 * -l14) - (l2 * -l13))) * l27;
-            return out;
-        };
-        Matrix3x2.identify = function (out) {
-            out.rawData[0] = 1;
-            out.rawData[1] = 0;
-            out.rawData[2] = 0;
-            out.rawData[3] = 1;
-            out.rawData[4] = 0;
-            out.rawData[5] = 0;
-            return out;
-        };
-        Matrix3x2.copy = function (src, out) {
-            for (var i = 0; i < 16; i++) {
-                out.rawData[i] = src.rawData[i];
-            }
-            return out;
-        };
-        Matrix3x2.decompose = function (src, scale, rotation, translation) {
-            translation.x = src.rawData[4];
-            translation.y = src.rawData[5];
-            var xs = egret3d.sign(src.rawData[0] * src.rawData[1]) < 0 ? -1 : 1;
-            var ys = egret3d.sign(src.rawData[2] * src.rawData[3]) < 0 ? -1 : 1;
-            scale.x = xs * Math.sqrt(src.rawData[0] * src.rawData[0] + src.rawData[1] * src.rawData[1]);
-            scale.y = ys * Math.sqrt(src.rawData[2] * src.rawData[2] + src.rawData[3] * src.rawData[3]);
-            if (scale.x === 0 || scale.y === 0) {
-                rotation.v = 0;
-                return false;
-            }
-            var sx = src.rawData[0] / scale.x;
-            var csx = src.rawData[1] / scale.x;
-            var r1 = Math.asin(sx);
-            var r2 = Math.acos(csx);
-            rotation.v = r1;
-            return true;
-        };
-        return Matrix3x2;
-    }());
-    egret3d.Matrix3x2 = Matrix3x2;
-    __reflect(Matrix3x2.prototype, "egret3d.Matrix3x2");
-    var helpMat3x2_1 = new Matrix3x2();
-    var helpMat3x2_2 = new Matrix3x2();
-})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     /**
@@ -7654,44 +7477,6 @@ var egret3d;
     }(egret3d.BaseObjectAsset));
     egret3d.RawScene = RawScene;
     __reflect(RawScene.prototype, "egret3d.RawScene");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * audio asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 声音资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var Sound = (function (_super) {
-        __extends(Sound, _super);
-        function Sound() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        /**
-         * @inheritDoc
-         */
-        Sound.prototype.dispose = function () {
-            this.buffer = null;
-        };
-        /**
-         * @inheritDoc
-         */
-        Sound.prototype.caclByteLength = function () {
-            if (this.buffer) {
-                return this.buffer.length;
-            }
-        };
-        return Sound;
-    }(paper.Asset));
-    egret3d.Sound = Sound;
-    __reflect(Sound.prototype, "egret3d.Sound");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -12178,69 +11963,84 @@ var egret3d;
     }());
     __reflect(TrailStick.prototype, "TrailStick");
 })(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
-    paper.serializeClassMap = {
-        0: "paper.Scene",
-        1: "paper.GameObject",
-        2: "egret3d.AniPlayer",
-        3: "egret3d.BoxCollider",
-        4: "egret3d.Camera",
-        5: "egret3d.MeshFilter",
-        6: "egret3d.MeshRenderer",
-        7: "egret3d.particle.ParticleComponent",
-        8: "egret3d.particle.ParticleRenderer",
-        9: "egret3d.SkinnedMeshRenderer",
-        10: "egret3d.SphereCollider",
-        11: "egret3d.Transform",
-        12: "egret3d.Shader",
-        13: "egret3d.Mesh",
-        14: "egret3d.Material",
-        15: "egret3d.AnimationClip",
-        16: "egret3d.TPoseInfo",
-        17: "egret3d.PoseBoneMatrix",
-        18: "egret3d.Texture",
-        19: "egret3d.Texture",
-        20: "egret3d.Vector2",
-        21: "egret3d.Vector3",
-        22: "egret3d.Vector4",
-        23: "egret3d.Quaternion",
-        24: "egret3d.Color",
-        25: "egret3d.Gradient",
-        26: "egret3d.Curve",
-        27: "egret3d.Keyframe",
-        28: "egret3d.Rect",
-        29: "egret3d.MainModule",
-        30: "egret3d.EmissionModule",
-        31: "egret3d.ShapeModule",
-        32: "egret3d.VelocityOverLifetimeModule",
-        33: "egret3d.RotationOverLifetimeModule",
-        34: "egret3d.ColorOverLifetimeModule",
-        35: "egret3d.SizeOverLifetimeModule",
-        36: "egret3d.MinMaxCurve",
-        37: "egret3d.MinMaxGradient",
-        38: "egret3d.alphaKey",
-        39: "egret3d.colorKey",
-        40: "egret3d.Animation",
-        41: "egret3d.GLTFAsset",
-    };
-    function findClassCode(name) {
-        for (var key in paper.serializeClassMap) {
-            if (paper.serializeClassMap[key] === name) {
-                return key;
-            }
+var egret3d;
+(function (egret3d) {
+    /**
+     * TrailRender系统
+     */
+    var TrailRendererSystem = (function (_super) {
+        __extends(TrailRendererSystem, _super);
+        function TrailRendererSystem() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._interests = [
+                {
+                    componentClass: egret3d.TrailRenderer,
+                    listeners: [
+                        {
+                            type: "material" /* Meterial */,
+                            listener: function (component) {
+                                var gameObject = component.gameObject;
+                                if (_this._hasGameObject(gameObject)) {
+                                    _this._drawCallList.updateDrawCalls(gameObject, false);
+                                }
+                            }
+                        },
+                    ]
+                }
+            ];
+            _this._transform = new egret3d.Transform(); // TODO 不要这样，这是组件
+            _this._createDrawCalls = (function (gameObject) {
+                var renderer = _this._getComponent(gameObject, 0);
+                if (renderer._mesh && renderer._material && renderer.$active) {
+                    var subMeshIndex = 0;
+                    var drawCalls = [];
+                    for (var _i = 0, _a = renderer._mesh.glTFMesh.primitives; _i < _a.length; _i++) {
+                        var primitive = _a[_i];
+                        drawCalls.push({
+                            subMeshInfo: subMeshIndex,
+                            mesh: renderer._mesh,
+                            material: renderer._material,
+                            lightMapIndex: -1,
+                            boneData: null,
+                            gameObject: gameObject,
+                            transform: _this._transform,
+                            frustumTest: false,
+                            zdist: -1
+                        });
+                        subMeshIndex++;
+                    }
+                    return drawCalls;
+                }
+                return null;
+            });
+            _this._drawCallList = new egret3d.DrawCallList(_this._createDrawCalls);
+            return _this;
         }
-        return "";
-    }
-    paper.findClassCode = findClassCode;
-    function findClassCodeFrom(target) {
-        var proto = target.__proto__;
-        var classTypeOrigin = proto.__class__;
-        var classType = paper.findClassCode(classTypeOrigin);
-        return classType;
-    }
-    paper.findClassCodeFrom = findClassCodeFrom;
-})(paper || (paper = {}));
+        TrailRendererSystem.prototype.onEnable = function () {
+            // TODO
+        };
+        TrailRendererSystem.prototype.onAddGameObject = function (gameObject) {
+            this._drawCallList.updateDrawCalls(gameObject, false);
+            this._drawCallList.updateShadowCasters(gameObject, false);
+        };
+        TrailRendererSystem.prototype.onRemoveGameObject = function (gameObject) {
+            this._drawCallList.removeDrawCalls(gameObject);
+        };
+        TrailRendererSystem.prototype.onUpdate = function () {
+            var deltaTime = paper.Time.deltaTime;
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                component.update(deltaTime);
+            }
+        };
+        TrailRendererSystem.prototype.onDisable = function () {
+            // TODO
+        };
+        return TrailRendererSystem;
+    }(paper.BaseSystem));
+    egret3d.TrailRendererSystem = TrailRendererSystem;
+    __reflect(TrailRendererSystem.prototype, "egret3d.TrailRendererSystem");
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -12331,288 +12131,69 @@ var egret3d;
     egret3d.SkinnedMeshRendererSystem = SkinnedMeshRendererSystem;
     __reflect(SkinnedMeshRendererSystem.prototype, "egret3d.SkinnedMeshRendererSystem");
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * glTF 资源。
-     */
-    var GLTFAsset = (function (_super) {
-        __extends(GLTFAsset, _super);
-        function GLTFAsset() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * Buffer 列表。
-             */
-            _this.buffers = [];
-            /**
-             * 配置。
-             */
-            _this.config = null;
-            return _this;
+var paper;
+(function (paper) {
+    paper.serializeClassMap = {
+        0: "paper.Scene",
+        1: "paper.GameObject",
+        2: "egret3d.AniPlayer",
+        3: "egret3d.BoxCollider",
+        4: "egret3d.Camera",
+        5: "egret3d.MeshFilter",
+        6: "egret3d.MeshRenderer",
+        7: "egret3d.particle.ParticleComponent",
+        8: "egret3d.particle.ParticleRenderer",
+        9: "egret3d.SkinnedMeshRenderer",
+        10: "egret3d.SphereCollider",
+        11: "egret3d.Transform",
+        12: "egret3d.Shader",
+        13: "egret3d.Mesh",
+        14: "egret3d.Material",
+        15: "egret3d.AnimationClip",
+        16: "egret3d.TPoseInfo",
+        17: "egret3d.PoseBoneMatrix",
+        18: "egret3d.Texture",
+        19: "egret3d.Texture",
+        20: "egret3d.Vector2",
+        21: "egret3d.Vector3",
+        22: "egret3d.Vector4",
+        23: "egret3d.Quaternion",
+        24: "egret3d.Color",
+        25: "egret3d.Gradient",
+        26: "egret3d.Curve",
+        27: "egret3d.Keyframe",
+        28: "egret3d.Rect",
+        29: "egret3d.MainModule",
+        30: "egret3d.EmissionModule",
+        31: "egret3d.ShapeModule",
+        32: "egret3d.VelocityOverLifetimeModule",
+        33: "egret3d.RotationOverLifetimeModule",
+        34: "egret3d.ColorOverLifetimeModule",
+        35: "egret3d.SizeOverLifetimeModule",
+        36: "egret3d.MinMaxCurve",
+        37: "egret3d.MinMaxGradient",
+        38: "egret3d.alphaKey",
+        39: "egret3d.colorKey",
+        40: "egret3d.Animation",
+        41: "egret3d.GLTFAsset",
+    };
+    function findClassCode(name) {
+        for (var key in paper.serializeClassMap) {
+            if (paper.serializeClassMap[key] === name) {
+                return key;
+            }
         }
-        /**
-         *
-         */
-        GLTFAsset.getComponentTypeCount = function (type) {
-            switch (type) {
-                case 5120 /* Byte */:
-                case 5121 /* UnsignedByte */:
-                    return 1;
-                case 5122 /* Short */:
-                case 5123 /* UnsignedShort */:
-                    return 2;
-                case 5124 /* Int */:
-                case 5125 /* UnsignedInt */:
-                    return 4;
-                case 5126 /* Float */:
-                    return 4;
-                default:
-                    throw new Error();
-            }
-        };
-        /**
-         *
-         */
-        GLTFAsset.getAccessorTypeCount = function (type) {
-            switch (type) {
-                case "SCALAR" /* SCALAR */:
-                    return 1;
-                case "VEC2" /* VEC2 */:
-                    return 2;
-                case "VEC3" /* VEC3 */:
-                    return 3;
-                case "VEC4" /* VEC4 */:
-                case "MAT2" /* MAT2 */:
-                    return 4;
-                case "MAT3" /* MAT3 */:
-                    return 9;
-                case "MAT4" /* MAT4 */:
-                    return 16;
-                default:
-                    throw new Error();
-            }
-        };
-        /**
-         * 自定义 Mesh 的属性枚举。
-         */
-        GLTFAsset.getMeshAttributeType = function (type) {
-            switch (type) {
-                case "POSITION" /* POSITION */:
-                case "NORMAL" /* NORMAL */:
-                    return "VEC3" /* VEC3 */;
-                case "TEXCOORD_0" /* TEXCOORD_0 */:
-                case "TEXCOORD_1" /* TEXCOORD_1 */:
-                    return "VEC2" /* VEC2 */;
-                case "TANGENT" /* TANGENT */:
-                case "COLOR_0" /* COLOR_0 */:
-                case "COLOR_1" /* COLOR_1 */:
-                case "JOINTS_0" /* JOINTS_0 */:
-                case "WEIGHTS_0" /* WEIGHTS_0 */:
-                    return "VEC4" /* VEC4 */;
-                default:
-                    throw new Error();
-            }
-        };
-        /**
-         *
-         */
-        GLTFAsset.createGLTFAsset = function () {
-            var glftAsset = new GLTFAsset("");
-            glftAsset.config = {
-                asset: {
-                    version: "2.0"
-                },
-                extensionsRequired: ["paper"],
-                extensionsUsed: ["paper"],
-            };
-            return glftAsset;
-        };
-        /**
-         * @internal
-         */
-        GLTFAsset.prototype.parse = function (config, buffers) {
-            this.config = config;
-            for (var _i = 0, buffers_1 = buffers; _i < buffers_1.length; _i++) {
-                var buffer = buffers_1[_i];
-                this.buffers.push(buffer);
-            }
-        };
-        /**
-         * 从二进制数据中解析资源。
-         */
-        GLTFAsset.prototype.parseFromBinary = function (array) {
-            var index = 0;
-            if (array[index++] !== 0x46546C67 ||
-                array[index++] !== 2) {
-                console.assert(false, "Nonsupport glTF data.");
-                return;
-            }
-            if (array[index++] !== array.byteLength) {
-                console.assert(false, "Error glTF data.");
-                return;
-            }
-            var chunkLength = 0;
-            var chunkType = 0;
-            while (index < array.length) {
-                chunkLength = array[index++];
-                chunkType = array[index++];
-                if (chunkLength % 4) {
-                    console.assert(false, "Error glTF data.");
-                }
-                if (chunkType === 0x4E4F534A) {
-                    var jsonArray = new Uint8Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint8Array.BYTES_PER_ELEMENT);
-                    var jsonString = egret3d.io.BinReader.utf8ArrayToString(jsonArray);
-                    this.config = JSON.parse(jsonString);
-                }
-                else if (chunkType === 0x004E4942) {
-                    var buffer = new Uint32Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint32Array.BYTES_PER_ELEMENT);
-                    this.buffers.push(buffer);
-                }
-                else {
-                    console.assert(false, "Nonsupport glTF data.");
-                    return;
-                }
-                index += chunkLength / 4;
-            }
-        };
-        /**
-         * 根据指定 BufferView 创建二进制数组。
-         */
-        GLTFAsset.prototype.createTypeArrayFromBufferView = function (bufferView, componentType) {
-            var buffer = this.buffers[bufferView.buffer];
-            var bufferOffset = buffer.byteOffset + (bufferView.byteOffset || 0);
-            // assert.config.buffers[bufferView.buffer];
-            switch (componentType) {
-                case 5120 /* Byte */:
-                    return new Int8Array(buffer.buffer, bufferOffset, bufferView.byteLength / Int8Array.BYTES_PER_ELEMENT);
-                case 5121 /* UnsignedByte */:
-                    return new Uint8Array(buffer.buffer, bufferOffset, bufferView.byteLength / Uint8Array.BYTES_PER_ELEMENT);
-                case 5122 /* Short */:
-                    return new Int16Array(buffer.buffer, bufferOffset, bufferView.byteLength / Int16Array.BYTES_PER_ELEMENT);
-                case 5123 /* UnsignedShort */:
-                    return new Uint16Array(buffer.buffer, bufferOffset, bufferView.byteLength / Uint16Array.BYTES_PER_ELEMENT);
-                case 5125 /* UnsignedInt */:
-                    return new Int32Array(buffer.buffer, bufferOffset, bufferView.byteLength / Int32Array.BYTES_PER_ELEMENT);
-                case 5125 /* UnsignedInt */:
-                    return new Uint32Array(buffer.buffer, bufferOffset, bufferView.byteLength / Uint32Array.BYTES_PER_ELEMENT);
-                case 5126 /* Float */:
-                    return new Float32Array(buffer.buffer, bufferOffset, bufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
-            }
-            throw new Error();
-        };
-        /**
-         * 根据指定 Accessor 创建二进制数组。
-         */
-        GLTFAsset.prototype.createTypeArrayFromAccessor = function (accessor) {
-            var bufferCount = GLTFAsset.getAccessorTypeCount(accessor.type) * accessor.count;
-            var bufferView = this.getBufferView(accessor);
-            var buffer = this.buffers[bufferView.buffer];
-            // assert.config.buffers[bufferView.buffer];
-            var bufferOffset = buffer.byteOffset + (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
-            switch (accessor.componentType) {
-                case 5120 /* Byte */:
-                    return new Int8Array(buffer.buffer, bufferOffset, bufferCount);
-                case 5121 /* UnsignedByte */:
-                    return new Uint8Array(buffer.buffer, bufferOffset, bufferCount);
-                case 5122 /* Short */:
-                    return new Int16Array(buffer.buffer, bufferOffset, bufferCount);
-                case 5123 /* UnsignedShort */:
-                    return new Uint16Array(buffer.buffer, bufferOffset, bufferCount);
-                case 5125 /* UnsignedInt */:
-                    return new Int32Array(buffer.buffer, bufferOffset, bufferCount);
-                case 5125 /* UnsignedInt */:
-                    return new Uint32Array(buffer.buffer, bufferOffset, bufferCount);
-                case 5126 /* Float */:
-                    return new Float32Array(buffer.buffer, bufferOffset, bufferCount);
-            }
-            throw new Error();
-        };
-        /**
-         * 通过 Accessor 获取指定 BufferLength。
-         */
-        GLTFAsset.prototype.getBufferLength = function (accessor) {
-            return GLTFAsset.getAccessorTypeCount(accessor.type) * GLTFAsset.getComponentTypeCount(accessor.componentType) * accessor.count;
-        };
-        /**
-         * 通过 Accessor 获取指定 BufferOffset。
-         */
-        GLTFAsset.prototype.getBufferOffset = function (accessor) {
-            var bufferView = this.getBufferView(accessor);
-            // const buffer = this.buffers[bufferView.buffer];
-            return (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
-        };
-        /**
-         * 通过 Accessor 获取指定 Buffer。
-         */
-        GLTFAsset.prototype.getBuffer = function (accessor) {
-            var bufferView = this.getBufferView(accessor);
-            // this.config.buffers[bufferView.buffer];
-            return this.buffers[bufferView.buffer];
-        };
-        /**
-         * 通过 Accessor 获取指定 BufferView。
-         */
-        GLTFAsset.prototype.getBufferView = function (accessor) {
-            if (!this.config.bufferViews) {
-                throw new Error();
-            }
-            return this.config.bufferViews[accessor.bufferView || 0];
-        };
-        /**
-         * 通过 Accessor 索引，获取指定 Accessor。
-         */
-        GLTFAsset.prototype.getAccessor = function (index) {
-            if (!this.config.accessors) {
-                throw new Error();
-            }
-            return this.config.accessors[index];
-        };
-        /**
-         * 获取节点。
-         */
-        GLTFAsset.prototype.getNode = function (index) {
-            if (!this.config.nodes) {
-                throw new Error();
-            }
-            return this.config.nodes[index];
-        };
-        /*
-         * 获取动画剪辑。
-         */
-        GLTFAsset.prototype.getAnimationClip = function (name) {
-            if (!this.config.animations ||
-                this.config.animations.length === 0) {
-                return null;
-            }
-            var animation = this.config.animations[0];
-            if (animation.extensions.paper.clips.length === 0) {
-                return null;
-            }
-            if (!name) {
-                return animation.extensions.paper.clips[0];
-            }
-            for (var _i = 0, _a = this.config.animations; _i < _a.length; _i++) {
-                var animation_1 = _a[_i];
-                for (var _b = 0, _c = animation_1.extensions.paper.clips; _b < _c.length; _b++) {
-                    var animationClip = _c[_b];
-                    if (animationClip.name === name) {
-                        return animationClip;
-                    }
-                }
-            }
-            return null;
-        };
-        GLTFAsset.prototype.caclByteLength = function () {
-            return 0; // TODO
-        };
-        GLTFAsset.prototype.dispose = function () {
-            this.buffers.length = 0;
-        };
-        return GLTFAsset;
-    }(paper.Asset));
-    egret3d.GLTFAsset = GLTFAsset;
-    __reflect(GLTFAsset.prototype, "egret3d.GLTFAsset");
-})(egret3d || (egret3d = {}));
+        return "";
+    }
+    paper.findClassCode = findClassCode;
+    function findClassCodeFrom(target) {
+        var proto = target.__proto__;
+        var classTypeOrigin = proto.__class__;
+        var classType = paper.findClassCode(classTypeOrigin);
+        return classType;
+    }
+    paper.findClassCodeFrom = findClassCodeFrom;
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     var helpVec3_1 = new egret3d.Vector3();
@@ -21771,7 +21352,23 @@ var egret3d;
                     //
                     if (meshAttribute["NORMAL" /* NORMAL */]) {
                         if (orginAttributes.NORMAL) {
-                            _copyAccessorBufferArray(glTFAsset, orginAttributes.NORMAL, tempVertexBuffers["NORMAL" /* NORMAL */]);
+                            var normalBuffer = glTFAsset.createTypeArrayFromAccessor(glTFAsset.getAccessor(orginAttributes.NORMAL));
+                            var target = tempVertexBuffers["NORMAL" /* NORMAL */];
+                            var count = normalBuffer.length;
+                            var startIndex_1 = target.length;
+                            target.length += count;
+                            for (var j = 0; j < count; j += 3) {
+                                helpVec3_1.x = normalBuffer[j + 0];
+                                helpVec3_1.y = normalBuffer[j + 1];
+                                helpVec3_1.z = normalBuffer[j + 2];
+                                worldMatrix.transformNormal(helpVec3_1);
+                                helpInverseMatrix.transformNormal(helpVec3_1);
+                                helpVec3_1.normalize();
+                                target[startIndex_1 + j] = helpVec3_1.x;
+                                target[startIndex_1 + j + 1] = helpVec3_1.y;
+                                target[startIndex_1 + j + 2] = helpVec3_1.z;
+                            }
+                            // _copyAccessorBufferArray(glTFAsset, orginAttributes.NORMAL, tempVertexBuffers[gltf.MeshAttributeType.NORMAL]);
                         }
                         else {
                             _fillDefaultArray(tempVertexBuffers["NORMAL" /* NORMAL */], orginVertexCount, [0, 0, 0]);
@@ -21779,7 +21376,23 @@ var egret3d;
                     }
                     if (meshAttribute["TANGENT" /* TANGENT */]) {
                         if (orginAttributes.TANGENT) {
-                            _copyAccessorBufferArray(glTFAsset, orginAttributes.TANGENT, tempVertexBuffers["TANGENT" /* TANGENT */]);
+                            var tangentBuffer = glTFAsset.createTypeArrayFromAccessor(glTFAsset.getAccessor(orginAttributes.TANGENT));
+                            var target = tempVertexBuffers["TANGENT" /* TANGENT */];
+                            var count = tangentBuffer.length;
+                            var startIndex_2 = target.length;
+                            target.length += count;
+                            for (var j = 0; j < count; j += 3) {
+                                helpVec3_1.x = tangentBuffer[j + 0];
+                                helpVec3_1.y = tangentBuffer[j + 1];
+                                helpVec3_1.z = tangentBuffer[j + 2];
+                                worldMatrix.transformNormal(helpVec3_1);
+                                helpInverseMatrix.transformNormal(helpVec3_1);
+                                helpVec3_1.normalize();
+                                target[startIndex_2 + j] = helpVec3_1.x;
+                                target[startIndex_2 + j + 1] = helpVec3_1.y;
+                                target[startIndex_2 + j + 2] = helpVec3_1.z;
+                            }
+                            // _copyAccessorBufferArray(glTFAsset, orginAttributes.TANGENT, tempVertexBuffers[gltf.MeshAttributeType.TANGENT]);
                         }
                         else {
                             _fillDefaultArray(tempVertexBuffers["TANGENT" /* TANGENT */], orginVertexCount, [0, 0, 0, 1]);
@@ -22313,7 +21926,6 @@ var egret3d;
      */
     var GlProgram = (function () {
         function GlProgram(gl, vShaderInfo, fShaderInfo, defines) {
-            this._unifromsValue = {};
             this._cacheContextVer = -1;
             this._cacheMeshVer = -1;
             this._cacheMeshEbo = -1;
@@ -29671,78 +29283,282 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * TrailRender系统
+     * glTF 资源。
      */
-    var TrailRendererSystem = (function (_super) {
-        __extends(TrailRendererSystem, _super);
-        function TrailRendererSystem() {
+    var GLTFAsset = (function (_super) {
+        __extends(GLTFAsset, _super);
+        function GLTFAsset() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._interests = [
-                {
-                    componentClass: egret3d.TrailRenderer,
-                    listeners: [
-                        {
-                            type: "material" /* Meterial */,
-                            listener: function (component) {
-                                var gameObject = component.gameObject;
-                                if (_this._hasGameObject(gameObject)) {
-                                    _this._drawCallList.updateDrawCalls(gameObject, false);
-                                }
-                            }
-                        },
-                    ]
-                }
-            ];
-            _this._transform = new egret3d.Transform(); // TODO 不要这样，这是组件
-            _this._createDrawCalls = (function (gameObject) {
-                var renderer = _this._getComponent(gameObject, 0);
-                if (renderer._mesh && renderer._material && renderer.$active) {
-                    var subMeshIndex = 0;
-                    var drawCalls = [];
-                    for (var _i = 0, _a = renderer._mesh.glTFMesh.primitives; _i < _a.length; _i++) {
-                        var primitive = _a[_i];
-                        drawCalls.push({
-                            subMeshInfo: subMeshIndex,
-                            mesh: renderer._mesh,
-                            material: renderer._material,
-                            lightMapIndex: -1,
-                            boneData: null,
-                            gameObject: gameObject,
-                            transform: _this._transform,
-                            frustumTest: false,
-                            zdist: -1
-                        });
-                        subMeshIndex++;
-                    }
-                    return drawCalls;
-                }
-                return null;
-            });
-            _this._drawCallList = new egret3d.DrawCallList(_this._createDrawCalls);
+            /**
+             * Buffer 列表。
+             */
+            _this.buffers = [];
+            /**
+             * 配置。
+             */
+            _this.config = null;
             return _this;
         }
-        TrailRendererSystem.prototype.onEnable = function () {
-            // TODO
-        };
-        TrailRendererSystem.prototype.onAddGameObject = function (gameObject) {
-            this._drawCallList.updateDrawCalls(gameObject, false);
-            this._drawCallList.updateShadowCasters(gameObject, false);
-        };
-        TrailRendererSystem.prototype.onRemoveGameObject = function (gameObject) {
-            this._drawCallList.removeDrawCalls(gameObject);
-        };
-        TrailRendererSystem.prototype.onUpdate = function () {
-            var deltaTime = paper.Time.deltaTime;
-            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                var component = _a[_i];
-                component.update(deltaTime);
+        /**
+         *
+         */
+        GLTFAsset.getComponentTypeCount = function (type) {
+            switch (type) {
+                case 5120 /* Byte */:
+                case 5121 /* UnsignedByte */:
+                    return 1;
+                case 5122 /* Short */:
+                case 5123 /* UnsignedShort */:
+                    return 2;
+                case 5124 /* Int */:
+                case 5125 /* UnsignedInt */:
+                    return 4;
+                case 5126 /* Float */:
+                    return 4;
+                default:
+                    throw new Error();
             }
         };
-        TrailRendererSystem.prototype.onDisable = function () {
-            // TODO
+        /**
+         *
+         */
+        GLTFAsset.getAccessorTypeCount = function (type) {
+            switch (type) {
+                case "SCALAR" /* SCALAR */:
+                    return 1;
+                case "VEC2" /* VEC2 */:
+                    return 2;
+                case "VEC3" /* VEC3 */:
+                    return 3;
+                case "VEC4" /* VEC4 */:
+                case "MAT2" /* MAT2 */:
+                    return 4;
+                case "MAT3" /* MAT3 */:
+                    return 9;
+                case "MAT4" /* MAT4 */:
+                    return 16;
+                default:
+                    throw new Error();
+            }
         };
-        return TrailRendererSystem;
-    }(paper.BaseSystem));
-    egret3d.TrailRendererSystem = TrailRendererSystem;
-    __reflect(TrailRendererSystem.prototype, "egret3d.TrailRendererSystem");
+        /**
+         * 自定义 Mesh 的属性枚举。
+         */
+        GLTFAsset.getMeshAttributeType = function (type) {
+            switch (type) {
+                case "POSITION" /* POSITION */:
+                case "NORMAL" /* NORMAL */:
+                    return "VEC3" /* VEC3 */;
+                case "TEXCOORD_0" /* TEXCOORD_0 */:
+                case "TEXCOORD_1" /* TEXCOORD_1 */:
+                    return "VEC2" /* VEC2 */;
+                case "TANGENT" /* TANGENT */:
+                case "COLOR_0" /* COLOR_0 */:
+                case "COLOR_1" /* COLOR_1 */:
+                case "JOINTS_0" /* JOINTS_0 */:
+                case "WEIGHTS_0" /* WEIGHTS_0 */:
+                    return "VEC4" /* VEC4 */;
+                default:
+                    throw new Error();
+            }
+        };
+        /**
+         *
+         */
+        GLTFAsset.createGLTFAsset = function () {
+            var glftAsset = new GLTFAsset("");
+            glftAsset.config = {
+                asset: {
+                    version: "2.0"
+                },
+                extensionsRequired: ["paper"],
+                extensionsUsed: ["paper"],
+            };
+            return glftAsset;
+        };
+        /**
+         * @internal
+         */
+        GLTFAsset.prototype.parse = function (config, buffers) {
+            this.config = config;
+            for (var _i = 0, buffers_1 = buffers; _i < buffers_1.length; _i++) {
+                var buffer = buffers_1[_i];
+                this.buffers.push(buffer);
+            }
+        };
+        /**
+         * 从二进制数据中解析资源。
+         */
+        GLTFAsset.prototype.parseFromBinary = function (array) {
+            var index = 0;
+            if (array[index++] !== 0x46546C67 ||
+                array[index++] !== 2) {
+                console.assert(false, "Nonsupport glTF data.");
+                return;
+            }
+            if (array[index++] !== array.byteLength) {
+                console.assert(false, "Error glTF data.");
+                return;
+            }
+            var chunkLength = 0;
+            var chunkType = 0;
+            while (index < array.length) {
+                chunkLength = array[index++];
+                chunkType = array[index++];
+                if (chunkLength % 4) {
+                    console.assert(false, "Error glTF data.");
+                }
+                if (chunkType === 0x4E4F534A) {
+                    var jsonArray = new Uint8Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint8Array.BYTES_PER_ELEMENT);
+                    var jsonString = egret3d.io.BinReader.utf8ArrayToString(jsonArray);
+                    this.config = JSON.parse(jsonString);
+                }
+                else if (chunkType === 0x004E4942) {
+                    var buffer = new Uint32Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint32Array.BYTES_PER_ELEMENT);
+                    this.buffers.push(buffer);
+                }
+                else {
+                    console.assert(false, "Nonsupport glTF data.");
+                    return;
+                }
+                index += chunkLength / 4;
+            }
+        };
+        /**
+         * 根据指定 BufferView 创建二进制数组。
+         */
+        GLTFAsset.prototype.createTypeArrayFromBufferView = function (bufferView, componentType) {
+            var buffer = this.buffers[bufferView.buffer];
+            var bufferOffset = buffer.byteOffset + (bufferView.byteOffset || 0);
+            // assert.config.buffers[bufferView.buffer];
+            switch (componentType) {
+                case 5120 /* Byte */:
+                    return new Int8Array(buffer.buffer, bufferOffset, bufferView.byteLength / Int8Array.BYTES_PER_ELEMENT);
+                case 5121 /* UnsignedByte */:
+                    return new Uint8Array(buffer.buffer, bufferOffset, bufferView.byteLength / Uint8Array.BYTES_PER_ELEMENT);
+                case 5122 /* Short */:
+                    return new Int16Array(buffer.buffer, bufferOffset, bufferView.byteLength / Int16Array.BYTES_PER_ELEMENT);
+                case 5123 /* UnsignedShort */:
+                    return new Uint16Array(buffer.buffer, bufferOffset, bufferView.byteLength / Uint16Array.BYTES_PER_ELEMENT);
+                case 5125 /* UnsignedInt */:
+                    return new Int32Array(buffer.buffer, bufferOffset, bufferView.byteLength / Int32Array.BYTES_PER_ELEMENT);
+                case 5125 /* UnsignedInt */:
+                    return new Uint32Array(buffer.buffer, bufferOffset, bufferView.byteLength / Uint32Array.BYTES_PER_ELEMENT);
+                case 5126 /* Float */:
+                    return new Float32Array(buffer.buffer, bufferOffset, bufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
+            }
+            throw new Error();
+        };
+        /**
+         * 根据指定 Accessor 创建二进制数组。
+         */
+        GLTFAsset.prototype.createTypeArrayFromAccessor = function (accessor) {
+            var bufferCount = GLTFAsset.getAccessorTypeCount(accessor.type) * accessor.count;
+            var bufferView = this.getBufferView(accessor);
+            var buffer = this.buffers[bufferView.buffer];
+            // assert.config.buffers[bufferView.buffer];
+            var bufferOffset = buffer.byteOffset + (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
+            switch (accessor.componentType) {
+                case 5120 /* Byte */:
+                    return new Int8Array(buffer.buffer, bufferOffset, bufferCount);
+                case 5121 /* UnsignedByte */:
+                    return new Uint8Array(buffer.buffer, bufferOffset, bufferCount);
+                case 5122 /* Short */:
+                    return new Int16Array(buffer.buffer, bufferOffset, bufferCount);
+                case 5123 /* UnsignedShort */:
+                    return new Uint16Array(buffer.buffer, bufferOffset, bufferCount);
+                case 5125 /* UnsignedInt */:
+                    return new Int32Array(buffer.buffer, bufferOffset, bufferCount);
+                case 5125 /* UnsignedInt */:
+                    return new Uint32Array(buffer.buffer, bufferOffset, bufferCount);
+                case 5126 /* Float */:
+                    return new Float32Array(buffer.buffer, bufferOffset, bufferCount);
+            }
+            throw new Error();
+        };
+        /**
+         * 通过 Accessor 获取指定 BufferLength。
+         */
+        GLTFAsset.prototype.getBufferLength = function (accessor) {
+            return GLTFAsset.getAccessorTypeCount(accessor.type) * GLTFAsset.getComponentTypeCount(accessor.componentType) * accessor.count;
+        };
+        /**
+         * 通过 Accessor 获取指定 BufferOffset。
+         */
+        GLTFAsset.prototype.getBufferOffset = function (accessor) {
+            var bufferView = this.getBufferView(accessor);
+            // const buffer = this.buffers[bufferView.buffer];
+            return (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
+        };
+        /**
+         * 通过 Accessor 获取指定 Buffer。
+         */
+        GLTFAsset.prototype.getBuffer = function (accessor) {
+            var bufferView = this.getBufferView(accessor);
+            // this.config.buffers[bufferView.buffer];
+            return this.buffers[bufferView.buffer];
+        };
+        /**
+         * 通过 Accessor 获取指定 BufferView。
+         */
+        GLTFAsset.prototype.getBufferView = function (accessor) {
+            if (!this.config.bufferViews) {
+                throw new Error();
+            }
+            return this.config.bufferViews[accessor.bufferView || 0];
+        };
+        /**
+         * 通过 Accessor 索引，获取指定 Accessor。
+         */
+        GLTFAsset.prototype.getAccessor = function (index) {
+            if (!this.config.accessors) {
+                throw new Error();
+            }
+            return this.config.accessors[index];
+        };
+        /**
+         * 获取节点。
+         */
+        GLTFAsset.prototype.getNode = function (index) {
+            if (!this.config.nodes) {
+                throw new Error();
+            }
+            return this.config.nodes[index];
+        };
+        /*
+         * 获取动画剪辑。
+         */
+        GLTFAsset.prototype.getAnimationClip = function (name) {
+            if (!this.config.animations ||
+                this.config.animations.length === 0) {
+                return null;
+            }
+            var animation = this.config.animations[0];
+            if (animation.extensions.paper.clips.length === 0) {
+                return null;
+            }
+            if (!name) {
+                return animation.extensions.paper.clips[0];
+            }
+            for (var _i = 0, _a = this.config.animations; _i < _a.length; _i++) {
+                var animation_1 = _a[_i];
+                for (var _b = 0, _c = animation_1.extensions.paper.clips; _b < _c.length; _b++) {
+                    var animationClip = _c[_b];
+                    if (animationClip.name === name) {
+                        return animationClip;
+                    }
+                }
+            }
+            return null;
+        };
+        GLTFAsset.prototype.caclByteLength = function () {
+            return 0; // TODO
+        };
+        GLTFAsset.prototype.dispose = function () {
+            this.buffers.length = 0;
+        };
+        return GLTFAsset;
+    }(paper.Asset));
+    egret3d.GLTFAsset = GLTFAsset;
+    __reflect(GLTFAsset.prototype, "egret3d.GLTFAsset");
 })(egret3d || (egret3d = {}));

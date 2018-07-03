@@ -191,14 +191,51 @@ namespace egret3d {
                     //
                     if (meshAttribute[gltf.MeshAttributeType.NORMAL]) {
                         if (orginAttributes.NORMAL) {
-                            _copyAccessorBufferArray(glTFAsset, orginAttributes.NORMAL, tempVertexBuffers[gltf.MeshAttributeType.NORMAL]);
+                            const normalBuffer = glTFAsset.createTypeArrayFromAccessor(glTFAsset.getAccessor(orginAttributes.NORMAL)) as Float32Array;
+                            const target = tempVertexBuffers[gltf.MeshAttributeType.NORMAL];
+                            const count = normalBuffer.length;
+                            let startIndex = target.length;
+
+                            target.length += count;
+                            for (let j = 0; j < count; j += 3) {
+                                helpVec3_1.x = normalBuffer[j + 0];
+                                helpVec3_1.y = normalBuffer[j + 1];
+                                helpVec3_1.z = normalBuffer[j + 2];
+
+                                worldMatrix.transformNormal(helpVec3_1);
+                                helpInverseMatrix.transformNormal(helpVec3_1);
+                                helpVec3_1.normalize();
+                                target[startIndex + j] = helpVec3_1.x;
+                                target[startIndex + j + 1] = helpVec3_1.y;
+                                target[startIndex + j + 2] = helpVec3_1.z;
+                            }
+                            // _copyAccessorBufferArray(glTFAsset, orginAttributes.NORMAL, tempVertexBuffers[gltf.MeshAttributeType.NORMAL]);
                         } else {
                             _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.NORMAL], orginVertexCount, [0, 0, 0]);
                         }
                     }
                     if (meshAttribute[gltf.MeshAttributeType.TANGENT]) {
                         if (orginAttributes.TANGENT) {
-                            _copyAccessorBufferArray(glTFAsset, orginAttributes.TANGENT, tempVertexBuffers[gltf.MeshAttributeType.TANGENT]);
+                            const tangentBuffer = glTFAsset.createTypeArrayFromAccessor(glTFAsset.getAccessor(orginAttributes.TANGENT)) as Float32Array;
+                            const target = tempVertexBuffers[gltf.MeshAttributeType.TANGENT];
+                            const count = tangentBuffer.length;
+                            let startIndex = target.length;
+
+                            target.length += count;
+                            for (let j = 0; j < count; j += 3) {
+                                helpVec3_1.x = tangentBuffer[j + 0];
+                                helpVec3_1.y = tangentBuffer[j + 1];
+                                helpVec3_1.z = tangentBuffer[j + 2];
+
+                                worldMatrix.transformNormal(helpVec3_1);
+                                helpInverseMatrix.transformNormal(helpVec3_1);
+                                helpVec3_1.normalize();
+                                
+                                target[startIndex + j] = helpVec3_1.x;
+                                target[startIndex + j + 1] = helpVec3_1.y;
+                                target[startIndex + j + 2] = helpVec3_1.z;
+                            }
+                            // _copyAccessorBufferArray(glTFAsset, orginAttributes.TANGENT, tempVertexBuffers[gltf.MeshAttributeType.TANGENT]);
                         } else {
                             _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.TANGENT], orginVertexCount, [0, 0, 0, 1]);
                         }

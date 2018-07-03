@@ -243,8 +243,6 @@ namespace egret3d {
         private _attributes: { [key: string]: WebGLAttribute };
         private _uniforms: { [key: string]: WebGLUniform };
 
-        private _unifromsValue: { [key: string]: any } = {};
-
         private _cacheContext: RenderContext;
         private _cacheContextVer: number = -1;
 

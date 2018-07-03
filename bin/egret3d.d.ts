@@ -167,7 +167,7 @@ declare namespace egret3d {
         inverse(): this;
         transformVector3(value: Vector3): Vector3;
         transformNormal(value: Vector3): Vector3;
-        static set(n11: number, n21: number, n31: number, n41: number, n12: number, n22: number, n32: number, n42: number, n13: number, n23: number, n33: number, n43: number, n14: number, n24: number, n34: number, n44: number, matrix: Matrix): Matrix;
+        static set(n11: number, n21: number, n31: number, n41: number, n12: number, n22: number, n32: number, n42: number, n13: number, n23: number, n33: number, n43: number, n14: number, n24: number, n34: number, n44: number, result: Matrix): Matrix;
         static getScale(m: Matrix, out: Vector3): Vector3;
         static getTranslation(m: Matrix, out: Vector3): Vector3;
         static getQuaternion(m: Matrix, out: Quaternion): Quaternion;
@@ -184,8 +184,8 @@ declare namespace egret3d {
         static fromTranslate(x: number, y: number, z: number, out: Matrix): Matrix;
         static fromRTS(p: Vector3, s: Vector3, q: Quaternion, out: Matrix): Matrix;
         static getVector3ByOffset(src: Matrix, offset: number, result: Vector3): Vector3;
-        static transformVector3(vector: Vector3, transformation: Matrix, result: Vector3): Vector3;
-        static transformNormal(vector: Vector3, transformation: Matrix, result: Vector3): Vector3;
+        static transformVector3(vector: Vector3, transformMatrix: Matrix, result: Vector3): Vector3;
+        static transformNormal(vector: Vector3, transformMatrix: Matrix, result: Vector3): Vector3;
         static lerp(left: Matrix, right: Matrix, v: number, out: Matrix): Matrix;
         static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix): Matrix;
         static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix): Matrix;
@@ -2262,41 +2262,6 @@ declare namespace paper {
         [key: string]: ISerializedObject[];
     }
 }
-declare namespace egret3d {
-    /**
-     *
-     */
-    class Border implements paper.ISerializable {
-        /**
-         *
-         */
-        l: number;
-        /**
-         *
-         */
-        t: number;
-        /**
-         *
-         */
-        r: number;
-        /**
-         *
-         */
-        b: number;
-        /**
-         *
-         */
-        constructor(l?: number, t?: number, r?: number, b?: number);
-        /**
-         * @inheritDoc
-         */
-        serialize(): number[];
-        /**
-         * @inheritDoc
-         */
-        deserialize(element: number[]): void;
-    }
-}
 declare namespace paper {
     /**
      * 序列化方法
@@ -2788,26 +2753,6 @@ declare namespace paper {
         function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any): void;
     }
 }
-declare namespace egret3d {
-    class Angelref {
-        v: number;
-    }
-    class Matrix3x2 {
-        rawData: Float32Array;
-        constructor(datas?: Float32Array);
-        static multiply(lhs: Matrix3x2, rhs: Matrix3x2, out: Matrix3x2): Matrix3x2;
-        static fromRotate(angle: number, out: Matrix3x2): Matrix3x2;
-        static fromScale(xScale: number, yScale: number, out: Matrix3x2): Matrix3x2;
-        static fromTranslate(x: number, y: number, out: Matrix3x2): Matrix3x2;
-        static fromRTS(pos: Vector2, scale: Vector2, rot: number, out: Matrix3x2): void;
-        static transformVector2(mat: Matrix, inp: Vector2, out: Vector2): Vector2;
-        static transformNormal(mat: Matrix, inp: Vector2, out: Vector2): Vector2;
-        static inverse(src: Matrix3x2, out: Matrix3x2): Matrix3x2;
-        static identify(out: Matrix3x2): Matrix3x2;
-        static copy(src: Matrix3x2, out: Matrix3x2): Matrix3x2;
-        static decompose(src: Matrix3x2, scale: Vector2, rotation: Angelref, translation: Vector2): boolean;
-    }
-}
 declare namespace paper {
     /**
      * 可以挂载Component的实体类。
@@ -3263,34 +3208,6 @@ declare namespace egret3d {
          * @language zh_CN
          */
         createInstance(): paper.Scene;
-    }
-}
-declare namespace egret3d {
-    /**
-     * audio asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 声音资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Sound extends paper.Asset {
-        /**
-         *
-         */
-        buffer: AudioBuffer;
-        /**
-         * @inheritDoc
-         */
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
     }
 }
 declare namespace egret3d {
@@ -5180,12 +5097,27 @@ declare namespace egret3d {
         private _updateTrailData();
     }
 }
-declare namespace paper {
-    const serializeClassMap: {
-        [key: string]: string;
-    };
-    function findClassCode(name: string): string;
-    function findClassCodeFrom(target: any): string;
+declare namespace egret3d {
+    /**
+     * TrailRender系统
+     */
+    class TrailRendererSystem extends paper.BaseSystem<TrailRenderer> {
+        readonly _interests: {
+            componentClass: typeof TrailRenderer;
+            listeners: {
+                type: TrailRenderEventType;
+                listener: (component: TrailRenderer) => void;
+            }[];
+        }[];
+        private readonly _transform;
+        private readonly _createDrawCalls;
+        private readonly _drawCallList;
+        onEnable(): void;
+        onAddGameObject(gameObject: paper.GameObject): void;
+        onRemoveGameObject(gameObject: paper.GameObject): void;
+        onUpdate(): void;
+        onDisable(): void;
+    }
 }
 declare namespace egret3d {
     /**
@@ -5209,176 +5141,12 @@ declare namespace egret3d {
         onDisable(): void;
     }
 }
-declare namespace egret3d {
-    /**
-     * @private
-     */
-    interface GLTFAnimation extends gltf.Animation {
-        extensions: {
-            paper: {
-                /**
-                 * 动画帧率。
-                 */
-                frameRate: number;
-                /**
-                 * 动画帧数。
-                 */
-                frameCount: number;
-                /**
-                 * 整个帧数据访问器索引。
-                 */
-                data: number;
-                /**
-                 * 采样帧访问器索引列表。
-                 */
-                frames: number[];
-                /**
-                 * 骨骼名称列表。
-                 */
-                joints: string[];
-                /**
-                 * 动画重定向。
-                 */
-                retarget?: {
-                    joints: string[];
-                };
-                /**
-                 * 动画剪辑列表。
-                 */
-                clips: GLTFAnimationClip[];
-            };
-        };
-    }
-    /**
-     * 动画剪辑反序列化。
-     */
-    interface GLTFAnimationClip {
-        /**
-         * 动画剪辑名称。
-         */
-        name: string;
-        /**
-         * 播放次数。
-         */
-        playTimes?: number;
-        /**
-         * 开始时间。（以秒为单位）
-         */
-        position: number;
-        /**
-         * 持续时间。（以秒为单位）
-         */
-        duration: number;
-        /**
-         * 遮罩名称列表。
-         */
-        mask: number[];
-        /**
-         * 事件列表。
-         */
-        events: GLTFFrameEvent[];
-    }
-    interface GLTFAnimationChannel extends gltf.AnimationChannel {
-        extensions?: {
-            paper: {
-                type: string;
-                property: string;
-            };
-        };
-    }
-    /**
-     * 帧事件反序列化。
-     */
-    interface GLTFFrameEvent {
-        /**
-         * 事件名称。
-         */
-        name: string;
-        /**
-         * 事件位置。（%）
-         */
-        position: number;
-        /**
-         * 事件 int 变量。
-         */
-        intVariable: number;
-        /**
-         * 事件 float 变量。
-         */
-        floatVariable: number;
-        /**
-         * 事件 string 变量。
-         */
-        stringVariable: string;
-    }
-    /**
-     * glTF 资源。
-     */
-    class GLTFAsset extends paper.Asset {
-        /**
-         *
-         */
-        static getComponentTypeCount(type: gltf.ComponentType): number;
-        /**
-         *
-         */
-        static getAccessorTypeCount(type: gltf.AccessorType): number;
-        /**
-         * 自定义 Mesh 的属性枚举。
-         */
-        static getMeshAttributeType(type: gltf.MeshAttribute): gltf.AccessorType;
-        /**
-         *
-         */
-        static createGLTFAsset(): GLTFAsset;
-        /**
-         * Buffer 列表。
-         */
-        readonly buffers: (Float32Array | Uint32Array | Uint16Array)[];
-        /**
-         * 配置。
-         */
-        config: gltf.GLTF;
-        /**
-         * 从二进制数据中解析资源。
-         */
-        parseFromBinary(array: Uint32Array): void;
-        /**
-         * 根据指定 BufferView 创建二进制数组。
-         */
-        createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): Uint8Array;
-        /**
-         * 根据指定 Accessor 创建二进制数组。
-         */
-        createTypeArrayFromAccessor(accessor: gltf.Accessor): Uint8Array;
-        /**
-         * 通过 Accessor 获取指定 BufferLength。
-         */
-        getBufferLength(accessor: gltf.Accessor): number;
-        /**
-         * 通过 Accessor 获取指定 BufferOffset。
-         */
-        getBufferOffset(accessor: gltf.Accessor): number;
-        /**
-         * 通过 Accessor 获取指定 Buffer。
-         */
-        getBuffer(accessor: gltf.Accessor): Float32Array | Uint16Array | Uint32Array;
-        /**
-         * 通过 Accessor 获取指定 BufferView。
-         */
-        getBufferView(accessor: gltf.Accessor): gltf.BufferView;
-        /**
-         * 通过 Accessor 索引，获取指定 Accessor。
-         */
-        getAccessor(index: gltf.GLTFIndex): gltf.Accessor;
-        /**
-         * 获取节点。
-         */
-        getNode(index: gltf.GLTFIndex): gltf.Node;
-        getAnimationClip(name: string): any;
-        caclByteLength(): number;
-        dispose(): void;
-    }
+declare namespace paper {
+    const serializeClassMap: {
+        [key: string]: string;
+    };
+    function findClassCode(name: string): string;
+    function findClassCodeFrom(target: any): string;
 }
 declare namespace egret3d {
     const enum MeshDrawMode {
@@ -7417,7 +7185,6 @@ declare namespace egret3d {
         program: WebGLProgram;
         private _attributes;
         private _uniforms;
-        private _unifromsValue;
         private _cacheContext;
         private _cacheContextVer;
         private _cacheMesh;
@@ -8645,23 +8412,172 @@ declare namespace egret3d.ammo {
 }
 declare namespace egret3d {
     /**
-     * TrailRender系统
+     * @private
      */
-    class TrailRendererSystem extends paper.BaseSystem<TrailRenderer> {
-        readonly _interests: {
-            componentClass: typeof TrailRenderer;
-            listeners: {
-                type: TrailRenderEventType;
-                listener: (component: TrailRenderer) => void;
-            }[];
-        }[];
-        private readonly _transform;
-        private readonly _createDrawCalls;
-        private readonly _drawCallList;
-        onEnable(): void;
-        onAddGameObject(gameObject: paper.GameObject): void;
-        onRemoveGameObject(gameObject: paper.GameObject): void;
-        onUpdate(): void;
-        onDisable(): void;
+    interface GLTFAnimation extends gltf.Animation {
+        extensions: {
+            paper: {
+                /**
+                 * 动画帧率。
+                 */
+                frameRate: number;
+                /**
+                 * 动画帧数。
+                 */
+                frameCount: number;
+                /**
+                 * 整个帧数据访问器索引。
+                 */
+                data: number;
+                /**
+                 * 采样帧访问器索引列表。
+                 */
+                frames: number[];
+                /**
+                 * 骨骼名称列表。
+                 */
+                joints: string[];
+                /**
+                 * 动画重定向。
+                 */
+                retarget?: {
+                    joints: string[];
+                };
+                /**
+                 * 动画剪辑列表。
+                 */
+                clips: GLTFAnimationClip[];
+            };
+        };
+    }
+    /**
+     * 动画剪辑反序列化。
+     */
+    interface GLTFAnimationClip {
+        /**
+         * 动画剪辑名称。
+         */
+        name: string;
+        /**
+         * 播放次数。
+         */
+        playTimes?: number;
+        /**
+         * 开始时间。（以秒为单位）
+         */
+        position: number;
+        /**
+         * 持续时间。（以秒为单位）
+         */
+        duration: number;
+        /**
+         * 遮罩名称列表。
+         */
+        mask: number[];
+        /**
+         * 事件列表。
+         */
+        events: GLTFFrameEvent[];
+    }
+    interface GLTFAnimationChannel extends gltf.AnimationChannel {
+        extensions?: {
+            paper: {
+                type: string;
+                property: string;
+            };
+        };
+    }
+    /**
+     * 帧事件反序列化。
+     */
+    interface GLTFFrameEvent {
+        /**
+         * 事件名称。
+         */
+        name: string;
+        /**
+         * 事件位置。（%）
+         */
+        position: number;
+        /**
+         * 事件 int 变量。
+         */
+        intVariable: number;
+        /**
+         * 事件 float 变量。
+         */
+        floatVariable: number;
+        /**
+         * 事件 string 变量。
+         */
+        stringVariable: string;
+    }
+    /**
+     * glTF 资源。
+     */
+    class GLTFAsset extends paper.Asset {
+        /**
+         *
+         */
+        static getComponentTypeCount(type: gltf.ComponentType): number;
+        /**
+         *
+         */
+        static getAccessorTypeCount(type: gltf.AccessorType): number;
+        /**
+         * 自定义 Mesh 的属性枚举。
+         */
+        static getMeshAttributeType(type: gltf.MeshAttribute): gltf.AccessorType;
+        /**
+         *
+         */
+        static createGLTFAsset(): GLTFAsset;
+        /**
+         * Buffer 列表。
+         */
+        readonly buffers: (Float32Array | Uint32Array | Uint16Array)[];
+        /**
+         * 配置。
+         */
+        config: gltf.GLTF;
+        /**
+         * 从二进制数据中解析资源。
+         */
+        parseFromBinary(array: Uint32Array): void;
+        /**
+         * 根据指定 BufferView 创建二进制数组。
+         */
+        createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): Uint8Array;
+        /**
+         * 根据指定 Accessor 创建二进制数组。
+         */
+        createTypeArrayFromAccessor(accessor: gltf.Accessor): Uint8Array;
+        /**
+         * 通过 Accessor 获取指定 BufferLength。
+         */
+        getBufferLength(accessor: gltf.Accessor): number;
+        /**
+         * 通过 Accessor 获取指定 BufferOffset。
+         */
+        getBufferOffset(accessor: gltf.Accessor): number;
+        /**
+         * 通过 Accessor 获取指定 Buffer。
+         */
+        getBuffer(accessor: gltf.Accessor): Float32Array | Uint16Array | Uint32Array;
+        /**
+         * 通过 Accessor 获取指定 BufferView。
+         */
+        getBufferView(accessor: gltf.Accessor): gltf.BufferView;
+        /**
+         * 通过 Accessor 索引，获取指定 Accessor。
+         */
+        getAccessor(index: gltf.GLTFIndex): gltf.Accessor;
+        /**
+         * 获取节点。
+         */
+        getNode(index: gltf.GLTFIndex): gltf.Node;
+        getAnimationClip(name: string): any;
+        caclByteLength(): number;
+        dispose(): void;
     }
 }
