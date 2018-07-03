@@ -51,7 +51,7 @@ namespace egret3d {
          *  
          */
         @paper.serializedField
-        public _material: Material | null;
+        private _material: Material | null;
         /**
          * 
          */

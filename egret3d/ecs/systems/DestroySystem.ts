@@ -38,12 +38,6 @@ namespace paper {
             }
 
             this._bufferedGameObjects.push(gameObject);
-
-            if (gameObject.transform) {
-                for (const child of gameObject.transform.children) {
-                    child.gameObject.destroy();
-                }
-            }
         }
     }
 }

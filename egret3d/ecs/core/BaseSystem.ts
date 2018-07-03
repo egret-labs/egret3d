@@ -66,6 +66,10 @@ namespace paper {
          */
         protected readonly _waittingComponents: { [key: string]: T[] } = {};
         /**
+         * 
+         */
+        protected readonly _globalGameObject: GameObject = paper.Application.sceneManager.globalGameObject;
+        /**
          * @internal
          */
         public constructor() {

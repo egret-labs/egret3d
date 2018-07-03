@@ -110,7 +110,12 @@ namespace paper {
         }
 
         private _removeComponentReference(component: BaseComponent) {
-            component.enabled = false; // TODO remove flag.
+            component.enabled = false;
+            (component as any).gameObject = null;
+
+            if (component === this.renderer) {
+                this.renderer = null;
+            }
 
             const destroySystem = Application.systemManager.getSystem(DestroySystem);
             if (destroySystem) {
@@ -132,6 +137,28 @@ namespace paper {
             }
         }
 
+        private _destroy() {
+            const destroySystem = Application.systemManager.getSystem(DestroySystem);
+            if (destroySystem) {
+                destroySystem.bufferGameObject(this);
+            }
+
+            for (const child of this.transform.children) {
+                child.gameObject._destroy();
+            }
+
+            for (const component of this._components) {
+                this._removeComponentReference(component);
+            }
+
+            this.transform = null as any;
+            this.renderer = null;
+
+            this._components.length = 0;
+            this._scene._removeGameObject(this);
+            this._scene = null as any;
+        }
+
         /**
          * 
          */
@@ -146,21 +173,12 @@ namespace paper {
                 return;
             }
 
-            const destroySystem = Application.systemManager.getSystem(DestroySystem);
-            if (destroySystem) {
-                destroySystem.bufferGameObject(this);
+            const parent = this.transform.parent;
+            if (parent) {
+                parent._children.splice(parent._children.indexOf(this.transform), 1);
             }
 
-            for (const component of this._components) {
-                this._removeComponentReference(component);
-            }
-
-            this.transform = null as any;
-            this.renderer = null;
-
-            this._components.length = 0;
-            this._scene._removeGameObject(this);
-            this._scene = null as any;
+            this._destroy();
         }
 
         /**
@@ -202,10 +220,6 @@ namespace paper {
                         this._removeComponentReference(component);
                         this._components.splice(index, 1);
 
-                        if (component === this.renderer) {
-                            this.renderer = null;
-                        }
-
                         return;
                     }
 
@@ -224,10 +238,6 @@ namespace paper {
                         this._removeComponentReference(component);
                         this._components.splice(i, 1);
 
-                        if (component === this.renderer) {
-                            this.renderer = null;
-                        }
-
                         if (!isAll) {
                             return;
                         }
@@ -243,10 +253,6 @@ namespace paper {
             for (const component of this._components) {
                 if (component instanceof egret3d.Transform) {
                     continue;
-                }
-
-                if (component === this.renderer) {
-                    this.renderer = null;
                 }
 
                 this._removeComponentReference(component);
@@ -359,6 +365,12 @@ namespace paper {
                     child.gameObject.broadcastMessage(methodName, parameter, requireReceiver);
                 }
             }
+        }
+        /**
+         * 
+         */
+        public get isDestroyed() {
+            return !this._scene;
         }
         /**
          * 

@@ -3,9 +3,6 @@ namespace egret3d {
      * 
      */
     export class Pool<T> {
-        public static readonly drawCall: Pool<DrawCall> = new Pool<DrawCall>();
-        public static readonly shadowCaster: Pool<DrawCall> = new Pool<DrawCall>();
-
         private readonly _instances: T[] = [];
 
         public clear() {

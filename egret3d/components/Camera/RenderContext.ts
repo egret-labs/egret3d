@@ -7,8 +7,6 @@ namespace egret3d {
      * 包括矩阵信息，灯光，光照贴图，viewport尺寸等等
      */
     export class RenderContext {
-
-        public receiveShadow: boolean = false;
         /**
          * 
          */
@@ -29,6 +27,7 @@ namespace egret3d {
          * 
          */
         public lightmap: Texture | null = null;
+        public lightmapIntensity: number = 1.0;
         public boneData: Float32Array | null = null;
 
         // 15: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
@@ -60,15 +59,21 @@ namespace egret3d {
         private readonly matrix_mv: Matrix = new Matrix();
         public readonly matrix_vp: Matrix = new Matrix();
         //matrixNormal: paper.matrix = new paper.matrix();
+
+        /**
+         * 
+         */
+        public drawCall: DrawCall;
         /**
          * 
          */
         public lightmapOffset: Float32Array | null = null;
 
-        public updateLightmap(texture: Texture, uv: number, offset: Float32Array) {
+        public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
             this.lightmap = texture;
             this.lightmapUV = uv;
             this.lightmapOffset = offset;
+            this.lightmapIntensity = intensity;
 
             this.version++;
         }
@@ -273,8 +278,8 @@ namespace egret3d {
             this.version++;
         }
 
-        updateModel(model: Transform) {
-            Matrix.copy(model.getWorldMatrix(), this.matrix_m); // clone matrix because getWorldMatrix returns a reference
+        updateModel(matrix: Matrix) {
+            Matrix.copy(matrix, this.matrix_m); // clone matrix because getWorldMatrix returns a reference
             Matrix.multiply(this.matrix_v, this.matrix_m, this.matrix_mv);
             // paper._Matrix.inverse(this.matrixModelView, this.matrixNormal);
             // paper.matrixTranspose(this.matrixNormal, this.matrixNormal);

@@ -53,7 +53,10 @@ namespace egret3d {
         private readonly localScale: Vector3 = new Vector3(1.0, 1.0, 1.0);
         @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setScale" })
         private readonly scale: Vector3 = new Vector3(1.0, 1.0, 1.0);
-        private readonly _children: Transform[] = [];
+        /**
+         * @internal
+         */
+        public readonly _children: Transform[] = [];
         private _aabb: AABB = null as any;
         private _parent: Transform | null = null;
 

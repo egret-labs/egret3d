@@ -25,7 +25,6 @@ namespace paper {
          * - 重载此方法时，必须调用 `super.uninitialize()`。
          */
         public uninitialize() {
-            (this as any).gameObject = null;
         }
 
         public serialize(): any {
@@ -41,6 +40,12 @@ namespace paper {
             if (element.uuid) {
                 (this as any).uuid = element.uuid;
             }
+        }
+        /**
+         * 
+         */
+        public get isDestroyed() {
+            return !this.gameObject;
         }
         /**
          * 组件的激活状态。
