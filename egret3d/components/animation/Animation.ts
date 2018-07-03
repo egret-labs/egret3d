@@ -653,7 +653,9 @@ namespace egret3d {
                 }
             }
 
-            if (this._playState === 1 && this._fadeState === 0) {
+            if (prevPlayState !== this._playState && this._playState === 1) {
+                this._animationComponent._dispatchEvent("complete", this);
+
                 const animationNames = this._animationComponent._animationNames;
                 if (animationNames.length > 0) {
                     const animationName = animationNames.shift();
@@ -687,7 +689,7 @@ namespace egret3d {
         private readonly _animations: GLTFAsset[] = [];
         /**
          * 骨骼姿势列表。
-         * 
+         * @internal
          */
         public readonly _boneBlendLayers: BoneBlendLayer[] = [];
         /**
@@ -704,12 +706,20 @@ namespace egret3d {
          */
         private _lastAnimationState: AnimationState | null = null;
         /**
-         * 
+         * @internal
          */
         public _skinnedMeshRenderer: SkinnedMeshRenderer | null = null;
         /**
-         * @inheritDoc
+         * @internal
          */
+        public _dispatchEvent(type: string, animationState: AnimationState, eventObject?: any) { // TODO more event type.
+            for (const component of this.gameObject.getComponents(paper.Behaviour, true)) {
+                if (component.onAnimationEvent) {
+                    component.onAnimationEvent(type, animationState, eventObject);
+                }
+            }
+        }
+
         public initialize() {
             super.initialize();
 

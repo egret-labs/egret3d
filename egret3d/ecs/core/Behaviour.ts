@@ -109,6 +109,10 @@ namespace paper {
         /**
          * 
          */
+        public onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
+        /**
+         * 
+         */
         public onLateUpdate?(deltaTime: number): void;
         /**
          * 组件被禁用或实体被禁用时调用。
