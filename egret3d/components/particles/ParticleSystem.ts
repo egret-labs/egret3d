@@ -420,6 +420,8 @@ namespace egret3d.particle {
 
                     frustumTest: false,
                     zdist: -1,
+
+                    disable: false,
                 };
 
                 this._drawCalls.drawCalls.push(drawCall);

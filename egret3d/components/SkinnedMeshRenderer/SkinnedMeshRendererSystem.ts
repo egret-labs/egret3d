@@ -42,6 +42,8 @@ namespace egret3d {
                     zdist: -1,
 
                     boneData: renderer.boneBuffer,
+
+                    disable: false,
                 };
 
                 this._drawCalls.drawCalls.push(drawCall);

@@ -42,6 +42,8 @@ namespace egret3d {
                             break;
                     }
 
+                    this._drawCalls.sortAfterFrustumCulling(shadow.camera);
+
                     for (let j = 0; j < face; j++) {
 
                         shadow.update(light, j);
@@ -63,7 +65,7 @@ namespace egret3d {
                         context.updateLightDepth(light);
 
                         for (const drawCall of this._drawCalls.drawCalls) {
-                            if (!drawCall.renderer.castShadows) {
+                            if (!drawCall.renderer.castShadows || drawCall.disable) {
                                 continue;
                             }
 
