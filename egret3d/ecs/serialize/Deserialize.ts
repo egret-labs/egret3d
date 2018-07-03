@@ -125,8 +125,27 @@ namespace paper {
                         (target as ISerializable).deserialize(source);
                         return target;
                     }
+                    else if (ArrayBuffer.isView(target)) {
+                        for (let i = 0, l = Math.min(source.length, (target as Uint8Array).length); i < l; ++i) {
+                            target[i] = source[i];
+                        }
+
+                        return target;
+                    }
+                    else if (Array.isArray(target) && target.length === 0) {
+                        for (let i = 0, l = source.length; i < l; ++i) {
+                            target[i] = _deserializeChild(source[i]);
+                        }
+
+                        return target;
+                    }
+                    else if (target instanceof BaseComponent) {
+                        _deserializeObject(source, target);
+
+                        return target;
+                    }
                     else {
-                        console.info("Deserialize can be optimized.");
+                        // console.info("Deserialize can be optimized.");
                     }
                 }
 

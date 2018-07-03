@@ -26,7 +26,7 @@ namespace paper {
         protected readonly _lightmapScaleOffset: Float32Array = new Float32Array([1.0, 1.0, 0.0, 0.0]);
 
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
-        public get receiveShadows(): boolean {
+        public get receiveShadows() {
             return this._receiveShadows;
         }
         public set receiveShadows(value: boolean) {
@@ -38,7 +38,7 @@ namespace paper {
         }
 
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
-        public get castShadows(): boolean {
+        public get castShadows() {
             return this._castShadows;
         }
         public set castShadows(value: boolean) {
@@ -50,7 +50,7 @@ namespace paper {
         }
 
         @paper.editor.property(paper.editor.EditType.NUMBER)
-        public get lightmapIndex(): number {
+        public get lightmapIndex() {
             return this._lightmapIndex;
         }
         public set lightmapIndex(value: number) {
@@ -62,7 +62,7 @@ namespace paper {
         }
 
         // @paper.editor.property(paper.editor.EditType.VECTOR4) TODO
-        public get lightmapScaleOffset(): Float32Array {
+        public get lightmapScaleOffset() {
             return this._lightmapScaleOffset;
         }
 
