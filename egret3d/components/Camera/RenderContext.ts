@@ -27,6 +27,7 @@ namespace egret3d {
          * 
          */
         public lightmap: Texture | null = null;
+        public lightmapIntensity: number = 1.0;
         public boneData: Float32Array | null = null;
 
         // 15: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
@@ -68,10 +69,11 @@ namespace egret3d {
          */
         public lightmapOffset: Float32Array | null = null;
 
-        public updateLightmap(texture: Texture, uv: number, offset: Float32Array) {
+        public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
             this.lightmap = texture;
             this.lightmapUV = uv;
             this.lightmapOffset = offset;
+            this.lightmapIntensity = intensity;
 
             this.version++;
         }

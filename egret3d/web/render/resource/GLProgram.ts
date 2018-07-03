@@ -243,8 +243,6 @@ namespace egret3d {
         private _attributes: { [key: string]: WebGLAttribute };
         private _uniforms: { [key: string]: WebGLUniform };
 
-        private _unifromsValue: { [key: string]: any } = {};
-
         private _cacheContext: RenderContext;
         private _cacheContextVer: number = -1;
 
@@ -431,6 +429,9 @@ namespace egret3d {
                         break;
                     case "_LightmapTex":
                         this.setTexture(key, context.lightmap);
+                        break;
+                    case "_LightmapIntensity":
+                        this.setFloat(key, context.lightmapIntensity);
                         break;
                     case "glstate_lightmapOffset":
                         if (context.lightmapOffset) {

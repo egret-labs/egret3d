@@ -14,6 +14,11 @@ namespace paper {
         @serializedField
         public readonly lightmaps: egret3d.Texture[] = [];
         /**
+         * lightmap强度
+         */
+        @serializedField
+        public lightmapIntensity: number = 1.0;
+        /**
          * 存储着关联的数据
          * 场景保存时，将场景快照数据保存至对应的资源中
          */
