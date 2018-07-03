@@ -53,8 +53,8 @@ namespace egret3d.particle {
                         lightMapIndex: -1,
                         lightMapScaleOffset: null,
                         boneData: null,
-                        gameObject: gameObject,
-                        transform: gameObject.transform,
+                        renderer: renderer,
+                        transform: renderer.gameObject.transform,
                         frustumTest: false,
                         zdist: -1
                     });

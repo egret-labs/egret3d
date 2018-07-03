@@ -140,9 +140,9 @@ namespace paper {
                 return undefined;
 
             case "object": {
-                if (Array.isArray(source)) { // Array.
+                if (Array.isArray(source) || ArrayBuffer.isView(source)) { // Array.
                     const target = [];
-                    for (const element of source) {
+                    for (const element of source as any[]) {
                         target.push(_serializeChild(element, parent, key));
                     }
 

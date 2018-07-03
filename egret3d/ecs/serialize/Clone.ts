@@ -33,6 +33,6 @@ namespace paper {
             }
         }
 
-        return deserialize<T>(data, assets);
+        return deserialize<T>(data, assets, true);
     }
 }

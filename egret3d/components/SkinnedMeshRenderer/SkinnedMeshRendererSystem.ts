@@ -37,7 +37,7 @@ namespace egret3d {
                         material: renderer.materials[primitive.material || 0],
                         lightMapIndex: -1,
                         boneData: renderer.boneBuffer,
-                        gameObject: gameObject,
+                        renderer: renderer,
                         transform: gameObject.transform, // TODO
                         frustumTest: false,
                         zdist: -1

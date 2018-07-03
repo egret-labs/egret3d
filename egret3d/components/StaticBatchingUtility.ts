@@ -264,8 +264,8 @@ namespace egret3d {
                             for (let j = 0; j < uvBuffer.length; j += 2) {
                                 let u = uvBuffer[j + 0];
                                 let v = uvBuffer[j + 1];
-                                u = ((u * orginLightmapScaleOffset.x + orginLightmapScaleOffset.z) - lightmapScaleOffset.z) / lightmapScaleOffset.x;
-                                v = ((v * orginLightmapScaleOffset.y - orginLightmapScaleOffset.y - orginLightmapScaleOffset.w) + lightmapScaleOffset.w + lightmapScaleOffset.y) / lightmapScaleOffset.y;
+                                u = ((u * orginLightmapScaleOffset[0] + orginLightmapScaleOffset[2]) - lightmapScaleOffset[2]) / lightmapScaleOffset[0];
+                                v = ((v * orginLightmapScaleOffset[1] - orginLightmapScaleOffset[1] - orginLightmapScaleOffset[3]) + lightmapScaleOffset[3] + lightmapScaleOffset[1]) / lightmapScaleOffset[1];
 
                                 tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
                             }
@@ -376,9 +376,9 @@ namespace egret3d {
         public vertexBufferSize: number = 0;
         public indexBufferTotalSize: number = 0;
         public lightmapIndex: number = -1;
-        public lightmapScaleOffset: Vector4 = new Vector4();
         public meshAttribute: { [key: string]: gltf.MeshAttributeType } = {};
         public root: paper.GameObject | null = null;
+        public lightmapScaleOffset: Float32Array | null = null;
         public readonly instances: paper.GameObject[] = [];
     }
 }
