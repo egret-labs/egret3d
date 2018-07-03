@@ -53,9 +53,7 @@ namespace egret3d {
                 const gameObject = drawCall.renderer.gameObject;
 
                 if (camera.cullingMask & gameObject.layer) {
-                    if (gameObject.activeInHierarchy) {
-                        this._applyDrawCall(camera.context, drawCall);
-                    }
+                    this._applyDrawCall(camera.context, drawCall);
                 }
             }
             // Egret2D渲染不加入DrawCallList的排序

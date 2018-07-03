@@ -68,18 +68,16 @@ namespace egret3d {
                             }
 
                             const gameObject = drawCall.renderer.gameObject;
-                            if (gameObject.activeInHierarchy) {
-                                context.drawCall = drawCall;
-                                context.updateModel(drawCall.matrix || gameObject.transform.getWorldMatrix());
-                                //
-                                let drawType = "base";
-                                if (drawCall.boneData) {
-                                    context.updateBones(drawCall.boneData);
-                                    drawType = "skin";
-                                }
-
-                                WebGLKit.draw(context, drawType);
+                            context.drawCall = drawCall;
+                            context.updateModel(drawCall.matrix || gameObject.transform.getWorldMatrix());
+                            //
+                            let drawType = "base";
+                            if (drawCall.boneData) {
+                                context.updateBones(drawCall.boneData);
+                                drawType = "skin";
                             }
+
+                            WebGLKit.draw(context, drawType);
                         }
                     }
 

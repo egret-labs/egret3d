@@ -30,50 +30,6 @@ namespace egret3d.particle {
             }
         ];
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
-
-        private _updateDrawCalls(gameObject: paper.GameObject) {
-            if (!this._enabled || !this._hasGameObject(gameObject)) {
-                return;
-            }
-
-            const component = this._getComponent(gameObject, 0) as ParticleComponent;
-            const renderer = this._getComponent(gameObject, 1) as ParticleRenderer;
-            if (!renderer.batchMesh || !renderer.batchMaterial) {
-                return;
-            }
-
-            this._onUpdateBatchMesh(component);
-            //
-            this._drawCalls.removeDrawCalls(renderer);
-            //
-            this._drawCalls.renderers.push(renderer);
-            //
-            let subMeshIndex = 0;
-            const primitives = renderer.batchMesh.glTFMesh.primitives;
-
-            if (primitives.length !== 1) {
-                console.error("ParticleSystem : materials.length != 1");
-            }
-
-            if (renderer._renderMode === ParticleRenderMode.None) {
-                console.error("ParticleSystem : error renderMode");
-            }
-
-            for (const primitive of primitives) {
-                const drawCall: DrawCall = {
-                    renderer: renderer,
-
-                    subMeshIndex: subMeshIndex++,
-                    mesh: renderer.batchMesh,
-                    material: renderer.batchMaterial,
-
-                    frustumTest: false,
-                    zdist: -1,
-                };
-
-                this._drawCalls.drawCalls.push(drawCall);
-            }
-        }
         /**
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */
@@ -423,6 +379,50 @@ namespace egret3d.particle {
                     renderer._setFloat(ParticleMaterialUniform.CYCLES, module._cycleCount);
                     renderer._setVector4v(ParticleMaterialUniform.SUB_UV, module.floatValues);
                 }
+            }
+        }
+
+        private _updateDrawCalls(gameObject: paper.GameObject) {
+            if (!this._enabled || !this._hasGameObject(gameObject)) {
+                return;
+            }
+
+            const component = this._getComponent(gameObject, 0) as ParticleComponent;
+            const renderer = this._getComponent(gameObject, 1) as ParticleRenderer;
+            //
+            this._onUpdateBatchMesh(component);
+            if (!renderer.batchMesh || !renderer.batchMaterial) {
+                return;
+            }
+            //
+            this._drawCalls.removeDrawCalls(renderer);
+            //
+            this._drawCalls.renderers.push(renderer);
+            //
+            let subMeshIndex = 0;
+            const primitives = renderer.batchMesh.glTFMesh.primitives;
+
+            if (primitives.length !== 1) {
+                console.error("ParticleSystem : materials.length != 1");
+            }
+
+            if (renderer._renderMode === ParticleRenderMode.None) {
+                console.error("ParticleSystem : error renderMode");
+            }
+
+            for (const primitive of primitives) {
+                const drawCall: DrawCall = {
+                    renderer: renderer,
+
+                    subMeshIndex: subMeshIndex++,
+                    mesh: renderer.batchMesh,
+                    material: renderer.batchMaterial,
+
+                    frustumTest: false,
+                    zdist: -1,
+                };
+
+                this._drawCalls.drawCalls.push(drawCall);
             }
         }
 

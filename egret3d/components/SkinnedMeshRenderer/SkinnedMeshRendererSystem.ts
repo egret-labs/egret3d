@@ -16,7 +16,7 @@ namespace egret3d {
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
-            if (!this._enabled) {
+            if (!this._enabled || !this._hasGameObject(gameObject)) {
                 return;
             }
 
@@ -24,7 +24,9 @@ namespace egret3d {
             if (!renderer.mesh || renderer.materials.length === 0) {
                 return;
             }
-
+            //
+            this._drawCalls.removeDrawCalls(renderer);
+            //
             this._drawCalls.renderers.push(renderer);
             //
             let subMeshIndex = 0;

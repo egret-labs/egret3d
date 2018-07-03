@@ -1,5 +1,22 @@
 namespace egret3d {
     /**
+     * @private
+     * draw call type
+     */
+    export type DrawCall = {
+        renderer: paper.BaseRenderer,
+        matrix?: Matrix,
+
+        subMeshIndex: number,
+        mesh: Mesh,
+        material: Material,
+
+        frustumTest: boolean,
+        zdist: number,
+
+        boneData?: Float32Array,
+    };
+    /**
      * 
      */
     export class DrawCalls extends paper.SingletonComponent {
@@ -11,6 +28,19 @@ namespace egret3d {
          * 所有的 draw call 列表。
          */
         public readonly drawCalls: DrawCall[] = [];
+
+        private _sort(a: DrawCall, b: DrawCall) {
+            if (a.material.renderQueue === b.material.renderQueue) {
+                // if (a.material.renderQueue >= egret3d.RenderQueue.Transparent) {
+                //     a.renderer.gameObject.transform
+                // }
+
+                return b.zdist - a.zdist;
+            }
+            else {
+                return a.material.renderQueue - b.material.renderQueue;
+            }
+        }
         /**
          * 
          */
@@ -21,14 +51,7 @@ namespace egret3d {
          * 
          */
         public sort() {
-            this.drawCalls.sort(function (a, b) {
-                if (a.material.renderQueue === b.material.renderQueue) {
-                    return b.zdist - a.zdist; // 从远至近画
-                }
-                else {
-                    return a.material.renderQueue - b.material.renderQueue;
-                }
-            });
+            this.drawCalls.sort(this._sort);
         }
         /**
          * 移除指定渲染器的 draw call 列表。
