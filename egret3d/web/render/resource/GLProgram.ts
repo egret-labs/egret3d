@@ -430,6 +430,9 @@ namespace egret3d {
                     case "_LightmapTex":
                         this.setTexture(key, context.lightmap);
                         break;
+                    case "_LightmapIntensity":
+                        this.setFloat(key, context.lightmapIntensity);
+                        break;
                     case "glstate_lightmapOffset":
                         if (context.lightmapOffset) {
                             this.setVector4_2(key, context.lightmapOffset);

@@ -222,7 +222,7 @@ namespace egret3d {
                             let startIndex = target.length;
 
                             target.length += count;
-                            for (let j = 0; j < count; j += 3) {
+                            for (let j = 0; j < count; j += 4) {
                                 helpVec3_1.x = tangentBuffer[j + 0];
                                 helpVec3_1.y = tangentBuffer[j + 1];
                                 helpVec3_1.z = tangentBuffer[j + 2];
@@ -230,10 +230,11 @@ namespace egret3d {
                                 worldMatrix.transformNormal(helpVec3_1);
                                 helpInverseMatrix.transformNormal(helpVec3_1);
                                 helpVec3_1.normalize();
-                                
+
                                 target[startIndex + j] = helpVec3_1.x;
                                 target[startIndex + j + 1] = helpVec3_1.y;
                                 target[startIndex + j + 2] = helpVec3_1.z;
+                                target[startIndex + j + 3] = tangentBuffer[j + 3];
                             }
                             // _copyAccessorBufferArray(glTFAsset, orginAttributes.TANGENT, tempVertexBuffers[gltf.MeshAttributeType.TANGENT]);
                         } else {

@@ -3055,7 +3055,7 @@ var egret3d;
             if (draw.lightMapIndex >= 0) {
                 var activeScene = paper.Application.sceneManager.activeScene;
                 if (activeScene.lightmaps.length > draw.lightMapIndex) {
-                    context.updateLightmap(activeScene.lightmaps[draw.lightMapIndex], draw.mesh.glTFMesh.primitives[draw.subMeshInfo].attributes.TEXCOORD_1 ? 1 : 0, draw.lightMapScaleOffset);
+                    context.updateLightmap(activeScene.lightmaps[draw.lightMapIndex], draw.mesh.glTFMesh.primitives[draw.subMeshInfo].attributes.TEXCOORD_1 ? 1 : 0, draw.lightMapScaleOffset, activeScene.lightmapIntensity);
                     drawType = "lightmap";
                 }
             }
@@ -6666,6 +6666,10 @@ var paper;
              */
             _this.lightmaps = [];
             /**
+             * lightmap强度
+             */
+            _this.lightmapIntensity = 1.0;
+            /**
              * 存储着关联的数据
              * 场景保存时，将场景快照数据保存至对应的资源中
              */
@@ -6795,6 +6799,9 @@ var paper;
         __decorate([
             paper.serializedField
         ], Scene.prototype, "lightmaps", void 0);
+        __decorate([
+            paper.serializedField
+        ], Scene.prototype, "lightmapIntensity", void 0);
         __decorate([
             paper.serializedField,
             paper.deserializedIgnore
@@ -10101,6 +10108,7 @@ var egret3d;
              *
              */
             this.lightmap = null;
+            this.lightmapIntensity = 1.0;
             this.boneData = null;
             // 15: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
             this.directLightArray = new Float32Array(0);
@@ -10135,10 +10143,11 @@ var egret3d;
             this.lightShadowCameraNear = 0;
             this.lightShadowCameraFar = 0;
         }
-        RenderContext.prototype.updateLightmap = function (texture, uv, offset) {
+        RenderContext.prototype.updateLightmap = function (texture, uv, offset, intensity) {
             this.lightmap = texture;
             this.lightmapUV = uv;
             this.lightmapOffset = offset;
+            this.lightmapIntensity = intensity;
             this.version++;
         };
         RenderContext.prototype.updateCamera = function (camera) {
@@ -17793,7 +17802,7 @@ var egret3d;
         ShaderLib.code_vert = "attribute vec4 _glesVertex;\nattribute vec4 _glesColor;             \nattribute vec4 _glesMultiTexCoord0;    \nuniform highp mat4 glstate_matrix_mvp; \nvarying lowp vec4 xlv_COLOR;           \nvarying highp vec2 xlv_TEXCOORD0;      \nvoid main() {                                          \n    highp vec4 tmpvar_1;                   \n    tmpvar_1.w = 1.0;                      \n    tmpvar_1.xyz = _glesVertex.xyz;        \n    xlv_COLOR = _glesColor;                \n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy;\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
         ShaderLib.depthpackage_frag = "#include <packing>\n\nvoid main() {\n gl_FragColor = packDepthToRGBA( gl_FragCoord.z );\n}";
         ShaderLib.depthpackage_vert = "attribute vec3 _glesVertex;\n\nuniform mat4 glstate_matrix_mvp;\n\nvoid main() { \n    gl_Position = glstate_matrix_mvp * vec4(_glesVertex, 1.0);\n}";
-        ShaderLib.diffuselightmap_frag = "uniform sampler2D _MainTex;\nuniform sampler2D _LightmapTex;\nuniform lowp float _AlphaCut;\nvarying highp vec2 xlv_TEXCOORD0;\nvarying highp vec2 xlv_TEXCOORD1;\nlowp vec3 decode_hdr(lowp vec4 data)\n{\n    highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n    return data.rgb * power * 1.0 ;\n}\nvoid main() \n{\n    lowp vec4 outColor = texture2D(_MainTex, xlv_TEXCOORD0);\n    if(outColor.a < _AlphaCut)\n        discard;\n    lowp vec4 lightmap = texture2D(_LightmapTex, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap);\n    gl_FragData[0] = outColor;\n}";
+        ShaderLib.diffuselightmap_frag = "uniform sampler2D _MainTex;\nuniform sampler2D _LightmapTex;\nuniform lowp float _LightmapIntensity;\nuniform lowp float _AlphaCut;\nvarying highp vec2 xlv_TEXCOORD0;\nvarying highp vec2 xlv_TEXCOORD1;\nlowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n{\n    highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n    return data.rgb * power * intensity;\n}\nvoid main() \n{\n    lowp vec4 outColor = texture2D(_MainTex, xlv_TEXCOORD0);\n    if(outColor.a < _AlphaCut)\n        discard;\n    lowp vec4 lightmap = texture2D(_LightmapTex, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, _LightmapIntensity);\n    gl_FragData[0] = outColor;\n}";
         ShaderLib.diffuselightmap_vert = "attribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nattribute vec4 _glesMultiTexCoord1;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 glstate_lightmapOffset;\nuniform lowp float glstate_lightmapUV;\nuniform highp vec4 _MainTex_ST; \nvarying highp vec2 xlv_TEXCOORD0;\nvarying highp vec2 xlv_TEXCOORD1;\nvoid main()\n{\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  \n\n    highp vec2 beforelightUV = _glesMultiTexCoord1.xy;\n    if(glstate_lightmapUV == 0.0)\n    {\n        beforelightUV = _glesMultiTexCoord0.xy;\n    }\n    highp float u = beforelightUV.x * glstate_lightmapOffset.x + glstate_lightmapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * glstate_lightmapOffset.y + glstate_lightmapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
         ShaderLib.diffuse_frag = "uniform sampler2D _MainTex;\nvarying highp vec2 xlv_TEXCOORD0;\nvoid main() {\n    lowp vec4 tmpvar_3 = texture2D(_MainTex, xlv_TEXCOORD0);\n    gl_FragData[0] = tmpvar_3;\n}";
         ShaderLib.diffuse_vert = "attribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 _MainTex_ST;  \nvarying highp vec2 xlv_TEXCOORD0;\n\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
@@ -21694,7 +21703,7 @@ var egret3d;
                             var count = tangentBuffer.length;
                             var startIndex_2 = target.length;
                             target.length += count;
-                            for (var j = 0; j < count; j += 3) {
+                            for (var j = 0; j < count; j += 4) {
                                 helpVec3_1.x = tangentBuffer[j + 0];
                                 helpVec3_1.y = tangentBuffer[j + 1];
                                 helpVec3_1.z = tangentBuffer[j + 2];
@@ -21704,6 +21713,7 @@ var egret3d;
                                 target[startIndex_2 + j] = helpVec3_1.x;
                                 target[startIndex_2 + j + 1] = helpVec3_1.y;
                                 target[startIndex_2 + j + 2] = helpVec3_1.z;
+                                target[startIndex_2 + j + 3] = tangentBuffer[j + 3];
                             }
                             // _copyAccessorBufferArray(glTFAsset, orginAttributes.TANGENT, tempVertexBuffers[gltf.MeshAttributeType.TANGENT]);
                         }
@@ -22414,6 +22424,9 @@ var egret3d;
                         break;
                     case "_LightmapTex":
                         this.setTexture(key, context.lightmap);
+                        break;
+                    case "_LightmapIntensity":
+                        this.setFloat(key, context.lightmapIntensity);
                         break;
                     case "glstate_lightmapOffset":
                         if (context.lightmapOffset) {

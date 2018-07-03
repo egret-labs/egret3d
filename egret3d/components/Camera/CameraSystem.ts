@@ -24,7 +24,8 @@ namespace egret3d {
                     context.updateLightmap(
                         activeScene.lightmaps[draw.lightMapIndex],
                         draw.mesh.glTFMesh.primitives[draw.subMeshInfo].attributes.TEXCOORD_1 ? 1 : 0,
-                        draw.lightMapScaleOffset
+                        draw.lightMapScaleOffset,
+                        activeScene.lightmapIntensity
                     );
                     drawType = "lightmap";
                 }
