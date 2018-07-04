@@ -18,7 +18,7 @@ namespace egret3d {
             if (this._raw) {
                 for (const item of this._raw.assets) {
                     if (item.url.indexOf("shader.json") < 0) {
-                        this._assets[item.uuid || item.hashCode] = paper.Asset.find(utils.combinePath(utils.getPathByUrl(this.url) + "/", item.url)); // 兼容 hashCode 。
+                        this._assets[item.hashCode || item.uuid] = paper.Asset.find(utils.combinePath(utils.getPathByUrl(this.url) + "/", item.url)); // 兼容 hashCode 。
                     }
                 }
             }
