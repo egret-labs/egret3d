@@ -1185,8 +1185,7 @@ namespace paper.editor {
                             addComponent = deserialize(element.serializeData,element.assetsMap);
                             Editor.editorModel.addComponentToGameObject(gameObj,addComponent);
                         }else{
-                            let cc = egret.getDefinitionByName(compClz);
-                            addComponent = gameObj.addComponent(cc);
+                            addComponent = gameObj.addComponent(compClz);
                             element.serializeData = serialize(addComponent);
                             element.assetsMap = Editor.editorModel.createAssetMap(element.serializeData);
                         }

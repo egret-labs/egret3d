@@ -621,17 +621,6 @@ namespace paper.editor {
         }
 
         public _deleteGameObject(gameObjects: GameObject[]) {
-            // for (let i = 0, l = gameObjects.length; i < l; i++) {
-            //     //////-----引擎API问题，这里暂时手动解决transform引用关系
-            //     let gameObject = gameObjects[i];
-            //     let t = gameObject.transform;
-            //     if (t.parent) {
-            //         let index = t.parent.children.indexOf(t);
-            //         t.parent.children.splice(index, 1);
-            //     }
-            //     gameObject.destroy();
-            // }
-
             for (let index = 0; index < gameObjects.length; index++) {
                 const element = gameObjects[index];
                 element.destroy();
@@ -1025,5 +1014,41 @@ namespace paper.editor {
         public redo = () => {
             this.paperHistory.forward();
         }
+
+            /**
+    * 从一个预置体文件创建实例
+    * @param prefabPath 预置体资源路径
+    */
+    public async createGameObjectFromPrefab(prefabPath: string, paper: any, RES: any): Promise<paper.GameObject> {
+        const prefab = await RES.getResAsync(prefabPath) as egret3d.Prefab | null;
+        if (prefab) {
+            const instance = prefab.createInstance();
+            (instance as any).prefabEditInfo = true;
+            this.setGameObjectPrefab(instance, prefab, instance);
+            return instance;
+        }
+        return null;
+    }
+
+        /**
+     * 设置children prefab属性
+     * @param gameObj 
+     * @param prefab 
+     */
+    private setGameObjectPrefab(gameObj: GameObject, prefab: egret3d.Prefab, rootObj: GameObject) {
+        if (!gameObj) {
+            return;
+        }
+        (gameObj as any).prefab = prefab;
+        if (gameObj != rootObj) {
+            (gameObj as any).prefabEditInfo = rootObj.uuid;
+        }
+        for (let index = 0; index < gameObj.transform.children.length; index++) {
+            const element = gameObj.transform.children[index];
+            const obj: GameObject = element.gameObject;
+            this.setGameObjectPrefab(obj, prefab, rootObj);
+        }
+    }
+
     }
 }

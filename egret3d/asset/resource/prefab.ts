@@ -70,7 +70,7 @@ namespace egret3d {
                 return null;
             }
 
-            const gameObject = paper.deserialize<paper.GameObject>(this._raw, this._assets);
+            const gameObject = paper.deserialize<paper.GameObject>(this._raw, this._assets,true);
 
             return gameObject;
         }
