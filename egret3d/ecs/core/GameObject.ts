@@ -176,7 +176,7 @@ namespace paper {
         /**
          * 根据类型名获取组件
          */
-        public addComponent<T extends BaseComponent>(componentClass: { new(): T }): T {
+        public addComponent<T extends BaseComponent>(componentClass: { new(): T }, config?: any): T {
             BaseComponent._injectGameObject = this;
             const component = new componentClass();
 
@@ -188,7 +188,13 @@ namespace paper {
             }
 
             this._components.push(component);
-            component.initialize();
+
+            if (config) {
+                component.initialize(config);
+            }
+            else {
+                component.initialize();
+            }
 
             if (component.isActiveAndEnabled) {
                 EventPool.dispatchEvent(EventPool.EventType.Enabled, component);
