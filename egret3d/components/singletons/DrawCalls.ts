@@ -15,6 +15,8 @@ namespace egret3d {
         zdist: number,
 
         boneData?: Float32Array,
+
+        disable: boolean;
     };
     /**
      * 
@@ -28,24 +30,33 @@ namespace egret3d {
          * 所有的 draw call 列表。
          */
         public readonly drawCalls: DrawCall[] = [];
+        // public readonly finalDrawCalls: DrawCall[] = [];//TODO,裁切开启后，放到这里，排序会少算一些
 
         private _sort(a: DrawCall, b: DrawCall) {
             if (a.material.renderQueue === b.material.renderQueue) {
-                // if (a.material.renderQueue >= egret3d.RenderQueue.Transparent) {
-                //     a.renderer.gameObject.transform
-                // }
-
                 return b.zdist - a.zdist;
             }
             else {
                 return a.material.renderQueue - b.material.renderQueue;
             }
         }
-        /**
-         * 
-         */
-        public updateZDist(camera: Camera) {
-            // TODO 更新计算物体的zdist，如果是不透明物体，统一设置为 -1
+        public sortAfterFrustumCulling(camera: Camera) {
+            // this.finalDrawCalls.length = 0;
+            const cameraPos = camera.gameObject.transform.getPosition();
+            //
+            for (const drawCall of this.drawCalls) {
+                drawCall.disable = (drawCall.frustumTest && !camera.testFrustumCulling(drawCall.renderer.gameObject.transform));
+                if (!drawCall.disable) {
+                    if (drawCall.material.renderQueue >= RenderQueue.Transparent) {
+                        //透明物体需要排序
+                        const objPos = drawCall.renderer.gameObject.transform.getPosition();
+                        drawCall.zdist = objPos.getDistance(cameraPos);
+                    }
+                    // this.finalDrawCalls.push(drawCall);
+                }
+            }
+            this.drawCalls.sort(this._sort);
+            // this.finalDrawCalls.sort(this._sort);
         }
         /**
          * 

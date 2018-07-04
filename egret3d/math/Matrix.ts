@@ -177,22 +177,24 @@ namespace egret3d {
             const l38 = (l5 * l11) - (l7 * l9);
             const l39 = (l5 * l10) - (l6 * l9);
 
-            this.rawData[0] = l23 * l27;
-            this.rawData[1] = -(((l2 * l17) - (l3 * l18)) + (l4 * l19)) * l27;
-            this.rawData[2] = (((l2 * l28) - (l3 * l29)) + (l4 * l30)) * l27;
-            this.rawData[3] = -(((l2 * l34) - (l3 * l35)) + (l4 * l36)) * l27;
-            this.rawData[4] = l24 * l27;
-            this.rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
-            this.rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
-            this.rawData[7] = (((l1 * l34) - (l3 * l37)) + (l4 * l38)) * l27;
-            this.rawData[8] = l25 * l27;
-            this.rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
-            this.rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
-            this.rawData[11] = -(((l1 * l35) - (l2 * l37)) + (l4 * l39)) * l27;
-            this.rawData[12] = l26 * l27;
-            this.rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
-            this.rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
-            this.rawData[15] = (((l1 * l36) - (l2 * l38)) + (l3 * l39)) * l27;
+            const rawData = this.rawData;
+
+            rawData[0] = l23 * l27;
+            rawData[1] = -(((l2 * l17) - (l3 * l18)) + (l4 * l19)) * l27;
+            rawData[2] = (((l2 * l28) - (l3 * l29)) + (l4 * l30)) * l27;
+            rawData[3] = -(((l2 * l34) - (l3 * l35)) + (l4 * l36)) * l27;
+            rawData[4] = l24 * l27;
+            rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
+            rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
+            rawData[7] = (((l1 * l34) - (l3 * l37)) + (l4 * l38)) * l27;
+            rawData[8] = l25 * l27;
+            rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
+            rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
+            rawData[11] = -(((l1 * l35) - (l2 * l37)) + (l4 * l39)) * l27;
+            rawData[12] = l26 * l27;
+            rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
+            rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
+            rawData[15] = (((l1 * l36) - (l2 * l38)) + (l3 * l39)) * l27;
 
             return this;
         }

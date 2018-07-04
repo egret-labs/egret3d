@@ -71,6 +71,9 @@ namespace egret3d {
             const def_particlesystem_vs = Shader.registerVertShader("def_particlesystem", "#define DIFFUSEMAP \n#define TINTCOLOR \n" + ShaderLib.particlesystem_vert);
             const def_particlesystem_fs = Shader.registerFragShader("def_particlesystem", "#define DIFFUSEMAP \n#define TINTCOLOR \n" + ShaderLib.particlesystem_frag);
 
+            const def_alphaBlend_fs = Shader.registerFragShader("def_alphaBlend", ShaderLib.alphaBlend_frag);
+            const def_alphaCut_fs = Shader.registerFragShader("def_alphaCut", ShaderLib.alphaCut_frag);
+
             {
                 const shader = new Shader("shader/lambert");
                 shader.url = "shader/lambert";
@@ -197,6 +200,46 @@ namespace egret3d {
                 p.setAlphaBlend(BlendModeEnum.Blend);
                 // p.uniformTexture("_MainTex", null);
                 this.TRANSPARENT = sh;
+
+                paper.Asset.register(sh);
+            }
+            {
+                // 兼容外部引入的 transparent_tintColor.shader.json
+                const sh = new Shader("transparent_tintColor.shader.json");
+                sh.url = "transparent_tintColor.shader.json";
+                sh.renderQueue = RenderQueue.Transparent;
+                sh.passes["base"] = [];
+                sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
+                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
+                sh.defaultValue["_TintColor"] = { type: "Vector4", value: [0.5, 0.5, 0.5, 0.5] };
+                const p = new DrawPass(def_diffuse_vs, def_alphaBlend_fs);
+                sh.passes["base"].push(p);
+                p.state_ztest = true;
+                p.state_ztest_method = WebGLKit.LEQUAL;
+                p.state_zwrite = false;
+                p.state_showface = ShowFaceStateEnum.CCW;
+                p.setAlphaBlend(BlendModeEnum.Add);
+                this.TRANSPARENT_ADDITIVE = sh;
+
+                paper.Asset.register(sh);
+            }
+            {
+                // 兼容外部引入的 transparent_tintColor.shader.json
+                const sh = new Shader("transparent_alphaCut.shader.json");
+                sh.url = "transparent_alphaCut.shader.json";
+                sh.renderQueue = RenderQueue.AlphaTest;
+                sh.passes["base"] = [];
+                sh.defaultValue["_MainTex"] = { type: "Texture", value: paper.Asset.find("grid") };
+                sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
+                sh.defaultValue["_AlphaCut"] = { type: "Range", value: 0.1, min: 0, max: 1 };
+                const p = new DrawPass(def_diffuse_vs, def_alphaCut_fs);
+                sh.passes["base"].push(p);
+                p.state_ztest = true;
+                p.state_ztest_method = WebGLKit.LEQUAL;
+                p.state_zwrite = true;
+                p.state_showface = ShowFaceStateEnum.CCW;
+                p.setAlphaBlend(BlendModeEnum.Close);
+                this.TRANSPARENT_ADDITIVE = sh;
 
                 paper.Asset.register(sh);
             }

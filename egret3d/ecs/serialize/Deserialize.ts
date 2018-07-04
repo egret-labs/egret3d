@@ -1,13 +1,13 @@
 namespace paper {
-    let _isClone: boolean = false;
+    let _isCreate: boolean = false;
     let _deserializedObjects: { [key: string]: ISerializable };
     /**
      * 反序列化
      * @param data 反序列化数据
      * @param expandMap 扩展的对象映射，此映射中存在的对象不需要重新序列化，直接使用即可（例如已经加载完成的资源文件）。
      */
-    export function deserialize<T extends ISerializable>(data: ISerializedData, expandMap: { [k: string]: ISerializable }, isClone: boolean = false): T | null {
-        _isClone = isClone;
+    export function deserialize<T extends ISerializable>(data: ISerializedData, expandMap: { [k: string]: ISerializable }, isCreate: boolean = false): T | null {
+        _isCreate = isCreate;
         _deserializedObjects = {};
         for (const k in expandMap) {
             _deserializedObjects[k] = expandMap[k];
@@ -81,11 +81,16 @@ namespace paper {
 
     function _deserializeObject(source: any, target: ISerializable) {
         if (target.constructor.prototype.hasOwnProperty("deserialize")) { // TODO 字符串依赖。
-            if (_isClone) {
-                delete source.uuid; // TODO 字符串依赖。
+            let uuid = source.uuid; // TODO 字符串依赖。
+            if (_isCreate) {
+                delete source.uuid;
             }
 
-            (target as ISerializable).deserialize(source);
+            target.deserialize(source);
+
+            if (_isCreate) {
+                source.uuid = uuid;
+            }
         }
         else {
             for (const k in source) {
@@ -93,7 +98,7 @@ namespace paper {
                     continue;
                 }
 
-                if (_isClone && k === "uuid") { // TODO 字符串依赖。
+                if (_isCreate && k === "uuid") { // TODO 字符串依赖。
                     continue;
                 }
 
@@ -125,8 +130,27 @@ namespace paper {
                         (target as ISerializable).deserialize(source);
                         return target;
                     }
+                    else if (ArrayBuffer.isView(target)) {
+                        for (let i = 0, l = Math.min(source.length, (target as Uint8Array).length); i < l; ++i) {
+                            target[i] = source[i];
+                        }
+
+                        return target;
+                    }
+                    else if (Array.isArray(target) && target.length === 0) {
+                        for (let i = 0, l = source.length; i < l; ++i) {
+                            target[i] = _deserializeChild(source[i]);
+                        }
+
+                        return target;
+                    }
+                    else if (target instanceof BaseComponent) {
+                        _deserializeObject(source, target);
+
+                        return target;
+                    }
                     else {
-                        console.info("Deserialize can be optimized.");
+                        // console.info("Deserialize can be optimized.");
                     }
                 }
 

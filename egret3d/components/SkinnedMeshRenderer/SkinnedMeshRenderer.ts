@@ -74,7 +74,7 @@ namespace egret3d {
             }
 
             this._mesh = mesh;
-            paper.EventPool.dispatchEvent(MeshFilterEventType.Mesh, this);
+            paper.EventPool.dispatchEvent(SkinnedMeshRendererEventType.Mesh, this);
         }
 
         @paper.serializedField

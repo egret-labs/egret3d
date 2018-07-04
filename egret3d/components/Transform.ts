@@ -181,14 +181,6 @@ namespace egret3d {
             this._dirtify();
         }
 
-        /**
-         * 
-         */
-        public $getGlobalPosition(): ImmutableVector4 {
-            const position = this.getPosition();
-            return new Float32Array([position.x, position.y, position.z, 1]);
-        }
-
         public deserialize(element: any) {
             super.deserialize(element); // TODO
 

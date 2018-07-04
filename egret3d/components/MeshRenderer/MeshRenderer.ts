@@ -28,7 +28,6 @@ namespace egret3d {
             target._lightmapScaleOffset = this._lightmapScaleOffset;
             target._materials = [] as any[];
 
-
             for (const material of this._materials) {
                 target._materials.push(paper.serializeAsset(material));
             }
