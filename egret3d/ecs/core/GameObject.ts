@@ -57,7 +57,10 @@ namespace paper {
          * @internal
          */
         public _activeDirty: boolean = true;
-        private readonly _components: BaseComponent[] = [];
+        /**
+         * @internal
+         */
+        public readonly _components: BaseComponent[] = [];
         private _scene: Scene = null as any;
 
         /**
@@ -155,7 +158,7 @@ namespace paper {
          * 
          */
         public destroy() {
-            if (!this._scene) {
+            if (this.isDestroyed) {
                 console.warn("The game object has been destroyed.", this.name, this.uuid);
                 return;
             }
@@ -385,6 +388,11 @@ namespace paper {
                 this._addToScene(Application.sceneManager.globalScene);
             }
             else {
+                if (this === Application.sceneManager.globalGameObject) {
+                    console.warn("Cannot change the `dontDestroy` value of the global game object.", this.name, this.uuid);
+                    return;
+                }
+
                 this._addToScene(Application.sceneManager.activeScene);
             }
         }

@@ -230,11 +230,33 @@ namespace egret3d {
             }
         }
 
+        public getChildIndex(value: Transform) {
+            if (value.parent !== this) {
+                return -1;
+            }
+
+            return this._children.indexOf(value);
+        }
+
+        public setChildIndex(value: Transform, index: number) {
+            if (value.parent !== this) {
+                return;
+            }
+
+            const prevIndex = this._children.indexOf(value);
+            if (prevIndex === index) {
+                return;
+            }
+
+            this._children.splice(prevIndex, 1);
+            this._children.splice(index, 0, value);
+        }
+
         /**
          * 获取对象下标的子集对象
          * @param index 
          */
-        public getChild(index: number) {
+        public getChildAt(index: number) {
             return 0 <= index && index < this._children.length ? this._children[index] : null;
         }
 
