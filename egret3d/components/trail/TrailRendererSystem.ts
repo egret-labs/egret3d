@@ -39,6 +39,8 @@ namespace egret3d {
 
                     frustumTest: false,
                     zdist: -1,
+
+                    disable: false,
                 };
 
                 this._drawCalls.drawCalls.push(drawCall);

@@ -48,17 +48,14 @@ namespace egret3d {
         }
 
         public $renderCamera(camera: Camera) {
-            // this._drawCalls.updateZdist(camera);
-            this._drawCalls.sort();
+            //在这里先剔除，然后排序，最后绘制           
+            this._drawCalls.sortAfterFrustumCulling(camera);
+            // this._drawCalls.sort();
 
             for (const drawCall of this._drawCalls.drawCalls) {
-                // 视锥剔除
-                // if(drawCall.frustumTest) {
-                //     if(!camera.testFrustumCulling(drawCall.gameObject.transform)) {
-                //         return;
-                //     }
-                // }
-
+                if(drawCall.disable){
+                    continue;
+                }
                 const gameObject = drawCall.renderer.gameObject;
 
                 if (camera.cullingMask & gameObject.layer) {
