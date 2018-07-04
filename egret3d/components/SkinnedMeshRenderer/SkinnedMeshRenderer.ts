@@ -295,7 +295,6 @@ namespace egret3d {
             target._bones = [] as paper.IUUID[];
             target._mesh = this._mesh ? this._mesh.serialize() : null;
             target._materials = [] as paper.IUUID[];
-            target.uuid = this.uuid;
 
             if (this.rootBone) {
                 target.rootBone = { uuid: this.rootBone.uuid };

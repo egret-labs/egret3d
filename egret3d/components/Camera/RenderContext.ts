@@ -78,21 +78,19 @@ namespace egret3d {
             this.version++;
         }
 
-        public updateCamera(camera: Camera) {
-            const viewPortPixel = this.viewPortPixel;
-            camera.calcViewPortPixel(viewPortPixel); // update viewport
-            const asp = viewPortPixel.w / viewPortPixel.h;
-            camera.calcViewMatrix(this.matrix_v);
+        public updateCamera(camera: Camera, matrix: Matrix) {
+            camera.calcViewPortPixel(this.viewPortPixel); // update viewport
+
+            const asp = this.viewPortPixel.w / this.viewPortPixel.h;
+            this.matrix_v.copy(matrix).inverse();
             camera.calcProjectMatrix(asp, this.matrix_p);
             Matrix.multiply(this.matrix_p, this.matrix_v, this.matrix_vp);
 
-            //
-            const position = camera.gameObject.transform.getPosition();
-            const worldMatrix = camera.gameObject.transform.getWorldMatrix().rawData;
+            const worldMatrix = matrix.rawData;
 
-            this.cameraPosition.x = position.x;
-            this.cameraPosition.y = position.y;
-            this.cameraPosition.z = position.z;
+            this.cameraPosition.x = worldMatrix[12];
+            this.cameraPosition.y = worldMatrix[13];
+            this.cameraPosition.z = worldMatrix[14];
 
             this.cameraUp.x = worldMatrix[4];
             this.cameraUp.y = worldMatrix[5];
@@ -105,25 +103,21 @@ namespace egret3d {
             this.version++;
         }
 
-        public updateLights(lights: ReadonlyArray<Light>) {
+        public updateLights(lights: ReadonlyArray<BaseLight>) {
             let allLightCount = 0,
                 directLightCount = 0,
                 pointLightCount = 0,
                 spotLightCount = 0;
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
-                switch (light.type) {
-                    case LightTypeEnum.Direction:
-                        directLightCount++;
-                        break;
-
-                    case LightTypeEnum.Point:
-                        pointLightCount++;
-                        break;
-
-                    case LightTypeEnum.Spot:
-                        spotLightCount++;
-                        break;
+                if (light instanceof DirectLight) {
+                    directLightCount++;
+                }
+                else if (light instanceof PointLight) {
+                    pointLightCount++;
+                }
+                else if (light instanceof SpotLight) {
+                    spotLightCount++;
                 }
 
                 allLightCount++;
@@ -168,17 +162,17 @@ namespace egret3d {
             for (const light of lights) {
                 let lightArray = this.directLightArray;
 
-                if (light.type === LightTypeEnum.Direction) {
+                if (light.type === LightType.Direction) {
                     lightArray = this.directLightArray;
                     index = directLightIndex;
                     size = 15;
                 }
-                else if (light.type === LightTypeEnum.Point) {
+                else if (light.type === LightType.Point) {
                     lightArray = this.pointLightArray;
                     index = pointLightIndex;
                     size = 19;
                 }
-                else if (light.type === LightTypeEnum.Spot) {
+                else if (light.type === LightType.Spot) {
                     lightArray = this.spotLightArray;
                     index = spotLightIndex;
                     size = 19;
@@ -202,10 +196,10 @@ namespace egret3d {
 
                 lightArray[index * size + offset++] = light.intensity;
 
-                if (light.type === LightTypeEnum.Point || light.type === LightTypeEnum.Spot) {
+                if (light.type === LightType.Point || light.type === LightType.Spot) {
                     lightArray[index * size + offset++] = light.distance;
                     lightArray[index * size + offset++] = light.decay;
-                    if (light.type === LightTypeEnum.Spot) {
+                    if (light.type === LightType.Spot) {
                         lightArray[index * size + offset++] = Math.cos(light.angle);
                         lightArray[index * size + offset++] = Math.cos(light.angle * (1 - light.penumbra));
                     }
@@ -214,30 +208,30 @@ namespace egret3d {
                 if (light.castShadows) {
                     lightArray[index * size + offset++] = 1;
 
-                    if (light.type === LightTypeEnum.Direction) {
-                        lightArray[index * size + offset++] = light.$directLightShadow.bias;
-                        lightArray[index * size + offset++] = light.$directLightShadow.radius;
-                        lightArray[index * size + offset++] = light.$directLightShadow.windowSize;
-                        lightArray[index * size + offset++] = light.$directLightShadow.windowSize;
-                        this.directShadowMatrix.set(light.$directLightShadow.matrix.rawData, directLightIndex * 16);
-                        this.directShadowMaps[directLightIndex] = light.$directLightShadow.map;
+                    if (light.type === LightType.Direction) {
+                        lightArray[index * size + offset++] = light.shadowBias;
+                        lightArray[index * size + offset++] = light.shadowRadius;
+                        lightArray[index * size + offset++] = light.shadowSize;
+                        lightArray[index * size + offset++] = light.shadowSize;
+                        this.directShadowMatrix.set(light.matrix.rawData, directLightIndex * 16);
+                        this.directShadowMaps[directLightIndex] = light.renderTarget.texture;
                     }
-                    else if (light.type === LightTypeEnum.Point) {
-                        lightArray[index * size + offset++] = light.$pointLightShadow.bias;
-                        lightArray[index * size + offset++] = light.$pointLightShadow.radius;
-                        lightArray[index * size + offset++] = light.$pointLightShadow.camera.near;
-                        lightArray[index * size + offset++] = light.$pointLightShadow.camera.far;
-                        lightArray[index * size + offset++] = light.$pointLightShadow.windowSize;
-                        lightArray[index * size + offset++] = light.$pointLightShadow.windowSize;
-                        this.pointShadowMaps[pointLightIndex] = light.$pointLightShadow.map;
+                    else if (light.type === LightType.Point) {
+                        lightArray[index * size + offset++] = light.shadowBias;
+                        lightArray[index * size + offset++] = light.shadowRadius
+                        lightArray[index * size + offset++] = light.shadowCameraNear;
+                        lightArray[index * size + offset++] = light.shadowCameraFar;
+                        lightArray[index * size + offset++] = light.shadowSize
+                        lightArray[index * size + offset++] = light.shadowSize
+                        this.pointShadowMaps[pointLightIndex] = light.renderTarget.texture;
                     }
-                    else if (light.type === LightTypeEnum.Spot) {
-                        lightArray[index * size + offset++] = light.$spotLightShadow.bias;
-                        lightArray[index * size + offset++] = light.$spotLightShadow.radius;
-                        lightArray[index * size + offset++] = light.$spotLightShadow.windowSize;
-                        lightArray[index * size + offset++] = light.$spotLightShadow.windowSize;
-                        this.spotShadowMatrix.set(light.$spotLightShadow.matrix.rawData, spotLightIndex * 16);
-                        this.spotShadowMaps[spotLightIndex] = light.$spotLightShadow.map;
+                    else if (light.type === LightType.Spot) {
+                        lightArray[index * size + offset++] = light.shadowBias;
+                        lightArray[index * size + offset++] = light.shadowRadius;
+                        lightArray[index * size + offset++] = light.shadowSize;
+                        lightArray[index * size + offset++] = light.shadowSize;
+                        this.spotShadowMatrix.set(light.matrix.rawData, spotLightIndex * 16);
+                        this.spotShadowMaps[spotLightIndex] = light.renderTarget.texture;
                     }
                 }
                 else {
@@ -247,24 +241,24 @@ namespace egret3d {
                     lightArray[index * size + offset++] = 0;
                     lightArray[index * size + offset++] = 0;
 
-                    if (light.type === LightTypeEnum.Direction) {
+                    if (light.type === LightType.Direction) {
                         this.directShadowMaps[directLightIndex] = null;
                     }
-                    else if (light.type === LightTypeEnum.Point) {
+                    else if (light.type === LightType.Point) {
                         this.pointShadowMaps[pointLightIndex] = null;
                     }
-                    else if (light.type === LightTypeEnum.Spot) {
+                    else if (light.type === LightType.Spot) {
                         this.spotShadowMaps[spotLightIndex] = null;
                     }
                 }
 
-                if (light.type === LightTypeEnum.Direction) {
+                if (light.type === LightType.Direction) {
                     directLightIndex++;
                 }
-                else if (light.type === LightTypeEnum.Point) {
+                else if (light.type === LightType.Point) {
                     pointLightIndex++;
                 }
-                else if (light.type === LightTypeEnum.Spot) {
+                else if (light.type === LightType.Spot) {
                     spotLightIndex++;
                 }
             }
@@ -302,35 +296,19 @@ namespace egret3d {
             this.version++;
         }
 
-        public lightPosition: ImmutableVector4 = new Float32Array([0, 0, 0, 1]);
+        public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0, 1.0]);
         public lightShadowCameraNear: number = 0;
         public lightShadowCameraFar: number = 0;
-        public updateLightDepth(light: Light) {
-            let shadow: ILightShadow | null = null;
-            switch (light.type) {
-                case LightTypeEnum.Direction:
-                    shadow = light.$directLightShadow;
-                    break;
+        public updateLightDepth(light: BaseLight) {
+            const position = light.gameObject.transform.getPosition();
+            this.lightPosition[0] = position.x;
+            this.lightPosition[1] = position.y;
+            this.lightPosition[2] = position.z;
+            // this.lightPosition[3] = 1.0;
 
-                case LightTypeEnum.Point:
-                    shadow = light.$pointLightShadow;
-                    break;
+            this.lightShadowCameraNear = light.shadowCameraNear;
+            this.lightShadowCameraFar = light.shadowCameraFar;
 
-                case LightTypeEnum.Spot:
-                    shadow = light.$spotLightShadow;
-                    break;
-            }
-            // let pos = light.gameObject.transform.getPosition();
-            this.lightPosition = light.gameObject.transform.$getGlobalPosition();
-            // this.lightPosition.x = pos.x;
-            // this.lightPosition.y = pos.y;
-            // this.lightPosition.z = pos.z;
-            // this.lightPosition.w = 1;
-
-            if (shadow) {
-                this.lightShadowCameraNear = shadow.camera.near;
-                this.lightShadowCameraFar = shadow.camera.far;
-            }
         }
     }
 }

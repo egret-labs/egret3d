@@ -39,6 +39,14 @@ namespace egret3d {
             WebGLKit.draw(context, drawType);
         }
 
+        protected _onAddComponent(component: Camera) {
+            if (component.gameObject === this._globalGameObject) { // Pass global camera.
+                return;
+            }
+
+            super._onAddComponent(component);
+        }
+
         public $renderCamera(camera: Camera) {
             // this._drawCalls.updateZdist(camera);
             this._drawCalls.sort();

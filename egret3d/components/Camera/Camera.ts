@@ -178,6 +178,11 @@ namespace egret3d {
         public readonly postQueues: ICameraPostQueue[] = [];
 
         /**
+         * 相机渲染上下文
+         */
+        public context: RenderContext = null as any;
+
+        /**
          * render target
          * @defualt null
          * @version paper 1.0
@@ -193,21 +198,14 @@ namespace egret3d {
          */
         public renderTarget: IRenderTarget | null = null;
 
-        /**
-         * 相机渲染上下文
-         */
-        public context: RenderContext = null as any;
-
         @paper.serializedField
         private _near: number = 0.01;
 
         @paper.serializedField
         private _far: number = 1000;
 
-        private readonly matView: Matrix = new Matrix;
         private readonly matProjP: Matrix = new Matrix;
         private readonly matProjO: Matrix = new Matrix;
-        private readonly matProj: Matrix = new Matrix;
         private readonly frameVecs: Vector3[] = [
             new Vector3(),
             new Vector3(),
@@ -329,16 +327,15 @@ namespace egret3d {
          */
         public update(_delta: number) {
             this.calcCameraFrame();
-            this.context.updateCamera(this);
+
+            this.context.updateCamera(this, this.gameObject.transform.getWorldMatrix());
         }
 
         /**
          * 计算相机的 view matrix（视图矩阵）
          */
         public calcViewMatrix(matrix: Matrix): Matrix {
-            var camworld = this.gameObject.transform.getWorldMatrix();
-            Matrix.inverse(camworld, this.matView);
-            Matrix.copy(this.matView, matrix);
+            matrix.copy(this.gameObject.transform.getWorldMatrix()).inverse();
 
             return matrix;
         }
@@ -356,16 +353,14 @@ namespace egret3d {
             }
 
             if (this.opvalue === 0.0) {
-                Matrix.copy(this.matProjO, this.matProj);
+                Matrix.copy(this.matProjO, matrix);
             }
             else if (this.opvalue === 1.0) {
-                Matrix.copy(this.matProjP, this.matProj);
+                Matrix.copy(this.matProjP, matrix);
             }
             else {
-                Matrix.lerp(this.matProjO, this.matProjP, this.opvalue, this.matProj);
+                Matrix.lerp(this.matProjO, this.matProjP, this.opvalue, matrix);
             }
-
-            Matrix.copy(this.matProj, matrix);
 
             return matrix;
         }
