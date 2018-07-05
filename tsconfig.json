@@ -179,7 +179,6 @@
         
         "libs/OimoPhysics.d.ts",
         "egret3d/oimo/CollisionShape/CollisionShape.ts",
-        "egret3d/oimo/CollisionShape/CollisionShapeType.ts",
         "egret3d/oimo/CollisionShape/BoxCollisionShape.ts",
         "egret3d/oimo/CollisionShape/SphereCollisionShape.ts",
 

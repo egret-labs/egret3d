@@ -279,14 +279,14 @@ declare module OIMO {
          * 
          * If `index` is less than `0` or greater than `2`, `dst` will be set to the zero vector.
          */
-        getRowTo(index: number, dst: Vec3): void;
+        getRowTo(index: number, dst: Vec3);
 
         /**
          * Sets `dst` to the `index`th column vector of the matrix.
          * 
          * If `index` is less than `0` or greater than `2`, `dst` will be set to the zero vector.
          */
-        getColTo(index: number, dst: Vec3): void;
+        getColTo(index: number, dst: Vec3);
 
         /**
          * Sets this matrix by row vectors and returns `this`.
@@ -1007,27 +1007,27 @@ declare module OIMO {
         /**
          * Disposes an object got from `Pool.vec3`, `Pool.mat3`, `Pool.mat4`, or `Pool.quat`.
          */
-        dispose(vec3?: Vec3, mat3?: Mat3, mat4?: Mat4, quat?: Quat): void;
+        dispose(vec3?: Vec3, mat3?: Mat3, mat4?: Mat4, quat?: Quat);
 
         /**
          * Disposes an `Vec3` object got from `Pool.vec3`.
          */
-        disposeVec3(v: Vec3): void;
+        disposeVec3(v: Vec3);
 
         /**
          * Disposes an `Mat3` object got from `Pool.mat3`.
          */
-        disposeMat3(m: Mat3): void;
+        disposeMat3(m: Mat3);
 
         /**
          * Disposes an `Mat4` object got from `Pool.mat4`.
          */
-        disposeMat4(m: Mat4): void;
+        disposeMat4(m: Mat4);
 
         /**
          * Disposes an `Quat` object got from `Pool.quat`.
          */
-        disposeQuat(q: Quat): void;
+        disposeQuat(q: Quat);
 
     }
 
@@ -1186,7 +1186,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getPositionTo(position: Vec3): void;
+        getPositionTo(position: Vec3);
 
         /**
          * Sets the position of the transformation to `position` and returns `this`.
@@ -1196,7 +1196,7 @@ declare module OIMO {
         /**
          * Translates the position by `translation`.
          */
-        translate(translation: Vec3): void;
+        translate(translation: Vec3);
 
         /**
          * Returns the rotation matrix.
@@ -1208,7 +1208,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Mat3`.
          */
-        getRotationTo(out: Mat3): void;
+        getRotationTo(out: Mat3);
 
         /**
          * Sets the rotation matrix to `rotation` and returns `this`.
@@ -1218,18 +1218,18 @@ declare module OIMO {
         /**
          * Sets the rotation by Euler angles `eulerAngles` in radians.
          */
-        setRotationXyz(eulerAngles: Vec3): void;
+        setRotationXyz(eulerAngles: Vec3);
 
 
         /**
          * Applies rotation by the rotation matrix `rotation`.
          */
-        rotate(rotation: Mat3): void;
+        rotate(rotation: Mat3);
 
         /**
          * Applies the rotation by Euler angles `eulerAngles` in radians.
          */
-        rotateXyz(eulerAngles: Vec3): void;
+        rotateXyz(eulerAngles: Vec3);
 
         /**
          * Returns the rotation as a quaternion.
@@ -1242,7 +1242,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Quat`.
          */
-        getOrientationTo(orientation: Quat): void;
+        getOrientationTo(orientation: Quat);
 
         /**
          * Sets the rotation from a quaternion `quaternion` and returns `this`.
@@ -1581,16 +1581,6 @@ declare module OIMO {
 
         constructor(broadPhase: BroadPhase);
 
-        /**
-         * --- private --
-         */
-        createContacts(): void;
-
-        pp: ProxyPair;
-
-        s1: Shape;
-
-        s2: Shape;
 
     }
 
@@ -1633,26 +1623,11 @@ declare module OIMO {
         constructor();
 
 
-        /**
-         * --- internal --
-         */
-        _clear(): void;
-
-        _setGravity(gravity: Vec3): void;
-
-        _addRigidBody(rigidBody: RigidBody): void;
-
-        _addConstraintSolver(solver: ConstraintSolver, positionCorrection: number): void;
-
-        _stepSingleRigidBody(timeStep: TimeStep, rb: RigidBody): void;
-
-
-
 
         /**
          * update velocit
          */
-        _step(timeStep: TimeStep, numVelocityIterations: number, numPositionIterations: number): void;
+        _step(timeStep: TimeStep, numVelocityIterations: number, numPositionIterations: number);
 
     }
 
@@ -1705,34 +1680,34 @@ declare module OIMO {
          * --- public --
          * Advances the simulation by the time step `timeStep`.
          */
-        step(timeStep: number): void;
+        step(timeStep: number);
 
         /**
          * Adds the rigid body `rigidBody` to the simulation world.
          */
-        addRigidBody(rigidBody: RigidBody): void;
+        addRigidBody(rigidBody: RigidBody);
 
         /**
          * then add the shapes to the worl
          * Removes the rigid body `rigidBody` from the simulation world.
          */
-        removeRigidBody(rigidBody: RigidBody): void;
+        removeRigidBody(rigidBody: RigidBody);
 
         /**
          * then remove the shapes from the worl
          * Adds the joint `joint` to the simulation world.
          */
-        addJoint(joint: Joint): void;
+        addJoint(joint: Joint);
 
         /**
          * Removes the joint `joint` from the simulation world.
          */
-        removeJoint(joint: Joint): void;
+        removeJoint(joint: Joint);
 
         /**
          * Sets the debug draw interface to `debugDraw`. Call `World.debugDraw` to draw the simulation world.
          */
-        setDebugDraw(debugDraw: DebugDraw): void;
+        setDebugDraw(debugDraw: DebugDraw);
 
         /**
          * Returns the debug draw interface.
@@ -1742,27 +1717,27 @@ declare module OIMO {
         /**
          * Draws the simulation world for debugging. Call `World.setDebugDraw` to set the debug draw interface.
          */
-        debugDraw(): void;
+        debugDraw();
 
 
         /**
          * Performs a ray casting. `callback.process` is called for all shapes the ray
          * from `begin` to `end` hits.
          */
-        rayCast(begin: Vec3, end: Vec3, callback: RayCastCallback): void;
+        rayCast(begin: Vec3, end: Vec3, callback: RayCastCallback);
 
         /**
          * Performs a convex casting. `callback.process` is called for all shapes the convex geometry
          * `convex` hits. The convex geometry translates by `translation` starting from the beginning
          * transform `begin`.
          */
-        convexCast(convex: ConvexGeometry, begin: Transform, translation: Vec3, callback: RayCastCallback): void;
+        convexCast(convex: ConvexGeometry, begin: Transform, translation: Vec3, callback: RayCastCallback);
 
         /**
          * Performs an AABB query. `callback.process` is called for all shapes that their
          * AABB and `aabb` intersect.
          */
-        aabbTest(aabb: Aabb, callback: AabbTestCallback): void;
+        aabbTest(aabb: Aabb, callback: AabbTestCallback);
 
         /**
          * Returns the list of the rigid bodies added to the world.
@@ -1812,7 +1787,7 @@ declare module OIMO {
         /**
          * Sets the number of velocity iterations of constraint solvers to `numVelocityIterations`.
          */
-        setNumVelocityIterations(numVelocityIterations: number): void;
+        setNumVelocityIterations(numVelocityIterations: number);
 
         /**
          * Returns the number of position iterations of constraint solvers.
@@ -1822,7 +1797,7 @@ declare module OIMO {
         /**
          * Sets the number of position iterations of constraint solvers to `numPositionIterations`.
          */
-        setNumPositionIterations(numPositionIterations: number): void;
+        setNumPositionIterations(numPositionIterations: number);
 
         /**
          * Returns the gravitational acceleration of the simulation world.
@@ -1832,7 +1807,7 @@ declare module OIMO {
         /**
          * Sets the gravitational acceleration of the simulation world to `gravity`.
          */
-        setGravity(gravity: Vec3): void;
+        setGravity(gravity: Vec3);
 
     }
 
@@ -1853,7 +1828,7 @@ declare module OIMO {
 
             constructor();
 
-            process(proxy: Proxy): void;
+            process(proxy: Proxy);
 
             shape: Shape;
 
@@ -1878,7 +1853,7 @@ declare module OIMO {
 
             constructor();
 
-            process(proxy: Proxy): void;
+            process(proxy: Proxy);
 
             shape: Shape;
 
@@ -1899,7 +1874,7 @@ declare module OIMO {
 
             constructor();
 
-            process(proxy: Proxy): void;
+            process(proxy: Proxy);
 
             shape: Shape;
 
@@ -1953,7 +1928,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getMinTo(min: Vec3): void;
+        getMinTo(min: Vec3);
 
         /**
          * Sets the minimum point of the axis-aligned bounding box to `min` and returns `this`.
@@ -1971,7 +1946,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getMaxTo(max: Vec3): void;
+        getMaxTo(max: Vec3);
 
         /**
          * Sets the maximum point of the axis-aligned bounding box to `max` and returns `this`.
@@ -1988,7 +1963,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getCenterTo(center: Vec3): void;
+        getCenterTo(center: Vec3);
 
         /**
          * Returns the half extents of the AABB.
@@ -2000,7 +1975,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getExtentsTo(halfExtents: Vec3): void;
+        getExtentsTo(halfExtents: Vec3);
 
         /**
          * Combines `other` into this AABB and returns `this`.
@@ -2027,7 +2002,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Aabb`.
          */
-        getIntersectionTo(other: Aabb, intersection: Aabb): void;
+        getIntersectionTo(other: Aabb, intersection: Aabb);
 
         /**
          * Copies AABB from `aabb` to and returns `this`.
@@ -2094,7 +2069,7 @@ declare module OIMO {
          */
         getHalfHeight(): number;
 
-        _updateMass(): void;
+        _updateMass();
 
         r2: number;
 
@@ -2110,13 +2085,13 @@ declare module OIMO {
 
         inertiaXZ: number;
 
-        _computeAabb(aabb: Aabb, tf: Transform): void;
+        _computeAabb(aabb: Aabb, tf: Transform);
 
         radVec: Vec3;
 
         axis: Vec3;
 
-        computeLocalSupportingVertex(dir: Vec3, out: Vec3): void;
+        computeLocalSupportingVertex(dir: Vec3, out: Vec3);
 
         _rayCastLocal(begin: Vec3, end: Vec3, hit: RayCastHit): boolean;
 
@@ -2194,7 +2169,7 @@ declare module OIMO {
         /**
          * Sets the GJK mergin around the "core" to `gjkMergin`.
          */
-        setGjkMergin(gjkMergin: number): void;
+        setGjkMergin(gjkMergin: number);
 
     }
 
@@ -2230,13 +2205,13 @@ declare module OIMO {
          */
         getHalfHeight(): number;
 
-        _updateMass(): void;
+        _updateMass();
 
         r2: number;
 
         h2: number;
 
-        _computeAabb(aabb: Aabb, tf: Transform): void;
+        _computeAabb(aabb: Aabb, tf: Transform);
 
         axis: Vec3;
 
@@ -2264,7 +2239,7 @@ declare module OIMO {
 
         min: Vec3;
 
-        computeLocalSupportingVertex(dir: Vec3, out: Vec3): void;
+        computeLocalSupportingVertex(dir: Vec3, out: Vec3);
 
         dx: number;
 
@@ -2301,7 +2276,7 @@ declare module OIMO {
          */
         getVertices(): Array<Vec3>;
 
-        _updateMass(): void;
+        _updateMass();
 
         minx: number;
 
@@ -2332,7 +2307,7 @@ declare module OIMO {
         /**
          * (size / 2) ^
          */
-        _computeAabb(aabb: Aabb, tf: Transform): void;
+        _computeAabb(aabb: Aabb, tf: Transform);
 
         min: Vec3;
 
@@ -2344,7 +2319,7 @@ declare module OIMO {
 
         worldV: Vec3;
 
-        computeLocalSupportingVertex(dir: Vec3, out: Vec3): void;
+        computeLocalSupportingVertex(dir: Vec3, out: Vec3);
 
         maxDot: number;
 
@@ -2382,13 +2357,13 @@ declare module OIMO {
          */
         getHalfHeight(): number;
 
-        _updateMass(): void;
+        _updateMass();
 
         r2: number;
 
         h2: number;
 
-        _computeAabb(aabb: Aabb, tf: Transform): void;
+        _computeAabb(aabb: Aabb, tf: Transform);
 
         axis: Vec3;
 
@@ -2406,7 +2381,7 @@ declare module OIMO {
 
         max: Vec3;
 
-        computeLocalSupportingVertex(dir: Vec3, out: Vec3): void;
+        computeLocalSupportingVertex(dir: Vec3, out: Vec3);
 
         rx: number;
 
@@ -2461,22 +2436,6 @@ declare module OIMO {
      * Abstract collision geometry.
      */
     export class Geometry {
-
-        _type: number;
-
-        _volume: number;
-
-        _inertiaCoeff: Mat3;
-
-        /**
-         * --- internal --
-         */
-        _updateMass(): void;
-
-        _computeAabb(aabb: Aabb, tf: Transform): void;
-
-        _rayCastLocal(begin: Vec3, end: Vec3, hit: RayCastHit): boolean;
-
         /**
          * --- public --
          * Returns the type of the collision geometry.
@@ -2597,13 +2556,13 @@ declare module OIMO {
          */
         getRadius(): number;
 
-        _updateMass(): void;
+        _updateMass();
 
-        _computeAabb(aabb: Aabb, tf: Transform): void;
+        _computeAabb(aabb: Aabb, tf: Transform);
 
         radVec: Vec3;
 
-        computeLocalSupportingVertex(dir: Vec3, out: Vec3): void;
+        computeLocalSupportingVertex(dir: Vec3, out: Vec3);
 
         _rayCastLocal(begin: Vec3, end: Vec3, hit: RayCastHit): boolean;
 
@@ -2713,7 +2672,7 @@ declare module OIMO {
 
         constructor();
 
-        computeLocalSupportingVertex(dir: Vec3, out: Vec3): void;
+        computeLocalSupportingVertex(dir: Vec3, out: Vec3);
 
     }
 
@@ -2736,7 +2695,7 @@ declare module OIMO {
         /**
          * This is called every time a broad phase algorithm reports a proxy `proxy`.
          */
-        process(proxy: Proxy): void;
+        process(proxy: Proxy);
 
     }
 
@@ -2799,10 +2758,6 @@ declare module OIMO {
 
         constructor(userData: any, id: number);
 
-        /**
-         * --- internal --
-         */
-        _setAabb(aabb: Aabb): void;
 
         /**
          * --- public --
@@ -2822,7 +2777,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Aabb`.
          */
-        getFatAabbTo(aabb: Aabb): void;
+        getFatAabbTo(aabb: Aabb);
 
     }
 
@@ -2949,7 +2904,7 @@ declare module OIMO {
         /**
          * Cleans up the result data.
          */
-        clear(): void;
+        clear();
 
     }
 
@@ -3121,7 +3076,7 @@ declare module OIMO {
          * 
          * `color` is the color of the AABB.
          */
-        aabb(min: Vec3, max: Vec3, color: Vec3): void;
+        aabb(min: Vec3, max: Vec3, color: Vec3);
 
 
         /**
@@ -3135,7 +3090,7 @@ declare module OIMO {
          * 
          * `colorZ` is the color of the z-axis of the basis.
          */
-        basis(transform: Transform, length: number, colorX: Vec3, colorY: Vec3, colorZ: Vec3): void;
+        basis(transform: Transform, length: number, colorX: Vec3, colorY: Vec3, colorZ: Vec3);
 
 
         /**
@@ -3153,7 +3108,7 @@ declare module OIMO {
          * 
          * `color` is the color of the ellipse.
          */
-        ellipse(center: Vec3, ex: Vec3, ey: Vec3, radiusX: number, radiusY: number, color: Vec3): void;
+        ellipse(center: Vec3, ex: Vec3, ey: Vec3, radiusX: number, radiusY: number, color: Vec3);
 
         /**
          * Draws an arc.
@@ -3176,7 +3131,7 @@ declare module OIMO {
          * 
          * `color` is the color of the arc.
          */
-        arc(center: Vec3, ex: Vec3, ey: Vec3, radiusX: number, radiusY: number, startAngle: number, endAngle: number, drawSector: boolean, color: Vec3): void;
+        arc(center: Vec3, ex: Vec3, ey: Vec3, radiusX: number, radiusY: number, startAngle: number, endAngle: number, drawSector: boolean, color: Vec3);
 
 
         /**
@@ -3189,7 +3144,7 @@ declare module OIMO {
          * 
          * `color` is the color of the sphere.
          */
-        sphere(tf: Transform, radius: number, color: Vec3): void;
+        sphere(tf: Transform, radius: number, color: Vec3);
 
         /**
          * to
@@ -3203,7 +3158,7 @@ declare module OIMO {
          * 
          * `color` is the color of the box.
          */
-        box(tf: Transform, halfExtents: Vec3, color: Vec3): void;
+        box(tf: Transform, halfExtents: Vec3, color: Vec3);
 
 
 
@@ -3222,14 +3177,14 @@ declare module OIMO {
          * 
          * `color` is the color of the rectangle.
          */
-        rect(v1: Vec3, v2: Vec3, v3: Vec3, v4: Vec3, n1: Vec3, n2: Vec3, n3: Vec3, n4: Vec3, color: Vec3): void;
+        rect(v1: Vec3, v2: Vec3, v3: Vec3, v4: Vec3, n1: Vec3, n2: Vec3, n3: Vec3, n4: Vec3, color: Vec3);
 
         /**
          * Draws a point at `v`.
          * 
          * `color` is the color of the point.
          */
-        point(v: Vec3, color: Vec3): void;
+        point(v: Vec3, color: Vec3);
 
         /**
          * override thi
@@ -3241,7 +3196,7 @@ declare module OIMO {
          * 
          * `color` is the color of the triangle.
          */
-        triangle(v1: Vec3, v2: Vec3, v3: Vec3, n1: Vec3, n2: Vec3, n3: Vec3, color: Vec3): void;
+        triangle(v1: Vec3, v2: Vec3, v3: Vec3, n1: Vec3, n2: Vec3, n3: Vec3, color: Vec3);
 
         /**
          * override thi
@@ -3249,7 +3204,7 @@ declare module OIMO {
          * 
          * `color` is the color of the line segment.
          */
-        line(v1: Vec3, v2: Vec3, color: Vec3): void;
+        line(v1: Vec3, v2: Vec3, color: Vec3);
 
     }
 
@@ -3366,7 +3321,7 @@ declare module OIMO {
          * This is called every time the world detects a shape `shape` that
          * the query aabb intersects.
          */
-        process(shape: Shape): void;
+        process(shape: Shape);
 
     }
 
@@ -3395,25 +3350,25 @@ declare module OIMO {
          * This is called when two shapes start touching each other. `c` is the contact of
          * the two shapes.
          */
-        beginContact(c: Contact): void;
+        beginContact(c: Contact);
 
         /**
          * This is called every frame **before** velocity solver iterations while two shapes
          * are touching. `c` is the contact for the two shapes.
          */
-        preSolve(c: Contact): void;
+        preSolve(c: Contact);
 
         /**
          * This is called every frame **after** velocity solver iterations while two shapes
          * are touching. `c` is the contact for the two shapes.
          */
-        postSolve(c: Contact): void;
+        postSolve(c: Contact);
 
         /**
          * This is called when two shapes end touching each other. `c` is the contact of
          * the two shapes.
          */
-        endContact(c: Contact): void;
+        endContact(c: Contact);
 
     }
 
@@ -3435,7 +3390,7 @@ declare module OIMO {
          * This is called every time the world detects a shape `shape` that
          * the ray intersects with the hit data `hit`.
          */
-        process(shape: Shape, hit: RayCastHit): void;
+        process(shape: Shape, hit: RayCastHit);
 
     }
 
@@ -3483,9 +3438,9 @@ declare module OIMO {
         /**
          * Clears the result data.
          */
-        clear(): void;
+        clear();
 
-        process(shape: Shape, hit: RayCastHit): void;
+        process(shape: Shape, hit: RayCastHit);
 
     }
 
@@ -3510,23 +3465,23 @@ declare module OIMO {
          * Prepares for velocity iteration. Time step information `timeStep` is given for
          * computing time-depending data.
          */
-        preSolveVelocity(timeStep: TimeStep): void;
+        preSolveVelocity(timeStep: TimeStep);
 
         /**
          * Applies initial impulses.
          */
-        warmStart(timeStep: TimeStep): void;
+        warmStart(timeStep: TimeStep);
 
         /**
          * Performs single velocity iteration.
          */
-        solveVelocity(): void;
+        solveVelocity();
 
         /**
          * Performs post-processes of velocity part. Time step information `timeStep` is given
          * for computing time-depending data.
          */
-        postSolveVelocity(timeStep: TimeStep): void;
+        postSolveVelocity(timeStep: TimeStep);
 
         /**
          * Prepares for position iteration (split impulse or nonlinear Gauss-Seidel). Time step
@@ -3534,22 +3489,22 @@ declare module OIMO {
          * 
          * This may not be called depending on position correction algorithm.
          */
-        preSolvePosition(timeStep: TimeStep): void;
+        preSolvePosition(timeStep: TimeStep);
 
         /**
          * Performs single position iteration (split impulse)
          */
-        solvePositionSplitImpulse(): void;
+        solvePositionSplitImpulse();
 
         /**
          * Performs single position iteration (nonlinear Gauss-Seidel)
          */
-        solvePositionNgs(timeStep: TimeStep): void;
+        solvePositionNgs(timeStep: TimeStep);
 
         /**
          * Performs post-processes.
          */
-        postSolve(): void;
+        postSolve();
 
     }
 
@@ -3625,76 +3580,6 @@ declare module OIMO {
      */
     export class RigidBody {
 
-        _next: RigidBody;
-
-        _prev: RigidBody;
-
-        _shapeList: Shape;
-
-        _shapeListLast: Shape;
-
-        _numShapes: number;
-
-        _vel: Vec3;
-
-        _angVel: Vec3;
-
-        _pseudoVel: Vec3;
-
-        _angPseudoVel: Vec3;
-
-        _ptransform: Transform;
-
-        _transform: Transform;
-
-        _type: number;
-
-        _sleepTime: number;
-
-        _sleeping: boolean;
-
-        _autoSleep: boolean;
-
-        _mass: number;
-
-        _invMass: number;
-
-        _localInertia: Mat3;
-
-        _rotFactor: Vec3;
-
-        _invLocalInertia: Mat3;
-
-        _invLocalInertiaWithoutRotFactor: Mat3;
-
-        _invInertia: Mat3;
-
-        _linearDamping: number;
-
-        _angularDamping: number;
-
-        _force: Vec3;
-
-        _torque: Vec3;
-
-        _world: World;
-
-        _contactLinkList: ContactLink;
-
-        _contactLinkListLast: ContactLink;
-
-        _numContactLinks: number;
-
-        _jointLinkList: JointLink;
-
-        _jointLinkListLast: JointLink;
-
-        _numJointLinks: number;
-
-        _addedToIsland: boolean;
-
-        _gravityScale: number;
-
         /**
          * Extra field that users can use for their own purposes.
          */
@@ -3705,16 +3590,405 @@ declare module OIMO {
          */
         constructor(config: RigidBodyConfig);
 
-        pseudoVelLengthSq: number;
-
-        angPseudoVelLengthSq: number;
+        /**
+	 * Returns the world position of the rigid body.
+	 */
+        public getPosition(): Vec3;
 
         /**
-         * no need of intgratio
+         * Sets `position` to the world position of the rigid body.
+         *
+         * This does not create a new instance of `Vec3`.
          */
-        translation: Vec3;
+        public getPositionTo(position: Vec3);
 
-        rotation: Vec3;
+        /**
+         * Sets the world position of the rigid body to `position`.
+         */
+        public setPosition(position: Vec3);
+
+        /**
+         * Translates the position of the rigid body by `translation`.
+         */
+        public translate(translation: Vec3);
+
+        /**
+         * Returns the rotation matrix of the rigid body.
+         */
+        public getRotation(): Mat3;
+
+        /**
+         * Sets `rotation` to the rotation matrix of the rigid body.
+         *
+         * This does not create a new instance of `Mat3`.
+         */
+        public getRotationTo(rotation: Mat3);
+
+        /**
+         * Sets the rotation matrix of the rigid body to `rotation`.
+         */
+        public setRotation(rotation: Mat3);
+
+        /**
+         * Sets the rotation of the rigid body by Euler angles `eulerAngles` in radians.
+         */
+        public setRotationXyz(eulerAngles: Vec3);
+
+        /**
+         * Rotates the rigid body by the rotation matrix `rotation`.
+         */
+        public rotate(rotation: Mat3);
+        /**
+         * Rotates the rigid body by Euler angles `eulerAngles` in radians.
+         */
+        public rotateXyz(eulerAngles: Vec3);
+
+        /**
+         * Returns the rotation of the rigid body as a quaternion.
+         */
+        public getOrientation(): Quat;
+
+        /**
+         * Sets `orientation` to the rotation quaternion of the rigid body.
+         *
+         * This does not create a new instance of `Quat`.
+         */
+        public getOrientationTo(orientation: Quat);
+
+        /**
+         * Sets the rotation of the rigid body from a quaternion `quaternion`.
+         */
+        public setOrientation(quaternion: Quat);
+
+        /**
+         * Returns the transform of the rigid body.
+         */
+        public getTransform(): Transform;
+        /**
+         * Sets `transform` to the transform of the rigid body.
+         *
+         * This does not create a new instance of `Transform`.
+         */
+        public getTransformTo(transform: Transform);
+
+        /**
+         * Sets the transform of the rigid body to `transform`.
+         *
+         * This does not keep any references to `transform`.
+         */
+        public setTransform(transform: Transform);
+
+        /**
+         * Returns the mass of the rigid body.
+         *
+         * If the rigid body has infinite mass, `0` will be returned.
+         */
+        public getMass(): number;
+
+        /**
+         * Returns the moment of inertia tensor in local space.
+         */
+        public getLocalInertia(): Mat3;
+        /**
+         * Sets `inertia` to the moment of inertia tensor in local space.
+         *
+         * This does not create a new instance of `Mat3`
+         */
+        public getLocalInertiaTo(inertia: Mat3);
+
+        /**
+         * Returns the mass data of the rigid body.
+         */
+        public getMassData(): MassData;
+
+        /**
+         * Sets `massData` to the mass data of the rigid body.
+         *
+         * This does not create a new instance of `MassData`.
+         */
+        public getMassDataTo(massData: MassData);
+        /**
+         * Sets the mass and moment of inertia of the rigid body by the mass data `massData`.
+         * The properties set by this will be overwritten when
+         *
+         * - some shapes are added or removed
+         * - the type of the rigid body is changed
+         */
+        public setMassData(massData: MassData);
+
+        /**
+         * Returns the rotation factor of the rigid body.
+         */
+        public getRotationFactor(): Vec3;
+
+        /**
+         * Sets the rotation factor of the rigid body to `rotationFactor`.
+         *
+         * This changes moment of inertia internally, so that the change of
+         * angular velocity in **global space** along X, Y and Z axis will scale by `rotationFactor.x`,
+         * `rotationFactor.y` and `rotationFactor.z` times respectively.
+         */
+        public setRotationFactor(rotationFactor: Vec3);
+
+        /**
+         * Returns the linear velocity of the rigid body.
+         */
+        public getLinearVelocity(): Vec3;
+
+        /**
+         * Sets `linearVelocity` to the linear velocity of the rigid body.
+         *
+         * This does not create a new intrance of `Vec3`.
+         */
+        public getLinearVelocityTo(linearVelocity: Vec3);
+
+        /**
+         * Sets the linear velocity of the rigid body.
+         */
+        public setLinearVelocity(linearVelocity: Vec3);
+
+        /**
+         * Returns the angular velocity of the rigid body.
+         */
+        public getAngularVelocity(): Vec3;
+
+        /**
+         * Sets `angularVelocity` to the angular velocity of the rigid body.
+         *
+         * This does not create a new intrance of `Vec3`.
+         */
+        public getAngularVelocityTo(angularVelocity: Vec3);
+
+        /**
+         * Sets the angular velocity of the rigid body.
+         */
+        public setAngularVelocity(angularVelocity: Vec3);
+
+        /**
+         * Adds `linearVelocityChange` to the linear velcity of the rigid body.
+         */
+        public addLinearVelocity(linearVelocityChange: Vec3);
+
+        /**
+         * Adds `angularVelocityChange` to the angular velcity of the rigid body.
+         */
+        public addAngularVelocity(angularVelocityChange: Vec3);
+
+        /**
+         * Applies the impulse `impulse` to the rigid body at `positionInWorld` in world position.
+         *
+         * This changes both the linear velocity and the angular velocity.
+         */
+        public applyImpulse(impulse: Vec3, positionInWorld: Vec3);
+
+        /**
+         * Applies the linear impulse `impulse` to the rigid body.
+         *
+         * This does not change the angular velocity.
+         */
+        public applyLinearImpulse(impulse: Vec3);
+
+        /**
+         * Applies the angular impulse `impulse` to the rigid body.
+         *
+         * This does not change the linear velocity.
+         */
+        public applyAngularImpulse(impulse: Vec3)
+
+        /**
+         * Applies the force `force` to `positionInWorld` in world position.
+         */
+        public applyForce(force: Vec3, positionInWorld: Vec3)
+
+        /**
+         * Applies the force `force` to the center of mass.
+         */
+        public applyForceToCenter(force: Vec3)
+
+        /**
+         * Applies the torque `torque`.
+         */
+        public applyTorque(torque: Vec3)
+
+        /**
+         * Returns the gravity scaling factor of the rigid body.
+         */
+        public getGravityScale(): number
+
+        /**
+         * Sets the gravity scaling factor of the rigid body to `gravityScale`.
+         *
+         * If `0` is set, the rigid body will not be affected by gravity.
+         */
+        public setGravityScale(gravityScale: number)
+
+        /**
+         * Returns the local coordinates of the point `worldPoint` in world coodinates.
+         */
+        public getLocalPoint(worldPoint: Vec3): Vec3
+
+        /**
+         * Sets `localPoint` to the local coordinates of the point `worldPoint` in world coodinates.
+         *
+         * This does not create a new instance of `Vec3`.
+         */
+        public getLocalPointTo(worldPoint: Vec3, localPoint: Vec3)
+
+        /**
+         * Returns the local coordinates of the vector `worldVector` in world coodinates.
+         */
+        public getLocalVector(worldVector: Vec3): Vec3;
+
+        /**
+         * Sets `localVector` to the local coordinates of the vector `worldVector` in world coodinates.
+         *
+         * This does not create a new instance of `Vec3`.
+         */
+        public getLocalVectorTo(worldVector: Vec3, localVector: Vec3);
+
+        /**
+         * Returns the world coordinates of the point `localPoint` in local coodinates.
+         */
+        public getWorldPoint(localPoint: Vec3): Vec3;
+
+        /**
+         * Sets `worldPoint` to the world coordinates of the point `localPoint` in local coodinates.
+         *
+         * This does not create a new instance of `Vec3`.
+         */
+        public getWorldPointTo(localPoint: Vec3, worldPoint: Vec3);
+
+        /**
+         * Returns the world coordinates of the vector `localVector` in local coodinates.
+         */
+        public getWorldVector(localVector: Vec3): Vec3;
+
+        /**
+         * Sets `worldVector` to the world coordinates of the vector `localVector` in local coodinates.
+         *
+         * This does not create a new instance of `Vec3`.
+         */
+        public getWorldVectorTo(localVector: Vec3, worldVector: Vec3);
+
+        /**
+         * Returns the number of the shapes added.
+         */
+        public getNumShapes(): number;
+
+        /**
+         * Returns the list of the shapes of the rigid body.
+         */
+        public getShapeList(): Shape;
+
+        /**
+         * Returns the number of the contact lists the rigid body is involved.
+         */
+        public getNumContectLinks(): number;
+
+        /**
+         * Returns the list of the contact links the rigid body is involved.
+         */
+        public getContactLinkList(): ContactLink;
+
+        /**
+         * Returns the number of the joint links the rigid body is attached.
+         */
+        public getNumJointLinks(): number;
+
+        /**
+         * Returns the list of the joint links the rigid body is attached.
+         */
+        public getJointLinkList(): JointLink;
+
+        /**
+         * Adds the shape to the rigid body.
+         */
+        public addShape(shape: Shape);
+
+        /**
+         * Removes the shape from the rigid body.
+         */
+        public removeShape(shape: Shape);
+
+        /**
+         * Returns the rigid body's type of behaviour.
+         *
+         * See `RigidBodyType` class for details.
+         */
+        public getType(): number;
+
+        /**
+         * Sets the rigid body's type of behaviour.
+         *
+         * See `RigidBodyType` class for details.
+         */
+        public setType(type: number);
+
+        /**
+         * Sets the rigid body's sleep flag false.
+         *
+         * This also resets the sleeping timer of the rigid body.
+         */
+        public wakeUp();
+
+        /**
+         * Sets the rigid body's sleep flag true.
+         *
+         * This also resets the sleeping timer of the rigid body.
+         */
+        public sleep();
+
+        /**
+         * Returns whether the rigid body is sleeping.
+         */
+        public isSleeping(): boolean;
+
+        /**
+         * Returns how long the rigid body is stopping moving. This returns `0` if the body
+         * has already slept.
+         */
+        public getSleepTime(): number;
+
+        /**
+         * Sets the rigid body's auto sleep flag.
+         *
+         * If auto sleep is enabled, the rigid body will automatically sleep when needed.
+         */
+        public setAutoSleep(autoSleepEnabled: boolean);
+
+        /**
+         * Returns the linear damping.
+         */
+        public getLinearDamping(): number;
+
+        /**
+         * Sets the linear damping to `damping`.
+         */
+        public setLinearDamping(damping: number);
+
+        /**
+         * Returns the angular damping.
+         */
+        public getAngularDamping(): number;
+
+        /**
+         * Sets the angular damping to `damping`.
+         */
+        public setAngularDamping(damping: number);
+
+        /**
+         * Returns the previous rigid body in the world.
+         *
+         * If the previous one does not exist, `null` will be returned.
+         */
+        public getPrev(): RigidBody;
+
+        /**
+         * Returns the next rigid body in the world.
+         *
+         * If the next one does not exist, `null` will be returned.
+         */
+        public getNext(): RigidBody;
 
     }
 
@@ -3788,12 +4062,6 @@ declare module OIMO {
      */
     export class RigidBodyType {
 
-        static _DYNAMIC: any;
-
-        static _STATIC: any;
-
-        static _KINEMATIC: any;
-
         /**
          * Represents a dynamic rigid body. A dynamic rigid body has finite mass (and usually inertia
          * tensor). The rigid body is affected by gravity, or by constraints the rigid body is involved.
@@ -3826,39 +4094,6 @@ declare module OIMO {
      * geometry can locally be transformed relative to the parent rigid body's center of gravity.
      */
     export class Shape {
-
-        _id: number;
-
-        _prev: Shape;
-
-        _next: Shape;
-
-        _rigidBody: RigidBody;
-
-        _geom: Geometry;
-
-        _localTransform: Transform;
-
-        _ptransform: Transform;
-
-        _transform: Transform;
-
-        _restitution: number;
-
-        _friction: number;
-
-        _density: number;
-
-        _aabb: Aabb;
-
-        _proxy: Proxy;
-
-        _collisionGroup: number;
-
-        _collisionMask: number;
-
-        _contactCallback: ContactCallback;
-
         displacement: Vec3;
 
         /**
@@ -3872,17 +4107,6 @@ declare module OIMO {
         constructor(config: ShapeConfig);
 
         /**
-         * --- internal --
-         */
-        _sync(tf1: Transform, tf2: Transform): void;
-
-        min: Vec3;
-
-        max: Vec3;
-
-        d: Vec3;
-
-        /**
          * --- public --
          * Returns the coefficient of friction.
          */
@@ -3891,7 +4115,7 @@ declare module OIMO {
         /**
          * Sets the coefficient of friction to `friction`.
          */
-        setFriction(friction: number): void;
+        setFriction(friction: number);
 
         /**
          * Returns the coefficient of restitution.
@@ -3901,7 +4125,7 @@ declare module OIMO {
         /**
          * Sets the coefficient of restitution to `restitution`.
          */
-        setRestitution(restitution: number): void;
+        setRestitution(restitution: number);
 
         /**
          * Returns the transform of the shape relative to the parent rigid body's transform.
@@ -3914,7 +4138,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Transform`.
          */
-        getLocalTransformTo(transform: Transform): void;
+        getLocalTransformTo(transform: Transform);
 
         /**
          * Returns the world transform of the shape.
@@ -3926,14 +4150,14 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Transform`.
          */
-        getTransformTo(transform: Transform): void;
+        getTransformTo(transform: Transform);
 
         /**
          * Sets the shape's transform to `transform` relative to the parent rigid body's transform.
          * 
          * This affects the parent rigid body's mass data.
          */
-        setLocalTransform(transform: Transform): void;
+        setLocalTransform(transform: Transform);
 
         /**
          * Returns the density of the shape.
@@ -3945,7 +4169,7 @@ declare module OIMO {
          * 
          * This affects the parent rigid body's mass data.
          */
-        setDensity(density: number): void;
+        setDensity(density: number);
 
         /**
          * Returns the AABB of the shape. The AABB may be incorrect if the shape doesn't have a
@@ -3959,7 +4183,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `AABB`.
          */
-        getAabbTo(aabb: Aabb): void;
+        getAabbTo(aabb: Aabb);
 
         /**
          * Returns the colision geometry of the shape.
@@ -3980,7 +4204,7 @@ declare module OIMO {
         /**
          * Sets the shape's collision group bits to `collisionGroup`.
          */
-        setCollisionGroup(collisionGroup: number): void;
+        setCollisionGroup(collisionGroup: number);
 
         /**
          * Returns the collision mask bits of the shape.
@@ -3990,7 +4214,7 @@ declare module OIMO {
         /**
          * Sets the shape's collision mask bits to `collisionMask`.
          */
-        setCollisionMask(collisionMask: number): void;
+        setCollisionMask(collisionMask: number);
 
         /**
          * Returns the contact callback of the shape.
@@ -4000,7 +4224,7 @@ declare module OIMO {
         /**
          * Sets the contact callback of the shape to `callback`.
          */
-        setContactCallback(callback: ContactCallback): void;
+        setContactCallback(callback: ContactCallback);
 
         /**
          * Returns the previous shape in the rigid body.
@@ -4109,19 +4333,19 @@ declare module OIMO {
          */
         createProxy(userData: any, aabb: Aabb): Proxy;
 
-        destroyProxy(proxy: Proxy): void;
+        destroyProxy(proxy: Proxy);
 
-        moveProxy(proxy: Proxy, aabb: Aabb, dislacement: Vec3): void;
+        moveProxy(proxy: Proxy, aabb: Aabb, dislacement: Vec3);
 
-        collectPairs(): void;
-
-
-        rayCast(begin: Vec3, end: Vec3, callback: BroadPhaseProxyCallback): void;
+        collectPairs();
 
 
-        convexCast(convex: ConvexGeometry, begin: Transform, translation: Vec3, callback: BroadPhaseProxyCallback): void;
+        rayCast(begin: Vec3, end: Vec3, callback: BroadPhaseProxyCallback);
 
-        aabbTest(aabb: Aabb, callback: BroadPhaseProxyCallback): void;
+
+        convexCast(convex: ConvexGeometry, begin: Transform, translation: Vec3, callback: BroadPhaseProxyCallback);
+
+        aabbTest(aabb: Aabb, callback: BroadPhaseProxyCallback);
 
     }
 
@@ -4136,7 +4360,6 @@ declare module OIMO {
     export class BvhTree { }
     export class BvhBroadPhase extends BroadPhase {
 
-        _tree: BvhTree;
 
         movedProxies: Array<BvhProxy>;
 
@@ -4165,7 +4388,7 @@ declare module OIMO {
 
         addToMax: Vec3;
 
-        collide(n1: BvhNode, n2: BvhNode): void;
+        collide(n1: BvhNode, n2: BvhNode);
 
         l1: boolean;
 
@@ -4175,7 +4398,7 @@ declare module OIMO {
          * descend node
          * descend node
          */
-        rayCastRecursive(node: BvhNode, _p1: Vec3, _p2: Vec3, callback: BroadPhaseProxyCallback): void;
+        rayCastRecursive(node: BvhNode, _p1: Vec3, _p2: Vec3, callback: BroadPhaseProxyCallback);
 
         p1: Vec3;
 
@@ -4187,13 +4410,13 @@ declare module OIMO {
         /**
          * lea
          */
-        convexCastRecursive(node: BvhNode, convex: ConvexGeometry, begin: Transform, translation: Vec3, callback: BroadPhaseProxyCallback): void;
+        convexCastRecursive(node: BvhNode, convex: ConvexGeometry, begin: Transform, translation: Vec3, callback: BroadPhaseProxyCallback);
 
         /**
          * TODO: use stack
          * lea
          */
-        aabbTestRecursive(node: BvhNode, aabb: Aabb, callback: BroadPhaseProxyCallback): void;
+        aabbTestRecursive(node: BvhNode, aabb: Aabb, callback: BroadPhaseProxyCallback);
 
         /**
          * lea
@@ -4201,14 +4424,14 @@ declare module OIMO {
          */
         createProxy(userData: any, aabb: Aabb): Proxy;
 
-        destroyProxy(proxy: Proxy): void;
+        destroyProxy(proxy: Proxy);
 
-        moveProxy(proxy: Proxy, aabb: Aabb, displacement: Vec3): void;
+        moveProxy(proxy: Proxy, aabb: Aabb, displacement: Vec3);
 
         /**
          * need not move prox
          */
-        collectPairs(): void;
+        collectPairs();
 
     }
 
@@ -4239,75 +4462,6 @@ declare module OIMO {
      * BVH Node
      */
     export class BvhNode {
-
-        _next: BvhNode;
-
-        /**
-         * for object poo
-         */
-        _prevLeaf: BvhNode;
-
-        /**
-         * for BvhTree.leafLis
-         */
-        _nextLeaf: BvhNode;
-
-        _children: Array<BvhNode>;
-
-        _childIndex: number;
-
-        _parent: BvhNode;
-
-        /**
-         * must be 0 or 1 regardless of having paren
-         */
-        _height: number;
-
-        _proxy: BvhProxy;
-
-        _aabbMin: Vec3;
-
-        /**
-         * node's aabb. if the node is a leaf, the aabb is equal to the proxy's one
-         */
-        _aabbMax: Vec3;
-
-        _tmp: Vec3;
-
-        /**
-         * used by other classe
-         */
-        constructor();
-
-        /**
-         * --- internal --
-         */
-        _setChild(index: number, child: BvhNode): void;
-
-        _removeReferences(): void;
-
-        _computeAabb(): void;
-
-        c1: BvhNode;
-
-        c2: BvhNode;
-
-        _computeHeight(): void;
-
-        h1: number;
-
-        h2: number;
-
-        _perimeter(): number;
-
-        size: Vec3;
-
-        x: number;
-
-        y: number;
-
-        z: number;
-
     }
 
 }
@@ -4321,9 +4475,6 @@ declare module OIMO {
      */
     export class BvhProxy extends Proxy {
 
-        _leaf: BvhNode;
-
-        _moved: boolean;
 
         constructor(userData: any, id: number);
 
@@ -4363,13 +4514,13 @@ declare module OIMO {
         /**
          * --- private --
          */
-        setNormal(result: DetectorResult, n: Vec3): void;
+        setNormal(result: DetectorResult, n: Vec3);
 
-        addPoint(result: DetectorResult, pos1: Vec3, pos2: Vec3, depth: number, id: number): void;
+        addPoint(result: DetectorResult, pos1: Vec3, pos2: Vec3, depth: number, id: number);
 
         p: DetectorResultPoint;
 
-        detectImpl(result: DetectorResult, geom1: Geometry, geom2: Geometry, tf1: Transform, tf2: Transform, cachedData: CachedDetectorData): void;
+        detectImpl(result: DetectorResult, geom1: Geometry, geom2: Geometry, tf1: Transform, tf2: Transform, cachedData: CachedDetectorData);
 
         /**
          * override thi
@@ -4378,7 +4529,7 @@ declare module OIMO {
          * `transform1` and `transform2`, and stores it to `result`. `cachedData` is used to improve performance
          * of collision detection in some detectors.
          */
-        detect(result: DetectorResult, geom1: Geometry, geom2: Geometry, transform1: Transform, transform2: Transform, cachedData: CachedDetectorData): void;
+        detect(result: DetectorResult, geom1: Geometry, geom2: Geometry, transform1: Transform, transform2: Transform, cachedData: CachedDetectorData);
 
     }
 
@@ -4653,7 +4804,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getNormalTo(normal: Vec3): void;
+        getNormalTo(normal: Vec3);
 
         /**
          * Returns the tangent vector of the contact manifold. The tangent vector has unit
@@ -4667,7 +4818,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getTangentTo(tangent: Vec3): void;
+        getTangentTo(tangent: Vec3);
 
         /**
          * Returns the binormal vector of the contact manifold. The binormal vector has unit
@@ -4681,7 +4832,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getBinormalTo(binormal: Vec3): void;
+        getBinormalTo(binormal: Vec3);
 
         /**
          * Returns the manifold point vector of the contact manifold. Note that **only the first
@@ -4731,7 +4882,7 @@ declare module OIMO {
          * Sets `position` to the first rigid body's manifold point in world coordinate.
          * This does not create a new instance of `Vec3`.
          */
-        getPosition1To(position: Vec3): void;
+        getPosition1To(position: Vec3);
 
         /**
          * Returns the second rigid body's manifold point in world coordinate.
@@ -4742,7 +4893,7 @@ declare module OIMO {
          * Sets `position` to the second rigid body's manifold point in world coordinate.
          * This does not create a new instance of `Vec3`.
          */
-        getPosition2To(position: Vec3): void;
+        getPosition2To(position: Vec3);
 
         /**
          * Returns the amount of the overlap. If the manifold point is separate, a negative
@@ -4795,16 +4946,16 @@ declare module OIMO {
         /**
          * --- private --
          */
-        removeOutdatedPoints(): void;
+        removeOutdatedPoints();
 
         /**
          * compute projection of dif
          * the amount of horizontal sliding exceeds threshol
          */
-        removeManifoldPoint(index: number): void;
+        removeManifoldPoint(index: number);
 
 
-        addManifoldPoint(point: DetectorResultPoint, tf1: Transform, tf2: Transform): void;
+        addManifoldPoint(point: DetectorResultPoint, tf1: Transform, tf2: Transform);
 
 
         /**
@@ -4812,7 +4963,7 @@ declare module OIMO {
          */
         computeTargetIndex(newPoint: DetectorResultPoint, tf1: Transform, tf2: Transform): number;
 
-        computeRelativePositions(tf1: Transform, tf2: Transform): void;
+        computeRelativePositions(tf1: Transform, tf2: Transform);
 
 
         /**
@@ -4846,9 +4997,9 @@ declare module OIMO {
          */
         constructor();
 
-        clear(): void;
+        clear();
 
-        updateSparsity(): void;
+        updateSparsity();
 
         isLinearSet(): boolean;
 
@@ -4868,17 +5019,6 @@ declare module OIMO {
      * rotation part of the 
      */
     export class CylindricalJoint extends Joint {
-
-        _translSd: SpringDamper;
-
-        _translLm: TranslationalLimitMotor;
-
-        _rotSd: SpringDamper;
-
-        _rotLm: RotationalLimitMotor;
-
-        _basis: JointBasis;
-
         angle: number;
 
         angularErrorY: number;
@@ -4899,7 +5039,7 @@ declare module OIMO {
         /**
          * --- private --
          */
-        getInfo(info: JointSolverInfo, timeStep: TimeStep, isPositionPart: boolean): void;
+        getInfo(info: JointSolverInfo, timeStep: TimeStep, isPositionPart: boolean);
 
         erp: number;
 
@@ -5036,14 +5176,14 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getAnchor1To(anchor: Vec3): void;
+        getAnchor1To(anchor: Vec3);
 
         /**
          * Sets `anchor` to the second rigid body's anchor point in world coordinates.
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getAnchor2To(anchor: Vec3): void;
+        getAnchor2To(anchor: Vec3);
 
         /**
          * Returns the first rigid body's local anchor point in world coordinates.
@@ -5060,14 +5200,14 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getLocalAnchor1To(localAnchor: Vec3): void;
+        getLocalAnchor1To(localAnchor: Vec3);
 
         /**
          * Sets `localAnchor` to the second rigid body's anchor point in local coordinates.
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getLocalAnchor2To(localAnchor: Vec3): void;
+        getLocalAnchor2To(localAnchor: Vec3);
 
         /**
          * Returns the basis of the joint for the first rigid body in world coordinates.
@@ -5084,14 +5224,14 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Mat3`.
          */
-        getBasis1To(basis: Mat3): void;
+        getBasis1To(basis: Mat3);
 
         /**
          * Sets `basis` to the basis of the joint for the second rigid body in world coordinates.
          * 
          * This does not create a new instance of `Mat3`.
          */
-        getBasis2To(basis: Mat3): void;
+        getBasis2To(basis: Mat3);
 
         /**
          * Returns whether to allow the connected rigid bodies to collide each other.
@@ -5101,7 +5241,7 @@ declare module OIMO {
         /**
          * Sets whether to allow the connected rigid bodies to collide each other.
          */
-        setAllowCollision(allowCollision: boolean): void;
+        setAllowCollision(allowCollision: boolean);
 
         /**
          * Returns the magnitude of the constraint force at which the joint will be destroyed.
@@ -5115,7 +5255,7 @@ declare module OIMO {
          * 
          * Set `0` for unbreakable joints.
          */
-        setBreakForce(breakForce: number): void;
+        setBreakForce(breakForce: number);
 
         /**
          * Returns the magnitude of the constraint torque at which the joint will be destroyed.
@@ -5129,7 +5269,7 @@ declare module OIMO {
          * 
          * Set `0` for unbreakable joints.
          */
-        setBreakTorque(breakTorque: number): void;
+        setBreakTorque(breakTorque: number);
 
         /**
          * Returns the type of the position correction algorithm for the joint.
@@ -5143,7 +5283,7 @@ declare module OIMO {
          * 
          * See `PositionCorrectionAlgorithm` for details.
          */
-        setPositionCorrectionAlgorithm(positionCorrectionAlgorithm: number): void;
+        setPositionCorrectionAlgorithm(positionCorrectionAlgorithm: number);
 
         /**
          * Returns the force applied to the first rigid body at the last time step.
@@ -5157,7 +5297,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getAppliedForceTo(appliedForce: Vec3): void;
+        getAppliedForceTo(appliedForce: Vec3);
 
         /**
          * Returns the torque applied to the first rigid body at the last time step.
@@ -5169,7 +5309,7 @@ declare module OIMO {
          * 
          * This does not create a new instance of `Vec3`.
          */
-        getAppliedTorqueTo(appliedTorque: Vec3): void;
+        getAppliedTorqueTo(appliedTorque: Vec3);
 
         /**
          * Returns the previous joint in the world.
@@ -5206,11 +5346,11 @@ declare module OIMO {
 
         constructor(joint: Joint);
 
-        trackByX(): void;
+        trackByX();
 
-        trackByY(): void;
+        trackByY();
 
-        trackByZ(): void;
+        trackByZ();
 
         invM1: number;
 
@@ -5301,11 +5441,6 @@ declare module OIMO {
 
         constructor();
 
-        /**
-         * --- private --
-         */
-        _init(rb1: RigidBody, rb2: RigidBody, worldAnchor: Vec3): void;
-
     }
 
 }
@@ -5334,7 +5469,7 @@ declare module OIMO {
          */
         constructor();
 
-        clear(): void;
+        clear();
 
     }
 
@@ -5348,14 +5483,6 @@ declare module OIMO {
      * See also `ContactLink`.
      */
     export class JointLink {
-
-        _prev: JointLink;
-
-        _next: JointLink;
-
-        _joint: Joint;
-
-        _other: RigidBody;
 
         constructor(joint: Joint);
 
@@ -5394,18 +5521,6 @@ declare module OIMO {
      * The list of the types of the joints.
      */
     export class JointType {
-
-        static _SPHERICAL: number;
-
-        static _REVOLUTE: number;
-
-        static _CYLINDRICAL: number;
-
-        static _PRISMATIC: number;
-
-        static _UNIVERSAL: number;
-
-        static _RAGDOLL: number;
 
         /**
          * Represents a spherical joint.
@@ -5464,12 +5579,6 @@ declare module OIMO {
      */
     export class PrismaticJoint extends Joint {
 
-        _sd: SpringDamper;
-
-        _lm: TranslationalLimitMotor;
-
-        _basis: JointBasis;
-
         translation: number;
 
         linearErrorY: number;
@@ -5486,7 +5595,7 @@ declare module OIMO {
         /**
          * --- priate --
          */
-        getInfo(info: JointSolverInfo, timeStep: TimeStep, isPositionPart: boolean): void;
+        getInfo(info: JointSolverInfo, timeStep: TimeStep, isPositionPart: boolean);
 
         erp: number;
 
@@ -5578,16 +5687,6 @@ declare module OIMO {
      */
     export class RagdollJoint extends Joint {
 
-        _twistSd: SpringDamper;
-
-        _swingSd: SpringDamper;
-
-        _twistLm: RotationalLimitMotor;
-
-        _maxSwingAngle1: number;
-
-        _maxSwingAngle2: number;
-
         swingAxis: Vec3;
 
         twistAxis: Vec3;
@@ -5598,15 +5697,96 @@ declare module OIMO {
 
         dummySwingLm: RotationalLimitMotor;
 
-        _swingAngle: number;
-
-        _twistAngle: number;
-
         /**
          * Creates a new ragdoll joint by configuration `config`.
          */
         constructor(config: RagdollJointConfig);
 
+        computeErrors();
+
+        /**
+         * Returns the first rigid body's constraint axis in world coordinates.
+         */
+        getAxis1(): Vec3;
+
+        /**
+	    * Returns the second rigid body's constraint axis in world coordinates.
+	    */
+        getAxis2(): Vec3;
+
+        /**
+         * Sets `axis` to the first rigid body's constraint axis in world coordinates.
+         *
+         * This does not create a new instance of `Vec3`.
+         */
+        public  getAxis1To(axis: Vec3);
+
+        /**
+         * Sets `axis` to the second rigid body's constraint axis in world coordinates.
+         *
+         * This does not create a new instance of `Vec3`.
+         */
+        public  getAxis2To(axis: Vec3);
+
+        /**
+         * Returns the first rigid body's constraint axis relative to the rigid body's transform.
+         */
+        public  getLocalAxis1(): Vec3;
+
+        /**
+         * Returns the second rigid body's constraint axis relative to the rigid body's transform.
+         */
+        public  getLocalAxis2(): Vec3;
+
+        /**
+         * Sets `axis` to the first rigid body's constraint axis relative to the rigid body's transform.
+         *
+         * This does not create a new instance of `Vec3`.
+         */
+        public  getLocalAxis1To(axis: Vec3);
+
+        /**
+         * Sets `axis` to the second rigid body's constraint axis relative to the rigid body's transform.
+         *
+         * This does not create a new instance of `Vec3`.
+         */
+        public  getLocalAxis2To(axis: Vec3);
+
+        /**
+         * Returns the rotational spring and damper settings along the twist axis.
+         */
+        public  getTwistSpringDamper(): SpringDamper;
+
+        /**
+         * Returns the rotational limits and motor settings along the twist axis.
+         */
+        public  getTwistLimitMotor(): RotationalLimitMotor;
+
+        /**
+         * Returns the rotational spring and damper settings along the swing axis.
+         */
+        public  getSwingSpringDamper(): SpringDamper;
+
+        /**
+         * Returns the swing axis in world coordinates.
+         */
+        public  getSwingAxis(): Vec3;
+
+        /**
+         * Sets `axis` to the swing axis in world coordinates.
+         *
+         * This does not create a new instance of `Vec3`.
+         */
+        public  getSwingAxisTo(axis: Vec3);
+
+        /**
+         * Returns the swing angle in radians.
+         */
+        public  getSwingAngle(): number
+        /**
+         * Returns the twist angle in radians.
+         */
+        public  getTwistAngle(): number
     }
 
 }
@@ -5712,7 +5892,7 @@ declare module OIMO {
         /**
          * --- private --
          */
-        getInfo(info: JointSolverInfo, timeStep: TimeStep, isPositionPart: boolean): void;
+        getInfo(info: JointSolverInfo, timeStep: TimeStep, isPositionPart: boolean);
 
         erp: number;
 
@@ -5870,7 +6050,7 @@ declare module OIMO {
         /**
          * --- private --
          */
-        getInfo(info: JointSolverInfo, timeStep: TimeStep, isPositionPart: boolean): void;
+        getInfo(info: JointSolverInfo, timeStep: TimeStep, isPositionPart: boolean);
 
         error: Vec3;
 
@@ -5903,15 +6083,6 @@ declare module OIMO {
 
         j: JacobianRow;
 
-        /**
-         * linear
-         * linear
-         * linear
-         * --- internal --
-         */
-        _getVelocitySolverInfo(timeStep: TimeStep, info: JointSolverInfo): void;
-
-        _getPositionSolverInfo(info: JointSolverInfo): void;
 
         /**
          * --- public --
@@ -6144,7 +6315,7 @@ declare module OIMO {
          * note that we can directory use Y-axis of Euler angles to constrain relative velocit
          * along the axis, as `angleAxisY` is parallel to `angleAxisX cross angleAxisZ`
          */
-        getInfo(info: JointSolverInfo, timeStep: TimeStep, isPositionPart: boolean): void;
+        getInfo(info: JointSolverInfo, timeStep: TimeStep, isPositionPart: boolean);
 
         erp: number;
 
@@ -6266,9 +6437,9 @@ declare module OIMO {
          */
         constructor();
 
-        clear(): void;
+        clear();
 
-        copyFrom(imp: ContactImpulse): void;
+        copyFrom(imp: ContactImpulse);
 
     }
 
@@ -6334,7 +6505,7 @@ declare module OIMO {
 
         constructor();
 
-        dumpHoleEdge(first: EpaVertex): void;
+        dumpHoleEdge(first: EpaVertex);
 
 
         validate(): boolean;
@@ -6343,7 +6514,7 @@ declare module OIMO {
          * hrow M.error("!?"))
          * hrow M.error("!?"))
          */
-        findEdgeLoop(id: number, base: EpaTriangle, from: Vec3): void;
+        findEdgeLoop(id: number, base: EpaTriangle, from: Vec3);
 
     }
 
@@ -6387,7 +6558,7 @@ declare module OIMO {
 
         constructor();
 
-        clear(): void;
+        clear();
 
     }
 
@@ -6421,7 +6592,7 @@ declare module OIMO {
 
         init(v: Vec3, w1: Vec3, w2: Vec3): EpaVertex;
 
-        removeReferences(): void;
+        removeReferences();
 
     }
 
@@ -6683,7 +6854,7 @@ declare module OIMO {
 
         constructor();
 
-        clear(): void;
+        clear();
 
     }
 
@@ -6761,11 +6932,11 @@ declare module OIMO {
 
         constructor();
 
-        clear(): void;
+        clear();
 
-        equalLimit(rhs: number, cfm: number): void;
+        equalLimit(rhs: number, cfm: number);
 
-        motor(speed: number, maxImpulse: number): void;
+        motor(speed: number, maxImpulse: number);
 
     }
 
@@ -6879,15 +7050,15 @@ declare module OIMO {
 
         constructor(constraint: ContactConstraint);
 
-        preSolveVelocity(timeStep: TimeStep): void;
+        preSolveVelocity(timeStep: TimeStep);
 
 
-        warmStart(timeStep: TimeStep): void;
+        warmStart(timeStep: TimeStep);
 
         /**
          * adjust impulse for variable time ste
          */
-        solveVelocity(): void;
+        solveVelocity();
 
     }
 
@@ -6908,7 +7079,7 @@ declare module OIMO {
 
         constructor(joint: Joint);
 
-        preSolveVelocity(timeStep: TimeStep): void;
+        preSolveVelocity(timeStep: TimeStep);
 
         invM1: number;
 
@@ -6927,7 +7098,7 @@ declare module OIMO {
 
         j: JacobianRow;
 
-        warmStart(timeStep: TimeStep): void;
+        warmStart(timeStep: TimeStep);
 
         factor: number;
 
@@ -6980,7 +7151,7 @@ declare module OIMO {
          */
         constructor(maxRows: number);
 
-        init(buildInfo: BoundaryBuildInfo): void;
+        init(buildInfo: BoundaryBuildInfo);
 
         /**
          * copy bounded par
@@ -7045,15 +7216,15 @@ declare module OIMO {
          */
         constructor(size: number);
 
-        clear(): void;
+        clear();
 
-        pushBounded(idx: number, sign: number): void;
+        pushBounded(idx: number, sign: number);
 
-        pushUnbounded(idx: number): void;
+        pushUnbounded(idx: number);
 
-        popBounded(): void;
+        popBounded();
 
-        popUnbounded(): void;
+        popUnbounded();
 
     }
 
@@ -7076,7 +7247,7 @@ declare module OIMO {
 
         getIndex(i: number): number;
 
-        select(index: number): void;
+        select(index: number);
 
         i: number;
 
@@ -7086,7 +7257,7 @@ declare module OIMO {
          * validate()
          * Makes first n elements the permutation of {0, 1, ... , n-1}
          */
-        setSize(size: number): void;
+        setSize(size: number);
 
         numSmaller: number;
 
@@ -7130,27 +7301,27 @@ declare module OIMO {
 
         constructor(joint: Joint);
 
-        preSolveVelocity(timeStep: TimeStep): void;
+        preSolveVelocity(timeStep: TimeStep);
 
         /**
          * compute inverse mass matri
          * build boundarie
          * update the size of the boundary selecto
          */
-        warmStart(timeStep: TimeStep): void;
+        warmStart(timeStep: TimeStep);
 
 
         /**
          * apply initial impuls
          */
-        solveVelocity(): void;
+        solveVelocity();
 
         /**
          * accumulate the delta impulse
          * apply motor + limit impulse
          * make the priority of the boundary higher for the next iteratio
          */
-        postSolveVelocity(timeStep: TimeStep): void;
+        postSolveVelocity(timeStep: TimeStep);
 
 
         /**
@@ -7158,12 +7329,12 @@ declare module OIMO {
          * build boundarie
          * update the size of the boundary selecto
          */
-        preSolvePosition(timeStep: TimeStep): void;
+        preSolvePosition(timeStep: TimeStep);
 
         /**
          * clear position impulse
          */
-        solvePositionSplitImpulse(): void;
+        solvePositionSplitImpulse();
 
 
         /**
@@ -7171,7 +7342,7 @@ declare module OIMO {
          * apply delta impulse
          * make the priority of the boundary higher for the next iteratio
          */
-        solvePositionNgs(timeStep: TimeStep): void;
+        solvePositionNgs(timeStep: TimeStep);
 
 
         /**
@@ -7179,7 +7350,7 @@ declare module OIMO {
          * apply delta impulse
          * make the priority of the boundary higher for the next iteratio
          */
-        postSolve(): void;
+        postSolve();
 
     }
 
@@ -7209,7 +7380,7 @@ declare module OIMO {
         /**
          * --- private --
          */
-        computeSubmatrix(id: number, indices: Array<number>, size: number): void;
+        computeSubmatrix(id: number, indices: Array<number>, size: number);
 
         /**
          * clear cached submatrice

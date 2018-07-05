@@ -13,7 +13,7 @@ namespace egret3d {
      * 引擎启动入口
      */
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
-        (Ammo as any)().then(() => { // TODO WebAssembly load
+        //(Ammo as any)().then(() => { // TODO WebAssembly load
             const requiredOptions = getOptions(options);
             const canvas = getMainCanvas();
             WebGLKit.init(canvas, requiredOptions);
@@ -25,7 +25,7 @@ namespace egret3d {
             paper.Application.init(options);
             //
             paper.Application.sceneManager.createScene("default");
-        });
+        //});
     }
 
     function getMainCanvas() {

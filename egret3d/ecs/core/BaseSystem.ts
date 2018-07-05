@@ -289,7 +289,7 @@ namespace paper {
         /**
          * 系统初始化时调用。
          */
-        public onAwake?(): void;
+        public onAwake(): void{}
         /**
          * 系统被激活时调用。
          * @see paper.BaseSystem#enabled
