@@ -17,7 +17,7 @@ namespace paper {
             }
 
             const gameObject = component.gameObject;
-            console.debug("StartSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
+            console.debug("StartSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component));
         }
 
         protected _onRemoveComponent(component: Behaviour) {
@@ -29,7 +29,7 @@ namespace paper {
             }
 
             const gameObject = component.gameObject;
-            console.debug("StartSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
+            console.debug("StartSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component));
         }
 
         public onUpdate() {
@@ -50,7 +50,7 @@ namespace paper {
                             component.onReset && component.onReset();
                         }
 
-                        if (_executeInEditModeComponents.indexOf(component.constructor) < 0) {
+                        if (_executeInEditModeComponents.indexOf(component.constructor as any) < 0) {
                             continue;
                         }
 

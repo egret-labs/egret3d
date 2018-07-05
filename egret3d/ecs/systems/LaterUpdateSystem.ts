@@ -13,7 +13,7 @@ namespace paper {
 
             if (this._isEditorUpdate()) {
                 for (const component of components) {
-                    if (component && component._isStarted && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                    if (component && component._isStarted && _executeInEditModeComponents.indexOf(component.constructor as any) >= 0) {
                         component.onLateUpdate && component.onLateUpdate(deltaTime);
                     }
                 }

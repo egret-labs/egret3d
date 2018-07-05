@@ -672,6 +672,7 @@ namespace egret3d {
     /**
      * 动画组件。
      */
+    @paper.disallowMultipleComponent
     export class Animation extends paper.BaseComponent {
         /**
          * @private
@@ -713,7 +714,7 @@ namespace egret3d {
          * @internal
          */
         public _dispatchEvent(type: string, animationState: AnimationState, eventObject?: any) { // TODO more event type.
-            for (const component of this.gameObject.getComponents(paper.Behaviour, true)) {
+            for (const component of this.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
                 if (component.onAnimationEvent) {
                     component.onAnimationEvent(type, animationState, eventObject);
                 }

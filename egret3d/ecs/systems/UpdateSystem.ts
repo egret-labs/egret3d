@@ -17,7 +17,7 @@ namespace paper {
             }
 
             const gameObject = component.gameObject;
-            console.debug("UpdateSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
+            console.debug("UpdateSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component));
         }
 
         protected _onRemoveComponent(component: Behaviour) {
@@ -29,7 +29,7 @@ namespace paper {
             }
 
             const gameObject = component.gameObject;
-            console.debug("UpdateSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component.constructor));
+            console.debug("UpdateSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component));
         }
 
         public onUpdate() {
@@ -41,7 +41,7 @@ namespace paper {
             if (this._isEditorUpdate()) {
                 for (const component of components) {
                     if (component) {
-                        if (component._isStarted && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                        if (component._isStarted && _executeInEditModeComponents.indexOf(component.constructor as any) >= 0) {
                             component.onUpdate && component.onUpdate(deltaTime);
                         }
 
