@@ -712,7 +712,7 @@ namespace paper.editor {
 
             let mat = new egret3d.Material();
             mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
-            mat.setVector4("_Color", new egret3d.Vector4(0.8, 0.8, 0.4, 0.1));
+            mat.setVector4v("_Color", [0.8, 0.8, 0.4, 0.1]);
             renderer.materials = [mat];
 
             let xAxis = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.2), 0);
@@ -819,7 +819,7 @@ namespace paper.editor {
 
             let mat = new egret3d.Material();
             mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
-            mat.setVector4("_Color", color);
+            mat.setVector4v("_Color", [color.x,color.y,color.z,color.w]);
             renderer.materials = [mat];
 
             return gizmoAxis;

@@ -13,6 +13,12 @@ namespace paper {
         @paper.serializedField
         public readonly uuid: string = createUUID();
 
+        /**
+         * internal
+         */
+        @paper.serializedField
+        public readonly assetUUid:string = createUUID();
+
         public serialize(): any {
             console.warn("Unimplemented serialize method.");
         }

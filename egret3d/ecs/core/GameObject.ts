@@ -47,8 +47,15 @@ namespace paper {
         @serializedField
         public prefab: egret3d.Prefab | null = null;
 
+        /**
+         * @internal
+         */
+        @serializedField
+        private prefabEditInfo:boolean | string | null = null;
+
         @serializedField
         private _activeSelf: boolean = true;
+
         /**
          * @internal
          */

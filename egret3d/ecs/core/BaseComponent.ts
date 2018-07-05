@@ -30,7 +30,12 @@ namespace paper {
         public serialize(): any {
             const target = serializeRC(this);
             target._enabled = this._enabled;
-
+            if (this.uuid) {
+                target.uuid = this.uuid;
+            }
+            if (this.assetUUid) {
+                target.assetUUid = this.assetUUid;
+            }
             return target;
         }
 
@@ -39,6 +44,10 @@ namespace paper {
 
             if (element.uuid) {
                 (this as any).uuid = element.uuid;
+            }
+
+            if (element.assetUUid) {
+                (this as any).assetUUid = element.assetUUid;
             }
         }
         /**
