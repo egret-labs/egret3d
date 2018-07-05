@@ -13,7 +13,7 @@ namespace paper {
      * - onDisable();
      * - onDestroy();
      */
-    export class Behaviour extends BaseComponent {
+    export abstract class Behaviour extends BaseComponent {
         /**
          * @internal
          */
@@ -38,13 +38,13 @@ namespace paper {
             this._isTriggerEnabled = Boolean(this.onTriggerEnter || this.onTriggerStay || this.onTriggerExit);
             this._isCollisionEnabled = Boolean(this.onCollisionEnter || this.onCollisionStay || this.onCollisionExit);
 
-            if (!Application.isEditor || _executeInEditModeComponents.indexOf(this.constructor) >= 0) {
+            if (!Application.isEditor || _executeInEditModeComponents.indexOf(this.constructor as any) >= 0) {
                 this.onAwake && this.onAwake(config);
             }
         }
 
         public uninitialize() {
-            if (!Application.isEditor || _executeInEditModeComponents.indexOf(this.constructor) >= 0) {
+            if (!Application.isEditor || _executeInEditModeComponents.indexOf(this.constructor as any) >= 0) {
                 this.onDestroy && this.onDestroy(); // TODO onDestroy 如果不是 enabled 就不派发
             }
 
