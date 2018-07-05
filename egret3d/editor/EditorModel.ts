@@ -51,6 +51,7 @@ namespace paper.editor {
         public static REMOVE_COMPONENT = "REMOVE_COMPONENT";
         /**更改parent */
         public static UPDATE_PARENT = "UPDATE_PARENT";
+
         /**修改预制体游戏对象属性 */
         public static MODIFY_PREFAB_GAMEOBJECT_PROPERTY = "MODIFY_PREFAB_GAMEOBJECT_PROPERTY";
         /**修改预制体组件属性 */
@@ -59,6 +60,7 @@ namespace paper.editor {
         public static ADD_PREFAB_COMPONENT = "ADD_PREFAB_COMPONENT";
         /**移除组件 */
         public static REMOVE_PREFAB_COMPONENT = "REMOVE_PREFAB_COMPONENT";
+
         /**修改asset属性 */
         public static MODIFY_ASSET_PROPERTY = "MODIFY_ASSET_PROPERTY";
         /**创建prefab */
@@ -400,6 +402,16 @@ namespace paper.editor {
                 }
             }
             return null;
+        }
+
+        public getComponentByAssetId(gameObject:GameObject, assetId: string): BaseComponent | null {
+            for (let i: number = 0; i < gameObject.components.length; i++) {
+                let comp = gameObject.components[i];
+                if (comp.assetUUid === assetId) {
+                    return comp;
+                }
+            }
+            return null;;
         }
 
         public pasteGameObject(target: egret3d.Transform = null):void {

@@ -1030,31 +1030,36 @@ namespace paper.editor {
             }
             let objects = this.getGameObjectsByPrefab(prefabObj.prefab);
             for (let k: number = 0; k < prefabObj.components.length; k++) {
-                let PrefabComp = prefabObj.components[k];
-                let editInfoList = editor.getEditInfo(PrefabComp);
-                if (PrefabComp.uuid === componentUUid) {
+                let prefabComp = prefabObj.components[k];
+                let editInfoList = editor.getEditInfo(prefabComp);
+                if (prefabComp.uuid === componentUUid) {
                     valueList.forEach(async(propertyValue) => {
                         const { propName, copyValue, valueEditType } = propertyValue;
                         let newValue = await Editor.editorModel.deserializeProperty(copyValue, valueEditType);
                         objects.forEach(object => {
-                            let objectComp = object.components[k];
-                            let valueType = typeof objectComp[propName];
-                            if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
-                                if (objectComp[propName] === PrefabComp[propName]) {
-                                    Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
-                                    this.dispathPropertyEvent(objectComp, propName, newValue);
+                            let objectComp = Editor.editorModel.getComponentByAssetId(object,prefabComp.assetUUid);
+                            if (objectComp !== null) {
+                                let valueType = typeof objectComp[propName];
+                                if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
+                                    if (objectComp[propName] === prefabComp[propName]) {
+                                        Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
+                                        this.dispathPropertyEvent(objectComp, propName, newValue);
+                                    }
                                 }
-                            }
-                            else {
-                                if (this.equal(objectComp[propName], PrefabComp[propName])) {
-                                    Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
-                                    this.dispathPropertyEvent(objectComp, propName, newValue);
+                                else {
+                                    if (this.equal(objectComp[propName], prefabComp[propName])) {
+                                        Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
+                                        this.dispathPropertyEvent(objectComp, propName, newValue);
+                                    }
                                 }
+                            }else{
+                                console.warn(`{prefabComp.assetUUid} not match!`)
                             }
+
                         });
 
-                        Editor.editorModel.setTargetProperty(propName, PrefabComp, newValue);
-                        this.dispathPropertyEvent(PrefabComp, propName, newValue);
+                        Editor.editorModel.setTargetProperty(propName, prefabComp, newValue);
+                        this.dispathPropertyEvent(prefabComp, propName, newValue);
                     })
                 }
             }
@@ -1181,13 +1186,14 @@ namespace paper.editor {
                     const gameObj = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObj) {
                         let addComponent;
-                        if (element.serializeData) {
-                            addComponent = deserialize(element.serializeData,element.assetsMap);
+
+                        if (this.data.serializeData) {
+                            addComponent = deserialize(this.data.serializeData,this.data.assetsMap,true);
                             Editor.editorModel.addComponentToGameObject(gameObj,addComponent);
                         }else{
                             addComponent = gameObj.addComponent(compClz);
-                            element.serializeData = serialize(addComponent);
-                            element.assetsMap = Editor.editorModel.createAssetMap(element.serializeData);
+                            this.data.serializeData = serialize(addComponent);
+                            this.data.assetsMap = Editor.editorModel.createAssetMap(this.data.serializeData);
                         }
 
                         element.cacheUUid = addComponent.uuid;
