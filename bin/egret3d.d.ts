@@ -1559,6 +1559,10 @@ declare namespace paper {
         /**
          *
          */
+        onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
+        /**
+         *
+         */
         onLateUpdate?(deltaTime: number): void;
         /**
          * 组件被禁用或实体被禁用时调用。
@@ -1669,8 +1673,147 @@ declare namespace egret3d {
         }[];
         private readonly _drawCalls;
         private _applyDrawCall(context, drawCall);
+        protected _onAddComponent(component: Camera): void;
         $renderCamera(camera: Camera): void;
         onUpdate(): void;
+    }
+}
+declare namespace egret3d {
+    /**
+     * Light Type Enum
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 灯光类型的枚举。
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    const enum LightType {
+        /**
+         * direction light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 直射光
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        Direction = 1,
+        /**
+         * point light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 点光源
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        Point = 2,
+        /**
+         * point light
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 聚光灯
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        Spot = 3,
+    }
+    /**
+     * light component
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 灯光组件
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    abstract class BaseLight extends paper.BaseComponent {
+        /**
+         *
+         */
+        readonly type: LightType;
+        /**
+         *
+         */
+        castShadows: boolean;
+        /**
+         *
+         */
+        intensity: number;
+        /**
+         *
+         */
+        distance: number;
+        /**
+         *
+         */
+        decay: number;
+        /**
+         *
+         */
+        angle: number;
+        /**
+         *
+         */
+        penumbra: number;
+        /**
+         * spot angel cos
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 聚光灯的开合角度cos值
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        spotAngelCos: number;
+        /**
+         *
+         */
+        shadowBias: number;
+        /**
+         *
+         */
+        shadowRadius: number;
+        /**
+         *
+         */
+        shadowSize: number;
+        /**
+         *
+         */
+        shadowCameraNear: number;
+        /**
+         *
+         */
+        shadowCameraFar: number;
+        /**
+         *
+         */
+        readonly color: Color;
+        readonly matrix: Matrix;
+        renderTarget: IRenderTarget;
+        protected _updateMatrix(camera: Camera): void;
+        update(camera: Camera, faceIndex: number): void;
     }
 }
 declare namespace egret3d.particle {
@@ -2070,6 +2213,8 @@ declare namespace paper {
      * 单例组件基类。
      */
     class SingletonComponent extends BaseComponent {
+        initialize(): void;
+        uninitialize(): void;
     }
 }
 declare namespace paper.editor {
@@ -2208,44 +2353,13 @@ declare namespace egret3d {
         a: number;
         constructor(r?: number, g?: number, b?: number, a?: number);
         serialize(): number[];
-        deserialize(element: number[]): void;
-        static set(r: number, g: number, b: number, a: number, out: Color): Color;
+        deserialize(element: Readonly<[number, number, number, number]>): void;
+        set(r?: number, g?: number, b?: number, a?: number): this;
         static multiply(c1: Color, c2: Color, out: Color): Color;
         static scale(c: Color, scaler: number): Color;
         static copy(c: Color, out: Color): Color;
         static lerp(c1: Color, c2: Color, value: number, out: Color): Color;
     }
-}
-declare namespace paper {
-    /**
-     * 序列化方法
-     * 只有 ISerializable 参与序列化
-     * 只有被标记的对象属性 参与序列化
-     * 序列化后，输出 ISerializeData
-     * 对象在objects中按生成顺序，root一定是第一个元素。
-     * 允许依赖标记对序列化对象数据分类，以便单独处理一些对象（例如资源等等，但资源的路径这里不做处理，在方法外由开发者自行处理）
-     */
-    function serialize(source: SerializableObject, sourcePath?: string): ISerializedData;
-    /**
-     *
-     */
-    function serializeAsset(source: Asset): any;
-    /**
-     *
-     */
-    function serializeRC(source: SerializableObject): any;
-    /**
-     *
-     */
-    function serializeR(source: SerializableObject): any;
-    /**
-     *
-     */
-    function serializeC(source: SerializableObject): any;
-    /**
-     *
-     */
-    function getTypesFromPrototype(classPrototype: any, typeKey: string, types?: string[] | null): string[];
 }
 declare namespace egret3d.ammo {
     /**
@@ -3515,10 +3629,6 @@ declare namespace egret3d {
          * 子类可通过重载此方法进行标脏状态传递
          */
         protected _onParentChange(newParent: Transform | null, oldParent: Transform | null): void;
-        /**
-         *
-         */
-        $getGlobalPosition(): ImmutableVector4;
         deserialize(element: any): void;
         /**
          * 设置父节点
@@ -4026,6 +4136,10 @@ declare namespace egret3d {
          */
         readonly postQueues: ICameraPostQueue[];
         /**
+         * 相机渲染上下文
+         */
+        context: RenderContext;
+        /**
          * render target
          * @defualt null
          * @version paper 1.0
@@ -4040,16 +4154,10 @@ declare namespace egret3d {
          * @language
          */
         renderTarget: IRenderTarget | null;
-        /**
-         * 相机渲染上下文
-         */
-        context: RenderContext;
         private _near;
         private _far;
-        private readonly matView;
         private readonly matProjP;
         private readonly matProjO;
-        private readonly matProj;
         private readonly frameVecs;
         /**
          * 计算相机视锥区域
@@ -4282,16 +4390,16 @@ declare namespace egret3d {
          */
         lightmapOffset: Float32Array | null;
         updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number): void;
-        updateCamera(camera: Camera): void;
-        updateLights(lights: ReadonlyArray<Light>): void;
+        updateCamera(camera: Camera, matrix: Matrix): void;
+        updateLights(lights: ReadonlyArray<BaseLight>): void;
         updateOverlay(): void;
         updateModel(matrix: Matrix): void;
         updateModeTrail(): void;
         updateBones(data: Float32Array | null): void;
-        lightPosition: ImmutableVector4;
+        readonly lightPosition: Float32Array;
         lightShadowCameraNear: number;
         lightShadowCameraFar: number;
-        updateLightDepth(light: Light): void;
+        updateLightDepth(light: BaseLight): void;
     }
 }
 declare namespace egret3d {
@@ -4729,185 +4837,57 @@ declare namespace egret3d {
         onUpdate(): void;
     }
 }
+declare namespace paper {
+    /**
+     *
+     */
+    class MissingComponent extends BaseComponent {
+        /**
+         *
+         */
+        missingObject: MissingObject;
+    }
+}
 declare namespace egret3d {
-    class DirectLightShadow implements ILightShadow {
-        renderTarget: GlRenderTarget;
-        map: WebGLTexture;
-        bias: number;
-        radius: number;
-        matrix: Matrix;
-        windowSize: number;
-        camera: Camera;
+    /**
+     *
+     */
+    class DirectLight extends BaseLight {
+        readonly type: LightType;
         constructor();
-        update(light: Light): void;
-        private _updateCamera(light);
-        private _updateMatrix();
-    }
-}
-declare namespace egret3d {
-    interface ILightShadow {
-        renderTarget: IRenderTarget;
-        map: WebGLTexture;
-        bias: number;
-        radius: number;
-        matrix: Matrix;
-        windowSize: number;
-        camera: Camera;
-        update(light: Light, face?: number): void;
+        update(camera: Camera, faceIndex: number): void;
     }
 }
 declare namespace egret3d {
     /**
-     * Light Type Enum
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     *
      */
-    /**
-     * 灯光类型的枚举。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    enum LightTypeEnum {
-        /**
-         * direction light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 直射光
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Direction = 1,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 点光源
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Point = 2,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Spot = 3,
+    class PointLight extends BaseLight {
+        readonly type: LightType;
+        constructor();
+        update(camera: Camera, faceIndex: number): void;
     }
+}
+declare namespace egret3d {
     /**
-     * light component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     *
      */
-    /**
-     * 灯光组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class Light extends paper.BaseComponent {
-        /**
-         * light type
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 光源类型
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        type: LightTypeEnum;
-        color: Color;
-        intensity: number;
-        distance: number;
-        decay: number;
-        angle: number;
-        penumbra: number;
-        /**
-         * spot angel cos
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯的开合角度cos值
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        spotAngelCos: number;
-        castShadows: boolean;
-        $directLightShadow: DirectLightShadow;
-        $pointLightShadow: PointLightShadow;
-        $spotLightShadow: SpotLightShadow;
-        shadowBias: number;
-        shadowRadius: number;
-        shadowSize: number;
-        shadowCameraNear: number;
-        shadowCameraFar: number;
+    class SpotLight extends BaseLight {
+        readonly type: LightType;
+        update(camera: Camera, faceIndex: number): void;
     }
 }
 declare namespace egret3d {
     /**
      * Light系统
      */
-    class LightSystem extends paper.BaseSystem<Light> {
+    class LightSystem extends paper.BaseSystem<BaseLight> {
         protected readonly _interests: {
-            componentClass: typeof Light;
+            componentClass: typeof DirectLight[];
         }[];
+        private readonly _lightCamera;
         private readonly _drawCalls;
         onUpdate(): void;
-    }
-}
-declare namespace egret3d {
-    class PointLightShadow implements ILightShadow {
-        renderTarget: GlRenderTargetCube;
-        map: WebGLTexture;
-        bias: number;
-        radius: number;
-        matrix: Matrix;
-        windowSize: number;
-        camera: Camera;
-        private _targets;
-        private _ups;
-        constructor();
-        update(light: Light, face: number): void;
-        private _updateCamera(light, face);
-        private _updateMatrix();
-    }
-}
-declare namespace egret3d {
-    class SpotLightShadow implements ILightShadow {
-        renderTarget: GlRenderTarget;
-        map: WebGLTexture;
-        bias: number;
-        radius: number;
-        matrix: Matrix;
-        windowSize: number;
-        camera: Camera;
-        constructor();
-        update(light: Light): void;
-        private _updateCamera(light);
-        private _updateMatrix();
     }
 }
 declare namespace egret3d {
@@ -5616,15 +5596,45 @@ declare namespace egret3d.particle {
         readonly isAlive: boolean;
     }
 }
+declare type int = number;
+declare type uint = number;
 declare namespace paper {
     /**
-     *
+     * 组件实体系统的主入口
      */
-    class MissingComponent extends BaseComponent {
+    class Application {
+        /**
+         * 系统管理器
+         */
+        static readonly systemManager: SystemManager;
+        /**
+         * 场景管理器
+         */
+        static readonly sceneManager: SceneManager;
+        private static _isEditor;
+        private static _isFocused;
+        private static _isPlaying;
+        private static _isRunning;
+        private static _bindUpdate;
+        private static _update();
+        static init({isEditor, isPlaying}?: {
+            isEditor?: boolean;
+            isPlaying?: boolean;
+        }): void;
         /**
          *
          */
-        missingObject: MissingObject;
+        static pause(): void;
+        static resume(): void;
+        static readonly isEditor: boolean;
+        static readonly isFocused: boolean;
+        static readonly isPlaying: boolean;
+        static readonly isRunning: boolean;
+        /**
+         * @deprecated
+         */
+        static callLater(callback: () => void): void;
+        private constructor();
     }
 }
 declare namespace egret3d.particle {
@@ -5747,52 +5757,22 @@ declare namespace egret3d {
     }
     const stage: Stage3D;
 }
-declare type int = number;
-declare type uint = number;
 declare namespace paper {
     /**
-     * 组件实体系统的主入口
+     *
      */
-    class Application {
-        /**
-         * 系统管理器
-         */
-        static readonly systemManager: SystemManager;
-        /**
-         * 场景管理器
-         */
-        static readonly sceneManager: SceneManager;
-        private static _isEditor;
-        private static _isFocused;
-        private static _isPlaying;
-        private static _isRunning;
-        private static _bindUpdate;
-        private static _update();
-        static init({isEditor, isPlaying}?: {
-            isEditor?: boolean;
-            isPlaying?: boolean;
-        }): void;
-        /**
-         *
-         */
-        static pause(): void;
-        static resume(): void;
-        static readonly isEditor: boolean;
-        static readonly isFocused: boolean;
-        static readonly isPlaying: boolean;
-        static readonly isRunning: boolean;
-        /**
-         * @deprecated
-         */
-        static callLater(callback: () => void): void;
-        private constructor();
+    class StartSystem extends BaseSystem<Behaviour> {
+        protected readonly _interests: ReadonlyArray<InterestConfig<Behaviour>>;
+        protected _onAddComponent(component: Behaviour): void;
+        protected _onRemoveComponent(component: Behaviour): void;
+        onUpdate(): void;
     }
 }
 declare namespace paper {
     /**
      *
      */
-    class StartSystem extends BaseSystem<Behaviour> {
+    class UpdateSystem extends BaseSystem<Behaviour> {
         protected readonly _interests: ReadonlyArray<InterestConfig<Behaviour>>;
         protected _onAddComponent(component: Behaviour): void;
         protected _onRemoveComponent(component: Behaviour): void;
@@ -6989,11 +6969,17 @@ declare namespace paper {
     /**
      *
      */
-    class UpdateSystem extends BaseSystem<Behaviour> {
-        protected readonly _interests: ReadonlyArray<InterestConfig<Behaviour>>;
-        protected _onAddComponent(component: Behaviour): void;
-        protected _onRemoveComponent(component: Behaviour): void;
+    class LaterUpdateSystem extends BaseSystem<Behaviour> {
+        protected readonly _interests: {
+            componentClass: any;
+            isExtends: boolean;
+        }[];
+        private readonly _laterCalls;
         onUpdate(): void;
+        /**
+         *
+         */
+        callLater(callback: () => void): void;
     }
 }
 declare namespace egret3d {
@@ -7290,23 +7276,6 @@ declare namespace paper {
     /**
      *
      */
-    class LaterUpdateSystem extends BaseSystem<Behaviour> {
-        protected readonly _interests: {
-            componentClass: any;
-            isExtends: boolean;
-        }[];
-        private readonly _laterCalls;
-        onUpdate(): void;
-        /**
-         *
-         */
-        callLater(callback: () => void): void;
-    }
-}
-declare namespace paper {
-    /**
-     *
-     */
     class EndSystem extends BaseSystem<Behaviour> {
         protected readonly _interests: {
             componentClass: any;
@@ -7316,6 +7285,8 @@ declare namespace paper {
         protected _onRemoveComponent(component: Behaviour): void;
         onUpdate(): void;
     }
+}
+declare namespace paper {
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
@@ -7900,6 +7871,18 @@ declare namespace paper.editor {
     const line_vert: string;
 }
 declare namespace paper {
+    /**
+     * 反序列化
+     * @param data 反序列化数据
+     * @param expandMap 扩展的对象映射，此映射中存在的对象不需要重新序列化，直接使用即可（例如已经加载完成的资源文件）。
+     */
+    function deserialize<T extends ISerializable>(data: ISerializedData, expandMap: {
+        [k: string]: ISerializable;
+    }, isCreate?: boolean): T | null;
+    /**
+     *
+     */
+    function getDeserializedObject<T extends ISerializable>(source: ISerializedObject): T;
 }
 declare namespace egret3d.ammo {
     /**
@@ -8052,17 +8035,58 @@ declare namespace egret3d.ammo {
 }
 declare namespace paper {
     /**
-     * 反序列化
-     * @param data 反序列化数据
-     * @param expandMap 扩展的对象映射，此映射中存在的对象不需要重新序列化，直接使用即可（例如已经加载完成的资源文件）。
+     *
      */
-    function deserialize<T extends ISerializable>(data: ISerializedData, expandMap: {
-        [k: string]: ISerializable;
-    }, isClone?: boolean): T | null;
+    interface IUUID {
+        /**
+         *
+         */
+        readonly uuid: string;
+    }
     /**
      *
      */
-    function getDeserializedObject<T extends ISerializable>(source: ISerializedObject): T;
+    interface IStruct {
+        /**
+         *
+         */
+        readonly class: string;
+    }
+    /**
+     * 自定义序列化接口。
+     */
+    interface ISerializable {
+        /**
+         *
+         */
+        serialize(): any | IUUID | ISerializedObject;
+        /**
+         *
+         */
+        deserialize(element: any): void;
+    }
+    /**
+     * 序列化后的数据接口。
+     */
+    interface ISerializedObject extends IUUID, IStruct {
+        /**
+         *
+         */
+        [key: string]: any | IUUID;
+    }
+    /**
+     * 序列化数据接口
+     */
+    interface ISerializedData {
+        /**
+         *
+         */
+        readonly objects: ISerializedObject[];
+        /**
+         *
+         */
+        [key: string]: ISerializedObject[];
+    }
 }
 declare namespace egret3d.ammo {
     /**
@@ -8207,58 +8231,34 @@ declare namespace egret3d.ammo {
 }
 declare namespace paper {
     /**
-     *
+     * 序列化方法
+     * 只有 ISerializable 参与序列化
+     * 只有被标记的对象属性 参与序列化
+     * 序列化后，输出 ISerializeData
+     * 对象在objects中按生成顺序，root一定是第一个元素。
+     * 允许依赖标记对序列化对象数据分类，以便单独处理一些对象（例如资源等等，但资源的路径这里不做处理，在方法外由开发者自行处理）
      */
-    interface IUUID {
-        /**
-         *
-         */
-        readonly uuid: string;
-    }
+    function serialize(source: SerializableObject, sourcePath?: string): ISerializedData;
     /**
      *
      */
-    interface IStruct {
-        /**
-         *
-         */
-        readonly class: string;
-    }
+    function serializeAsset(source: Asset): any;
     /**
-     * 自定义序列化接口。
+     *
      */
-    interface ISerializable {
-        /**
-         *
-         */
-        serialize(): any | IUUID | ISerializedObject;
-        /**
-         *
-         */
-        deserialize(element: any): void;
-    }
+    function serializeRC(source: SerializableObject): any;
     /**
-     * 序列化后的数据接口。
+     *
      */
-    interface ISerializedObject extends IUUID, IStruct {
-        /**
-         *
-         */
-        [key: string]: any | IUUID;
-    }
+    function serializeR(source: SerializableObject): any;
     /**
-     * 序列化数据接口
+     *
      */
-    interface ISerializedData {
-        /**
-         *
-         */
-        readonly objects: ISerializedObject[];
-        /**
-         *
-         */
-        [key: string]: ISerializedObject[];
-    }
+    function serializeC(source: SerializableObject): any;
+    /**
+     *
+     */
+    function getTypesFromPrototype(classPrototype: any, typeKey: string, types?: string[] | null): string[];
 }
 declare namespace egret3d.ammo {
     /**
@@ -8556,11 +8556,6 @@ declare namespace egret3d {
          */
         private readonly _animations;
         /**
-         * 骨骼姿势列表。
-         *
-         */
-        readonly _boneBlendLayers: BoneBlendLayer[];
-        /**
          * 混合节点列表。
          */
         private readonly _blendNodes;
@@ -8569,13 +8564,6 @@ declare namespace egret3d {
          * 当进行动画混合时，该值通常没有任何意义。
          */
         private _lastAnimationState;
-        /**
-         *
-         */
-        _skinnedMeshRenderer: SkinnedMeshRenderer | null;
-        /**
-         * @inheritDoc
-         */
         initialize(): void;
         /**
          *

@@ -257,7 +257,7 @@ namespace egret3d {
                 sh.passes["base"].push(p);
                 p.state_ztest = true;
                 p.state_ztest_method = WebGLKit.LEQUAL;
-                p.state_zwrite = true;
+                p.state_zwrite = false;
                 p.state_showface = ShowFaceStateEnum.CCW;
                 // p.setProgram(diffuseProgram);
                 p.setAlphaBlend(BlendModeEnum.Add);
@@ -280,7 +280,7 @@ namespace egret3d {
                 sh.passes["base"].push(p);
                 p.state_ztest = true;
                 p.state_ztest_method = WebGLKit.LEQUAL;
-                p.state_zwrite = true;
+                p.state_zwrite = false;
                 p.state_showface = ShowFaceStateEnum.ALL;
                 // p.setProgram(diffuseProgram);
                 p.setAlphaBlend(BlendModeEnum.Add);
@@ -303,7 +303,7 @@ namespace egret3d {
                 sh.passes["base"].push(p);
                 p.state_ztest = true;
                 p.state_ztest_method = WebGLKit.LEQUAL;
-                p.state_zwrite = true;
+                p.state_zwrite = false;
                 p.state_showface = ShowFaceStateEnum.ALL;
                 // p.setProgram(diffuseProgram);
                 p.setAlphaBlend(BlendModeEnum.Blend);
@@ -645,7 +645,7 @@ namespace egret3d {
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
                 renderPass.state_ztest = true;
                 renderPass.state_ztest_method = WebGLKit.LEQUAL;
-                renderPass.state_zwrite = true;
+                renderPass.state_zwrite = false;
                 renderPass.state_showface = ShowFaceStateEnum.ALL;
                 renderPass.setAlphaBlend(BlendModeEnum.Add_PreMultiply);
                 shader.passes["base"].push(renderPass);
@@ -706,8 +706,8 @@ namespace egret3d {
                 shader.passes["base"] = [];
                 const renderPass = new DrawPass(def_particlesystem_vs, def_particlesystem_fs);
                 renderPass.state_ztest = true;
-                renderPass.state_ztest_method = WebGLKit.EQUAL;
-                renderPass.state_zwrite = true;
+                renderPass.state_ztest_method = WebGLKit.LEQUAL;
+                renderPass.state_zwrite = false;
                 renderPass.state_showface = ShowFaceStateEnum.ALL;
                 renderPass.setAlphaBlend(BlendModeEnum.Blend_PreMultiply);
                 shader.passes["base"].push(renderPass);
