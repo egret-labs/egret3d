@@ -22,25 +22,27 @@ namespace egret3d {
         }
 
         public copy(value: Readonly<Matrix>) {
-            this.rawData[0] = value.rawData[0];
-            this.rawData[1] = value.rawData[1];
-            this.rawData[2] = value.rawData[2];
-            this.rawData[3] = value.rawData[3];
+            const fromRawData = value.rawData;
+            const toRawData = this.rawData;
+            toRawData[0] = fromRawData[0];
+            toRawData[1] = fromRawData[1];
+            toRawData[2] = fromRawData[2];
+            toRawData[3] = fromRawData[3];
 
-            this.rawData[4] = value.rawData[4];
-            this.rawData[5] = value.rawData[5];
-            this.rawData[6] = value.rawData[6];
-            this.rawData[7] = value.rawData[7];
+            toRawData[4] = fromRawData[4];
+            toRawData[5] = fromRawData[5];
+            toRawData[6] = fromRawData[6];
+            toRawData[7] = fromRawData[7];
 
-            this.rawData[8] = value.rawData[8];
-            this.rawData[9] = value.rawData[9];
-            this.rawData[10] = value.rawData[10];
-            this.rawData[11] = value.rawData[11];
+            toRawData[8] = fromRawData[8];
+            toRawData[9] = fromRawData[9];
+            toRawData[10] = fromRawData[10];
+            toRawData[11] = fromRawData[11];
 
-            this.rawData[12] = value.rawData[12];
-            this.rawData[13] = value.rawData[13];
-            this.rawData[14] = value.rawData[14];
-            this.rawData[15] = value.rawData[15];
+            toRawData[12] = fromRawData[12];
+            toRawData[13] = fromRawData[13];
+            toRawData[14] = fromRawData[14];
+            toRawData[15] = fromRawData[15];
 
             return this;
         }
@@ -175,22 +177,24 @@ namespace egret3d {
             const l38 = (l5 * l11) - (l7 * l9);
             const l39 = (l5 * l10) - (l6 * l9);
 
-            this.rawData[0] = l23 * l27;
-            this.rawData[4] = l24 * l27;
-            this.rawData[8] = l25 * l27;
-            this.rawData[12] = l26 * l27;
-            this.rawData[1] = -(((l2 * l17) - (l3 * l18)) + (l4 * l19)) * l27;
-            this.rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
-            this.rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
-            this.rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
-            this.rawData[2] = (((l2 * l28) - (l3 * l29)) + (l4 * l30)) * l27;
-            this.rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
-            this.rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
-            this.rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
-            this.rawData[3] = -(((l2 * l34) - (l3 * l35)) + (l4 * l36)) * l27;
-            this.rawData[7] = (((l1 * l34) - (l3 * l37)) + (l4 * l38)) * l27;
-            this.rawData[11] = -(((l1 * l35) - (l2 * l37)) + (l4 * l39)) * l27;
-            this.rawData[15] = (((l1 * l36) - (l2 * l38)) + (l3 * l39)) * l27;
+            const rawData = this.rawData;
+
+            rawData[0] = l23 * l27;
+            rawData[1] = -(((l2 * l17) - (l3 * l18)) + (l4 * l19)) * l27;
+            rawData[2] = (((l2 * l28) - (l3 * l29)) + (l4 * l30)) * l27;
+            rawData[3] = -(((l2 * l34) - (l3 * l35)) + (l4 * l36)) * l27;
+            rawData[4] = l24 * l27;
+            rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
+            rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
+            rawData[7] = (((l1 * l34) - (l3 * l37)) + (l4 * l38)) * l27;
+            rawData[8] = l25 * l27;
+            rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
+            rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
+            rawData[11] = -(((l1 * l35) - (l2 * l37)) + (l4 * l39)) * l27;
+            rawData[12] = l26 * l27;
+            rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
+            rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
+            rawData[15] = (((l1 * l36) - (l2 * l38)) + (l3 * l39)) * l27;
 
             return this;
         }
@@ -225,29 +229,26 @@ namespace egret3d {
             n12: number, n22: number, n32: number, n42: number,
             n13: number, n23: number, n33: number, n43: number,
             n14: number, n24: number, n34: number, n44: number,
-            matrix: Matrix
+            result: Matrix
         ): Matrix {
-            matrix.rawData[0] = n11;
-            matrix.rawData[1] = n12;
-            matrix.rawData[2] = n13;
-            matrix.rawData[3] = n14;
-
-            matrix.rawData[4] = n21;
-            matrix.rawData[5] = n22;
-            matrix.rawData[6] = n23;
-            matrix.rawData[7] = n24;
-
-            matrix.rawData[8] = n31;
-            matrix.rawData[9] = n32;
-            matrix.rawData[10] = n33;
-            matrix.rawData[11] = n34;
-
-            matrix.rawData[12] = n41;
-            matrix.rawData[13] = n42;
-            matrix.rawData[14] = n43;
-            matrix.rawData[15] = n44;
-
-            return matrix;
+            const rawData = result.rawData;
+            rawData[0] = n11;
+            rawData[1] = n12;
+            rawData[2] = n13;
+            rawData[3] = n14;
+            rawData[4] = n21;
+            rawData[5] = n22;
+            rawData[6] = n23;
+            rawData[7] = n24;
+            rawData[8] = n31;
+            rawData[9] = n32;
+            rawData[10] = n33;
+            rawData[11] = n34;
+            rawData[12] = n41;
+            rawData[13] = n42;
+            rawData[14] = n43;
+            rawData[15] = n44;
+            return result;
         }
 
         public static getScale(m: Matrix, out: Vector3): Vector3 {
@@ -460,22 +461,24 @@ namespace egret3d {
             let l38 = (l5 * l11) - (l7 * l9);
             let l39 = (l5 * l10) - (l6 * l9);
 
-            out.rawData[0] = l23 * l27;
-            out.rawData[4] = l24 * l27;
-            out.rawData[8] = l25 * l27;
-            out.rawData[12] = l26 * l27;
-            out.rawData[1] = -(((l2 * l17) - (l3 * l18)) + (l4 * l19)) * l27;
-            out.rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
-            out.rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
-            out.rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
-            out.rawData[2] = (((l2 * l28) - (l3 * l29)) + (l4 * l30)) * l27;
-            out.rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
-            out.rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
-            out.rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
-            out.rawData[3] = -(((l2 * l34) - (l3 * l35)) + (l4 * l36)) * l27;
-            out.rawData[7] = (((l1 * l34) - (l3 * l37)) + (l4 * l38)) * l27;
-            out.rawData[11] = -(((l1 * l35) - (l2 * l37)) + (l4 * l39)) * l27;
-            out.rawData[15] = (((l1 * l36) - (l2 * l38)) + (l3 * l39)) * l27;
+            const rawData = out.rawData;
+
+            rawData[0] = l23 * l27;
+            rawData[1] = -(((l2 * l17) - (l3 * l18)) + (l4 * l19)) * l27;
+            rawData[2] = (((l2 * l28) - (l3 * l29)) + (l4 * l30)) * l27;
+            rawData[3] = -(((l2 * l34) - (l3 * l35)) + (l4 * l36)) * l27;
+            rawData[4] = l24 * l27;
+            rawData[5] = (((l1 * l17) - (l3 * l20)) + (l4 * l21)) * l27;
+            rawData[6] = -(((l1 * l28) - (l3 * l31)) + (l4 * l32)) * l27;
+            rawData[7] = (((l1 * l34) - (l3 * l37)) + (l4 * l38)) * l27;
+            rawData[8] = l25 * l27;
+            rawData[9] = -(((l1 * l18) - (l2 * l20)) + (l4 * l22)) * l27;
+            rawData[10] = (((l1 * l29) - (l2 * l31)) + (l4 * l33)) * l27;
+            rawData[11] = -(((l1 * l35) - (l2 * l37)) + (l4 * l39)) * l27;
+            rawData[12] = l26 * l27;
+            rawData[13] = (((l1 * l19) - (l2 * l21)) + (l3 * l22)) * l27;
+            rawData[14] = -(((l1 * l30) - (l2 * l32)) + (l3 * l33)) * l27;
+            rawData[15] = (((l1 * l36) - (l2 * l38)) + (l3 * l39)) * l27;
 
             return out;
         }
@@ -615,11 +618,12 @@ namespace egret3d {
             return result;
         }
 
-        public static transformVector3(vector: Vector3, transformation: Matrix, result: Vector3): Vector3 {
-            let x = (vector.x * transformation.rawData[0]) + (vector.y * transformation.rawData[4]) + (vector.z * transformation.rawData[8]) + transformation.rawData[12];
-            let y = (vector.x * transformation.rawData[1]) + (vector.y * transformation.rawData[5]) + (vector.z * transformation.rawData[9]) + transformation.rawData[13];
-            let z = (vector.x * transformation.rawData[2]) + (vector.y * transformation.rawData[6]) + (vector.z * transformation.rawData[10]) + transformation.rawData[14];
-            let w = (vector.x * transformation.rawData[3]) + (vector.y * transformation.rawData[7]) + (vector.z * transformation.rawData[11]) + transformation.rawData[15];
+        public static transformVector3(vector: Vector3, transformMatrix: Matrix, result: Vector3): Vector3 {
+            const transformMatrixRawdata = transformMatrix.rawData;
+            const x = (vector.x * transformMatrixRawdata[0]) + (vector.y * transformMatrixRawdata[4]) + (vector.z * transformMatrixRawdata[8]) + transformMatrixRawdata[12];
+            const y = (vector.x * transformMatrixRawdata[1]) + (vector.y * transformMatrixRawdata[5]) + (vector.z * transformMatrixRawdata[9]) + transformMatrixRawdata[13];
+            const z = (vector.x * transformMatrixRawdata[2]) + (vector.y * transformMatrixRawdata[6]) + (vector.z * transformMatrixRawdata[10]) + transformMatrixRawdata[14];
+            const w = (vector.x * transformMatrixRawdata[3]) + (vector.y * transformMatrixRawdata[7]) + (vector.z * transformMatrixRawdata[11]) + transformMatrixRawdata[15];
 
             result.x = x / w;
             result.y = y / w;
@@ -628,10 +632,11 @@ namespace egret3d {
             return result;
         }
 
-        public static transformNormal(vector: Vector3, transformation: Matrix, result: Vector3): Vector3 {
-            let x = (vector.x * transformation.rawData[0]) + (vector.y * transformation.rawData[4]) + (vector.z * transformation.rawData[8]);
-            let y = (vector.x * transformation.rawData[1]) + (vector.y * transformation.rawData[5]) + (vector.z * transformation.rawData[9]);
-            let z = (vector.x * transformation.rawData[2]) + (vector.y * transformation.rawData[6]) + (vector.z * transformation.rawData[10]);
+        public static transformNormal(vector: Vector3, transformMatrix: Matrix, result: Vector3): Vector3 {
+            const transformMatrixRawdata = transformMatrix.rawData;
+            const x = (vector.x * transformMatrixRawdata[0]) + (vector.y * transformMatrixRawdata[4]) + (vector.z * transformMatrixRawdata[8]);
+            const y = (vector.x * transformMatrixRawdata[1]) + (vector.y * transformMatrixRawdata[5]) + (vector.z * transformMatrixRawdata[9]);
+            const z = (vector.x * transformMatrixRawdata[2]) + (vector.y * transformMatrixRawdata[6]) + (vector.z * transformMatrixRawdata[10]);
 
             result.x = x;
             result.y = y;

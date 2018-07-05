@@ -2,119 +2,79 @@ namespace egret3d {
     /**
      * 
      */
-    export class MeshRendererSystem extends paper.BaseSystem<MeshRenderer | MeshFilter> {
+    export class MeshRendererSystem extends paper.BaseSystem<MeshFilter | MeshRenderer> {
         protected readonly _interests = [
-            {
-                componentClass: MeshRenderer,
-                listeners: [
-                    {
-                        type: MeshRendererEventType.CastShadows,
-                        listener: (component: MeshRenderer) => {
-                            if (this._hasGameObject(component.gameObject)) {
-                                this._drawCallList.updateDrawCalls(component.gameObject, component.castShadows);
-                                this._drawCallList.updateShadowCasters(component.gameObject, component.castShadows);
-                            }
-                        }
-                    },
-                    {
-                        type: MeshRendererEventType.LightmapIndex,
-                        listener: (component: MeshRenderer) => {
-                            if (this._hasGameObject(component.gameObject)) {
-                                this._updateLightMap(component);
-                            }
-                        }
-                    },
-                    {
-                        type: MeshRendererEventType.LightmapScaleOffset,
-                        listener: (component: MeshRenderer) => {
-                            if (this._hasGameObject(component.gameObject)) {
-                                this._updateLightMap(component);
-                            }
-                        }
-                    },
-                    {
-                        type: MeshRendererEventType.Materials,
-                        listener: (component: MeshRenderer) => {
-                            if (this._hasGameObject(component.gameObject)) {
-                                this._drawCallList.updateDrawCalls(component.gameObject, component.castShadows);
-                            }
-                        }
-                    },
-                ]
-            },
             {
                 componentClass: MeshFilter,
                 listeners: [
-                    {
-                        type: MeshFilterEventType.Mesh,
-                        listener: (component: MeshFilter) => {
-                            const renderer = this._getComponent(component.gameObject, 0) as MeshRenderer | null;
-                            if (renderer) {
-                                this._drawCallList.updateDrawCalls(component.gameObject, renderer.castShadows);
-                            }
-                        }
-                    },
+                    { type: MeshFilterEventType.Mesh, listener: (component: MeshFilter) => { this._updateDrawCalls(component.gameObject); } }
+                ]
+            },
+            {
+                componentClass: MeshRenderer,
+                listeners: [
+                    { type: paper.RendererEventType.Materials, listener: (component: MeshRenderer) => { this._updateDrawCalls(component.gameObject); } }
                 ]
             },
         ];
-        private readonly _createDrawCalls = ((gameObject: paper.GameObject) => {
-            const renderer = this._getComponent(gameObject, 0) as MeshRenderer;
-            const filter = this._getComponent(gameObject, 1) as MeshFilter;
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
 
-            if (filter.mesh && renderer.materials.length > 0) {
-                let subMeshIndex = 0;
-                const drawCalls: DrawCall[] = [];
-
-                for (const primitive of filter.mesh.glTFMesh.primitives) {
-                    drawCalls.push({
-                        subMeshInfo: subMeshIndex,
-                        mesh: filter.mesh,
-                        material: renderer.materials[primitive.material || 0],
-                        lightMapIndex: renderer.lightmapIndex,
-                        lightMapScaleOffset: renderer.lightmapScaleOffset,
-                        boneData: null,
-                        gameObject: gameObject,
-                        transform: gameObject.transform,
-                        frustumTest: false,
-                        zdist: -1
-                    });
-
-                    subMeshIndex++;
-                }
-
-                return drawCalls;
+        private _updateDrawCalls(gameObject: paper.GameObject) {
+            if (!this._enabled || !this._hasGameObject(gameObject)) {
+                return;
             }
 
-            return null;
-        });
-        private readonly _drawCallList: DrawCallList = new DrawCallList(this._createDrawCalls);
+            const filter = this._getComponent(gameObject, 0) as MeshFilter;
+            const renderer = gameObject.renderer as MeshRenderer;
+            if (!filter.mesh || renderer.materials.length === 0) {
+                return;
+            }
 
-        private _updateLightMap(component: MeshRenderer) {
-            const drawCalls = this._drawCallList.getDrawCalls(component.gameObject);
-            if (drawCalls) {
-                for (const drawCall of drawCalls) {
-                    drawCall.lightMapIndex = component.lightmapIndex;
-                    drawCall.lightMapScaleOffset = component.lightmapScaleOffset;
-                }
+            this._drawCalls.removeDrawCalls(renderer);
+            //
+            this._drawCalls.renderers.push(renderer);
+            //
+            let subMeshIndex = 0;
+            for (const primitive of filter.mesh.glTFMesh.primitives) {
+                const drawCall: DrawCall = {
+                    renderer: renderer,
+
+                    subMeshIndex: subMeshIndex++,
+                    mesh: filter.mesh,
+                    material: renderer.materials[primitive.material || 0],
+
+                    frustumTest: false,
+                    zdist: -1,
+
+                    disable: false,
+                };
+
+                this._drawCalls.drawCalls.push(drawCall);
             }
         }
 
         public onEnable() {
-            // TODO 重新生成 drawcall
+            for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
+                this._updateDrawCalls(this._components[i].gameObject);
+            }
         }
 
         public onAddGameObject(gameObject: paper.GameObject) {
-            const renderer = this._getComponent(gameObject, 0) as MeshRenderer;
-            this._drawCallList.updateDrawCalls(gameObject, renderer.castShadows);
+            this._updateDrawCalls(gameObject);
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCallList.removeDrawCalls(gameObject);
+            if (!this._enabled) {
+                return;
+            }
+
+            this._drawCalls.removeDrawCalls(gameObject.renderer);
         }
 
         public onDisable() {
-            for (const component of this._components) {
-                this._drawCallList.removeDrawCalls(component.gameObject);
+            for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
+                const renderer = this._components[i + 1] as MeshRenderer;
+                this._drawCalls.removeDrawCalls(renderer);
             }
         }
     }

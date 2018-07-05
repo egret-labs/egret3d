@@ -287,7 +287,7 @@ namespace egret3d {
         private static _doPick(ray: Ray, maxDistance: number = Number.MAX_VALUE, layerMask: paper.Layer, pickAll: boolean = false, isPickMesh: boolean = false) {
             const pickedList: PickInfo[] = [];
 
-            for (const gameObject of paper.Application.sceneManager.getActiveScene().getRootGameObjects()) {
+            for (const gameObject of paper.Application.sceneManager.activeScene.getRootGameObjects()) {
                 if (gameObject.layer & layerMask) {
                     if (isPickMesh) {
                         this._pickMesh(ray, gameObject.transform, pickedList);

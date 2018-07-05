@@ -7,6 +7,7 @@ namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
+    @paper.disallowMultipleComponent
     export class Egret2DRenderer extends paper.BaseRenderer {
         private renderer: egret.web.Renderer;
 

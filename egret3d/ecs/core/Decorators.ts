@@ -1,11 +1,19 @@
 namespace paper {
-    const _tagA: any[] = [];
-    const _tagB: any[] = [];
-    const _tagC: any[] = [];
     /**
      * @internal
      */
-    export const _executeInEditModeComponents: any[] = [];
+    export const _executeInEditModeComponents: { new(): BaseComponent }[] = [];
+    /**
+     * @internal
+     */
+    export const _disallowMultipleComponents: { new(): BaseComponent }[] = [];
+    /**
+     * @internal
+     */
+    export const _requireComponents: { [key: string]: { new(): BaseComponent }[] } = {};
+    const _tagA: any[] = [];
+    const _tagB: any[] = [];
+    const _tagC: any[] = [];
     /**
      * @internal
      */
@@ -19,7 +27,7 @@ namespace paper {
      * 标记序列化分类
      * 如果没有标记序列化分类，序列化后的对象只会收集在objects中
      * 如果被标记了某种序列化分类，序列化后的对象还会被单独收集到一个新的数组中，key即为类名
-     * TODO 不能发布给开发者使用。
+     * @internal
      */
     export function serializedType(type: string) {
         return function (clazz: Function) {
@@ -73,7 +81,23 @@ namespace paper {
     /**
      * 标记脚本组件是否在编辑模式也拥有生命周期。
      */
-    export function executeInEditMode<T extends Behaviour>(target: { new(): T }) {
+    export function executeInEditMode<T extends BaseComponent>(target: { new(): T }) {
         _executeInEditModeComponents.push(target);
+    }
+    /**
+     * 
+     */
+    export function disallowMultipleComponent<T extends BaseComponent>(target: { new(): T }) {
+        _disallowMultipleComponents.push(target);
+    }
+    /**
+     * 
+     */
+    export function requireComponent<R extends BaseComponent>(requireTarget: { new(): R }) {
+        return function (target: any) {
+            const key = egret.getQualifiedClassName(target);
+            const components = key in _requireComponents ? _requireComponents[key] : (_requireComponents[key] = []);
+            components.push(requireTarget);
+        };
     }
 }

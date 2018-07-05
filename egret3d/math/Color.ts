@@ -21,19 +21,20 @@ namespace egret3d {
             return [this.r, this.g, this.b, this.a];
         }
 
-        public deserialize(element: number[]) {
+        public deserialize(element: Readonly<[number, number, number, number]>) {
             this.r = element[0];
             this.g = element[1];
             this.b = element[2];
             this.a = element[3];
         }
 
-        public static set(r: number = 1, g: number = 1, b: number = 1, a: number = 1, out: Color): Color {
-            out.r = r;
-            out.g = g;
-            out.b = b;
-            out.a = a;
-            return out;
+        public set(r: number = 1, g: number = 1, b: number = 1, a: number = 1) {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
+
+            return this;
         }
 
         public static multiply(c1: Color, c2: Color, out: Color): Color {

@@ -322,6 +322,9 @@ namespace egret3d {
         setVector4(_id: string, _vector4: Vector4) {
             if (this.$uniforms[_id] !== undefined) {
                 this.$uniforms[_id].value = _vector4;
+                if(this.$uniforms[_id].type !== UniformTypeEnum.Float4){
+                    console.error("设置setVector4类型错误，类型不匹配")
+                }
             } else {
                 this.$uniforms[_id] = { type: UniformTypeEnum.Float4, value: _vector4 };
             }
@@ -331,6 +334,9 @@ namespace egret3d {
         setVector4v(_id: string, _vector4v: Float32Array | [number, number, number, number]) {
             if (this.$uniforms[_id] !== undefined) {
                 this.$uniforms[_id].value = _vector4v;
+                if(this.$uniforms[_id].type !== UniformTypeEnum.Float4v){
+                    console.error("设置setVector4v类型错误，类型不匹配")
+                }
             } else {
                 this.$uniforms[_id] = { type: UniformTypeEnum.Float4v, value: _vector4v };
             }
@@ -402,7 +408,7 @@ namespace egret3d {
                         if (Array.isArray(tempValue)) {
                             this.setVector4v(i, tempValue)
                         } else {
-                            console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级")
+                            console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级");
                         }
                         break;
                     default:
@@ -437,7 +443,14 @@ namespace egret3d {
                         mat.setFloat(i, data.value);
                         break;
                     case UniformTypeEnum.Float4:
-                        mat.setVector4(i, data.value);
+                        if (Array.isArray(data.value)) {
+                            mat.setVector4v(i, data.value as any);
+                        } else {
+                            mat.setVector4(i, data.value);
+                        }
+                        break;
+                    case UniformTypeEnum.Float4v:
+                        mat.setVector4v(i, data.value as any);
                         break;
                     default:
                         break;

@@ -12,7 +12,7 @@ namespace egret3d.ammo {
             }
 
             if (!this._connectedBody) {
-                console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.hashCode);
+                console.error("The constraint need to config another rigid body.", this.gameObject.name, this.gameObject.uuid);
                 return null;
             }
             //

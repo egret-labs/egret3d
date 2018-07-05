@@ -51,6 +51,7 @@ namespace paper.editor {
         public static REMOVE_COMPONENT = "REMOVE_COMPONENT";
         /**更改parent */
         public static UPDATE_PARENT = "UPDATE_PARENT";
+
         /**修改预制体游戏对象属性 */
         public static MODIFY_PREFAB_GAMEOBJECT_PROPERTY = "MODIFY_PREFAB_GAMEOBJECT_PROPERTY";
         /**修改预制体组件属性 */
@@ -59,8 +60,11 @@ namespace paper.editor {
         public static ADD_PREFAB_COMPONENT = "ADD_PREFAB_COMPONENT";
         /**移除组件 */
         public static REMOVE_PREFAB_COMPONENT = "REMOVE_PREFAB_COMPONENT";
+
         /**修改asset属性 */
         public static MODIFY_ASSET_PROPERTY = "MODIFY_ASSET_PROPERTY";
+        /**创建prefab */
+        public static CREATE_PREFAB = "CREATE_PREFAB";
     }
 
     /**
@@ -206,15 +210,27 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createModifyAssetPropertyState(target: Asset, newValueList: any[], preValueCopylist: any[]) {
+        public createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]) {
             const data = {
                 cmdType: CmdType.MODIFY_ASSET_PROPERTY,
-                target,
+                assetUrl,
                 newValueList,
                 preValueCopylist,
             }
 
             const state = ModifyAssetPropertyState.create(data);
+            this.addState(state);
+        }
+
+        public createPrefabState(prefab:any,selectIds:string[])
+        {
+            const data = {
+                cmdType: CmdType.CREATE_PREFAB,
+                prefab,
+                selectIds
+            }
+
+            const state = CreatePrefabState.create(data);
             this.addState(state);
         }
 
@@ -237,12 +253,20 @@ namespace paper.editor {
                     return value.url;
                 case editor.EditType.LIST:
                     return value;
-                case editor.EditType.MATERIAL:
                 case editor.EditType.MATERIAL_ARRAY:
+                    const data = value.map((item) => {
+                        let url=item.url.substr(RES.config.config.resourceRoot.length,item.url.length);
+                        return {name:url,url:url};
+                    })
+                    return data;
+                case editor.EditType.MESH:
+                    let url = value.glTFAsset.url;
+                    url=url.substr(RES.config.config.resourceRoot.length,url.length);
+                    return url;
+                case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
                 case editor.EditType.TRANSFROM:
                 case editor.EditType.SOUND:
-                case editor.EditType.MESH:
                 case editor.EditType.ARRAY:
                     //TODO
                     console.error("not supported!")
@@ -252,7 +276,7 @@ namespace paper.editor {
             }
         }
 
-        public deserializeProperty(serializeData: any, editType: editor.EditType): any {
+        public async deserializeProperty(serializeData: any, editType: editor.EditType): Promise<any> {
             switch (editType) {
                 case editor.EditType.NUMBER:
                 case editor.EditType.TEXT:
@@ -273,16 +297,25 @@ namespace paper.editor {
                     return target;
                 case editor.EditType.SHADER:
                      const url = serializeData;
-                     const asset = paper.Asset.find<egret3d.Shader>(url);
+                     const asset = await RES.getResAsync(url);
                      return asset;
                 case editor.EditType.LIST:
                     return serializeData;
-                case editor.EditType.MATERIAL:
                 case editor.EditType.MATERIAL_ARRAY:
+                    const materials:egret3d.Material[] = [];
+                    for (const matrial of serializeData) {
+                        const asset = await RES.getResAsync(matrial.url);
+                        materials.push(asset);
+                    }
+                    return materials;
+                case editor.EditType.MESH: 
+                     let meshAsset = await RES.getResAsync(serializeData);
+                     let mesh: egret3d.Mesh = new egret3d.Mesh(meshAsset, 0)
+                     return mesh;
+                case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
                 case editor.EditType.TRANSFROM:
                 case editor.EditType.SOUND:
-                case editor.EditType.MESH:
                 case editor.EditType.ARRAY:
                     //TODO
                     console.error("not supported!")
@@ -345,7 +378,7 @@ namespace paper.editor {
             let assetsMap = {};
             if (serializeData["assets"]) {
                 (<ISerializedObject[]>serializeData["assets"]).forEach(item => {
-                    assetsMap[item.hashCode] = Asset.find(item["url"]);
+                    assetsMap[item.uuid] = Asset.find(item["url"]);
                 });
             }
 
@@ -369,6 +402,16 @@ namespace paper.editor {
                 }
             }
             return null;
+        }
+
+        public getComponentByAssetId(gameObject:GameObject, assetId: string): BaseComponent | null {
+            for (let i: number = 0; i < gameObject.components.length; i++) {
+                let comp = gameObject.components[i];
+                if (comp.assetUUid === assetId) {
+                    return comp;
+                }
+            }
+            return null;;
         }
 
         public pasteGameObject(target: egret3d.Transform = null):void {
@@ -430,9 +473,9 @@ namespace paper.editor {
                 const element = gameObjects[index];
                 let uniqueIndex = 0;
                 let prefabstru: any = {};
-                let allRootObjs: GameObject[] = [];
-                this.getPrefabRootObjsFromGameObject(element, allRootObjs);
-                this.getPrefabDataFromGameObject(element, uniqueIndex, prefabstru, allRootObjs);
+                let allRootObjsUUid: string[] = [];
+                this.getPrefabRootObjsUUidFromGameObject(element, allRootObjsUUid);
+                this.getPrefabDataFromGameObject(element, uniqueIndex, prefabstru, allRootObjsUUid);
                 prefabData.push(prefabstru);
             }
             return prefabData;
@@ -451,19 +494,18 @@ namespace paper.editor {
             if (prefabData[uniqueIndex]) {
                 const { url, isPrefabRoot } = prefabData[uniqueIndex];
                 const prefab = Asset.find(url);
+                 (gameObj as any).prefab = prefab;
                 if (isPrefabRoot) {
-                    (gameObj as any).___isRootPrefab____ = true;
-                }
-                (gameObj as any).prefab = prefab;
-                const rootObj:GameObject | null = this.getPrefabRootObjByChild(gameObj);
-                if (rootObj !== null) {
-                    (gameObj as any).___prefabRoot____ = rootObj;
+                    (gameObj as any).prefabEditInfo = true;
                 }else{
-                    throw new Error("root obj can't find")
+                    const rootObj:GameObject | null = this.getPrefabRootObjByChild(gameObj);
+                    if (rootObj !== null) {
+                        (gameObj as any).prefabEditInfo = rootObj.uuid;
+                    }
                 }
             } else {
                 (gameObj as any).prefab = null;
-                (gameObj as any).___prefabRoot____ = null;
+                (gameObj as any).prefabEditInfo = null;
             }
 
             for (let index = 0; index < gameObj.transform.children.length; index++) {
@@ -480,13 +522,13 @@ namespace paper.editor {
          * @param index 
          * @param prefabData 
          */
-        public getPrefabDataFromGameObject(gameObj: GameObject, uniqueIndex: number, prefabData: any, allRootObjs: GameObject[]):void {
+        public getPrefabDataFromGameObject(gameObj: GameObject, uniqueIndex: number, prefabData: any, allRootObjsUUid: string[]):void {
             if (!gameObj)
                 return;
 
-            if (((gameObj as any).___isRootPrefab____ && allRootObjs.indexOf(gameObj) >= 0)
-                || ((gameObj as any).___prefabRoot____ && allRootObjs.indexOf((gameObj as any).___prefabRoot____) >= 0)) {
-                let isPrefabRoot = (gameObj as any).___isRootPrefab____ ? true : false;
+            if ((Editor.editorModel.isPrefabRoot(gameObj) && allRootObjsUUid.indexOf(gameObj.uuid) >= 0)
+                || (Editor.editorModel.isPrefabChild(gameObj) && allRootObjsUUid.indexOf((gameObj as any).prefabEditInfo) >= 0)) {
+                let isPrefabRoot = Editor.editorModel.isPrefabRoot(gameObj);
                 let url = gameObj.prefab.url;
                 prefabData[uniqueIndex] = { gameObj, isPrefabRoot, url };
             }
@@ -495,26 +537,26 @@ namespace paper.editor {
                 uniqueIndex++;
                 const element = gameObj.transform.children[index];
                 const obj: GameObject = element.gameObject;
-                this.getPrefabDataFromGameObject(obj, uniqueIndex, prefabData, allRootObjs);
+                this.getPrefabDataFromGameObject(obj, uniqueIndex, prefabData, allRootObjsUUid);
             }
         }
 
         /**
-         * 获取某个游戏对象下所有预制体实例的根对象,用于确定duplicate时选中的对象是否属于一个完整的预制体
+         * 获取某个游戏对象下所有预制体实例的根对象uuid,用于确定duplicate时选中的对象是否属于一个完整的预制体
          * @param gameObj 
          * @param rootObjs 
          */
-        private getPrefabRootObjsFromGameObject(gameObj: GameObject, rootObjs: GameObject[]):void {
+        private getPrefabRootObjsUUidFromGameObject(gameObj: GameObject, rootObjsUUids: string[]):void {
             if (!gameObj) {
                 return;
             }
-            if ((gameObj as any).___isRootPrefab____) {
-                rootObjs.push(gameObj);
+            if (Editor.editorModel.isPrefabRoot(gameObj)) {
+                rootObjsUUids.push(gameObj.uuid);
             }
             for (let index = 0; index < gameObj.transform.children.length; index++) {
                 const element = gameObj.transform.children[index];
                 const obj: GameObject = element.gameObject;
-                this.getPrefabRootObjsFromGameObject(obj, rootObjs);
+                this.getPrefabRootObjsUUidFromGameObject(obj, rootObjsUUids);
             }
         }
 
@@ -523,7 +565,7 @@ namespace paper.editor {
             let findObj: GameObject;
             while (parent) {
                 findObj = parent.gameObject;
-                if ((findObj as any).___isRootPrefab____) {
+                if (Editor.editorModel.isPrefabRoot(findObj)) {
                     return findObj;
                 }
                 parent = parent.parent;
@@ -559,7 +601,7 @@ namespace paper.editor {
                 let assetsMap = {};
                 if (serializeData["assets"]) { // 认为此时所有资源已经正确加载
                     (<ISerializedObject[]>serializeData["assets"]).forEach(item => {
-                        assetsMap[item.hashCode] = Asset.find(item["url"]); // 获取资源引用
+                        assetsMap[item.uuid] = Asset.find(item["url"]); // 获取资源引用
                     });
                 }
                 one["assetsMap"] = assetsMap;
@@ -591,15 +633,9 @@ namespace paper.editor {
         }
 
         public _deleteGameObject(gameObjects: GameObject[]) {
-            for (let i = 0, l = gameObjects.length; i < l; i++) {
-                //////-----引擎API问题，这里暂时手动解决transform引用关系
-                let gameObject = gameObjects[i];
-                let t = gameObject.transform;
-                if (t.parent) {
-                    let index = t.parent.children.indexOf(t);
-                    t.parent.children.splice(index, 1);
-                }
-                gameObject.destroy();
+            for (let index = 0; index < gameObjects.length; index++) {
+                const element = gameObjects[index];
+                element.destroy();
             }
         }
 
@@ -645,13 +681,9 @@ namespace paper.editor {
                 return;
             }
 
-            if (gameObj == rootObj) {
-                (gameObj as any).___isRootPrefab____ = false;
+            if (gameObj == rootObj || (this.isPrefabChild(gameObj))) {
+                (gameObj as any).prefabEditInfo = null;
                 (gameObj as any).prefab = null;
-            }
-            else if ((gameObj as any).___prefabRoot____ == rootObj) {
-                (gameObj as any).prefab = null;
-                (gameObj as any).___prefabRoot____ = null;
             }
 
             for (let index = 0; index < gameObj.transform.children.length; index++) {
@@ -670,12 +702,12 @@ namespace paper.editor {
             for (let index = 0; index < prefabIds.length; index++) {
                 const element = prefabIds[index];
                 if (element === rootObj.uuid) {
-                    (rootObj as any).___isRootPrefab____ = true;
+                    (rootObj as any).prefabEditInfo = true;
                     (rootObj as any).prefab = prefab;
                 } else {
                     let gameObj:GameObject | null = this.getGameObjectByUUid(element);
                     if (gameObj) {
-                        (gameObj as any).___prefabRoot____ = rootObj;
+                        (gameObj as any).prefabEditInfo = rootObj.uuid;
                         (gameObj as any).prefab = prefab;
                     }
                 }
@@ -691,7 +723,7 @@ namespace paper.editor {
             if (!gameObj) {
                 return;
             }
-            if (gameObj == rootObj || (gameObj as any).___prefabRoot____ == rootObj) {
+            if (gameObj == rootObj || (this.isPrefabChild(gameObj) && (gameObj as any).prefabEditInfo == rootObj.uuid)) {
                 ids.push(gameObj.uuid);
             }
             for (let index = 0; index < gameObj.transform.children.length; index++) {
@@ -749,6 +781,15 @@ namespace paper.editor {
             return null;
         }
 
+        public async getAssetByAssetUrl(url:string):Promise<any>{
+            const RES = this.backRunTime.RES;
+            let asset = await RES.getResAsync(url);
+            if (asset) {
+                return asset;
+            }
+            return null;
+        }
+
         /**
          * 
          * @param uuids unique id
@@ -783,20 +824,6 @@ namespace paper.editor {
             }
         }
 
-        public resetUUid(gameObj: GameObject, uuids: string[]):void {
-            let uuid = uuids.shift();
-            if (uuid) {
-               gameObj.uuid = uuid;
-            } else {
-                throw new Error("no match hashcode!")
-            }
-            for (let index = 0; index < gameObj.transform.children.length; index++) {
-                const element = gameObj.transform.children[index];
-                const obj: GameObject = element.gameObject;
-                this.resetUUid(obj, uuids);
-            }
-        }
-
         public getAllComponentUUidFromGameObject(gameObject: GameObject, uuids: string[]) {
             for (let i: number = 0; i < gameObject.components.length; i++) {
                 let comp:BaseComponent = gameObject.components[i];
@@ -809,33 +836,15 @@ namespace paper.editor {
             }
         }
 
-        public resetComponentUUid(gameObject: GameObject, uuids: string[]):void {
-            for (let i: number = 0; i < gameObject.components.length; i++) {
-                let comp = gameObject.components[i];
-                (comp as any).gameObject = gameObject;
-                let uuid = uuids.shift();
-                if (uuid) {
-                    comp.uuid = uuid;
-                } else {
-                    throw new Error("no match uuid!")
-                }
-            }
-            for (let index = 0; index < gameObject.transform.children.length; index++) {
-                const element = gameObject.transform.children[index];
-                const obj: GameObject = element.gameObject;
-                this.resetComponentUUid(obj, uuids);
-            }
-        }
-
         /**
          * call after duplicate/create/paste
          * @param instance 
          */
         public  generateGameobjectUUids(instance:paper.GameObject):void
         {
-            instance.uuid = generateUuid();
+            (instance as any).uuid = generateUuid();
             instance.components.forEach((component) => {
-                component.uuid = generateUuid();
+                (component as any).uuid = generateUuid();
             })
     
             for (let index = 0; index < instance.transform.children.length; index++) {
@@ -975,6 +984,35 @@ namespace paper.editor {
             return jsonData;
         }
 
+        public createAssetMap(serializeData:ISerializedData):any
+        {
+            let assetsMap = {};
+            if (serializeData["assets"]) {
+                (<ISerializedObject[]>serializeData["assets"]).forEach(item => {
+                    assetsMap[item.uuid] = Asset.find(item["url"]);
+                });
+            }
+            return assetsMap;
+        }
+
+        public isPrefabRoot(gameObj:GameObject):boolean
+        {
+            let prefabInfo = (gameObj as any).prefabEditInfo;
+            if (typeof(prefabInfo) == "boolean" && prefabInfo === true) {
+                return true;
+            }
+            return false;
+        }
+
+        public isPrefabChild(gameObj:GameObject):boolean
+        {
+            let prefabInfo = (gameObj as any).prefabEditInfo;
+            if (typeof(prefabInfo) == "string") {
+                return true;
+            }
+            return false;
+        }
+
         public serializeHistory():string
         {
             const historyData = HistoryUtil.serialize(this.paperHistory);
@@ -988,5 +1026,41 @@ namespace paper.editor {
         public redo = () => {
             this.paperHistory.forward();
         }
+
+            /**
+    * 从一个预置体文件创建实例
+    * @param prefabPath 预置体资源路径
+    */
+    public async createGameObjectFromPrefab(prefabPath: string, paper: any, RES: any): Promise<paper.GameObject> {
+        const prefab = await RES.getResAsync(prefabPath) as egret3d.Prefab | null;
+        if (prefab) {
+            const instance = prefab.createInstance();
+            (instance as any).prefabEditInfo = true;
+            this.setGameObjectPrefab(instance, prefab, instance);
+            return instance;
+        }
+        return null;
+    }
+
+        /**
+     * 设置children prefab属性
+     * @param gameObj 
+     * @param prefab 
+     */
+    private setGameObjectPrefab(gameObj: GameObject, prefab: egret3d.Prefab, rootObj: GameObject) {
+        if (!gameObj) {
+            return;
+        }
+        (gameObj as any).prefab = prefab;
+        if (gameObj != rootObj) {
+            (gameObj as any).prefabEditInfo = rootObj.uuid;
+        }
+        for (let index = 0; index < gameObj.transform.children.length; index++) {
+            const element = gameObj.transform.children[index];
+            const obj: GameObject = element.gameObject;
+            this.setGameObjectPrefab(obj, prefab, rootObj);
+        }
+    }
+
     }
 }

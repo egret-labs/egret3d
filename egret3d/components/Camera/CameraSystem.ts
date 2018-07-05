@@ -6,55 +6,60 @@ namespace egret3d {
         protected readonly _interests = [
             { componentClass: Camera, isExtends: true }
         ];
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
 
-        private _applyDrawCall(context: RenderContext, draw: DrawCall): void {
-            context.updateModel(draw.transform);
+        private _applyDrawCall(context: RenderContext, drawCall: DrawCall): void {
+            const renderer = drawCall.renderer;
+            const lightmapIndex = renderer.lightmapIndex;
 
-            let drawType: string = "base";
+            context.drawCall = drawCall;
 
-            if (draw.boneData) {
-                context.updateBones(draw.boneData);
+            context.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
+
+            let drawType: string = "base"; // TODO
+
+            if (drawCall.boneData) {
+                context.updateBones(drawCall.boneData);
                 drawType = "skin";
             }
 
-            if (draw.lightMapIndex >= 0) {
-                if (draw.gameObject.scene.lightmaps.length > draw.lightMapIndex) { // TODO scene 不应从 gameObject 获取。
+            if (lightmapIndex >= 0) {
+                const activeScene = paper.Application.sceneManager.activeScene;
+                if (activeScene.lightmaps.length > lightmapIndex) {
                     context.updateLightmap(
-                        draw.gameObject.scene.lightmaps[draw.lightMapIndex],
-                        draw.mesh.glTFMesh.primitives[draw.subMeshInfo].attributes.TEXCOORD_1 ? 1 : 0,
-                        draw.lightMapScaleOffset as any
+                        activeScene.lightmaps[lightmapIndex],
+                        drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0,
+                        renderer.lightmapScaleOffset,
+                        activeScene.lightmapIntensity
                     );
                     drawType = "lightmap";
                 }
             }
 
-            const renderer = draw.gameObject.getComponent(MeshRenderer);
-            if (renderer && renderer.receiveShadows) {
-                context.receiveShadow = true;
-            }
-            else {
-                context.receiveShadow = false;
+            WebGLKit.draw(context, drawType);
+        }
+
+        protected _onAddComponent(component: Camera) {
+            if (component.gameObject === this._globalGameObject) { // Pass global camera.
+                return;
             }
 
-            WebGLKit.draw(context, draw.material, draw.mesh, draw.subMeshInfo, drawType, draw.transform._worldMatrixDeterminant < 0);
+            super._onAddComponent(component);
         }
 
         public $renderCamera(camera: Camera) {
-            DrawCallList.updateZdist(camera);
-            DrawCallList.sort();
+            //在这里先剔除，然后排序，最后绘制           
+            this._drawCalls.sortAfterFrustumCulling(camera);
+            // this._drawCalls.sort();
 
-            for (const drawCall of Pool.drawCall.instances) {
-                // 视锥剔除
-                // if(drawCall.frustumTest) {
-                //     if(!camera.testFrustumCulling(drawCall.gameObject.transform)) {
-                //         return;
-                //     }
-                // }
+            for (const drawCall of this._drawCalls.drawCalls) {
+                if(drawCall.disable){
+                    continue;
+                }
+                const gameObject = drawCall.renderer.gameObject;
 
-                if (camera.cullingMask & drawCall.gameObject.layer) {
-                    if (drawCall.gameObject.activeInHierarchy) {
-                        this._applyDrawCall(camera.context, drawCall);
-                    }
+                if (camera.cullingMask & gameObject.layer) {
+                    this._applyDrawCall(camera.context, drawCall);
                 }
             }
             // Egret2D渲染不加入DrawCallList的排序

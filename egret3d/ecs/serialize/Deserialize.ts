@@ -1,11 +1,13 @@
 namespace paper {
+    let _isCreate: boolean = false;
     let _deserializedObjects: { [key: string]: ISerializable };
     /**
      * 反序列化
      * @param data 反序列化数据
      * @param expandMap 扩展的对象映射，此映射中存在的对象不需要重新序列化，直接使用即可（例如已经加载完成的资源文件）。
      */
-    export function deserialize<T extends ISerializable>(data: ISerializedData, expandMap: { [hashCode: number]: ISerializable }): T | null {
+    export function deserialize<T extends ISerializable>(data: ISerializedData, expandMap: { [k: string]: ISerializable }, isCreate: boolean = false): T | null {
+        _isCreate = isCreate;
         _deserializedObjects = {};
         for (const k in expandMap) {
             _deserializedObjects[k] = expandMap[k];
@@ -14,10 +16,11 @@ namespace paper {
         let root: ISerializable | null = null;
 
         for (const source of data.objects) { // 实例化。
+            const k = source.hashCode || source.uuid; // hashCode 兼容。
             let target: ISerializable;
 
-            if (source.hashCode in _deserializedObjects) {
-                target = _deserializedObjects[source.hashCode];
+            if (k in _deserializedObjects) {
+                target = _deserializedObjects[k];
             }
             else {
                 const className = serializeClassMap[source.class] || source.class;
@@ -25,11 +28,11 @@ namespace paper {
 
                 if (clazz) {
                     target = new clazz();
-                    _deserializedObjects[source.hashCode] = target;
+                    _deserializedObjects[k] = target;
                 }
                 else {
                     target = new MissingObject();
-                    _deserializedObjects[source.hashCode] = target;
+                    _deserializedObjects[k] = target;
                     console.error(`Class ${source.class} not defined.`);
                 }
             }
@@ -38,12 +41,12 @@ namespace paper {
         }
 
         for (const source of data.objects) { // 属性赋值。
-            if (source.hashCode in expandMap) { // 跳过外部插入对象。
+            const k = source.hashCode || source.uuid; // hashCode 兼容。
+            if (k in expandMap) { // 跳过外部插入对象。
                 continue;
             }
 
-            const target = _deserializedObjects[source.hashCode];
-
+            const target = _deserializedObjects[k];
             _deserializeObject(source, target);
 
             if (target instanceof GameObject) {
@@ -54,7 +57,8 @@ namespace paper {
         }
 
         for (const source of data.objects) { // 组件初始化。 TODO
-            const target = _deserializedObjects[source.hashCode];
+            const k = source.hashCode || source.uuid; // hashCode 兼容。
+            const target = _deserializedObjects[k];
             if (target instanceof BaseComponent) {
                 target.initialize();
                 if (target.isActiveAndEnabled) {
@@ -70,17 +74,31 @@ namespace paper {
     /**
      * 
      */
-    export function getDeserializedObject<T extends ISerializable>(source: IHashCode): T {
-        return _deserializedObjects[source.hashCode] as T;
+    export function getDeserializedObject<T extends ISerializable>(source: ISerializedObject): T {
+        const k = source.hashCode || source.uuid; // hashCode 兼容。
+        return _deserializedObjects[k] as T;
     }
 
     function _deserializeObject(source: any, target: ISerializable) {
         if (target.constructor.prototype.hasOwnProperty("deserialize")) { // TODO 字符串依赖。
-            (target as ISerializable).deserialize(source);
+            let uuid = source.uuid; // TODO 字符串依赖。
+            if (_isCreate) {
+                delete source.uuid;
+            }
+
+            target.deserialize(source);
+
+            if (_isCreate) {
+                source.uuid = uuid;
+            }
         }
         else {
             for (const k in source) {
                 if (k === "hashCode" || k === "class") { // TODO 字符串依赖。
+                    continue;
+                }
+
+                if (_isCreate && k === "uuid") { // TODO 字符串依赖。
                     continue;
                 }
 
@@ -106,9 +124,34 @@ namespace paper {
                 return undefined;
 
             case "object": {
-                if (target && target.constructor.prototype.hasOwnProperty("deserialize")) { // TODO 字符串依赖。
-                    (target as ISerializable).deserialize(source);
-                    return target;
+                if (target) {
+                    if (target.constructor.prototype.hasOwnProperty("deserialize")) { // TODO 字符串依赖。
+                        // _deserializeObject(source, target);
+                        (target as ISerializable).deserialize(source);
+                        return target;
+                    }
+                    else if (ArrayBuffer.isView(target)) {
+                        for (let i = 0, l = Math.min(source.length, (target as Uint8Array).length); i < l; ++i) {
+                            target[i] = source[i];
+                        }
+
+                        return target;
+                    }
+                    else if (Array.isArray(target) && target.length === 0) {
+                        for (let i = 0, l = source.length; i < l; ++i) {
+                            target[i] = _deserializeChild(source[i]);
+                        }
+
+                        return target;
+                    }
+                    else if (target instanceof BaseComponent) {
+                        _deserializeObject(source, target);
+
+                        return target;
+                    }
+                    else {
+                        // console.info("Deserialize can be optimized.");
+                    }
                 }
 
                 if (Array.isArray(source)) {
@@ -121,28 +164,28 @@ namespace paper {
                     return target;
                 }
 
-                const hashCode = source.hashCode as number; // TODO 字符串依赖。
+                const uuid = (source.hashCode || source.uuid) as string; // TODO 字符串依赖， hashCode 兼容。
                 let classCodeOrName = source.class as string; // TODO 字符串依赖。
 
-                if (hashCode) {
-                    if (hashCode in _deserializedObjects) {
-                        return _deserializedObjects[hashCode];
+                if (uuid) {
+                    if (uuid in _deserializedObjects) {
+                        return _deserializedObjects[uuid];
                     }
                     else if (classCodeOrName) {
                         if (classCodeOrName === findClassCodeFrom(Scene)) {
                             // TODO
                         }
                         else if (classCodeOrName === findClassCodeFrom(GameObject)) {
-                            for (const gameObject of Application.sceneManager.activeScene.gameObjects) { // TODO 暂时是搜索当前场景。
-                                if (gameObject.hashCode === hashCode) {
+                            for (const gameObject of Application.sceneManager.activeScene.gameObjects) {
+                                if (gameObject.uuid === uuid) {
                                     return gameObject;
                                 }
                             }
                         }
-                        else {
-                            for (const gameObject of Application.sceneManager.activeScene.gameObjects) { // TODO 暂时是搜索当前场景。
+                        else { // Component
+                            for (const gameObject of Application.sceneManager.activeScene.gameObjects) {
                                 for (const component of gameObject.components) {
-                                    if (component.hashCode === hashCode) {
+                                    if (component.uuid === uuid) {
                                         return component;
                                     }
                                 }

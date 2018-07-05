@@ -240,7 +240,7 @@ namespace paper.editor {
             for (let i = 0; i < lights.length; i++)
                 this.lightPool.push(lights[i].gameObject);
             this.cameraPool = [];
-            let allGameObj = Application.sceneManager.getActiveScene().gameObjects;
+            let allGameObj = Application.sceneManager.activeScene.gameObjects;
             for (let i = 0; i < allGameObj.length; i++) {
                 if (allGameObj[i].getComponent(egret3d.Camera)) {
                     if (allGameObj[i].tag != "EditorCamera")
@@ -253,7 +253,7 @@ namespace paper.editor {
             if (!this._enabled) return;
             let gl = this.webgl;
             for (let i = 0; i < this.lightPool.length; i++) {
-                let light = this.lightPool[i].getComponent(egret3d.Light);
+                let light = this.lightPool[i].getComponent(egret3d.BaseLight as any, true) as egret3d.BaseLight;
                 Gizmo.DrawIcon("light", this.lightPool[i].transform.getPosition(), 30, light.color);
                 Gizmo.DrawCylinder(this.lightPool[i].transform, light.color);
             }

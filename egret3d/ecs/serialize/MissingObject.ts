@@ -3,18 +3,15 @@ namespace paper {
      * 
      */
     export class MissingObject implements ISerializable {
-        /**
-         * 
-         */
-        public readonly missingData: { [key: string]: any } = {};
+        [k: string]: any;
 
-        public serialize(): any | IHashCode | ISerializedObject {
-            return this.missingData;
+        public serialize(): any | IUUID | ISerializedObject {
+            return this;
         }
 
         public deserialize(element: any): void {
-            for (const key in element) {
-                this.missingData[key] = element[key];
+            for (const k in element) {
+                this[k] = element[k];
             }
         }
     }

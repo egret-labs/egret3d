@@ -6,12 +6,12 @@ namespace paper {
     const KEY_DESERIALIZE: keyof ISerializable = "deserialize";
 
     let _sourcePath: string = "";
-    const _hashCodes: number[] = []; // 缓存序列化记录，提高查找效率
+    const _serializeds: string[] = []; // 缓存序列化记录，提高查找效率
     let _serializeData: ISerializedData | null = null;
 
     /**
      * 序列化方法
-     * 只有 ISerializable (有对应hashCode属性) 参与序列化
+     * 只有 ISerializable 参与序列化
      * 只有被标记的对象属性 参与序列化
      * 序列化后，输出 ISerializeData
      * 对象在objects中按生成顺序，root一定是第一个元素。
@@ -27,7 +27,7 @@ namespace paper {
         }
 
         _serializeObject(source);
-        _hashCodes.length = 0;
+        _serializeds.length = 0;
 
         const data = _serializeData;
         _serializeData = null;
@@ -55,13 +55,13 @@ namespace paper {
      */
     export function serializeRC(source: SerializableObject): any {
         const className = egret.getQualifiedClassName(source);
-        return { hashCode: source.hashCode, class: findClassCode(className) || className };
+        return { uuid: source.uuid, class: findClassCode(className) || className };
     }
     /**
      * 
      */
     export function serializeR(source: SerializableObject): any {
-        return { hashCode: source.hashCode };
+        return { uuid: source.uuid };
     }
     /**
      * 
@@ -90,11 +90,7 @@ namespace paper {
     }
 
     function _serializeObject(source: SerializableObject, isStruct: boolean = false, parentHasCustomDeserialize: boolean = false) {
-        if (_hashCodes.indexOf(source.hashCode) >= 0) {
-            // if (!(source instanceof Asset)) {
-            //     console.warn("Serialize object again.", source.hashCode);
-            // }
-
+        if (_serializeds.indexOf(source.uuid) >= 0) {
             return serializeR(source);
         }
 
@@ -105,7 +101,7 @@ namespace paper {
             (parentHasCustomDeserialize ? {} : (isStruct ? serializeC(source) : serializeRC(source)));
 
         if (!isStruct && _serializeData) {
-            _hashCodes.push(source.hashCode);
+            _serializeds.push(source.uuid);
             // Add to custom.
             if (SerializeKey.SerializedType in source) { // TODO 原型静态依赖
                 for (const type of source[SerializeKey.SerializedType] as string[]) {
@@ -144,9 +140,9 @@ namespace paper {
                 return undefined;
 
             case "object": {
-                if (Array.isArray(source)) { // Array.
+                if (Array.isArray(source) || ArrayBuffer.isView(source)) { // Array.
                     const target = [];
-                    for (const element of source) {
+                    for (const element of source as any[]) {
                         target.push(_serializeChild(element, parent, key));
                     }
 

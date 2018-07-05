@@ -1,9 +1,13 @@
 namespace egret3d {
+    /**
+     * 
+     */
     export class Pool<T> {
-        public static readonly drawCall: Pool<DrawCall> = new Pool<DrawCall>();
-        public static readonly shadowCaster: Pool<DrawCall> = new Pool<DrawCall>();
-
         private readonly _instances: T[] = [];
+
+        public clear() {
+            this._instances.length = 0;
+        }
 
         public add(instanceOrInstances: T | (T[])) {
             if (Array.isArray(instanceOrInstances)) {
@@ -39,10 +43,6 @@ namespace egret3d {
 
         public get() {
             return this._instances.pop() || null;
-        }
-
-        public clear() {
-            this._instances.length = 0;
         }
 
         public get instances() {

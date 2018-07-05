@@ -24,6 +24,7 @@ namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
+    @paper.disallowMultipleComponent
     export class Transform extends paper.BaseComponent {
         private _dirtyAABB: boolean = true;
         private _dirtyLocal: boolean = true;
@@ -53,7 +54,10 @@ namespace egret3d {
         private readonly localScale: Vector3 = new Vector3(1.0, 1.0, 1.0);
         @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setScale" })
         private readonly scale: Vector3 = new Vector3(1.0, 1.0, 1.0);
-        private readonly _children: Transform[] = [];
+        /**
+         * @internal
+         */
+        public readonly _children: Transform[] = [];
         private _aabb: AABB = null as any;
         private _parent: Transform | null = null;
 
@@ -178,12 +182,21 @@ namespace egret3d {
             this._dirtify();
         }
 
+        private _getAllChildren(children: Transform[]) {
+            for (const child of this._children) {
+                children.push(child);
+                child._getAllChildren(children);
+            }
+        }
+
         /**
-         * 
+         * @internal
          */
-        public $getGlobalPosition(): ImmutableVector4 {
-            const position = this.getPosition();
-            return new Float32Array([position.x, position.y, position.z, 1]);
+        public getAllChildren() {
+            const children: Transform[] = [];
+            this._getAllChildren(children);
+
+            return children;
         }
 
         public deserialize(element: any) {
@@ -235,11 +248,33 @@ namespace egret3d {
             }
         }
 
+        public getChildIndex(value: Transform) {
+            if (value.parent !== this) {
+                return -1;
+            }
+
+            return this._children.indexOf(value);
+        }
+
+        public setChildIndex(value: Transform, index: number) {
+            if (value.parent !== this) {
+                return;
+            }
+
+            const prevIndex = this._children.indexOf(value);
+            if (prevIndex === index) {
+                return;
+            }
+
+            this._children.splice(prevIndex, 1);
+            this._children.splice(index, 0, value);
+        }
+
         /**
          * 获取对象下标的子集对象
          * @param index 
          */
-        public getChild(index: number) {
+        public getChildAt(index: number) {
             return 0 <= index && index < this._children.length ? this._children[index] : null;
         }
 
@@ -775,22 +810,6 @@ namespace egret3d {
 
             return result;
         }
-        /**
-         * @internal
-         */
-        public getAllChildren() {
-            const children: Transform[] = [];
-            this._getAllChildren(children);
-
-            return children;
-        }
-
-        private _getAllChildren(children: Transform[]) {
-            for (const child of this._children) {
-                children.push(child);
-                child._getAllChildren(children);
-            }
-        }
 
         /**
          * 当前子集对象的数量
@@ -861,7 +880,5 @@ namespace egret3d {
         }
     }
 
-    // export type SerializeObject = { hashCode: number, class: string, localPosition: number[], localRotation: number[], localScale: number[], _parent: {}, children: Array<any> };
     export type ImmutableVector4 = Readonly<Float32Array>;
-
 }

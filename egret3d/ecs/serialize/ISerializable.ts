@@ -2,11 +2,11 @@ namespace paper {
     /**
      * 
      */
-    export interface IHashCode {
+    export interface IUUID {
         /**
          * 
          */
-        readonly hashCode: number;
+        readonly uuid: string;
     }
     /**
      * 
@@ -24,7 +24,7 @@ namespace paper {
         /**
          * 
          */
-        serialize(): any | IHashCode | ISerializedObject;
+        serialize(): any | IUUID | ISerializedObject;
         /**
          * 
          */
@@ -34,11 +34,11 @@ namespace paper {
     /**
      * 序列化后的数据接口。
      */
-    export interface ISerializedObject extends IHashCode, IStruct {
+    export interface ISerializedObject extends IUUID, IStruct {
         /**
          * 
          */
-        [key: string]: any | IHashCode;
+        [key: string]: any | IUUID;
     }
 
     /**

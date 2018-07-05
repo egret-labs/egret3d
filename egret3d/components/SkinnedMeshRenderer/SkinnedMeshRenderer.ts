@@ -37,6 +37,7 @@ namespace egret3d {
      * @platform Web
      * @language
      */
+    @paper.disallowMultipleComponent
     export class SkinnedMeshRenderer extends paper.BaseRenderer {
         /**
          * 
@@ -74,7 +75,7 @@ namespace egret3d {
             }
 
             this._mesh = mesh;
-            paper.EventPool.dispatchEvent(MeshFilterEventType.Mesh, this);
+            paper.EventPool.dispatchEvent(SkinnedMeshRendererEventType.Mesh, this);
         }
 
         @paper.serializedField
@@ -292,13 +293,12 @@ namespace egret3d {
             target.center = [this.center.x, this.center.y, this.center.z];
             target.size = [this.size.x, this.size.y, this.size.z];
             target.rootBone = null;
-            target._bones = [] as paper.IHashCode[];
+            target._bones = [] as paper.IUUID[];
             target._mesh = this._mesh ? this._mesh.serialize() : null;
-            target._materials = [] as paper.IHashCode[];
-            target.uuid = this.uuid;
+            target._materials = [] as paper.IUUID[];
 
             if (this.rootBone) {
-                target.rootBone = { hashCode: this.rootBone.hashCode };
+                target.rootBone = { uuid: this.rootBone.uuid };
             }
 
             const materials = this._materials;
@@ -312,7 +312,7 @@ namespace egret3d {
             target._bones.length = bones.length;
             for (let i = 0, l = bones.length; i < l; i++) {
                 const bone = bones[i];
-                target._bones[i] = { hashCode: bone.hashCode };
+                target._bones[i] = { uuid: bone.uuid };
             }
 
             return target;
@@ -322,10 +322,9 @@ namespace egret3d {
          */
         public deserialize(element: any) {
             super.deserialize(element);
-            
+
             this.center.deserialize(element.center);
             this.size.deserialize(element.size);
-            this.uuid = element.uuid;
 
             if (element._mesh) {
                 this._mesh = new (Mesh as any)(); //

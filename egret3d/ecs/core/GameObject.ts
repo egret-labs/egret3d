@@ -5,49 +5,6 @@ namespace paper {
      */
     export class GameObject extends SerializableObject {
         /**
-         * 返回当前激活场景中查找对应名称的GameObject
-         * @param name 
-         */
-        public static find(name: string, scene: Scene | null = null): GameObject | null {
-            for (const gameObject of (scene || Application.sceneManager.activeScene).gameObjects) {
-                if (gameObject.name === name) {
-                    return gameObject;
-                }
-            }
-
-            return null;
-        }
-
-        /**
-         * 返回一个在当前激活场景中查找对应tag的GameObject
-         * @param tag 
-         */
-        public static findWithTag(tag: string, scene: Scene | null = null): GameObject | null {
-            for (const gameObject of (scene || Application.sceneManager.activeScene).gameObjects) {
-                if (gameObject.tag === tag) {
-                    return gameObject;
-                }
-            }
-
-            return null;
-        }
-
-        /**
-         * 返回所有在当前激活场景中查找对应tag的GameObject
-         * @param name 
-         */
-        public static findGameObjectsWithTag(tag: string, scene: Scene | null = null): GameObject[] {
-            const gameObjects: GameObject[] = [];
-            for (const gameObject of (scene || Application.sceneManager.activeScene).gameObjects) {
-                if (gameObject.tag === tag) {
-                    gameObjects.push(gameObject);
-                }
-            }
-
-            return gameObjects;
-        }
-
-        /**
          * 是否是静态，启用这个属性可以提升性能
          */
         @serializedField
@@ -75,12 +32,6 @@ namespace paper {
         public tag: string = "";
 
         /**
-         * @internal
-         */
-        @serializedField
-        public uuid: string | null = null;
-
-        /**
          * 变换组件
          */
         public transform: egret3d.Transform = null as any;
@@ -96,8 +47,15 @@ namespace paper {
         @serializedField
         public prefab: egret3d.Prefab | null = null;
 
+        /**
+         * @internal
+         */
+        @serializedField
+        private prefabEditInfo:boolean | string | null = null;
+
         @serializedField
         private _activeSelf: boolean = true;
+
         /**
          * @internal
          */
@@ -106,7 +64,10 @@ namespace paper {
          * @internal
          */
         public _activeDirty: boolean = true;
-        private readonly _components: BaseComponent[] = [];
+        /**
+         * @internal
+         */
+        public readonly _components: BaseComponent[] = [];
         private _scene: Scene = null as any;
 
         /**
@@ -150,8 +111,33 @@ namespace paper {
             this._scene._addGameObject(this);
         }
 
+        private _canRemoveComponent<T extends BaseComponent>(value: T) {
+            if (value === this.transform as any) {
+                console.warn("Cannot remove the transform component from a game object.");
+                return false;
+            }
+
+            for (const component of this._components) {
+                const className = egret.getQualifiedClassName(component);
+                if (className in _requireComponents) {
+                    const requireComponents = _requireComponents[className];
+                    if (requireComponents.indexOf(value.constructor as any) >= 0) {
+                        console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${className} component.`);
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         private _removeComponentReference(component: BaseComponent) {
-            component.enabled = false; // TODO remove flag.
+            component.enabled = false;
+            (component as any).gameObject = null;
+
+            if (component === this.renderer) {
+                this.renderer = null;
+            }
 
             const destroySystem = Application.systemManager.getSystem(DestroySystem);
             if (destroySystem) {
@@ -173,23 +159,14 @@ namespace paper {
             }
         }
 
-        /**
-         * 
-         */
-        public destroy() {
-            if (!this._scene) {
-                console.warn("The game object has been destroyed.", this.name, this.hashCode);
-                return;
-            }
-
-            if (this === Application.sceneManager.globalGameObject) {
-                console.warn("Cannot destroy global game object.", this.name, this.hashCode);
-                return;
-            }
-
+        private _destroy() {
             const destroySystem = Application.systemManager.getSystem(DestroySystem);
             if (destroySystem) {
                 destroySystem.bufferGameObject(this);
+            }
+
+            for (const child of this.transform.children) {
+                child.gameObject._destroy();
             }
 
             for (const component of this._components) {
@@ -205,9 +182,48 @@ namespace paper {
         }
 
         /**
+         * 
+         */
+        public destroy() {
+            if (this.isDestroyed) {
+                console.warn(`The game object (${this.path}) has been destroyed.`);
+                return;
+            }
+
+            if (this === Application.sceneManager.globalGameObject) {
+                console.warn("Cannot destroy global game object.");
+                return;
+            }
+
+            const parent = this.transform.parent;
+            if (parent) {
+                parent._children.splice(parent._children.indexOf(this.transform), 1);
+            }
+
+            this._destroy();
+        }
+
+        /**
          * 根据类型名获取组件
          */
-        public addComponent<T extends BaseComponent>(componentClass: { new(): T }): T {
+        public addComponent<T extends BaseComponent>(componentClass: { new(): T }, config?: any): T {
+            if (_disallowMultipleComponents.indexOf(componentClass) >= 0) {
+                for (const component of this._components) {
+                    if (component instanceof componentClass) {
+                        console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the game object (${this.path}) again.`);
+                        return;
+                    }
+                }
+            }
+
+            const className = egret.getQualifiedClassName(componentClass);
+            if (className in _requireComponents) {
+                const requireComponents = _requireComponents[className];
+                for (const requireComponentClass of requireComponents) {
+                    this.getComponent(requireComponentClass) || this.addComponent(requireComponentClass);
+                }
+            }
+
             BaseComponent._injectGameObject = this;
             const component = new componentClass();
 
@@ -219,7 +235,13 @@ namespace paper {
             }
 
             this._components.push(component);
-            component.initialize();
+
+            if (config) {
+                component.initialize(config);
+            }
+            else {
+                component.initialize();
+            }
 
             if (component.isActiveAndEnabled) {
                 EventPool.dispatchEvent(EventPool.EventType.Enabled, component);
@@ -231,21 +253,17 @@ namespace paper {
         /**
          * 移除组件
          */
-        public removeComponent<T extends BaseComponent>(componentInstanceOrClass: { new(): T } | T, isExtends: boolean = false, isAll: boolean = false) {
+        public removeComponent<T extends BaseComponent>(componentInstanceOrClass: { new(): T } | T, isExtends: boolean = false) {
             if (componentInstanceOrClass instanceof BaseComponent) {
-                if (componentInstanceOrClass === this.transform as any) {
-                    return;
-                }
-
                 let index = 0;
                 for (const component of this._components) {
                     if (component === componentInstanceOrClass) {
+                        if (!this._canRemoveComponent(component)) {
+                            return;
+                        }
+
                         this._removeComponentReference(component);
                         this._components.splice(index, 1);
-
-                        if (component === this.renderer) {
-                            this.renderer = null;
-                        }
 
                         return;
                     }
@@ -254,24 +272,18 @@ namespace paper {
                 }
             }
             else {
-                if (componentInstanceOrClass === egret3d.Transform as any) {
-                    return;
-                }
-
                 let i = this._components.length;
                 while (i--) {
                     const component = this._components[i];
                     if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentInstanceOrClass)) : component.constructor === componentInstanceOrClass) {
+                        if (!this._canRemoveComponent(component)) {
+                            return;
+                        }
+
                         this._removeComponentReference(component);
                         this._components.splice(i, 1);
 
-                        if (component === this.renderer) {
-                            this.renderer = null;
-                        }
-
-                        if (!isAll) {
-                            return;
-                        }
+                        return;
                     }
                 }
             }
@@ -280,21 +292,32 @@ namespace paper {
         /**
          * 移除自身的所有组件
          */
-        public removeAllComponents() {
-            for (const component of this._components) {
-                if (component instanceof egret3d.Transform) {
-                    continue;
-                }
+        public removeAllComponents<T extends BaseComponent>(componentClass?: { new(): T }, isExtends: boolean = false) {
+            if (componentClass) {
+                let i = this._components.length;
+                while (i--) {
+                    const component = this._components[i];
+                    if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentClass)) : component.constructor === componentClass) {
+                        if (!this._canRemoveComponent(component)) {
+                            return;
+                        }
 
-                if (component === this.renderer) {
-                    this.renderer = null;
+                        this._removeComponentReference(component);
+                        this._components.splice(i, 1);
+                    }
                 }
-
-                this._removeComponentReference(component);
             }
+            else {
+                for (const component of this._components) {
+                    if (component instanceof egret3d.Transform) {
+                        continue;
+                    }
 
-            this._components.length = 0;
-            this._components.push(this.transform);
+                    this._removeComponentReference(component);
+                    this._components.length = 0;
+                    this._components.push(this.transform);
+                }
+            }
         }
 
         /**
@@ -404,6 +427,12 @@ namespace paper {
         /**
          * 
          */
+        public get isDestroyed() {
+            return !this._scene;
+        }
+        /**
+         * 
+         */
         public get dontDestroy() {
             return this._scene === Application.sceneManager.globalScene;
         }
@@ -416,6 +445,11 @@ namespace paper {
                 this._addToScene(Application.sceneManager.globalScene);
             }
             else {
+                if (this === Application.sceneManager.globalGameObject) {
+                    console.warn("Cannot change the `dontDestroy` value of the global game object.", this.name, this.uuid);
+                    return;
+                }
+
                 this._addToScene(Application.sceneManager.activeScene);
             }
         }
@@ -460,6 +494,22 @@ namespace paper {
             return this._activeInHierarchy;
         }
 
+        public get path(): string {
+            let path = this.name;
+
+            if (this.transform) {
+                let parent: egret3d.Transform | null = this.transform.parent;
+                while (parent) {
+                    path = parent.gameObject.name + "/" + path;
+                    parent = parent.gameObject.transform;
+                }
+
+                return this._scene.name + "/" + path;
+            }
+
+            return path;
+        }
+
         /**
          * 组件列表
          */
@@ -475,7 +525,7 @@ namespace paper {
             this._components.length = 0;
             for (const component of value) {
                 if (component instanceof MissingObject) {
-                    this.addComponent(MissComponent).missingObject = component;
+                    this.addComponent(MissingComponent).missingObject = component;
                 }
                 else {
                     if (component instanceof paper.BaseRenderer) {
@@ -494,6 +544,28 @@ namespace paper {
          */
         public get scene(): Scene {
             return this._scene;
+        }
+
+        /**
+         * @deprecated
+         * @see paper.Scene#find()
+         */
+        public static find(name: string, scene: Scene | null = null) {
+            return (scene || Application.sceneManager.activeScene).find(name);
+        }
+        /**
+         * @deprecated
+         * @see paper.Scene#findWithTag()
+         */
+        public static findWithTag(tag: string, scene: Scene | null = null) {
+            return (scene || Application.sceneManager.activeScene).findWithTag(tag);
+        }
+        /**
+         * @deprecated
+         * @see paper.Scene#findGameObjectsWithTag()
+         */
+        public static findGameObjectsWithTag(tag: string, scene: Scene | null = null) {
+            return (scene || Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
         }
     }
 }

@@ -1,8 +1,9 @@
 namespace egret3d.particle {
+    /**
+     * 
+     */
     export class ParticleSystem extends paper.BaseSystem<ParticleComponent | ParticleRenderer>{
-        /**
-         * @inheritDoc
-         */
+        private _globalTimer: number = 0.0;
         protected readonly _interests = [
             {
                 componentClass: ParticleComponent,
@@ -20,71 +21,15 @@ namespace egret3d.particle {
             {
                 componentClass: ParticleRenderer,
                 listeners: [
-                    { type: ParticleRendererEventType.Mesh, listener: (comp: ParticleRenderer) => { this._onUpdateDrawCalls(comp.gameObject); } },
-                    { type: ParticleRendererEventType.Materials, listener: (comp: ParticleRenderer) => { this._onUpdateDrawCalls(comp.gameObject); } },
+                    { type: ParticleRendererEventType.Mesh, listener: (comp: ParticleRenderer) => { this._updateDrawCalls(comp.gameObject); } },
+                    { type: ParticleRendererEventType.Materials, listener: (comp: ParticleRenderer) => { this._updateDrawCalls(comp.gameObject); } },
                     { type: ParticleRendererEventType.LengthScaleChanged, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.LengthScaleChanged); } },
                     { type: ParticleRendererEventType.VelocityScaleChanged, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.VelocityScaleChanged); } },
                     { type: ParticleRendererEventType.RenderMode, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.RenderMode); } },
                 ]
             }
         ];
-
-        private readonly _createDrawCalls = ((gameObject: paper.GameObject) => {
-            const renderer = this._getComponent(gameObject, 1) as ParticleRenderer;
-            //粒子系统不支持多材质
-            if (renderer.batchMesh && renderer.batchMaterial) {
-                let subMeshIndex = 0;
-                const drawCalls: DrawCall[] = [];
-                const primitives = renderer.batchMesh.glTFMesh.primitives;
-
-                if (primitives.length !== 1) {
-                    console.error("ParticleSystem : materials.length != 1");
-                }
-
-                if (renderer._renderMode === ParticleRenderMode.None) {
-                    console.error("ParticleSystem : error renderMode");
-                }
-
-                for (const primitive of primitives) {
-                    drawCalls.push({
-                        subMeshInfo: subMeshIndex,
-                        mesh: renderer.batchMesh,
-                        material: renderer.batchMaterial,
-                        lightMapIndex: -1,
-                        lightMapScaleOffset: null,
-                        boneData: null,
-                        gameObject: gameObject,
-                        transform: gameObject.transform,
-                        frustumTest: false,
-                        zdist: -1
-                    });
-
-                    subMeshIndex++;
-                }
-
-                return drawCalls;
-            }
-
-            return null;
-        });
-
-        private readonly _drawCallList: DrawCallList = new DrawCallList(this._createDrawCalls);
-        private _globalTimer: number;
-
-        private _onUpdateDrawCalls(gameObject: paper.GameObject) {
-            const component = this._getComponent(gameObject, 0) as ParticleComponent;
-            const renderer = this._getComponent(gameObject, 1) as ParticleRenderer;
-
-            if (component.enabled && renderer.enabled) { // TODO 是否应使用 isActiveAndEnabled
-                this._onUpdateBatchMesh(component);
-                component.main.playOnAwake && component.play();
-            }
-            else {
-                component.stop();
-            }
-
-            this._drawCallList.updateDrawCalls(gameObject, false);
-        }
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
         /**
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */
@@ -437,16 +382,74 @@ namespace egret3d.particle {
             }
         }
 
+        private _updateDrawCalls(gameObject: paper.GameObject) {
+            if (!this._enabled || !this._hasGameObject(gameObject)) {
+                return;
+            }
+
+            const component = this._getComponent(gameObject, 0) as ParticleComponent;
+            const renderer = this._getComponent(gameObject, 1) as ParticleRenderer;
+            //
+            this._onUpdateBatchMesh(component);
+            if (!renderer.batchMesh || !renderer.batchMaterial) {
+                return;
+            }
+            //
+            this._drawCalls.removeDrawCalls(renderer);
+            //
+            this._drawCalls.renderers.push(renderer);
+            //
+            let subMeshIndex = 0;
+            const primitives = renderer.batchMesh.glTFMesh.primitives;
+
+            if (primitives.length !== 1) {
+                console.error("ParticleSystem : materials.length != 1");
+            }
+
+            if (renderer._renderMode === ParticleRenderMode.None) {
+                console.error("ParticleSystem : error renderMode");
+            }
+
+            for (const primitive of primitives) {
+                const drawCall: DrawCall = {
+                    renderer: renderer,
+
+                    subMeshIndex: subMeshIndex++,
+                    mesh: renderer.batchMesh,
+                    material: renderer.batchMaterial,
+
+                    frustumTest: false,
+                    zdist: -1,
+
+                    disable: false,
+                };
+
+                this._drawCalls.drawCalls.push(drawCall);
+            }
+        }
+
         public onEnable() {
-            // TODO
+            for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
+                this._updateDrawCalls(this._components[i].gameObject);
+            }
         }
 
         public onAddGameObject(gameObject: paper.GameObject) {
-            this._onUpdateDrawCalls(gameObject);
+            this._updateDrawCalls(gameObject);
+
+            const component = this._getComponent(gameObject, 0) as ParticleComponent;
+            if (component.main.playOnAwake) {
+                component.play();
+            }
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCallList.removeDrawCalls(gameObject);
+            if (!this._enabled) {
+                return;
+            }
+
+            this._drawCalls.removeDrawCalls(gameObject.renderer);
+            // component.stop();
         }
 
         public onUpdate() {
@@ -464,7 +467,10 @@ namespace egret3d.particle {
         }
 
         public onDisable() {
-            // TODO
+            for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
+                const renderer = this._components[i + 1] as ParticleRenderer;
+                this._drawCalls.removeDrawCalls(renderer);
+            }
         }
     }
 }

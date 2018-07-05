@@ -113,7 +113,7 @@ namespace egret3d {
                 defines += "#define USE_SPOT_LIGHT " + context.spotLightCount + "\n";
             }
 
-            if (context.receiveShadow) {
+            if (context.drawCall.renderer.receiveShadows) {
                 defines += "#define USE_SHADOW \n";
                 defines += "#define USE_PCF_SOFT_SHADOW \n";
             }
@@ -242,8 +242,6 @@ namespace egret3d {
 
         private _attributes: { [key: string]: WebGLAttribute };
         private _uniforms: { [key: string]: WebGLUniform };
-
-        private _unifromsValue: { [key: string]: any } = {};
 
         private _cacheContext: RenderContext;
         private _cacheContextVer: number = -1;
@@ -432,8 +430,16 @@ namespace egret3d {
                     case "_LightmapTex":
                         this.setTexture(key, context.lightmap);
                         break;
+                    case "_LightmapIntensity":
+                        this.setFloat(key, context.lightmapIntensity);
+                        break;
                     case "glstate_lightmapOffset":
-                        this.setVector4_2(key, context.lightmapOffset);
+                        if (context.lightmapOffset) {
+                            this.setVector4_2(key, context.lightmapOffset);
+                        }
+                        else {
+                            console.debug("Error light map scale and offset.");
+                        }
                         break;
                     case "glstate_lightmapUV":
                         this.setFloat(key, context.lightmapUV);

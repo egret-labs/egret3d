@@ -29,6 +29,7 @@ namespace egret3d {
      * @platform Web
      * @language
      */
+    @paper.disallowMultipleComponent
     export class TrailRenderer extends paper.BaseRenderer {
         /**
          * extend direction
@@ -51,7 +52,7 @@ namespace egret3d {
          *  
          */
         @paper.serializedField
-        public _material: Material | null;
+        private _material: Material | null;
         /**
          * 
          */

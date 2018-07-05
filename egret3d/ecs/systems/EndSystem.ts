@@ -14,7 +14,7 @@ namespace paper {
             }
 
             const gameObject = component.gameObject;
-            console.debug("EndSystem remove behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
+            console.debug("EndSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component));
         }
 
         protected _onRemoveComponent(component: Behaviour) {
@@ -25,14 +25,14 @@ namespace paper {
             }
 
             const gameObject = component.gameObject;
-            console.debug("EndSystem add behaviour error.", gameObject.name, gameObject.hashCode, egret.getQualifiedClassName(component.constructor));
+            console.debug("EndSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component));
         }
 
         public onUpdate() {
             if (this._isEditorUpdate()) {
                 if (this._components.length > 0) {
                     for (const component of this._components) {
-                        if (component && _executeInEditModeComponents.indexOf(component.constructor) >= 0) {
+                        if (component && _executeInEditModeComponents.indexOf(component.constructor as any) >= 0) {
                             component.onDisable && component.onDisable();
                         }
                     }

@@ -13,19 +13,19 @@ namespace egret3d {
      * 引擎启动入口
      */
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
-        //(Ammo as any)().then(() => { // TODO WebAssembly load
-            const requiredOptions = getOptions(options);
-            const canvas = getMainCanvas();
-            WebGLKit.init(canvas, requiredOptions);
-            InputManager.init(canvas);
-            DefaultMeshes.init();
-            DefaultTextures.init();
-            DefaultShaders.init();
-            stage.init(canvas, requiredOptions);
-            paper.Application.init(options);
-            //
-            paper.Application.sceneManager.createScene("default");
-        //});
+        // (Ammo as any)().then(() => { // TODO WebAssembly load
+        const requiredOptions = getOptions(options);
+        const canvas = getMainCanvas();
+        WebGLKit.init(canvas, requiredOptions);
+        InputManager.init(canvas);
+        DefaultMeshes.init();
+        DefaultTextures.init();
+        DefaultShaders.init();
+        stage.init(canvas, requiredOptions);
+        paper.Application.init(options);
+        //
+        paper.Application.sceneManager.createScene("default");
+        // });
     }
 
     function getMainCanvas() {

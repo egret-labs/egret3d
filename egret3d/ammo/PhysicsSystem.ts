@@ -258,7 +258,7 @@ namespace egret3d.ammo {
                     if (collisionObject.collisionObjectType & Ammo.CollisionObjectTypes.GhostObject) {
                         const ghostObject = collisionObject as GhostObject;
                         const btGhostObject = (collisionObject as GhostObject).btGhostObject;
-                        const behaviours = collisionObject.gameObject.getComponents(paper.Behaviour, true);
+                        const behaviours = collisionObject.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[];
                         ghostObject._currentCollisionObjects.length = 0;
 
                         for (let i = 0, l = btGhostObject.getNumOverlappingObjects(); i < l; ++i) {

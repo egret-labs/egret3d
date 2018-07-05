@@ -21,9 +21,14 @@ namespace paper {
         /**
          * @internal
          */
-        public _addScene(scene: Scene) {
+        public _addScene(scene: Scene, isActive: boolean) {
             if (this._scenes.indexOf(scene) < 0) {
-                this._scenes.unshift(scene);
+                if (isActive) {
+                    this._scenes.unshift(scene);
+                }
+                else {
+                    this._scenes.push(scene);
+                }
             }
             else {
                 console.debug("Add the scene again.", scene.name);
@@ -32,8 +37,8 @@ namespace paper {
         /**
          * 创建一个空场景并激活 
          */
-        public createScene(name: string) {
-            const scene = new Scene();
+        public createScene(name: string, isActive: boolean = true) {
+            const scene = new Scene(isActive);
             scene.name = name;
             scene.rawScene = null as any; // 保存的话需要设置一个对应的RawScene文件
 
@@ -122,8 +127,8 @@ namespace paper {
          */
         public get globalScene() {
             if (!this._globalScene) {
-                this._globalScene = new Scene(); // Global scene are not added to the scenes.
-                this._globalScene.name = "global";
+                this._globalScene = this.createScene("global", false);
+                this._scenes.pop(); // Remove global scene from scenes.
             }
 
             return this._globalScene;
@@ -143,14 +148,18 @@ namespace paper {
          * 获取当前激活的场景
          */
         public get activeScene() {
-            if (this._scenes.length < 1) {
+            if (this._scenes.length === 0) {
                 this.createScene("default");
             }
 
             return this._scenes[0];
         }
         public set activeScene(value: Scene) {
-            if (this._scenes.length <= 1 || this._scenes[0] === value) {
+            if (
+                this._scenes.length <= 1 ||
+                this._scenes[0] === value ||
+                this._globalScene === value // Cannot active global scene.
+            ) {
                 return;
             }
 
@@ -160,7 +169,7 @@ namespace paper {
                 this._scenes.unshift(value);
             }
             else {
-                console.debug("Active scene error.", value.name, value.hashCode);
+                console.debug("Active scene error.", value.name, value.uuid);
             }
         }
 
