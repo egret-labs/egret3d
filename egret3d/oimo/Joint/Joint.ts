@@ -14,6 +14,15 @@ namespace egret3d.oimo {
      * 
      */
     export abstract class Joint<T extends OIMO.Joint> extends paper.BaseComponent {
+        protected static readonly _helpVector3A: Vector3 = new Vector3();
+        protected static readonly _helpVector3B: Vector3 = new Vector3();
+        protected static readonly _helpVector3C: Vector3 = new Vector3();
+        protected static readonly _helpVector3D: Vector3 = new Vector3();
+        protected static readonly _helpQuaternionA: Quaternion = new Quaternion();
+        protected static readonly _helpQuaternionB: Quaternion = new Quaternion();
+        protected static readonly _helpMatrixA: Matrix = new Matrix();
+        protected static readonly _helpMatrixB: Matrix = new Matrix();
+        protected static readonly _helpMatrixC: Matrix = new Matrix();
         // @paper.serializedField
         // protected _constraintType: Ammo.ConstraintType = Ammo.ConstraintType.ConstrainToAnotherBody;
         @paper.serializedField
@@ -23,23 +32,87 @@ namespace egret3d.oimo {
         @paper.serializedField
         protected _isGlobalAnchor: boolean = false;
         @paper.serializedField
-        protected readonly _anchor1Local: Vector3 = Vector3.ZERO.clone();
+        protected readonly _anchor: Vector3 = Vector3.ZERO.clone();
         @paper.serializedField
         protected readonly _axisX: Vector3 = Vector3.FORWARD.clone();
         @paper.serializedField
         protected readonly _axisY: Vector3 = Vector3.UP.clone();
         @paper.serializedField
-        protected readonly _anchor2Local: Vector3 = Vector3.ZERO.clone();
+        protected readonly _connectedAnchor: Vector3 = Vector3.ZERO.clone();
         @paper.serializedField
         protected readonly _connectedAxisX: Vector3 = Vector3.FORWARD.clone();
         @paper.serializedField
         protected readonly _connectedAxisY: Vector3 = Vector3.UP.clone();
         @paper.serializedField
-        protected _rb2: Rigidbody | null = null;
-        protected _rb1: Rigidbody = null as any;
+        protected _connectedBody: Rigidbody | null = null;
+        protected _rigidbody: Rigidbody = null as any;
         protected _oimoJoint: T = null as any;
 
         protected abstract _createJoint(): T;
+
+        protected _createFrame(forward: Vector3, up: Vector3, constraintPoint: Vector3, frame: Matrix) {
+            if (this._isGlobalAnchor) {
+
+            }
+            else {
+                const vR = Vector3.cross(forward, up, Joint._helpVector3A);
+                const vU = Vector3.cross(vR, forward, Joint._helpVector3B);
+
+                vR.normalize();
+                vU.normalize();
+
+                frame.identity();
+                frame.set3x3(
+                    forward.x, vU.x, vR.x,
+                    forward.y, vU.y, vR.y,
+                    forward.z, vU.z, vR.z,
+                );
+                frame.setTranslation(constraintPoint);
+            }
+        }
+
+        protected _createFrames(frameA: Matrix, frameB: Matrix) {
+            if (!this._connectedBody) {
+                console.debug("Never.");
+                return;
+            }
+
+            this._createFrame(this._axisX, this._axisY, this._anchor, frameA);
+
+            if (this._autoCalculateConnectedAnchor) {
+                if (this._isGlobalAnchor) {
+
+                }
+                else {
+                    const thisTransform = this.gameObject.transform;
+                    const otherTransform = this._connectedBody.gameObject.transform;
+                    const quaternion = Quaternion.multiply(
+                        thisTransform.getLocalRotation(),
+                        Quaternion.inverse(otherTransform.getLocalRotation(), Joint._helpQuaternionA),
+                        Joint._helpQuaternionB
+                    );
+
+                    const matrixValues = frameA.rawData;
+                    const xx = quaternion.transformVector3(Joint._helpVector3A.set(matrixValues[0], matrixValues[1], matrixValues[2]));
+                    const yy = quaternion.transformVector3(Joint._helpVector3B.set(matrixValues[4], matrixValues[5], matrixValues[6]));
+                    const zz = quaternion.transformVector3(Joint._helpVector3C.set(matrixValues[8], matrixValues[9], matrixValues[10]));
+                    frameB.identity();
+                    frameB.set3x3(
+                        xx.x, yy.x, zz.x,
+                        xx.y, yy.y, zz.y,
+                        xx.z, yy.z, zz.z,
+                    );
+                    frameB.setTranslation(
+                        Joint._helpMatrixC.copy(otherTransform.getWorldMatrix()).inverse().transformVector3(
+                            thisTransform.getWorldMatrix().transformVector3(Joint._helpVector3D.copy(this._connectedAnchor))
+                        )
+                    );
+                }
+            }
+            else {
+                this._createFrame(this._connectedAxisX, this._connectedAxisY, this._connectedAnchor, frameB);
+            }
+        }
 
         protected jointNotConstructed() {
             if (this._oimoJoint) {
@@ -137,14 +210,14 @@ namespace egret3d.oimo {
          * 
          */
         public get anchor1Local() {
-            return this._anchor1Local;
+            return this._anchor;
         }
         public set anchor1Local(value: Vector3) {
             if (this._oimoJoint) {
                 console.warn("Cannot change the anchor after the joint has been created.");
             }
             else {
-                this._anchor1Local.copy(value);
+                this._anchor.copy(value);
             }
         }
         /**
@@ -195,14 +268,14 @@ namespace egret3d.oimo {
          * 
          */
         public get anchor2Local() {
-            return this._anchor2Local;
+            return this._connectedAnchor;
         }
         public set anchor2Local(value: Vector3) {
             if (this._oimoJoint) {
                 console.warn("Cannot change the connected anchor after the joint has been created.");
             }
             else {
-                this._anchor2Local.copy(value);
+                this._connectedAnchor.copy(value);
                 this._autoCalculateConnectedAnchor = false;
             }
         }
@@ -240,10 +313,10 @@ namespace egret3d.oimo {
          * 
          */
         public get connectedRigidbody() {
-            return this._rb2;
+            return this._connectedBody;
         }
         public set connectedRigidbody(value: Rigidbody | null) {
-            if (this._rb2 === value) {
+            if (this._connectedBody === value) {
                 return;
             }
 
@@ -251,7 +324,7 @@ namespace egret3d.oimo {
                 console.warn("Cannot change the connected rigidbody after the joint has been created.");
             }
             else {
-                this._rb2 = value;
+                this._connectedBody = value;
             }
         }
         /**
@@ -276,7 +349,7 @@ namespace egret3d.oimo {
          * 
          */
         public get rigidbody() {
-            return this._rb1;
+            return this._rigidbody;
         }
         /**
          * 
