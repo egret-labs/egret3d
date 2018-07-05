@@ -18,7 +18,7 @@ namespace paper {
          * 添加组件后，组件内部初始化。
          * - 重载此方法时，必须调用 `super.initialize()`。
          */
-        public initialize() {
+        public initialize(config?: any) {
         }
         /**
          * 移除组件后，组件内部卸载。

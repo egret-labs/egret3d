@@ -64,7 +64,10 @@ namespace paper {
          * @internal
          */
         public _activeDirty: boolean = true;
-        private readonly _components: BaseComponent[] = [];
+        /**
+         * @internal
+         */
+        public readonly _components: BaseComponent[] = [];
         private _scene: Scene = null as any;
 
         /**
@@ -162,7 +165,7 @@ namespace paper {
          * 
          */
         public destroy() {
-            if (!this._scene) {
+            if (this.isDestroyed) {
                 console.warn("The game object has been destroyed.", this.name, this.uuid);
                 return;
             }
@@ -183,7 +186,7 @@ namespace paper {
         /**
          * 根据类型名获取组件
          */
-        public addComponent<T extends BaseComponent>(componentClass: { new(): T }): T {
+        public addComponent<T extends BaseComponent>(componentClass: { new(): T }, config?: any): T {
             BaseComponent._injectGameObject = this;
             const component = new componentClass();
 
@@ -195,7 +198,13 @@ namespace paper {
             }
 
             this._components.push(component);
-            component.initialize();
+
+            if (config) {
+                component.initialize(config);
+            }
+            else {
+                component.initialize();
+            }
 
             if (component.isActiveAndEnabled) {
                 EventPool.dispatchEvent(EventPool.EventType.Enabled, component);
@@ -386,6 +395,11 @@ namespace paper {
                 this._addToScene(Application.sceneManager.globalScene);
             }
             else {
+                if (this === Application.sceneManager.globalGameObject) {
+                    console.warn("Cannot change the `dontDestroy` value of the global game object.", this.name, this.uuid);
+                    return;
+                }
+
                 this._addToScene(Application.sceneManager.activeScene);
             }
         }
