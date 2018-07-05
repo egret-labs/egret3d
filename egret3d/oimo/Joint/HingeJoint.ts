@@ -1,8 +1,9 @@
 namespace egret3d.oimo {
+    @paper.requireComponent(Rigidbody)
     export class HingeJoint extends Joint {
+        private static readonly _config: OIMO.RevoluteJointConfig = new OIMO.RevoluteJointConfig();
+
         //TODO: spring damper value not supported
-        protected _oimoJoint: OIMO.RevoluteJoint = null;
-        protected _config: OIMO.RevoluteJointConfig;
         protected _springDamper: OIMO.SpringDamper;
         protected _rotateLimit: OIMO.RotationalLimitMotor;
 
@@ -14,6 +15,22 @@ namespace egret3d.oimo {
             this._config = new OIMO.RevoluteJointConfig();
         }
 
+        protected _createJoint(): OIMO.RevoluteJoint {
+            this._rb1 = this.gameObject.getComponent(Rigidbody) as Rigidbody;
+
+            let worldAnchor = PhysicsSystem.toOIMOVec3_A(this.worldAnchor);
+            let worldAxis = PhysicsSystem.toOIMOVec3_B(this.worldAxis);
+
+            this._config.init(this.thisRigidbody.oimoRB, this.connectedRigidbody.oimoRB, worldAnchor, worldAxis);
+
+            //other settings
+            if (this._springDamper != null)
+                this._config.springDamper = this._springDamper;
+            if (this._rotateLimit != null)
+                this._config.limitMotor = this._rotateLimit;
+            return new OIMO.RevoluteJoint(this._config);
+        }
+
         //#region setter and getter
         //AXIS
         public get worldAxis() {
@@ -23,7 +40,7 @@ namespace egret3d.oimo {
             return this._worldAxis;
         }
         public set worldAxis(value: Vector3) {
-            if(this.jointNotConstructed){
+            if (this.jointNotConstructed) {
                 this._worldAxis = value;
             }
         }
@@ -55,19 +72,5 @@ namespace egret3d.oimo {
             return this._springDamper;
         }
         //#endregion
-
-        protected _createJoint(): OIMO.RevoluteJoint {
-            let worldAnchor = PhysicsSystem.toOIMOVec3_A(this.worldAnchor);
-            let worldAxis = PhysicsSystem.toOIMOVec3_B(this.worldAxis);
-
-            this._config.init(this.thisRigidbody.oimoRB, this.connectedRigidbody.oimoRB, worldAnchor, worldAxis);
-
-            //other settings
-            if (this._springDamper != null)
-                this._config.springDamper = this._springDamper;
-            if (this._rotateLimit != null)
-                this._config.limitMotor = this._rotateLimit;
-            return new OIMO.RevoluteJoint(this._config);
-        }
     }
 }
