@@ -6,28 +6,51 @@ namespace egret3d.oimo {
         protected _oimoShape: OIMO.Shape = null;
         private _shapeConfig: OIMO.ShapeConfig;
 
-        constructor() {
-            super();
-            this._shapeConfig = new OIMO.ShapeConfig();
-        }
         public get geometryType() {
             return this._geometryType;
         }
 
         public get oimoShape() {
             if (!this._oimoShape) {
-                console.log("collision shape "+this.gameObject.name+" is created");
-                let geom = this._createGeometry();
-                this._shapeConfig.geometry = geom;
-                this._oimoShape = new OIMO.Shape(this._shapeConfig);
+                console.log("Shape is automatically constructed with own settings. Use .create(config?) to build shape manually");
+                this.create();
             }
             return this._oimoShape;
         }
+
         protected abstract _createGeometry(): OIMO.Geometry;
 
-        /*public getVolume (){
-            return this._oimoGeometry.getVolume();
-        }*/
+        public create(config?: any) {
+            if (!config) {
+                let oimoGeometry = this._createGeometry();
+                this.shapeConfig.geometry = oimoGeometry;
+                this._oimoShape = new OIMO.Shape(this._shapeConfig);
+            }
+        }
+
+        protected get shapeConfig() {
+            if (!this._shapeConfig)
+                this._shapeConfig = new OIMO.ShapeConfig();
+            return this._shapeConfig;
+        }
+
+        //TODO:添加对其他shapeconfig内属性设置的支持
+        public get collisionGroup() {
+            return this.shapeConfig.collisionGroup;
+        }
+        public set collisionGroup(value: number) {
+            if (!this.shapeConstructed("collision group"))
+                this.shapeConfig.collisionGroup = value;
+        }
+
+        protected shapeConstructed(name: string): boolean {
+            if (this._oimoShape) {
+                console.warn("shape already constructed, you cannot change " + name + " any more :(")
+                return true;
+            }
+            return false;
+        }
+
     }
 
     export class GeometryType {

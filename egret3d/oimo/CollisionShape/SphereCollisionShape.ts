@@ -3,17 +3,19 @@ namespace egret3d.oimo {
         @paper.serializedField
         private _radius: number = 1;
 
-        public constructor(radius: number) {
+        public constructor() {
             super();
-            this._radius = radius;
             this._geometryType = GeometryType.SPHERE;
         }
 
         public get radius(): number {
             return this._radius;
         }
+        public set radius(value) {
+            this._radius = value;
+        }
 
-        protected _createGeometry(){
+        protected _createGeometry() {
             return new OIMO.SphereGeometry(this._radius);
         }
     }

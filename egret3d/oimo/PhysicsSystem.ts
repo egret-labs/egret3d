@@ -58,28 +58,37 @@ namespace egret3d.oimo {
             for (let i = 0, length = this._components.length; i < length; i += this._interestComponentCount) {
                 const rb = this._components[i + 0] as Rigidbody;
                 let shapeList = rb.oimoRB.getShapeList();
-                do {
-                    //目前一个rb一个shape，所以只会执行一次
-                    let egretTransform = rb.gameObject.transform;
-                    let oimoTransform = shapeList.getTransform();
+                switch (rb.type) {
+                    case RigidbodyType.DYNAMIC:
+                        do {
+                            //目前一个rb一个shape，所以只会执行一次
+                            let egretTransform = rb.gameObject.transform;
+                            let oimoTransform = shapeList.getTransform();
 
-                    oimoTransform.getPositionTo(PhysicsSystem.helpVec3A);
-                    egretTransform.setPosition(PhysicsSystem.toVector3(PhysicsSystem.helpVec3A, v3));
+                            oimoTransform.getPositionTo(PhysicsSystem.helpVec3A);
+                            egretTransform.setPosition(PhysicsSystem.toVector3(PhysicsSystem.helpVec3A, v3));
 
-                    oimoTransform.getOrientationTo(PhysicsSystem.helpQuaternionA);
-                    egretTransform.setRotation(PhysicsSystem.toQuat(PhysicsSystem.helpQuaternionA, quat));
-                } while (shapeList.getNext() != null);
+                            oimoTransform.getOrientationTo(PhysicsSystem.helpQuaternionA);
+                            egretTransform.setRotation(PhysicsSystem.toQuat(PhysicsSystem.helpQuaternionA, quat));
+                        } while (shapeList.getNext() != null);
+                        break;
+                        case RigidbodyType.KINEMATIC:
+                        case RigidbodyType.STATIC://还不清楚具体区别，先放在一起
+                        let egretTransform = rb.gameObject.transform;
+                        let oimoTransform = shapeList.getTransform();
 
+                        let pos=egretTransform.getPosition(),rot=egretTransform.getRotation();
+                        shapeList.getRigidBody().setPosition(PhysicsSystem.toOIMOVec3_A(pos));
+                        shapeList.getRigidBody().setOrientation(PhysicsSystem.toOIMOQuat_A(rot));
+                        break;
+                }
             }
         }
 
         public onAddGameObject(gameObject: paper.GameObject) {
             const collisionGeom = this._getComponent(gameObject, 1) as CollisionShape;
             const rigidbody = this._getComponent(gameObject, 0) as Rigidbody;
-            let geometry = collisionGeom.oimoShape;
-            
-            console.log("TODO");
-            //rigidbody.setCollisionShape(geometry);
+
             this._oimoWorld.addRigidBody(rigidbody.oimoRB);
 
             //init transform
@@ -155,7 +164,7 @@ namespace egret3d.oimo {
         }
 
         /**
-         * @internal
+         * value stored in PhysicsSystem.helpVec3A
          */
         public static toOIMOVec3_A(value: Vector3) {
             let result = PhysicsSystem.helpVec3A;

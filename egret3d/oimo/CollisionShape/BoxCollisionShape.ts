@@ -1,7 +1,7 @@
 namespace egret3d.oimo {
     export class BoxCollisionShape extends CollisionShape {
         @paper.serializedField
-        protected readonly _size: Vector3 = new Vector3(0.5, 0.5, 0.5);
+        protected readonly _size: Vector3 = new Vector3(1,1,1);
 
         public constructor() {
             super();
