@@ -77,7 +77,7 @@ namespace egret3d.oimo {
             const collisionGeom = this._getComponent(gameObject, 1) as CollisionShape;
             const rigidbody = this._getComponent(gameObject, 0) as Rigidbody;
             let geometry = collisionGeom.oimoShape;
-            
+
             console.log("TODO");
             //rigidbody.setCollisionShape(geometry);
             this._oimoWorld.addRigidBody(rigidbody.oimoRB);
@@ -200,21 +200,23 @@ namespace egret3d.oimo {
         /**
          * @internal
          */
-        public static toVector3(value: OIMO.Vec3, result: Vector3) {
+        public static toVector3(value: OIMO.Vec3 | Vector3, result: Vector3 | OIMO.Vec3) {
             result.x = value.x;
             result.y = value.y;
             result.z = value.z;
+
             return result;
         }
 
         /**
          * @internal
          */
-        public static toQuat(value: OIMO.Quat, result: Quaternion) {
+        public static toQuat(value: OIMO.Quat | Quaternion, result: Quaternion | OIMO.Quat) {
             result.x = value.x;
             result.y = value.y;
             result.z = value.z;
             result.w = value.w;
+            
             return result;
         }
 
