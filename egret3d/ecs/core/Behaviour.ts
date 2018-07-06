@@ -13,7 +13,7 @@ namespace paper {
      * - onDisable();
      * - onDestroy();
      */
-    export class Behaviour extends BaseComponent {
+    export abstract class Behaviour extends BaseComponent {
         /**
          * @internal
          */
@@ -31,24 +31,20 @@ namespace paper {
          * @internal
          */
         public _isCollisionEnabled: boolean = false;
-        /**
-         * @internal
-         */
-        public initialize() {
-            super.initialize();
+
+        public initialize(config?: any) {
+            super.initialize(config);
 
             this._isTriggerEnabled = Boolean(this.onTriggerEnter || this.onTriggerStay || this.onTriggerExit);
             this._isCollisionEnabled = Boolean(this.onCollisionEnter || this.onCollisionStay || this.onCollisionExit);
 
-            if (!Application.isEditor || _executeInEditModeComponents.indexOf(this.constructor) >= 0) {
-                this.onAwake && this.onAwake();
+            if (!Application.isEditor || _executeInEditModeComponents.indexOf(this.constructor as any) >= 0) {
+                this.onAwake && this.onAwake(config);
             }
         }
-        /**
-         * @internal
-         */
+
         public uninitialize() {
-            if (!Application.isEditor || _executeInEditModeComponents.indexOf(this.constructor) >= 0) {
+            if (!Application.isEditor || _executeInEditModeComponents.indexOf(this.constructor as any) >= 0) {
                 this.onDestroy && this.onDestroy(); // TODO onDestroy 如果不是 enabled 就不派发
             }
 
@@ -58,7 +54,7 @@ namespace paper {
          * 组件被初始化时调用。
          * @see paper.GameObject#addComponent()
          */
-        public onAwake?(): void;
+        public onAwake?(config?: any): void;
         /**
          * 
          */

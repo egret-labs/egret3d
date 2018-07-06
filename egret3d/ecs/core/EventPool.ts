@@ -94,7 +94,7 @@ namespace paper {
                 }
             }
 
-            const componentType = egret.getQualifiedClassName(component.constructor);
+            const componentType = egret.getQualifiedClassName(component);
             if (componentType in _componentListeners) {
                 _dispatchEvent(type, componentType, component, extend);
             }

@@ -3,6 +3,8 @@ namespace egret3d {
     /**
      * mesh的渲染组件
      */
+    @paper.requireComponent(MeshFilter)
+    @paper.disallowMultipleComponent
     export class MeshRenderer extends paper.BaseRenderer {
         @paper.serializedField
         private readonly _materials: Material[] = [];
@@ -17,9 +19,7 @@ namespace egret3d {
             material.setShader(DefaultShaders.DIFFUSE);
             this._materials.push(material);
         }
-        /**
-         * @inheritDoc
-         */
+
         public serialize() {
             const target = super.serialize();
             target._receiveShadows = this._receiveShadows;
@@ -34,9 +34,7 @@ namespace egret3d {
 
             return target;
         }
-        /**
-         * @inheritDoc
-         */
+
         public deserialize(element: any) {
             super.deserialize(element);
 
@@ -58,9 +56,7 @@ namespace egret3d {
                 this._lightmapScaleOffset[3] = element._lightmapScaleOffset[3];
             }
         }
-        /**
-         * @inheritDoc
-         */
+
         public uninitialize() {
             super.uninitialize();
 

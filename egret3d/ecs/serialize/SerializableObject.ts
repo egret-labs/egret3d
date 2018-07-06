@@ -12,6 +12,11 @@ namespace paper {
     export abstract class SerializableObject implements IUUID, ISerializable {
         @paper.serializedField
         public readonly uuid: string = createUUID();
+        /**
+         * @internal
+         */
+        @paper.serializedField
+        public readonly assetUUid: string = createUUID();
 
         public serialize(): any {
             console.warn("Unimplemented serialize method.");

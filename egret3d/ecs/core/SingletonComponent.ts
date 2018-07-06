@@ -7,7 +7,7 @@ namespace paper {
             super.initialize();
 
             if (this.constructor.prototype["instance"]) {
-                console.error("Cannot add singleton component again.", egret.getQualifiedClassName(this.constructor), this.uuid);
+                console.error("Cannot add singleton component again.", egret.getQualifiedClassName(this), this.uuid);
             }
             else {
                 this.constructor.prototype["instance"] = this;

@@ -7,6 +7,7 @@ namespace paper {
          * @internal
          */
         public static _injectGameObject: GameObject;
+
         /**
          * 组件挂载的 GameObject
          */
@@ -18,7 +19,7 @@ namespace paper {
          * 添加组件后，组件内部初始化。
          * - 重载此方法时，必须调用 `super.initialize()`。
          */
-        public initialize() {
+        public initialize(config?: any) {
         }
         /**
          * 移除组件后，组件内部卸载。
@@ -31,6 +32,10 @@ namespace paper {
             const target = serializeRC(this);
             target._enabled = this._enabled;
 
+            if (this.assetUUid) {
+                target.assetUUid = this.assetUUid;
+            }
+
             return target;
         }
 
@@ -39,6 +44,10 @@ namespace paper {
 
             if (element.uuid) {
                 (this as any).uuid = element.uuid;
+            }
+
+            if (element.assetUUid) {
+                (this as any).assetUUid = element.assetUUid;
             }
         }
         /**

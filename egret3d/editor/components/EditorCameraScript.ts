@@ -32,7 +32,7 @@ namespace paper.editor {
             Gizmo.DrawCameras();
             //Gizmo.DrawArrowXYZ();
 
-            this.editorModel.geoController.update();
+            // this.editorModel.geoController.update();
         };
 
         public OnEnable() {
