@@ -295,7 +295,17 @@ namespace egret3d.particle {
 
             renderer.batchMesh = mesh;
             //粒子系统不能用共享材质
-            renderer.batchMaterial = renderer.materials[0].clone();
+            const mat = renderer.materials[0].clone();
+            //
+            const oldShaderName = mat.getShader().url;
+            if (renderer.renderMode === ParticleRenderMode.Mesh) {
+                mat.setShader(DefaultShaders.PARTICLE_3D.clone());
+            } else {
+                mat.setShader(DefaultShaders.PARTICLE_2D.clone());
+            }
+            //
+
+            renderer.batchMaterial = mat;
             mesh.uploadSubIndexBuffer();
         }
 

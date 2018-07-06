@@ -1,5 +1,4 @@
 
-
 uniform float u_currentTime;
 uniform vec3 u_gravity;
 
@@ -115,12 +114,7 @@ uniform int u_simulationSpace;
 
 varying float v_discard;
 varying vec4 v_color;
-#ifdef DIFFUSEMAP
-	varying vec2 v_texcoord;
-#endif
-#ifdef RENDERMESH
-	varying vec4 v_mesh_color;
-#endif
+varying vec2 v_texcoord;
 
 vec3 rotation_euler(in vec3 vector,in vec3 euler)
 {

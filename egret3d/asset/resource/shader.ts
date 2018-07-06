@@ -271,5 +271,36 @@ namespace egret3d {
         public caclByteLength() {
             return 0;
         }
+        /**
+         * @internal
+         */
+        public clone(){
+            let shader = new Shader(this.url);
+            shader.renderQueue = this.renderQueue;
+            for(let key in this.passes){
+                const orginPasss = this.passes[key];
+                shader.passes[key] = [];
+                for(let i = 0, l = orginPasss.length; i < l; i++){
+                    const orginPass = orginPasss[i];
+                    let drawPass = new DrawPass(orginPass.vShaderInfo, orginPass.fShaderInfo);
+                    drawPass.state_showface = orginPass.state_showface;
+                    drawPass.state_zwrite = orginPass.state_zwrite;
+                    drawPass.state_ztest = orginPass.state_ztest;
+                    drawPass.state_blend = orginPass.state_blend;
+                    drawPass.state_blendEquation = orginPass.state_blendEquation;
+                    drawPass.state_blendSrcRGB = orginPass.state_blendSrcRGB;
+                    drawPass.state_blendDestRGB = orginPass.state_blendDestRGB;
+                    drawPass.state_blendSrcAlpha = orginPass.state_blendSrcAlpha;
+                    drawPass.state_blendDestALpha = orginPass.state_blendDestALpha;
+                    shader.passes[key].push(drawPass);
+                }                
+            }
+
+            for(let key in this.defaultValue){
+                shader.defaultValue[key] = this.defaultValue[key];
+            }
+
+            return shader;
+        }
     }
 }

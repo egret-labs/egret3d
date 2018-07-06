@@ -189,7 +189,6 @@ namespace egret3d.particle {
          * @internal
          */
         public batchMaterial: Material;
-
         public deserialize(element: any): void {
             super.deserialize(element);
 
@@ -364,6 +363,10 @@ namespace egret3d.particle {
             return this._materials;
         }
         public set materials(value: ReadonlyArray<Material>) {
+            if(value.length > 1){
+                console.error("粒子系统暂时不支持多材质!!!");
+            }
+
             if (value === this._materials) {
                 return;
             }
@@ -382,7 +385,6 @@ namespace egret3d.particle {
                 return;
             }
 
-            const old = this._renderMode;
             this._renderMode = value;
             paper.EventPool.dispatchEvent(ParticleRendererEventType.RenderMode, this);
         }

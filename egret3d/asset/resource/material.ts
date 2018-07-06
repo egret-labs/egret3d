@@ -431,7 +431,7 @@ namespace egret3d {
          */
         public clone(): Material {
             let mat: Material = new Material();
-            mat.setShader(this.shader);
+            mat.setShader(this.shader.clone());
             for (let i in this.$uniforms) {
                 let data = this.$uniforms[i];
                 let _uniformType: UniformTypeEnum = data.type;
