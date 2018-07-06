@@ -23,8 +23,10 @@ namespace paper {
          * 场景保存时，将场景快照数据保存至对应的资源中
          */
         public rawScene: egret3d.RawScene | null = null;
-
-        private readonly _gameObjects: GameObject[] = [];
+        /**
+         * @internal
+         */
+        public readonly _gameObjects: GameObject[] = [];
         /**
          * @internal
          */
@@ -139,6 +141,10 @@ namespace paper {
             }
 
             return gameObjects;
+        }
+
+        public get gameObjectCount() {
+            return this._gameObjects.length;
         }
         /**
          * 当前场景的所有GameObject对象池

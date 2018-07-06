@@ -7,6 +7,7 @@ namespace paper {
          * @internal
          */
         public static _injectGameObject: GameObject;
+
         /**
          * 组件挂载的 GameObject
          */
@@ -30,12 +31,11 @@ namespace paper {
         public serialize(): any {
             const target = serializeRC(this);
             target._enabled = this._enabled;
-            if (this.uuid) {
-                target.uuid = this.uuid;
-            }
+
             if (this.assetUUid) {
                 target.assetUUid = this.assetUUid;
             }
+
             return target;
         }
 

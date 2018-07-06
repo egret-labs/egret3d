@@ -5,6 +5,8 @@ namespace egret3d {
         defaultScene?: string;
         isEditor?: boolean;
         isPlaying?: boolean;
+        contentWidth?: number;
+        contentHeight?: number;
     }
 
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number }
@@ -45,8 +47,8 @@ namespace egret3d {
             return {
                 antialias: options.antialias,
                 antialiasSamples: 4,
-                contentWidth: 640,
-                contentHeight: 1136
+                contentWidth: options.contentWidth | 640,
+                contentHeight: options.contentHeight | 1136
             } as RequiredRuntimeOptions;
         }
         else {

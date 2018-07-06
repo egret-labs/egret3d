@@ -182,6 +182,23 @@ namespace egret3d {
             this._dirtify();
         }
 
+        private _getAllChildren(children: Transform[]) {
+            for (const child of this._children) {
+                children.push(child);
+                child._getAllChildren(children);
+            }
+        }
+
+        /**
+         * @internal
+         */
+        public getAllChildren() {
+            const children: Transform[] = [];
+            this._getAllChildren(children);
+
+            return children;
+        }
+
         public deserialize(element: any) {
             super.deserialize(element); // TODO
 
@@ -792,22 +809,6 @@ namespace egret3d {
             }
 
             return result;
-        }
-        /**
-         * @internal
-         */
-        public getAllChildren() {
-            const children: Transform[] = [];
-            this._getAllChildren(children);
-
-            return children;
-        }
-
-        private _getAllChildren(children: Transform[]) {
-            for (const child of this._children) {
-                children.push(child);
-                child._getAllChildren(children);
-            }
         }
 
         /**
