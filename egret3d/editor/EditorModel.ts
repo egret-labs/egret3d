@@ -578,25 +578,24 @@ namespace paper.editor {
             const selectIds = gameObjects.map((gameObj) => { return gameObj.uuid });
             this.unique(gameObjects);
             let datas = [];
+            let indexData:{uuid:string,preIndex:number}[] = [];
+
             for (let index = 0; index < gameObjects.length; index++) {
                 const element = gameObjects[index];
                 let one = {};
                 let gameObj: GameObject = element;
                 let serializeData = serialize(gameObj);
 
-                //保存gameobject的hashcode
-                let gameObjectUUids = [];
-                this.getAllUUidFromGameObject(element, gameObjectUUids);
-                one["deleteuuids"] = gameObjectUUids;
-
-                //保存gameobject组件的hashcode
-                let gameObjectComponentsUUids = [];
-                this.getAllComponentUUidFromGameObject(element, gameObjectComponentsUUids);
-                one["deleteComponentUUids"] = gameObjectComponentsUUids;
+                one["deleteuuid"] = gameObj.uuid;
 
                 if (gameObj.transform.parent) {
                     one["parentUUid"] = gameObj.transform.parent.gameObject.uuid;
+                    one["preIndex"] = gameObj.transform.parent.children.indexOf(gameObj.transform);
+                    this.getAllRootIndexsFromGameObject(gameObj,indexData);
+                }else{
+                    this.getAllRootIndexsFromGameObject(gameObj,indexData);
                 }
+
                 one["serializeData"] = serializeData;
                 let assetsMap = {};
                 if (serializeData["assets"]) { // 认为此时所有资源已经正确加载
@@ -607,6 +606,8 @@ namespace paper.editor {
                 one["assetsMap"] = assetsMap;
                 datas.push(one);
             }
+
+            indexData.sort((a, b) =>  { return a.preIndex - b.preIndex; });
 
             let prefabData = {};
             for (let key in prefabRootMap) {
@@ -626,6 +627,7 @@ namespace paper.editor {
                 datas: datas,
                 prefabData,
                 selectIds,
+                indexData
             }
 
             let state = DeleteGameObjectsState.create(data);
@@ -814,13 +816,13 @@ namespace paper.editor {
             return result;
         }
 
-
-        public getAllUUidFromGameObject(gameObject: GameObject, uuids: string[]) {
-            uuids.push(gameObject.uuid);
+        public getAllRootIndexsFromGameObject(gameObject: GameObject, indexData: {uuid:string,preIndex:number}[]) {
+            let objs:ReadonlyArray<GameObject> = paper.Application.sceneManager.getActiveScene().gameObjects;
+            indexData.push({preIndex:objs.indexOf(gameObject),uuid:gameObject.uuid});
             for (let index = 0; index < gameObject.transform.children.length; index++) {
                 const element = gameObject.transform.children[index];
                 const obj: GameObject = element.gameObject;
-                this.getAllUUidFromGameObject(obj, uuids);
+                this.getAllRootIndexsFromGameObject(obj, indexData);
             }
         }
 

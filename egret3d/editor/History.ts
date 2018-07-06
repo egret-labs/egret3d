@@ -519,23 +519,51 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                const { datas, prefabData,selectIds } = this.data;
+                const { datas, prefabData,selectIds,indexData } = this.data;
+                let addObjs:GameObject[] = [];
 
                 for (let index = 0; index < datas.length; index++) {
                     let element = datas[index];
                     let serializeData = element.serializeData;
                     let assetsMap = element.assetsMap;
                     let gameObj: GameObject = deserialize(serializeData, assetsMap);
-                    let uuids = element.deleteuuids.concat();
+                    addObjs.push(gameObj);
+                }
+
+                //reset index
+                for (let index = 0; index < datas.length; index++) {
+                    const element = datas[index];
                     let parentUUid = element.parentUUid;
+                    let preIndex = element.preIndex;
+                    let gameObj = addObjs[index];
+                    if (!gameObj) {
+                        continue;
+                    }
+                    
                     if (parentUUid) {
                         let parent_3 = Editor.editorModel.getGameObjectByUUid(parentUUid);
-                        if (parent_3)
+                        if (parent_3){
                             gameObj.transform.setParent(parent_3.transform);
+                            gameObj.transform.parent.setChildIndex(gameObj.transform,preIndex);
+                        }
                     }
                 }
 
-                //预制体相关
+                for (let index = 0; index < indexData.length; index++) {
+                    const element = indexData[index];
+                    const{preIndex,uuid} = element;
+                    let allObjs = paper.Application.sceneManager.getActiveScene().gameObjects;
+                    let gameObj = Editor.editorModel.getGameObjectByUUid(uuid);
+                    let currentIndex = allObjs.indexOf(gameObj);
+                    if(currentIndex == preIndex || currentIndex < 0)
+                    {
+                        return;
+                    }
+                    (allObjs as any).splice(currentIndex,1);
+                    (allObjs as any).splice(preIndex,0,gameObj);
+                }
+
+                //prefab
                 for (let key in prefabData) {
                     const prefabRootId = prefabData[key].rootId;
                     const url = prefabData[key].url;
@@ -561,7 +589,7 @@ namespace paper.editor {
                 let deleteUUids = [];
                 for (let index = 0; index < datas.length; index++) {
                     let element = datas[index];
-                    deleteUUids.push(element.deleteuuids[0]);
+                    deleteUUids.push(element.deleteuuid);
                 }
 
                 //先处理预制体相关逻辑，再执行删除逻辑
