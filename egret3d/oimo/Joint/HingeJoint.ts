@@ -10,7 +10,9 @@ namespace egret3d.oimo {
         MotorSpeed,
         MotorTorque,
     }
-
+    /**
+     * 
+     */
     @paper.requireComponent(Rigidbody)
     export class HingeJoint extends Joint<OIMO.RevoluteJoint> {
         private static readonly _config: OIMO.RevoluteJointConfig = new OIMO.RevoluteJointConfig();
@@ -40,7 +42,7 @@ namespace egret3d.oimo {
 
             if (this.isGlobalAnchor) {
                 config.init(
-                    this._rigidbody.oimoRB, this._connectedBody.oimoRB,
+                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any, this._axis as any
                 );
             }
@@ -49,7 +51,7 @@ namespace egret3d.oimo {
                 const anchor = matrix.transformVector3(helpVector3A.copy(this._anchor));
                 const axis = matrix.transformNormal(helpVector3B.copy(this._axis));
                 config.init(
-                    this._rigidbody.oimoRB, this._connectedBody.oimoRB,
+                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     anchor as any, axis as any
                 );
             }
@@ -65,6 +67,7 @@ namespace egret3d.oimo {
             config.limitMotor.motorTorque = this.motorTorque;
 
             const joint = new OIMO.RevoluteJoint(config);
+            joint.userData = this;
 
             return joint;
         }
@@ -137,7 +140,7 @@ namespace egret3d.oimo {
         public get axis() {
             return this._axis;
         }
-        public set axis(value: Readonly<Vector3>) {
+        public set axis(value: Readonly<IVector3>) {
             if (this._oimoJoint) {
                 console.warn("Cannot change the axis x after the joint has been created.");
             }

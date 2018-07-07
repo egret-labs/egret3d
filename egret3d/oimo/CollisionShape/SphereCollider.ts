@@ -1,5 +1,9 @@
 namespace egret3d.oimo {
-    export class SphereCollisionShape extends CollisionShape {
+    /**
+     * 
+     */
+    @paper.requireComponent(Rigidbody)
+    export class SphereCollider extends Collider {
         public readonly geometryType: GeometryType = GeometryType.SPHERE;
 
         @paper.serializedField
@@ -10,6 +14,7 @@ namespace egret3d.oimo {
             config.geometry = new OIMO.SphereGeometry(this._radius);
 
             const shape = new OIMO.Shape(config);
+            shape.userData = this;
 
             return shape;
         }

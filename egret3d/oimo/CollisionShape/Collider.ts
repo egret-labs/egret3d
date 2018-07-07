@@ -23,7 +23,7 @@ namespace egret3d.oimo {
     /**
      * 
      */
-    export abstract class CollisionShape extends paper.BaseComponent {
+    export abstract class Collider extends paper.BaseComponent {
         protected static readonly _config: OIMO.ShapeConfig = new OIMO.ShapeConfig();
 
         public readonly geometryType: GeometryType;
@@ -32,14 +32,14 @@ namespace egret3d.oimo {
          */
         @paper.serializedField
         protected readonly _values: Float32Array = new Float32Array([
-            OIMO.Setting.defaultCollisionGroup, OIMO.Setting.defaultCollisionMask, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
+            paper.CullingMask.Everything, paper.CullingMask.Everything, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
         ]);
         protected _oimoShape: OIMO.Shape = null as any;
 
         protected abstract _createShape(): OIMO.Shape;
 
         protected _updateConfig() {
-            const config = CollisionShape._config;
+            const config = Collider._config;
             config.collisionGroup = this.collisionGroup;
             config.collisionMask = this.collisionMask;
             config.friction = this.friction;
@@ -54,7 +54,7 @@ namespace egret3d.oimo {
         public get collisionGroup() {
             return this._values[ValueType.CollisionGroup];
         }
-        public set collisionGroup(value: number) {
+        public set collisionGroup(value: paper.CullingMask) {
             if (this._values[ValueType.CollisionGroup] === value) {
                 return;
             }
@@ -71,7 +71,7 @@ namespace egret3d.oimo {
         public get collisionMask() {
             return this._values[ValueType.CollisionMask];
         }
-        public set collisionMask(value: number) {
+        public set collisionMask(value: paper.CullingMask) {
             if (this._values[ValueType.CollisionMask] === value) {
                 return;
             }

@@ -51,7 +51,7 @@ namespace paper {
          * @internal
          */
         @serializedField
-        private prefabEditInfo:boolean | string | null = null;
+        private prefabEditInfo: boolean | string | null = null;
 
         @serializedField
         private _activeSelf: boolean = true;
@@ -216,9 +216,9 @@ namespace paper {
                 }
             }
 
-            const className = egret.getQualifiedClassName(componentClass);
-            if (className in _requireComponents) {
-                const requireComponents = _requireComponents[className];
+            const index = _requireComponents.indexOf(componentClass);
+            if (index >= 0) {
+                const requireComponents = _requireComponentss[index];
                 for (const requireComponentClass of requireComponents) {
                     this.getComponent(requireComponentClass) || this.addComponent(requireComponentClass);
                 }

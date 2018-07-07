@@ -1,233 +1,219 @@
 namespace egret3d.oimo {
-    export class PhysicsSystem extends paper.BaseSystem<Rigidbody | CollisionShape>{
-        private static _helpVec3A: OIMO.Vec3 | null = null;
-        private static _helpVec3B: OIMO.Vec3 | null = null;
-        private static _helpVec3C: OIMO.Vec3 | null = null;
-        private static _helpVector3: egret3d.Vector3 | null = null;
-        private static _helpQuatA: OIMO.Quat | null = null;
+    /**
+     * 
+     */
+    export class PhysicsSystem extends paper.BaseSystem<Rigidbody>{
+        /**
+         * 
+         */
+        public static readonly instance: PhysicsSystem;
+        /**
+         * @internal
+         */
+        public static readonly _helpTransform: OIMO.Transform = new OIMO.Transform();
 
         protected readonly _interests = [
             {
                 componentClass: Rigidbody
             },
             {
-                componentClass: [BoxCollisionShape as any, SphereCollisionShape]
+                componentClass: [BoxCollider as any, SphereCollider], isUnessential: true
+            },
+            {
+                componentClass: [HingeJoint, ConeTwistJoint], isUnessential: true
             }
         ];
+        private readonly _gravity = new Vector3(0, -9.80665, 0);
+        private readonly _rayCastClosest: OIMO.RayCastClosest = new OIMO.RayCastClosest();
+        private readonly _shapes: Collider[] = [];
+        private readonly _joints: Joint<any>[] = [];
+        private _oimoWorld: OIMO.World = null as any;
+        /**
+         * @internal
+         */
+        public _initializeRigidbody(gameObject: paper.GameObject) {
+            const rigidbody = this._getComponent(gameObject, 0) as Rigidbody;
 
-        private _oimoWorld: OIMO.World;
-        private _gravity = new Vector3(0, -9.80665, 0);
-        private readonly _joints: Joint[] = [];
+            for (const shape of gameObject.getComponents(Collider as any, true) as Collider[]) {
+                rigidbody.oimoRigidbody.addShape(shape.oimoShape);
+                rigidbody._updateMass(rigidbody.oimoRigidbody);
+            }
 
+            // 子物体的transform？ TODO
+        }
 
+        public rayCast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask: paper.CullingMask = paper.CullingMask.Everything, raycastInfo?: RaycastInfo) {
+            const rayCastClosest = this._rayCastClosest;
+            rayCastClosest.clear(); // TODO mask.
+
+            this._oimoWorld.rayCast(
+                from as any, to as any,
+                rayCastClosest
+            );
+
+            if (rayCastClosest.hit) {
+                raycastInfo = raycastInfo || new RaycastInfo();
+                raycastInfo.clean();
+                raycastInfo.distance = Vector3.getDistance(from, to) * rayCastClosest.fraction;
+                raycastInfo.position.copy(rayCastClosest.position);
+                raycastInfo.normal.copy(rayCastClosest.normal);
+                raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData;
+                raycastInfo.collider = rayCastClosest.shape.userData;
+
+                return raycastInfo;
+            }
+
+            return null;
+        }
 
         public onAwake() {
-            super.onAwake();
+            (PhysicsSystem as any).instance = this;
 
             this._oimoWorld = new OIMO.World();
-            this._oimoWorld.setGravity(PhysicsSystem.toOIMOVec3_A(this._gravity));
-            //监听joint
-            const jointClasses = [ConeTwistJoint, HingeJoint];
-            for (const constraintClass of jointClasses) {
-                paper.EventPool.addEventListener(paper.EventPool.EventType.Enabled, constraintClass as any, (component: Joint) => {
-                    if (this._joints.indexOf(component) < 0) {
-                        this._joints.push(component);
-                    }
-                });
-                paper.EventPool.addEventListener(paper.EventPool.EventType.Disabled, constraintClass as any, (component: Joint) => {
-                    component.removeFromWorld(this._oimoWorld);
-                });
+            this._oimoWorld.setGravity(this._gravity as any);
+        }
+
+        public onAddGameObject(gameObject: paper.GameObject) {
+            const rigidbody = this._getComponent(gameObject, 0) as Rigidbody;
+            const position = gameObject.transform.getPosition();
+            const quaternion = gameObject.transform.getRotation();
+            const oimoTransform = PhysicsSystem._helpTransform;
+            oimoTransform.setPosition(position as any);
+            oimoTransform.setOrientation(quaternion as any);
+            rigidbody.oimoRigidbody.setTransform(oimoTransform);
+
+            for (const shape of gameObject.getComponents(Collider as any, true) as Collider[]) {
+                rigidbody.oimoRigidbody.addShape(shape.oimoShape);
+                rigidbody._updateMass(rigidbody.oimoRigidbody);
+            }
+
+            this._oimoWorld.addRigidBody(rigidbody.oimoRigidbody);
+        }
+
+        public onAddComponent(component: Collider | Joint<any>) {
+            if (!this._hasGameObject(component.gameObject)) {
+                return;
+            }
+
+            if (component instanceof Collider) {
+                if (this._shapes.indexOf(component) < 0) {
+                    this._shapes.push(component);
+                }
+            }
+            else {
+                if (this._joints.indexOf(component) < 0) {
+                    this._joints.push(component);
+                }
             }
         }
 
         public onUpdate() {
-            //init joint
+            //
+            if (this._shapes.length > 0) {
+                for (const shape of this._shapes) {
+                    const rigidbody = this._getComponent(shape.gameObject, 0) as Rigidbody;
+                    rigidbody.oimoRigidbody.addShape(shape.oimoShape);
+                    rigidbody._updateMass(rigidbody.oimoRigidbody);
+                }
+
+                this._shapes.length = 0;
+            }
+            //
             if (this._joints.length > 0) {
                 for (const joint of this._joints) {
-                    joint.addToWorld(this._oimoWorld);
+                    this._oimoWorld.addJoint(joint.oimoJoint);
                 }
+
                 this._joints.length = 0;
             }
-
-            //step simulation
+            //
             this._oimoWorld.step(paper.Time.deltaTime);
 
-            //set obj transform
-            let v3 = new Vector3();
-            let quat = new Quaternion();
-            for (let i = 0, length = this._components.length; i < length; i += this._interestComponentCount) {
-                const rb = this._components[i + 0] as Rigidbody;
-                let shapeList = rb.oimoRB.getShapeList();
-                do {
-                    //目前一个rb一个shape，所以只会执行一次
-                    let egretTransform = rb.gameObject.transform;
-                    let oimoTransform = shapeList.getTransform();
+            //
+            const oimoTransform = PhysicsSystem._helpTransform;
 
-                    oimoTransform.getPositionTo(PhysicsSystem.helpVec3A);
-                    egretTransform.setPosition(PhysicsSystem.toVector3(PhysicsSystem.helpVec3A, v3));
+            for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
+                const rigidbody = this._components[i + 0] as Rigidbody;
+                const transform = rigidbody.gameObject.transform;
+                const oimoRigidbody = rigidbody.oimoRigidbody;
 
-                    oimoTransform.getOrientationTo(PhysicsSystem.helpQuaternionA);
-                    egretTransform.setRotation(PhysicsSystem.toQuat(PhysicsSystem.helpQuaternionA, quat));
-                } while (shapeList.getNext() != null);
+                switch (rigidbody.type) {
+                    case RigidbodyType.DYNAMIC:
+                        if (oimoRigidbody.isSleeping()) {
+                        }
+                        else {
+                            oimoRigidbody.getTransformTo(oimoTransform);
+                            oimoTransform.getPositionTo(helpVector3A as any);
+                            oimoTransform.getOrientationTo(helpVector4A as any);
+                            transform.setPosition(helpVector3A);
+                            transform.setRotation(helpVector4A);
+                        }
+                        break;
 
+                    case RigidbodyType.KINEMATIC:
+                        if (oimoRigidbody.isSleeping()) {
+                        }
+                        else {
+                            const position = transform.getPosition();
+                            const quaternion = transform.getRotation();
+                            oimoTransform.setPosition(position as any);
+                            oimoTransform.setOrientation(quaternion as any);
+                            oimoRigidbody.setTransform(oimoTransform);
+                            oimoRigidbody.sleep();
+                        }
+                        break;
+
+                    case RigidbodyType.STATIC:
+                        break;
+                }
             }
-        }
-
-        public onAddGameObject(gameObject: paper.GameObject) {
-            const collisionGeom = this._getComponent(gameObject, 1) as CollisionShape;
-            const rigidbody = this._getComponent(gameObject, 0) as Rigidbody;
-            let geometry = collisionGeom.oimoShape;
-
-            console.log("TODO");
-            //rigidbody.setCollisionShape(geometry);
-            this._oimoWorld.addRigidBody(rigidbody.oimoRB);
-
-            //init transform
-            let pos = gameObject.transform.getPosition();
-            let rot = gameObject.transform.getRotation();
-            let transform = rigidbody.oimoRB.getTransform();
-            transform.setPosition(PhysicsSystem.toOIMOVec3_A(pos));
-            transform.setOrientation(PhysicsSystem.toOIMOQuat_A(rot));
-            rigidbody.oimoRB.setTransform(transform);
-            //子物体的transform？
-
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
             const rigidbody = this._getComponent(gameObject, 0) as Rigidbody;
-            this._oimoWorld.removeRigidBody(rigidbody.oimoRB);
+            this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
+
+            // TODO remove joint
         }
 
-        //#region help vector
-        /**
-         * @internal
-         */
-        public static get helpVec3A(): OIMO.Vec3 {
-            if (!this._helpVec3A) {
-                this._helpVec3A = new OIMO.Vec3();
+        public onRemoveComponent(component: Collider | Joint<any>) {
+            const rigidbody = this._getComponent(component.gameObject, 0) as Rigidbody | null;
+            if (!rigidbody) {
+                return;
             }
 
-            return this._helpVec3A;
-        }
-
-        /**
-        * @internal
-        */
-        public static get helpVector3(): egret3d.Vector3 {
-            if (!this._helpVector3) {
-                this._helpVector3 = new egret3d.Vector3();
+            if (component instanceof Collider) {
+                const index = this._shapes.indexOf(component);
+                if (index >= 0) {
+                    this._shapes.splice(index, 1);
+                }
+                else { // TODO has shape and created oimo shape.
+                    rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                }
             }
-
-            return this._helpVector3;
-        }
-
-        /**
-         * @internal
-         */
-        public static get helpQuaternionA(): OIMO.Quat {
-            if (!this._helpQuatA) {
-                this._helpQuatA = new OIMO.Quat();
+            else {
+                const index = this._joints.indexOf(component);
+                if (index >= 0) {
+                    this._joints.splice(index, 1);
+                }
+                else { // TODO has joint and created oimo joint.
+                    this._oimoWorld.removeJoint(component.oimoJoint);
+                }
             }
-
-            return this._helpQuatA;
         }
 
-        /**
-         * @internal
-         */
-        public static get helpVec3B(): OIMO.Vec3 {
-            if (!this._helpVec3B) {
-                this._helpVec3B = new OIMO.Vec3();
-            }
-
-            return this._helpVec3B;
-        }
-
-        /**
-         * @internal
-         */
-        public static get helpVec3C(): OIMO.Vec3 {
-            if (!this._helpVec3C) {
-                this._helpVec3C = new OIMO.Vec3();
-            }
-
-            return this._helpVec3C;
-        }
-
-        /**
-         * @internal
-         */
-        public static toOIMOVec3_A(value: Vector3) {
-            let result = PhysicsSystem.helpVec3A;
-            result.x = value.x;
-            result.y = value.y;
-            result.z = value.z;
-            return result;
+        public onDestroy() {
+            // TODO remove listener
         }
         /**
-         * @internal
+         * 
          */
-        public static toOIMOVec3_B(value: Vector3) {
-            let result = PhysicsSystem.helpVec3B;
-            result.x = value.x;
-            result.y = value.y;
-            result.z = value.z;
-            return result;
-        }
-        /**
-         * @internal
-         */
-        public static toOIMOVec3_C(value: Vector3) {
-            let result = PhysicsSystem.helpVec3C;
-            result.x = value.x;
-            result.y = value.y;
-            result.z = value.z;
-            return result;
-        }
-
-        /**
-         * @internal
-         */
-        public static toOIMOQuat_A(value: Quaternion) {
-            let result = PhysicsSystem.helpQuaternionA;
-            result.x = value.x;
-            result.y = value.y;
-            result.z = value.z;
-            result.w = value.w;
-            return result;
-        }
-
-        /**
-         * @internal
-         */
-        public static toVector3(value: OIMO.Vec3 | Vector3, result: Vector3 | OIMO.Vec3) {
-            result.x = value.x;
-            result.y = value.y;
-            result.z = value.z;
-
-            return result;
-        }
-
-        /**
-         * @internal
-         */
-        public static toQuat(value: OIMO.Quat | Quaternion, result: Quaternion | OIMO.Quat) {
-            result.x = value.x;
-            result.y = value.y;
-            result.z = value.z;
-            result.w = value.w;
-            
-            return result;
-        }
-
         public get gravity() {
-            return PhysicsSystem.toVector3(this._oimoWorld.getGravity(), PhysicsSystem.helpVector3);
+            return this._gravity;
         }
-
-
-        public set gravity(value: Vector3) {
-            this._oimoWorld.setGravity(PhysicsSystem.toOIMOVec3_A(value));
+        public set gravity(value: Readonly<IVector3>) {
+            this._gravity.copy(value);
+            this._oimoWorld.setGravity(this._gravity as any);
         }
-        //#endregion
     }
 }

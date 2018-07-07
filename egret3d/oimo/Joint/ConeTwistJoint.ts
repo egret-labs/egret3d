@@ -17,7 +17,9 @@ namespace egret3d.oimo {
         MaxSwingAngleA,
         MaxSwingAngleB,
     }
-
+    /**
+     * 
+     */
     @paper.requireComponent(Rigidbody)
     export class ConeTwistJoint extends Joint<OIMO.RagdollJoint> {
         private static readonly _config: OIMO.RagdollJointConfig = new OIMO.RagdollJointConfig();
@@ -52,17 +54,17 @@ namespace egret3d.oimo {
 
             if (this.isGlobalAnchor) {
                 config.init(
-                    this._rigidbody.oimoRB, this._connectedBody.oimoRB,
+                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any, this._twistAxis as any, this._twistAxis as any
                 );
             }
             else {
                 const matrix = this.gameObject.transform.getWorldMatrix();
                 const anchor = matrix.transformVector3(helpVector3A.copy(this._anchor));
-                const twistAxis = matrix.transformNormal(helpVector3C.copy(this._twistAxis));
-                const swingAxis = matrix.transformNormal(helpVector3B.copy(this._swingAxis));
+                const twistAxis = matrix.transformNormal(helpVector3B.copy(this._twistAxis));
+                const swingAxis = matrix.transformNormal(helpVector3C.copy(this._swingAxis));
                 config.init(
-                    this._rigidbody.oimoRB, this._connectedBody.oimoRB,
+                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     anchor as any, twistAxis as any, swingAxis as any
                 );
             }
@@ -70,7 +72,6 @@ namespace egret3d.oimo {
             config.twistSpringDamper = ConeTwistJoint._twistSpringDamper;
             config.swingSpringDamper = ConeTwistJoint._swingSpringDamper;
             config.twistLimitMotor = ConeTwistJoint._twistLimitMotor;
-
 
             config.twistSpringDamper.frequency = this.twistFrequency;
             config.twistSpringDamper.dampingRatio = this.twistDampingRatio;
@@ -87,6 +88,7 @@ namespace egret3d.oimo {
             config.maxSwingAngle2 = this.maxSwingAngle2;
 
             const joint = new OIMO.RagdollJoint(config);
+            joint.userData = this;
 
             return joint;
         }
@@ -204,7 +206,7 @@ namespace egret3d.oimo {
         public get twistAxis() {
             return this._twistAxis;
         }
-        public set twistAxis(value: Readonly<Vector3>) {
+        public set twistAxis(value: Readonly<IVector3>) {
             if (this._oimoJoint) {
                 console.warn("Cannot change the axis x after the joint has been created.");
             }
@@ -218,7 +220,7 @@ namespace egret3d.oimo {
         public get swingAxis() {
             return this._swingAxis;
         }
-        public set swingAxis(value: Readonly<Vector3>) {
+        public set swingAxis(value: Readonly<IVector3>) {
             if (this._oimoJoint) {
                 console.warn("Cannot change the axis x after the joint has been created.");
             }

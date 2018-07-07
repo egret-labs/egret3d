@@ -212,7 +212,9 @@ namespace paper.editor {
                     let ray = camera.createRayByScreen(screenPosition.x, screenPosition.y);
                     let hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                     egret3d.Vector3.subtract(hit, worldPosition, hit);
-                    let cosHitOffset = egret3d.Vector3.dot(egret3d.Vector3.normalize(hit), egret3d.Vector3.normalize(this._dragOffset));
+                    egret3d.Vector3.normalize(hit);
+                    egret3d.Vector3.normalize(this._dragOffset);
+                    let cosHitOffset = egret3d.Vector3.dot(hit, this._dragOffset);
                     egret3d.Vector3.cross(this._dragOffset, hit, helpVec3_1)
                     let theta = egret3d.Vector3.dot(helpVec3_1, this._dragPlaneNormal) >= 0 ? Math.acos(cosHitOffset) : -Math.acos(cosHitOffset);
                     let cos = Math.cos(theta * 0.5), sin = Math.sin(theta * 0.5);
@@ -413,7 +415,8 @@ namespace paper.editor {
                             this.editorModel.setProperty("localScale", scale, this.selectedGameObjs[i].transform);
 
                             let pos = this.selectedGameObjs[i].transform.getPosition();
-                            let sub = egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
+                            let sub = helpVec3_2;
+                            egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
                             egret3d.Quaternion.transformVector3(this.controller.transform.getRotation(), right, helpVec3_3);
                             let cos = egret3d.Vector3.dot(sub, helpVec3_3);
                             egret3d.Vector3.scale(helpVec3_3, cos * (s - 1));
@@ -434,7 +437,8 @@ namespace paper.editor {
                             this.editorModel.setProperty("localScale", scale, this.selectedGameObjs[i].transform);
 
                             let pos = this.selectedGameObjs[i].transform.getPosition();
-                            let sub = egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
+                            let sub = helpVec3_2;
+                            egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
                             egret3d.Quaternion.transformVector3(this.controller.transform.getRotation(), up, helpVec3_3);
                             let cos = egret3d.Vector3.dot(sub, helpVec3_3);
                             egret3d.Vector3.scale(helpVec3_3, cos * (s - 1));
@@ -455,7 +459,8 @@ namespace paper.editor {
                             this.editorModel.setProperty("localScale", scale, this.selectedGameObjs[i].transform);
 
                             let pos = this.selectedGameObjs[i].transform.getPosition();
-                            let sub = egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
+                            let sub = helpVec3_2;
+                            egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
                             egret3d.Quaternion.transformVector3(this.controller.transform.getRotation(), forward, helpVec3_3);
                             let cos = egret3d.Vector3.dot(sub, helpVec3_3);
                             egret3d.Vector3.scale(helpVec3_3, cos * (s - 1));
@@ -526,14 +531,14 @@ namespace paper.editor {
             this.editorModel.addEventListener(EditorModelEvent.CHANGE_PROPERTY, e => this.changeProperty(e.data), this);
         }
         private selectGameObjects = this._selectGameObjects.bind(this);
-        private _selectGameObjects(selectObj:any) {
+        private _selectGameObjects(selectObj: any) {
             let selectIds;
             if (selectObj[selectItemType.GAMEOBJECT]) {
                 selectIds = selectObj[selectItemType.GAMEOBJECT];
-            }else{
+            } else {
                 selectIds = [];
             }
-            
+
             this.selectedGameObjs = this.editorModel.getGameObjectsByUUids(selectIds);
             let len = this.selectedGameObjs.length;
             this._modeCanChange = true;
@@ -819,7 +824,7 @@ namespace paper.editor {
 
             let mat = new egret3d.Material();
             mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
-            mat.setVector4v("_Color", [color.x,color.y,color.z,color.w]);
+            mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
             renderer.materials = [mat];
 
             return gizmoAxis;

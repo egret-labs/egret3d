@@ -6,7 +6,7 @@ namespace egret3d {
 
     const helpMat4_1: Matrix = new Matrix();
 
-    export class Quaternion implements paper.ISerializable {
+    export class Quaternion implements IVector4, paper.ISerializable {
 
         public x: number;
 
@@ -34,7 +34,7 @@ namespace egret3d {
             this.w = element[3];
         }
 
-        public copy(value: Readonly<Vector4>) {
+        public copy(value: Readonly<IVector4>) {
             this.x = value.x;
             this.y = value.y;
             this.z = value.z;
@@ -44,7 +44,7 @@ namespace egret3d {
         }
 
         public clone() {
-            const value = new Vector4();
+            const value = new Quaternion();
             value.copy(this);
 
             return value;
@@ -92,7 +92,7 @@ namespace egret3d {
             return this;
         }
 
-        public multiply(value: Readonly<Quaternion>) {
+        public multiply(value: Readonly<IVector4>) {
             const w1 = this.w, x1 = this.x, y1 = this.y, z1 = this.z;
             const w2 = value.w, x2 = value.x, y2 = value.y, z2 = value.z;
 
@@ -106,7 +106,7 @@ namespace egret3d {
             return this;
         }
 
-        public transformVector3(value: Vector3) {
+        public transformVector3(value: IVector3) {
             const x2 = value.x, y2 = value.y, z2 = value.z;
             const x1 = this.w * x2 + this.y * z2 - this.z * y2;
             const y1 = this.w * y2 - this.x * z2 + this.z * x2;
@@ -120,6 +120,9 @@ namespace egret3d {
             return value;
         }
 
+        /**
+         * @deprecated
+         */
         public static set(x: number, y: number, z: number, w: number, out: Quaternion): Quaternion {
             out.x = x;
             out.y = y;

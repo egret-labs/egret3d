@@ -2,26 +2,10 @@ namespace egret3d.oimo {
     /**
      * 
      */
-    export enum RigidbodyType {
-        /**
-         * Represents a dynamic rigid body. A dynamic rigid body has finite mass (and usually inertia
-         * tensor). The rigid body is affected by gravity, or by constraints the rigid body is involved.
-         */
-        DYNAMIC = OIMO.RigidBodyType.DYNAMIC,
-
-        /**
-         * Represents a static rigid body. A static rigid body has zero velocities and infinite mass
-         * and inertia tensor. The rigid body is not affected by any force or impulse, such as gravity,
-         * constraints, or external forces or impulses added by an user.
-         */
-        STATIC = OIMO.RigidBodyType.STATIC,
-
-        /**
-         * Represents a kinematic rigid body. A kinematic rigid body is similar to a static one, except
-         * that it can have non-zero linear and angular velocities. This is useful for overlapping rigid
-         * bodies to pre-computed motions.
-         */
-        KINEMATIC = OIMO.RigidBodyType.KINEMATIC,
+    export const enum RigidbodyType {
+        DYNAMIC = 0, // OIMO.RigidBodyType.DYNAMIC
+        STATIC = 1, // OIMO.RigidBodyType.STATIC
+        KINEMATIC = 2, // OIMO.RigidBodyType.KINEMATIC
     }
 
     const enum ValueType {
@@ -57,7 +41,8 @@ namespace egret3d.oimo {
             config.linearVelocity = this._linearVelocity as any; // 
             config.angularVelocity = this._angularVelocity as any; // 
             const rigidbody = new OIMO.RigidBody(config);
-            this._updateMass(rigidbody);
+            rigidbody.userData = this;
+            // this._updateMass(rigidbody); // TODO update mesh and type.
 
             return rigidbody;
         }
@@ -65,33 +50,71 @@ namespace egret3d.oimo {
          * @internal
          */
         public _updateMass(rigidbody: OIMO.RigidBody) {
-            rigidbody.getMassDataTo(Rigidbody._massData); // Copy mass data from rigibody.
-            Rigidbody._massData.mass = this._values[ValueType.Mass]; // Update mass.
-            rigidbody.setMassData(Rigidbody._massData); // Set mass data to rigibody.
+            const massData = Rigidbody._massData;
+            massData.localInertia.identity();
+            rigidbody.getMassDataTo(massData); // Copy mass data from rigibody.
+            massData.mass = this._values[ValueType.Mass]; // Update mass.
+            rigidbody.setMassData(massData); // Set mass data to rigibody.
         }
         /**
          * 
          */
-        public applyForce(force: Readonly<Vector3>, positionInWorld: Readonly<Vector3>) {
-            this.oimoRB.applyForce(PhysicsSystem.toOIMOVec3_A(force), PhysicsSystem.toOIMOVec3_B(positionInWorld));
+        public applyForce(force: Readonly<IVector3>, positionInWorld: Readonly<IVector3>) {
+            if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
+                paper.Application.systemManager.getSystem(PhysicsSystem)._initializeRigidbody(this.gameObject);
+            }
+
+            if (this._oimoRigidbody.getNumShapes() === 0) {
+                console.warn("Can not add force to an empty rigidbody.");
+                return;
+            }
+
+            this.oimoRigidbody.applyForce(force as any, positionInWorld as any);
         }
         /**
          * 
          */
-        public applyForceToCenter(force: Readonly<Vector3>) {
-            this.oimoRB.applyForceToCenter(PhysicsSystem.toOIMOVec3_A(force));
+        public applyForceToCenter(force: Readonly<IVector3>) {
+            if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
+                paper.Application.systemManager.getSystem(PhysicsSystem)._initializeRigidbody(this.gameObject);
+            }
+
+            if (this._oimoRigidbody.getNumShapes() === 0) {
+                console.warn("Can not add force to an empty rigidbody.");
+                return;
+            }
+
+            this.oimoRigidbody.applyForceToCenter(force as any);
         }
         /**
          * 
          */
-        public applyImpulse(impulse: Readonly<Vector3>, position: Readonly<Vector3>) {
-            this.oimoRB.applyImpulse(PhysicsSystem.toOIMOVec3_A(impulse), PhysicsSystem.toOIMOVec3_B(position));
+        public applyImpulse(impulse: Readonly<IVector3>, position: Readonly<IVector3>) {
+            if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
+                paper.Application.systemManager.getSystem(PhysicsSystem)._initializeRigidbody(this.gameObject);
+            }
+
+            if (this._oimoRigidbody.getNumShapes() === 0) {
+                console.warn("Can not add impulse to an empty rigidbody.");
+                return;
+            }
+
+            this.oimoRigidbody.applyImpulse(impulse as any, position as any);
         }
         /**
-         * 不用传入作用位置 
+         * 
          */
-        public applyTorque(torque: Readonly<Vector3>) {
-            this.oimoRB.applyTorque(PhysicsSystem.toOIMOVec3_A(torque));
+        public applyTorque(torque: Readonly<IVector3>) {
+            if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
+                paper.Application.systemManager.getSystem(PhysicsSystem)._initializeRigidbody(this.gameObject);
+            }
+
+            if (this._oimoRigidbody.getNumShapes() === 0) {
+                console.warn("Can not add torque to an empty rigidbody.");
+                return;
+            }
+
+            this.oimoRigidbody.applyTorque(torque as any);
         }
         /**
          * 
@@ -177,7 +200,7 @@ namespace egret3d.oimo {
 
             return this._linearVelocity;
         }
-        public set linearVelocity(value: Readonly<Vector3>) {
+        public set linearVelocity(value: Readonly<IVector3>) {
             if (this.type === RigidbodyType.STATIC) {
                 console.warn(`Can not the linear velocity of a static rigibody (${this.gameObject.path}).`);
                 return;
@@ -199,7 +222,7 @@ namespace egret3d.oimo {
 
             return this._angularVelocity;
         }
-        public set angularVelocity(value: Readonly<Vector3>) {
+        public set angularVelocity(value: Readonly<IVector3>) {
             if (this.type === RigidbodyType.STATIC) {
                 console.warn(`Can not the angular velocity of a static rigibody (${this.gameObject.path}).`);
                 return;
@@ -214,7 +237,7 @@ namespace egret3d.oimo {
         /**
          * 
          */
-        public get oimoRB() {
+        public get oimoRigidbody() {
             if (!this._oimoRigidbody) {
                 this._oimoRigidbody = this._createRigidbody();
             }

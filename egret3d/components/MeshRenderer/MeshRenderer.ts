@@ -3,7 +3,6 @@ namespace egret3d {
     /**
      * mesh的渲染组件
      */
-    @paper.requireComponent(MeshFilter)
     @paper.disallowMultipleComponent
     export class MeshRenderer extends paper.BaseRenderer {
         @paper.serializedField

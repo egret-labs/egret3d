@@ -16,6 +16,10 @@ namespace paper {
          */
         isExtends?: boolean;
         /**
+         * 是否非必要的组件。
+         */
+        isUnessential?: boolean;
+        /**
          * 关心该组件的事件。
          */
         listeners?: {
@@ -38,6 +42,7 @@ namespace paper {
          * @internal
          */
         public static _createEnabled: boolean = false;
+        
         protected _enabled: boolean = true;
         protected _started: boolean = false;
         protected _bufferedCount: number = 0;
@@ -80,6 +85,28 @@ namespace paper {
             BaseSystem._createEnabled = false;
         }
         /**
+         * 根据关心列表的顺序快速查找指定组件。
+         */
+        protected _getComponent(gameObject: GameObject, componentOffset: number) {
+            if (gameObject.uuid in this._gameObjectOffsets) {
+                return this._components[this._gameObjectOffsets[gameObject.uuid] + componentOffset];
+            }
+
+            return null;
+        }
+        /**
+         * 判断实体是否在系统内。
+         */
+        protected _hasGameObject(gameObject: GameObject) {
+            return gameObject.uuid in this._gameObjectOffsets;
+        }
+        /**
+         * @internal
+         */
+        protected _isEditorUpdate() {
+            return Application.isEditor && !Application.isPlaying;
+        }
+        /**
          * 当关心的组件被添加时。
          */
         protected _onAddComponent(component: T) {
@@ -96,6 +123,10 @@ namespace paper {
             const components = new Array<T>();
 
             for (const config of this._interests) {
+                if (config.isUnessential) {
+                    continue;
+                }
+
                 let insterestComponent: T | null = null;
 
                 if (Array.isArray(config.componentClass)) {
@@ -160,34 +191,20 @@ namespace paper {
             }
         }
         /**
-         * 判断实体是否在系统内。
-         */
-        protected _hasGameObject(gameObject: GameObject) {
-            return gameObject.uuid in this._gameObjectOffsets;
-        }
-        /**
-         * 根据关心列表的顺序快速查找指定组件。
-         */
-        protected _getComponent(gameObject: GameObject, componentOffset: number) {
-            if (gameObject.uuid in this._gameObjectOffsets) {
-                return this._components[this._gameObjectOffsets[gameObject.uuid] + componentOffset];
-            }
-
-            return null;
-        }
-        /**
-         * @internal
-         */
-        protected _isEditorUpdate() {
-            return Application.isEditor && !Application.isPlaying;
-        }
-        /**
          * 系统内部初始化。
          * @internal
          */
         public initialize() {
             this._onAddComponent = this._onAddComponent.bind(this);
             this._onRemoveComponent = this._onRemoveComponent.bind(this);
+
+            if (this.onAddComponent) {
+                this.onAddComponent = this.onAddComponent.bind(this);
+            }
+
+            if (this.onRemoveComponent) {
+                this.onRemoveComponent = this.onRemoveComponent.bind(this);
+            }
 
             for (const config of this._interests) {
                 if (config.listeners) {
@@ -203,17 +220,31 @@ namespace paper {
                     }
                 }
 
-                this._interestComponentCount++;
-
-                if (Array.isArray(config.componentClass)) {
-                    for (const componentClass of config.componentClass) {
-                        EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddComponent);
-                        EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveComponent);
+                if (config.isUnessential) {
+                    if (Array.isArray(config.componentClass)) {
+                        for (const componentClass of config.componentClass) {
+                            this.onAddComponent && EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this.onAddComponent);
+                            this.onRemoveComponent && EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this.onRemoveComponent);
+                        }
+                    }
+                    else {
+                        this.onAddComponent && EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this.onAddComponent);
+                        this.onRemoveComponent && EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this.onRemoveComponent);
                     }
                 }
                 else {
-                    EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddComponent);
-                    EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveComponent);
+                    this._interestComponentCount++;
+
+                    if (Array.isArray(config.componentClass)) {
+                        for (const componentClass of config.componentClass) {
+                            EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddComponent);
+                            EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveComponent);
+                        }
+                    }
+                    else {
+                        EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddComponent);
+                        EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveComponent);
+                    }
                 }
             }
 
@@ -241,17 +272,20 @@ namespace paper {
                     }
                 }
 
-                this._interestComponentCount++;
+                if (config.isUnessential) {
 
-                if (Array.isArray(config.componentClass)) {
-                    for (const componentClass of config.componentClass) {
-                        EventPool.removeEventListener(EventPool.EventType.Enabled, componentClass, this._onAddComponent);
-                        EventPool.removeEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveComponent);
-                    }
                 }
                 else {
-                    EventPool.removeEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddComponent);
-                    EventPool.removeEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveComponent);
+                    if (Array.isArray(config.componentClass)) {
+                        for (const componentClass of config.componentClass) {
+                            EventPool.removeEventListener(EventPool.EventType.Enabled, componentClass, this._onAddComponent);
+                            EventPool.removeEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveComponent);
+                        }
+                    }
+                    else {
+                        EventPool.removeEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddComponent);
+                        EventPool.removeEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveComponent);
+                    }
                 }
             }
 
@@ -299,7 +333,7 @@ namespace paper {
         /**
          * 系统初始化时调用。
          */
-        public onAwake(): void{}
+        public onAwake?(): void;
         /**
          * 系统被激活时调用。
          * @see paper.BaseSystem#enabled
@@ -319,6 +353,16 @@ namespace paper {
          * @see paper.GameObject#removeComponent()
          */
         public onRemoveGameObject?(gameObject: GameObject): void;
+        /**
+         * 关心的非必要组件被添加到实体时调用。
+         * @see paper.GameObject#addComponent()
+         */
+        public onAddComponent?(component: BaseComponent): void;
+        /**
+         * 关心的非必要组件从实体移除时调用。
+         * @see paper.GameObject#removeComponent()
+         */
+        public onRemoveComponent?(component: BaseComponent): void;
         /**
          * 系统更新时调用。
          */

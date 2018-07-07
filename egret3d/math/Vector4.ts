@@ -1,6 +1,13 @@
 namespace egret3d {
 
-    export class Vector4 implements paper.ISerializable {
+    export interface IVector4 {
+        x: number;
+        y: number;
+        z: number;
+        w: number;
+    }
+
+    export class Vector4 implements IVector4, paper.ISerializable {
 
         public x: number;
 
@@ -28,7 +35,7 @@ namespace egret3d {
             this.w = element[3];
         }
 
-        public copy(value: Vector4) {
+        public copy(value: Readonly<IVector4>) {
             this.x = value.x;
             this.y = value.y;
             this.z = value.z;
@@ -70,25 +77,6 @@ namespace egret3d {
 
             return this;
         }
-
-        public static set(x: number, y: number, z: number, w: number, out: Vector4): Vector4 {
-            out.x = x;
-            out.y = y;
-            out.z = z;
-            out.w = w;
-
-            return out;
-        }
-
-        public static copy(v: Vector4, out: Vector4): Vector4 {
-            out.x = v.x;
-            out.y = v.y;
-            out.z = v.z;
-            out.w = v.w;
-
-            return out;
-        }
-
     }
 
     export const helpVector4A = new Vector4();

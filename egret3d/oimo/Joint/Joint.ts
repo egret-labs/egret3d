@@ -36,21 +36,23 @@ namespace egret3d.oimo {
         protected _oimoJoint: T = null as any;
 
         protected abstract _createJoint(): T;
+        /**
+         * 
+         */
+        public getAppliedForce(out?: IVector3) {
+            out = out || new Vector3();
+            this._oimoJoint.getAppliedForceTo(out as any);
 
-        protected jointNotConstructed() {
-            if (this._oimoJoint) {
-                console.warn("joint already constructed, can't change connect target!");
-                return false;
-            }
-            return true;
+            return out;
         }
+        /**
+         * 
+         */
+        public getAppliedTorque(out?: IVector3) {
+            out = out || new Vector3();
+            this._oimoJoint.getAppliedTorqueTo(out as any);
 
-        protected notSettedWarning(value: any, name: string): boolean {
-            if (value == null || value == undefined) {
-                console.warn(name + " is not setted!");
-                return false;
-            }
-            return true;
+            return out;
         }
         /**
          * 
@@ -89,7 +91,7 @@ namespace egret3d.oimo {
         public get anchor() {
             return this._anchor;
         }
-        public set anchor(value: Readonly<Vector3>) {
+        public set anchor(value: Readonly<IVector3>) {
             if (this._oimoJoint) {
                 console.warn("Cannot change the anchor after the joint has been created.");
             }
@@ -114,24 +116,6 @@ namespace egret3d.oimo {
             else {
                 this._connectedBody = value;
             }
-        }
-        /**
-         * 
-         */
-        public get appliedForce() {
-            const r = new Vector3();
-            this._oimoJoint.getAppliedForceTo(PhysicsSystem.helpVec3A);
-
-            return PhysicsSystem.toVector3(PhysicsSystem.helpVec3A, r);
-        }
-        /**
-         * 
-         */
-        public get appliedTorque() {
-            const r = new Vector3();
-            this._oimoJoint.getAppliedTorqueTo(PhysicsSystem.helpVec3A);
-
-            return PhysicsSystem.toVector3(PhysicsSystem.helpVec3A, r);
         }
         /**
          * 
