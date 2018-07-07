@@ -75,16 +75,14 @@ namespace egret3d.oimo {
 
         public onAddGameObject(gameObject: paper.GameObject) {
             const rigidbody = this._getComponent(gameObject, 0) as Rigidbody;
-            const position = gameObject.transform.getPosition();
-            const quaternion = gameObject.transform.getRotation();
-            const oimoTransform = PhysicsSystem._helpTransform;
-            oimoTransform.setPosition(position as any);
-            oimoTransform.setOrientation(quaternion as any);
-            rigidbody.oimoRigidbody.setTransform(oimoTransform);
 
             for (const shape of gameObject.getComponents(Collider as any, true) as Collider[]) {
                 rigidbody.oimoRigidbody.addShape(shape.oimoShape);
                 rigidbody._updateMass(rigidbody.oimoRigidbody);
+            }
+
+            for (const joint of gameObject.getComponents(Joint as any, true) as Joint<any>[]) {
+                this._oimoWorld.addJoint(joint.oimoJoint);
             }
 
             this._oimoWorld.addRigidBody(rigidbody.oimoRigidbody);
@@ -171,9 +169,17 @@ namespace egret3d.oimo {
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
             const rigidbody = this._getComponent(gameObject, 0) as Rigidbody;
-            this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
 
-            // TODO remove joint
+            for (const joint of gameObject.getComponents(Joint as any, true) as Joint<any>[]) {
+                this._oimoWorld.removeJoint(joint.oimoJoint);
+            }
+
+            for (const shape of gameObject.getComponents(Collider as any, true) as Collider[]) {
+                rigidbody.oimoRigidbody.removeShape(shape.oimoShape);
+                // rigidbody._updateMass(rigidbody.oimoRigidbody);
+            }
+
+            this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
         }
 
         public onRemoveComponent(component: Collider | Joint<any>) {
@@ -189,6 +195,7 @@ namespace egret3d.oimo {
                 }
                 else { // TODO has shape and created oimo shape.
                     rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                    rigidbody._updateMass(rigidbody.oimoRigidbody);
                 }
             }
             else {

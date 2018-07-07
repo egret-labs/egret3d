@@ -156,12 +156,12 @@
         "libs/oimo.d.ts",
         "egret3d/oimo/RaycastInfo.ts",
         "egret3d/oimo/Rigidbody.ts",
-        "egret3d/oimo/CollisionShape/Collider.ts",
-        "egret3d/oimo/CollisionShape/BoxCollider.ts",
-        "egret3d/oimo/CollisionShape/SphereCollider.ts",
-        "egret3d/oimo/Joint/Joint.ts",
-        "egret3d/oimo/Joint/HingeJoint.ts",
-        "egret3d/oimo/Joint/ConeTwistJoint.ts",
+        "egret3d/oimo/collider/Collider.ts",
+        "egret3d/oimo/collider/BoxCollider.ts",
+        "egret3d/oimo/collider/SphereCollider.ts",
+        "egret3d/oimo/joint/Joint.ts",
+        "egret3d/oimo/joint/HingeJoint.ts",
+        "egret3d/oimo/joint/ConeTwistJoint.ts",
         "egret3d/oimo/PhysicsSystem.ts",
         "egret3d/oimo/RayTester.ts"
     ]

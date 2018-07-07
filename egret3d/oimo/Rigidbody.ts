@@ -41,6 +41,12 @@ namespace egret3d.oimo {
             config.linearVelocity = this._linearVelocity as any; // 
             config.angularVelocity = this._angularVelocity as any; // 
             const rigidbody = new OIMO.RigidBody(config);
+            const position = this.gameObject.transform.getPosition();
+            const quaternion = this.gameObject.transform.getRotation();
+            const oimoTransform = PhysicsSystem._helpTransform;
+            oimoTransform.setPosition(position as any);
+            oimoTransform.setOrientation(quaternion as any);
+            rigidbody.setTransform(oimoTransform);
             rigidbody.userData = this;
             // this._updateMass(rigidbody); // TODO update mesh and type.
 
@@ -51,7 +57,6 @@ namespace egret3d.oimo {
          */
         public _updateMass(rigidbody: OIMO.RigidBody) {
             const massData = Rigidbody._massData;
-            massData.localInertia.identity();
             rigidbody.getMassDataTo(massData); // Copy mass data from rigibody.
             massData.mass = this._values[ValueType.Mass]; // Update mass.
             rigidbody.setMassData(massData); // Set mass data to rigibody.
@@ -61,7 +66,7 @@ namespace egret3d.oimo {
          */
         public applyForce(force: Readonly<IVector3>, positionInWorld: Readonly<IVector3>) {
             if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                paper.Application.systemManager.getSystem(PhysicsSystem)._initializeRigidbody(this.gameObject);
+                PhysicsSystem.instance._initializeRigidbody(this.gameObject);
             }
 
             if (this._oimoRigidbody.getNumShapes() === 0) {
@@ -76,7 +81,7 @@ namespace egret3d.oimo {
          */
         public applyForceToCenter(force: Readonly<IVector3>) {
             if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                paper.Application.systemManager.getSystem(PhysicsSystem)._initializeRigidbody(this.gameObject);
+                PhysicsSystem.instance._initializeRigidbody(this.gameObject);
             }
 
             if (this._oimoRigidbody.getNumShapes() === 0) {
@@ -91,7 +96,7 @@ namespace egret3d.oimo {
          */
         public applyImpulse(impulse: Readonly<IVector3>, position: Readonly<IVector3>) {
             if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                paper.Application.systemManager.getSystem(PhysicsSystem)._initializeRigidbody(this.gameObject);
+                PhysicsSystem.instance._initializeRigidbody(this.gameObject);
             }
 
             if (this._oimoRigidbody.getNumShapes() === 0) {
@@ -106,7 +111,7 @@ namespace egret3d.oimo {
          */
         public applyTorque(torque: Readonly<IVector3>) {
             if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                paper.Application.systemManager.getSystem(PhysicsSystem)._initializeRigidbody(this.gameObject);
+                PhysicsSystem.instance._initializeRigidbody(this.gameObject);
             }
 
             if (this._oimoRigidbody.getNumShapes() === 0) {
@@ -131,7 +136,6 @@ namespace egret3d.oimo {
 
             if (this._oimoRigidbody) {
                 this._oimoRigidbody.setType(value);
-                this._values[ValueType.Mass] = this._oimoRigidbody.getMass();
             }
         }
         /**
@@ -141,6 +145,10 @@ namespace egret3d.oimo {
             return this._values[ValueType.Mass];
         }
         public set mass(value: number) {
+            if (value <= 0.0) {
+                value = 0.01;
+            }
+
             if (this._values[ValueType.Mass] === value) {
                 return;
             }
@@ -149,11 +157,6 @@ namespace egret3d.oimo {
 
             if (this._oimoRigidbody) {
                 this._updateMass(this._oimoRigidbody);
-            }
-
-            // TODO update type.
-            if (this._values[ValueType.Mass] > 0.0) {
-
             }
         }
         /**
