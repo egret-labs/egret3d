@@ -3,17 +3,17 @@ namespace egret3d.oimo {
      * 
      */
     export enum JointType {
-        SPHERICAL = OIMO.JointType.SPHERICAL,
-        REVOLUTE = OIMO.JointType.REVOLUTE,
-        CYLINDRICAL = OIMO.JointType.CYLINDRICAL,
-        PRISMATIC = OIMO.JointType.PRISMATIC,
-        UNIVERSAL = OIMO.JointType.UNIVERSAL,
-        RAGDOLL = OIMO.JointType.RAGDOLL,
+        Spherical = OIMO.JointType.SPHERICAL,
+        Prismatic = OIMO.JointType.PRISMATIC,
+        Hinge = OIMO.JointType.REVOLUTE,
+        Cylindrical = OIMO.JointType.CYLINDRICAL,
+        ConeTwist = OIMO.JointType.RAGDOLL,
+        Universal = OIMO.JointType.UNIVERSAL,
     }
 
     const enum ValueType {
         CollisionEnabled,
-        GlobalAnchor,
+        UseGlobalAnchor,
     }
     /**
      * 
@@ -41,7 +41,7 @@ namespace egret3d.oimo {
          */
         public getAppliedForce(out?: IVector3) {
             out = out || new Vector3();
-            this._oimoJoint.getAppliedForceTo(out as any);
+            this._oimoJoint.getAppliedForceTo(out as any); // TODO
 
             return out;
         }
@@ -50,7 +50,7 @@ namespace egret3d.oimo {
          */
         public getAppliedTorque(out?: IVector3) {
             out = out || new Vector3();
-            this._oimoJoint.getAppliedTorqueTo(out as any);
+            this._oimoJoint.getAppliedTorqueTo(out as any); // TODO
 
             return out;
         }
@@ -74,15 +74,15 @@ namespace egret3d.oimo {
         /**
          * 
          */
-        public get isGlobalAnchor() {
-            return this._values[ValueType.GlobalAnchor] > 0;
+        public get useGlobalAnchor() {
+            return this._values[ValueType.UseGlobalAnchor] > 0;
         }
-        public set isGlobalAnchor(value: boolean) {
+        public set useGlobalAnchor(value: boolean) {
             if (this._oimoJoint) {
                 console.warn("Cannot change the isGlobalAnchor after the joint has been created.");
             }
             else {
-                this._values[ValueType.GlobalAnchor] = value ? 1 : 0;
+                this._values[ValueType.UseGlobalAnchor] = value ? 1 : 0;
             }
         }
         /**

@@ -1,4 +1,5 @@
 namespace egret3d.oimo {
+    const _helpVector3 = new Vector3();
     /**
      * 
      */
@@ -20,7 +21,7 @@ namespace egret3d.oimo {
                 componentClass: [BoxCollider as any, SphereCollider], isUnessential: true
             },
             {
-                componentClass: [HingeJoint, ConeTwistJoint], isUnessential: true
+                componentClass: [SphericalJoint, HingeJoint, ConeTwistJoint], isUnessential: true
             }
         ];
         private readonly _gravity = new Vector3(0, -9.80665, 0);
@@ -42,19 +43,26 @@ namespace egret3d.oimo {
             // 子物体的transform？ TODO
         }
 
-        public rayCast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask: paper.CullingMask = paper.CullingMask.Everything, raycastInfo?: RaycastInfo) {
+        public rayCast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null
+        public rayCast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null
+        public rayCast(rayOrFrom: Ray | Readonly<IVector3>, distanceOrTo: number | Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo) {
             const rayCastClosest = this._rayCastClosest;
             rayCastClosest.clear(); // TODO mask.
 
+            if (rayOrFrom instanceof Ray) {
+                distanceOrTo = _helpVector3.copy(rayOrFrom.direction).scale((distanceOrTo as number) || 100.0).add(rayOrFrom.origin);
+                rayOrFrom = rayOrFrom.origin;
+            }
+
             this._oimoWorld.rayCast(
-                from as any, to as any,
+                rayOrFrom as any, distanceOrTo as any,
                 rayCastClosest
             );
 
             if (rayCastClosest.hit) {
                 raycastInfo = raycastInfo || new RaycastInfo();
                 raycastInfo.clean();
-                raycastInfo.distance = Vector3.getDistance(from, to) * rayCastClosest.fraction;
+                raycastInfo.distance = Vector3.getDistance(rayOrFrom as Readonly<IVector3>, distanceOrTo as Readonly<IVector3>) * rayCastClosest.fraction;
                 raycastInfo.position.copy(rayCastClosest.position);
                 raycastInfo.normal.copy(rayCastClosest.normal);
                 raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData;
@@ -149,6 +157,7 @@ namespace egret3d.oimo {
                         break;
 
                     case RigidbodyType.KINEMATIC:
+                    case RigidbodyType.STATIC:
                         if (oimoRigidbody.isSleeping()) {
                         }
                         else {
@@ -159,9 +168,6 @@ namespace egret3d.oimo {
                             oimoRigidbody.setTransform(oimoTransform);
                             oimoRigidbody.sleep();
                         }
-                        break;
-
-                    case RigidbodyType.STATIC:
                         break;
                 }
             }

@@ -17,12 +17,12 @@ namespace egret3d.oimo {
     export class HingeJoint extends Joint<OIMO.RevoluteJoint> {
         private static readonly _config: OIMO.RevoluteJointConfig = new OIMO.RevoluteJointConfig();
         private static readonly _springDamper: OIMO.SpringDamper = new OIMO.SpringDamper();
-        private static readonly _rotationalLimitMotor: OIMO.RotationalLimitMotor = new OIMO.RotationalLimitMotor();
+        private static readonly _limitMotor: OIMO.RotationalLimitMotor = new OIMO.RotationalLimitMotor();
 
-        public readonly jointType: JointType = JointType.REVOLUTE;
+        public readonly jointType: JointType = JointType.Hinge;
 
         @paper.serializedField
-        private readonly _axis: Vector3 = Vector3.UP.clone();
+        private readonly _axis: Vector3 = Vector3.FORWARD.clone();
         @paper.serializedField
         private readonly _valuesB: Float32Array = new Float32Array([
             0.0, 0.0, 0,
@@ -40,7 +40,7 @@ namespace egret3d.oimo {
             const config = HingeJoint._config;
             config.allowCollision = this.collisionEnabled;
 
-            if (this.isGlobalAnchor) {
+            if (this.useGlobalAnchor) {
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any, this._axis as any
@@ -57,13 +57,13 @@ namespace egret3d.oimo {
             }
 
             config.springDamper = HingeJoint._springDamper;
-            config.limitMotor = HingeJoint._rotationalLimitMotor;
+            config.limitMotor = HingeJoint._limitMotor;
             config.springDamper.frequency = this.frequency;
             config.springDamper.dampingRatio = this.dampingRatio;
             config.springDamper.useSymplecticEuler = this.useSymplecticEuler;
-            config.limitMotor.lowerLimit = this.lowerLimit * egret3d.RAD_DEG;
-            config.limitMotor.upperLimit = this.upperLimit * egret3d.RAD_DEG;
-            config.limitMotor.motorSpeed = this.motorSpeed;
+            config.limitMotor.lowerLimit = this.lowerLimit * egret3d.DEG_RAD;
+            config.limitMotor.upperLimit = this.upperLimit * egret3d.DEG_RAD;
+            config.limitMotor.motorSpeed = this.motorSpeed * egret3d.DEG_RAD;
             config.limitMotor.motorTorque = this.motorTorque;
 
             const joint = new OIMO.RevoluteJoint(config);
@@ -79,6 +79,11 @@ namespace egret3d.oimo {
         }
         public set frequency(value: number) {
             this._valuesB[ValueType.Frequency] = value;
+
+            if (this._oimoJoint) {
+                const springDamper = (this._oimoJoint as OIMO.RevoluteJoint).getSpringDamper();
+                springDamper.frequency = value;
+            }
         }
         /**
          * 
@@ -88,6 +93,11 @@ namespace egret3d.oimo {
         }
         public set dampingRatio(value: number) {
             this._valuesB[ValueType.DampingRatio] = value;
+
+            if (this._oimoJoint) {
+                const springDamper = (this._oimoJoint as OIMO.RevoluteJoint).getSpringDamper();
+                springDamper.dampingRatio = value;
+            }
         }
         /**
          * 
@@ -97,6 +107,11 @@ namespace egret3d.oimo {
         }
         public set useSymplecticEuler(value: boolean) {
             this._valuesB[ValueType.UseSymplecticEuler] = value ? 1 : 0;
+
+            if (this._oimoJoint) {
+                const springDamper = (this._oimoJoint as OIMO.RevoluteJoint).getSpringDamper();
+                springDamper.useSymplecticEuler = value;
+            }
         }
         /**
          * 
@@ -106,6 +121,11 @@ namespace egret3d.oimo {
         }
         public set lowerLimit(value: number) {
             this._valuesB[ValueType.LowerLimit] = value;
+
+            if (this._oimoJoint) {
+                const limitMotor = (this._oimoJoint as OIMO.RevoluteJoint).getLimitMotor();
+                limitMotor.lowerLimit = value;
+            }
         }
         /**
          * 
@@ -115,6 +135,11 @@ namespace egret3d.oimo {
         }
         public set upperLimit(value: number) {
             this._valuesB[ValueType.UpperLimit] = value;
+
+            if (this._oimoJoint) {
+                const limitMotor = (this._oimoJoint as OIMO.RevoluteJoint).getLimitMotor();
+                limitMotor.upperLimit = value;
+            }
         }
         /**
          * 
@@ -124,6 +149,11 @@ namespace egret3d.oimo {
         }
         public set motorSpeed(value: number) {
             this._valuesB[ValueType.MotorSpeed] = value;
+
+            if (this._oimoJoint) {
+                const limitMotor = (this._oimoJoint as OIMO.RevoluteJoint).getLimitMotor();
+                limitMotor.motorSpeed = value;
+            }
         }
         /**
          * 
@@ -133,6 +163,11 @@ namespace egret3d.oimo {
         }
         public set motorTorque(value: number) {
             this._valuesB[ValueType.MotorTorque] = value;
+
+            if (this._oimoJoint) {
+                const limitMotor = (this._oimoJoint as OIMO.RevoluteJoint).getLimitMotor();
+                limitMotor.motorTorque = value;
+            }
         }
         /**
          * 

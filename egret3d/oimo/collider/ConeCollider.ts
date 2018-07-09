@@ -3,15 +3,18 @@ namespace egret3d.oimo {
      * 
      */
     @paper.requireComponent(Rigidbody)
-    export class SphereCollider extends Collider {
-        public readonly geometryType: GeometryType = GeometryType.Sphere;
+    export class ConeCollider extends Collider {
+        public readonly geometryType: GeometryType = GeometryType.Cone;
 
         @paper.serializedField
         private _radius: number = 1.0;
 
+        @paper.serializedField
+        private _height: number = 1.0;
+
         protected _createShape() {
             const config = this._updateConfig();
-            config.geometry = new OIMO.SphereGeometry(this._radius);
+            config.geometry = new OIMO.ConeGeometry(this._radius, this._height * 0.5);
 
             const shape = new OIMO.Shape(config);
             shape.userData = this;
@@ -34,6 +37,24 @@ namespace egret3d.oimo {
             }
             else {
                 this._radius = value;
+            }
+        }
+        /**
+         * 
+         */
+        public get height(): number {
+            return this._height;
+        }
+        public set height(value: number) {
+            if (this._height === value) {
+                return;
+            }
+
+            if (this._oimoShape) {
+                console.warn("Cannot change the height after the collider has been created.");
+            }
+            else {
+                this._height = value;
             }
         }
     }

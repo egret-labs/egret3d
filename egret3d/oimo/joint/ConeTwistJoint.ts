@@ -14,8 +14,8 @@ namespace egret3d.oimo {
         MotorSpeed,
         MotorTorque,
         //
-        MaxSwingAngleA,
-        MaxSwingAngleB,
+        MaxSwingAngleY,
+        MaxSwingAngleZ,
     }
     /**
      * 
@@ -27,7 +27,7 @@ namespace egret3d.oimo {
         private static readonly _twistSpringDamper: OIMO.SpringDamper = new OIMO.SpringDamper();
         private static readonly _twistLimitMotor: OIMO.RotationalLimitMotor = new OIMO.RotationalLimitMotor();
 
-        public readonly jointType: JointType = JointType.RAGDOLL;
+        public readonly jointType: JointType = JointType.ConeTwist;
 
         @paper.serializedField
         private readonly _twistAxis: Vector3 = Vector3.UP.clone();
@@ -52,7 +52,7 @@ namespace egret3d.oimo {
             const config = ConeTwistJoint._config;
             config.allowCollision = this.collisionEnabled;
 
-            if (this.isGlobalAnchor) {
+            if (this.useGlobalAnchor) {
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any, this._twistAxis as any, this._twistAxis as any
@@ -79,13 +79,13 @@ namespace egret3d.oimo {
             config.swingSpringDamper.frequency = this.swingFrequency;
             config.swingSpringDamper.dampingRatio = this.swingDampingRatio;
             config.swingSpringDamper.useSymplecticEuler = this.swingUseSymplecticEuler;
-            config.twistLimitMotor.lowerLimit = this.lowerLimit * egret3d.RAD_DEG;
-            config.twistLimitMotor.upperLimit = this.upperLimit * egret3d.RAD_DEG;
-            config.twistLimitMotor.motorSpeed = this.motorSpeed;
+            config.twistLimitMotor.lowerLimit = this.lowerLimit * egret3d.DEG_RAD;
+            config.twistLimitMotor.upperLimit = this.upperLimit * egret3d.DEG_RAD;
+            config.twistLimitMotor.motorSpeed = this.motorSpeed * egret3d.DEG_RAD;
             config.twistLimitMotor.motorTorque = this.motorTorque;
 
-            config.maxSwingAngle1 = this.maxSwingAngle1;
-            config.maxSwingAngle2 = this.maxSwingAngle2;
+            config.maxSwingAngle1 = this.maxSwingAngleY;
+            config.maxSwingAngle2 = this.maxSwingAngleZ;
 
             const joint = new OIMO.RagdollJoint(config);
             joint.userData = this;
@@ -100,6 +100,11 @@ namespace egret3d.oimo {
         }
         public set twistFrequency(value: number) {
             this._valuesB[ValueType.TWFrequency] = value;
+
+            if (this._oimoJoint) {
+                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getTwistSpringDamper();
+                springDamper.frequency = value;
+            }
         }
         /**
          * 
@@ -109,6 +114,11 @@ namespace egret3d.oimo {
         }
         public set twistDampingRatio(value: number) {
             this._valuesB[ValueType.TWDampingRatio] = value;
+
+            if (this._oimoJoint) {
+                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getTwistSpringDamper();
+                springDamper.dampingRatio = value;
+            }
         }
         /**
          * 
@@ -118,6 +128,11 @@ namespace egret3d.oimo {
         }
         public set twistUseSymplecticEuler(value: boolean) {
             this._valuesB[ValueType.TWUseSymplecticEuler] = value ? 1 : 0;
+
+            if (this._oimoJoint) {
+                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getTwistSpringDamper();
+                springDamper.useSymplecticEuler = value;
+            }
         }
         /**
          * 
@@ -127,6 +142,11 @@ namespace egret3d.oimo {
         }
         public set swingFrequency(value: number) {
             this._valuesB[ValueType.SWFrequency] = value;
+
+            if (this._oimoJoint) {
+                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getSwingSpringDamper();
+                springDamper.frequency = value;
+            }
         }
         /**
          * 
@@ -136,6 +156,11 @@ namespace egret3d.oimo {
         }
         public set swingDampingRatio(value: number) {
             this._valuesB[ValueType.SWDampingRatio] = value;
+
+            if (this._oimoJoint) {
+                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getSwingSpringDamper();
+                springDamper.dampingRatio = value;
+            }
         }
         /**
          * 
@@ -145,6 +170,11 @@ namespace egret3d.oimo {
         }
         public set swingUseSymplecticEuler(value: boolean) {
             this._valuesB[ValueType.SWUseSymplecticEuler] = value ? 1 : 0;
+
+            if (this._oimoJoint) {
+                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getSwingSpringDamper();
+                springDamper.useSymplecticEuler = value;
+            }
         }
         /**
          * 
@@ -154,6 +184,11 @@ namespace egret3d.oimo {
         }
         public set lowerLimit(value: number) {
             this._valuesB[ValueType.LowerLimit] = value;
+
+            if (this._oimoJoint) {
+                const limitMotor = (this._oimoJoint as OIMO.RagdollJoint).getTwistLimitMotor();
+                limitMotor.lowerLimit = value;
+            }
         }
         /**
          * 
@@ -163,6 +198,11 @@ namespace egret3d.oimo {
         }
         public set upperLimit(value: number) {
             this._valuesB[ValueType.UpperLimit] = value;
+
+            if (this._oimoJoint) {
+                const limitMotor = (this._oimoJoint as OIMO.RagdollJoint).getTwistLimitMotor();
+                limitMotor.upperLimit = value;
+            }
         }
         /**
          * 
@@ -172,6 +212,11 @@ namespace egret3d.oimo {
         }
         public set motorSpeed(value: number) {
             this._valuesB[ValueType.MotorSpeed] = value;
+
+            if (this._oimoJoint) {
+                const limitMotor = (this._oimoJoint as OIMO.RagdollJoint).getTwistLimitMotor();
+                limitMotor.motorSpeed = value;
+            }
         }
         /**
          * 
@@ -181,24 +226,39 @@ namespace egret3d.oimo {
         }
         public set motorTorque(value: number) {
             this._valuesB[ValueType.MotorTorque] = value;
+
+            if (this._oimoJoint) {
+                const limitMotor = (this._oimoJoint as OIMO.RagdollJoint).getTwistLimitMotor();
+                limitMotor.motorTorque = value;
+            }
         }
         /**
          * 
          */
-        public get maxSwingAngle1() {
-            return this._valuesB[ValueType.MaxSwingAngleA];
+        public get maxSwingAngleY() {
+            return this._valuesB[ValueType.MaxSwingAngleY];
         }
-        public set maxSwingAngle1(value: number) {
-            this._valuesB[ValueType.MaxSwingAngleA] = value;
+        public set maxSwingAngleY(value: number) {
+            if (this._oimoJoint) {
+                console.warn("Cannot change the maxSwingAngle2 after the joint has been created.");
+            }
+            else {
+                this._valuesB[ValueType.MaxSwingAngleY] = value;
+            }
         }
         /**
          * 
          */
-        public get maxSwingAngle2() {
-            return this._valuesB[ValueType.MaxSwingAngleB];
+        public get maxSwingAngleZ() {
+            return this._valuesB[ValueType.MaxSwingAngleZ];
         }
-        public set maxSwingAngle2(value: number) {
-            this._valuesB[ValueType.MaxSwingAngleB] = value;
+        public set maxSwingAngleZ(value: number) {
+            if (this._oimoJoint) {
+                console.warn("Cannot change the maxSwingAngle2 after the joint has been created.");
+            }
+            else {
+                this._valuesB[ValueType.MaxSwingAngleZ] = value;
+            }
         }
         /**
          * 

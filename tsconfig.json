@@ -159,9 +159,15 @@
         "egret3d/oimo/collider/Collider.ts",
         "egret3d/oimo/collider/BoxCollider.ts",
         "egret3d/oimo/collider/SphereCollider.ts",
+        "egret3d/oimo/collider/CylinderCollider.ts",
+        "egret3d/oimo/collider/ConeCollider.ts",
+        "egret3d/oimo/collider/CapsuleCollider.ts",
         "egret3d/oimo/joint/Joint.ts",
+        "egret3d/oimo/joint/SphericalJoint.ts",
+        "egret3d/oimo/joint/CylindricalJoint.ts",
         "egret3d/oimo/joint/HingeJoint.ts",
         "egret3d/oimo/joint/ConeTwistJoint.ts",
+        "egret3d/oimo/joint/UniversalJoint.ts",
         "egret3d/oimo/PhysicsSystem.ts",
         "egret3d/oimo/RayTester.ts"
     ]

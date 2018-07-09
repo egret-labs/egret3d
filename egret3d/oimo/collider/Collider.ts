@@ -3,14 +3,12 @@ namespace egret3d.oimo {
      * 
      */
     export enum GeometryType {
-        SPHERE = OIMO.GeometryType.SPHERE,
-        BOX = OIMO.GeometryType.BOX,
-        CYLINDER = OIMO.GeometryType.CYLINDER,
-        CONE = OIMO.GeometryType.CONE,
-        CAPSULE = OIMO.GeometryType.CAPSULE,
-        CONVEX_HULL = OIMO.GeometryType.CONVEX_HULL,
-        CONVEX_MIN = OIMO.GeometryType._CONVEX_MIN,
-        CONVEX_MAX = OIMO.GeometryType._CONVEX_MAX,
+        Box = OIMO.GeometryType.BOX,
+        Sphere = OIMO.GeometryType.SPHERE,
+        Cylinder = OIMO.GeometryType.CYLINDER,
+        Cone = OIMO.GeometryType.CONE,
+        Capsule = OIMO.GeometryType.CAPSULE,
+        ConvexHull = OIMO.GeometryType.CONVEX_HULL,
     }
 
     const enum ValueType {

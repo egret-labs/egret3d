@@ -7,10 +7,11 @@ namespace egret3d.oimo {
         STATIC = 1, // OIMO.RigidBodyType.STATIC
         KINEMATIC = 2, // OIMO.RigidBodyType.KINEMATIC
     }
-
+    OIMO.RigidBodyType.STATIC
     const enum ValueType {
         Type,
         Mass,
+        GravityScale,
         LinearDamping,
         AngularDamping,
     }
@@ -29,7 +30,7 @@ namespace egret3d.oimo {
          */
         @paper.serializedField
         private readonly _values: Float32Array = new Float32Array([
-            RigidbodyType.DYNAMIC, 1.0, 0.0, 0.0,
+            RigidbodyType.DYNAMIC, 1.0, 1.0, 0.0, 0.0,
         ]);
         private _oimoRigidbody: OIMO.RigidBody = null as any;
 
@@ -49,6 +50,7 @@ namespace egret3d.oimo {
             rigidbody.setTransform(oimoTransform);
             rigidbody.userData = this;
             // this._updateMass(rigidbody); // TODO update mesh and type.
+            rigidbody.setGravityScale(this.gravityScale);
 
             return rigidbody;
         }
@@ -60,6 +62,22 @@ namespace egret3d.oimo {
             rigidbody.getMassDataTo(massData); // Copy mass data from rigibody.
             massData.mass = this._values[ValueType.Mass]; // Update mass.
             rigidbody.setMassData(massData); // Set mass data to rigibody.
+        }
+        /**
+         * 
+         */
+        public wakeUp() {
+            if (this._oimoRigidbody) {
+                this._oimoRigidbody.wakeUp();
+            }
+        }
+        /**
+         * 
+         */
+        public sleep() {
+            if (this._oimoRigidbody) {
+                this._oimoRigidbody.sleep();
+            }
         }
         /**
          * 
@@ -124,6 +142,16 @@ namespace egret3d.oimo {
         /**
          * 
          */
+        public get isSleeping() {
+            if (this._oimoRigidbody) {
+                return this._oimoRigidbody.isSleeping();
+            }
+
+            return false;
+        }
+        /**
+         * 
+         */
         public get type() {
             return this._values[ValueType.Type];
         }
@@ -157,6 +185,23 @@ namespace egret3d.oimo {
 
             if (this._oimoRigidbody) {
                 this._updateMass(this._oimoRigidbody);
+            }
+        }
+        /**
+         * 
+         */
+        public get gravityScale() {
+            return this._values[ValueType.GravityScale];
+        }
+        public set gravityScale(value: number) {
+            if (this._values[ValueType.GravityScale] === value) {
+                return;
+            }
+
+            this._values[ValueType.GravityScale] = value;
+
+            if (this._oimoRigidbody) {
+                this._oimoRigidbody.setGravityScale(value);
             }
         }
         /**
@@ -204,11 +249,6 @@ namespace egret3d.oimo {
             return this._linearVelocity;
         }
         public set linearVelocity(value: Readonly<IVector3>) {
-            if (this.type === RigidbodyType.STATIC) {
-                console.warn(`Can not the linear velocity of a static rigibody (${this.gameObject.path}).`);
-                return;
-            }
-
             this._linearVelocity.copy(value);
 
             if (this._oimoRigidbody) {
@@ -226,11 +266,6 @@ namespace egret3d.oimo {
             return this._angularVelocity;
         }
         public set angularVelocity(value: Readonly<IVector3>) {
-            if (this.type === RigidbodyType.STATIC) {
-                console.warn(`Can not the angular velocity of a static rigibody (${this.gameObject.path}).`);
-                return;
-            }
-
             this._angularVelocity.copy(value);
 
             if (this._oimoRigidbody) {

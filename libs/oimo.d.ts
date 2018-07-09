@@ -5719,74 +5719,74 @@ declare module OIMO {
          *
          * This does not create a new instance of `Vec3`.
          */
-        public  getAxis1To(axis: Vec3);
+        public getAxis1To(axis: Vec3);
 
         /**
          * Sets `axis` to the second rigid body's constraint axis in world coordinates.
          *
          * This does not create a new instance of `Vec3`.
          */
-        public  getAxis2To(axis: Vec3);
+        public getAxis2To(axis: Vec3);
 
         /**
          * Returns the first rigid body's constraint axis relative to the rigid body's transform.
          */
-        public  getLocalAxis1(): Vec3;
+        public getLocalAxis1(): Vec3;
 
         /**
          * Returns the second rigid body's constraint axis relative to the rigid body's transform.
          */
-        public  getLocalAxis2(): Vec3;
+        public getLocalAxis2(): Vec3;
 
         /**
          * Sets `axis` to the first rigid body's constraint axis relative to the rigid body's transform.
          *
          * This does not create a new instance of `Vec3`.
          */
-        public  getLocalAxis1To(axis: Vec3);
+        public getLocalAxis1To(axis: Vec3);
 
         /**
          * Sets `axis` to the second rigid body's constraint axis relative to the rigid body's transform.
          *
          * This does not create a new instance of `Vec3`.
          */
-        public  getLocalAxis2To(axis: Vec3);
+        public getLocalAxis2To(axis: Vec3);
 
         /**
          * Returns the rotational spring and damper settings along the twist axis.
          */
-        public  getTwistSpringDamper(): SpringDamper;
+        public getTwistSpringDamper(): SpringDamper;
 
         /**
          * Returns the rotational limits and motor settings along the twist axis.
          */
-        public  getTwistLimitMotor(): RotationalLimitMotor;
+        public getTwistLimitMotor(): RotationalLimitMotor;
 
         /**
          * Returns the rotational spring and damper settings along the swing axis.
          */
-        public  getSwingSpringDamper(): SpringDamper;
+        public getSwingSpringDamper(): SpringDamper;
 
         /**
          * Returns the swing axis in world coordinates.
          */
-        public  getSwingAxis(): Vec3;
+        public getSwingAxis(): Vec3;
 
         /**
          * Sets `axis` to the swing axis in world coordinates.
          *
          * This does not create a new instance of `Vec3`.
          */
-        public  getSwingAxisTo(axis: Vec3);
+        public getSwingAxisTo(axis: Vec3);
 
         /**
          * Returns the swing angle in radians.
          */
-        public  getSwingAngle(): number
+        public getSwingAngle(): number
         /**
          * Returns the twist angle in radians.
          */
-        public  getTwistAngle(): number
+        public getTwistAngle(): number
     }
 
 }
@@ -5924,8 +5924,16 @@ declare module OIMO {
 
         motorMass: number;
 
-    }
+        /**
+         * Returns the rotational limits and motor settings along the twist axis.
+         */
+        public getSpringDamper(): SpringDamper;
 
+        /**
+         * Returns the rotational limits and motor settings along the twist axis.
+         */
+        public getLimitMotor(): RotationalLimitMotor;
+    }
 }
 
 declare module OIMO {
@@ -6347,6 +6355,10 @@ declare module OIMO {
 
         motorMassZ: number;
 
+        public getSpringDamper1(): SpringDamper;
+        public getSpringDamper2(): SpringDamper;
+        public getLimitMotor1(): RotationalLimitMotor;
+        public getLimitMotor2(): RotationalLimitMotor;
     }
 
 }

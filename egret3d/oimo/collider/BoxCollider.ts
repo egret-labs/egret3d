@@ -4,7 +4,7 @@ namespace egret3d.oimo {
      */
     @paper.requireComponent(Rigidbody)
     export class BoxCollider extends Collider {
-        public readonly geometryType: GeometryType = GeometryType.BOX;
+        public readonly geometryType: GeometryType = GeometryType.Box;
 
         @paper.serializedField
         protected readonly _size: Vector3 = Vector3.ONE.clone();
@@ -26,7 +26,7 @@ namespace egret3d.oimo {
         }
         public set size(value: Readonly<IVector3>) {
             if (this._oimoShape) {
-                console.warn("Cannot change the size after the collision shape has been created.\nSize is only the initial value.");
+                console.warn("Cannot change the size after the collider has been created.");
             }
             else {
                 this._size.copy(value);
