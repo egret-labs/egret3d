@@ -68,7 +68,6 @@
         "egret3d/asset/resource/texture.ts",
         "egret3d/asset/resource/GLTF.ts",
         "egret3d/asset/resource/Mesh.ts",
-
         "egret3d/components/Pool.ts",
         "egret3d/components/Transform.ts",
         "egret3d/components/Camera/CameraSystem.ts",
@@ -81,13 +80,11 @@
         "egret3d/components/Egret2DRenderer/ScreenAdapter.ts",
         "egret3d/components/Guidpath/GuidPath.ts",
         "egret3d/components/Guidpath/GuidpathSystem.ts",
-
         "egret3d/components/light/BaseLight.ts",
         "egret3d/components/light/DirectLight.ts",
         "egret3d/components/light/PointLight.ts",
         "egret3d/components/light/SpotLight.ts",
         "egret3d/components/light/LightSystem.ts",
-        
         "egret3d/components/MeshFilter/MeshFilter.ts",
         "egret3d/components/MeshRenderer/MeshRenderer.ts",
         "egret3d/components/MeshRenderer/MeshRendererSystem.ts",
@@ -95,9 +92,7 @@
         "egret3d/components/trail/TrailRenderer.ts",
         "egret3d/components/trail/TrailRendererSystem.ts",
         "egret3d/components/SkinnedMeshRenderer/SkinnedMeshRendererSystem.ts",
-        
         "egret3d/components/singletons/DrawCalls.ts",
-
         "egret3d/components/animation/Animation.ts",
         "egret3d/components/particles/ParticleHelper.ts",
         "egret3d/components/particles/ParticleModules.ts",
@@ -105,11 +100,10 @@
         "egret3d/components/particles/ParticleComponent.ts",
         "egret3d/components/particles/ParticleRenderer.ts",
         "egret3d/components/particles/ParticleSystem.ts",
-
+        "egret3d/components/audio/Audio.ts",
         "egret3d/web/render/resource/WebGLUniform.ts",
         "egret3d/web/render/Stage3D.ts",
         "egret3d/web/render/WebGLCapabilities.ts",
-
         "egret3d/asset/resource/material.ts",
         "egret3d/asset/resource/font.ts",
         "egret3d/asset/resource/DrawPass.ts",

@@ -1,5 +1,5 @@
 namespace egret3d {
-    egret.RuntimeType = {} as any;
+
     export type RunEgretOptions = {
         antialias: boolean;
         defaultScene?: string;
@@ -47,8 +47,8 @@ namespace egret3d {
             return {
                 antialias: options.antialias,
                 antialiasSamples: 4,
-                contentWidth: options.contentWidth | 640,
-                contentHeight: options.contentHeight | 1136
+                contentWidth: options.contentWidth || 640,
+                contentHeight: options.contentHeight || 1136
             } as RequiredRuntimeOptions;
         }
         else {
