@@ -1562,9 +1562,11 @@ declare namespace egret3d {
      *
      */
     class BaseObjectAsset extends paper.Asset {
-        protected readonly _assets: any;
+        protected readonly _assets: {
+            [index: string]: paper.Asset;
+        };
         protected _raw: PrefabConfig;
-        $parse(json: PrefabConfig): void;
+        $parse(json: PrefabConfig, subAssets: paper.Asset[]): void;
         /**
          * @inheritDoc
          */
@@ -1575,35 +1577,13 @@ declare namespace egret3d {
         caclByteLength(): number;
     }
     /**
-     * prefab asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 预制件资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * 预制体资源。
      */
     class Prefab extends BaseObjectAsset {
         /**
-         * Create instance from this prefab.
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 从当前预制件生成一个实例。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 从当前预制体生成一个实例。
          */
         createInstance(): paper.GameObject;
-        /**
-         * @deprecated
-         */
-        getClone(): paper.GameObject;
     }
 }
 declare namespace paper {

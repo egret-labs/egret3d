@@ -61,14 +61,17 @@ namespace RES.processor {
         return resource.root + resource.url;
     }
 
-    function formatUrlAndSort(assets: any[], path: string, ): string[] {
-        let list: { url: string, type: AssetTypeEnum }[] = [];
-        list = assets.map<{ url: string, type: AssetTypeEnum }>(item => {
-            return { url: egret3d.utils.combinePath(path + "/", item.url), type: calcType(item.url) }
+
+    type TempResult = { url: string, type: AssetTypeEnum, hashCode: number }
+
+    function formatUrlAndSort(assets: any[], path: string, ): TempResult[] {
+        let list: TempResult[] = [];
+        list = assets.map(item => {
+            return { url: egret3d.utils.combinePath(path + "/", item.url), type: calcType(item.url), hashCode: item.hashCode }
         });
         return list.sort((a, b) => {
             return a.type - b.type;
-        }).map(item => item.url);
+        })
     }
 
     async function promisify(loader: egret.ImageLoader | egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
@@ -263,20 +266,11 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             const data: egret3d.PrefabConfig = await host.load(resource, "json");
             const url = getUrl(resource);
-            // load ref assets
-            const assets = data.assets;
-            if (assets) {
-                const list = formatUrlAndSort(assets, getPath(resource.url));
-                for (let item of list) {
-                    let r = RES.host.resourceConfig["getResource"](item);
-                    if (r) {
-                        let asset: paper.Asset = await host.load(r);
-                    }
-                }
-            }
+            const subassets = await loadSubAssets(data, resource)
+
 
             const prefab = new egret3d.Prefab(url);
-            prefab.$parse(data);
+            prefab.$parse(data, subassets);
             paper.Asset.register(prefab, true);
 
             return prefab;
@@ -289,26 +283,35 @@ namespace RES.processor {
 
     };
 
+
+    async function loadSubAssets(data: egret3d.PrefabConfig, resource: RES.ResourceInfo) {
+
+        // load ref assets
+        const assets = data.assets;
+        const result: paper.Asset[] = [];
+        if (assets) {
+            const list = formatUrlAndSort(assets, getPath(resource.url));
+            for (let item of list) {
+                let r = RES.host.resourceConfig["getResource"](item.url);
+                if (r) {
+                    let asset: paper.Asset = await host.load(r);
+                    asset.hashCode = item.hashCode;
+                    result.push(asset)
+                }
+            }
+        }
+        return result;
+    }
+
     export const SceneProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
             const data = await host.load(resource, "json");
             const url = getUrl(resource);
-
-            // load ref assets
-            const assets = data.assets;
-            if (assets) {
-                const list = formatUrlAndSort(assets, getPath(resource.url));
-                for (let item of list) {
-                    let r = RES.host.resourceConfig["getResource"](item);
-                    if (r) {
-                        let asset: paper.Asset = await host.load(r);
-                    }
-                }
-            }
+            const subassets = await loadSubAssets(data, resource)
 
             const scene = new egret3d.RawScene(url);
-            scene.$parse(data);
+            scene.$parse(data, subassets);
             paper.Asset.register(scene, true);
 
             return scene;

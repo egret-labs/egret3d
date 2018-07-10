@@ -2412,8 +2412,8 @@ var egret3d;
             return {
                 antialias: options.antialias,
                 antialiasSamples: 4,
-                contentWidth: options.contentWidth | 640,
-                contentHeight: options.contentHeight | 1136
+                contentWidth: options.contentWidth || 640,
+                contentHeight: options.contentHeight || 1136
             };
         }
         else {
@@ -2930,23 +2930,18 @@ var egret3d;
             _this._raw = null;
             return _this;
         }
-        BaseObjectAsset.prototype.$parse = function (json) {
+        BaseObjectAsset.prototype.$parse = function (json, subAssets) {
             this._raw = json;
-            if (this._raw) {
-                for (var _i = 0, _a = this._raw.assets; _i < _a.length; _i++) {
-                    var item = _a[_i];
-                    if (item.url.indexOf("shader.json") < 0) {
-                        this._assets[item.hashCode || item.uuid] = paper.Asset.find(egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", item.url)); // 兼容 hashCode 。
-                    }
-                }
+            for (var _i = 0, subAssets_1 = subAssets; _i < subAssets_1.length; _i++) {
+                var item = subAssets_1[_i];
+                this._assets[item.hashCode || item.uuid] = item; // 兼容 hashCode 。
             }
         };
         /**
          * @inheritDoc
          */
         BaseObjectAsset.prototype.dispose = function () {
-            for (var _i = 0, _a = this._assets; _i < _a.length; _i++) {
-                var k = _a[_i];
+            for (var k in this._assets) {
                 delete this._assets[k];
             }
             this._raw = null;
@@ -2962,16 +2957,7 @@ var egret3d;
     egret3d.BaseObjectAsset = BaseObjectAsset;
     __reflect(BaseObjectAsset.prototype, "egret3d.BaseObjectAsset");
     /**
-     * prefab asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 预制件资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * 预制体资源。
      */
     var Prefab = (function (_super) {
         __extends(Prefab, _super);
@@ -2979,16 +2965,7 @@ var egret3d;
             return _super !== null && _super.apply(this, arguments) || this;
         }
         /**
-         * Create instance from this prefab.
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 从当前预制件生成一个实例。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 从当前预制体生成一个实例。
          */
         Prefab.prototype.createInstance = function () {
             if (!this._raw) {
@@ -2996,12 +2973,6 @@ var egret3d;
             }
             var gameObject = paper.deserialize(this._raw, this._assets, true);
             return gameObject;
-        };
-        /**
-         * @deprecated
-         */
-        Prefab.prototype.getClone = function () {
-            return this.createInstance();
         };
         return Prefab;
     }(BaseObjectAsset));
@@ -17166,11 +17137,11 @@ var RES;
         function formatUrlAndSort(assets, path) {
             var list = [];
             list = assets.map(function (item) {
-                return { url: egret3d.utils.combinePath(path + "/", item.url), type: calcType(item.url) };
+                return { url: egret3d.utils.combinePath(path + "/", item.url), type: calcType(item.url), hashCode: item.hashCode };
             });
             return list.sort(function (a, b) {
                 return a.type - b.type;
-            }).map(function (item) { return item.url; });
+            });
         }
         function promisify(loader, resource) {
             return __awaiter(this, void 0, void 0, function () {
@@ -17429,33 +17400,18 @@ var RES;
         processor.PrefabProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, assets, list, _i, list_1, item, r, asset, prefab;
+                    var data, url, subassets, prefab;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
                                 url = getUrl(resource);
-                                assets = data.assets;
-                                if (!assets) return [3 /*break*/, 5];
-                                list = formatUrlAndSort(assets, getPath(resource.url));
-                                _i = 0, list_1 = list;
-                                _a.label = 2;
+                                return [4 /*yield*/, loadSubAssets(data, resource)];
                             case 2:
-                                if (!(_i < list_1.length)) return [3 /*break*/, 5];
-                                item = list_1[_i];
-                                r = RES.host.resourceConfig["getResource"](item);
-                                if (!r) return [3 /*break*/, 4];
-                                return [4 /*yield*/, host.load(r)];
-                            case 3:
-                                asset = _a.sent();
-                                _a.label = 4;
-                            case 4:
-                                _i++;
-                                return [3 /*break*/, 2];
-                            case 5:
+                                subassets = _a.sent();
                                 prefab = new egret3d.Prefab(url);
-                                prefab.$parse(data);
+                                prefab.$parse(data, subassets);
                                 paper.Asset.register(prefab, true);
                                 return [2 /*return*/, prefab];
                         }
@@ -17473,36 +17429,52 @@ var RES;
                 });
             }
         };
+        function loadSubAssets(data, resource) {
+            return __awaiter(this, void 0, void 0, function () {
+                var assets, result, list, _i, list_1, item, r, asset;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            assets = data.assets;
+                            result = [];
+                            if (!assets) return [3 /*break*/, 4];
+                            list = formatUrlAndSort(assets, getPath(resource.url));
+                            _i = 0, list_1 = list;
+                            _a.label = 1;
+                        case 1:
+                            if (!(_i < list_1.length)) return [3 /*break*/, 4];
+                            item = list_1[_i];
+                            r = RES.host.resourceConfig["getResource"](item.url);
+                            if (!r) return [3 /*break*/, 3];
+                            return [4 /*yield*/, RES.host.load(r)];
+                        case 2:
+                            asset = _a.sent();
+                            asset.hashCode = item.hashCode;
+                            result.push(asset);
+                            _a.label = 3;
+                        case 3:
+                            _i++;
+                            return [3 /*break*/, 1];
+                        case 4: return [2 /*return*/, result];
+                    }
+                });
+            });
+        }
         processor.SceneProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, assets, list, _i, list_2, item, r, asset, scene;
+                    var data, url, subassets, scene;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
                                 url = getUrl(resource);
-                                assets = data.assets;
-                                if (!assets) return [3 /*break*/, 5];
-                                list = formatUrlAndSort(assets, getPath(resource.url));
-                                _i = 0, list_2 = list;
-                                _a.label = 2;
+                                return [4 /*yield*/, loadSubAssets(data, resource)];
                             case 2:
-                                if (!(_i < list_2.length)) return [3 /*break*/, 5];
-                                item = list_2[_i];
-                                r = RES.host.resourceConfig["getResource"](item);
-                                if (!r) return [3 /*break*/, 4];
-                                return [4 /*yield*/, host.load(r)];
-                            case 3:
-                                asset = _a.sent();
-                                _a.label = 4;
-                            case 4:
-                                _i++;
-                                return [3 /*break*/, 2];
-                            case 5:
+                                subassets = _a.sent();
                                 scene = new egret3d.RawScene(url);
-                                scene.$parse(data);
+                                scene.$parse(data, subassets);
                                 paper.Asset.register(scene, true);
                                 return [2 /*return*/, scene];
                         }
@@ -21194,13 +21166,13 @@ var egret3d;
         };
         Profile._print = function (list) {
             var totalTime = 0.0;
-            for (var _i = 0, list_3 = list; _i < list_3.length; _i++) {
-                var item = list_3[_i];
+            for (var _i = 0, list_2 = list; _i < list_2.length; _i++) {
+                var item = list_2[_i];
                 totalTime += item.time;
             }
             console.log("------------------------");
-            for (var _a = 0, list_4 = list; _a < list_4.length; _a++) {
-                var item = list_4[_a];
+            for (var _a = 0, list_3 = list; _a < list_3.length; _a++) {
+                var item = list_3[_a];
                 console.log(item.key + ":用时" + item.time + "平均:" + (item.time / item.count) + "最大值:" + item.maxTime + " 权重:" + (Math.round(item.time / totalTime * 100)) + "%");
             }
         };
