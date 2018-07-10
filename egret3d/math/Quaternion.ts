@@ -8,6 +8,24 @@ namespace egret3d {
 
     export class Quaternion implements IVector4, paper.ISerializable {
 
+        private static readonly _instances: Quaternion[] = [];
+
+        public static create(x?: number, y?: number, z?: number, w?: number) {
+            if (this._instances.length > 0) {
+                return this._instances.pop();
+            }
+
+            return new Quaternion(x, y, z, w);
+        }
+
+        public static release(value: Quaternion) {
+            if (this._instances.indexOf(value) >= 0) {
+                return;
+            }
+
+            this._instances.push(value);
+        }
+
         public x: number;
 
         public y: number;

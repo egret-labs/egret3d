@@ -7,9 +7,7 @@ namespace egret3d {
             { componentClass: Egret2DRenderer }
         ];
 
-        public onUpdate() {
-            const deltaTime = paper.Time.deltaTime;
-
+        public onUpdate(deltaTime: number) {
             for (const component of this._components) {
                 component.update(deltaTime);
             }

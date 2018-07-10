@@ -22,8 +22,6 @@ namespace egret3d {
         DefaultShaders.init();
         stage.init(canvas, requiredOptions);
         paper.Application.init(options);
-        //
-        paper.Application.sceneManager.createScene("default");
     }
 
     function getMainCanvas() {

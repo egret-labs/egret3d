@@ -22,7 +22,7 @@ namespace egret3d.oimo {
         public readonly jointType: JointType = JointType.Hinge;
 
         @paper.serializedField
-        private readonly _axis: Vector3 = Vector3.FORWARD.clone();
+        private readonly _axis: Vector3 = Vector3.UP.clone();
         @paper.serializedField
         private readonly _valuesB: Float32Array = new Float32Array([
             0.0, 0.0, 0,

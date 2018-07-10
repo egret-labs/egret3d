@@ -42,7 +42,7 @@ namespace paper {
          * @internal
          */
         public static _createEnabled: boolean = false;
-        
+
         protected _enabled: boolean = true;
         protected _started: boolean = false;
         protected _bufferedCount: number = 0;
@@ -73,7 +73,11 @@ namespace paper {
         /**
          * 
          */
-        protected readonly _globalGameObject: GameObject = paper.Application.sceneManager.globalGameObject;
+        protected readonly _globalGameObject: GameObject = Application.sceneManager.globalGameObject;
+        /**
+         * 
+         */
+        protected readonly _clock: Clock = this._globalGameObject.getComponent(Clock) || this._globalGameObject.addComponent(Clock);
         /**
          * @internal
          */
@@ -327,7 +331,7 @@ namespace paper {
             }
 
             if (this._enabled) {
-                this.onUpdate && this.onUpdate();
+                this.onUpdate && this.onUpdate(this._clock.deltaTime);
             }
         }
         /**
@@ -366,7 +370,7 @@ namespace paper {
         /**
          * 系统更新时调用。
          */
-        public onUpdate?(): void;
+        public onUpdate?(deltaTime?: number): void;
         /**
          * 系统被禁用时调用。
          * @see paper.BaseSystem#enabled

@@ -5,10 +5,8 @@ namespace paper {
     export class DestroySystem extends BaseSystem<BaseComponent> {
         private readonly _bufferedComponents: BaseComponent[] = [];
         private readonly _bufferedGameObjects: GameObject[] = [];
-        /**
-         * @inheritDoc
-         */
-        public onUpdate() {
+
+        public onUpdate(deltaTime: number) {
             for (const component of this._bufferedComponents) {
                 component.uninitialize();
             }
@@ -16,7 +14,7 @@ namespace paper {
             this._bufferedComponents.length = 0;
             this._bufferedGameObjects.length = 0;
             //
-            egret3d.InputManager.update(Time.deltaTime);
+            egret3d.InputManager.update(deltaTime);
             egret3d.Performance.endCounter(egret3d.PerformanceType.All);
         }
         /**

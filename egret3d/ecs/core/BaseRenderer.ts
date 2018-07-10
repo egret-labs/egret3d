@@ -16,16 +16,16 @@ namespace paper {
      * @language zh_CN
      */
     export abstract class BaseRenderer extends BaseComponent {
-        @paper.serializedField
+        @serializedField
         protected _receiveShadows: boolean = false;
-        @paper.serializedField
+        @serializedField
         protected _castShadows: boolean = false;
-        @paper.serializedField
+        @serializedField
         protected _lightmapIndex: number = -1;
-        @paper.serializedField
+        @serializedField
         protected readonly _lightmapScaleOffset: Float32Array = new Float32Array([1.0, 1.0, 0.0, 0.0]);
 
-        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        @editor.property(editor.EditType.CHECKBOX)
         public get receiveShadows() {
             return this._receiveShadows;
         }
@@ -37,7 +37,7 @@ namespace paper {
             this._receiveShadows = value;
         }
 
-        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        @editor.property(editor.EditType.CHECKBOX)
         public get castShadows() {
             return this._castShadows;
         }
@@ -49,7 +49,7 @@ namespace paper {
             this._castShadows = value;
         }
 
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @editor.property(editor.EditType.NUMBER)
         public get lightmapIndex() {
             return this._lightmapIndex;
         }
@@ -61,7 +61,7 @@ namespace paper {
             this._lightmapIndex = value;
         }
 
-        // @paper.editor.property(paper.editor.EditType.VECTOR4) TODO
+        // @editor.property(editor.EditType.VECTOR4) TODO
         public get lightmapScaleOffset() {
             return this._lightmapScaleOffset;
         }

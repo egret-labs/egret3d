@@ -23,8 +23,6 @@ namespace paper {
         private static _bindUpdate: FrameRequestCallback = null as any;
 
         private static _update() {
-            Time.update();
-
             if (this._isRunning) {
                 requestAnimationFrame(this._bindUpdate);
             }
@@ -56,7 +54,9 @@ namespace paper {
                 this.systemManager.register(systemClass, level++);
             }
 
-            Time.initialize();
+            //
+            Time = this.sceneManager.globalGameObject.getComponent(Clock) || this.sceneManager.globalGameObject.addComponent(Clock);
+
             this._isEditor = isEditor;
             this._isPlaying = isPlaying;
             this.resume();

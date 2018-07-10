@@ -65,8 +65,7 @@ namespace egret3d {
             this._drawCalls.removeDrawCalls(gameObject.renderer as TrailRenderer);
         }
 
-        public onUpdate() { // TODO 应将组件功能尽量移到系统
-            const deltaTime = paper.Time.deltaTime;
+        public onUpdate(deltaTime: number) {
             for (const component of this._components) {
                 component.update(deltaTime);
             }

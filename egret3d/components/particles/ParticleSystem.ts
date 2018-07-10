@@ -3,7 +3,6 @@ namespace egret3d.particle {
      * 
      */
     export class ParticleSystem extends paper.BaseSystem<ParticleComponent | ParticleRenderer>{
-        private _globalTimer: number = 0.0;
         protected readonly _interests = [
             {
                 componentClass: ParticleComponent,
@@ -452,18 +451,11 @@ namespace egret3d.particle {
             // component.stop();
         }
 
-        public onUpdate() {
-            if (this._globalTimer !== this._globalTimer) {
-                this._globalTimer = paper.Time.time;
-            }
-
-            const elapsedTime = paper.Time.time - this._globalTimer;
+        public onUpdate(deltaTime: number) {
             for (let i = 0, l = this._components.length; i < l; i += 2) {
                 const particleComp = this._components[i] as ParticleComponent;
-                particleComp.update(elapsedTime);
+                particleComp.update(deltaTime);
             }
-
-            this._globalTimer = paper.Time.time;
         }
 
         public onDisable() {

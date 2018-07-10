@@ -34,6 +34,8 @@ namespace paper {
 
         public onUpdate() {
             //
+            this._clock.update();
+            //
             egret3d.Performance.startCounter(egret3d.PerformanceType.All);
             egret3d.stage.update();
 

@@ -6,9 +6,8 @@ namespace paper {
         protected readonly _interests = [{ componentClass: Behaviour as any, isExtends: true }];
         private readonly _laterCalls: (() => void)[] = [];
 
-        public onUpdate() {
+        public onUpdate(deltaTime: number) {
             // Update behaviours.
-            const deltaTime = Time.deltaTime;
             const components = (Application.systemManager.getSystem(UpdateSystem) as UpdateSystem).components;
 
             if (this._isEditorUpdate()) {

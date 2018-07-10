@@ -3,10 +3,7 @@ namespace paper.editor {
      * EditorCamera系统
      */
     export class EditorCameraSystem extends egret3d.CameraSystem {
-        /**
-         * @inheritDoc
-         */
-        public onUpdate() {
+        public onUpdate(deltaTime: number) {
             this._components.sort((a, b) => {
                 return a.order - b.order;
             });
@@ -19,7 +16,7 @@ namespace paper.editor {
                 if (component.gameObject.tag === "EditorCamera") {
                     camera = component;
                 }
-                component.update(paper.Time.deltaTime);
+                component.update(deltaTime);
                 if (lights && lights.length > 0) {
                     component.context.updateLights(lights);
                 }

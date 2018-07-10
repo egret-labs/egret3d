@@ -6,9 +6,7 @@ namespace egret3d {
     export class GuidpathSystem extends paper.BaseSystem<Guidpath> {
         protected readonly _interests = [{ componentClass: Guidpath }];
 
-        public onUpdate() {
-            const deltaTime = paper.Time.deltaTime;
-
+        public onUpdate(deltaTime: number) {
             for (const component of this._components) {
                 component.update(deltaTime);
             }

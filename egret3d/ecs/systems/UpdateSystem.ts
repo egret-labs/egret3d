@@ -32,10 +32,9 @@ namespace paper {
             console.debug("UpdateSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component));
         }
 
-        public onUpdate() {
+        public onUpdate(deltaTime: number) {
             let index = 0;
             let removeCount = 0;
-            const deltaTime = Time.deltaTime;
             const components = this._components;
 
             if (this._isEditorUpdate()) {

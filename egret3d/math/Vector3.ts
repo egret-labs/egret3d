@@ -16,6 +16,24 @@ namespace egret3d {
         public static readonly FORWARD: Readonly<Vector3> = new Vector3(0.0, 0.0, 1.0);
         public static readonly BACK: Readonly<Vector3> = new Vector3(0.0, 0.0, -1.0);
 
+        private static readonly _instances: Vector3[] = [];
+
+        public static create(x?: number, y?: number, z?: number) {
+            if (this._instances.length > 0) {
+                return this._instances.pop();
+            }
+
+            return new Vector3(x, y, z);
+        }
+
+        public static release(value: Vector3) {
+            if (this._instances.indexOf(value) >= 0) {
+                return;
+            }
+
+            this._instances.push(value);
+        }
+
         public static subtract(v1: Readonly<IVector3>, v2: Readonly<IVector3>, out: IVector3) {
             out.x = v1.x - v2.x;
             out.y = v1.y - v2.y;

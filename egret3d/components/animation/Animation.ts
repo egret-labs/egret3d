@@ -144,7 +144,7 @@ namespace egret3d {
         }
 
         public fadeOut(fadeTime: number) {
-            const globalTime = paper.Time.time;
+            const globalTime = paper.Time.time; //
             const localFadeTime = globalTime - this._fadeTimeStart;
 
             if (this._fadeState > 0) {
@@ -438,7 +438,7 @@ namespace egret3d {
          * 
          */
         public initialize(animationComponent: Animation, animationAsset: GLTFAsset, animationClip: GLTFAnimationClip) {
-            const globalTime = paper.Time.time;
+            const globalTime = paper.Time.time; //
             const assetConfig = animationAsset.config;
             //
             this.animationAsset = animationAsset;
@@ -934,7 +934,7 @@ namespace egret3d {
         }
 
         public onUpdate() { // TODO 应将组件功能尽量移到系统
-            const globalTime = paper.Time.time;
+            const globalTime = this._clock.time;
             for (const component of this._components) {
                 component.update(globalTime);
             }

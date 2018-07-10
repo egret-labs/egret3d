@@ -39,7 +39,7 @@ namespace paper {
         /**
          * 
          */
-        public renderer: paper.BaseRenderer | null = null as any;
+        public renderer: BaseRenderer | null = null as any;
 
         /**
          * 预制体
@@ -230,7 +230,7 @@ namespace paper {
             if (component instanceof egret3d.Transform) {
                 this.transform = component;
             }
-            else if (component instanceof paper.BaseRenderer) {
+            else if (component instanceof BaseRenderer) {
                 this.renderer = component;
             }
 
@@ -528,7 +528,7 @@ namespace paper {
                     this.addComponent(MissingComponent).missingObject = component;
                 }
                 else {
-                    if (component instanceof paper.BaseRenderer) {
+                    if (component instanceof BaseRenderer) {
                         this.renderer = component;
                     }
 

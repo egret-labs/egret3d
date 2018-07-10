@@ -53,7 +53,7 @@ namespace egret3d {
             // this._drawCalls.sort();
 
             for (const drawCall of this._drawCalls.drawCalls) {
-                if(drawCall.disable){
+                if (drawCall.disable) {
                     continue;
                 }
                 const gameObject = drawCall.renderer.gameObject;
@@ -73,7 +73,7 @@ namespace egret3d {
             }
         }
 
-        public onUpdate() {
+        public onUpdate(deltaTime: number) {
             this._components.sort((a, b) => { // TODO 不应每次产生函数实例。
                 return a.order - b.order;
             });
@@ -82,7 +82,7 @@ namespace egret3d {
             const lights = lightSystem ? lightSystem.components : null;
 
             for (const component of this._components) {
-                component.update(paper.Time.deltaTime);
+                component.update(deltaTime);
 
                 if (lights && lights.length > 0) {
                     component.context.updateLights(lights); // TODO 性能优化

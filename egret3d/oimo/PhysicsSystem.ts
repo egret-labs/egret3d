@@ -37,7 +37,7 @@ namespace egret3d.oimo {
 
             for (const shape of gameObject.getComponents(Collider as any, true) as Collider[]) {
                 rigidbody.oimoRigidbody.addShape(shape.oimoShape);
-                rigidbody._updateMass(rigidbody.oimoRigidbody);
+                // rigidbody._updateMass(rigidbody.oimoRigidbody);
             }
 
             // 子物体的transform？ TODO
@@ -86,11 +86,13 @@ namespace egret3d.oimo {
 
             for (const shape of gameObject.getComponents(Collider as any, true) as Collider[]) {
                 rigidbody.oimoRigidbody.addShape(shape.oimoShape);
-                rigidbody._updateMass(rigidbody.oimoRigidbody);
+                // rigidbody._updateMass(rigidbody.oimoRigidbody);
             }
 
-            for (const joint of gameObject.getComponents(Joint as any, true) as Joint<any>[]) {
-                this._oimoWorld.addJoint(joint.oimoJoint);
+            for (const joint of gameObject.getComponents(Joint as any, true) as Joint<OIMO.Joint>[]) {
+                if (!(joint.oimoJoint as any)._world) {
+                    this._oimoWorld.addJoint(joint.oimoJoint);
+                }
             }
 
             this._oimoWorld.addRigidBody(rigidbody.oimoRigidbody);
@@ -113,13 +115,13 @@ namespace egret3d.oimo {
             }
         }
 
-        public onUpdate() {
+        public onUpdate(deltaTime: number) {
             //
             if (this._shapes.length > 0) {
                 for (const shape of this._shapes) {
                     const rigidbody = this._getComponent(shape.gameObject, 0) as Rigidbody;
                     rigidbody.oimoRigidbody.addShape(shape.oimoShape);
-                    rigidbody._updateMass(rigidbody.oimoRigidbody);
+                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
                 }
 
                 this._shapes.length = 0;
@@ -132,8 +134,12 @@ namespace egret3d.oimo {
 
                 this._joints.length = 0;
             }
-            //
-            this._oimoWorld.step(paper.Time.deltaTime);
+
+            let times = 0;
+            while (this._clock._fixedTime >= this._clock.fixedTimeStep && times++ < this._clock.maxFixedSubSteps) {
+                this._oimoWorld.step(this._clock.fixedTimeStep);
+                this._clock._fixedTime -= this._clock.fixedTimeStep;
+            }
 
             //
             const oimoTransform = PhysicsSystem._helpTransform;

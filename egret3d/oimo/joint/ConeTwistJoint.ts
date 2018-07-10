@@ -14,7 +14,7 @@ namespace egret3d.oimo {
         MotorSpeed,
         MotorTorque,
         //
-        MaxSwingAngleY,
+        MaxSwingAngleX,
         MaxSwingAngleZ,
     }
     /**
@@ -38,7 +38,7 @@ namespace egret3d.oimo {
             0.0, 0.0, 0,
             0.0, 0.0, 0,
             1.0, 0.0, 0.0, 0.0,
-            Math.PI, Math.PI,
+            180.0, 180.0,
         ]);
 
         protected _createJoint() {
@@ -55,7 +55,7 @@ namespace egret3d.oimo {
             if (this.useGlobalAnchor) {
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
-                    this._anchor as any, this._twistAxis as any, this._twistAxis as any
+                    this._anchor as any, this._twistAxis as any, this._swingAxis as any
                 );
             }
             else {
@@ -84,8 +84,8 @@ namespace egret3d.oimo {
             config.twistLimitMotor.motorSpeed = this.motorSpeed * egret3d.DEG_RAD;
             config.twistLimitMotor.motorTorque = this.motorTorque;
 
-            config.maxSwingAngle1 = this.maxSwingAngleY;
-            config.maxSwingAngle2 = this.maxSwingAngleZ;
+            config.maxSwingAngle1 = this.maxSwingAngleX * egret3d.DEG_RAD;
+            config.maxSwingAngle2 = this.maxSwingAngleZ * egret3d.DEG_RAD;
 
             const joint = new OIMO.RagdollJoint(config);
             joint.userData = this;
@@ -235,15 +235,19 @@ namespace egret3d.oimo {
         /**
          * 
          */
-        public get maxSwingAngleY() {
-            return this._valuesB[ValueType.MaxSwingAngleY];
+        public get maxSwingAngleX() {
+            return this._valuesB[ValueType.MaxSwingAngleX];
         }
-        public set maxSwingAngleY(value: number) {
+        public set maxSwingAngleX(value: number) {
+            if (value < 1.0) {
+                value = 1.0;
+            }
+
             if (this._oimoJoint) {
-                console.warn("Cannot change the maxSwingAngle2 after the joint has been created.");
+                console.warn("Cannot change the maxSwingAngleX after the joint has been created.");
             }
             else {
-                this._valuesB[ValueType.MaxSwingAngleY] = value;
+                this._valuesB[ValueType.MaxSwingAngleX] = value;
             }
         }
         /**
@@ -253,8 +257,12 @@ namespace egret3d.oimo {
             return this._valuesB[ValueType.MaxSwingAngleZ];
         }
         public set maxSwingAngleZ(value: number) {
+            if (value < 1.0) {
+                value = 1.0;
+            }
+
             if (this._oimoJoint) {
-                console.warn("Cannot change the maxSwingAngle2 after the joint has been created.");
+                console.warn("Cannot change the maxSwingAngleZ after the joint has been created.");
             }
             else {
                 this._valuesB[ValueType.MaxSwingAngleZ] = value;
