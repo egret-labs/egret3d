@@ -51,7 +51,7 @@ namespace paper {
          * @internal
          */
         @serializedField
-        private prefabEditInfo:boolean | string | null = null;
+        private prefabEditInfo: boolean | string | null = null;
 
         @serializedField
         private _activeSelf: boolean = true;
@@ -439,6 +439,10 @@ namespace paper {
         public set dontDestroy(value: boolean) {
             if (this.dontDestroy === value) {
                 return;
+            }
+
+            for (const child of this.transform.children) {
+                child.gameObject.dontDestroy = value;
             }
 
             if (value) {

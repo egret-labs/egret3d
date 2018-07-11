@@ -6346,6 +6346,10 @@ var paper;
                 if (this.dontDestroy === value) {
                     return;
                 }
+                for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
+                    var child = _a[_i];
+                    child.gameObject.dontDestroy = value;
+                }
                 if (value) {
                     this._addToScene(paper.Application.sceneManager.globalScene);
                 }
