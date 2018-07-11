@@ -95,5 +95,11 @@ namespace paper {
          * @language zh_CN
          */
         public abstract dispose(): void;
+
+        /**
+         * @internal
+         * TODO:临时，在 Prefab/Scene.parse处需要
+         */
+        hashCode: number
     }
 }

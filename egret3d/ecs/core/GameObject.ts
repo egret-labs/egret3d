@@ -441,6 +441,10 @@ namespace paper {
                 return;
             }
 
+            for (const child of this.transform.children) {
+                child.gameObject.dontDestroy = value;
+            }
+
             if (value) {
                 this._addToScene(Application.sceneManager.globalScene);
             }

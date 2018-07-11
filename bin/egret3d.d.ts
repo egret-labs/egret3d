@@ -573,6 +573,8 @@ declare namespace egret3d {
         defaultScene?: string;
         isEditor?: boolean;
         isPlaying?: boolean;
+        contentWidth?: number;
+        contentHeight?: number;
     };
     type RequiredRuntimeOptions = {
         antialias: boolean;
@@ -1560,9 +1562,11 @@ declare namespace egret3d {
      *
      */
     class BaseObjectAsset extends paper.Asset {
-        protected readonly _assets: any;
+        protected readonly _assets: {
+            [index: string]: paper.Asset;
+        };
         protected _raw: PrefabConfig;
-        $parse(json: PrefabConfig): void;
+        $parse(json: PrefabConfig, subAssets: paper.Asset[]): void;
         /**
          * @inheritDoc
          */
@@ -1573,35 +1577,13 @@ declare namespace egret3d {
         caclByteLength(): number;
     }
     /**
-     * prefab asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 预制件资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * 预制体资源。
      */
     class Prefab extends BaseObjectAsset {
         /**
-         * Create instance from this prefab.
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 从当前预制件生成一个实例。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 从当前预制体生成一个实例。
          */
         createInstance(): paper.GameObject;
-        /**
-         * @deprecated
-         */
-        getClone(): paper.GameObject;
     }
 }
 declare namespace paper {
@@ -1620,10 +1602,10 @@ declare namespace paper {
          */
         createScene(name: string, isActive?: boolean): Scene;
         /**
-         * load scene 加载场景
-         * @param rawScene url
+         * 加载场景
+         * @param resourceName 资源名称
          */
-        loadScene(url: string): Scene;
+        loadScene(resourceName: string): Scene;
         /**
          * 卸载指定场景。
          */
@@ -1636,10 +1618,6 @@ declare namespace paper {
          *
          */
         getSceneByName(name: string): Scene;
-        /**
-         *
-         */
-        getSceneByURL(url: string): Scene;
         /**
          *
          */
@@ -2097,56 +2075,20 @@ declare namespace egret3d {
          */
         dispose(): void;
         /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         caclByteLength(): number;
         private _setDefaultUniforms(shader);
         /**
-         * set shader
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 设置着色器，不保留原有数据。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         setShader(shader: Shader): void;
         /**
-          * get shader
-          * @version paper 1.0
-          * @platform Web
-          * @language en_US
-          */
-        /**
          * 获取当前着色器。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         getShader(): Shader;
         /**
-         * change shader
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 更改着色器，保留原有数据。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         changeShader(shader: Shader): void;
         renderQueue: RenderQueue;
@@ -2166,18 +2108,8 @@ declare namespace egret3d {
         setMatrix(_id: string, _matrix: Matrix): void;
         setMatrixv(_id: string, _matrixv: Float32Array): void;
         setTexture(_id: string, _texture: egret3d.Texture): void;
-        $parse(json: MaterialConfig): void;
-        /**
-         * clone material
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
         /**
          * 克隆材质资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         clone(): Material;
     }
@@ -3140,89 +3072,6 @@ declare namespace paper {
         static readonly deltaTime: number;
         static readonly unscaledDeltaTime: number;
         private constructor();
-    }
-}
-declare namespace egret3d {
-    /**
-     * path play type
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 路径播放类型
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    enum pathtype {
-        once = 0,
-        loop = 1,
-        pingpong = 2,
-    }
-    /**
-     * path asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 路径资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class PathAsset extends paper.Asset {
-        /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        dispose(): void;
-        /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        caclByteLength(): number;
-        /**
-         * path point data
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 路径节点数据
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        paths: egret3d.Vector3[];
-        private type;
-        private instertPointcount;
-        private items;
-        /**
-         *
-         */
-        $parse(json: any): void;
-        private lines;
-        private getpaths();
-        private getBezierPointAlongCurve(points, rate, clearflag?);
-        private vec3Lerp(start, end, lerp, out);
     }
 }
 declare namespace egret3d {
@@ -4641,191 +4490,6 @@ declare namespace egret3d {
         }): void;
     }
 }
-declare namespace egret3d {
-    /**
-     * Guid Path Component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 路径组件。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class Guidpath extends paper.BaseComponent {
-        private paths;
-        private _pathasset;
-        /**
-         * Path Asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 路径组件需要的路径资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        /**
-         * Path Asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 路径组件需要的路径资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        pathasset: PathAsset;
-        /**
-         * move speed
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 移动速度。
-         * @default 1
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        speed: number;
-        private isactived;
-        private loopCount;
-        /**
-         * play movement
-         * @version paper 1.0
-         * @param loopCount play times
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 按照路径开始移动。
-         * @param loopCount 播放次数
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        play(loopCount?: number): void;
-        /**
-         * pause movement
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 暂停移动。
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        pause(): void;
-        /**
-         * stop movement
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 停止移动。
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        stop(): void;
-        /**
-         * restart movement
-         * @param loopCount play times
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 重新按照路径移动。
-         * @param loopCount 播放次数
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        replay(loopCount?: number): void;
-        /**
-         * loop play
-         * @default false
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 循环播放。
-         * @default false
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        isloop: boolean;
-        private datasafe;
-        private folowindex;
-        /**
-         * look forward
-         * @default false
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 挂载此组件的gameobject是否朝向前方。
-         * @default false
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        lookforward: boolean;
-        private oncomplete;
-        private mystrans;
-        /**
-         * set path asset
-         * @param pathasset path asset
-         * @param speed move speed
-         * @param oncomplete on complete callback
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置路径组件的需要的参数。
-         * @param pathasset 路径资源
-         * @param speed 移动速度
-         * @param oncomplete 按照路径移动结束需要执行的事件
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        setpathasset(pathasset: PathAsset, speed?: number, oncomplete?: () => void): void;
-        /**
-         *
-         */
-        update(delta: number): void;
-        private adjustDir;
-        private followmove(delta);
-    }
-}
-declare namespace egret3d {
-    /**
-     * Guidpath系统
-     */
-    class GuidpathSystem extends paper.BaseSystem<Guidpath> {
-        protected readonly _interests: {
-            componentClass: typeof Guidpath;
-        }[];
-        onUpdate(): void;
-    }
-}
 declare namespace paper {
     /**
      *
@@ -5324,239 +4988,205 @@ declare namespace egret3d {
         hasDrawCalls(renderer: paper.BaseRenderer): boolean;
     }
 }
+declare namespace egret3d {
+    /**
+     *
+     */
+    class BoneBlendLayer {
+        dirty: number;
+        layer: number;
+        leftWeight: number;
+        layerWeight: number;
+        blendWeight: number;
+        target: Transform | null;
+        update(animationState: AnimationState): boolean;
+    }
+    /**
+     * 动画混合节点。
+     */
+    abstract class BlendNode {
+        /**
+         * @private
+         */
+        additive: boolean;
+        /**
+         * 动画混合模式。（根节点有效）
+         */
+        layer: number;
+        /**
+         * 节点权重。
+         */
+        weight: number;
+        /**
+         * 淡入淡出的时间。
+         */
+        fadeTime: number;
+        /**
+         * 父节点。
+         */
+        parent: BlendNode | null;
+        /**
+         * 融合进度。
+         *
+         */
+        _fadeProgress: number;
+        /**
+         * 全局融合时间标记。
+         */
+        protected _fadeTimeStart: number;
+        protected _onFadeStateChange(): void;
+        update(globalTime: number): void;
+        fadeOut(fadeTime: number): void;
+    }
+    /**
+     * 动画混合树节点。
+     */
+    class BlendTree extends BlendNode {
+        private readonly _blendNodes;
+    }
+    /**
+     * 动画状态。
+     */
+    class AnimationState extends BlendNode {
+        /**
+         * @private
+         */
+        layer: number;
+        /**
+         * 动画总播放次数。
+         */
+        playTimes: number;
+        /**
+         * 动画当前播放次数。
+         */
+        currentPlayTimes: number;
+        /**
+         * 播放速度。
+         */
+        timeScale: number;
+        /**
+         * @private
+         */
+        animationAsset: GLTFAsset;
+        /**
+         * 播放的动画数据。
+         */
+        animation: GLTFAnimation;
+        /**
+         * 播放的动画剪辑。
+         */
+        animationClip: GLTFAnimationClip;
+        /**
+         * 是否允许播放。
+         */
+        private _isPlaying;
+        /**
+         * 播放状态。
+         * -1: start, 0: playing, 1: complete;
+         */
+        private _playState;
+        /**
+         * 帧率。
+         */
+        private _frameRate;
+        /**
+         * 起始帧。
+         */
+        private _frameStart;
+        /**
+         * 总帧数。
+         */
+        private _frameCount;
+        /**
+         * 全局播放时间标记。
+         */
+        private _playTimeStart;
+        /**
+         * 本地播放时间。
+         */
+        private _playTime;
+        /**
+         * 帧插值进度。
+         */
+        private _frameProgress;
+        private _animationComponent;
+        private readonly _channels;
+        private readonly _retargetBoneIndices;
+        private readonly _delta;
+        private _frameBuffer;
+        private _frameOffset;
+        private _nextFrameOffset;
+        private _frameOffsets;
+        private _onArriveAtFrame();
+        private _onUpdateFrame();
+        private _onUpdateTranslation(channel);
+        private _onUpdateRotation(channel);
+        private _onUpdateScale(channel);
+        private _onUpdateActive(channel);
+        /**
+         *
+         */
+        initialize(animationComponent: Animation, animationAsset: GLTFAsset, animationClip: GLTFAnimationClip): void;
+        /**
+         *
+         */
+        update(globalTime: number): void;
+        fateOut(): void;
+    }
+    /**
+     * 动画组件。
+     */
+    class Animation extends paper.BaseComponent {
+        /**
+         * @private
+         */
+        autoPlay: boolean;
+        /**
+         * 动画速度。
+         */
+        timeScale: number;
+        /**
+         * 动画数据列表。
+         */
+        private readonly _animations;
+        /**
+         * 混合节点列表。
+         */
+        private readonly _blendNodes;
+        /**
+         * 最后一个播放的动画状态。
+         * 当进行动画混合时，该值通常没有任何意义。
+         */
+        private _lastAnimationState;
+        initialize(): void;
+        /**
+         *
+         */
+        update(globalTime: number): void;
+        fadeIn(animationName: string | null, fadeTime: number, playTimes?: number, layer?: number, additive?: boolean): AnimationState | null;
+        play(animationNameOrNames?: string | string[] | null, playTimes?: number): AnimationState | null;
+        readonly lastAnimationnName: string;
+        /**
+         * 动画数据列表。
+         */
+        animations: ReadonlyArray<GLTFAsset>;
+    }
+    class AnimationSystem extends paper.BaseSystem<Animation> {
+        protected readonly _interests: {
+            componentClass: typeof Animation;
+        }[];
+        onAddGameObject(gameObject: paper.GameObject): void;
+        onUpdate(): void;
+    }
+}
+declare namespace egret3d.particle {
+}
 declare namespace paper {
     const serializeClassMap: {
         [key: string]: string;
     };
     function findClassCode(name: string): string;
     function findClassCodeFrom(target: any): string;
-}
-declare namespace egret3d.particle {
-}
-declare namespace egret3d.particle {
-    const enum CurveMode {
-        Constant = 0,
-        Curve = 1,
-        TwoCurves = 2,
-        TwoConstants = 3,
-    }
-    const enum ColorGradientMode {
-        Color = 0,
-        Gradient = 1,
-        TwoColors = 2,
-        TwoGradients = 3,
-        RandomColor = 4,
-    }
-    const enum SimulationSpace {
-        Local = 0,
-        World = 1,
-        Custom = 2,
-    }
-    const enum ScalingMode {
-        Hierarchy = 0,
-        Local = 1,
-        Shape = 2,
-    }
-    const enum ShapeType {
-        None = -1,
-        Sphere = 0,
-        SphereShell = 1,
-        Hemisphere = 2,
-        HemisphereShell = 3,
-        Cone = 4,
-        Box = 5,
-        Mesh = 6,
-        ConeShell = 7,
-        ConeVolume = 8,
-        ConeVolumeShell = 9,
-        Circle = 10,
-        CircleEdge = 11,
-        SingleSidedEdge = 12,
-        MeshRenderer = 13,
-        SkinnedMeshRenderer = 14,
-        BoxShell = 15,
-        BoxEdge = 16,
-    }
-    const enum ShapeMultiModeValue {
-        Random = 0,
-        Loop = 1,
-        PingPong = 2,
-        BurstSpread = 3,
-    }
-    const enum AnimationType {
-        WholeSheet = 0,
-        SingleRow = 1,
-    }
-    const enum UVChannelFlags {
-        UV0 = 1,
-        UV1 = 2,
-        UV2 = 4,
-        UV3 = 8,
-    }
-    const enum GradientMode {
-        Blend = 0,
-        Fixed = 1,
-    }
-    class Keyframe implements paper.ISerializable {
-        time: number;
-        value: number;
-        serialize(): number[];
-        deserialize(element: any): void;
-        clone(source: Keyframe): void;
-    }
-    class AnimationCurve implements paper.ISerializable {
-        /**
-         * 功能与效率平衡长度取4
-         */
-        private readonly _keys;
-        private readonly _floatValues;
-        serialize(): number[][];
-        deserialize(element: any): void;
-        evaluate(t?: number): number;
-        readonly floatValues: Readonly<Float32Array>;
-        clone(source: AnimationCurve): void;
-    }
-    class GradientColorKey extends paper.SerializableObject {
-        color: Color;
-        time: number;
-        deserialize(element: any): void;
-    }
-    class GradientAlphaKey extends paper.SerializableObject {
-        alpha: number;
-        time: number;
-        deserialize(element: any): void;
-    }
-    class Gradient extends paper.SerializableObject {
-        mode: GradientMode;
-        private readonly alphaKeys;
-        private readonly colorKeys;
-        private readonly _alphaValue;
-        private readonly _colorValue;
-        deserialize(element: any): void;
-        evaluate(t: number, out: Color): Color;
-        readonly alphaValues: Readonly<Float32Array>;
-        readonly colorValues: Readonly<Float32Array>;
-    }
-    class MinMaxCurve extends paper.SerializableObject {
-        mode: CurveMode;
-        constant: number;
-        constantMin: number;
-        constantMax: number;
-        readonly curve: AnimationCurve;
-        readonly curveMin: AnimationCurve;
-        readonly curveMax: AnimationCurve;
-        deserialize(element: any): void;
-        evaluate(t?: number): number;
-        clone(source: MinMaxCurve): void;
-    }
-    class MinMaxGradient extends paper.SerializableObject {
-        mode: ColorGradientMode;
-        readonly color: Color;
-        readonly colorMin: Color;
-        readonly colorMax: Color;
-        readonly gradient: Gradient;
-        readonly gradientMin: Gradient;
-        readonly gradientMax: Gradient;
-        deserialize(element: any): void;
-        evaluate(t: number, out: Color): Color;
-    }
-    class Burst implements paper.ISerializable {
-        time: number;
-        minCount: number;
-        maxCount: number;
-        cycleCount: number;
-        repeatInterval: number;
-        serialize(): number[];
-        deserialize(element: any): void;
-    }
-    abstract class ParticleSystemModule extends paper.SerializableObject {
-        enable: boolean;
-        protected _comp: ParticleComponent;
-        constructor(comp: ParticleComponent);
-        deserialize(element: any): void;
-    }
-    class MainModule extends ParticleSystemModule {
-        duration: number;
-        loop: boolean;
-        readonly startDelay: MinMaxCurve;
-        readonly startLifetime: MinMaxCurve;
-        readonly startSpeed: MinMaxCurve;
-        readonly startSizeX: MinMaxCurve;
-        readonly startSizeY: MinMaxCurve;
-        readonly startSizeZ: MinMaxCurve;
-        readonly startRotationX: MinMaxCurve;
-        readonly startRotationY: MinMaxCurve;
-        readonly startRotationZ: MinMaxCurve;
-        readonly startColor: MinMaxGradient;
-        readonly gravityModifier: MinMaxCurve;
-        playOnAwake: boolean;
-        deserialize(element: any): void;
-        startRotation3D: boolean;
-        simulationSpace: SimulationSpace;
-        scaleMode: ScalingMode;
-        maxParticles: number;
-    }
-    class EmissionModule extends ParticleSystemModule {
-        readonly rateOverTime: MinMaxCurve;
-        readonly bursts: Array<Burst>;
-        deserialize(element: any): void;
-    }
-    class ShapeModule extends ParticleSystemModule {
-        shapeType: ShapeType;
-        radius: number;
-        angle: number;
-        length: number;
-        readonly arcSpeed: MinMaxCurve;
-        arcMode: ShapeMultiModeValue;
-        radiusSpread: number;
-        radiusMode: ShapeMultiModeValue;
-        readonly box: egret3d.Vector3;
-        randomDirection: boolean;
-        spherizeDirection: boolean;
-        deserialize(element: any): void;
-        invalidUpdate(): void;
-        generatePositionAndDirection(position: Vector3, direction: Vector3): void;
-    }
-    class VelocityOverLifetimeModule extends ParticleSystemModule {
-        deserialize(element: any): void;
-        mode: CurveMode;
-        space: SimulationSpace;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class ColorOverLifetimeModule extends ParticleSystemModule {
-        deserialize(element: any): void;
-        color: Readonly<MinMaxGradient>;
-    }
-    class SizeOverLifetimeModule extends ParticleSystemModule {
-        deserialize(element: any): void;
-        separateAxes: boolean;
-        size: Readonly<MinMaxCurve>;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class RotationOverLifetimeModule extends ParticleSystemModule {
-        deserialize(element: any): void;
-        separateAxes: boolean;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class TextureSheetAnimationModule extends ParticleSystemModule {
-        private readonly _floatValues;
-        deserialize(element: any): void;
-        numTilesX: number;
-        numTilesY: number;
-        animation: AnimationType;
-        useRandomRow: boolean;
-        frameOverTime: Readonly<MinMaxCurve>;
-        startFrame: Readonly<MinMaxCurve>;
-        cycleCount: number;
-        rowIndex: number;
-        readonly floatValues: Readonly<Float32Array>;
-    }
 }
 declare namespace egret3d.particle {
 }
@@ -5672,6 +5302,10 @@ declare namespace egret3d.particle {
     }
 }
 declare namespace egret3d {
+    class Audio extends paper.BaseComponent {
+    }
+}
+declare namespace egret3d {
     enum WEBGL_UNIFORM_TYPE {
         FLOAT_VEC2 = 35664,
         FLOAT_VEC3 = 35665,
@@ -5752,132 +5386,6 @@ declare namespace paper {
          *
          */
         callLater(callback: () => void): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    class Charinfo {
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-        xSize: number;
-        ySize: number;
-        xOffset: number;
-        yOffset: number;
-        xAddvance: number;
-        static caclByteLength(): number;
-    }
-    /**
-     * font asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 字体资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Font extends paper.Asset {
-        /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        dispose(): void;
-        /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        caclByteLength(): number;
-        private _texture;
-        /**
-         * font texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 字体材质。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        /**
-         * font texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 字体材质。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        texture: Texture;
-        /**
-         *
-         * 字体信息map
-         */
-        cmap: {
-            [id: string]: Charinfo;
-        };
-        /**
-         *
-         */
-        fontname: string;
-        /**
-         *
-         * 像素尺寸
-         */
-        pointSize: number;
-        /**
-         *
-         * 间隔
-         */
-        padding: number;
-        /**
-         *
-         * 行高
-         */
-        lineHeight: number;
-        /**
-         *
-         * 基线
-         */
-        baseline: number;
-        /**
-         *
-         */
-        atlasWidth: number;
-        /**
-         *
-         */
-        atlasHeight: number;
-        /**
-         *
-         */
-        $parse(json: any): void;
     }
 }
 declare namespace egret3d {
@@ -6142,8 +5650,6 @@ declare namespace RES.processor {
     const GLTFProcessor: RES.processor.Processor;
     const PrefabProcessor: RES.processor.Processor;
     const SceneProcessor: RES.processor.Processor;
-    const Font3DProcessor: RES.processor.Processor;
-    const PathAssetProcessor: RES.processor.Processor;
 }
 declare namespace egret3d {
     class DefaultShaders {
@@ -6276,104 +5782,7 @@ declare namespace egret3d.io {
     }
 }
 declare namespace egret3d.utils {
-    /**
-     * Get path by url
-     * @param content text
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 获取RUL的PATH。
-     * @param content 文本
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    function getPathByUrl(url: string): string;
-    function combinePath(base: string, relative: string): string;
     function getRelativePath(targetPath: string, sourcePath: string): string;
-    /**
-     * first char to lower case
-     * @param str source string
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 将一个字符串中的第一个字符转为小写
-     * @param str 要处理的字符串
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    function firstCharToLowerCase(str: string): string;
-    /**
-     * replace all
-     * @param srcStr source string
-     * @param fromStr from string
-     * @param toStr to string
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 将一个字符串中的所有指定字符替换为指定字符
-     * @param srcStr 要处理的字符串
-     * @param fromStr 原字符串中的指定字符串
-     * @param toStr 将被替换为的字符串
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    function replaceAll(srcStr: string, fromStr: string, toStr: string): string;
-    /**
-     * remove all space
-     * @param str source string
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 剔除掉字符串中所有的空格
-     * @param str 要处理的字符串
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    function trimAll(str: string): string;
-    /**
-     * Convert string to blob
-     * @param content text
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * string转换为blob。
-     * @param content 文本
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    function stringToBlob(content: string): Blob;
-    /**
-     * Convert string to utf8 array
-     * @param str text
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * string转换为utf8数组。
-     * @param str 文本
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    function stringToUtf8Array(str: string): number[];
-    function caclStringByteLength(value: string): number;
-    function getKeyCodeByAscii(ev: KeyboardEvent): number;
 }
 declare namespace Stats {
     /**
@@ -7412,7 +6821,10 @@ declare namespace paper.editor {
          * @param uuids unique id
          */
         getGameObjectsByUUids(uuids: string[]): GameObject[];
-        getAllUUidFromGameObject(gameObject: GameObject, uuids: string[]): void;
+        getAllRootIndexsFromGameObject(gameObject: GameObject, indexData: {
+            uuid: string;
+            preIndex: number;
+        }[]): void;
         getAllComponentUUidFromGameObject(gameObject: GameObject, uuids: string[]): void;
         /**
          * call after duplicate/create/paste
@@ -8426,194 +7838,228 @@ declare namespace egret3d.ammo {
         collisionObject: CollisionObject | null;
     }
 }
-declare namespace egret3d {
-    /**
-     *
-     */
-    class BoneBlendLayer {
-        dirty: number;
-        layer: number;
-        leftWeight: number;
-        layerWeight: number;
-        blendWeight: number;
-        target: Transform | null;
-        update(animationState: AnimationState): boolean;
+declare namespace egret3d.particle {
+    const enum CurveMode {
+        Constant = 0,
+        Curve = 1,
+        TwoCurves = 2,
+        TwoConstants = 3,
     }
-    /**
-     * 动画混合节点。
-     */
-    abstract class BlendNode {
-        /**
-         * @private
-         */
-        additive: boolean;
-        /**
-         * 动画混合模式。（根节点有效）
-         */
-        layer: number;
-        /**
-         * 节点权重。
-         */
-        weight: number;
-        /**
-         * 淡入淡出的时间。
-         */
-        fadeTime: number;
-        /**
-         * 父节点。
-         */
-        parent: BlendNode | null;
-        /**
-         * 融合进度。
-         *
-         */
-        _fadeProgress: number;
-        /**
-         * 全局融合时间标记。
-         */
-        protected _fadeTimeStart: number;
-        protected _onFadeStateChange(): void;
-        update(globalTime: number): void;
-        fadeOut(fadeTime: number): void;
+    const enum ColorGradientMode {
+        Color = 0,
+        Gradient = 1,
+        TwoColors = 2,
+        TwoGradients = 3,
+        RandomColor = 4,
     }
-    /**
-     * 动画混合树节点。
-     */
-    class BlendTree extends BlendNode {
-        private readonly _blendNodes;
+    const enum SimulationSpace {
+        Local = 0,
+        World = 1,
+        Custom = 2,
     }
-    /**
-     * 动画状态。
-     */
-    class AnimationState extends BlendNode {
-        /**
-         * @private
-         */
-        layer: number;
-        /**
-         * 动画总播放次数。
-         */
-        playTimes: number;
-        /**
-         * 动画当前播放次数。
-         */
-        currentPlayTimes: number;
-        /**
-         * 播放速度。
-         */
-        timeScale: number;
-        /**
-         * @private
-         */
-        animationAsset: GLTFAsset;
-        /**
-         * 播放的动画数据。
-         */
-        animation: GLTFAnimation;
-        /**
-         * 播放的动画剪辑。
-         */
-        animationClip: GLTFAnimationClip;
-        /**
-         * 是否允许播放。
-         */
-        private _isPlaying;
-        /**
-         * 播放状态。
-         * -1: start, 0: playing, 1: complete;
-         */
-        private _playState;
-        /**
-         * 帧率。
-         */
-        private _frameRate;
-        /**
-         * 起始帧。
-         */
-        private _frameStart;
-        /**
-         * 总帧数。
-         */
-        private _frameCount;
-        /**
-         * 全局播放时间标记。
-         */
-        private _playTimeStart;
-        /**
-         * 本地播放时间。
-         */
-        private _playTime;
-        /**
-         * 帧插值进度。
-         */
-        private _frameProgress;
-        private _animationComponent;
-        private readonly _channels;
-        private readonly _retargetBoneIndices;
-        private readonly _delta;
-        private _frameBuffer;
-        private _frameOffset;
-        private _nextFrameOffset;
-        private _frameOffsets;
-        private _onArriveAtFrame();
-        private _onUpdateFrame();
-        private _onUpdateTranslation(channel);
-        private _onUpdateRotation(channel);
-        private _onUpdateScale(channel);
-        private _onUpdateActive(channel);
-        /**
-         *
-         */
-        initialize(animationComponent: Animation, animationAsset: GLTFAsset, animationClip: GLTFAnimationClip): void;
-        /**
-         *
-         */
-        update(globalTime: number): void;
-        fateOut(): void;
+    const enum ScalingMode {
+        Hierarchy = 0,
+        Local = 1,
+        Shape = 2,
     }
-    /**
-     * 动画组件。
-     */
-    class Animation extends paper.BaseComponent {
-        /**
-         * @private
-         */
-        autoPlay: boolean;
-        /**
-         * 动画速度。
-         */
-        timeScale: number;
-        /**
-         * 动画数据列表。
-         */
-        private readonly _animations;
-        /**
-         * 混合节点列表。
-         */
-        private readonly _blendNodes;
-        /**
-         * 最后一个播放的动画状态。
-         * 当进行动画混合时，该值通常没有任何意义。
-         */
-        private _lastAnimationState;
-        initialize(): void;
-        /**
-         *
-         */
-        update(globalTime: number): void;
-        fadeIn(animationName: string | null, fadeTime: number, playTimes?: number, layer?: number, additive?: boolean): AnimationState | null;
-        play(animationNameOrNames?: string | string[] | null, playTimes?: number): AnimationState | null;
-        readonly lastAnimationnName: string;
-        /**
-         * 动画数据列表。
-         */
-        animations: ReadonlyArray<GLTFAsset>;
+    const enum ShapeType {
+        None = -1,
+        Sphere = 0,
+        SphereShell = 1,
+        Hemisphere = 2,
+        HemisphereShell = 3,
+        Cone = 4,
+        Box = 5,
+        Mesh = 6,
+        ConeShell = 7,
+        ConeVolume = 8,
+        ConeVolumeShell = 9,
+        Circle = 10,
+        CircleEdge = 11,
+        SingleSidedEdge = 12,
+        MeshRenderer = 13,
+        SkinnedMeshRenderer = 14,
+        BoxShell = 15,
+        BoxEdge = 16,
     }
-    class AnimationSystem extends paper.BaseSystem<Animation> {
-        protected readonly _interests: {
-            componentClass: typeof Animation;
-        }[];
-        onAddGameObject(gameObject: paper.GameObject): void;
-        onUpdate(): void;
+    const enum ShapeMultiModeValue {
+        Random = 0,
+        Loop = 1,
+        PingPong = 2,
+        BurstSpread = 3,
+    }
+    const enum AnimationType {
+        WholeSheet = 0,
+        SingleRow = 1,
+    }
+    const enum UVChannelFlags {
+        UV0 = 1,
+        UV1 = 2,
+        UV2 = 4,
+        UV3 = 8,
+    }
+    const enum GradientMode {
+        Blend = 0,
+        Fixed = 1,
+    }
+    class Keyframe implements paper.ISerializable {
+        time: number;
+        value: number;
+        serialize(): number[];
+        deserialize(element: any): void;
+        clone(source: Keyframe): void;
+    }
+    class AnimationCurve implements paper.ISerializable {
+        /**
+         * 功能与效率平衡长度取4
+         */
+        private readonly _keys;
+        private readonly _floatValues;
+        serialize(): number[][];
+        deserialize(element: any): void;
+        evaluate(t?: number): number;
+        readonly floatValues: Readonly<Float32Array>;
+        clone(source: AnimationCurve): void;
+    }
+    class GradientColorKey extends paper.SerializableObject {
+        color: Color;
+        time: number;
+        deserialize(element: any): void;
+    }
+    class GradientAlphaKey extends paper.SerializableObject {
+        alpha: number;
+        time: number;
+        deserialize(element: any): void;
+    }
+    class Gradient extends paper.SerializableObject {
+        mode: GradientMode;
+        private readonly alphaKeys;
+        private readonly colorKeys;
+        private readonly _alphaValue;
+        private readonly _colorValue;
+        deserialize(element: any): void;
+        evaluate(t: number, out: Color): Color;
+        readonly alphaValues: Readonly<Float32Array>;
+        readonly colorValues: Readonly<Float32Array>;
+    }
+    class MinMaxCurve extends paper.SerializableObject {
+        mode: CurveMode;
+        constant: number;
+        constantMin: number;
+        constantMax: number;
+        readonly curve: AnimationCurve;
+        readonly curveMin: AnimationCurve;
+        readonly curveMax: AnimationCurve;
+        deserialize(element: any): void;
+        evaluate(t?: number): number;
+        clone(source: MinMaxCurve): void;
+    }
+    class MinMaxGradient extends paper.SerializableObject {
+        mode: ColorGradientMode;
+        readonly color: Color;
+        readonly colorMin: Color;
+        readonly colorMax: Color;
+        readonly gradient: Gradient;
+        readonly gradientMin: Gradient;
+        readonly gradientMax: Gradient;
+        deserialize(element: any): void;
+        evaluate(t: number, out: Color): Color;
+    }
+    class Burst implements paper.ISerializable {
+        time: number;
+        minCount: number;
+        maxCount: number;
+        cycleCount: number;
+        repeatInterval: number;
+        serialize(): number[];
+        deserialize(element: any): void;
+    }
+    abstract class ParticleSystemModule extends paper.SerializableObject {
+        enable: boolean;
+        protected _comp: ParticleComponent;
+        constructor(comp: ParticleComponent);
+        deserialize(element: any): void;
+    }
+    class MainModule extends ParticleSystemModule {
+        duration: number;
+        loop: boolean;
+        readonly startDelay: MinMaxCurve;
+        readonly startLifetime: MinMaxCurve;
+        readonly startSpeed: MinMaxCurve;
+        readonly startSizeX: MinMaxCurve;
+        readonly startSizeY: MinMaxCurve;
+        readonly startSizeZ: MinMaxCurve;
+        readonly startRotationX: MinMaxCurve;
+        readonly startRotationY: MinMaxCurve;
+        readonly startRotationZ: MinMaxCurve;
+        readonly startColor: MinMaxGradient;
+        readonly gravityModifier: MinMaxCurve;
+        playOnAwake: boolean;
+        deserialize(element: any): void;
+        startRotation3D: boolean;
+        simulationSpace: SimulationSpace;
+        scaleMode: ScalingMode;
+        maxParticles: number;
+    }
+    class EmissionModule extends ParticleSystemModule {
+        readonly rateOverTime: MinMaxCurve;
+        readonly bursts: Array<Burst>;
+        deserialize(element: any): void;
+    }
+    class ShapeModule extends ParticleSystemModule {
+        shapeType: ShapeType;
+        radius: number;
+        angle: number;
+        length: number;
+        readonly arcSpeed: MinMaxCurve;
+        arcMode: ShapeMultiModeValue;
+        radiusSpread: number;
+        radiusMode: ShapeMultiModeValue;
+        readonly box: egret3d.Vector3;
+        randomDirection: boolean;
+        spherizeDirection: boolean;
+        deserialize(element: any): void;
+        invalidUpdate(): void;
+        generatePositionAndDirection(position: Vector3, direction: Vector3): void;
+    }
+    class VelocityOverLifetimeModule extends ParticleSystemModule {
+        deserialize(element: any): void;
+        mode: CurveMode;
+        space: SimulationSpace;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class ColorOverLifetimeModule extends ParticleSystemModule {
+        deserialize(element: any): void;
+        color: Readonly<MinMaxGradient>;
+    }
+    class SizeOverLifetimeModule extends ParticleSystemModule {
+        deserialize(element: any): void;
+        separateAxes: boolean;
+        size: Readonly<MinMaxCurve>;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class RotationOverLifetimeModule extends ParticleSystemModule {
+        deserialize(element: any): void;
+        separateAxes: boolean;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class TextureSheetAnimationModule extends ParticleSystemModule {
+        private readonly _floatValues;
+        deserialize(element: any): void;
+        numTilesX: number;
+        numTilesY: number;
+        animation: AnimationType;
+        useRandomRow: boolean;
+        frameOverTime: Readonly<MinMaxCurve>;
+        startFrame: Readonly<MinMaxCurve>;
+        cycleCount: number;
+        rowIndex: number;
+        readonly floatValues: Readonly<Float32Array>;
     }
 }
