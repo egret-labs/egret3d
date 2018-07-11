@@ -15503,7 +15503,7 @@ var RES;
             return file;
         }
         ;
-        function getPath(url) {
+        function dirname(url) {
             return url.substring(0, url.lastIndexOf("/"));
         }
         function getUrl(resource) {
@@ -15592,14 +15592,13 @@ var RES;
         processor.ShaderProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, shader;
+                    var data, shader;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
-                                url = getUrl(resource);
-                                shader = new egret3d.Shader(url);
+                                shader = new egret3d.Shader(resource.name);
                                 shader.$parse(data);
                                 paper.Asset.register(shader, true);
                                 return [2 /*return*/, shader];
@@ -15813,7 +15812,7 @@ var RES;
                             assets = data.assets;
                             result = [];
                             if (!assets) return [3 /*break*/, 4];
-                            list = formatUrlAndSort(assets, getPath(resource.url));
+                            list = formatUrlAndSort(assets, dirname(resource.url));
                             _i = 0, list_1 = list;
                             _a.label = 1;
                         case 1:
@@ -17409,20 +17408,6 @@ var egret3d;
 (function (egret3d) {
     var utils;
     (function (utils) {
-        /**
-         * Get path by url
-         * @param content text
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取RUL的PATH。
-         * @param content 文本
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
         function getPathByUrl(url) {
             return url.substring(0, url.lastIndexOf("/"));
         }
@@ -17463,160 +17448,6 @@ var egret3d;
             return relPath;
         }
         utils.getRelativePath = getRelativePath;
-        /**
-         * first char to lower case
-         * @param str source string
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 将一个字符串中的第一个字符转为小写
-         * @param str 要处理的字符串
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        function firstCharToLowerCase(str) {
-            var firstChar = str.substr(0, 1).toLowerCase();
-            var other = str.substr(1);
-            return firstChar + other;
-        }
-        utils.firstCharToLowerCase = firstCharToLowerCase;
-        /**
-         * replace all
-         * @param srcStr source string
-         * @param fromStr from string
-         * @param toStr to string
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 将一个字符串中的所有指定字符替换为指定字符
-         * @param srcStr 要处理的字符串
-         * @param fromStr 原字符串中的指定字符串
-         * @param toStr 将被替换为的字符串
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        function replaceAll(srcStr, fromStr, toStr) {
-            return srcStr.replace(new RegExp(fromStr, 'gm'), toStr);
-        }
-        utils.replaceAll = replaceAll;
-        /**
-         * remove all space
-         * @param str source string
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 剔除掉字符串中所有的空格
-         * @param str 要处理的字符串
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        function trimAll(str) {
-            str += ""; // number to string
-            var result = str.replace(/(^\s+)|(\s+$)/g, "");
-            result = result.replace(/\s/g, "");
-            return result;
-        }
-        utils.trimAll = trimAll;
-        /**
-         * Convert string to blob
-         * @param content text
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * string转换为blob。
-         * @param content 文本
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        function stringToBlob(content) {
-            var u8 = new Uint8Array(stringToUtf8Array(content));
-            var blob = new Blob([u8]);
-            return blob;
-        }
-        utils.stringToBlob = stringToBlob;
-        /**
-         * Convert string to utf8 array
-         * @param str text
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * string转换为utf8数组。
-         * @param str 文本
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        function stringToUtf8Array(str) {
-            var bstr = [];
-            for (var i = 0; i < str.length; i++) {
-                var c = str.charAt(i);
-                var cc = c.charCodeAt(0);
-                if (cc > 0xFFFF) {
-                    throw new Error("InvalidCharacterError");
-                }
-                if (cc > 0x80) {
-                    if (cc < 0x07FF) {
-                        var c1 = (cc >>> 6) | 0xC0;
-                        var c2 = (cc & 0x3F) | 0x80;
-                        bstr.push(c1, c2);
-                    }
-                    else {
-                        var c1 = (cc >>> 12) | 0xE0;
-                        var c2 = ((cc >>> 6) & 0x3F) | 0x80;
-                        var c3 = (cc & 0x3F) | 0x80;
-                        bstr.push(c1, c2, c3);
-                    }
-                }
-                else {
-                    bstr.push(cc);
-                }
-            }
-            return bstr;
-        }
-        utils.stringToUtf8Array = stringToUtf8Array;
-        function caclStringByteLength(value) {
-            var total = 0;
-            for (var i = 0; i < value.length; i++) {
-                var charCode = value.charCodeAt(i);
-                if (charCode <= 0x007f) {
-                    total += 1;
-                }
-                else if (charCode <= 0x07ff) {
-                    total += 2;
-                }
-                else if (charCode <= 0xffff) {
-                    total += 3;
-                }
-                else {
-                    total += 4;
-                }
-            }
-            return total;
-        }
-        utils.caclStringByteLength = caclStringByteLength;
-        function getKeyCodeByAscii(ev) {
-            if (ev.shiftKey) {
-                return ev.keyCode - 32;
-            }
-            else {
-                return ev.keyCode;
-            }
-        }
-        utils.getKeyCodeByAscii = getKeyCodeByAscii;
     })(utils = egret3d.utils || (egret3d.utils = {}));
 })(egret3d || (egret3d = {}));
 var Stats;

@@ -53,7 +53,7 @@ namespace RES.processor {
         return file;
     };
 
-    function getPath(url: string): string {
+    function dirname(url: string): string {
         return url.substring(0, url.lastIndexOf("/"));
     }
 
@@ -131,8 +131,7 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             let data = await host.load(resource, "json");
-            let url = getUrl(resource);
-            let shader = new egret3d.Shader(url);
+            let shader = new egret3d.Shader(resource.name);
             shader.$parse(data);
             paper.Asset.register(shader, true);
 
@@ -226,7 +225,7 @@ namespace RES.processor {
     export const MaterialProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let data = await host.load(resource, "json");
+            let data = await host.load(resource, "json") as egret3d.MaterialConfig
             let url = getUrl(resource);
             let material = new egret3d.Material(url);
             material.$parse(data);
@@ -290,7 +289,7 @@ namespace RES.processor {
         const assets = data.assets;
         const result: paper.Asset[] = [];
         if (assets) {
-            const list = formatUrlAndSort(assets, getPath(resource.url));
+            const list = formatUrlAndSort(assets, dirname(resource.url));
             for (let item of list) {
                 let r = RES.host.resourceConfig["getResource"](item.url);
                 if (r) {
