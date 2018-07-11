@@ -37,7 +37,7 @@ namespace egret3d.oimo {
         private readonly _valuesB: Float32Array = new Float32Array([
             0.0, 0.0, 0,
             0.0, 0.0, 0,
-            1.0, 0.0, 0.0, 0.0,
+            -180.0, 180.0, 0.0, 0.0,
             180.0, 180.0,
         ]);
 

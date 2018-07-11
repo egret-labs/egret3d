@@ -32,12 +32,18 @@ namespace paper {
 
         public static init({ isEditor = false, isPlaying = true } = {}) {
             const systemClasses = [
+                //
                 StartSystem,
+                //
                 egret3d.oimo.PhysicsSystem, // TODO 分离
+                //
                 UpdateSystem,
+                //
                 egret3d.GuidpathSystem,
                 egret3d.AnimationSystem,
+                //
                 LaterUpdateSystem,
+                //
                 egret3d.TrailRendererSystem,
                 egret3d.MeshRendererSystem,
                 egret3d.SkinnedMeshRendererSystem,
@@ -45,7 +51,9 @@ namespace paper {
                 egret3d.Egret2DRendererSystem,
                 egret3d.LightSystem,
                 egret3d.CameraSystem,
+                //
                 EndSystem,
+                //
                 DestroySystem,
             ];
 

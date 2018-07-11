@@ -3,12 +3,11 @@ namespace paper {
      * 
      */
     export class LaterUpdateSystem extends BaseSystem<Behaviour> {
-        protected readonly _interests = [{ componentClass: Behaviour as any, isExtends: true }];
         private readonly _laterCalls: (() => void)[] = [];
 
         public onUpdate(deltaTime: number) {
             // Update behaviours.
-            const components = (Application.systemManager.getSystem(UpdateSystem) as UpdateSystem).components;
+            const components = (Application.systemManager.getSystem(StartSystem) as StartSystem).components;
 
             if (this._isEditorUpdate()) {
                 for (const component of components) {

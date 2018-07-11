@@ -73,35 +73,35 @@ namespace paper {
         /**
          * 
          */
-        public onFixedUpdate?(): void;
+        public onFixedUpdate?(currentTimes?: number, totalTimes?: number): void;
         /**
          * 
          */
-        public onTriggerEnter?(collisionObject: any): void;
+        public onTriggerEnter?(collider: any): void;
         /**
          * 
          */
-        public onTriggerStay?(collisionObject: any): void;
+        public onTriggerStay?(collider: any): void;
         /**
          * 
          */
-        public onTriggerExit?(collisionObject: any): void;
+        public onTriggerExit?(collider: any): void;
         /**
          * 
          */
-        public onCollisionEnter?(collisionObject: any): void;
+        public onCollisionEnter?(collider: any): void;
         /**
          * 
          */
-        public onCollisionStay?(collisionObject: any): void;
+        public onCollisionStay?(collider: any): void;
         /**
          * 
          */
-        public onCollisionExit?(collisionObject: any): void;
+        public onCollisionExit?(collider: any): void;
         /**
          * 
          */
-        public onUpdate?(deltaTime: number): void;
+        public onUpdate?(deltaTime?: number): void;
         /**
          * 
          */
@@ -109,7 +109,7 @@ namespace paper {
         /**
          * 
          */
-        public onLateUpdate?(deltaTime: number): void;
+        public onLateUpdate?(deltaTime?: number): void;
         /**
          * 组件被禁用或实体被禁用时调用。
          * @see paper.BaseComponent#enabled

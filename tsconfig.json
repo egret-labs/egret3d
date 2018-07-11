@@ -34,6 +34,8 @@
         "egret3d/ecs/core/BaseComponent.ts",
         "egret3d/ecs/core/MissingComponent.ts",
         "egret3d/ecs/core/SingletonComponent.ts",
+        "egret3d/ecs/core/ContactColliders.ts",
+
         "egret3d/ecs/core/Behaviour.ts",
         "egret3d/ecs/core/BaseSystem.ts",
         "egret3d/ecs/core/BaseRenderer.ts",
@@ -51,6 +53,7 @@
         "egret3d/ecs/systems/LaterUpdateSystem.ts",
         "egret3d/ecs/systems/EndSystem.ts",
         "egret3d/ecs/systems/DestroySystem.ts",
+
         "egret3d/math/Vector2.ts",
         "egret3d/math/Vector3.ts",
         "egret3d/math/Vector4.ts",

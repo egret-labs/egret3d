@@ -26,6 +26,8 @@ namespace egret3d.oimo {
         ];
         private readonly _gravity = new Vector3(0, -9.80665, 0);
         private readonly _rayCastClosest: OIMO.RayCastClosest = new OIMO.RayCastClosest();
+        private readonly _contactCallback: OIMO.ContactCallback = new OIMO.ContactCallback();
+        private readonly _contactColliders: paper.ContactColliders = this._globalGameObject.getComponent(paper.ContactColliders) || this._globalGameObject.addComponent(paper.ContactColliders);
         private readonly _shapes: Collider[] = [];
         private readonly _joints: Joint<any>[] = [];
         private _oimoWorld: OIMO.World = null as any;
@@ -79,6 +81,27 @@ namespace egret3d.oimo {
 
             this._oimoWorld = new OIMO.World();
             this._oimoWorld.setGravity(this._gravity as any);
+
+            this._contactCallback.beginContact = (contact: OIMO.Contact) => {
+                // do {
+
+                // }
+                // while (contact.getNext());
+                this._contactColliders.begin.push(
+                    contact.getShape1().userData as Collider,
+                    contact.getShape1().userData as Collider,
+                );
+            };
+            this._contactCallback.preSolve = (contact: OIMO.Contact) => {
+            };
+            this._contactCallback.postSolve = (contact: OIMO.Contact) => {
+            };
+            this._contactCallback.endContact = (contact: OIMO.Contact) => {
+                this._contactColliders.end.push(
+                    contact.getShape1().userData as Collider,
+                    contact.getShape1().userData as Collider,
+                );
+            };
         }
 
         public onAddGameObject(gameObject: paper.GameObject) {
@@ -120,6 +143,7 @@ namespace egret3d.oimo {
             if (this._shapes.length > 0) {
                 for (const shape of this._shapes) {
                     const rigidbody = this._getComponent(shape.gameObject, 0) as Rigidbody;
+                    shape.oimoShape.setContactCallback
                     rigidbody.oimoRigidbody.addShape(shape.oimoShape);
                     // rigidbody._updateMass(rigidbody.oimoRigidbody);
                 }
@@ -135,47 +159,123 @@ namespace egret3d.oimo {
                 this._joints.length = 0;
             }
 
-            let times = 0;
-            while (this._clock._fixedTime >= this._clock.fixedTimeStep && times++ < this._clock.maxFixedSubSteps) {
-                this._oimoWorld.step(this._clock.fixedTimeStep);
-                this._clock._fixedTime -= this._clock.fixedTimeStep;
-            }
-
-            //
+            let currentTimes = 0;
+            const totalTimes = Math.min(Math.floor(this._clock._fixedTime / this._clock.fixedTimeStep), this._clock.maxFixedSubSteps);
             const oimoTransform = PhysicsSystem._helpTransform;
+            const behaviourComponents = (paper.Application.systemManager.getSystem(paper.StartSystem) as paper.StartSystem).components; // TODO 
 
-            for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
-                const rigidbody = this._components[i + 0] as Rigidbody;
-                const transform = rigidbody.gameObject.transform;
-                const oimoRigidbody = rigidbody.oimoRigidbody;
-
-                switch (rigidbody.type) {
-                    case RigidbodyType.DYNAMIC:
-                        if (oimoRigidbody.isSleeping()) {
-                        }
-                        else {
-                            oimoRigidbody.getTransformTo(oimoTransform);
-                            oimoTransform.getPositionTo(helpVector3A as any);
-                            oimoTransform.getOrientationTo(helpVector4A as any);
-                            transform.setPosition(helpVector3A);
-                            transform.setRotation(helpVector4A);
-                        }
-                        break;
-
-                    case RigidbodyType.KINEMATIC:
-                    case RigidbodyType.STATIC:
-                        if (oimoRigidbody.isSleeping()) {
-                        }
-                        else {
-                            const position = transform.getPosition();
-                            const quaternion = transform.getRotation();
-                            oimoTransform.setPosition(position as any);
-                            oimoTransform.setOrientation(quaternion as any);
-                            oimoRigidbody.setTransform(oimoTransform);
-                            oimoRigidbody.sleep();
-                        }
-                        break;
+            while (this._clock._fixedTime >= this._clock.fixedTimeStep && currentTimes++ < this._clock.maxFixedSubSteps) {
+                for (const component of behaviourComponents) {
+                    if (component) {
+                        component.onFixedUpdate && component.onFixedUpdate(currentTimes, totalTimes);
+                    }
                 }
+
+                for (const component of this._components) {
+                    const transform = component.gameObject.transform;
+                    const oimoRigidbody = component.oimoRigidbody;
+
+                    switch (component.type) {
+                        case RigidbodyType.KINEMATIC:
+                        case RigidbodyType.STATIC:
+                            if (oimoRigidbody.isSleeping()) {
+                            }
+                            else {
+                                const position = transform.getPosition();
+                                const quaternion = transform.getRotation();
+                                oimoTransform.setPosition(position as any);
+                                oimoTransform.setOrientation(quaternion as any);
+                                oimoRigidbody.setTransform(oimoTransform);
+                            }
+                            break;
+                    }
+                }
+
+                this._oimoWorld.step(this._clock.fixedTimeStep);
+
+                for (const component of this._components) {
+                    const transform = component.gameObject.transform;
+                    const oimoRigidbody = component.oimoRigidbody;
+
+                    switch (component.type) {
+                        case RigidbodyType.DYNAMIC:
+                            if (oimoRigidbody.isSleeping()) {
+                            }
+                            else {
+                                oimoRigidbody.getTransformTo(oimoTransform);
+                                oimoTransform.getPositionTo(helpVector3A as any);
+                                oimoTransform.getOrientationTo(helpVector4A as any);
+                                transform.setPosition(helpVector3A);
+                                transform.setRotation(helpVector4A);
+                            }
+                            break;
+                    }
+                }
+                //
+                const begin = this._contactColliders.begin as Collider[];
+                const stay = this._contactColliders.stay as Collider[];
+                const end = this._contactColliders.end as Collider[];
+
+                if (begin.length > 0) {
+                    for (let i = 0, l = begin.length; i < l; i += 2) {
+                        const colliderA = begin[i];
+                        const colliderB = begin[i + 1];
+
+                        for (const behaviour of colliderA.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                            behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
+                        }
+
+                        for (const behaviour of colliderB.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                            behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
+                        }
+
+                        this._contactColliders.stay.push(colliderA, colliderB);
+                    }
+
+                    begin.length = 0;
+                }
+
+                if (end.length > 0) {
+                    for (let i = 0, l = end.length; i < l; i += 2) {
+                        const colliderA = end[i];
+                        const colliderB = end[i + 1];
+
+                        for (const behaviour of colliderA.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                            behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
+                        }
+
+                        for (const behaviour of colliderB.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                            behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
+                        }
+
+                        let index = stay.indexOf(colliderA);
+                        if (index >= 0) {
+                            stay.splice(index, 1);
+                        }
+
+                        index = stay.indexOf(colliderB);
+                        if (index >= 0) {
+                            stay.splice(index, 1);
+                        }
+                    }
+
+                    end.length = 0;
+                }
+
+                for (let i = 0, l = stay.length; i < l; i += 2) {
+                    const colliderA = stay[i];
+                    const colliderB = stay[i + 1];
+
+                    for (const behaviour of colliderA.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                        behaviour.onCollisionStay && behaviour.onCollisionStay(colliderB);
+                    }
+
+                    for (const behaviour of colliderB.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                        behaviour.onCollisionStay && behaviour.onCollisionStay(colliderA);
+                    }
+                }
+
+                this._clock._fixedTime -= this._clock.fixedTimeStep;
             }
         }
 

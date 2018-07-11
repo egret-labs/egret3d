@@ -15,6 +15,7 @@ namespace paper {
         private constructor() {
         }
 
+        // TODO 增加子系统功能，SystemManager 与 baseSystem 合并。
         private readonly _registerSystems: (BaseSystem<any> | null)[] = [];
         private readonly _systems: (BaseSystem<any> | null)[] = [];
         private readonly _unregisterSystems: (BaseSystem<any> | null)[] = [];

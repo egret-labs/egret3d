@@ -4,7 +4,7 @@ namespace paper {
      */
     export class Clock extends SingletonComponent {
         public maxFixedSubSteps: number = 3;
-        public fixedTimeStep: number = 1.0 / 30.0;
+        public fixedTimeStep: number = 1.0 / 30.0; // TODO same as fps.
         public timeScale = 1.0;
 
         private _frameCount: number = 0;

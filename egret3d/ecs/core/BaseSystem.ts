@@ -32,6 +32,7 @@ namespace paper {
              */
             listener: (component: T) => void;
         }[];
+
     };
     /**
      * 系统基类。
@@ -57,7 +58,7 @@ namespace paper {
         /**
          * 关心列表。
          */
-        protected readonly _interests: ReadonlyArray<InterestConfig<T>> = [];
+        protected readonly _interests: Readonly<(InterestConfig<T>[])> = [];
         /**
          * 系统根据关心列表收集的组件列表。
          */

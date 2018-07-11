@@ -26,7 +26,7 @@ namespace egret3d.oimo {
         @paper.serializedField
         private readonly _valuesB: Float32Array = new Float32Array([
             0.0, 0.0, 0,
-            1.0, 0.0, 0.0, 0.0,
+            -180.0, 180.0, 0.0, 0.0,
         ]);
 
         protected _createJoint() {
