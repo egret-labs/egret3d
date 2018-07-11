@@ -73,16 +73,7 @@ namespace egret3d {
         }
 
         /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         caclByteLength(): number {
             let total = 0;
@@ -146,17 +137,9 @@ namespace egret3d {
                 }
             }
         }
-        /**
-         * set shader
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 设置着色器，不保留原有数据。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         setShader(shader: Shader) {
             this.shader = shader;
@@ -165,33 +148,14 @@ namespace egret3d {
         }
 
         /**
-          * get shader
-          * @version paper 1.0
-          * @platform Web
-          * @language en_US
-          */
-        /**
          * 获取当前着色器。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         getShader() {
             return this.shader;
         }
 
-
-        /**
-         * change shader
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
         /**
          * 更改着色器，保留原有数据。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         changeShader(shader: Shader) {
             const map: { [name: string]: { type: UniformTypeEnum, value: any } } = {};
@@ -322,7 +286,7 @@ namespace egret3d {
         setVector4(_id: string, _vector4: Vector4) {
             if (this.$uniforms[_id] !== undefined) {
                 this.$uniforms[_id].value = _vector4;
-                if(this.$uniforms[_id].type !== UniformTypeEnum.Float4){
+                if (this.$uniforms[_id].type !== UniformTypeEnum.Float4) {
                     console.error("设置setVector4类型错误，类型不匹配")
                 }
             } else {
@@ -334,7 +298,7 @@ namespace egret3d {
         setVector4v(_id: string, _vector4v: Float32Array | [number, number, number, number]) {
             if (this.$uniforms[_id] !== undefined) {
                 this.$uniforms[_id].value = _vector4v;
-                if(this.$uniforms[_id].type !== UniformTypeEnum.Float4v){
+                if (this.$uniforms[_id].type !== UniformTypeEnum.Float4v) {
                     console.error("设置setVector4v类型错误，类型不匹配")
                 }
             } else {
@@ -383,51 +347,9 @@ namespace egret3d {
             }
         }
 
-        $parse(json: MaterialConfig) {
-            let shaderName = json.shader
-            const shader = paper.Asset.find<Shader>(shaderName);
-            this.setShader(shader);
-            let mapUniform = json.mapUniform;
-            for (let i in mapUniform) {
-                let jsonChild = mapUniform[i];
-                switch (jsonChild.type) {
-                    case UniformTypeEnum.Texture:
-                        const value = jsonChild.value;
-                        const url = egret3d.utils.combinePath(utils.getPathByUrl(this.url) + "/", value)
-                        let texture = paper.Asset.find<Texture>(url);
-                        if (!texture) {
-                            texture = DefaultTextures.GRID;
-                        }
-                        this.setTexture(i, texture);
-                        break;
-                    case UniformTypeEnum.Float:
-                        this.setFloat(i, jsonChild.value);
-                        break;
-                    case UniformTypeEnum.Float4:
-                        let tempValue = jsonChild.value as [number, number, number, number];
-                        if (Array.isArray(tempValue)) {
-                            this.setVector4v(i, tempValue)
-                        } else {
-                            console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级");
-                        }
-                        break;
-                    default:
-                        console.warn(`不支持的 Uniform 参数：${this.url},${i}`);
-                }
-            }
-        }
 
         /**
-         * clone material
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 克隆材质资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         public clone(): Material {
             let mat: Material = new Material();

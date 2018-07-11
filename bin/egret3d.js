@@ -3856,16 +3856,7 @@ var egret3d;
             this.version++;
         };
         /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         Material.prototype.caclByteLength = function () {
             var total = 0;
@@ -3929,16 +3920,7 @@ var egret3d;
             }
         };
         /**
-         * set shader
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 设置着色器，不保留原有数据。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         Material.prototype.setShader = function (shader) {
             this.shader = shader;
@@ -3946,31 +3928,13 @@ var egret3d;
             this._setDefaultUniforms(this.shader);
         };
         /**
-          * get shader
-          * @version paper 1.0
-          * @platform Web
-          * @language en_US
-          */
-        /**
          * 获取当前着色器。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         Material.prototype.getShader = function () {
             return this.shader;
         };
         /**
-         * change shader
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 更改着色器，保留原有数据。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         Material.prototype.changeShader = function (shader) {
             var map = {};
@@ -4157,51 +4121,8 @@ var egret3d;
                 this._textureRef.push(_texture);
             }
         };
-        Material.prototype.$parse = function (json) {
-            var shaderName = json.shader;
-            var shader = paper.Asset.find(shaderName);
-            this.setShader(shader);
-            var mapUniform = json.mapUniform;
-            for (var i in mapUniform) {
-                var jsonChild = mapUniform[i];
-                switch (jsonChild.type) {
-                    case egret3d.UniformTypeEnum.Texture:
-                        var value = jsonChild.value;
-                        var url = egret3d.utils.combinePath(egret3d.utils.getPathByUrl(this.url) + "/", value);
-                        var texture = paper.Asset.find(url);
-                        if (!texture) {
-                            texture = egret3d.DefaultTextures.GRID;
-                        }
-                        this.setTexture(i, texture);
-                        break;
-                    case egret3d.UniformTypeEnum.Float:
-                        this.setFloat(i, jsonChild.value);
-                        break;
-                    case egret3d.UniformTypeEnum.Float4:
-                        var tempValue = jsonChild.value;
-                        if (Array.isArray(tempValue)) {
-                            this.setVector4v(i, tempValue);
-                        }
-                        else {
-                            console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级");
-                        }
-                        break;
-                    default:
-                        console.warn("\u4E0D\u652F\u6301\u7684 Uniform \u53C2\u6570\uFF1A" + this.url + "," + i);
-                }
-            }
-        };
-        /**
-         * clone material
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
         /**
          * 克隆材质资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         Material.prototype.clone = function () {
             var mat = new Material();
@@ -15448,47 +15369,6 @@ var RES;
 (function (RES) {
     var processor;
     (function (processor) {
-        // 按照加载优先级排序
-        var AssetTypeEnum;
-        (function (AssetTypeEnum) {
-            AssetTypeEnum[AssetTypeEnum["Unknown"] = 0] = "Unknown";
-            AssetTypeEnum[AssetTypeEnum["GLVertexShader"] = 1] = "GLVertexShader";
-            AssetTypeEnum[AssetTypeEnum["GLFragmentShader"] = 2] = "GLFragmentShader";
-            AssetTypeEnum[AssetTypeEnum["Shader"] = 3] = "Shader";
-            AssetTypeEnum[AssetTypeEnum["Texture"] = 4] = "Texture";
-            AssetTypeEnum[AssetTypeEnum["TextureDesc"] = 5] = "TextureDesc";
-            AssetTypeEnum[AssetTypeEnum["Material"] = 6] = "Material";
-            AssetTypeEnum[AssetTypeEnum["GLTFBinary"] = 7] = "GLTFBinary";
-            AssetTypeEnum[AssetTypeEnum["Prefab"] = 8] = "Prefab";
-            AssetTypeEnum[AssetTypeEnum["Scene"] = 9] = "Scene";
-        })(AssetTypeEnum || (AssetTypeEnum = {}));
-        var typeMap = {
-            ".vs.glsl": AssetTypeEnum.GLVertexShader,
-            ".fs.glsl": AssetTypeEnum.GLFragmentShader,
-            ".shader.json": AssetTypeEnum.Shader,
-            ".png": AssetTypeEnum.Texture,
-            ".jpg": AssetTypeEnum.Texture,
-            ".imgdesc.json": AssetTypeEnum.TextureDesc,
-            ".mat.json": AssetTypeEnum.Material,
-            ".gltf.bin": AssetTypeEnum.GLTFBinary,
-            ".glb": AssetTypeEnum.GLTFBinary,
-            ".prefab.json": AssetTypeEnum.Prefab,
-            ".scene.json": AssetTypeEnum.Scene
-        };
-        function calcType(url) {
-            var filei = url.lastIndexOf("/");
-            var file = url.substr(filei + 1);
-            var i = file.indexOf(".", 0);
-            var extname = null;
-            while (i >= 0) {
-                extname = file.substr(i);
-                if (typeMap[extname] != undefined) {
-                    return typeMap[extname];
-                }
-                i = file.indexOf(".", i + 1);
-            }
-            return AssetTypeEnum.Unknown;
-        }
         function getFileName(url, removeEX) {
             if (removeEX === void 0) { removeEX = false; }
             var filei = url.lastIndexOf("/");
@@ -15505,14 +15385,26 @@ var RES;
         function getUrl(resource) {
             return resource.root + resource.url;
         }
+        function combinePath(base, relative) {
+            var stack = base.split("/"), parts = relative.split("/");
+            stack.pop(); // remove current file name (or empty string)
+            // (omit if "base" is the current folder without trailing slash)
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i] == ".")
+                    continue;
+                if (parts[i] == "..")
+                    stack.pop();
+                else
+                    stack.push(parts[i]);
+            }
+            return stack.join("/");
+        }
         function formatUrlAndSort(assets, path) {
             var list = [];
             list = assets.map(function (item) {
-                return { url: egret3d.utils.combinePath(path + "/", item.url), type: calcType(item.url), hashCode: item.hashCode };
+                return { url: combinePath(path + "/", item.url), hashCode: item.hashCode };
             });
-            return list.sort(function (a, b) {
-                return a.type - b.type;
-            });
+            return list;
         }
         function promisify(loader, resource) {
             return __awaiter(this, void 0, void 0, function () {
@@ -15588,13 +15480,14 @@ var RES;
         processor.ShaderProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, shader;
+                    var data, url, shader;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
-                                shader = new egret3d.Shader(resource.name);
+                                url = getUrl(resource);
+                                shader = new egret3d.Shader(url);
                                 shader.$parse(data);
                                 paper.Asset.register(shader, true);
                                 return [2 /*return*/, shader];
@@ -15712,15 +15605,69 @@ var RES;
         processor.MaterialProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, url, material;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
+                    var json, url, material, shaderName, shader, mapUniform, _a, _b, _i, i, jsonChild, _c, value, url_1, r, texture, tempValue;
+                    return __generator(this, function (_d) {
+                        switch (_d.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
-                                data = _a.sent();
+                                json = _d.sent();
                                 url = getUrl(resource);
                                 material = new egret3d.Material(url);
-                                material.$parse(data);
+                                shaderName = json.shader;
+                                shader = paper.Asset.find(shaderName);
+                                material.setShader(shader);
+                                mapUniform = json.mapUniform;
+                                _a = [];
+                                for (_b in mapUniform)
+                                    _a.push(_b);
+                                _i = 0;
+                                _d.label = 2;
+                            case 2:
+                                if (!(_i < _a.length)) return [3 /*break*/, 11];
+                                i = _a[_i];
+                                jsonChild = mapUniform[i];
+                                _c = jsonChild.type;
+                                switch (_c) {
+                                    case egret3d.UniformTypeEnum.Texture: return [3 /*break*/, 3];
+                                    case egret3d.UniformTypeEnum.Float: return [3 /*break*/, 7];
+                                    case egret3d.UniformTypeEnum.Float4: return [3 /*break*/, 8];
+                                }
+                                return [3 /*break*/, 9];
+                            case 3:
+                                value = jsonChild.value;
+                                url_1 = combinePath(dirname(resource.url) + "/", value);
+                                r = RES.host.resourceConfig["getResource"](url_1);
+                                texture = void 0;
+                                if (!r) return [3 /*break*/, 5];
+                                return [4 /*yield*/, RES.getResAsync(r.name)];
+                            case 4:
+                                texture = _d.sent();
+                                return [3 /*break*/, 6];
+                            case 5:
+                                texture = egret3d.DefaultTextures.GRID;
+                                _d.label = 6;
+                            case 6:
+                                material.setTexture(i, texture);
+                                return [3 /*break*/, 10];
+                            case 7:
+                                material.setFloat(i, jsonChild.value);
+                                return [3 /*break*/, 10];
+                            case 8:
+                                tempValue = jsonChild.value;
+                                if (Array.isArray(tempValue)) {
+                                    material.setVector4v(i, tempValue);
+                                }
+                                else {
+                                    console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级");
+                                }
+                                return [3 /*break*/, 10];
+                            case 9:
+                                console.warn("\u4E0D\u652F\u6301\u7684 Uniform \u53C2\u6570\uFF1A" + material.url + "," + i);
+                                _d.label = 10;
+                            case 10:
+                                _i++;
+                                return [3 /*break*/, 2];
+                            case 11:
                                 paper.Asset.register(material, true);
                                 return [2 /*return*/, material];
                         }
@@ -15801,31 +15748,34 @@ var RES;
         };
         function loadSubAssets(data, resource) {
             return __awaiter(this, void 0, void 0, function () {
-                var assets, result, list, _i, list_1, item, r, asset;
+                var _this = this;
+                var assets, result, list;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             assets = data.assets;
                             result = [];
-                            if (!assets) return [3 /*break*/, 4];
                             list = formatUrlAndSort(assets, dirname(resource.url));
-                            _i = 0, list_1 = list;
-                            _a.label = 1;
+                            return [4 /*yield*/, Promise.all(list.map((function (item) { return __awaiter(_this, void 0, void 0, function () {
+                                    var r, asset;
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0:
+                                                r = RES.host.resourceConfig["getResource"](item.url);
+                                                if (!r) return [3 /*break*/, 2];
+                                                return [4 /*yield*/, RES.host.load(r)];
+                                            case 1:
+                                                asset = _a.sent();
+                                                asset.hashCode = item.hashCode;
+                                                result.push(asset);
+                                                _a.label = 2;
+                                            case 2: return [2 /*return*/];
+                                        }
+                                    });
+                                }); })))];
                         case 1:
-                            if (!(_i < list_1.length)) return [3 /*break*/, 4];
-                            item = list_1[_i];
-                            r = RES.host.resourceConfig["getResource"](item.url);
-                            if (!r) return [3 /*break*/, 3];
-                            return [4 /*yield*/, RES.host.load(r)];
-                        case 2:
-                            asset = _a.sent();
-                            asset.hashCode = item.hashCode;
-                            result.push(asset);
-                            _a.label = 3;
-                        case 3:
-                            _i++;
-                            return [3 /*break*/, 1];
-                        case 4: return [2 /*return*/, result];
+                            _a.sent();
+                            return [2 /*return*/, result];
                     }
                 });
             });
@@ -17404,25 +17354,6 @@ var egret3d;
 (function (egret3d) {
     var utils;
     (function (utils) {
-        function getPathByUrl(url) {
-            return url.substring(0, url.lastIndexOf("/"));
-        }
-        utils.getPathByUrl = getPathByUrl;
-        function combinePath(base, relative) {
-            var stack = base.split("/"), parts = relative.split("/");
-            stack.pop(); // remove current file name (or empty string)
-            // (omit if "base" is the current folder without trailing slash)
-            for (var i = 0; i < parts.length; i++) {
-                if (parts[i] == ".")
-                    continue;
-                if (parts[i] == "..")
-                    stack.pop();
-                else
-                    stack.push(parts[i]);
-            }
-            return stack.join("/");
-        }
-        utils.combinePath = combinePath;
         function getRelativePath(targetPath, sourcePath) {
             var relPath = "";
             targetPath = targetPath.replace("\\", "/");
@@ -19274,13 +19205,13 @@ var egret3d;
         };
         Profile._print = function (list) {
             var totalTime = 0.0;
-            for (var _i = 0, list_2 = list; _i < list_2.length; _i++) {
-                var item = list_2[_i];
+            for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
+                var item = list_1[_i];
                 totalTime += item.time;
             }
             console.log("------------------------");
-            for (var _a = 0, list_3 = list; _a < list_3.length; _a++) {
-                var item = list_3[_a];
+            for (var _a = 0, list_2 = list; _a < list_2.length; _a++) {
+                var item = list_2[_a];
                 console.log(item.key + ":用时" + item.time + "平均:" + (item.time / item.count) + "最大值:" + item.maxTime + " 权重:" + (Math.round(item.time / totalTime * 100)) + "%");
             }
         };

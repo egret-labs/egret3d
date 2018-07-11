@@ -2075,56 +2075,20 @@ declare namespace egret3d {
          */
         dispose(): void;
         /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         caclByteLength(): number;
         private _setDefaultUniforms(shader);
         /**
-         * set shader
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 设置着色器，不保留原有数据。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         setShader(shader: Shader): void;
         /**
-          * get shader
-          * @version paper 1.0
-          * @platform Web
-          * @language en_US
-          */
-        /**
          * 获取当前着色器。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         getShader(): Shader;
         /**
-         * change shader
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 更改着色器，保留原有数据。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         changeShader(shader: Shader): void;
         renderQueue: RenderQueue;
@@ -2144,18 +2108,8 @@ declare namespace egret3d {
         setMatrix(_id: string, _matrix: Matrix): void;
         setMatrixv(_id: string, _matrixv: Float32Array): void;
         setTexture(_id: string, _texture: egret3d.Texture): void;
-        $parse(json: MaterialConfig): void;
-        /**
-         * clone material
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
         /**
          * 克隆材质资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         clone(): Material;
     }
@@ -5828,8 +5782,6 @@ declare namespace egret3d.io {
     }
 }
 declare namespace egret3d.utils {
-    function getPathByUrl(url: string): string;
-    function combinePath(base: string, relative: string): string;
     function getRelativePath(targetPath: string, sourcePath: string): string;
 }
 declare namespace Stats {
