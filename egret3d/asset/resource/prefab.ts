@@ -12,7 +12,7 @@ namespace egret3d {
         protected readonly _assets: { [index: string]: paper.Asset } = {};
         protected _raw: PrefabConfig = null;
 
-        public $parse(json: PrefabConfig, subAssets: paper.Asset[]) {
+        $parse(json: PrefabConfig, subAssets: paper.Asset[]) {
 
             this._raw = json;
             for (let item of subAssets) {
@@ -22,7 +22,7 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        public dispose() {
+        dispose() {
             for (const k in this._assets) {
                 delete this._assets[k];
             }

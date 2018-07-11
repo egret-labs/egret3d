@@ -1602,10 +1602,10 @@ declare namespace paper {
          */
         createScene(name: string, isActive?: boolean): Scene;
         /**
-         * load scene 加载场景
-         * @param rawScene url
+         * 加载场景
+         * @param resourceName 资源名称
          */
-        loadScene(url: string): Scene;
+        loadScene(resourceName: string): Scene;
         /**
          * 卸载指定场景。
          */
@@ -1618,10 +1618,6 @@ declare namespace paper {
          *
          */
         getSceneByName(name: string): Scene;
-        /**
-         *
-         */
-        getSceneByURL(url: string): Scene;
         /**
          *
          */
