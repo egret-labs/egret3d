@@ -3126,89 +3126,6 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     * path play type
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 路径播放类型
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    enum pathtype {
-        once = 0,
-        loop = 1,
-        pingpong = 2,
-    }
-    /**
-     * path asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 路径资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class PathAsset extends paper.Asset {
-        /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        dispose(): void;
-        /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        caclByteLength(): number;
-        /**
-         * path point data
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 路径节点数据
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        paths: egret3d.Vector3[];
-        private type;
-        private instertPointcount;
-        private items;
-        /**
-         *
-         */
-        $parse(json: any): void;
-        private lines;
-        private getpaths();
-        private getBezierPointAlongCurve(points, rate, clearflag?);
-        private vec3Lerp(start, end, lerp, out);
-    }
-}
-declare namespace egret3d {
-    /**
      * scene asset
      * @version paper 1.0
      * @platform Web
@@ -4623,191 +4540,6 @@ declare namespace egret3d {
         }): void;
     }
 }
-declare namespace egret3d {
-    /**
-     * Guid Path Component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 路径组件。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class Guidpath extends paper.BaseComponent {
-        private paths;
-        private _pathasset;
-        /**
-         * Path Asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 路径组件需要的路径资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        /**
-         * Path Asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 路径组件需要的路径资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        pathasset: PathAsset;
-        /**
-         * move speed
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 移动速度。
-         * @default 1
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        speed: number;
-        private isactived;
-        private loopCount;
-        /**
-         * play movement
-         * @version paper 1.0
-         * @param loopCount play times
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 按照路径开始移动。
-         * @param loopCount 播放次数
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        play(loopCount?: number): void;
-        /**
-         * pause movement
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 暂停移动。
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        pause(): void;
-        /**
-         * stop movement
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 停止移动。
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        stop(): void;
-        /**
-         * restart movement
-         * @param loopCount play times
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 重新按照路径移动。
-         * @param loopCount 播放次数
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        replay(loopCount?: number): void;
-        /**
-         * loop play
-         * @default false
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 循环播放。
-         * @default false
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        isloop: boolean;
-        private datasafe;
-        private folowindex;
-        /**
-         * look forward
-         * @default false
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 挂载此组件的gameobject是否朝向前方。
-         * @default false
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        lookforward: boolean;
-        private oncomplete;
-        private mystrans;
-        /**
-         * set path asset
-         * @param pathasset path asset
-         * @param speed move speed
-         * @param oncomplete on complete callback
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置路径组件的需要的参数。
-         * @param pathasset 路径资源
-         * @param speed 移动速度
-         * @param oncomplete 按照路径移动结束需要执行的事件
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        setpathasset(pathasset: PathAsset, speed?: number, oncomplete?: () => void): void;
-        /**
-         *
-         */
-        update(delta: number): void;
-        private adjustDir;
-        private followmove(delta);
-    }
-}
-declare namespace egret3d {
-    /**
-     * Guidpath系统
-     */
-    class GuidpathSystem extends paper.BaseSystem<Guidpath> {
-        protected readonly _interests: {
-            componentClass: typeof Guidpath;
-        }[];
-        onUpdate(): void;
-    }
-}
 declare namespace paper {
     /**
      *
@@ -5497,237 +5229,14 @@ declare namespace egret3d {
         onUpdate(): void;
     }
 }
+declare namespace egret3d.particle {
+}
 declare namespace paper {
     const serializeClassMap: {
         [key: string]: string;
     };
     function findClassCode(name: string): string;
     function findClassCodeFrom(target: any): string;
-}
-declare namespace egret3d.particle {
-    const enum CurveMode {
-        Constant = 0,
-        Curve = 1,
-        TwoCurves = 2,
-        TwoConstants = 3,
-    }
-    const enum ColorGradientMode {
-        Color = 0,
-        Gradient = 1,
-        TwoColors = 2,
-        TwoGradients = 3,
-        RandomColor = 4,
-    }
-    const enum SimulationSpace {
-        Local = 0,
-        World = 1,
-        Custom = 2,
-    }
-    const enum ScalingMode {
-        Hierarchy = 0,
-        Local = 1,
-        Shape = 2,
-    }
-    const enum ShapeType {
-        None = -1,
-        Sphere = 0,
-        SphereShell = 1,
-        Hemisphere = 2,
-        HemisphereShell = 3,
-        Cone = 4,
-        Box = 5,
-        Mesh = 6,
-        ConeShell = 7,
-        ConeVolume = 8,
-        ConeVolumeShell = 9,
-        Circle = 10,
-        CircleEdge = 11,
-        SingleSidedEdge = 12,
-        MeshRenderer = 13,
-        SkinnedMeshRenderer = 14,
-        BoxShell = 15,
-        BoxEdge = 16,
-    }
-    const enum ShapeMultiModeValue {
-        Random = 0,
-        Loop = 1,
-        PingPong = 2,
-        BurstSpread = 3,
-    }
-    const enum AnimationType {
-        WholeSheet = 0,
-        SingleRow = 1,
-    }
-    const enum UVChannelFlags {
-        UV0 = 1,
-        UV1 = 2,
-        UV2 = 4,
-        UV3 = 8,
-    }
-    const enum GradientMode {
-        Blend = 0,
-        Fixed = 1,
-    }
-    class Keyframe implements paper.ISerializable {
-        time: number;
-        value: number;
-        serialize(): number[];
-        deserialize(element: any): void;
-        clone(source: Keyframe): void;
-    }
-    class AnimationCurve implements paper.ISerializable {
-        /**
-         * 功能与效率平衡长度取4
-         */
-        private readonly _keys;
-        private readonly _floatValues;
-        serialize(): number[][];
-        deserialize(element: any): void;
-        evaluate(t?: number): number;
-        readonly floatValues: Readonly<Float32Array>;
-        clone(source: AnimationCurve): void;
-    }
-    class GradientColorKey extends paper.SerializableObject {
-        color: Color;
-        time: number;
-        deserialize(element: any): void;
-    }
-    class GradientAlphaKey extends paper.SerializableObject {
-        alpha: number;
-        time: number;
-        deserialize(element: any): void;
-    }
-    class Gradient extends paper.SerializableObject {
-        mode: GradientMode;
-        private readonly alphaKeys;
-        private readonly colorKeys;
-        private readonly _alphaValue;
-        private readonly _colorValue;
-        deserialize(element: any): void;
-        evaluate(t: number, out: Color): Color;
-        readonly alphaValues: Readonly<Float32Array>;
-        readonly colorValues: Readonly<Float32Array>;
-    }
-    class MinMaxCurve extends paper.SerializableObject {
-        mode: CurveMode;
-        constant: number;
-        constantMin: number;
-        constantMax: number;
-        readonly curve: AnimationCurve;
-        readonly curveMin: AnimationCurve;
-        readonly curveMax: AnimationCurve;
-        deserialize(element: any): void;
-        evaluate(t?: number): number;
-        clone(source: MinMaxCurve): void;
-    }
-    class MinMaxGradient extends paper.SerializableObject {
-        mode: ColorGradientMode;
-        readonly color: Color;
-        readonly colorMin: Color;
-        readonly colorMax: Color;
-        readonly gradient: Gradient;
-        readonly gradientMin: Gradient;
-        readonly gradientMax: Gradient;
-        deserialize(element: any): void;
-        evaluate(t: number, out: Color): Color;
-    }
-    class Burst implements paper.ISerializable {
-        time: number;
-        minCount: number;
-        maxCount: number;
-        cycleCount: number;
-        repeatInterval: number;
-        serialize(): number[];
-        deserialize(element: any): void;
-    }
-    abstract class ParticleSystemModule extends paper.SerializableObject {
-        enable: boolean;
-        protected _comp: ParticleComponent;
-        constructor(comp: ParticleComponent);
-        deserialize(element: any): void;
-    }
-    class MainModule extends ParticleSystemModule {
-        duration: number;
-        loop: boolean;
-        readonly startDelay: MinMaxCurve;
-        readonly startLifetime: MinMaxCurve;
-        readonly startSpeed: MinMaxCurve;
-        readonly startSizeX: MinMaxCurve;
-        readonly startSizeY: MinMaxCurve;
-        readonly startSizeZ: MinMaxCurve;
-        readonly startRotationX: MinMaxCurve;
-        readonly startRotationY: MinMaxCurve;
-        readonly startRotationZ: MinMaxCurve;
-        readonly startColor: MinMaxGradient;
-        readonly gravityModifier: MinMaxCurve;
-        playOnAwake: boolean;
-        deserialize(element: any): void;
-        startRotation3D: boolean;
-        simulationSpace: SimulationSpace;
-        scaleMode: ScalingMode;
-        maxParticles: number;
-    }
-    class EmissionModule extends ParticleSystemModule {
-        readonly rateOverTime: MinMaxCurve;
-        readonly bursts: Array<Burst>;
-        deserialize(element: any): void;
-    }
-    class ShapeModule extends ParticleSystemModule {
-        shapeType: ShapeType;
-        radius: number;
-        angle: number;
-        length: number;
-        readonly arcSpeed: MinMaxCurve;
-        arcMode: ShapeMultiModeValue;
-        radiusSpread: number;
-        radiusMode: ShapeMultiModeValue;
-        readonly box: egret3d.Vector3;
-        randomDirection: boolean;
-        spherizeDirection: boolean;
-        deserialize(element: any): void;
-        invalidUpdate(): void;
-        generatePositionAndDirection(position: Vector3, direction: Vector3): void;
-    }
-    class VelocityOverLifetimeModule extends ParticleSystemModule {
-        deserialize(element: any): void;
-        mode: CurveMode;
-        space: SimulationSpace;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class ColorOverLifetimeModule extends ParticleSystemModule {
-        deserialize(element: any): void;
-        color: Readonly<MinMaxGradient>;
-    }
-    class SizeOverLifetimeModule extends ParticleSystemModule {
-        deserialize(element: any): void;
-        separateAxes: boolean;
-        size: Readonly<MinMaxCurve>;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class RotationOverLifetimeModule extends ParticleSystemModule {
-        deserialize(element: any): void;
-        separateAxes: boolean;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class TextureSheetAnimationModule extends ParticleSystemModule {
-        private readonly _floatValues;
-        deserialize(element: any): void;
-        numTilesX: number;
-        numTilesY: number;
-        animation: AnimationType;
-        useRandomRow: boolean;
-        frameOverTime: Readonly<MinMaxCurve>;
-        startFrame: Readonly<MinMaxCurve>;
-        cycleCount: number;
-        rowIndex: number;
-        readonly floatValues: Readonly<Float32Array>;
-    }
 }
 declare namespace egret3d.particle {
 }
@@ -5927,132 +5436,6 @@ declare namespace paper {
          *
          */
         callLater(callback: () => void): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    class Charinfo {
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-        xSize: number;
-        ySize: number;
-        xOffset: number;
-        yOffset: number;
-        xAddvance: number;
-        static caclByteLength(): number;
-    }
-    /**
-     * font asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 字体资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Font extends paper.Asset {
-        /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        dispose(): void;
-        /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        caclByteLength(): number;
-        private _texture;
-        /**
-         * font texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 字体材质。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        /**
-         * font texture
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 字体材质。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        texture: Texture;
-        /**
-         *
-         * 字体信息map
-         */
-        cmap: {
-            [id: string]: Charinfo;
-        };
-        /**
-         *
-         */
-        fontname: string;
-        /**
-         *
-         * 像素尺寸
-         */
-        pointSize: number;
-        /**
-         *
-         * 间隔
-         */
-        padding: number;
-        /**
-         *
-         * 行高
-         */
-        lineHeight: number;
-        /**
-         *
-         * 基线
-         */
-        baseline: number;
-        /**
-         *
-         */
-        atlasWidth: number;
-        /**
-         *
-         */
-        atlasHeight: number;
-        /**
-         *
-         */
-        $parse(json: any): void;
     }
 }
 declare namespace egret3d {
@@ -6317,8 +5700,6 @@ declare namespace RES.processor {
     const GLTFProcessor: RES.processor.Processor;
     const PrefabProcessor: RES.processor.Processor;
     const SceneProcessor: RES.processor.Processor;
-    const Font3DProcessor: RES.processor.Processor;
-    const PathAssetProcessor: RES.processor.Processor;
 }
 declare namespace egret3d {
     class DefaultShaders {
@@ -8605,4 +7986,227 @@ declare namespace egret3d.ammo {
     }
 }
 declare namespace egret3d.particle {
+    const enum CurveMode {
+        Constant = 0,
+        Curve = 1,
+        TwoCurves = 2,
+        TwoConstants = 3,
+    }
+    const enum ColorGradientMode {
+        Color = 0,
+        Gradient = 1,
+        TwoColors = 2,
+        TwoGradients = 3,
+        RandomColor = 4,
+    }
+    const enum SimulationSpace {
+        Local = 0,
+        World = 1,
+        Custom = 2,
+    }
+    const enum ScalingMode {
+        Hierarchy = 0,
+        Local = 1,
+        Shape = 2,
+    }
+    const enum ShapeType {
+        None = -1,
+        Sphere = 0,
+        SphereShell = 1,
+        Hemisphere = 2,
+        HemisphereShell = 3,
+        Cone = 4,
+        Box = 5,
+        Mesh = 6,
+        ConeShell = 7,
+        ConeVolume = 8,
+        ConeVolumeShell = 9,
+        Circle = 10,
+        CircleEdge = 11,
+        SingleSidedEdge = 12,
+        MeshRenderer = 13,
+        SkinnedMeshRenderer = 14,
+        BoxShell = 15,
+        BoxEdge = 16,
+    }
+    const enum ShapeMultiModeValue {
+        Random = 0,
+        Loop = 1,
+        PingPong = 2,
+        BurstSpread = 3,
+    }
+    const enum AnimationType {
+        WholeSheet = 0,
+        SingleRow = 1,
+    }
+    const enum UVChannelFlags {
+        UV0 = 1,
+        UV1 = 2,
+        UV2 = 4,
+        UV3 = 8,
+    }
+    const enum GradientMode {
+        Blend = 0,
+        Fixed = 1,
+    }
+    class Keyframe implements paper.ISerializable {
+        time: number;
+        value: number;
+        serialize(): number[];
+        deserialize(element: any): void;
+        clone(source: Keyframe): void;
+    }
+    class AnimationCurve implements paper.ISerializable {
+        /**
+         * 功能与效率平衡长度取4
+         */
+        private readonly _keys;
+        private readonly _floatValues;
+        serialize(): number[][];
+        deserialize(element: any): void;
+        evaluate(t?: number): number;
+        readonly floatValues: Readonly<Float32Array>;
+        clone(source: AnimationCurve): void;
+    }
+    class GradientColorKey extends paper.SerializableObject {
+        color: Color;
+        time: number;
+        deserialize(element: any): void;
+    }
+    class GradientAlphaKey extends paper.SerializableObject {
+        alpha: number;
+        time: number;
+        deserialize(element: any): void;
+    }
+    class Gradient extends paper.SerializableObject {
+        mode: GradientMode;
+        private readonly alphaKeys;
+        private readonly colorKeys;
+        private readonly _alphaValue;
+        private readonly _colorValue;
+        deserialize(element: any): void;
+        evaluate(t: number, out: Color): Color;
+        readonly alphaValues: Readonly<Float32Array>;
+        readonly colorValues: Readonly<Float32Array>;
+    }
+    class MinMaxCurve extends paper.SerializableObject {
+        mode: CurveMode;
+        constant: number;
+        constantMin: number;
+        constantMax: number;
+        readonly curve: AnimationCurve;
+        readonly curveMin: AnimationCurve;
+        readonly curveMax: AnimationCurve;
+        deserialize(element: any): void;
+        evaluate(t?: number): number;
+        clone(source: MinMaxCurve): void;
+    }
+    class MinMaxGradient extends paper.SerializableObject {
+        mode: ColorGradientMode;
+        readonly color: Color;
+        readonly colorMin: Color;
+        readonly colorMax: Color;
+        readonly gradient: Gradient;
+        readonly gradientMin: Gradient;
+        readonly gradientMax: Gradient;
+        deserialize(element: any): void;
+        evaluate(t: number, out: Color): Color;
+    }
+    class Burst implements paper.ISerializable {
+        time: number;
+        minCount: number;
+        maxCount: number;
+        cycleCount: number;
+        repeatInterval: number;
+        serialize(): number[];
+        deserialize(element: any): void;
+    }
+    abstract class ParticleSystemModule extends paper.SerializableObject {
+        enable: boolean;
+        protected _comp: ParticleComponent;
+        constructor(comp: ParticleComponent);
+        deserialize(element: any): void;
+    }
+    class MainModule extends ParticleSystemModule {
+        duration: number;
+        loop: boolean;
+        readonly startDelay: MinMaxCurve;
+        readonly startLifetime: MinMaxCurve;
+        readonly startSpeed: MinMaxCurve;
+        readonly startSizeX: MinMaxCurve;
+        readonly startSizeY: MinMaxCurve;
+        readonly startSizeZ: MinMaxCurve;
+        readonly startRotationX: MinMaxCurve;
+        readonly startRotationY: MinMaxCurve;
+        readonly startRotationZ: MinMaxCurve;
+        readonly startColor: MinMaxGradient;
+        readonly gravityModifier: MinMaxCurve;
+        playOnAwake: boolean;
+        deserialize(element: any): void;
+        startRotation3D: boolean;
+        simulationSpace: SimulationSpace;
+        scaleMode: ScalingMode;
+        maxParticles: number;
+    }
+    class EmissionModule extends ParticleSystemModule {
+        readonly rateOverTime: MinMaxCurve;
+        readonly bursts: Array<Burst>;
+        deserialize(element: any): void;
+    }
+    class ShapeModule extends ParticleSystemModule {
+        shapeType: ShapeType;
+        radius: number;
+        angle: number;
+        length: number;
+        readonly arcSpeed: MinMaxCurve;
+        arcMode: ShapeMultiModeValue;
+        radiusSpread: number;
+        radiusMode: ShapeMultiModeValue;
+        readonly box: egret3d.Vector3;
+        randomDirection: boolean;
+        spherizeDirection: boolean;
+        deserialize(element: any): void;
+        invalidUpdate(): void;
+        generatePositionAndDirection(position: Vector3, direction: Vector3): void;
+    }
+    class VelocityOverLifetimeModule extends ParticleSystemModule {
+        deserialize(element: any): void;
+        mode: CurveMode;
+        space: SimulationSpace;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class ColorOverLifetimeModule extends ParticleSystemModule {
+        deserialize(element: any): void;
+        color: Readonly<MinMaxGradient>;
+    }
+    class SizeOverLifetimeModule extends ParticleSystemModule {
+        deserialize(element: any): void;
+        separateAxes: boolean;
+        size: Readonly<MinMaxCurve>;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class RotationOverLifetimeModule extends ParticleSystemModule {
+        deserialize(element: any): void;
+        separateAxes: boolean;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class TextureSheetAnimationModule extends ParticleSystemModule {
+        private readonly _floatValues;
+        deserialize(element: any): void;
+        numTilesX: number;
+        numTilesY: number;
+        animation: AnimationType;
+        useRandomRow: boolean;
+        frameOverTime: Readonly<MinMaxCurve>;
+        startFrame: Readonly<MinMaxCurve>;
+        cycleCount: number;
+        rowIndex: number;
+        readonly floatValues: Readonly<Float32Array>;
+    }
 }

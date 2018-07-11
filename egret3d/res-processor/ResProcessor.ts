@@ -324,42 +324,6 @@ namespace RES.processor {
 
     };
 
-    export const Font3DProcessor: RES.processor.Processor = {
-
-        async onLoadStart(host, resource) {
-            const data = await host.load(resource, "json");
-            const url = getUrl(resource);
-            const font = new egret3d.Font(url);
-            font.$parse(data);
-            paper.Asset.register(font, true);
-            return font;
-        },
-
-        async onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-        }
-
-    };
-
-    export const PathAssetProcessor: RES.processor.Processor = {
-
-        async onLoadStart(host, resource) {
-            const data = await host.load(resource, "json");
-            const url = getUrl(resource);
-            const pathAsset = new egret3d.PathAsset(url);
-            pathAsset.$parse(data);
-            paper.Asset.register(pathAsset, true);
-            return pathAsset;
-        },
-
-        async onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-        }
-
-    };
-
     RES.processor.map("GLVertexShader", GLVertexShaderProcessor);
     RES.processor.map("GLFragmentShader", GLFragmentShaderProcessor);
     RES.processor.map("Shader", ShaderProcessor);
@@ -369,6 +333,4 @@ namespace RES.processor {
     RES.processor.map("GLTFBinary", GLTFProcessor);
     RES.processor.map("Prefab", PrefabProcessor);
     RES.processor.map("Scene", SceneProcessor);
-    RES.processor.map("Font", Font3DProcessor);
-    RES.processor.map("pathAsset", PathAssetProcessor);
 }
