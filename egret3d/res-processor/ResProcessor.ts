@@ -212,13 +212,15 @@ namespace RES.processor {
                     case egret3d.UniformTypeEnum.Texture:
                         const value = jsonChild.value;
                         const url = combinePath(dirname(resource.url) + "/", value)
-                        const r = RES.host.resourceConfig["getResource"](url);
-                        let texture: egret3d.Texture
-                        if (r) {
-                            texture = await RES.getResAsync(r.name)
-                        }
-                        else {
-                            texture = egret3d.DefaultTextures.GRID;
+                        let texture = paper.Asset.find<egret3d.Texture>(url);
+                        if (!texture) {
+                            const r = RES.host.resourceConfig["getResource"](url);
+                            if (r) {
+                                texture = await RES.getResAsync(r.name)
+                            }
+                            else {
+                                texture = egret3d.DefaultTextures.GRID;
+                            }
                         }
                         material.setTexture(i, texture);
                         break;

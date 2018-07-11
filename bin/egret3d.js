@@ -15609,7 +15609,7 @@ var RES;
         processor.MaterialProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var json, url, material, shaderName, shader, mapUniform, _a, _b, _i, i, jsonChild, _c, value, url_1, r, texture, tempValue;
+                    var json, url, material, shaderName, shader, mapUniform, _a, _b, _i, i, jsonChild, _c, value, url_1, texture, r, tempValue;
                     return __generator(this, function (_d) {
                         switch (_d.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
@@ -15640,8 +15640,9 @@ var RES;
                             case 3:
                                 value = jsonChild.value;
                                 url_1 = combinePath(dirname(resource.url) + "/", value);
+                                texture = paper.Asset.find(url_1);
+                                if (!!texture) return [3 /*break*/, 6];
                                 r = RES.host.resourceConfig["getResource"](url_1);
-                                texture = void 0;
                                 if (!r) return [3 /*break*/, 5];
                                 return [4 /*yield*/, RES.getResAsync(r.name)];
                             case 4:
