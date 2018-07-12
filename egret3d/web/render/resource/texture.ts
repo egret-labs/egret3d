@@ -240,7 +240,6 @@ namespace egret3d {
             this.width = img.width;
             this.height = img.height;
             this.mipmap = mipmap;
-            this.loaded = true;
             const webgl = this.webgl;
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
@@ -288,7 +287,6 @@ namespace egret3d {
             this.width = width;
             this.height = height;
             this.mipmap = mipmap;
-            this.loaded = true;
             const webgl = this.webgl;
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
@@ -336,7 +334,6 @@ namespace egret3d {
         }
 
         webgl: WebGLRenderingContext;
-        loaded: boolean = false;
         texture: WebGLTexture;
         format: TextureFormatEnum;
         width: number = 0;
@@ -433,17 +430,17 @@ namespace egret3d {
 
             webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
             this.format = format;
-            this.formatGL = webgl.RGBA;
+            let formatGL = webgl.RGBA;
 
             if (format == TextureFormatEnum.RGB) {
-                this.formatGL = webgl.RGB;
+                formatGL = webgl.RGB;
             } else if (format == TextureFormatEnum.Gray) {
-                this.formatGL = webgl.LUMINANCE;
+                formatGL = webgl.LUMINANCE;
             }
 
             let data: Uint8Array = null;
 
-            webgl.texImage2D(webgl.TEXTURE_2D, 0, this.formatGL, width, height, 0, this.formatGL, webgl.UNSIGNED_BYTE, data);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, width, height, 0, formatGL, webgl.UNSIGNED_BYTE, data);
             if (linear) {
                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
@@ -471,25 +468,6 @@ namespace egret3d {
             }
         }
 
-        linear: boolean;
-        premultiply: boolean = true;
-        repeat: boolean = false;
-        mirroredU: boolean = false;
-        mirroredV: boolean = false
-
-        updateRect(data: Uint8Array, x: number, y: number, width: number, height: number) {
-            const webgl = this.webgl;
-            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
-
-            webgl.texSubImage2D(webgl.TEXTURE_2D, 0, x, y, width, height, this.formatGL, webgl.UNSIGNED_BYTE, data);
-        }
-
-        updateRectImg(data: ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement, x: number, y: number) {
-            const webgl = this.webgl;
-            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
-            webgl.texSubImage2D(webgl.TEXTURE_2D, 0, x, y, this.formatGL, webgl.UNSIGNED_BYTE, data);
-        }
-
         isFrameBuffer(): boolean {
             return false;
         }
@@ -497,7 +475,6 @@ namespace egret3d {
         webgl: WebGLRenderingContext;
         texture: WebGLTexture;
         format: TextureFormatEnum;
-        formatGL: number;
         width: number = 0;
         height: number = 0;
 
