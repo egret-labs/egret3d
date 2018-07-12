@@ -241,56 +241,47 @@ namespace egret3d {
             this.height = img.height;
             this.mipmap = mipmap;
             this.loaded = true;
-            this.webgl.pixelStorei(this.webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
-            this.webgl.pixelStorei(this.webgl.UNPACK_FLIP_Y_WEBGL, 0);
+            const webgl = this.webgl;
+            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
+            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
 
-            this.webgl.bindTexture(this.webgl.TEXTURE_2D, this.texture);
-            let formatGL = this.webgl.RGBA;
+            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
+            let formatGL = webgl.RGBA;
             if (this.format == TextureFormatEnum.RGB) {
-                formatGL = this.webgl.RGB;
+                formatGL = webgl.RGB;
             } else if (this.format == TextureFormatEnum.Gray) {
-                formatGL = this.webgl.LUMINANCE;
+                formatGL = webgl.LUMINANCE;
             }
-            this.webgl.texImage2D(this.webgl.TEXTURE_2D, 0, formatGL, formatGL, this.webgl.UNSIGNED_BYTE, img);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, formatGL, webgl.UNSIGNED_BYTE, img);
             if (mipmap) {
-                this.webgl.generateMipmap(this.webgl.TEXTURE_2D);
+                webgl.generateMipmap(webgl.TEXTURE_2D);
 
                 if (linear) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MAG_FILTER, this.webgl.LINEAR);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MIN_FILTER, this.webgl.LINEAR_MIPMAP_LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR_MIPMAP_LINEAR);
                 } else {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MAG_FILTER, this.webgl.NEAREST);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MIN_FILTER, this.webgl.NEAREST_MIPMAP_NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST_MIPMAP_NEAREST);
                 }
             } else {
                 if (linear) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MAG_FILTER, this.webgl.LINEAR);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MIN_FILTER, this.webgl.LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
                 } else {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MAG_FILTER, this.webgl.NEAREST);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MIN_FILTER, this.webgl.NEAREST);
-
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
                 }
             }
+
+            let wrap_s_param = webgl.CLAMP_TO_EDGE;
+            let wrap_t_param = webgl.CLAMP_TO_EDGE;
 
             if (repeat) {
-                if (mirroredU && mirroredV) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.MIRRORED_REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.MIRRORED_REPEAT);
-                } else if (mirroredU) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.MIRRORED_REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.REPEAT);
-                } else if (mirroredV) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.MIRRORED_REPEAT);
-                } else {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.REPEAT);
-                }
-            } else {
-                this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.CLAMP_TO_EDGE);
-                this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.CLAMP_TO_EDGE);
+                wrap_s_param = mirroredU ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
+                wrap_t_param = mirroredV ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
             }
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, wrap_s_param);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrap_t_param);
         }
 
         uploadByteArray(mipmap: boolean, linear: boolean, width: number, height: number, data: Uint8Array, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false): void {
@@ -298,57 +289,50 @@ namespace egret3d {
             this.height = height;
             this.mipmap = mipmap;
             this.loaded = true;
-            this.webgl.pixelStorei(this.webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
-            this.webgl.pixelStorei(this.webgl.UNPACK_FLIP_Y_WEBGL, 0);
+            const webgl = this.webgl;
+            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
+            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
 
-            this.webgl.bindTexture(this.webgl.TEXTURE_2D, this.texture);
-            let formatGL = this.webgl.RGBA;
+            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
+            let formatGL = webgl.RGBA;
             if (this.format == TextureFormatEnum.RGB) {
-                formatGL = this.webgl.RGB;
+                formatGL = webgl.RGB;
             } else if (this.format == TextureFormatEnum.Gray) {
-                formatGL = this.webgl.LUMINANCE;
+                formatGL = webgl.LUMINANCE;
             }
-            this.webgl.texImage2D(this.webgl.TEXTURE_2D, 0, formatGL, width, height, 0, formatGL, this.webgl.UNSIGNED_BYTE, data);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, width, height, 0, formatGL, webgl.UNSIGNED_BYTE, data);
             if (mipmap) {
-                this.webgl.generateMipmap(this.webgl.TEXTURE_2D);
+                webgl.generateMipmap(webgl.TEXTURE_2D);
 
                 if (linear) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MAG_FILTER, this.webgl.LINEAR);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MIN_FILTER, this.webgl.LINEAR_MIPMAP_LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR_MIPMAP_LINEAR);
                 } else {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MAG_FILTER, this.webgl.NEAREST);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MIN_FILTER, this.webgl.NEAREST_MIPMAP_NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST_MIPMAP_NEAREST);
                 }
             } else {
                 if (linear) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MAG_FILTER, this.webgl.LINEAR);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MIN_FILTER, this.webgl.LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
                 }
                 else {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MAG_FILTER, this.webgl.NEAREST);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MIN_FILTER, this.webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
 
                 }
             }
+
+            let wrap_s_param = webgl.CLAMP_TO_EDGE;
+            let wrap_t_param = webgl.CLAMP_TO_EDGE;
 
             if (repeat) {
-                if (mirroredU && mirroredV) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.MIRRORED_REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.MIRRORED_REPEAT);
-                } else if (mirroredU) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.MIRRORED_REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.REPEAT);
-                } else if (mirroredV) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.MIRRORED_REPEAT);
-                } else {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.REPEAT);
-                }
-            } else {
-                this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.CLAMP_TO_EDGE);
-                this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.CLAMP_TO_EDGE);
+                wrap_s_param = mirroredU ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
+                wrap_t_param = mirroredV ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
             }
+
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, wrap_s_param);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrap_t_param);
         }
 
         webgl: WebGLRenderingContext;
@@ -440,50 +424,50 @@ namespace egret3d {
 
     export class WriteableTexture2D implements ITexture {
         constructor(webgl: WebGLRenderingContext, format: TextureFormatEnum = TextureFormatEnum.RGBA, width: number, height: number, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
-            this.webgl = webgl;
+            webgl = webgl;
 
             this.texture = webgl.createTexture();
 
-            this.webgl.pixelStorei(this.webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
-            this.webgl.pixelStorei(this.webgl.UNPACK_FLIP_Y_WEBGL, 0);
+            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
+            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
 
-            this.webgl.bindTexture(this.webgl.TEXTURE_2D, this.texture);
+            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
             this.format = format;
-            this.formatGL = this.webgl.RGBA;
+            this.formatGL = webgl.RGBA;
 
             if (format == TextureFormatEnum.RGB) {
-                this.formatGL = this.webgl.RGB;
+                this.formatGL = webgl.RGB;
             } else if (format == TextureFormatEnum.Gray) {
-                this.formatGL = this.webgl.LUMINANCE;
+                this.formatGL = webgl.LUMINANCE;
             }
 
             let data: Uint8Array = null;
 
-            this.webgl.texImage2D(this.webgl.TEXTURE_2D, 0, this.formatGL, width, height, 0, this.formatGL, this.webgl.UNSIGNED_BYTE, data);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, this.formatGL, width, height, 0, this.formatGL, webgl.UNSIGNED_BYTE, data);
             if (linear) {
-                this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MAG_FILTER, this.webgl.LINEAR);
-                this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MIN_FILTER, this.webgl.LINEAR);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
             } else {
-                this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MAG_FILTER, this.webgl.NEAREST);
-                this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_MIN_FILTER, this.webgl.NEAREST);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
             }
             if (repeat) {
                 if (mirroredU && mirroredV) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.MIRRORED_REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.MIRRORED_REPEAT);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.MIRRORED_REPEAT);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.MIRRORED_REPEAT);
                 } else if (mirroredU) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.MIRRORED_REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.REPEAT);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.MIRRORED_REPEAT);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.REPEAT);
                 } else if (mirroredV) {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.MIRRORED_REPEAT);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.REPEAT);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.MIRRORED_REPEAT);
                 } else {
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.REPEAT);
-                    this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.REPEAT);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.REPEAT);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.REPEAT);
                 }
             } else {
-                this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_S, this.webgl.CLAMP_TO_EDGE);
-                this.webgl.texParameteri(this.webgl.TEXTURE_2D, this.webgl.TEXTURE_WRAP_T, this.webgl.CLAMP_TO_EDGE);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
             }
         }
 
@@ -494,14 +478,16 @@ namespace egret3d {
         mirroredV: boolean = false
 
         updateRect(data: Uint8Array, x: number, y: number, width: number, height: number) {
-            this.webgl.bindTexture(this.webgl.TEXTURE_2D, this.texture);
+            const webgl = this.webgl;
+            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
 
-            this.webgl.texSubImage2D(this.webgl.TEXTURE_2D, 0, x, y, width, height, this.formatGL, this.webgl.UNSIGNED_BYTE, data);
+            webgl.texSubImage2D(webgl.TEXTURE_2D, 0, x, y, width, height, this.formatGL, webgl.UNSIGNED_BYTE, data);
         }
 
         updateRectImg(data: ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement, x: number, y: number) {
-            this.webgl.bindTexture(this.webgl.TEXTURE_2D, this.texture);
-            this.webgl.texSubImage2D(this.webgl.TEXTURE_2D, 0, x, y, this.formatGL, this.webgl.UNSIGNED_BYTE, data);
+            const webgl = this.webgl;
+            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
+            webgl.texSubImage2D(webgl.TEXTURE_2D, 0, x, y, this.formatGL, webgl.UNSIGNED_BYTE, data);
         }
 
         isFrameBuffer(): boolean {
