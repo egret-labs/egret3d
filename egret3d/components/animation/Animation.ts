@@ -918,15 +918,13 @@ namespace egret3d {
         }
     }
 
-    export class AnimationSystem extends paper.BaseSystem<Animation> {
+    export class AnimationSystem extends paper.BaseSystem {
         protected readonly _interests = [
-            {
-                componentClass: Animation
-            }
+            { componentClass: Animation }
         ];
 
-        public onAddGameObject(gameObject: paper.GameObject) {
-            const component = this._getComponent(gameObject, 0);
+        public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
+            const component = group.getComponent(gameObject, 0) as Animation;
 
             if (component.autoPlay) {
                 component.play();
@@ -935,7 +933,8 @@ namespace egret3d {
 
         public onUpdate() { // TODO 应将组件功能尽量移到系统
             const globalTime = this._clock.time;
-            for (const component of this._components) {
+            const components = this._groups[0].components as ReadonlyArray<Animation>;
+            for (const component of components) {
                 component.update(globalTime);
             }
         }

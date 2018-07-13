@@ -63,6 +63,15 @@ namespace egret3d.oimo {
             massData.mass = this._values[ValueType.Mass]; // Update mass.
             rigidbody.setMassData(massData); // Set mass data to rigibody.
         }
+
+        private _addShapes() {
+            for (const shape of this.gameObject.getComponents(Collider as any, true) as Collider[]) {
+                this.oimoRigidbody.addShape(shape.oimoShape);
+                // rigidbody._updateMass(rigidbody.oimoRigidbody);
+            }
+
+            // 子物体的transform？ TODO
+        }
         /**
          * 
          */
@@ -84,7 +93,7 @@ namespace egret3d.oimo {
          */
         public applyForce(force: Readonly<IVector3>, positionInWorld: Readonly<IVector3>) {
             if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                PhysicsSystem.instance._initializeRigidbody(this.gameObject);
+                this._addShapes();
             }
 
             if (this._oimoRigidbody.getNumShapes() === 0) {
@@ -99,7 +108,7 @@ namespace egret3d.oimo {
          */
         public applyForceToCenter(force: Readonly<IVector3>) {
             if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                PhysicsSystem.instance._initializeRigidbody(this.gameObject);
+                this._addShapes();
             }
 
             if (this._oimoRigidbody.getNumShapes() === 0) {
@@ -114,7 +123,7 @@ namespace egret3d.oimo {
          */
         public applyImpulse(impulse: Readonly<IVector3>, position: Readonly<IVector3>) {
             if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                PhysicsSystem.instance._initializeRigidbody(this.gameObject);
+                this._addShapes();
             }
 
             if (this._oimoRigidbody.getNumShapes() === 0) {
@@ -129,7 +138,7 @@ namespace egret3d.oimo {
          */
         public applyTorque(torque: Readonly<IVector3>) {
             if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                PhysicsSystem.instance._initializeRigidbody(this.gameObject);
+                this._addShapes();
             }
 
             if (this._oimoRigidbody.getNumShapes() === 0) {

@@ -2,9 +2,17 @@ namespace egret3d {
     /**
      * Camera系统
      */
-    export class CameraSystem extends paper.BaseSystem<Camera> {
+    export class CameraSystem extends paper.BaseSystem {
         protected readonly _interests = [
-            { componentClass: Camera, isExtends: true }
+            [
+                { componentClass: Camera }
+            ],
+            [
+                { componentClass: [DirectLight, SpotLight, PointLight] }
+            ],
+            [
+                { componentClass: Egret2DRenderer }
+            ],
         ];
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
 
@@ -39,12 +47,8 @@ namespace egret3d {
             WebGLKit.draw(context, drawType);
         }
 
-        protected _onAddComponent(component: Camera) {
-            if (component.gameObject === this._globalGameObject) { // Pass global camera.
-                return;
-            }
-
-            super._onAddComponent(component);
+        protected _sortCamera(a: Camera, b: Camera) {
+            return a.order - b.order;
         }
 
         public $renderCamera(camera: Camera) {
@@ -62,37 +66,35 @@ namespace egret3d {
                     this._applyDrawCall(camera.context, drawCall);
                 }
             }
+
             // Egret2D渲染不加入DrawCallList的排序
-            const egret2DRenderSystem = paper.Application.systemManager.getSystem(Egret2DRendererSystem);
-            if (egret2DRenderSystem && egret2DRenderSystem.enabled) {
-                for (const egret2DRenderer of egret2DRenderSystem.components) {
-                    if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
-                        egret2DRenderer.render(camera.context, camera);
-                    }
+            const egret2DRenderers = this._groups[2].components as ReadonlyArray<Egret2DRenderer>;
+            for (const egret2DRenderer of egret2DRenderers) {
+                if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
+                    egret2DRenderer.render(camera.context, camera);
                 }
             }
         }
 
         public onUpdate(deltaTime: number) {
-            this._components.sort((a, b) => { // TODO 不应每次产生函数实例。
-                return a.order - b.order;
-            });
-
-            const lightSystem = paper.Application.systemManager.getSystem(LightSystem);
-            const lights = lightSystem ? lightSystem.components : null;
-
-            for (const component of this._components) {
-                component.update(deltaTime);
-
-                if (lights && lights.length > 0) {
-                    component.context.updateLights(lights); // TODO 性能优化
-                }
-            }
-
             Performance.startCounter("render");
 
-            if (this._components.length > 0) {
-                for (const component of this._components) {
+            const cameras = this._groups[0].components as Camera[];
+            if (cameras.length > 0) {
+                const lights = this._groups[1].components as ReadonlyArray<BaseLight>;
+                cameras.sort(this._sortCamera);
+
+                for (const component of cameras) {
+                    if (component.gameObject === this._globalGameObject) { // Pass global camera.
+                        continue;
+                    }
+
+                    component.update(deltaTime);
+
+                    if (lights.length > 0) {
+                        component.context.updateLights(lights); // TODO 性能优化
+                    }
+
                     if (component.postQueues.length === 0) {
                         component.context.drawtype = "";
                         component._targetAndViewport(component.renderTarget, false);

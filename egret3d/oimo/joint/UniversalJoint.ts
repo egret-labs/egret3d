@@ -33,9 +33,9 @@ namespace egret3d.oimo {
         public readonly jointType: JointType = JointType.Universal;
 
         @paper.serializedField
-        private readonly _axisY: Vector3 = Vector3.UP.clone();
+        private readonly _axisY: Vector3 = Vector3.FORWARD.clone();
         @paper.serializedField
-        private readonly _axisZ: Vector3 = Vector3.UP.clone();
+        private readonly _axisZ: Vector3 = Vector3.FORWARD.clone();
         @paper.serializedField
         private readonly _valuesB: Float32Array = new Float32Array([
             0.0, 0.0, 0,

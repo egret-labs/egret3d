@@ -32,7 +32,7 @@ namespace egret3d.oimo {
         @paper.serializedField
         private readonly _twistAxis: Vector3 = Vector3.UP.clone();
         @paper.serializedField
-        private readonly _swingAxis: Vector3 = Vector3.RIGHT.clone(); //
+        private readonly _swingAxis: Vector3 = Vector3.RIGHT.clone();
         @paper.serializedField
         private readonly _valuesB: Float32Array = new Float32Array([
             0.0, 0.0, 0,
@@ -84,8 +84,8 @@ namespace egret3d.oimo {
             config.twistLimitMotor.motorSpeed = this.motorSpeed * egret3d.DEG_RAD;
             config.twistLimitMotor.motorTorque = this.motorTorque;
 
-            config.maxSwingAngle1 = this.maxSwingAngleX * egret3d.DEG_RAD;
-            config.maxSwingAngle2 = this.maxSwingAngleZ * egret3d.DEG_RAD;
+            config.maxSwingAngle1 = this.maxSwingAngleZ * egret3d.DEG_RAD;
+            config.maxSwingAngle2 = this.maxSwingAngleX * egret3d.DEG_RAD;
 
             const joint = new OIMO.RagdollJoint(config);
             joint.userData = this;

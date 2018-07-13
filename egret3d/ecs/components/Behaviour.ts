@@ -54,7 +54,7 @@ namespace paper {
          * 组件被初始化时调用。
          * @see paper.GameObject#addComponent()
          */
-        public onAwake?(config?: any): void;
+        public onAwake?(config: any): void;
         /**
          * 
          */
@@ -73,7 +73,7 @@ namespace paper {
         /**
          * 
          */
-        public onFixedUpdate?(currentTimes?: number, totalTimes?: number): void;
+        public onFixedUpdate?(currentTimes: number, totalTimes: number): void;
         /**
          * 
          */
@@ -101,7 +101,7 @@ namespace paper {
         /**
          * 
          */
-        public onUpdate?(deltaTime?: number): void;
+        public onUpdate?(deltaTime: number): void;
         /**
          * 
          */
@@ -109,7 +109,7 @@ namespace paper {
         /**
          * 
          */
-        public onLateUpdate?(deltaTime?: number): void;
+        public onLateUpdate?(deltaTime: number): void;
         /**
          * 组件被禁用或实体被禁用时调用。
          * @see paper.BaseComponent#enabled

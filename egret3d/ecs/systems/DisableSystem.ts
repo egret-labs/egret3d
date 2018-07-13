@@ -2,13 +2,13 @@ namespace paper {
     /**
      * @internal
      */
-    export class StartSystem extends BaseSystem {
+    export class DisableSystem extends BaseSystem {
         protected readonly _interests = [
             { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
         ];
 
-        public onAddComponent(component: Behaviour) {
-            if (!component || component._isStarted) {
+        public onRemoveComponent(component: Behaviour) {
+            if (!component) {
                 return;
             }
 
@@ -18,8 +18,7 @@ namespace paper {
                 }
             }
 
-            component._isStarted = true;
-            component.onStart && component.onStart();
+            component.onDisable && component.onDisable();
         }
     }
 }

@@ -4,7 +4,7 @@ namespace egret3d.oimo {
         Frequency,
         DampingRatio,
         UseSymplecticEuler,
-        // RotationalLimitMotor
+        // LimitMotor
         LowerLimit,
         UpperLimit,
         MotorSpeed,
@@ -177,7 +177,7 @@ namespace egret3d.oimo {
         }
         public set axis(value: Readonly<IVector3>) {
             if (this._oimoJoint) {
-                console.warn("Cannot change the axis x after the joint has been created.");
+                console.warn("Cannot change the axis after the joint has been created.");
             }
             else {
                 this._axis.copy(value).normalize();

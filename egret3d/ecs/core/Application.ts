@@ -3,6 +3,10 @@ type uint = number;
 
 namespace paper {
     /**
+     * 
+     */
+    export let Time: Clock;
+    /**
      * 组件实体系统的主入口
      */
     export class Application {
@@ -33,16 +37,17 @@ namespace paper {
         public static init({ isEditor = false, isPlaying = true } = {}) {
             const systemClasses = [
                 //
+                BeginSystem,
+                EnableSystem,
                 StartSystem,
                 //
                 egret3d.oimo.PhysicsSystem, // TODO 分离
                 //
                 UpdateSystem,
                 //
-                egret3d.GuidpathSystem,
                 egret3d.AnimationSystem,
                 //
-                LaterUpdateSystem,
+                LateUpdateSystem,
                 //
                 egret3d.TrailRendererSystem,
                 egret3d.MeshRendererSystem,
@@ -52,9 +57,8 @@ namespace paper {
                 egret3d.LightSystem,
                 egret3d.CameraSystem,
                 //
+                DisableSystem,
                 EndSystem,
-                //
-                DestroySystem,
             ];
 
             let level = 0;
@@ -111,7 +115,7 @@ namespace paper {
          * @deprecated
          */
         public static callLater(callback: () => void): void {
-            (this.systemManager.getSystem(LaterUpdateSystem) as LaterUpdateSystem).callLater(callback);
+            (this.systemManager.getSystem(LateUpdateSystem) as LateUpdateSystem).callLater(callback);
         }
 
         private constructor() {

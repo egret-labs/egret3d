@@ -4,21 +4,27 @@ namespace paper.editor {
      */
     export class EditorCameraSystem extends egret3d.CameraSystem {
         public onUpdate(deltaTime: number) {
-            this._components.sort((a, b) => {
-                return a.order - b.order;
-            });
-
-            const lightSystem = paper.Application.systemManager.getSystem(egret3d.LightSystem);
-            const lights = lightSystem ? lightSystem.components : null;
-
+            const cameras = this._groups[0].components as egret3d.Camera[];
             let camera: egret3d.Camera | null = null;
-            for (const component of this._components) {
-                if (component.gameObject.tag === "EditorCamera") {
-                    camera = component;
-                }
-                component.update(deltaTime);
-                if (lights && lights.length > 0) {
-                    component.context.updateLights(lights);
+
+            if (cameras.length > 0) {
+                const lights = this._groups[1].components as ReadonlyArray<egret3d.BaseLight>;
+                cameras.sort(this._sortCamera);
+
+                for (const component of cameras) {
+                    if (component.gameObject === this._globalGameObject) { // Pass global camera.
+                        continue;
+                    }
+
+                    component.update(deltaTime);
+
+                    if (lights.length > 0) {
+                        component.context.updateLights(lights); // TODO 性能优化
+                    }
+
+                    if (component.gameObject.tag === "EditorCamera") {
+                        camera = component;
+                    }
                 }
             }
 

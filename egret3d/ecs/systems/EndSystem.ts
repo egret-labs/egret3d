@@ -1,54 +1,43 @@
 namespace paper {
     /**
-     * 
+     * @internal
      */
-    export class EndSystem extends BaseSystem<Behaviour> {
-        protected readonly _interests = [{ componentClass: Behaviour as any, isExtends: true }];
+    export class EndSystem extends BaseSystem {
+        private readonly _bufferedComponents: BaseComponent[] = [];
+        private readonly _bufferedGameObjects: GameObject[] = [];
 
-        protected _onAddComponent(component: Behaviour) {
-            const index = this._components.indexOf(component);
-            if (index >= 0) {
-                this._components[index] = null as any;
+        public onUpdate(deltaTime: number) {
+            //
+            egret3d.InputManager.update(deltaTime);
 
+            for (const component of this._bufferedComponents) {
+                component.uninitialize();
+            }
+
+            this._bufferedComponents.length = 0;
+            this._bufferedGameObjects.length = 0;
+            //
+            egret3d.Performance.endCounter(egret3d.PerformanceType.All);
+        }
+        /**
+         * @internal
+         */
+        public bufferComponent(component: BaseComponent) {
+            if (this._bufferedComponents.indexOf(component) >= 0) {
                 return;
             }
 
-            const gameObject = component.gameObject;
-            console.debug("EndSystem remove behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component));
+            this._bufferedComponents.push(component);
         }
-
-        protected _onRemoveComponent(component: Behaviour) {
-            if (this._components.indexOf(component) < 0) {
-                this._components.push(component);
-
+        /**
+         * @internal
+         */
+        public bufferGameObject(gameObject: GameObject) {
+            if (this._bufferedGameObjects.indexOf(gameObject) >= 0) {
                 return;
             }
 
-            const gameObject = component.gameObject;
-            console.debug("EndSystem add behaviour error.", gameObject.name, gameObject.uuid, egret.getQualifiedClassName(component));
-        }
-
-        public onUpdate() {
-            if (this._isEditorUpdate()) {
-                if (this._components.length > 0) {
-                    for (const component of this._components) {
-                        if (component && _executeInEditModeComponents.indexOf(component.constructor as any) >= 0) {
-                            component.onDisable && component.onDisable();
-                        }
-                    }
-
-                    this._components.length = 0;
-                }
-            }
-            else if (this._components.length > 0) {
-                for (const component of this._components) {
-                    if (component) {
-                        component.onDisable && component.onDisable();
-                    }
-                }
-
-                this._components.length = 0;
-            }
+            this._bufferedGameObjects.push(gameObject);
         }
     }
 }

@@ -2,13 +2,14 @@ namespace egret3d {
     /**
      * 
      */
-    export class Egret2DRendererSystem extends paper.BaseSystem<Egret2DRenderer> {
+    export class Egret2DRendererSystem extends paper.BaseSystem {
         protected readonly _interests = [
             { componentClass: Egret2DRenderer }
         ];
 
         public onUpdate(deltaTime: number) {
-            for (const component of this._components) {
+            const components = this._groups[0].components as ReadonlyArray<Egret2DRenderer>;
+            for (const component of components) {
                 component.update(deltaTime);
             }
         }

@@ -2,23 +2,26 @@ namespace paper {
     /**
      * 
      */
-    export class LaterUpdateSystem extends BaseSystem<Behaviour> {
+    export class LateUpdateSystem extends BaseSystem {
+        protected readonly _interests = [
+            { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
+        ];
         private readonly _laterCalls: (() => void)[] = [];
 
         public onUpdate(deltaTime: number) {
             // Update behaviours.
-            const components = (Application.systemManager.getSystem(StartSystem) as StartSystem).components;
+            const components = this._groups[0].components as ReadonlyArray<Behaviour | null>;
 
             if (this._isEditorUpdate()) {
                 for (const component of components) {
-                    if (component && component._isStarted && _executeInEditModeComponents.indexOf(component.constructor as any) >= 0) {
+                    if (component && _executeInEditModeComponents.indexOf(component.constructor as any) >= 0) {
                         component.onLateUpdate && component.onLateUpdate(deltaTime);
                     }
                 }
             }
             else {
                 for (const component of components) {
-                    if (component && component._isStarted) {
+                    if (component) {
                         component.onLateUpdate && component.onLateUpdate(deltaTime);
                     }
                 }

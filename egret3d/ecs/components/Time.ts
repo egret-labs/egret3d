@@ -55,9 +55,4 @@ namespace paper {
             return this._unscaledDeltaTime;
         }
     }
-
-    /**
-     * 
-     */
-    export let Time: Clock;
 }

@@ -16,11 +16,11 @@ namespace paper {
         }
 
         // TODO 增加子系统功能，SystemManager 与 baseSystem 合并。
-        private readonly _registerSystems: (BaseSystem<any> | null)[] = [];
-        private readonly _systems: (BaseSystem<any> | null)[] = [];
-        private readonly _unregisterSystems: (BaseSystem<any> | null)[] = [];
+        private readonly _registerSystems: (BaseSystem | null)[] = [];
+        private readonly _systems: (BaseSystem | null)[] = [];
+        private readonly _unregisterSystems: (BaseSystem | null)[] = [];
 
-        private _preRegister(systemClass: { new(): BaseSystem<any> }) {
+        private _preRegister(systemClass: { new(): BaseSystem }) {
             // TODO 移除可能正在注销但并未反初始化的系统。
 
             if (this.getSystem(systemClass)) {
@@ -36,14 +36,13 @@ namespace paper {
          * @param systemClass 要注册的系统
          * @param level 系统的优先级，越小越早执行。
          */
-        public register(systemClass: { new(): BaseSystem<any> }, level: number = 0) {
+        public register(systemClass: { new(): BaseSystem }, level: number = 0) {
             if (this._preRegister(systemClass)) {
                 return;
             }
 
             let isAdded = false;
-            BaseSystem._createEnabled = true;
-            const system = new systemClass();
+            const system = BaseSystem.create(systemClass);
             system._level = level;
 
             for (let i = 0, l = this._systems.length; i < l; ++i) {
@@ -66,14 +65,13 @@ namespace paper {
          * @param systemClass 要注册的系统
          * @param target 加入到目标系统的前面。
          */
-        public registerBefore(systemClass: { new(): BaseSystem<any> }, target: { new(): BaseSystem<any> }) {
+        public registerBefore(systemClass: { new(): BaseSystem }, target: { new(): BaseSystem }) {
             if (this._preRegister(systemClass)) {
                 return;
             }
 
             let isAdded = false;
-            BaseSystem._createEnabled = true;
-            const system = new systemClass();
+            const system = BaseSystem.create(systemClass);
 
             for (let i = 0, l = this._systems.length; i < l; ++i) {
                 const eachSystem = this._systems[i];
@@ -103,14 +101,13 @@ namespace paper {
          * @param systemClass 要注册的系统
          * @param target 加入到目标系统的后面。
          */
-        public registerAfter(systemClass: { new(): BaseSystem<any> }, target: { new(): BaseSystem<any> }) {
+        public registerAfter(systemClass: { new(): BaseSystem }, target: { new(): BaseSystem }) {
             if (this._preRegister(systemClass)) {
                 return;
             }
 
             let isAdded = false;
-            BaseSystem._createEnabled = true;
-            const system = new systemClass();
+            const system = BaseSystem.create(systemClass);
 
             for (let i = 0, l = this._systems.length; i < l; ++i) {
                 const eachSystem = this._systems[i];
@@ -139,11 +136,12 @@ namespace paper {
          * 注销一个管理器中的系统
          * @param systemClass 要注销的系统
          */
-        public unregister(systemClass: { new(): BaseSystem<any> }) {
+        public unregister(systemClass: { new(): BaseSystem }) {
             // TODO 移除可能正在注册但并未初始化的系统。
             let index = 0;
             for (const system of this._systems) {
                 if (system && system.constructor === systemClass) {
+                    system.enabled = false;
                     this._unregisterSystems.push(system);
                     this._systems[index] = null;
                     return;
@@ -157,7 +155,7 @@ namespace paper {
         /**
          * 
          */
-        public enableSystem(systemClass: { new(): BaseSystem<any> }) {
+        public enableSystem(systemClass: { new(): BaseSystem }) {
             const system = this.getSystem(systemClass);
             if (system) {
                 system.enabled = true;
@@ -169,7 +167,7 @@ namespace paper {
         /**
          * 
          */
-        public disableSystem(systemClass: { new(): BaseSystem<any> }) {
+        public disableSystem(systemClass: { new(): BaseSystem }) {
             const system = this.getSystem(systemClass);
             if (system) {
                 system.enabled = false;
@@ -181,7 +179,7 @@ namespace paper {
         /**
          * 获取一个管理器中指定的系统实例。
          */
-        public getSystem<T extends BaseSystem<any>>(systemClass: { new(): T }) {
+        public getSystem<T extends BaseSystem>(systemClass: { new(): T }) {
             for (const system of this._systems) {
                 if (system && system.constructor === systemClass) {
                     return system as T;
@@ -194,8 +192,10 @@ namespace paper {
          * @internal
          */
         public update() {
-            let index = 0;
-            let removeCount = 0;
+            Time.update();
+            Group.begin();
+
+            const deltaTime = Time.deltaTime;
 
             if (this._registerSystems.length > 0) {
                 for (const system of this._registerSystems) {
@@ -207,18 +207,86 @@ namespace paper {
                 this._registerSystems.length = 0;
             }
 
+            // Enable.
+
+            for (const system of this._registerSystems) {
+                if (system && !system._started) {
+                    system._started = true;
+                    system.onStart && system.onStart();
+                }
+            }
+
+            for (const system of this._systems) {
+                if (system && system.onAddGameObject && system._enabled) {
+                    for (const group of system.groups) {
+                        const l = group._addedComponents.length;
+                        if (l > 0) {
+                            for (let i = 0; i < l; i += group.interestCount) {
+                                system.onAddGameObject(group._addedComponents[i].gameObject, group);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (const system of this._systems) {
+                if (system && system.onAddComponent && system._enabled) {
+                    for (const group of system.groups) {
+                        const l = group._addedUnessentialComponents.length;
+                        if (l > 0) {
+                            for (let i = 0; i < l; ++i) {
+                                system.onAddComponent(group._addedUnessentialComponents[i], group);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (const system of this._systems) {
+                if (system && system.onUpdate && system._enabled) {
+                    system.onUpdate(deltaTime);
+                }
+            }
+
+            for (const system of this._systems) {
+                if (system && system.onRemoveComponent && system._enabled) {
+                    for (const group of system.groups) {
+                        const l = group._removedUnessentialComponents.length;
+                        if (l > 0) {
+                            for (let i = 0; i < l; ++i) {
+                                system.onRemoveComponent(group._removedUnessentialComponents[i], group);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (const system of this._systems) {
+                if (system && system.onRemoveGameObject && system._enabled) {
+                    for (const group of system.groups) {
+                        const l = group._removedComponents.length;
+                        if (l > 0) {
+                            for (let i = 0; i < l; i += group.interestCount) {
+                                system.onRemoveGameObject(group._removedComponents[i].gameObject, group);
+                            }
+                        }
+                    }
+                }
+            }
+
+            let index = 0;
+            let removeCount = 0;
+
             for (const system of this._systems) {
                 if (system) {
-                    const systemName = (system.constructor as any).name;
-                    egret3d.Profile.startTime(systemName);
                     if (removeCount > 0) {
                         this._systems[index - removeCount] = system;
                         this._systems[index] = null;
                     }
 
-                    system.update();
-
-                    egret3d.Profile.endTime(systemName);
+                    if (system.onLateUpdate && system._enabled) {
+                        system.onLateUpdate(deltaTime);
+                    }
                 }
                 else {
                     removeCount++;
@@ -226,6 +294,8 @@ namespace paper {
 
                 index++;
             }
+
+            // Disable.
 
             if (removeCount > 0) {
                 this._systems.length -= removeCount;
@@ -240,6 +310,8 @@ namespace paper {
                     this._unregisterSystems.length = 0;
                 }
             }
+
+            Group.end();
         }
     }
 }

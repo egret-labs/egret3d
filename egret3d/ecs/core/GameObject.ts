@@ -139,7 +139,7 @@ namespace paper {
                 this.renderer = null;
             }
 
-            const destroySystem = Application.systemManager.getSystem(DestroySystem);
+            const destroySystem = Application.systemManager.getSystem(EndSystem);
             if (destroySystem) {
                 destroySystem.bufferComponent(component);
             }
@@ -160,7 +160,7 @@ namespace paper {
         }
 
         private _destroy() {
-            const destroySystem = Application.systemManager.getSystem(DestroySystem);
+            const destroySystem = Application.systemManager.getSystem(EndSystem);
             if (destroySystem) {
                 destroySystem.bufferGameObject(this);
             }
