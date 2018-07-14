@@ -2382,6 +2382,7 @@ var egret3d;
     function runEgret(options) {
         if (options === void 0) { options = { antialias: false }; }
         // (Ammo as any)().then(() => { // TODO WebAssembly load
+        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
         var requiredOptions = getOptions(options);
         var canvas = getMainCanvas();
         egret3d.WebGLKit.init(canvas, requiredOptions);

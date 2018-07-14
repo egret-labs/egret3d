@@ -16,6 +16,7 @@ namespace egret3d {
      */
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
         // (Ammo as any)().then(() => { // TODO WebAssembly load
+        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound'] //TODO:Sound
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas();
         WebGLKit.init(canvas, requiredOptions);
