@@ -46,10 +46,7 @@ namespace paper.editor {
                                     } else if (l > 1) {
                                         this.selectedGameObjects.splice(index, 1);
                                     }
-                                    const selectUUids: string[] = this.selectedGameObjects.map((gameobj) => { return gameobj.uuid });
-                                    let select={};
-                                    select[selectItemType.GAMEOBJECT]= selectUUids;
-                                    this.editorModel.selectGameObject(select, null);
+                                    this.editorModel.selectGameObject(this.selectedGameObjects);
                                 }
                             }
                         }
@@ -62,17 +59,12 @@ namespace paper.editor {
                                 // 对GameObject的点选
                                 if (tapDelta < 200) {
                                     this.selectedGameObjects = [picked];
-                                    const selectUUids: string[] = this.selectedGameObjects.map((gameobj) => { return gameobj.uuid });
-                                    let select={};
-                                    select[selectItemType.GAMEOBJECT]=selectUUids;
-                                    this.editorModel.selectGameObject(select, null);
+                                    this.editorModel.selectGameObject(this.selectedGameObjects);
                                 }
                             }
                         } else if (tapDelta < 200) {
                             this.selectedGameObjects = [];
-                            let select={};
-                            select[selectItemType.GAMEOBJECT]=[];
-                            this.editorModel.selectGameObject(select, null);
+                            this.editorModel.selectGameObject(this.selectedGameObjects);
                         }
                     }
                 }

@@ -35,12 +35,12 @@ namespace RES.processor {
     }
 
 
-    type TempResult = { url: string, hashCode: number }
+    type TempResult = { url: string, hashCode: number, uuid: string }
 
     function formatUrlAndSort(assets: any[], path: string, ): TempResult[] {
         let list: TempResult[] = [];
         list = assets.map(item => {
-            return { url: combinePath(path + "/", item.url), hashCode: item.hashCode }
+            return { url: combinePath(path + "/", item.url), hashCode: item.hashCode, uuid: item.uuid }
         });
         return list
     }
@@ -318,6 +318,7 @@ namespace RES.processor {
             if (r) {
                 let asset: paper.Asset = await host.load(r);
                 asset.hashCode = item.hashCode;
+                asset.uuid = item.uuid;
                 result.push(asset)
             }
         })))

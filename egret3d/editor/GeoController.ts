@@ -526,15 +526,10 @@ namespace paper.editor {
             this.editorModel.addEventListener(EditorModelEvent.CHANGE_PROPERTY, e => this.changeProperty(e.data), this);
         }
         private selectGameObjects = this._selectGameObjects.bind(this);
-        private _selectGameObjects(selectObj:any) {
-            let selectIds;
-            if (selectObj[selectItemType.GAMEOBJECT]) {
-                selectIds = selectObj[selectItemType.GAMEOBJECT];
-            }else{
-                selectIds = [];
-            }
-            
-            this.selectedGameObjs = this.editorModel.getGameObjectsByUUids(selectIds);
+        private _selectGameObjects(gameObjects: GameObject[]) {
+            if (!gameObjects)
+                gameObjects = [];
+            this.selectedGameObjs = gameObjects;
             let len = this.selectedGameObjs.length;
             this._modeCanChange = true;
             if (len > 0) {
@@ -819,7 +814,7 @@ namespace paper.editor {
 
             let mat = new egret3d.Material();
             mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
-            mat.setVector4v("_Color", [color.x,color.y,color.z,color.w]);
+            mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
             renderer.materials = [mat];
 
             return gizmoAxis;
