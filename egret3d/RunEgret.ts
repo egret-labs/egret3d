@@ -1,5 +1,5 @@
 namespace egret3d {
-    egret.RuntimeType = {} as any;
+
     export type RunEgretOptions = {
         antialias: boolean;
         defaultScene?: string;
@@ -16,6 +16,7 @@ namespace egret3d {
      */
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
         // (Ammo as any)().then(() => { // TODO WebAssembly load
+        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound'] //TODO:Sound
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas();
         WebGLKit.init(canvas, requiredOptions);
@@ -47,8 +48,8 @@ namespace egret3d {
             return {
                 antialias: options.antialias,
                 antialiasSamples: 4,
-                contentWidth: options.contentWidth | 640,
-                contentHeight: options.contentHeight | 1136
+                contentWidth: options.contentWidth || 640,
+                contentHeight: options.contentHeight || 1136
             } as RequiredRuntimeOptions;
         }
         else {

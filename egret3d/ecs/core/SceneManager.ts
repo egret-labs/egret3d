@@ -40,16 +40,14 @@ namespace paper {
         public createScene(name: string, isActive: boolean = true) {
             const scene = new Scene(isActive);
             scene.name = name;
-            scene.rawScene = null as any; // 保存的话需要设置一个对应的RawScene文件
-
             return scene;
         }
         /**
-         * load scene 加载场景
-         * @param rawScene url
+         * 加载场景
+         * @param resourceName 资源名称
          */
-        public loadScene(url: string) {
-            const rawScene = Asset.find<egret3d.RawScene>(url);
+        public loadScene(resourceName: string) {
+            const rawScene = RES.getRes(resourceName) as egret3d.RawScene;
             if (rawScene) {
                 const scene = rawScene.createInstance();
 
@@ -104,18 +102,7 @@ namespace paper {
 
             return null;
         }
-        /**
-         * 
-         */
-        public getSceneByURL(url: string) {
-            for (const scene of this._scenes) {
-                if (scene.rawScene && scene.rawScene.url === url) {
-                    return scene;
-                }
-            }
 
-            return null;
-        }
         /**
          * 
          */

@@ -37,7 +37,6 @@ namespace paper {
                 StartSystem,
                 // egret3d.ammo.PhysicsSystem, // TODO 分离
                 UpdateSystem,
-                egret3d.GuidpathSystem,
                 egret3d.AnimationSystem,
                 LaterUpdateSystem,
                 egret3d.TrailRendererSystem,
