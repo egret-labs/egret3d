@@ -15,7 +15,6 @@ namespace paper {
         private constructor() {
         }
 
-        // TODO 增加子系统功能，SystemManager 与 baseSystem 合并。
         private readonly _registerSystems: (BaseSystem | null)[] = [];
         private readonly _systems: (BaseSystem | null)[] = [];
         private readonly _unregisterSystems: (BaseSystem | null)[] = [];
@@ -142,8 +141,12 @@ namespace paper {
             for (const system of this._systems) {
                 if (system && system.constructor === systemClass) {
                     system.enabled = false;
-                    this._unregisterSystems.push(system);
-                    this._systems[index] = null;
+
+                    if (!system.enabled) {
+                        this._unregisterSystems.push(system);
+                        this._systems[index] = null;
+                    }
+
                     return;
                 }
 
@@ -192,10 +195,7 @@ namespace paper {
          * @internal
          */
         public update() {
-            Time.update();
             Group.begin();
-
-            const deltaTime = Time.deltaTime;
 
             if (this._registerSystems.length > 0) {
                 for (const system of this._registerSystems) {
@@ -204,75 +204,17 @@ namespace paper {
                     }
                 }
 
+                for (const system of this._registerSystems) {
+                    if (system && system.enabled && !system._started) {
+                        system._started = true;
+                        system.onStart && system.onStart();
+                    }
+                }
+
                 this._registerSystems.length = 0;
             }
 
             // Enable.
-
-            for (const system of this._registerSystems) {
-                if (system && !system._started) {
-                    system._started = true;
-                    system.onStart && system.onStart();
-                }
-            }
-
-            for (const system of this._systems) {
-                if (system && system.onAddGameObject && system._enabled) {
-                    for (const group of system.groups) {
-                        const l = group._addedComponents.length;
-                        if (l > 0) {
-                            for (let i = 0; i < l; i += group.interestCount) {
-                                system.onAddGameObject(group._addedComponents[i].gameObject, group);
-                            }
-                        }
-                    }
-                }
-            }
-
-            for (const system of this._systems) {
-                if (system && system.onAddComponent && system._enabled) {
-                    for (const group of system.groups) {
-                        const l = group._addedUnessentialComponents.length;
-                        if (l > 0) {
-                            for (let i = 0; i < l; ++i) {
-                                system.onAddComponent(group._addedUnessentialComponents[i], group);
-                            }
-                        }
-                    }
-                }
-            }
-
-            for (const system of this._systems) {
-                if (system && system.onUpdate && system._enabled) {
-                    system.onUpdate(deltaTime);
-                }
-            }
-
-            for (const system of this._systems) {
-                if (system && system.onRemoveComponent && system._enabled) {
-                    for (const group of system.groups) {
-                        const l = group._removedUnessentialComponents.length;
-                        if (l > 0) {
-                            for (let i = 0; i < l; ++i) {
-                                system.onRemoveComponent(group._removedUnessentialComponents[i], group);
-                            }
-                        }
-                    }
-                }
-            }
-
-            for (const system of this._systems) {
-                if (system && system.onRemoveGameObject && system._enabled) {
-                    for (const group of system.groups) {
-                        const l = group._removedComponents.length;
-                        if (l > 0) {
-                            for (let i = 0; i < l; i += group.interestCount) {
-                                system.onRemoveGameObject(group._removedComponents[i].gameObject, group);
-                            }
-                        }
-                    }
-                }
-            }
 
             let index = 0;
             let removeCount = 0;
@@ -284,9 +226,7 @@ namespace paper {
                         this._systems[index] = null;
                     }
 
-                    if (system.onLateUpdate && system._enabled) {
-                        system.onLateUpdate(deltaTime);
-                    }
+                    system.update();
                 }
                 else {
                     removeCount++;
@@ -312,6 +252,12 @@ namespace paper {
             }
 
             Group.end();
+        }
+        /**
+         * 
+         */
+        public get systems(): ReadonlyArray<BaseSystem> {
+            return this._systems;
         }
     }
 }

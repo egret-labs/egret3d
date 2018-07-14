@@ -15,10 +15,8 @@ namespace paper {
          * @internal
          */
         public _started: boolean = true;
-        /**
-         * @internal
-         */
-        public _enabled: boolean = true;
+        private _locked: boolean = false;
+        protected _enabled: boolean = true;
         /**
          * @internal
          */
@@ -135,6 +133,40 @@ namespace paper {
             }
         }
         /**
+         * @internal
+         */
+        public update() {
+            if (!this._enabled) {
+                return;
+            }
+
+            this._locked = true;
+
+            for (const group of this._groups) {
+                if (this.onAddGameObject) {
+                    let l = group._addedComponents.length;
+                    if (l > 0) {
+                        for (let i = 0; i < l; i += group.interestCount) {
+                            this.onAddGameObject(group._addedComponents[i].gameObject, group);
+                        }
+                    }
+                }
+
+                if (this.onAddComponent) {
+                    let l = group._addedUnessentialComponents.length;
+                    if (l > 0) {
+                        for (let i = 0; i < l; ++i) {
+                            this.onAddComponent(group._addedUnessentialComponents[i], group);
+                        }
+                    }
+                }
+            }
+
+            this.onUpdate && this.onUpdate(this._clock.deltaTime);
+
+            this._locked = false;
+        }
+        /**
          * 系统初始化时调用。
          */
         public onAwake?(): void;
@@ -148,21 +180,19 @@ namespace paper {
          */
         public onStart?(): void;
         /**
-         * 实体被添加到系统时调用。
+         * 实体被添加到组时调用。
+         * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
          * @see paper.GameObject#addComponent()
          */
         public onAddGameObject?(gameObject: GameObject, group: Group): void;
         /**
-         * 
+         * 充分非必要组件添加到实体时调用。
+         * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
          * @see paper.GameObject#addComponent()
          */
         public onAddComponent?(component: BaseComponent, group: Group): void;
         /**
-         * 系统更新时调用。
-         */
-        public onUpdate?(deltaTime?: number): void;
-        /**
-         * 
+         * 充分非必要组件从实体移除时调用。
          * @see paper.GameObject#removeComponent()
          */
         public onRemoveComponent?(component: BaseComponent, group: Group): void;
@@ -171,6 +201,10 @@ namespace paper {
          * @see paper.GameObject#removeComponent()
          */
         public onRemoveGameObject?(gameObject: GameObject, group: Group): void;
+        /**
+         * 系统更新时调用。
+         */
+        public onUpdate?(deltaTime?: number): void;
         /**
          * 
          */
@@ -187,13 +221,23 @@ namespace paper {
          */
         public onDestroy?(): void;
         /**
+         * 
+         */
+        public get locked() {
+            return this._locked;
+        }
+        /**
          * 该系统是否被激活。
-         * - 当禁用时，仅停止 onUpdate 生命周期。
          */
         public get enabled() {
             return this._enabled;
         }
         public set enabled(value: boolean) {
+            if (this._locked) {
+                console.warn("Cannot change the enabled value when the system is updating.", egret.getQualifiedClassName(this));
+                return;
+            }
+
             if (this._enabled === value) {
                 return;
             }

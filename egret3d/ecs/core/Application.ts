@@ -31,6 +31,7 @@ namespace paper {
                 requestAnimationFrame(this._bindUpdate);
             }
 
+            Time.update();
             this.systemManager.update();
         }
 

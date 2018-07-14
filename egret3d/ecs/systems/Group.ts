@@ -53,7 +53,6 @@ namespace paper {
         private static readonly _groups: Group[] = [];
 
         public static getGroup(interestConfig: ReadonlyArray<InterestConfig>): Group {
-            let isSame = true;
             let isBehaviour = false;
             interestConfig = Array.isArray(interestConfig) ? interestConfig : [interestConfig];
 
@@ -66,10 +65,10 @@ namespace paper {
 
             for (const group of this._groups) {
                 if (group._interestConfig.length !== interestConfig.length) {
-                    isSame = false;
                     continue;
                 }
 
+                let isSame = true;
                 for (let i = 0, l = interestConfig.length; i < l; ++i) {
                     const configA = interestConfig[i];
                     const configB = group._interestConfig[i];
@@ -134,18 +133,9 @@ namespace paper {
          */
         public readonly _addedUnessentialComponents: BaseComponent[] = [];
         private readonly _components: BaseComponent[] = [];
-        /**
-         * @internal
-         */
-        public readonly _removedUnessentialComponents: BaseComponent[] = [];
-        /**
-         * @internal
-         */
-        public readonly _removedComponents: BaseComponent[] = [];
         private readonly _bufferedGameObjects: { [key: string]: number } = {};
         private readonly _addedGameObjects: { [key: string]: number } = {};
         private readonly _gameObjects: { [key: string]: number } = {};
-        private readonly _removedGameObjects: { [key: string]: number } = {};
         private readonly _interestConfig: ReadonlyArray<InterestConfig> = null as any;
 
         private constructor(interestConfig: ReadonlyArray<InterestConfig>, isBehaviour: boolean) {
@@ -238,11 +228,6 @@ namespace paper {
                 return;
             }
 
-            if (uuid in this._removedGameObjects) { // Removed.
-                console.warn("Add gameObject to group error.", gameObject.path);
-                this._removeGameObjectFrom(uuid, this._removedComponents, this._removedGameObjects);
-            }
-
             const backupLength = this._bufferedComponents.length;
 
             for (const config of this._interestConfig) {
@@ -283,11 +268,6 @@ namespace paper {
                     return;
                 }
 
-                let index = this._removedUnessentialComponents.indexOf(component);
-                if (index >= 0) { // Removed.
-                    this._removedUnessentialComponents.splice(index, 1);
-                }
-
                 this._bufferedUnessentialComponents.push(component);
                 return;
             }
@@ -302,51 +282,60 @@ namespace paper {
                 return;
             }
 
-            const index = this._removedUnessentialComponents.indexOf(component);
-            if (index >= 0) { // Removed.
-                this._removedUnessentialComponents.splice(index, 1);
-            }
-
             this._bufferedUnessentialComponents.push(component);
         }
 
         private _onRemoveUnessentialComponent(component: BaseComponent) {
             if (this._isBehaviour) {
-                let index = this._components.indexOf(component);
-                if (
-                    index < 0 ||
-                    this._removedUnessentialComponents.indexOf(component) >= 0
-                ) {
+                let index = this._bufferedUnessentialComponents.indexOf(component);
+                if (index >= 0) { // Buffered.
+                    this._bufferedUnessentialComponents.splice(index, 1);
                     return;
                 }
 
-                this._removedUnessentialComponents.push(component);
+                index = this._components.indexOf(component);
+                if (index < 0) {
+                    return;
+                }
+
                 this._components[index] = null as any;
 
                 index = this._addedUnessentialComponents.indexOf(component);
-                if (index >= 0) {
-                    this._addedUnessentialComponents[index] = null as any;
+                if (index >= 0) { //
+                    this._addedUnessentialComponents.splice(index, 1);
+                }
+            }
+            else {
+                const gameObject = component.gameObject;
+                const uuid = gameObject.uuid;
+
+                if (!(uuid in this._bufferedGameObjects || uuid in this._gameObjects)) { // Uninclude.
+                    return;
                 }
 
-                return;
+                let index = this._bufferedUnessentialComponents.indexOf(component);
+                if (index >= 0) { // Buffered.
+                    this._bufferedUnessentialComponents.splice(index, 1);
+                    return;
+                }
+
+                index = this._addedUnessentialComponents.indexOf(component);
+                if (index >= 0) { //
+                    this._addedUnessentialComponents.splice(index, 1);
+                }
+
+                // if (currentSystem.locked && currentSystem.groups.indexOf(this) >= 0) {
+                //     console.error("Cannot remove component when the system is updating.");
+                // }
             }
 
-            const gameObject = component.gameObject;
-            const uuid = gameObject.uuid;
+            for (const system of Application.systemManager.systems) {
+                if (!system.onRemoveComponent || system.groups.indexOf(this) < 0) {
+                    continue;
+                }
 
-            if (
-                !(uuid in this._bufferedGameObjects || uuid in this._gameObjects) || // Uninclude.
-                this._removedUnessentialComponents.indexOf(component) >= 0 // Removed.
-            ) {
-                return;
+                system.onRemoveComponent(component, this);
             }
-
-            const index = this._addedUnessentialComponents.indexOf(component);
-            if (index >= 0) { // Added.
-                this._addedUnessentialComponents.splice(index, 1);
-            }
-
-            this._removedUnessentialComponents.push(component);
         }
 
         private _onRemoveComponent(component: BaseComponent) {
@@ -357,12 +346,23 @@ namespace paper {
                 this._removeGameObjectFrom(uuid, this._bufferedComponents, this._bufferedGameObjects);
             }
             else if (uuid in this._gameObjects) {
-                if (uuid in this._addedGameObjects) {
+                if (uuid in this._addedGameObjects) { // 
                     this._removeGameObjectFrom(uuid, this._addedComponents, this._addedGameObjects);
                 }
 
-                this._addGameObjectTo(uuid, this._components, this._gameObjects, this._removedComponents, this._removedGameObjects);
                 this._removeGameObjectFrom(uuid, this._components, this._gameObjects);
+
+                // if (currentSystem.locked && currentSystem.groups.indexOf(this) >= 0) {
+                //     console.error("Cannot remove component when the system is updating.");
+                // }
+
+                for (const system of Application.systemManager.systems) {
+                    if (!system.onRemoveGameObject || system.groups.indexOf(this) < 0) {
+                        continue;
+                    }
+
+                    system.onRemoveGameObject(gameObject, this);
+                }
             }
         }
 
@@ -401,41 +401,6 @@ namespace paper {
 
             if (this._addedUnessentialComponents.length > 0) {
                 this._addedUnessentialComponents.length = 0;
-            }
-
-            if (this._removedUnessentialComponents.length > 0) {
-                this._removedUnessentialComponents.length = 0;
-
-                if (this._isBehaviour) {
-                    let index = 0;
-                    let removeCount = 0;
-
-                    for (const component of this._components) {
-                        if (component) {
-                            if (removeCount > 0) {
-                                this._components[index - removeCount] = component;
-                                this._components[index] = null as any;
-                            }
-                        }
-                        else {
-                            removeCount++;
-                        }
-
-                        index++;
-                    }
-
-                    if (removeCount > 0) {
-                        this._components.length -= removeCount;
-                    }
-                }
-            }
-
-            if (this._removedComponents.length > 0) {
-                this._removedComponents.length = 0;
-
-                for (const k in this._removedGameObjects) {
-                    delete this._removedGameObjects[k];
-                }
             }
         }
         /**

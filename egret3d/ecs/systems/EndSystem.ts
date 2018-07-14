@@ -9,7 +9,7 @@ namespace paper {
         public onUpdate(deltaTime: number) {
             //
             egret3d.InputManager.update(deltaTime);
-
+            //
             for (const component of this._bufferedComponents) {
                 component.uninitialize();
             }
