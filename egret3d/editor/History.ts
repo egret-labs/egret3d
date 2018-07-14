@@ -8,33 +8,24 @@ namespace paper.editor {
     };
 
     export class History {
-        constructor();
-        constructor(serializeData:any);
-        constructor(serializeData?:any){
-            this._index = serializeData ? serializeData.index : -1;
-            this._locked = serializeData ? serializeData.locked : 0;
-            this._batchIndex = serializeData ? serializeData.batchIndex : 0;
-            this._states = serializeData ? serializeData.states : [];
+        private static _instance: History;
+        public static get instance(): History {
+            if (!this._instance) {
+                this._instance = new History();
+            }
+            return this._instance;
         }
-
-        public static toString(): string {
-            return "[class common.History]";
-            
-        }
-
         public dispatcher: EventDispatcher | null = null;
-
         private _locked: 0 | 1 | 2 | 3 = 0;
         private _index: number = -1;
         private _batchIndex: number = 0;
-        private readonly _states: BaseState[] = [];
-        private readonly _batchStates: BaseState[] = [];
-        private readonly _events: EventData<any>[] = [];
+        private _states: BaseState[] = [];
+        private _batchStates: BaseState[] = [];
+        private _events: EventData<any>[] = [];
 
         private _free(): void {
             if (this._states.length > this._index + 1) {
                 this._states.length = this._index + 1; // TODO release.
-
                 if (this.dispatcher) {
                     this.dispatcher.dispatchEvent(new BaseEvent(EventType.HistoryFree, null));
                 }
@@ -48,15 +39,12 @@ namespace paper.editor {
             else {
                 state.redo();
             }
-
             let d = isUndo ? "undo" : "redo";
             console.log(d, ":", state.data.cmdType, "data:", state.data);
-
             if (this.dispatcher && state.data) {
                 const data: EventData<any> = { isUndo: isUndo, data: state.data };
                 this._events.push(data);
             }
-
             return state.batchIndex > 0 && (isUndo ? this._index >= 0 : this._index < this._states.length - 1);
         }
 
@@ -64,22 +52,16 @@ namespace paper.editor {
             if (this._index < 0 || this._batchIndex > 0) {
                 return false;
             }
-
             this._locked |= 1;
-
             while (this._doState(this._states[this._index--], true)) {
             }
-
             if (this.dispatcher && this._events.length > 0) {
                 for (const event of this._events) {
                     this.dispatcher.dispatchEvent(new BaseEvent(EventType.HistoryState, event));
                 }
-
                 this._events.length = 0;
             }
-
             this._locked &= 2;
-
             return true;
         }
 
@@ -87,23 +69,16 @@ namespace paper.editor {
             if (this._index >= this._states.length - 1 || this._batchIndex > 0) {
                 return false;
             }
-
             this._locked |= 1;
-
             while (this._doState(this._states[++this._index], false)) {
             }
-
             if (this.dispatcher && this._events.length > 0) {
                 for (const event of this._events) {
                     this.dispatcher.dispatchEvent(new BaseEvent(EventType.HistoryState, event));
-
                 }
-
                 this._events.length = 0;
             }
-
             this._locked &= 2;
-
             return true;
         }
 
@@ -111,9 +86,7 @@ namespace paper.editor {
             if (this._batchIndex > 0) {
                 return false;
             }
-
             let result = false;
-
             if (this._index < index) {
                 while (this._index !== index && this.forward()) {
                     result = true;
@@ -124,7 +97,6 @@ namespace paper.editor {
                     result = true;
                 }
             }
-
             return result;
         }
 
@@ -132,19 +104,15 @@ namespace paper.editor {
             if (this._locked !== 0) {
                 return;
             }
-
             if (this._batchIndex > 0) {
                 state.batchIndex = this._batchIndex;
                 this._batchStates.push(state);
             }
             else {
-                console.log("addstate:",this._index);
                 this._states[this._index + 1] = state;
-
                 if (this.dispatcher !== null) {
                     this.dispatcher.dispatchEvent(new BaseEvent(EventType.HistoryAdd, event));
                 }
-
                 this.forward();
                 this._free();
             }
@@ -158,18 +126,15 @@ namespace paper.editor {
             if (this._batchIndex === 0) {
                 return;
             }
-
             this._batchIndex--;
             if (this._batchIndex === 0) {
                 let index = this._index + 1;
                 for (const state of this._batchStates) {
                     this._states[index++] = state;
                 }
-
                 if (this.dispatcher !== null) {
                     this.dispatcher.dispatchEvent(new BaseEvent(EventType.HistoryAdd, event));
                 }
-
                 this._batchStates.length = 0;
                 this.go(this._states.length - 1);
             }
@@ -199,50 +164,45 @@ namespace paper.editor {
             return this._index;
         }
 
-        public get batchIndex():number{
+        public get batchIndex(): number {
             return this._batchIndex;
         }
-    
-        public get locked():0 | 1 | 2 |3{
+
+        public get locked(): 0 | 1 | 2 | 3 {
             return this._locked;
         }
 
-        public get states():BaseState[]
-        {
+        public get states(): BaseState[] {
             return this._states;
         }
-    }
 
-    export class HistoryUtil{
-        public static serialize(history:History):any{
-            const states:BaseState[] = history.states; 
-            const statesData:any[] = [];
+        public serialize(): any {
+            const states: BaseState[] = this.states;
+            const statesData: any[] = [];
             for (let index = 0; index < states.length; index++) {
                 const element = states[index];
                 const className = egret.getQualifiedClassName(element);
                 const data = {
                     className,
-                    batchIndex:element.batchIndex,
-                    data:element.data,
-                    autoClear:element.autoClear,
-                    isDone:element.isDone,
-                } 
+                    batchIndex: element.batchIndex,
+                    data: element.data,
+                    autoClear: element.autoClear,
+                    isDone: element.isDone,
+                }
                 statesData.push(data);
             }
-
             const serializeHistory = {
-                index:history.index,
-                batchIndex:history.batchIndex,
-                locked:history.locked,
+                index: this.index,
+                batchIndex: this.batchIndex,
+                locked: this.locked,
                 statesData,
             }
-
             return serializeHistory;
         }
 
-        public static deserialize(serializeHistory:any):any{
-            const states:BaseState[] = [];
-            const statesData:any[] = serializeHistory.statesData;
+        public deserialize(serializeHistory: any): void {
+            const states: BaseState[] = [];
+            const statesData: any[] = serializeHistory.statesData;
             for (let index = 0; index < statesData.length; index++) {
                 const element = statesData[index];
                 const clazz = egret.getDefinitionByName(element.className);
@@ -258,14 +218,16 @@ namespace paper.editor {
             }
             const initData = {
                 states,
-                index:serializeHistory.index,
-                batchIndex:serializeHistory.batchIndex,
-                locked:serializeHistory.locked,
+                index: serializeHistory.index,
+                batchIndex: serializeHistory.batchIndex,
+                locked: serializeHistory.locked,
             }
-            return new History(initData);
+            this._index = initData ? initData.index : -1;
+            this._locked = initData ? initData.locked : 0;
+            this._batchIndex = initData ? initData.batchIndex : 0;
+            this._states = initData ? initData.states : [];
         }
     }
-
     export abstract class BaseState {
         public autoClear: boolean = false;
         public batchIndex: number = 0;
@@ -275,10 +237,8 @@ namespace paper.editor {
         public undo(): boolean {
             if (this._isDone) {
                 this._isDone = false;
-
                 return true;
             }
-
             return false;
         }
 
@@ -286,23 +246,20 @@ namespace paper.editor {
             if (this._isDone) {
                 return false;
             }
-
             this._isDone = true;
-
             return true;
         }
 
-        public get isDone():boolean{
+        public get isDone(): boolean {
             return this._isDone;
         }
 
-        public set isDone(value:boolean){
+        public set isDone(value: boolean) {
             this._isDone = value;
         }
 
-        public dispatchEditorModelEvent(type:string,data?:any)
-        {
-            Editor.editorModel.dispatchEvent(new EditorModelEvent(type,data));
+        public dispatchEditorModelEvent(type: string, data?: any) {
+            Editor.editorModel.dispatchEvent(new EditorModelEvent(type, data));
         }
     }
 
@@ -319,19 +276,17 @@ namespace paper.editor {
                 this.modifyProperty(preValue);
                 return true;
             }
-
             return false;
         }
 
-        private async modifyProperty(value:any)
-        {
-            const { uuid, propName,editType } = this.data;
+        private async modifyProperty(value: any) {
+            const { uuid, propName, editType } = this.data;
             let modifyObj = Editor.editorModel.getGameObjectByUUid(uuid);
             if (modifyObj && value !== undefined) {
                 const toValue = await Editor.editorModel.deserializeProperty(value, editType);
                 if (toValue !== null) {
                     Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
-                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target:modifyObj,propName: propName,propValue: toValue})
+                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: toValue })
                 }
             }
         }
@@ -361,80 +316,38 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                const { preValue} = this.data;
+                const { preValue } = this.data;
                 this.modifyProperty(preValue);
                 return true;
             }
-
             return false;
         }
 
-        private async modifyProperty(value:any):Promise<void>{
-            const { propName, componentUUid,gameObjectUUid,editType } = this.data;
+        private async modifyProperty(value: any): Promise<void> {
+            const { propName, componentUUid, gameObjectUUid, editType } = this.data;
             let gameObj: GameObject | null = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
             let modifyObj: BaseComponent | null;
             if (gameObj) {
-                modifyObj = Editor.editorModel.getComponentById(gameObj,componentUUid);
+                modifyObj = Editor.editorModel.getComponentById(gameObj, componentUUid);
             }
             if (modifyObj && value !== undefined) {
                 let toValue = await Editor.editorModel.deserializeProperty(value, editType);
-
                 if (toValue !== null) {
                     Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
-                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target: modifyObj,propName: propName, propValue: toValue});
+                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: toValue });
                 }
             }
         }
 
         public redo(): boolean {
             if (super.redo()) {
-                const { newValue} = this.data;
+                const { newValue } = this.data;
                 this.modifyProperty(newValue);
                 return true;
             }
-
             return false;
         }
     }
-
-
-    //选中游戏对象
-    export class SelectGameObjectesState extends BaseState {
-        public static toString(): string {
-            return "[class common.SelectGameObjectesState]";
-        }
-
-        public static create(data: any = null): SelectGameObjectesState | null {
-            const state = new SelectGameObjectesState();
-            state.data = data;
-            return state;
-        }
-
-        public undo(): boolean {
-            if (super.undo()) {
-                let preSelectids = this.data.prevalue;
-                let selectObjs = {};
-                selectObjs[selectItemType.GAMEOBJECT] = preSelectids;
-                this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,selectObjs);
-                return true;
-            }
-
-            return false;
-        }
-
-        public redo(): boolean {
-            if (super.redo()) {
-                let newSelectids = this.data.newvalue;
-                let selectObjs = {};
-                selectObjs[selectItemType.GAMEOBJECT] = newSelectids;
-                this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,selectObjs);
-                return true;
-            }
-
-            return false;
-        }
-    }
-
     //添加游戏对象
     export class AddGameObjectState extends BaseState {
         public static toString(): string {
@@ -450,33 +363,32 @@ namespace paper.editor {
         public undo(): boolean {
             if (super.undo()) {
                 var datas = this.data.datas;
-                var gameObjs = editor.Editor.editorModel.getGameObjectsByUUids( this.data.cacheGameObjectUUid);
+                var gameObjs = editor.Editor.editorModel.getGameObjectsByUUids(this.data.cacheGameObjectUUid);
                 editor.Editor.editorModel._deleteGameObject(gameObjs);
                 var selectUUids = datas.filter(function (data) {
                     if (data.parentUUid) {
                         return data.parentUUid;
                     }
                 });
-                this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS,selectUUids);
+                this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, selectUUids);
                 return true;
             }
-
             return false;
         }
 
         public redo(): boolean {
             if (super.redo()) {
-                let {datas} = this.data;
-                let selectUUids:string[] = [];
+                let { datas } = this.data;
+                let selectUUids: string[] = [];
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
-                    const {parentUUid} = element;
+                    const { parentUUid } = element;
 
-                    let gameObj:GameObject;
+                    let gameObj: GameObject;
 
                     if (element.serializeData) {
-                        gameObj = deserialize(element.serializeData,element.assetsMap);
-                    }else{
+                        gameObj = deserialize(element.serializeData, element.assetsMap);
+                    } else {
                         gameObj = new GameObject();
                         gameObj.name = "NewGameObject";
                         element.serializeData = serialize(gameObj);
@@ -484,7 +396,7 @@ namespace paper.editor {
                     }
 
                     if (parentUUid) {
-                        const parentGameObj:GameObject | null = Editor.editorModel.getGameObjectByUUid(parentUUid);
+                        const parentGameObj: GameObject | null = Editor.editorModel.getGameObjectByUUid(parentUUid);
                         if (parentGameObj) {
                             gameObj.transform.setParent(parentGameObj.transform);
                         }
@@ -496,11 +408,9 @@ namespace paper.editor {
                 this.data.cacheGameObjectUUid = selectUUids.concat();
 
                 //select new objects
-                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectUUids);
-
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, selectUUids);
                 return true;
             }
-
             return false;
         }
     }
@@ -519,8 +429,8 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                const { datas, prefabData,selectIds,indexData } = this.data;
-                let addObjs:GameObject[] = [];
+                const { datas, prefabData, selectIds, indexData } = this.data;
+                let addObjs: GameObject[] = [];
 
                 for (let index = 0; index < datas.length; index++) {
                     let element = datas[index];
@@ -539,28 +449,27 @@ namespace paper.editor {
                     if (!gameObj) {
                         continue;
                     }
-                    
+
                     if (parentUUid) {
                         let parent_3 = Editor.editorModel.getGameObjectByUUid(parentUUid);
-                        if (parent_3){
+                        if (parent_3) {
                             gameObj.transform.setParent(parent_3.transform);
-                            gameObj.transform.parent.setChildIndex(gameObj.transform,preIndex);
+                            gameObj.transform.parent.setChildIndex(gameObj.transform, preIndex);
                         }
                     }
                 }
 
                 for (let index = 0; index < indexData.length; index++) {
                     const element = indexData[index];
-                    const{preIndex,uuid} = element;
+                    const { preIndex, uuid } = element;
                     let allObjs = paper.Application.sceneManager.getActiveScene().gameObjects;
                     let gameObj = Editor.editorModel.getGameObjectByUUid(uuid);
                     let currentIndex = allObjs.indexOf(gameObj);
-                    if(currentIndex == preIndex || currentIndex < 0)
-                    {
+                    if (currentIndex == preIndex || currentIndex < 0) {
                         return;
                     }
-                    (allObjs as any).splice(currentIndex,1);
-                    (allObjs as any).splice(preIndex,0,gameObj);
+                    (allObjs as any).splice(currentIndex, 1);
+                    (allObjs as any).splice(preIndex, 0, gameObj);
                 }
 
                 //prefab
@@ -569,13 +478,13 @@ namespace paper.editor {
                     const url = prefabData[key].url;
                     const prefabIds = prefabData[key].prefabIds;
                     const prefab = Asset.find(url);
-                    let rootObj:GameObject | null = Editor.editorModel.getGameObjectByUUid(prefabRootId);
+                    let rootObj: GameObject | null = Editor.editorModel.getGameObjectByUUid(prefabRootId);
                     if (rootObj) {
                         Editor.editorModel.resetPrefabbyRootId(rootObj, prefab, prefabIds);
                     }
                 }
 
-                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectIds);
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, selectIds);
                 return true;
             }
 
@@ -605,7 +514,7 @@ namespace paper.editor {
                 Editor.editorModel._deleteGameObject(deleteObjs);
 
                 //clear select
-                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,[]);
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, []);
                 return true;
             }
 
@@ -629,8 +538,8 @@ namespace paper.editor {
         public undo(): boolean {
             if (super.undo()) {
                 Editor.editorModel._deleteGameObject(this.data.addObjs);
-                const {selectIds} = this.data;
-                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,selectIds);
+                const { selectIds } = this.data;
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, selectIds);
                 return true;
             }
 
@@ -642,7 +551,7 @@ namespace paper.editor {
                 let datas = this.data.datas;
                 let prefabData = this.data.prefabData;
                 let addObjs: GameObject[] = [];
-                let selectIds:string[] = [];
+                let selectIds: string[] = [];
 
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
@@ -652,11 +561,11 @@ namespace paper.editor {
                         continue;
                     }
 
-                    let duplicateObj:GameObject;
+                    let duplicateObj: GameObject;
                     if (element.serializeData) {
-                        duplicateObj = deserialize(element.serializeData,element.assetsMap);
+                        duplicateObj = deserialize(element.serializeData, element.assetsMap);
                         duplicateObj.transform.setParent(sourceObj.transform.parent);
-                    }else{
+                    } else {
                         duplicateObj = clone(sourceObj);
                         duplicateObj.name = sourceObj.name + "_duplicate";
                         duplicateObj.transform.setParent(sourceObj.transform.parent);
@@ -672,7 +581,7 @@ namespace paper.editor {
                 }
 
                 this.data.addObjs = addObjs;
-                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectIds);
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, selectIds);
                 return true;
             }
 
@@ -695,8 +604,8 @@ namespace paper.editor {
         public undo(): boolean {
             if (super.undo()) {
                 Editor.editorModel._deleteGameObject(this.data.addObjs);
-                const {selectIds} = this.data;
-                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,selectIds);
+                const { selectIds } = this.data;
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, selectIds);
                 return true;
             }
 
@@ -708,7 +617,7 @@ namespace paper.editor {
                 let datas = this.data.datas;
                 let addObjs: GameObject[] = [];
                 let prefabData = this.data.prefabData;
-                let selectIds:string[] = [];
+                let selectIds: string[] = [];
 
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
@@ -720,11 +629,11 @@ namespace paper.editor {
                         continue;
                     }
 
-                    let pasteObj:GameObject;
+                    let pasteObj: GameObject;
                     if (element.serializeData) {
-                        pasteObj = deserialize(element.serializeData,element.assetsMap);
+                        pasteObj = deserialize(element.serializeData, element.assetsMap);
                         pasteObj.transform.setParent(sourceObj.transform.parent);
-                    }else{
+                    } else {
                         pasteObj = clone(sourceObj);
                         pasteObj.name = sourceObj.name + "_paste";
                         pasteObj.transform.setParent(sourceObj.transform.parent);
@@ -740,7 +649,7 @@ namespace paper.editor {
                 }
 
                 this.data.addObjs = addObjs;
-                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectIds);
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, selectIds);
 
                 return true;
             }
@@ -790,9 +699,9 @@ namespace paper.editor {
                 if (gameObject) {
                     let addComponent;
                     if (this.data.serializeData) {
-                        addComponent = deserialize(this.data.serializeData,this.data.assetsMap);
-                        Editor.editorModel.addComponentToGameObject(gameObject,addComponent);
-                    }else{
+                        addComponent = deserialize(this.data.serializeData, this.data.assetsMap);
+                        Editor.editorModel.addComponentToGameObject(gameObject, addComponent);
+                    } else {
                         let compClz = egret.getDefinitionByName(compClzName);
                         addComponent = gameObject.addComponent(compClz);
                         this.data.serializeData = serialize(addComponent);
@@ -863,38 +772,52 @@ namespace paper.editor {
         }
     }
 
-    //更改游戏对象层级
-    export class UpdateParentState extends BaseState {
+    //游戏对象层级
+    export class GameObjectHierarchyState extends BaseState {
+
         public static toString(): string {
             return "[class common.UpdateParentState]";
         }
 
-        public static create(data: any = null): UpdateParentState | null {
-            const state = new UpdateParentState();
+        public static create(data: any = null): GameObjectHierarchyState | null {
+            const state = new GameObjectHierarchyState();
             state.data = data;
             return state;
         }
-
+        /**对象数组
+         * 数组必须是经过层级排序的
+         */
+        public gameObjects: { UUID: string, oldParentUUID: string, oldIndex: number }[] = [];
+        public targetObject: string;
+        public targetDir: 'top' | 'inner' | 'bottom';
+        public prefabData: any;
         public undo(): boolean {
             if (super.undo()) {
-                const { gameObjectUUids, targetUUid, originParentIds, prefabData } = this.data;
-                const gameObjs = Editor.editorModel.getGameObjectsByUUids(gameObjectUUids);
-                let originParentId;
-                let originParent;
-                let originTransForm;
-                for (let index = 0; index < gameObjs.length; index++) {
-                    const element = gameObjs[index];
-                    originParentId = originParentIds[index];
-                    if (originParentId) {
-                        originParent = Editor.editorModel.getGameObjectByUUid(originParentId);
+                for (let index = 0; index < this.gameObjects.length; index++) {
+                    //设置层级关系
+                    let obj = Editor.editorModel.getGameObjectByUUid(this.gameObjects[index].UUID);
+                    let oldParentObj = Editor.editorModel.getGameObjectByUUid(this.gameObjects[index].oldParentUUID);
+                    if (oldParentObj) {
+                        let oldTargetTransform = oldParentObj.transform.children[this.gameObjects[index].oldIndex];
+                        if (oldTargetTransform) {
+                            Editor.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, 'top');
+                        }
+                        else {
+                            Editor.editorModel.setGameObjectsHierarchy([obj], oldParentObj, 'inner');
+                        }
                     }
-                    originTransForm = originParent ? originParent.transform : null;
-                    element.transform.setParent(originTransForm);
-
-                    if (prefabData[element.uuid]) {
-                        const prefabRootId = prefabData[element.uuid].rootId;
-                        const url = prefabData[element.uuid].url;
-                        const prefabIds = prefabData[element.uuid].prefabIds;
+                    else {
+                        obj.transform.parent = null;
+                        let all = paper.Application.sceneManager.activeScene.gameObjects as Array<GameObject>;
+                        let currentIndex=all.indexOf(obj);
+                        all.splice(currentIndex,1);
+                        all.splice(this.gameObjects[index].oldIndex, 0, obj);
+                    }
+                    //重置预置体关系
+                    if (this.prefabData[obj.uuid]) {
+                        const prefabRootId = this.prefabData[obj.uuid].rootId;
+                        const url = this.prefabData[obj.uuid].url;
+                        const prefabIds = this.prefabData[obj.uuid].prefabIds;
                         const prefab = Asset.find(url);
                         let rootObj = Editor.editorModel.getGameObjectByUUid(prefabRootId);
                         if (rootObj) {
@@ -902,7 +825,7 @@ namespace paper.editor {
                         }
                     }
                 }
-                this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_PARENT);
+                this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
                 return true;
             }
 
@@ -911,26 +834,24 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                const { gameObjectUUids, targetUUid, prefabData } = this.data;
-                const gameObjs = Editor.editorModel.getGameObjectsByUUids(gameObjectUUids);
-                const targetGameObj = Editor.editorModel.getGameObjectByUUid(targetUUid);
-                let targetTransform = null;
+                let gameObjectUUids = this.gameObjects.map(v => { return v.UUID });
+                let gameObjs = Editor.editorModel.getGameObjectsByUUids(gameObjectUUids);
+                const targetGameObj = Editor.editorModel.getGameObjectByUUid(this.targetObject);
+                //清理预置体关系
                 for (let index = 0; index < gameObjs.length; index++) {
                     const element = gameObjs[index];
-                    if (targetGameObj) {
-                        targetTransform = targetGameObj.transform;
-                    }
-                    if (prefabData[element.uuid]) {
-                        const prefabRootId: string = prefabData[element.uuid].rootId;
+                    if (this.prefabData[element.uuid]) {
+                        const prefabRootId: string = this.prefabData[element.uuid].rootId;
                         const rootObj: GameObject = Editor.editorModel.getGameObjectByUUid(prefabRootId);
                         Editor.editorModel.clearRootPrefabInstance(rootObj, rootObj);
                     }
-                    element.transform.setParent(targetTransform);
                 }
-                this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_PARENT);
+                //设置层级
+                gameObjs = Editor.editorModel.sortGameObjectsForHierarchy(gameObjs);
+                Editor.editorModel.setGameObjectsHierarchy(gameObjs, targetGameObj, this.targetDir);
+                this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
                 return true;
             }
-
             return false;
         }
     }
@@ -965,7 +886,7 @@ namespace paper.editor {
         }
 
         protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any) {
-            this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target: modifyObj, propName: propName,propValue: newValue})
+            this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
         }
     }
 
@@ -993,7 +914,7 @@ namespace paper.editor {
             }
             let objects = this.getGameObjectsByPrefab(prefabObj.prefab);
             let editInfoList = editor.getEditInfo(prefabObj);
-            valueList.forEach(async(propertyValue) => {
+            valueList.forEach(async (propertyValue) => {
                 const { propName, copyValue, valueEditType } = propertyValue;
                 let newValue = await Editor.editorModel.deserializeProperty(copyValue, valueEditType);
                 objects.forEach(object => {
@@ -1061,11 +982,11 @@ namespace paper.editor {
                 let prefabComp = prefabObj.components[k];
                 let editInfoList = editor.getEditInfo(prefabComp);
                 if (prefabComp.uuid === componentUUid) {
-                    valueList.forEach(async(propertyValue) => {
+                    valueList.forEach(async (propertyValue) => {
                         const { propName, copyValue, valueEditType } = propertyValue;
                         let newValue = await Editor.editorModel.deserializeProperty(copyValue, valueEditType);
                         objects.forEach(object => {
-                            let objectComp = Editor.editorModel.getComponentByAssetId(object,prefabComp.assetUUid);
+                            let objectComp = Editor.editorModel.getComponentByAssetId(object, prefabComp.assetUUid);
                             if (objectComp !== null) {
                                 let valueType = typeof objectComp[propName];
                                 if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
@@ -1080,7 +1001,7 @@ namespace paper.editor {
                                         this.dispathPropertyEvent(objectComp, propName, newValue);
                                     }
                                 }
-                            }else{
+                            } else {
                                 console.warn(`{prefabComp.assetUUid} not match!`)
                             }
 
@@ -1216,9 +1137,9 @@ namespace paper.editor {
                         let addComponent;
 
                         if (this.data.serializeData) {
-                            addComponent = deserialize(this.data.serializeData,this.data.assetsMap,true);
-                            Editor.editorModel.addComponentToGameObject(gameObj,addComponent);
-                        }else{
+                            addComponent = deserialize(this.data.serializeData, this.data.assetsMap, true);
+                            Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
+                        } else {
                             addComponent = gameObj.addComponent(compClz);
                             this.data.serializeData = serialize(addComponent);
                             this.data.assetsMap = Editor.editorModel.createAssetMap(this.data.serializeData);
@@ -1250,12 +1171,12 @@ namespace paper.editor {
         public async modifyAssetPropertyValues(assetUrl: string, valueList: any[]): Promise<void> {
             let target = await Editor.editorModel.getAssetByAssetUrl(assetUrl);
             let editInfoList = editor.getEditInfo(target);
-            valueList.forEach(async(propertyValue) => {
+            valueList.forEach(async (propertyValue) => {
                 const { propName, copyValue, valueEditType } = propertyValue;
                 const newValue = await Editor.editorModel.deserializeProperty(copyValue, valueEditType);
                 Editor.editorModel.setTargetProperty(propName, target, newValue);
-                this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY,{target:target,propName:propName,propValue:newValue});
-        });
+                this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: newValue });
+            });
         }
 
         public undo(): boolean {
@@ -1270,8 +1191,8 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                const { newValueList,assetUrl } = this.data;
-                this.modifyAssetPropertyValues(assetUrl,newValueList);
+                const { newValueList, assetUrl } = this.data;
+                this.modifyAssetPropertyValues(assetUrl, newValueList);
                 return true;
             }
 
@@ -1279,8 +1200,7 @@ namespace paper.editor {
         }
     }
 
-    export class CreatePrefabState extends BaseState
-    {
+    export class CreatePrefabState extends BaseState {
         public static toString(): string {
             return "[class common.CreatePrefabState]";
         }
@@ -1313,10 +1233,10 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                let deleteUUid:string = this.data.cachePrefabUUid;
+                let deleteUUid: string = this.data.cachePrefabUUid;
                 let gameObj = Editor.editorModel.getGameObjectByUUid(deleteUUid);
                 Editor.editorModel._deleteGameObject([gameObj]);
-                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,[this.data.selectIds]);
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, [this.data.selectIds]);
                 return true;
 
             }
@@ -1325,13 +1245,13 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                const {prefab } = this.data;
+                const { prefab } = this.data;
                 if (prefab) {
                     let instance;
                     if (this.data.serializeData) {
-                        instance = deserialize(this.data.serializeData,this.data.assetsMap);
+                        instance = deserialize(this.data.serializeData, this.data.assetsMap);
                         this.setGameObjectPrefab(instance, prefab, instance);
-                    }else{
+                    } else {
                         instance = prefab.createInstance();
                         (instance as any).prefabEditInfo = true;
                         this.setGameObjectPrefab(instance, prefab, instance);
@@ -1343,7 +1263,7 @@ namespace paper.editor {
                 }
 
                 //select prefab root
-                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,[this.data.cachePrefabUUid]);
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, [this.data.cachePrefabUUid]);
                 return true;
             }
 

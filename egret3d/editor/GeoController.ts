@@ -212,9 +212,9 @@ namespace paper.editor {
                     let ray = camera.createRayByScreen(screenPosition.x, screenPosition.y);
                     let hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                     egret3d.Vector3.subtract(hit, worldPosition, hit);
-                    egret3d.Vector3.normalize(hit);
-                    egret3d.Vector3.normalize(this._dragOffset);
-                    let cosHitOffset = egret3d.Vector3.dot(hit, this._dragOffset);
+
+                    let cosHitOffset = egret3d.Vector3.dot(egret3d.Vector3.normalize(hit) as any, egret3d.Vector3.normalize(this._dragOffset) as any);
+
                     egret3d.Vector3.cross(this._dragOffset, hit, helpVec3_1)
                     let theta = egret3d.Vector3.dot(helpVec3_1, this._dragPlaneNormal) >= 0 ? Math.acos(cosHitOffset) : -Math.acos(cosHitOffset);
                     let cos = Math.cos(theta * 0.5), sin = Math.sin(theta * 0.5);
@@ -531,15 +531,10 @@ namespace paper.editor {
             this.editorModel.addEventListener(EditorModelEvent.CHANGE_PROPERTY, e => this.changeProperty(e.data), this);
         }
         private selectGameObjects = this._selectGameObjects.bind(this);
-        private _selectGameObjects(selectObj: any) {
-            let selectIds;
-            if (selectObj[selectItemType.GAMEOBJECT]) {
-                selectIds = selectObj[selectItemType.GAMEOBJECT];
-            } else {
-                selectIds = [];
-            }
-
-            this.selectedGameObjs = this.editorModel.getGameObjectsByUUids(selectIds);
+        private _selectGameObjects(gameObjects: GameObject[]) {
+            if (!gameObjects)
+                gameObjects = [];
+            this.selectedGameObjs = gameObjects;
             let len = this.selectedGameObjs.length;
             this._modeCanChange = true;
             if (len > 0) {
