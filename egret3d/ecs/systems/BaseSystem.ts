@@ -88,7 +88,7 @@ namespace paper {
                         }
                     }
 
-                    this._groups.push(Group.getGroup(interest));
+                    this._groups.push(Group.create(interest));
                 }
             }
 
@@ -133,6 +133,7 @@ namespace paper {
             }
         }
         /**
+         * 系统内部更新。
          * @internal
          */
         public update() {
@@ -164,6 +165,19 @@ namespace paper {
 
             this.onUpdate && this.onUpdate(this._clock.deltaTime);
 
+            this._locked = false;
+        }
+        /**
+         * 系统内部更新。
+         * @internal
+         */
+        public lateUpdate() {
+            if (!this._enabled) {
+                return;
+            }
+
+            this._locked = true;
+            this.onLateUpdate && this.onLateUpdate(this._clock.deltaTime);
             this._locked = false;
         }
         /**

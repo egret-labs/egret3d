@@ -50,7 +50,9 @@ namespace egret3d {
         protected _sortCamera(a: Camera, b: Camera) {
             return a.order - b.order;
         }
-
+        /**
+         * @internal
+         */
         public $renderCamera(camera: Camera) {
             //在这里先剔除，然后排序，最后绘制           
             this._drawCalls.sortAfterFrustumCulling(camera);
@@ -85,10 +87,6 @@ namespace egret3d {
                 cameras.sort(this._sortCamera);
 
                 for (const component of cameras) {
-                    if (component.gameObject === this._globalGameObject) { // Pass global camera.
-                        continue;
-                    }
-
                     component.update(deltaTime);
 
                     if (lights.length > 0) {

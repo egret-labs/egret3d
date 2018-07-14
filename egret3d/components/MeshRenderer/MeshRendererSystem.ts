@@ -65,7 +65,7 @@ namespace egret3d {
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCalls.removeDrawCalls(gameObject.renderer);
+            this._drawCalls.removeDrawCalls(gameObject.renderer as MeshRenderer);
         }
 
         public onDisable() {

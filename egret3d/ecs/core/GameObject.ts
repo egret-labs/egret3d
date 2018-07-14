@@ -118,11 +118,11 @@ namespace paper {
             }
 
             for (const component of this._components) {
-                const className = egret.getQualifiedClassName(component);
-                if (className in _requireComponents) {
-                    const requireComponents = _requireComponents[className];
+                const index = _requireComponents.indexOf(component.constructor as any);
+                if (index >= 0) {
+                    const requireComponents = _requireComponentss[index];
                     if (requireComponents.indexOf(value.constructor as any) >= 0) {
-                        console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${className} component.`);
+                        console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${egret.getQualifiedClassName(component)} component.`);
                         return false;
                     }
                 }
@@ -211,7 +211,7 @@ namespace paper {
                 for (const component of this._components) {
                     if (component instanceof componentClass) {
                         console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the game object (${this.path}) again.`);
-                        return;
+                        return component;
                     }
                 }
             }

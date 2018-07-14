@@ -51,8 +51,10 @@ namespace paper {
      */
     export class Group {
         private static readonly _groups: Group[] = [];
-
-        public static getGroup(interestConfig: ReadonlyArray<InterestConfig>): Group {
+        /**
+         * @internal
+         */
+        public static create(interestConfig: ReadonlyArray<InterestConfig>): Group {
             let isBehaviour = false;
             interestConfig = Array.isArray(interestConfig) ? interestConfig : [interestConfig];
 
@@ -121,6 +123,7 @@ namespace paper {
          */
         public readonly interestCount: number = 0;
 
+        private _isRemoved: boolean = false;
         private readonly _isBehaviour: boolean = false;
         private readonly _bufferedComponents: BaseComponent[] = [];
         private readonly _bufferedUnessentialComponents: BaseComponent[] = [];
@@ -137,6 +140,7 @@ namespace paper {
         private readonly _addedGameObjects: { [key: string]: number } = {};
         private readonly _gameObjects: { [key: string]: number } = {};
         private readonly _interestConfig: ReadonlyArray<InterestConfig> = null as any;
+        private readonly _globalGameObject: GameObject = Application.sceneManager.globalGameObject;
 
         private constructor(interestConfig: ReadonlyArray<InterestConfig>, isBehaviour: boolean) {
             this._isBehaviour = isBehaviour;
@@ -224,6 +228,10 @@ namespace paper {
             const gameObject = component.gameObject;
             const uuid = gameObject.uuid;
 
+            if (gameObject === this._globalGameObject) { // Pass global game object.
+                return;
+            }
+
             if (uuid in this._bufferedGameObjects || uuid in this._gameObjects) { // Buffered or added.
                 return;
             }
@@ -256,13 +264,20 @@ namespace paper {
                     return;
                 }
 
-                this._bufferedComponents.push(insterestComponent);
+                this._bufferedComponents.push(insterestComponent as any); // ts
             }
 
             this._bufferedGameObjects[uuid] = backupLength;
         }
 
         private _onAddUnessentialComponent(component: BaseComponent) {
+            const gameObject = component.gameObject;
+            const uuid = gameObject.uuid;
+
+            if (gameObject === this._globalGameObject) { // Pass global game object.
+                return;
+            }
+
             if (this._isBehaviour) {
                 if (this._bufferedUnessentialComponents.indexOf(component) >= 0 || this._components.indexOf(component) >= 0) { // Buffered or added.
                     return;
@@ -271,9 +286,6 @@ namespace paper {
                 this._bufferedUnessentialComponents.push(component);
                 return;
             }
-
-            const gameObject = component.gameObject;
-            const uuid = gameObject.uuid;
 
             if (
                 !(uuid in this._bufferedGameObjects || uuid in this._gameObjects) || // Uninclude.
@@ -298,6 +310,7 @@ namespace paper {
                     return;
                 }
 
+                this._isRemoved = true;
                 this._components[index] = null as any;
 
                 index = this._addedUnessentialComponents.indexOf(component);
@@ -323,14 +336,10 @@ namespace paper {
                 if (index >= 0) { //
                     this._addedUnessentialComponents.splice(index, 1);
                 }
-
-                // if (currentSystem.locked && currentSystem.groups.indexOf(this) >= 0) {
-                //     console.error("Cannot remove component when the system is updating.");
-                // }
             }
 
             for (const system of Application.systemManager.systems) {
-                if (!system.onRemoveComponent || system.groups.indexOf(this) < 0) {
+                if (!system || !system.onRemoveComponent || system.groups.indexOf(this) < 0) {
                     continue;
                 }
 
@@ -352,12 +361,8 @@ namespace paper {
 
                 this._removeGameObjectFrom(uuid, this._components, this._gameObjects);
 
-                // if (currentSystem.locked && currentSystem.groups.indexOf(this) >= 0) {
-                //     console.error("Cannot remove component when the system is updating.");
-                // }
-
                 for (const system of Application.systemManager.systems) {
-                    if (!system.onRemoveGameObject || system.groups.indexOf(this) < 0) {
+                    if (!system || !system.onRemoveGameObject || system.groups.indexOf(this) < 0) {
                         continue;
                     }
 
@@ -402,6 +407,29 @@ namespace paper {
             if (this._addedUnessentialComponents.length > 0) {
                 this._addedUnessentialComponents.length = 0;
             }
+
+            if (this._isRemoved) {
+                let index = 0;
+                let removeCount = 0;
+
+                for (const component of this._components) {
+                    if (component) {
+                        if (removeCount > 0) {
+                            this._components[index - removeCount] = component;
+                            this._components[index] = null as any;
+                        }
+                    }
+                    else {
+                        removeCount++;
+                    }
+
+                    index++;
+                }
+
+                if (removeCount > 0) {
+                    this._components.length -= removeCount;
+                }
+            }
         }
         /**
          * 根据关心列表的顺序快速查找指定组件。
@@ -417,7 +445,7 @@ namespace paper {
             return gameObject.uuid in this._gameObjects;
         }
         /**
-         * 
+         * 根据配置收集的实体的组件。
          */
         public get components(): ReadonlyArray<BaseComponent> {
             return this._components;

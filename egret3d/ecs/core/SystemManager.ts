@@ -15,6 +15,7 @@ namespace paper {
         private constructor() {
         }
 
+        private _currentSystem: BaseSystem = null as any;
         private readonly _registerSystems: (BaseSystem | null)[] = [];
         private readonly _systems: (BaseSystem | null)[] = [];
         private readonly _unregisterSystems: (BaseSystem | null)[] = [];
@@ -200,12 +201,14 @@ namespace paper {
             if (this._registerSystems.length > 0) {
                 for (const system of this._registerSystems) {
                     if (system) {
+                        this._currentSystem = system;
                         system.initialize();
                     }
                 }
 
                 for (const system of this._registerSystems) {
                     if (system && system.enabled && !system._started) {
+                        this._currentSystem = system;
                         system._started = true;
                         system.onStart && system.onStart();
                     }
@@ -215,6 +218,13 @@ namespace paper {
             }
 
             // Enable.
+
+            for (const system of this._systems) {
+                if (system) {
+                    this._currentSystem = system;
+                    system.update();
+                }
+            }
 
             let index = 0;
             let removeCount = 0;
@@ -226,7 +236,8 @@ namespace paper {
                         this._systems[index] = null;
                     }
 
-                    system.update();
+                    this._currentSystem = system;
+                    system.lateUpdate();
                 }
                 else {
                     removeCount++;
@@ -243,6 +254,7 @@ namespace paper {
                 if (this._unregisterSystems.length > 0) {
                     for (const system of this._unregisterSystems) {
                         if (system) {
+                            this._currentSystem = system;
                             system.uninitialize();
                         }
                     }
@@ -256,7 +268,13 @@ namespace paper {
         /**
          * 
          */
-        public get systems(): ReadonlyArray<BaseSystem> {
+        public get system() {
+            return this._currentSystem;
+        }
+        /**
+         * 
+         */
+        public get systems(): ReadonlyArray<BaseSystem | null> {
             return this._systems;
         }
     }
