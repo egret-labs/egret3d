@@ -114,6 +114,56 @@ declare namespace gltf {
         TrianglesFan = 6,
     }
 
+    /**
+     * The uniform type.  All valid values correspond to WebGL enums.
+     */
+    export const enum UniformType {
+        Int = 5124,
+        FLOAT = 5126,
+        FLOAT_VEC2 = 35664,
+        FLOAT_VEC3 = 35665,
+        FLOAT_VEC4 = 35666,
+        INT_VEC2 = 35667,
+        INT_VEC3 = 35668,
+        INT_VEC4 = 35669,
+        BOOL = 35670,
+        BOOL_VEC2 = 35671,
+        BOOL_VEC3 = 35672,
+        BOOL_VEC4 = 35673,
+        FLOAT_MAT2 = 35674,
+        FLOAT_MAT3 = 35675,
+        FLOAT_MAT4 = 35676,
+        SAMPLER_2D = 35678,
+    }
+    /**
+     * The shader stage.  All valid values correspond to WebGL enums.
+     */
+    export const enum ShaderStage {
+        FRAGMENT_SHADER = 35632,
+        VERTEX_SHADER = 35633,
+    }
+
+    export const enum BlendEquation {
+        FUNC_ADD = 0x8006,
+        FUNC_SUBTRACT = 0x800A,
+        FUNC_REVERSE_SUBTRACT = 0x800B,
+        MIN = 0x8007,
+        MAX = 0x8008,
+    }
+
+    export const enum BlendFactor {
+        ZERO = 0,
+        ONE = 1,
+        SRC_COLOR = 0x0300,
+        ONE_MINUS_SRC_COLOR = 0x0301,
+        SRC_ALPHA = 0x0302,
+        ONE_MINUS_SRC_ALPHA = 0x0303,
+        DST_ALPHA = 0x0304,
+        ONE_MINUS_DST_ALPHA = 0x0305,
+        DST_COLOR = 0x0306,
+        ONE_MINUS_DST_COLOR = 0x0307,
+    }
+
     export const enum AccessorType {
         SCALAR = "SCALAR",
         VEC2 = "VEC2",
@@ -828,5 +878,159 @@ declare namespace gltf {
         extensions?: any;
         extras?: any;
         // [k: string]: any;
+    }
+
+    /**
+    * A vertex or fragment shader. Exactly one of `uri` or `bufferView` must be provided for the GLSL source.
+    */
+    export interface Shader {
+        /**
+         * The uri of the GLSL source.
+         */
+        uri: string;
+        /**
+         * The shader stage.
+         */
+        type: 35632 | 35633;
+        /**
+         * The index of the bufferView that contains the GLSL shader source. Use this instead of the shader's uri property.
+         */
+        bufferView: GLTFIndex;
+        name: any;
+        extensions: any;
+        extras: any;
+        [k: string]: any;
+    }
+    /**
+     * An attribute input to a technique and the corresponding semantic.
+     */
+    export interface Attribute {
+        /**
+         * Identifies a mesh attribute semantic.
+         */
+        semantic: string;
+        extensions: any;
+        extras: any;
+        [k: string]: any;
+    }
+    export type UniformValue = any;
+    /**
+     * A uniform input to a technique, and an optional semantic and value.
+     */
+    export interface Uniform {
+        /**
+         * When defined, the uniform is an array of count elements of the specified type.  Otherwise, the uniform is not an array.
+         */
+        count: number;
+        /**
+         * The index of the node whose transform is used as the uniform's value.
+         */
+        node: GLTFIndex;
+        /**
+         * The uniform type.
+         */
+        type: 5124 | 5126 | 35664 | 35665 | 35666 | 35667 | 35668 | 35669 | 35670 | 35671 | 35672 | 35673 | 35674 | 35675 | 35676 | 35678;
+        /**
+         * Identifies a uniform with a well-known meaning.
+         */
+        semantic: string;
+        /**
+         * The value of the uniform.
+         */
+        value: UniformValue;
+        name: any;
+        extensions: any;
+        extras: any;
+        [k: string]: any;
+    }
+    /**
+     * A template for material appearances.
+     */
+    export interface Technique {
+        /**
+         * The index of the program.
+         */
+        program: GLTFIndex;
+        /**
+         * A dictionary object of `Attribute` objects.
+         */
+        attributes: {
+            /**
+             * An attribute input to a technique and the corresponding semantic.
+             */
+            [k: string]: Attribute;
+        };
+        /**
+         * A dictionary object of `Uniform` objects.
+         */
+        uniforms: {
+            /**
+             * A uniform input to a technique, and an optional semantic and value.
+             */
+            [k: string]: Uniform;
+        };
+        name: any;
+        extensions: any;
+        extras: any;
+        [k: string]: any;
+    }
+    /**
+     * A shader program, including its vertex and fragment shaders.
+     */
+    export interface Program {
+        /**
+         * The index of the fragment shader.
+         */
+        fragmentShader: GLTFIndex;
+        /**
+         * The index of the vertex shader.
+         */
+        vertexShader: GLTFIndex;
+        /**
+         * The names of required WebGL 1.0 extensions.
+         */
+        glExtensions: string[];
+        name: any;
+        extensions: any;
+        extras: any;
+        [k: string]: any;
+    }
+    export interface KhrTechniqueWebglGlTfExtension {
+        /**
+         * An array of shaders.
+         */
+        shaders: Shader[];
+        /**
+         * An array of techniques.
+         */
+        techniques: Technique[];
+        /**
+         * An array of programs.
+         */
+        programs: Program[];
+    }
+
+    /**
+    * The technique to use for a material and any additional uniform values.
+    */
+    export interface KhrTechniquesWebglMaterialExtension {
+        /**
+         * The index of the technique.
+         */
+        technique: GLTFIndex;
+        /**
+         * Dictionary object of uniform values.
+         */
+        values?: {
+            [k: string]: UniformValue;
+        };
+        extensions?: {
+            KHR_blend: {
+                blendEquation: number[],
+                blendFactors: number[],
+            }
+        }
+        extras?: any;
+        [k: string]: any;
     }
 }
