@@ -31,8 +31,9 @@ namespace paper {
                 requestAnimationFrame(this._bindUpdate);
             }
 
-            Time.update();
+            Time.begin();
             this.systemManager.update();
+            Time.end();
         }
 
         public static init({ isEditor = false, isPlaying = true } = {}) {

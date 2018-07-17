@@ -98,6 +98,7 @@
         "egret3d/components/trail/TrailRenderer.ts",
         "egret3d/components/trail/TrailRendererSystem.ts",
         "egret3d/components/SkinnedMeshRenderer/SkinnedMeshRendererSystem.ts",
+        "egret3d/components/singletons/Cameras.ts",
         "egret3d/components/singletons/DrawCalls.ts",
         "egret3d/components/animation/Animation.ts",
         "egret3d/components/particles/ParticleHelper.ts",

@@ -14,7 +14,8 @@ namespace egret3d {
                 { componentClass: Egret2DRenderer }
             ],
         ];
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
+        protected readonly _cameras: Cameras = this._globalGameObject.getComponent(Cameras) || this._globalGameObject.addComponent(Cameras);
+        protected readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
 
         private _applyDrawCall(context: RenderContext, drawCall: DrawCall): void {
             const renderer = drawCall.renderer;
@@ -47,9 +48,6 @@ namespace egret3d {
             WebGLKit.draw(context, drawType);
         }
 
-        protected _sortCamera(a: Camera, b: Camera) {
-            return a.order - b.order;
-        }
         /**
          * @internal
          */
@@ -78,13 +76,26 @@ namespace egret3d {
             }
         }
 
+        public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
+            if (group === this._groups[0]) {
+                this._cameras.update(this._groups[0].components as ReadonlyArray<Camera>);
+            }
+        }
+
+        public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
+            if (group === this._groups[0]) {
+                this._cameras.update(this._groups[0].components as ReadonlyArray<Camera>);
+            }
+        }
+
         public onUpdate(deltaTime: number) {
             Performance.startCounter("render");
 
-            const cameras = this._groups[0].components as Camera[];
+            const cameras = this._cameras.cameras;
             if (cameras.length > 0) {
                 const lights = this._groups[1].components as ReadonlyArray<BaseLight>;
-                cameras.sort(this._sortCamera);
+
+                this._cameras.sort(); // TODO
 
                 for (const component of cameras) {
                     component.update(deltaTime);

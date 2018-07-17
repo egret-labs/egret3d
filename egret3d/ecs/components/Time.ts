@@ -4,12 +4,13 @@ namespace paper {
      */
     export class Clock extends SingletonComponent {
         public maxFixedSubSteps: number = 3;
-        public fixedTimeStep: number = 1.0 / 30.0; // TODO same as fps.
+        public fixedDeltaTime: number = 1.0 / 50.0; // TODO same as fps.
         public timeScale = 1.0;
 
         private _frameCount: number = 0;
         private _beginTime: number = 0.0;
         private _lastTime: number = 0.0;
+        private _delayTime: number = 0.0;
         private _unscaledTime: number = 0.0;
         private _unscaledDeltaTime: number = 0.0;
         /**
@@ -25,14 +26,26 @@ namespace paper {
         /**
          * @internal
          */
-        public update(time?: number) {
+        public begin(time?: number) {
             const now = time || Date.now() * 0.001;
             this._frameCount += 1;
             this._unscaledTime = now - this._beginTime;
-            this._unscaledDeltaTime = now - this._lastTime;
-            this._lastTime = now;
+            this._unscaledDeltaTime = this._unscaledTime - this._lastTime;
 
             this._fixedTime += this._unscaledDeltaTime;
+        }
+
+        public end() {
+            this._lastTime = this._unscaledTime;
+
+            if (this._fixedTime < this.fixedDeltaTime) {
+            }
+            else if (this._fixedTime < this.fixedDeltaTime * this.maxFixedSubSteps) {
+                this._fixedTime %= this.fixedDeltaTime;
+            }
+            else {
+                this._fixedTime -= this.fixedDeltaTime * this.maxFixedSubSteps;
+            }
         }
 
         public get frameCount() {

@@ -429,6 +429,8 @@ namespace paper {
                 if (removeCount > 0) {
                     this._components.length -= removeCount;
                 }
+
+                this._isRemoved = false;
             }
         }
         /**
