@@ -6584,6 +6584,7 @@ declare namespace egret3d {
         uploadImage(img: HTMLImageElement, mipmap: boolean, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
         uploadByteArray(mipmap: boolean, linear: boolean, width: number, height: number, data: Uint8Array, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
         webgl: WebGLRenderingContext;
+        loaded: boolean;
         texture: WebGLTexture;
         format: TextureFormatEnum;
         width: number;
@@ -6599,10 +6600,18 @@ declare namespace egret3d {
     }
     class WriteableTexture2D implements ITexture {
         constructor(webgl: WebGLRenderingContext, format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
+        linear: boolean;
+        premultiply: boolean;
+        repeat: boolean;
+        mirroredU: boolean;
+        mirroredV: boolean;
+        updateRect(data: Uint8Array, x: number, y: number, width: number, height: number): void;
+        updateRectImg(data: ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement, x: number, y: number): void;
         isFrameBuffer(): boolean;
         webgl: WebGLRenderingContext;
         texture: WebGLTexture;
         format: TextureFormatEnum;
+        formatGL: number;
         width: number;
         height: number;
         dispose(webgl: WebGLRenderingContext): void;

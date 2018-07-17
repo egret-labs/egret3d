@@ -2,9 +2,9 @@ namespace egret3d {
     /**
      * Light系统
      */
-    export class LightSystem extends paper.BaseSystem<BaseLight> {
+    export class LightSystem extends paper.BaseSystem {
         protected readonly _interests = [
-            { componentClass: [DirectLight, SpotLight, PointLight] }
+            { componentClass: [DirectLight, SpotLight, PointLight] },
         ];
         private readonly _lightCamera: Camera = this._globalGameObject.getComponent(Camera) || this._globalGameObject.addComponent(Camera);
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
@@ -12,8 +12,9 @@ namespace egret3d {
         public onUpdate() {
             const camera = this._lightCamera;
             const drawCalls = this._drawCalls.drawCalls;
+            const components = this._groups[0].components as ReadonlyArray<BaseLight>;
 
-            for (const light of this._components) {
+            for (const light of components) {
                 if (!light.castShadows) {
                     continue;;
                 }

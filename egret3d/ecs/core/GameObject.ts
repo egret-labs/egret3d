@@ -39,7 +39,7 @@ namespace paper {
         /**
          * 
          */
-        public renderer: paper.BaseRenderer | null = null as any;
+        public renderer: BaseRenderer | null = null as any;
 
         /**
          * 预制体
@@ -118,11 +118,11 @@ namespace paper {
             }
 
             for (const component of this._components) {
-                const className = egret.getQualifiedClassName(component);
-                if (className in _requireComponents) {
-                    const requireComponents = _requireComponents[className];
+                const index = _requireComponents.indexOf(component.constructor as any);
+                if (index >= 0) {
+                    const requireComponents = _requireComponentss[index];
                     if (requireComponents.indexOf(value.constructor as any) >= 0) {
-                        console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${className} component.`);
+                        console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${egret.getQualifiedClassName(component)} component.`);
                         return false;
                     }
                 }
@@ -139,7 +139,7 @@ namespace paper {
                 this.renderer = null;
             }
 
-            const destroySystem = Application.systemManager.getSystem(DestroySystem);
+            const destroySystem = Application.systemManager.getSystem(EndSystem);
             if (destroySystem) {
                 destroySystem.bufferComponent(component);
             }
@@ -160,7 +160,7 @@ namespace paper {
         }
 
         private _destroy() {
-            const destroySystem = Application.systemManager.getSystem(DestroySystem);
+            const destroySystem = Application.systemManager.getSystem(EndSystem);
             if (destroySystem) {
                 destroySystem.bufferGameObject(this);
             }
@@ -211,14 +211,14 @@ namespace paper {
                 for (const component of this._components) {
                     if (component instanceof componentClass) {
                         console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the game object (${this.path}) again.`);
-                        return;
+                        return component;
                     }
                 }
             }
 
-            const className = egret.getQualifiedClassName(componentClass);
-            if (className in _requireComponents) {
-                const requireComponents = _requireComponents[className];
+            const index = _requireComponents.indexOf(componentClass);
+            if (index >= 0) {
+                const requireComponents = _requireComponentss[index];
                 for (const requireComponentClass of requireComponents) {
                     this.getComponent(requireComponentClass) || this.addComponent(requireComponentClass);
                 }
@@ -230,7 +230,7 @@ namespace paper {
             if (component instanceof egret3d.Transform) {
                 this.transform = component;
             }
-            else if (component instanceof paper.BaseRenderer) {
+            else if (component instanceof BaseRenderer) {
                 this.renderer = component;
             }
 
@@ -532,7 +532,7 @@ namespace paper {
                     this.addComponent(MissingComponent).missingObject = component;
                 }
                 else {
-                    if (component instanceof paper.BaseRenderer) {
+                    if (component instanceof BaseRenderer) {
                         this.renderer = component;
                     }
 

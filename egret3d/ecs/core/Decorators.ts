@@ -10,7 +10,12 @@ namespace paper {
     /**
      * @internal
      */
-    export const _requireComponents: { [key: string]: { new(): BaseComponent }[] } = {};
+    export const _requireComponents: { new(): BaseComponent }[] = [];
+    /**
+     * @internal
+     */
+    export const _requireComponentss: { new(): BaseComponent }[][] = [];
+
     const _tagA: any[] = [];
     const _tagB: any[] = [];
     const _tagC: any[] = [];
@@ -95,8 +100,16 @@ namespace paper {
      */
     export function requireComponent<R extends BaseComponent>(requireTarget: { new(): R }) {
         return function (target: any) {
-            const key = egret.getQualifiedClassName(target);
-            const components = key in _requireComponents ? _requireComponents[key] : (_requireComponents[key] = []);
+            // `egret.getQualifiedClassName()` cannot work here.
+
+            let index = _requireComponents.indexOf(target);
+            if (index < 0) {
+                index = _requireComponents.length;
+                _requireComponents.push(target);
+                _requireComponentss.push([]);
+            }
+
+            const components = _requireComponentss[index];
             components.push(requireTarget);
         };
     }

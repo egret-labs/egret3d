@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * 
      */
-    export class MeshRendererSystem extends paper.BaseSystem<MeshFilter | MeshRenderer> {
+    export class MeshRendererSystem extends paper.BaseSystem {
         protected readonly _interests = [
             {
                 componentClass: MeshFilter,
@@ -20,11 +20,11 @@ namespace egret3d {
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
-            if (!this._enabled || !this._hasGameObject(gameObject)) {
+            if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
                 return;
             }
 
-            const filter = this._getComponent(gameObject, 0) as MeshFilter;
+            const filter = this._groups[0].getComponent(gameObject, 0) as MeshFilter;
             const renderer = gameObject.renderer as MeshRenderer;
             if (!filter.mesh || renderer.materials.length === 0) {
                 return;
@@ -54,8 +54,9 @@ namespace egret3d {
         }
 
         public onEnable() {
-            for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
-                this._updateDrawCalls(this._components[i].gameObject);
+            const components = this._groups[0].components as ReadonlyArray<MeshFilter | MeshRenderer>;
+            for (let i = 0, l = components.length; i < l; i += 2) {
+                this._updateDrawCalls(components[i].gameObject);
             }
         }
 
@@ -64,16 +65,13 @@ namespace egret3d {
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            if (!this._enabled) {
-                return;
-            }
-
-            this._drawCalls.removeDrawCalls(gameObject.renderer);
+            this._drawCalls.removeDrawCalls(gameObject.renderer as MeshRenderer);
         }
 
         public onDisable() {
-            for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
-                const renderer = this._components[i + 1] as MeshRenderer;
+            const components = this._groups[0].components as ReadonlyArray<MeshFilter | MeshRenderer>;
+            for (let i = 0, l = components.length; i < l; i += 2) {
+                const renderer = components[i + 1] as MeshRenderer;
                 this._drawCalls.removeDrawCalls(renderer);
             }
         }

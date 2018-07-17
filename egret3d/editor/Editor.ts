@@ -21,9 +21,8 @@ namespace paper.editor {
         private static runEgret() {
             egret3d.runEgret({ antialias: true, isEditor: true, isPlaying: false });
 
+            Application.systemManager.registerBefore(editor.EditorCameraSystem, egret3d.CameraSystem);
             Application.systemManager.disableSystem(egret3d.CameraSystem);
-            Application.systemManager.registerBefore(editor.EditorCameraSystem, DestroySystem);
-            Application.systemManager.registerBefore(editor.GizmosSystem, DestroySystem);
         }
     }
 

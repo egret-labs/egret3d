@@ -490,9 +490,9 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public setRotation(v: Quaternion): void;
+        public setRotation(v: IVector4): void;
         public setRotation(x: number, y: number, z: number, w: number): void;
-        public setRotation(q1: Quaternion | number, q2?: number, q3?: number, q4?: number): void {
+        public setRotation(q1: IVector4 | number, q2?: number, q3?: number, q4?: number): void {
             if (q1.hasOwnProperty("x")) {
                 Quaternion.copy(<Quaternion>q1, helpQuat4);
             } else {

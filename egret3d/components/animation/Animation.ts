@@ -144,7 +144,7 @@ namespace egret3d {
         }
 
         public fadeOut(fadeTime: number) {
-            const globalTime = paper.Time.time;
+            const globalTime = paper.Time.time; //
             const localFadeTime = globalTime - this._fadeTimeStart;
 
             if (this._fadeState > 0) {
@@ -438,7 +438,7 @@ namespace egret3d {
          * 
          */
         public initialize(animationComponent: Animation, animationAsset: GLTFAsset, animationClip: GLTFAnimationClip) {
-            const globalTime = paper.Time.time;
+            const globalTime = paper.Time.time; //
             const assetConfig = animationAsset.config;
             //
             this.animationAsset = animationAsset;
@@ -918,15 +918,13 @@ namespace egret3d {
         }
     }
 
-    export class AnimationSystem extends paper.BaseSystem<Animation> {
+    export class AnimationSystem extends paper.BaseSystem {
         protected readonly _interests = [
-            {
-                componentClass: Animation
-            }
+            { componentClass: Animation }
         ];
 
-        public onAddGameObject(gameObject: paper.GameObject) {
-            const component = this._getComponent(gameObject, 0);
+        public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
+            const component = group.getComponent(gameObject, 0) as Animation;
 
             if (component.autoPlay) {
                 component.play();
@@ -934,8 +932,9 @@ namespace egret3d {
         }
 
         public onUpdate() { // TODO 应将组件功能尽量移到系统
-            const globalTime = paper.Time.time;
-            for (const component of this._components) {
+            const globalTime = this._clock.time;
+            const components = this._groups[0].components as ReadonlyArray<Animation>;
+            for (const component of components) {
                 component.update(globalTime);
             }
         }

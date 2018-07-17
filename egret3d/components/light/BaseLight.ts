@@ -174,7 +174,9 @@ namespace egret3d {
             Matrix.multiply(matrix, helpMatrixA, matrix);
             Matrix.multiply(matrix, helpMatrixB, matrix);
         }
-
+        /**
+         * @internal
+         */
         public update(camera: Camera, faceIndex: number) {
             camera.opvalue = 1.0;
             camera.backgroundColor.set(1.0, 1.0, 1.0, 1.0);

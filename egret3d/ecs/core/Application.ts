@@ -3,6 +3,10 @@ type uint = number;
 
 namespace paper {
     /**
+     * 
+     */
+    export let Time: Clock;
+    /**
      * 组件实体系统的主入口
      */
     export class Application {
@@ -23,22 +27,29 @@ namespace paper {
         private static _bindUpdate: FrameRequestCallback = null as any;
 
         private static _update() {
-            Time.update();
-
             if (this._isRunning) {
                 requestAnimationFrame(this._bindUpdate);
             }
 
+            Time.update();
             this.systemManager.update();
         }
 
         public static init({ isEditor = false, isPlaying = true } = {}) {
             const systemClasses = [
+                //
+                BeginSystem,
+                EnableSystem,
                 StartSystem,
-                // egret3d.ammo.PhysicsSystem, // TODO 分离
+                //
+                egret3d.oimo.PhysicsSystem, // TODO 分离
+                //
                 UpdateSystem,
+                //
                 egret3d.AnimationSystem,
-                LaterUpdateSystem,
+                //
+                LateUpdateSystem,
+                //
                 egret3d.TrailRendererSystem,
                 egret3d.MeshRendererSystem,
                 egret3d.SkinnedMeshRendererSystem,
@@ -46,9 +57,9 @@ namespace paper {
                 egret3d.Egret2DRendererSystem,
                 egret3d.LightSystem,
                 egret3d.CameraSystem,
-                egret3d.WebGLRenderSystem,
+                //
+                DisableSystem,
                 EndSystem,
-                DestroySystem,
             ];
 
             let level = 0;
@@ -56,7 +67,9 @@ namespace paper {
                 this.systemManager.register(systemClass, level++);
             }
 
-            Time.initialize();
+            //
+            Time = this.sceneManager.globalGameObject.getComponent(Clock) || this.sceneManager.globalGameObject.addComponent(Clock);
+
             this._isEditor = isEditor;
             this._isPlaying = isPlaying;
             this.resume();
@@ -103,7 +116,7 @@ namespace paper {
          * @deprecated
          */
         public static callLater(callback: () => void): void {
-            (this.systemManager.getSystem(LaterUpdateSystem) as LaterUpdateSystem).callLater(callback);
+            (this.systemManager.getSystem(LateUpdateSystem) as LateUpdateSystem).callLater(callback);
         }
 
         private constructor() {

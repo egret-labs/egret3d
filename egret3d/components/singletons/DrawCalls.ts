@@ -109,17 +109,6 @@ namespace egret3d {
             this.renderers.splice(index, 1);
         }
         /**
-         * 获取指定渲染器的 draw call 列表。
-         * @param renderer 
-         */
-        public getDrawCalls(renderer: paper.BaseRenderer): DrawCall[] | null {
-            if (this.renderers.indexOf(renderer) < 0) {
-                return null;
-            }
-
-            this.drawCalls.filter(drawCall => drawCall.renderer === renderer);
-        }
-        /**
          * 指定渲染器是否生成了 draw call 列表。
          * @param renderer 
          */
