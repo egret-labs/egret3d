@@ -24,6 +24,7 @@ namespace egret3d {
         DefaultMeshes.init();
         DefaultTextures.init();
         DefaultShaders.init();
+        DefaultTechnique.init();
         stage.init(canvas, requiredOptions);
         paper.Application.init(options);
         //
@@ -162,6 +163,24 @@ declare namespace gltf {
         ONE_MINUS_DST_ALPHA = 0x0305,
         DST_COLOR = 0x0306,
         ONE_MINUS_DST_COLOR = 0x0307,
+    }
+
+    export const enum SemanticType {
+        LOCAL = "LOCAL",
+        MODEL = "MODEL",
+        VIEW = "VIEW",
+        PROJECTION = "PROJECTION",
+        MODELVIEW = "MODELVIEW",
+        MODELVIEWPROJECTION = "MODELVIEWPROJECTION",
+        MODELINVERSE = "MODELINVERSE",
+        VIEWINVERSE = "VIEWINVERSE",
+        PROJECTIONINVERSE = "PROJECTIONINVERSE",
+        MODELVIEWINVERSE = "MODELVIEWINVERSE",
+        MODELVIEWPROJECTIONINVERSE = "MODELVIEWPROJECTIONINVERSE",
+        MODELINVERSETRANSPOSE = "MODELINVERSETRANSPOSE",
+        MODELVIEWINVERSETRANSPOSE = "MODELVIEWINVERSETRANSPOSE",
+        VIEWPORT = "VIEWPORT",
+        JOINTMATRIX = "JOINTMATRIX",
     }
 
     export const enum AccessorType {
@@ -879,7 +898,6 @@ declare namespace gltf {
         extras?: any;
         // [k: string]: any;
     }
-
     /**
     * A vertex or fragment shader. Exactly one of `uri` or `bufferView` must be provided for the GLSL source.
     */
@@ -887,7 +905,7 @@ declare namespace gltf {
         /**
          * The uri of the GLSL source.
          */
-        uri: string;
+        uri?: string;
         /**
          * The shader stage.
          */
@@ -895,10 +913,10 @@ declare namespace gltf {
         /**
          * The index of the bufferView that contains the GLSL shader source. Use this instead of the shader's uri property.
          */
-        bufferView: GLTFIndex;
+        bufferView?: GLTFIndex;
         name: any;
-        extensions: any;
-        extras: any;
+        extensions?: any;
+        extras?: any;
         [k: string]: any;
     }
     /**
@@ -909,8 +927,8 @@ declare namespace gltf {
          * Identifies a mesh attribute semantic.
          */
         semantic: string;
-        extensions: any;
-        extras: any;
+        extensions?: any;
+        extras?: any;
         [k: string]: any;
     }
     export type UniformValue = any;
@@ -921,7 +939,7 @@ declare namespace gltf {
         /**
          * When defined, the uniform is an array of count elements of the specified type.  Otherwise, the uniform is not an array.
          */
-        count: number;
+        count?: number;
         /**
          * The index of the node whose transform is used as the uniform's value.
          */
@@ -933,14 +951,14 @@ declare namespace gltf {
         /**
          * Identifies a uniform with a well-known meaning.
          */
-        semantic: string;
+        semantic?: string;
         /**
          * The value of the uniform.
          */
         value: UniformValue;
-        name: any;
-        extensions: any;
-        extras: any;
+        name?: any;
+        extensions?: any;
+        extras?: any;
         [k: string]: any;
     }
     /**
@@ -970,8 +988,8 @@ declare namespace gltf {
             [k: string]: Uniform;
         };
         name: any;
-        extensions: any;
-        extras: any;
+        extensions?: any;
+        extras?: any;
         [k: string]: any;
     }
     /**
@@ -989,10 +1007,10 @@ declare namespace gltf {
         /**
          * The names of required WebGL 1.0 extensions.
          */
-        glExtensions: string[];
-        name: any;
-        extensions: any;
-        extras: any;
+        glExtensions?: string[];
+        name?: any;
+        extensions?: any;
+        extras?: any;
         [k: string]: any;
     }
     export interface KhrTechniqueWebglGlTfExtension {
@@ -1024,13 +1042,13 @@ declare namespace gltf {
         values?: {
             [k: string]: UniformValue;
         };
-        extensions?: {
-            KHR_blend: {
-                blendEquation: number[],
-                blendFactors: number[],
-            }
-        }
-        extras?: any;
         [k: string]: any;
+    }
+    /**
+    * The technique to use for a material and any additional uniform values.
+    */
+    export interface KhrBlendMaterialExtension {
+        blendEquation: number[];
+        blendFactors: number[];
     }
 }

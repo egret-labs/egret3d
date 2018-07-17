@@ -23,15 +23,37 @@ namespace egret3d {
         public static PARTICLE_BLEND: Shader;
         public static PARTICLE_BLEND_PREMYLTIPLY: Shader;
 
+        public static readonly defaultShaders: { [key: string]: string } = {};
+
         private static _inited: boolean = false;
 
-        public static init() {
+        public static registerShader(name: string, src: string) {
+            this.defaultShaders[name] = src;
+        }
+
+        public static init(){
+            if(this._inited){
+                return;
+            }
+
+            this._inited = true;            
+
+            this.registerShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+            this.registerShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+
+            this.registerShader("def_lambert_vs", ShaderLib.lambert_vert);
+            this.registerShader("def_lambert_fs", ShaderLib.lambert_frag);
+        }
+
+        public static init2() {
             if (this._inited) {
                 return;
             }
 
             this._inited = true;
 
+
+            //
             const def_code_vs = Shader.registerVertShader("def_code", ShaderLib.code_vert);
             const def_code_fs = Shader.registerFragShader("def_code", ShaderLib.code_frag);
             const def_code2_fs = Shader.registerFragShader("def_code2", ShaderLib.code2_frag);

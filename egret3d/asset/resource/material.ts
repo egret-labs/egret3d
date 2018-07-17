@@ -63,6 +63,11 @@ namespace egret3d {
         private _renderQueue: RenderQueue = -1;
 
         /**
+         * @internal
+         */
+        public _gltfMaterial: GLTFMaterial = null as any;
+
+        /**
          * 释放资源。
          */
         dispose() {
@@ -144,8 +149,10 @@ namespace egret3d {
         setShader(shader: Shader) {
             this.shader = shader;
             this.$uniforms = {};
-            this._setDefaultUniforms(this.shader);
+            this._setDefaultUniforms(this.shader);           
         }
+
+        
 
         /**
          * 获取当前着色器。

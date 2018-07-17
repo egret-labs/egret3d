@@ -30,9 +30,33 @@ namespace egret3d {
          * 所有的 draw call 列表。
          */
         public readonly drawCalls: DrawCall[] = [];
-        // public readonly finalDrawCalls: DrawCall[] = [];//TODO,裁切开启后，放到这里，排序会少算一些
-
-        private _sort(a: DrawCall, b: DrawCall) {
+        /**
+         * 所有非透明的, 按照从近到远排序
+         */
+        public readonly opaqueCalls: DrawCall[] = [];
+        /**
+         * 所有透明的,按照从远到近排序
+         */
+        public readonly transparentCalls: DrawCall[] = [];
+        /**
+         * 所有非透明的, 按照从近到远排序
+         * @param a 
+         * @param b 
+         */
+        private _sortOpaque(a: DrawCall, b: DrawCall) {
+            if (a.material.renderQueue === b.material.renderQueue) {
+                return a.zdist - b.zdist;
+            }
+            else {
+                return a.material.renderQueue - b.material.renderQueue;
+            }
+        }
+        /**
+         * 所有透明的，按照从远到近排序
+         * @param a 
+         * @param b 
+         */
+        private _sortTransparent(a: DrawCall, b: DrawCall) {
             if (a.material.renderQueue === b.material.renderQueue) {
                 return b.zdist - a.zdist;
             }
@@ -41,28 +65,29 @@ namespace egret3d {
             }
         }
         public sortAfterFrustumCulling(camera: Camera) {
-            // this.finalDrawCalls.length = 0;
+            //每次根据视锥裁切填充TODO，放到StartSystem
+            this.opaqueCalls.length = 0;
+            this.transparentCalls.length = 0;
             const cameraPos = camera.gameObject.transform.getPosition();
             //
             for (const drawCall of this.drawCalls) {
                 drawCall.disable = (drawCall.frustumTest && !camera.testFrustumCulling(drawCall.renderer.gameObject.transform));
+                //裁切没通过
                 if (!drawCall.disable) {
+                    const objPos = drawCall.renderer.gameObject.transform.getPosition();
+                    drawCall.zdist = objPos.getDistance(cameraPos);
                     if (drawCall.material.renderQueue >= RenderQueue.Transparent) {
                         //透明物体需要排序
-                        const objPos = drawCall.renderer.gameObject.transform.getPosition();
-                        drawCall.zdist = objPos.getDistance(cameraPos);
+                        this.transparentCalls.push(drawCall);
                     }
-                    // this.finalDrawCalls.push(drawCall);
+                    else {
+                        this.opaqueCalls.push(drawCall);
+                    }
                 }
             }
-            this.drawCalls.sort(this._sort);
-            // this.finalDrawCalls.sort(this._sort);
-        }
-        /**
-         * 
-         */
-        public sort() {
-            this.drawCalls.sort(this._sort);
+            //
+            this.opaqueCalls.sort(this._sortOpaque);
+            this.transparentCalls.sort(this._sortTransparent);
         }
         /**
          * 移除指定渲染器的 draw call 列表。

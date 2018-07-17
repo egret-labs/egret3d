@@ -102,6 +102,87 @@ namespace egret3d {
         stringVariable: string;
     }
     /**
+     * @private
+     */
+    export interface GLTFMaterial extends gltf.Material {
+        extensions: {
+            KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
+            KHR_blend?: gltf.KhrBlendMaterialExtension;
+        }
+    }
+    export class GLTFWebglGlTechnique extends paper.BaseComponent implements gltf.KhrTechniqueWebglGlTfExtension {
+        /**
+        * An array of shaders.
+        */
+        public shaders: gltf.Shader[];
+        /**
+         * An array of techniques.
+         */
+        public techniques: gltf.Technique[];
+        /**
+         * An array of programs.
+         */
+        public programs: gltf.Program[];
+
+        //
+        public parseMaterial(mat: Material) {
+            if (!mat || !mat._gltfMaterial) {
+                console.error("");
+            }
+
+            //材质决定technique，technique决定program, program决定shader
+
+
+        }
+
+        public registerShader(shader: gltf.Shader) {
+            let index = this.shaders.indexOf(shader);
+            if (index >= 0) {
+                return index;
+            }
+
+            //
+            index = this.shaders.length;
+            this.shaders.push(shader);
+
+            return index;
+        }
+
+        public registerTechnique(technique: gltf.Technique) {
+            let index = this.techniques.indexOf(technique);
+            if (index >= 0) {
+                return index;
+            }
+
+            index = this.techniques.length;
+            this.techniques.push(technique);
+
+            return index;
+        }
+
+        public registerProgram(program: gltf.Program) {
+            let index = this.programs.indexOf(program);
+            if (index >= 0) {
+                return index;
+            }
+
+            index = this.programs.length;
+            this.programs.push(program);
+
+            return index;
+        }
+
+        public findShader(name: string) {
+            for (var shader of this.shaders) {
+                if (shader.name === name) {
+                    return shader;
+                }
+            }
+
+            return null;
+        }
+    }
+    /**
      * glTF 资源。
      */
     export class GLTFAsset extends paper.Asset {
@@ -417,7 +498,7 @@ namespace egret3d {
         public caclByteLength() {
             return 0; // TODO
         }
-        
+
         public dispose() {
             this.buffers.length = 0;
         }

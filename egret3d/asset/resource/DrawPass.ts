@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * uniform类型枚举
+     * uniform类型枚举 TODO 使用gltf.UniformType代替
      */
     export enum UniformTypeEnum {
         Texture,

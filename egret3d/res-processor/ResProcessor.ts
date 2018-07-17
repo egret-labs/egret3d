@@ -201,44 +201,112 @@ namespace RES.processor {
             let url = getUrl(resource);
             let material = new egret3d.Material(url);
 
+            //UniformValue已经不放在Material中，改为Technique
 
-            let shaderName = json.shader
-            const shader = paper.Asset.find<egret3d.Shader>(shaderName);
-            material.setShader(shader);
-            let mapUniform = json.mapUniform;
-            for (let i in mapUniform) {
-                const jsonChild = mapUniform[i];
-                switch (jsonChild.type) {
-                    case egret3d.UniformTypeEnum.Texture:
-                        const value = jsonChild.value;
-                        const url = combinePath(dirname(resource.url) + "/", value)
-                        let texture = paper.Asset.find<egret3d.Texture>(url);
-                        if (!texture) {
-                            const r = RES.host.resourceConfig["getResource"](url);
-                            if (r) {
-                                texture = await RES.getResAsync(r.name)
+            //现根据shaderName找出对应的Technique，然后再填充
+            const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(json.shader);
+            if (techniqueTemplate) {
+                const gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                const gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+                const gltfProgram = egret3d.DefaultTechnique.cloneGLTFProgram(techniqueTemplate.program);
+
+                const mapUniform = json.mapUniform;
+                for (let i in mapUniform) {
+                    const jsonChild = mapUniform[i];
+                    switch (jsonChild.type) {
+                        case egret3d.UniformTypeEnum.Texture:
+                            const value = jsonChild.value;
+                            const url = combinePath(dirname(resource.url) + "/", value)
+                            let texture = paper.Asset.find<egret3d.Texture>(url);
+                            if (!texture) {
+                                const r = RES.host.resourceConfig["getResource"](url);
+                                if (r) {
+                                    texture = await RES.getResAsync(r.name)
+                                }
+                                else {
+                                    texture = egret3d.DefaultTextures.GRID;
+                                }
+                            }
+                            if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.SAMPLER_2D) {
+                                gltfTechnique.uniforms[i].value = texture;
                             }
                             else {
-                                texture = egret3d.DefaultTextures.GRID;
+                                console.warn(`不存在的 Uniform 参数：${material.url},${i}`);
                             }
-                        }
-                        material.setTexture(i, texture);
-                        break;
-                    case egret3d.UniformTypeEnum.Float:
-                        material.setFloat(i, jsonChild.value);
-                        break;
-                    case egret3d.UniformTypeEnum.Float4:
-                        let tempValue = jsonChild.value as [number, number, number, number];
-                        if (Array.isArray(tempValue)) {
-                            material.setVector4v(i, tempValue)
-                        } else {
-                            console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级");
-                        }
-                        break;
-                    default:
-                        console.warn(`不支持的 Uniform 参数：${material.url},${i}`);
+                            break;
+                        case egret3d.UniformTypeEnum.Float:
+                            if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.FLOAT) {
+                                gltfTechnique.uniforms[i].value = jsonChild.value;
+                            }
+                            else {
+                                console.warn(`不存在的 Uniform 参数：${material.url},${i}`);
+                            }
+                            break;
+                        case egret3d.UniformTypeEnum.Float4:
+                            if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.FLOAT_VEC4) {
+                                gltfTechnique.uniforms[i].value = jsonChild.value;
+                            }
+                            else {
+                                console.warn(`不存在的 Uniform 参数：${material.url},${i}`);
+                            }
+                            break;
+                        default:
+                            console.warn(`不支持的 Uniform 参数：${material.url},${i}`);
+                    }
+                }
+
+                //找到对应的Technique TODO
+                const webglTechnique = paper.Application.sceneManager.globalGameObject.getComponent(egret3d.GLTFWebglGlTechnique);
+                if (webglTechnique) {
+                    gltfProgram.vertexShader = webglTechnique.registerShader(techniqueTemplate.vertShader);
+                    gltfProgram.fragmentShader = webglTechnique.registerShader(techniqueTemplate.fragShader);
+
+                    gltfTechnique.program = webglTechnique.registerProgram(gltfProgram);
+
+                    gltfMaterial.extensions.KHR_techniques_webgl.technique = webglTechnique.registerTechnique(gltfTechnique);
+                }
+                else{
+                    console.error("缺少GLTFWebglGlTechnique组件");
                 }
             }
+
+            // let shaderName = json.shader;
+            // const shader = paper.Asset.find<egret3d.Shader>(shaderName);
+            // material.setShader(shader);
+            // let mapUniform = json.mapUniform;
+            // for (let i in mapUniform) {
+            //     const jsonChild = mapUniform[i];
+            //     switch (jsonChild.type) {
+            //         case egret3d.UniformTypeEnum.Texture:
+            //             const value = jsonChild.value;
+            //             const url = combinePath(dirname(resource.url) + "/", value)
+            //             let texture = paper.Asset.find<egret3d.Texture>(url);
+            //             if (!texture) {
+            //                 const r = RES.host.resourceConfig["getResource"](url);
+            //                 if (r) {
+            //                     texture = await RES.getResAsync(r.name)
+            //                 }
+            //                 else {
+            //                     texture = egret3d.DefaultTextures.GRID;
+            //                 }
+            //             }
+            //             material.setTexture(i, texture);
+            //             break;
+            //         case egret3d.UniformTypeEnum.Float:
+            //             material.setFloat(i, jsonChild.value);
+            //             break;
+            //         case egret3d.UniformTypeEnum.Float4:
+            //             let tempValue = jsonChild.value as [number, number, number, number];
+            //             if (Array.isArray(tempValue)) {
+            //                 material.setVector4v(i, tempValue)
+            //             } else {
+            //                 console.error("不支持的旧格式，请访问 http://developer.egret.com/cn/docs/3d/file-format/ 进行升级");
+            //             }
+            //             break;
+            //         default:
+            //             console.warn(`不支持的 Uniform 参数：${material.url},${i}`);
+            //     }
+            // }
             paper.Asset.register(material, true);
             return material;
         },
