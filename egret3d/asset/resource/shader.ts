@@ -54,6 +54,8 @@ namespace egret3d {
          */
         public readonly defaultValue: { [key: string]: { type: string, value?: any, min?: number, max?: number } } = {};
 
+        public vertShader: ShaderInfo = null;//TODO
+        public fragShader: ShaderInfo = null;//TODO
         /**
          * TODO 应补全接口和枚举。
          * 

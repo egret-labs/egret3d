@@ -57,6 +57,7 @@ namespace paper {
                 egret3d.Egret2DRendererSystem,
                 egret3d.LightSystem,
                 egret3d.CameraSystem,
+                egret3d.WebGLRenderSystem,
                 //
                 DisableSystem,
                 EndSystem,

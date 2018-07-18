@@ -31,12 +31,21 @@ namespace egret3d {
             this.defaultShaders[name] = src;
         }
 
-        public static init(){
-            if(this._inited){
+        public static findShader(name: string) {
+            if(this.defaultShaders[name]){
+                return this.defaultShaders[name];
+            }
+
+            console.error("没有找到对应的shader:" + name);
+            return null;
+        }
+
+        public static init() {
+            if (this._inited) {
                 return;
             }
 
-            this._inited = true;            
+            this._inited = true;
 
             this.registerShader("def_diffuse_vs", ShaderLib.diffuse_vert);
             this.registerShader("def_diffuse_fs", ShaderLib.diffuse_frag);

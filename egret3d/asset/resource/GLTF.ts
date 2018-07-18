@@ -110,7 +110,17 @@ namespace egret3d {
             KHR_blend?: gltf.KhrBlendMaterialExtension;
         }
     }
-    export class GLTFWebglGlTechnique extends paper.BaseComponent implements gltf.KhrTechniqueWebglGlTfExtension {
+    export interface GLTFUniform extends gltf.Uniform {
+        extensions: {
+            paper: {
+                dirty: boolean;
+            }
+        }
+    }
+    export interface GLTFTechnique extends gltf.Technique {
+
+    }
+    export class GLTFWebglGlTechnique extends paper.BaseComponent {
         /**
         * An array of shaders.
         */
@@ -123,17 +133,6 @@ namespace egret3d {
          * An array of programs.
          */
         public programs: gltf.Program[];
-
-        //
-        public parseMaterial(mat: Material) {
-            if (!mat || !mat._gltfMaterial) {
-                console.error("");
-            }
-
-            //材质决定technique，technique决定program, program决定shader
-
-
-        }
 
         public registerShader(shader: gltf.Shader) {
             let index = this.shaders.indexOf(shader);
@@ -179,6 +178,15 @@ namespace egret3d {
                 }
             }
 
+            return null;
+        }
+
+        public findTechnique(index: number) {
+            if (index >= 0 && index < this.techniques.length - 1) {
+                return this.techniques[index];
+            }
+
+            console.error("获取Technique错误:" + index);
             return null;
         }
     }

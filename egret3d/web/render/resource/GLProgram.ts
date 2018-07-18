@@ -236,6 +236,10 @@ namespace egret3d {
             return this._programMap[name];
         }
 
+        public static getProgram(context: RenderContext, material: Material) {
+            
+        }
+
         private gl: WebGLRenderingContext;
 
         public program: WebGLProgram;
@@ -292,33 +296,6 @@ namespace egret3d {
             if (!forceUpdate && this._cacheMesh == mesh && this._cacheMeshVer == mesh._version && this._cacheMeshEbo == subMeshIndex) {
                 return;
             }
-
-            // MD mesh
-            // this._cacheMesh = mesh;
-            // this._cacheMeshVer = mesh._version;
-            // this._cacheMeshEbo = subMeshIndex;
-
-            // let gl = this.gl;
-            // gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
-            // if (bindEbo >= 0) {
-            //     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibos[bindEbo]);
-            // }
-
-            // let meshVertexFormat = mesh.vertexFormatData;
-            // let info: { size: number, normalized: boolean, stride: number, offset: number }, attribute: WebGLAttribute;
-            // for (let key in this._attributes) {
-            //     attribute = this._attributes[key];
-            //     info = meshVertexFormat[key];
-            //     if (info) {
-            //         if (attribute.count !== info.size) {
-            //             // console.warn("Renderer: attribute " + name + " size not match! attribute-count:" + attribute.count + ", info-size:" + info.size);
-            //         }
-            //         gl.vertexAttribPointer(attribute.location, info.size, attribute.format, info.normalized, info.stride, info.offset);
-            //         gl.enableVertexAttribArray(attribute.location);
-            //     } else {
-            //         gl.disableVertexAttribArray(attribute.location);
-            //     }
-            // }
 
             if (0 <= subMeshIndex && subMeshIndex < mesh.glTFMesh.primitives.length) {
                 this._cacheMesh = mesh;

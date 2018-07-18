@@ -66,6 +66,10 @@ namespace egret3d {
          * @internal
          */
         public _gltfMaterial: GLTFMaterial = null as any;
+        /**
+         * @internal
+         */
+        public _gltfTechnique: GLTFTechnique = null as any;
 
         /**
          * 释放资源。
@@ -149,10 +153,10 @@ namespace egret3d {
         setShader(shader: Shader) {
             this.shader = shader;
             this.$uniforms = {};
-            this._setDefaultUniforms(this.shader);           
+            this._setDefaultUniforms(this.shader);
         }
 
-        
+
 
         /**
          * 获取当前着色器。

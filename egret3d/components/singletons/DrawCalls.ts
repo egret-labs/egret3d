@@ -15,8 +15,6 @@ namespace egret3d {
         zdist: number,
 
         boneData?: Float32Array,
-
-        disable: boolean;
     };
     /**
      * 
@@ -31,11 +29,11 @@ namespace egret3d {
          */
         public readonly drawCalls: DrawCall[] = [];
         /**
-         * 所有非透明的, 按照从近到远排序
+         * 非透明列表
          */
         public readonly opaqueCalls: DrawCall[] = [];
         /**
-         * 所有透明的,按照从远到近排序
+         * 透明列表
          */
         public readonly transparentCalls: DrawCall[] = [];
         /**
@@ -71,13 +69,13 @@ namespace egret3d {
             const cameraPos = camera.gameObject.transform.getPosition();
             //
             for (const drawCall of this.drawCalls) {
-                drawCall.disable = (drawCall.frustumTest && !camera.testFrustumCulling(drawCall.renderer.gameObject.transform));
+                const drawTarget = drawCall.renderer.gameObject;
+                const visible = (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.transform)) && (camera.cullingMask & drawTarget.layer));
                 //裁切没通过
-                if (!drawCall.disable) {
-                    const objPos = drawCall.renderer.gameObject.transform.getPosition();
+                if (visible) {
+                    const objPos = drawTarget.transform.getPosition();
                     drawCall.zdist = objPos.getDistance(cameraPos);
                     if (drawCall.material.renderQueue >= RenderQueue.Transparent) {
-                        //透明物体需要排序
                         this.transparentCalls.push(drawCall);
                     }
                     else {

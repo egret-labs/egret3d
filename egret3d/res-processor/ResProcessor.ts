@@ -208,7 +208,10 @@ namespace RES.processor {
             if (techniqueTemplate) {
                 const gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
                 const gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
-                const gltfProgram = egret3d.DefaultTechnique.cloneGLTFProgram(techniqueTemplate.program);
+
+                material.setShader(techniqueTemplate.shader);
+                material._gltfMaterial = gltfMaterial;
+                material._gltfTechnique = gltfTechnique;
 
                 const mapUniform = json.mapUniform;
                 for (let i in mapUniform) {
@@ -256,18 +259,18 @@ namespace RES.processor {
                 }
 
                 //找到对应的Technique TODO
-                const webglTechnique = paper.Application.sceneManager.globalGameObject.getComponent(egret3d.GLTFWebglGlTechnique);
-                if (webglTechnique) {
-                    gltfProgram.vertexShader = webglTechnique.registerShader(techniqueTemplate.vertShader);
-                    gltfProgram.fragmentShader = webglTechnique.registerShader(techniqueTemplate.fragShader);
+                // const webglTechnique = paper.Application.sceneManager.globalGameObject.getComponent(egret3d.GLTFWebglGlTechnique);
+                // if (webglTechnique) {
+                //     gltfProgram.vertexShader = webglTechnique.registerShader(techniqueTemplate.vertShader);
+                //     gltfProgram.fragmentShader = webglTechnique.registerShader(techniqueTemplate.fragShader);
 
-                    gltfTechnique.program = webglTechnique.registerProgram(gltfProgram);
+                //     gltfTechnique.program = webglTechnique.registerProgram(gltfProgram);
 
-                    gltfMaterial.extensions.KHR_techniques_webgl.technique = webglTechnique.registerTechnique(gltfTechnique);
-                }
-                else{
-                    console.error("缺少GLTFWebglGlTechnique组件");
-                }
+                //     gltfMaterial.extensions.KHR_techniques_webgl.technique = webglTechnique.registerTechnique(gltfTechnique);
+                // }
+                // else{
+                //     console.error("缺少GLTFWebglGlTechnique组件");
+                // }
             }
 
             // let shaderName = json.shader;

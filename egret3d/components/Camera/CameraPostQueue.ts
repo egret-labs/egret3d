@@ -12,7 +12,7 @@ namespace egret3d {
         /**
          * 
          */
-        render(camera: Camera, renderSystem: CameraSystem): void;
+        render(camera: Camera, renderSystem: WebGLRenderSystem): void;
     }
 
     /**
@@ -27,7 +27,7 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        public render(camera: Camera, renderSystem: CameraSystem) {
+        public render(camera: Camera, renderSystem: WebGLRenderSystem) {
             const webgl = WebGLKit.webgl;
             camera._targetAndViewport(this.renderTarget, true); // 最后一个参数true 表示不用camera的clear 配置
             WebGLKit.zWrite(true);
@@ -38,7 +38,7 @@ namespace egret3d {
 
             camera.context.drawtype = "_depth";
             // camera._renderOnce(scene, context, "_depth");
-            renderSystem.$renderCamera(camera);
+            renderSystem._renderCamera(camera);
             GlRenderTarget.useNull(webgl);
         }
     }
@@ -86,13 +86,13 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        public render(camera: Camera, renderSystem: CameraSystem) {
+        public render(camera: Camera, renderSystem: WebGLRenderSystem) {
             const webgl = WebGLKit.webgl;
             camera._targetAndViewport(this.renderTarget, false);
             camera.context.drawtype = "";
 
             // camera._renderOnce(scene, context, "");
-            renderSystem.$renderCamera(camera);
+            renderSystem._renderCamera(camera);
             GlRenderTarget.useNull(webgl);
         }
     }
