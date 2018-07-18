@@ -71,7 +71,7 @@ namespace egret3d {
             }
 
             if (this._mesh) {
-                this._mesh.dispose();
+                // this._mesh.dispose(); TODO
             }
 
             this._mesh = mesh;

@@ -10,12 +10,17 @@ namespace egret3d {
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
 
         public onUpdate() {
+            const activeScene = paper.Application.sceneManager.activeScene;
             const camera = this._lightCamera;
             const drawCalls = this._drawCalls.drawCalls;
             const components = this._groups[0].components as ReadonlyArray<BaseLight>;
 
             for (const light of components) {
                 if (!light.castShadows) {
+                    continue;;
+                }
+
+                if (light.gameObject.scene !== activeScene) {
                     continue;;
                 }
 

@@ -97,8 +97,14 @@ namespace egret3d {
 
                 this._cameras.sort(); // TODO
 
+                const activeScene = paper.Application.sceneManager.activeScene;
+
                 for (const component of cameras) {
                     component.update(deltaTime);
+
+                    if (component.gameObject.scene !== activeScene) {
+                        continue;
+                    }
 
                     if (lights.length > 0) {
                         component.context.updateLights(lights); // TODO 性能优化
@@ -121,6 +127,9 @@ namespace egret3d {
                 WebGLKit.webgl.clearDepth(1.0);
                 WebGLKit.webgl.clear(WebGLKit.webgl.COLOR_BUFFER_BIT | WebGLKit.webgl.DEPTH_BUFFER_BIT);
             }
+
+            WebGLKit.webgl.bindBuffer(WebGLKit.webgl.ARRAY_BUFFER, null);
+            WebGLKit.webgl.bindBuffer(WebGLKit.webgl.ELEMENT_ARRAY_BUFFER, null);
 
             Performance.endCounter("render");
             Performance.updateFPS();
