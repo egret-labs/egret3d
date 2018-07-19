@@ -204,7 +204,7 @@ namespace egret3d {
     /**
      * extract uniforms
      */
-    function extractUniforms(gl: WebGLRenderingContext, program: WebGLProgram): { [key: string]: WebGLUniform } {
+    function extractUniforms(gl: WebGLRenderingContext, program: WebGLProgram, technique: gltf.Technique): { [key: string]: WebGLUniform } {
         var uniforms: { [key: string]: WebGLUniform } = {};
 
         var totalUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
@@ -214,6 +214,11 @@ namespace egret3d {
             var name = _uniformsKeyConvert[uniformData.name] ? _uniformsKeyConvert[uniformData.name] : uniformData.name;
             var uniform = new WebGLUniform(gl, program, uniformData);
             uniforms[name] = uniform;
+        }
+
+        for (const name in technique.uniforms) {
+            const uniform = technique.uniforms[name];
+            uniform.extensions.paper.enable = uniforms[name] ? true : false;
         }
 
         return uniforms;
@@ -231,13 +236,19 @@ namespace egret3d {
             let defines = buildDefines(context, material);
             let name = pass.vShaderInfo.name + "_" + pass.fShaderInfo.name + "_" + defines;
             if (!this._programMap[name]) {
-                this._programMap[name] = new GlProgram(WebGLKit.webgl, pass.vShaderInfo, pass.fShaderInfo, defines);
+                this._programMap[name] = new GlProgram(WebGLKit.webgl, null, pass.vShaderInfo, pass.fShaderInfo, defines);
             }
             return this._programMap[name];
         }
 
         public static getProgram(context: RenderContext, material: Material) {
-            
+            let defines = buildDefines(context, material);
+            const shader = material.getShader();
+            let name = shader.vertShader.name + "_" + shader.fragShader.name + "_" + defines;
+            if (!this._programMap[name]) {
+                this._programMap[name] = new GlProgram(WebGLKit.webgl, material._gltfTechnique, shader.vertShader, shader.fragShader, defines);
+            }
+            return this._programMap[name];
         }
 
         private gl: WebGLRenderingContext;
@@ -257,14 +268,14 @@ namespace egret3d {
         private _cacheMaterial: Material;
         private _cacheMaterialVer: number = -1;
 
-        private constructor(gl: WebGLRenderingContext, vShaderInfo: ShaderInfo, fShaderInfo: ShaderInfo, defines: string) {
+        private constructor(gl: WebGLRenderingContext, technique: gltf.Technique, vShaderInfo: ShaderInfo, fShaderInfo: ShaderInfo, defines: string) {
             this.gl = gl;
 
             let program = getWebGLProgram(gl, vShaderInfo, fShaderInfo, defines);
             this.program = program;
 
             this._attributes = extractAttributes(gl, program);
-            this._uniforms = extractUniforms(gl, program);
+            this._uniforms = extractUniforms(gl, program, technique);
 
             this._allocTexUnits();
         }

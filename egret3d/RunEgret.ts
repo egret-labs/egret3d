@@ -141,25 +141,58 @@ declare namespace gltf {
         VERTEX_SHADER = 35633,
     }
 
+    export const enum EnableState {
+        BLEND = 3042,
+        CULL_FACE = 2884,
+        DEPTH_TEST = 2929,
+        POLYGON_OFFSET_FILL = 32823,
+        SAMPLE_ALPHA_TO_COVERAGE = 32926,
+    }
+
     export const enum BlendEquation {
-        FUNC_ADD = 0x8006,
-        FUNC_SUBTRACT = 0x800A,
-        FUNC_REVERSE_SUBTRACT = 0x800B,
-        MIN = 0x8007,
-        MAX = 0x8008,
+        FUNC_ADD = 32774,
+        FUNC_SUBTRACT = 32778,
+        FUNC_REVERSE_SUBTRACT = 32779,
     }
 
     export const enum BlendFactor {
         ZERO = 0,
         ONE = 1,
-        SRC_COLOR = 0x0300,
-        ONE_MINUS_SRC_COLOR = 0x0301,
-        SRC_ALPHA = 0x0302,
-        ONE_MINUS_SRC_ALPHA = 0x0303,
-        DST_ALPHA = 0x0304,
-        ONE_MINUS_DST_ALPHA = 0x0305,
-        DST_COLOR = 0x0306,
-        ONE_MINUS_DST_COLOR = 0x0307,
+        SRC_COLOR = 768,
+        ONE_MINUS_SRC_COLOR = 769,
+        DST_COLOR = 774,
+        ONE_MINUS_DST_COLOR = 775,
+        SRC_ALPHA = 770,
+        ONE_MINUS_SRC_ALPHA = 771,
+        DST_ALPHA = 772,
+        ONE_MINUS_DST_ALPHA = 773,
+        CONSTANT_COLOR = 32769,
+        ONE_MINUS_CONSTANT_COLOR = 32770,
+        CONSTANT_ALPHA = 32771,
+        ONE_MINUS_CONSTANT_ALPHA = 32772,
+        SRC_ALPHA_SATURATE = 776,
+    }
+
+    export const enum CullFace {
+        FRONT = 1028,
+        BACK = 1029,
+        FRONT_AND_BACK = 1032,
+    }
+
+    export const enum FrontFace {
+        CW = 2304,
+        CCW = 2305,
+    }
+
+    export const enum DepthFunc {
+        NEVER = 512,
+        LESS = 513,
+        LEQUAL = 515,
+        EQUAL = 514,
+        GREATER = 516,
+        NOTEQUAL = 517,
+        GEQUAL = 518,
+        ALWAYS = 519,
     }
 
     export const enum SemanticType {
@@ -982,9 +1015,10 @@ declare namespace gltf {
             /**
              * A uniform input to a technique, and an optional semantic and value.
              */
-            [k: string]: Uniform;
+            [k: string]: egret3d.GLTFUniform;
         };
         name: any;
+        states: States;
         extensions?: any;
         extras?: any;
         [k: string]: any;
@@ -1047,5 +1081,72 @@ declare namespace gltf {
     export interface KhrBlendMaterialExtension {
         blendEquation: number[];
         blendFactors: number[];
+    }
+
+    /**
+ * Arguments for fixed-function rendering state functions other than `enable()`/`disable()`.
+ */
+    export interface Functions {
+        /**
+         * Floating-point values passed to `blendColor()`. [red, green, blue, alpha]
+         */
+        blendColor?: number[];
+        /**
+         * Integer values passed to `blendEquationSeparate()`.
+         */
+        blendEquationSeparate?: (32774 | 32778 | 32779)[];
+        /**
+         * Integer values passed to `blendFuncSeparate()`.
+         */
+        blendFuncSeparate?: (0 | 1 | 768 | 769 | 774 | 775 | 770 | 771 | 772 | 773 | 32769 | 32770 | 32771 | 32772 | 776)[];
+        /**
+         * Boolean values passed to `colorMask()`. [red, green, blue, alpha].
+         */
+        colorMask?: boolean[];
+        /**
+         * Integer value passed to `cullFace()`.
+         */
+        cullFace?: (1028 | 1029 | 1032)[];
+        /**
+         * Integer values passed to `depthFunc()`.
+         */
+        depthFunc?: (512 | 513 | 515 | 514 | 516 | 517 | 518 | 519)[];
+        /**
+         * Boolean value passed to `depthMask()`.
+         */
+        depthMask?: boolean[];
+        /**
+         * Floating-point values passed to `depthRange()`. [zNear, zFar]
+         */
+        depthRange?: number[];
+        /**
+         * Integer value passed to `frontFace()`.
+         */
+        frontFace?: (2304 | 2305)[];
+        /**
+         * Floating-point value passed to `lineWidth()`.
+         */
+        lineWidth?: number[];
+        /**
+         * Floating-point value passed to `polygonOffset()`.  [factor, units]
+         */
+        polygonOffset?: number[];
+        extensions?: any;
+        extras?: any;
+    }
+    /**
+     * Fixed-function rendering states.
+     */
+    export interface States {
+        /**
+         * WebGL states to enable.
+         */
+        enable?: (3042 | 2884 | 2929 | 32823 | 32926)[];
+        /**
+         * Arguments for fixed-function rendering state functions other than `enable()`/`disable()`.
+         */
+        functions?: Functions;
+        extensions?: any;
+        extras?: any;
     }
 }

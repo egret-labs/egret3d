@@ -114,6 +114,7 @@ namespace egret3d {
         extensions: {
             paper: {
                 dirty: boolean;
+                enable: boolean;
             }
         }
     }

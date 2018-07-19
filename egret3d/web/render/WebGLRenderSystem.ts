@@ -12,8 +12,35 @@ namespace egret3d {
             ],
         ];
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
-        private readonly _techiques: GLTFWebglGlTechnique = this._globalGameObject.getComponent(GLTFWebglGlTechnique) || this._globalGameObject.addComponent(GLTFWebglGlTechnique);
+        private readonly _webGL: WebGLRenderingContext = WebGLKit.webgl;
+        private readonly _stateEnable: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST];
 
+        // private readonly _techiques: GLTFWebglGlTechnique = this._globalGameObject.getComponent(GLTFWebglGlTechnique) || this._globalGameObject.addComponent(GLTFWebglGlTechnique);
+
+        private _updateState(state: gltf.States) {
+            //enable
+            for (const e of this._stateEnable) {
+                state.enable.indexOf(e) >= 0 ? this._webGL.enable(e) : this._webGL.disable(e);
+            }
+
+            //functions
+            for (const e in state.functions) {
+                //
+                (this._webGL[e] as Function).call(this._webGL, state.functions[e]);
+            }
+        }
+
+        private _updateUniforms(technique: gltf.Technique) {
+            const webgl = this._webGL;
+            for (const key in technique.uniforms) {
+                const uniform = technique.uniforms[key];
+                switch(uniform.type){
+                    case gltf.UniformType.BOOL:
+                        
+                    break;
+                }
+            }
+        }
 
         private _renderCall(context: RenderContext, drawCall: DrawCall) {
             const renderer = drawCall.renderer;
@@ -27,10 +54,10 @@ namespace egret3d {
             const material = drawCall.material;
             const technique = material._gltfTechnique;
 
-            // const program = GlProgram.get(dra
             //Program
-
+            const program = GlProgram.getProgram(context, material);
             //State
+            this._updateState(drawCall.material._gltfTechnique.states);
 
             //Uniform
 
