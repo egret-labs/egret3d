@@ -47,9 +47,9 @@ namespace egret3d {
         public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
 
         //
-        public readonly cameraPosition: Vector3 = new Vector3();
-        public readonly cameraForward: Vector3 = new Vector3();
-        public readonly cameraUp: Vector3 = new Vector3();
+        public readonly cameraPosition: Float32Array = new Float32Array(3);
+        public readonly cameraForward: Float32Array = new Float32Array(3);
+        public readonly cameraUp: Float32Array = new Float32Array(3);
 
 
         // transforms
@@ -88,17 +88,17 @@ namespace egret3d {
 
             const worldMatrix = matrix.rawData;
 
-            this.cameraPosition.x = worldMatrix[12];
-            this.cameraPosition.y = worldMatrix[13];
-            this.cameraPosition.z = worldMatrix[14];
+            this.cameraPosition[0] = worldMatrix[12];
+            this.cameraPosition[1] = worldMatrix[13];
+            this.cameraPosition[2] = worldMatrix[14];
 
-            this.cameraUp.x = worldMatrix[4];
-            this.cameraUp.y = worldMatrix[5];
-            this.cameraUp.z = worldMatrix[6];
+            this.cameraUp[0] = worldMatrix[4];
+            this.cameraUp[1] = worldMatrix[5];
+            this.cameraUp[2] = worldMatrix[6];
 
-            this.cameraForward.x = -worldMatrix[8];
-            this.cameraForward.y = -worldMatrix[9];
-            this.cameraForward.z = -worldMatrix[10];
+            this.cameraForward[1] = -worldMatrix[8];
+            this.cameraForward[2] = -worldMatrix[9];
+            this.cameraForward[3] = -worldMatrix[10];
 
             this.version++;
         }

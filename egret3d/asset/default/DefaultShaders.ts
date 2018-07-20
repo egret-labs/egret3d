@@ -32,7 +32,7 @@ namespace egret3d {
         }
 
         public static findShader(name: string) {
-            if(this.defaultShaders[name]){
+            if (this.defaultShaders[name]) {
                 return this.defaultShaders[name];
             }
 
@@ -52,6 +52,16 @@ namespace egret3d {
 
             this.registerShader("def_lambert_vs", ShaderLib.lambert_vert);
             this.registerShader("def_lambert_fs", ShaderLib.lambert_frag);
+
+            this.DIFFUSE = new Shader("diffuse.shader.json");
+            this.DIFFUSE.vertShader = { name: "def_diffuse_vs", src: ShaderLib.diffuse_vert };
+            this.DIFFUSE.fragShader = { name: "def_diffuse_fs", src: ShaderLib.diffuse_frag };
+            paper.Asset.register(this.DIFFUSE);
+
+            this.LAMBERT = new Shader("shader/lambert");
+            this.LAMBERT.vertShader = { name: "def_lambert_vs", src: ShaderLib.lambert_vert };
+            this.LAMBERT.fragShader = { name: "def_lambert_fs", src: ShaderLib.lambert_frag };
+            paper.Asset.register(this.LAMBERT);
         }
 
         public static init2() {

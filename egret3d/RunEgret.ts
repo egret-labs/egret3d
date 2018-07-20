@@ -195,7 +195,18 @@ declare namespace gltf {
         ALWAYS = 519,
     }
 
-    export const enum SemanticType {
+    export const enum AttributeSemanticType{
+        POSITION = "POSITION",
+        NORMAL = "NORMAL",
+        TEXCOORD_0 = "TEXCOORD_0",
+        TEXCOORD_1 = "TEXCOORD_",
+        COLOR_0 = "COLOR_0",
+        COLOR_1 = "COLOR_1",
+        JOINT = "JOINT",
+        WEIGHT = "WEIGHT",
+    }
+
+    export const enum UniformSemanticType {
         LOCAL = "LOCAL",
         MODEL = "MODEL",
         VIEW = "VIEW",
@@ -211,6 +222,28 @@ declare namespace gltf {
         MODELVIEWINVERSETRANSPOSE = "MODELVIEWINVERSETRANSPOSE",
         VIEWPORT = "VIEWPORT",
         JOINTMATRIX = "JOINTMATRIX",
+
+        _VIEWPROJECTION = "_VIEWPROJECTION",
+        _CAMERA_POS = "_CAMERA_POS",        
+        _CAMERA_UP = "CAMERA_UP",
+        _CAMERA_FORWARD = "_CAMERA_FORWARD",
+        _DIRECTLIGHTS = "_DIRECTLIGHTS",
+        _POINTLIGHTS = "_POINTLIGHTS",
+        _SPOTLIGHTS = "_SPOTLIGHTS",
+        _LIGHTCOUNT = "_LIGHTCOUNT",
+        _DIRECTIONSHADOWMAT = "_DIRECTIONSHADOWMAT",
+        _SPOTSHADOWMAT = "_SPOTSHADOWMAT",
+        _DIRECTIONSHADOWMAP = "_DIRECTIONSHADOWMAP",
+        _POINTSHADOWMAP = "_POINTSHADOWMAP",
+        _SPOTSHADOWMAP = "_SPOTSHADOWMAP",
+        _LIGHTMAPTEX = "_LIGHTMAPTEX",
+        _LIGHTMAPINTENSITY = "_LIGHTMAPINTENSITY",
+        _LIGHTMAPOFFSET = "_LIGHTMAPOFFSET",
+        _LIGHTMAPUV = "_LIGHTMAPUV",
+        _BONESVEC4 = "_BONESVEC4",
+        _REFERENCEPOSITION = "_REFERENCEPOSITION",
+        _NEARDICTANCE = "_NEARDICTANCE",
+        _FARDISTANCE = "_FARDISTANCE",
     }
 
     export const enum AccessorType {
@@ -973,7 +1006,7 @@ declare namespace gltf {
         /**
          * The index of the node whose transform is used as the uniform's value.
          */
-        node: GLTFIndex;
+        node?: GLTFIndex;
         /**
          * The uniform type.
          */
@@ -1006,7 +1039,7 @@ declare namespace gltf {
             /**
              * An attribute input to a technique and the corresponding semantic.
              */
-            [k: string]: Attribute;
+            [k: string]: egret3d.GLTFAttribute;
         };
         /**
          * A dictionary object of `Uniform` objects.

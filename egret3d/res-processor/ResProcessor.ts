@@ -202,16 +202,13 @@ namespace RES.processor {
             let material = new egret3d.Material(url);
 
             //UniformValue已经不放在Material中，改为Technique
+            let shaderName = json.shader;
+            const shader = paper.Asset.find<egret3d.Shader>(shaderName);
+            material.setShader(shader);
 
             //现根据shaderName找出对应的Technique，然后再填充
-            const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(json.shader);
-            if (techniqueTemplate) {
-                const gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
-                const gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
-
-                material.setShader(techniqueTemplate.shader);
-                material._gltfMaterial = gltfMaterial;
-                material._gltfTechnique = gltfTechnique;
+            if (material._gltfMaterial && material._gltfTechnique) {
+                const gltfTechnique = material._gltfTechnique;
 
                 const mapUniform = json.mapUniform;
                 for (let i in mapUniform) {

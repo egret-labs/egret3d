@@ -66,17 +66,14 @@ namespace egret3d {
                 const material: GLTFMaterial = { name: "shader/lambert", alphaMode: "OPAQUE", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
 
                 const technique: gltf.Technique = { name: "shader/lambert", program: -1, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
-                technique.attributes["_glesVertex"] = { semantic: "POSITION" };
-                technique.attributes["_glesNormal"] = { semantic: "NORMAL" };
-                technique.attributes["_glesMultiTexCoord0"] = { semantic: "TEXCOORD_0" };
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION, extensions: { paper: { enable: true, location: -1 } } };
+                technique.attributes["_glesNormal"] = { semantic: gltf.AttributeSemanticType.NORMAL, extensions: { paper: { enable: true, location: -1 } } };
+                technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0, extensions: { paper: { enable: true, location: -1 } } };
 
-                // technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, node: -1, semantic: gltf.SemanticType.MODELVIEWPROJECTION, value: {} };
-                // technique.uniforms["glstate_matrix_model"] = { type: gltf.UniformType.FLOAT_MAT4, node: -1, semantic: gltf.SemanticType.MODEL, value: {} };
-                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, node: -1, value: DefaultTextures.GRAY, extensions: { paper: { dirty: false, enable: false } } };
-                technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, node: -1, value: [1, 1, 1, 1], extensions: { paper: { dirty: false, enable: false } } };
-
-                // const vertShader: gltf.Shader = { name: "def_lambert_vs", type: gltf.ShaderStage.VERTEX_SHADER };
-                // const fragShader: gltf.Shader = { name: "def_lambert_fs", type: gltf.ShaderStage.FRAGMENT_SHADER };
+                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: {}, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+                technique.uniforms["glstate_matrix_model"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: {}, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: DefaultTextures.GRAY, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+                technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1], extensions: { paper: { dirty: true, enable: false, location: -1 } } };
 
                 const shader = new egret3d.Shader("shader/lambert");
                 shader.vertShader = { name: "def_lambert_vs", src: egret3d.DefaultShaders.findShader("def_lambert_vs") };
@@ -93,16 +90,12 @@ namespace egret3d {
                 const material: GLTFMaterial = { name: "diffuse.shader.json", alphaMode: "OPAQUE", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
 
                 const technique: gltf.Technique = { name: "diffuse.shader.json", program: -1, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
-                technique.attributes["_glesVertex"] = { semantic: "POSITION" };
-                technique.attributes["_glesMultiTexCoord0"] = { semantic: "TEXCOORD_0" };
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION, extensions: { paper: { enable: true, location: -1 } } };
+                technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0, extensions: { paper: { enable: true, location: -1 } } };
 
-                // technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, node: -1, semantic: gltf.SemanticType.MODELVIEWPROJECTION, value: {} };
-                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, node: -1, value: DefaultTextures.GRAY, extensions: { paper: { dirty: false, enable: false } } };
-                technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_VEC4, node: -1, value: [1, 1, 0, 0], extensions: { paper: { dirty: false, enable: false } } };
-
-
-                // const vertShader: gltf.Shader = { name: "def_diffuse_vs", type: gltf.ShaderStage.VERTEX_SHADER };
-                // const fragShader: gltf.Shader = { name: "def_diffuse_fs", type: gltf.ShaderStage.FRAGMENT_SHADER };
+                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: {}, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: DefaultTextures.GRID, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+                technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 0, 0], extensions: { paper: { dirty: true, enable: false, location: -1 } } };
 
                 const shader = new egret3d.Shader("diffuse.shader.json");
                 shader.vertShader = { name: "def_diffuse_vs", src: egret3d.DefaultShaders.findShader("def_diffuse_vs") };

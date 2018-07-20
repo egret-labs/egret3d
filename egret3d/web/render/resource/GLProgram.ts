@@ -186,7 +186,7 @@ namespace egret3d {
     /**
      * extract attributes
      */
-    function extractAttributes(gl: WebGLRenderingContext, program: WebGLProgram): { [key: string]: WebGLAttribute } {
+    function extractAttributes(gl: WebGLRenderingContext, program: WebGLProgram, technique: gltf.Technique): { [key: string]: WebGLAttribute } {
         var attributes: { [key: string]: WebGLAttribute } = {};
 
         var totalAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
@@ -196,6 +196,18 @@ namespace egret3d {
             var name = attribData.name;
             var attribute = new WebGLAttribute(gl, program, attribData);
             attributes[name] = attribute;
+        }
+
+        //
+        for(const name in technique.attributes){
+            const attribute = technique.attributes[name];
+            if(attributes[name]){
+                attribute.extensions.paper.enable = true;
+                attribute.extensions.paper.location = attributes[name].location;
+            }
+            else{
+                attribute.extensions.paper.enable = false;
+            }
         }
 
         return attributes;
@@ -218,7 +230,14 @@ namespace egret3d {
 
         for (const name in technique.uniforms) {
             const uniform = technique.uniforms[name];
-            uniform.extensions.paper.enable = uniforms[name] ? true : false;
+            if (uniforms[name]) {
+                uniform.extensions.paper.enable = true;
+                uniform.extensions.paper.location = uniforms[name].location;
+            }
+            else {
+                uniform.extensions.paper.enable = false;
+                uniform.extensions.paper.location = null;
+            }
         }
 
         return uniforms;
@@ -274,14 +293,17 @@ namespace egret3d {
             let program = getWebGLProgram(gl, vShaderInfo, fShaderInfo, defines);
             this.program = program;
 
-            this._attributes = extractAttributes(gl, program);
+            this._attributes = extractAttributes(gl, program, technique);
             this._uniforms = extractUniforms(gl, program, technique);
 
-            this._allocTexUnits();
+            this._allocTexUnits(technique);
         }
 
-        private _samplerUnitMap: { [key: string]: number } = {};
-        private _allocTexUnits(): void {
+        /**
+         * @internal
+         */
+        public _samplerUnitMap: { [key: string]: number } = {};//TODO
+        private _allocTexUnits(technique: gltf.Technique): void {
             // sampler数组中使用unit0会导致错误？
             let samplerArrayKeys = [];
             let samplerKeys = [];
@@ -295,9 +317,17 @@ namespace egret3d {
                 }
             }
 
+            const uniforms = technique.uniforms;
             let allKeys = samplerKeys.concat(samplerArrayKeys);
             let unitNumber: number = 0;
             allKeys.forEach(key => {
+                const uniform = uniforms[key];
+                if (uniform && uniform.type === gltf.UniformType.SAMPLER_2D) {
+                    // uniform.extensions.paper.textureId = unitNumber;
+                }
+                else {
+                    console.error("贴图Uniform缺少定义:" + key);
+                }
                 this._samplerUnitMap[key] = unitNumber;
                 unitNumber++;
             });
@@ -362,13 +392,13 @@ namespace egret3d {
                         this.setMatrix4(key, context.matrix_vp);
                         break;
                     case "glstate_cameraPos":
-                        this.setVector3(key, context.cameraPosition);
+                        this.setVector3v(key, context.cameraPosition);
                         break;
                     case "glstate_cameraForward":
-                        this.setVector3(key, context.cameraForward);
+                        this.setVector3v(key, context.cameraForward);
                         break;
                     case "glstate_cameraUp":
-                        this.setVector3(key, context.cameraUp);
+                        this.setVector3v(key, context.cameraUp);
                         break;
                     case "glstate_directLights[0]":
                         if (context.directLightCount > 0) {
