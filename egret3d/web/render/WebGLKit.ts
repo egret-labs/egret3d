@@ -1,195 +1,237 @@
 namespace egret3d {
 
     export class WebGLKit {
+        private static _programMap: { [key: string]: WebGLProgram } = {};
+        private static _vsShaderMap: { [key: string]: WebGLShader } = {};
+        private static _fsShaderMap: { [key: string]: WebGLShader } = {};
+        private static _constDefines: string;
+        private static _cacheProgram: WebGLProgram;
 
-
-        private static _texNumber: number[] = null;
-        private static _activeTextureIndex: number = -1;
-        static activeTexture(index: number) {
-            if (this._activeTextureIndex != index) {
-                this.webgl.activeTexture(WebGLKit._texNumber[index]);
-                this._activeTextureIndex = index;
-            }
-        }
-
-        private static _showFace: ShowFaceStateEnum;
-        private static _frontFaceCW: boolean = false;
-        static showFace(value: ShowFaceStateEnum, frontFaceCW: boolean = false) {
-            if (this._showFace != value || this._frontFaceCW != frontFaceCW) {
-                let webgl = this.webgl;
-                if (value == ShowFaceStateEnum.ALL) {
-                    webgl.disable(webgl.CULL_FACE);
-                } else {
-                    let ccw = (value == ShowFaceStateEnum.CCW);
-                    if (frontFaceCW) {
-                        ccw = !ccw;
-                    }
-                    if (ccw) {
-                        webgl.frontFace(webgl.CCW);
-                    } else {
-                        webgl.frontFace(webgl.CW);
-                    }
-                    webgl.cullFace(webgl.BACK);
-                    webgl.enable(webgl.CULL_FACE);
+        private static _parseIncludes(string) {
+            const pattern = /#include +<([\w\d.]+)>/g;
+            //
+            function replace(match, include) {
+                const replace = egret3d.ShaderChunk[include];
+                if (replace === undefined) {
+                    throw new Error('Can not resolve #include <' + include + '>');
                 }
 
-                this._showFace = value;
-                this._frontFaceCW = frontFaceCW;
+                return this.parseIncludes(replace);
             }
+            //
+            return string.replace(pattern, replace);
         }
 
-        private static _zWrite: boolean;
-        static zWrite(value: boolean) {
-            if (this._zWrite !== value) {
-                this.webgl.depthMask(value);
-                this._zWrite = value;
-            }
+        private static _createConstDefines(): string {
+            let defines = "precision " + this.capabilities.maxPrecision + " float; \n";
+            defines += "precision " + this.capabilities.maxPrecision + " int; \n";
+
+            defines += '#define PI 3.14159265359 \n';
+            defines += '#define EPSILON 1e-6 \n';
+            defines += 'float pow2( const in float x ) { return x*x; } \n';
+            defines += '#define LOG2 1.442695 \n';
+            defines += '#define RECIPROCAL_PI 0.31830988618 \n';
+            defines += '#define saturate(a) clamp( a, 0.0, 1.0 ) \n';
+            defines += '#define whiteCompliment(a) ( 1.0 - saturate( a ) ) \n';
+            // defines += '#extension GL_OES_standard_derivatives : enable \n';
+
+            return defines;
         }
 
-        private static _zTest: boolean;
-        static zTest(value: boolean) {
-            if (this._zTest !== value) {
-                let webgl = this.webgl;
-                if (value) {
-                    webgl.enable(webgl.DEPTH_TEST);
-                } else {
-                    webgl.disable(webgl.DEPTH_TEST);
+        private static _getWebGLShader(type: number, gl: WebGLRenderingContext, info: ShaderInfo, defines: string): WebGLShader {
+            let shader = gl.createShader(type);
+            //
+            gl.shaderSource(shader, this._constDefines + defines + this._parseIncludes(info.src));
+            gl.compileShader(shader);
+            let parameter = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+            if (!parameter) {
+                if (confirm("shader compile:" + info.name + " " + type + " error! ->" + gl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
+                    gl.deleteShader(shader);
+                    alert(info.src);
                 }
-                this._zTest = value;
+                return null;
             }
+
+            return shader;
         }
 
-        private static _zTestMethod: number;
-        static zTestMethod(value: number) {
-            if (this._zTestMethod !== value) {
-                this.webgl.depthFunc(value);
-                this._zTestMethod = value;
+        private static _getWebGLProgram(gl: WebGLRenderingContext, vs: ShaderInfo, fs: ShaderInfo, defines: string): WebGLProgram {
+            let program = gl.createProgram();
+
+            let key = vs.name + defines;
+            let vertexShader = this._vsShaderMap[key];
+            if (!vertexShader) {
+                vertexShader = this._getWebGLShader(gl.VERTEX_SHADER, gl, vs, defines);
+                this._vsShaderMap[key] = vertexShader;
             }
+
+            key = fs.name + defines;
+            let fragmentShader = this._fsShaderMap[key];
+            if (!fragmentShader) {
+                fragmentShader = this._getWebGLShader(gl.FRAGMENT_SHADER, gl, fs, defines);
+                this._fsShaderMap[key] = fragmentShader;
+            }
+
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+
+            gl.linkProgram(program);
+
+            let parameter = gl.getProgramParameter(program, gl.LINK_STATUS);
+            if (!parameter) {
+                alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + gl.getProgramInfoLog(program));
+                gl.deleteProgram(program);
+                return null;
+            }
+
+            return program;
         }
 
-        private static _blend: boolean;
-        static blend(value: boolean, equation: number, srcRGB: number, destRGB: number, srcAlpha: number, destAlpha: number) {
-            let webgl = this.webgl;
-            if (this._blend !== value) {
-                value ? webgl.enable(webgl.BLEND) : webgl.disable(webgl.BLEND);
-                this._blend = value;
+        /**
+         * extract attributes
+         */
+        private static _extractAttributes(gl: WebGLRenderingContext, program: WebGLProgram, technique: gltf.Technique) {
+            const totalAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+            //
+            const webglAttributes: { [key: string]: WebGLActiveInfo } = {};
+            for (var i = 0; i < totalAttributes; i++) {
+                var attribData = gl.getActiveAttrib(program, i);
+                webglAttributes[attribData.name] = attribData;
             }
-            if (value) {
-                webgl.blendEquation(equation);
-                // this.webgl.blendFunc(this.webgl.ONE, this.webgl.ONE_MINUS_SRC_ALPHA);
-                webgl.blendFuncSeparate(srcRGB, destRGB, srcAlpha, destAlpha);
+            //
+            for (const name in technique.attributes) {
+                const attribute = technique.attributes[name];
+                if (webglAttributes[name]) {
+                    if (webglAttributes[name].type !== attribute.type) {
+                        console.error("Attribute类型不匹配 着色器中类型:" + webglAttributes[name].type + " 文件中类型:" + attribute.type);
+                    }
+                    attribute.extensions.paper.enable = true;
+                    attribute.extensions.paper.location = gl.getAttribLocation(program, name);
+                }
+                else {
+                    attribute.extensions.paper.enable = false;
+                }
             }
+
+            return webglAttributes;
         }
 
-        private static _program: WebGLProgram;
-        static useProgram(program: WebGLProgram): boolean {
-            if (this._program != program) {
-                this._program = program;
-                this.webgl.useProgram(program);
-                return true;
+        /**
+         * extract uniforms
+         */
+        private static _extractUniforms(gl: WebGLRenderingContext, program: WebGLProgram, technique: gltf.Technique) {
+            const totalUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+            //
+            const webglUniforms: { [key: string]: WebGLActiveInfo } = {};
+            for (var i = 0; i < totalUniforms; i++) {
+                const uniformData = gl.getActiveUniform(program, i);
+                //const name = _uniformsKeyConvert[uniformData.name] ? _uniformsKeyConvert[uniformData.name] : uniformData.name;
+                const name = uniformData.name;
+                webglUniforms[name] = uniformData;
             }
-            return false;
+
+            for (const name in technique.uniforms) {
+                const uniform = technique.uniforms[name];
+                if (webglUniforms[name]) {
+                    if (webglUniforms[name].type !== uniform.type) {
+                        console.error("Uniform类型不匹配 着色器中类型:" + webglUniforms[name].type + " 文件中类型:" + uniform.type);
+                    }
+                    uniform.extensions.paper.enable = true;
+                    uniform.extensions.paper.location = gl.getUniformLocation(program, name);
+                }
+                else {
+                    uniform.extensions.paper.enable = false;
+                    uniform.extensions.paper.location = null;
+                }
+            }
+
+            return webglUniforms;
         }
-
-        static setStates(drawPass: DrawPass, frontFaceCW: boolean = false) {
-
-            WebGLKit.showFace(drawPass.state_showface, frontFaceCW);
-            WebGLKit.zWrite(drawPass.state_zwrite);
-            WebGLKit.zTest(drawPass.state_ztest);
-            WebGLKit.blend(drawPass.state_blend, drawPass.state_blendEquation, drawPass.state_blendSrcRGB, drawPass.state_blendDestRGB, drawPass.state_blendSrcAlpha, drawPass.state_blendDestALpha);
-            if (drawPass.state_ztest) {
-                WebGLKit.zTestMethod(drawPass.state_ztest_method);
-            }
-        }
-
-        static draw(context: RenderContext, basetype: string = "base") {
-            const drawCall = context.drawCall;
-            const renderer = drawCall.renderer;
-            const material = drawCall.material;
-
-            if (!material) {
-                console.warn("Material error.", renderer.gameObject.name, renderer.gameObject.uuid);
-                return;
+        /**
+         * allocTexUnits
+         */
+        private static _allocTexUnits(technique: gltf.Technique, webglUniforms: { [key: string]: WebGLActiveInfo }) {
+            let samplerArrayKeys: string[] = [];
+            let samplerKeys: string[] = [];
+            //排序
+            for (let key in webglUniforms) {
+                const uniform = webglUniforms[key];
+                if (uniform.type == gltf.UniformType.SAMPLER_2D || uniform.type == gltf.UniformType.SAMPLER_CUBE) {
+                    if (key.indexOf("[") > -1) {
+                        samplerArrayKeys.push(key);
+                    }
+                    else {
+                        samplerKeys.push(key);
+                    }
+                }
             }
 
-            const shader = material.getShader();
-            if (!shader) {
-                console.warn("Shader error.", renderer.gameObject.name, renderer.gameObject.uuid);
-                return;
-            }
-
-            let drawPasses = shader.passes[basetype + context.drawtype];
-            if (!drawPasses) {
-                drawPasses = shader.passes["base" + context.drawtype];
-            }
-
-            if (!drawPasses) {
-                console.warn("draw passes error.", renderer.gameObject.name, renderer.gameObject.uuid);
-                return;
-            }
-
-            // WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
-            const frontFaceCW = renderer.gameObject.transform._worldMatrixDeterminant < 0;
-            const webGL = this.webgl;
-            const mesh = drawCall.mesh;
-
-            for (let i = 0; i < drawPasses.length; i++) {
-                const pass = drawPasses[i];
-                const program = GlProgram.get(pass, context, material);
-                this.setStates(pass, frontFaceCW);
-
-                const force = WebGLKit.useProgram(program.program);
-                program.uploadUniforms(material, context, force);
-                program.bindAttributes(drawCall.mesh, drawCall.subMeshIndex, force);
-
-                const primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
-                const vertexAccessor = mesh.glTFAsset.getAccessor(primitive.attributes.POSITION);
-                const bufferOffset = mesh.glTFAsset.getBufferOffset(vertexAccessor);
-
-                if (primitive.indices !== undefined) {
-                    const indexAccessor = mesh.glTFAsset.getAccessor(primitive.indices);
-                    switch (primitive.mode) { // TODO
-                        case gltf.MeshPrimitiveMode.Lines:
-                            webGL.drawElements(webGL.LINES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset);
-                            break;
-
-                        case gltf.MeshPrimitiveMode.Triangles:
-                        default:
-                            webGL.drawElements(webGL.TRIANGLES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset);
-                            break;
+            const uniforms = technique.uniforms;
+            const allKeys = samplerKeys.concat(samplerArrayKeys);
+            let unitNumber: number = 0;
+            for (const key of allKeys) {
+                const uniform = uniforms[key];
+                if (uniform && (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE)) {
+                    if (!uniform.extensions.paper.textureUnits) {
+                        uniform.extensions.paper.textureUnits = [];
+                    }
+                    const textureUnits = uniform.extensions.paper.textureUnits;
+                    const count = uniform.count ? uniform.count : 1;
+                    if (webglUniforms[key].size !== count) {
+                        console.error("贴图数量不匹配:" + key);
+                    }
+                    for (let i = 0; i < count; i++) {
+                        textureUnits.push(unitNumber++);
                     }
                 }
                 else {
-                    switch (primitive.mode) {
-                        case gltf.MeshPrimitiveMode.Lines:
-                            webGL.drawArrays(webGL.LINES, bufferOffset, vertexAccessor.count);
-                            break;
-
-                        case gltf.MeshPrimitiveMode.LineLoop:
-                            webGL.drawArrays(webGL.LINE_LOOP, bufferOffset, vertexAccessor.count);
-                            break;
-
-                        case gltf.MeshPrimitiveMode.LineStrip:
-                            webGL.drawArrays(webGL.LINE_STRIP, bufferOffset, vertexAccessor.count);
-                            break;
-
-                        case gltf.MeshPrimitiveMode.Triangles:
-                        default:
-                            webGL.drawArrays(webGL.TRIANGLES, bufferOffset, vertexAccessor.count);
-                            break;
-                    }
+                    console.error(technique.name + " technique缺少Uniform定义:" + key);
                 }
             }
         }
 
-        static resetState() {
-            this._activeTextureIndex = -1;
-            this._showFace = undefined;
-            this._zWrite = undefined;
-            this._zTest = undefined;
-            this._zTestMethod = undefined;
-            this._blend = undefined;
-            this._program = undefined;
+        public static getProgram(context: RenderContext, material: Material, technique: gltf.Technique, defines: string) {
+            const shader = material.getShader();
+            const name = shader.vertShader.name + "_" + shader.fragShader.name + "_" + defines;
+            let program = this._programMap[name];
+            if (!program) {
+                const webgl = this.webgl;
+                program = this._getWebGLProgram(webgl, shader.vertShader, shader.fragShader, defines);
+                this._programMap[name] = program;
+                this._extractAttributes(webgl, program, technique);
+                const uniforms = this._extractUniforms(webgl, program, technique);
+                this._allocTexUnits(technique, uniforms);
+            }
+            return program;
+        }
+        public static useProgram(program: WebGLProgram) {
+            if (this._cacheProgram !== program) {
+                this._cacheProgram = program;
+                this.webgl.useProgram(program);
+                return true;
+            }
+
+            return false;
+        }
+        public static zWrite(value: boolean) {
+            this.webgl.depthMask(value);
+        }
+        public static zTest(value: boolean) {
+            let webgl = this.webgl;
+            if (value) {
+                webgl.enable(webgl.DEPTH_TEST);
+            } else {
+                webgl.disable(webgl.DEPTH_TEST);
+            }
+        }
+        public static resetState() {
+            // this._activeTextureIndex = -1;
+            // this._showFace = undefined;
+            // this._zWrite = undefined;
+            // this._zTest = undefined;
+            // this._zTestMethod = undefined;
+            // this._blend = undefined;
+            // this._program = undefined;
             // ...
         }
 
@@ -221,20 +263,8 @@ namespace egret3d {
             let webgl = <WebGLRenderingContext>canvas.getContext('webgl', options) ||
                 <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
 
-            if (WebGLKit._texNumber == null) {
+            if (!this.webgl) {
                 this.webgl = webgl;
-
-                WebGLKit._texNumber = [];
-                WebGLKit._texNumber.push(webgl.TEXTURE0);
-                WebGLKit._texNumber.push(webgl.TEXTURE1);
-                WebGLKit._texNumber.push(webgl.TEXTURE2);
-                WebGLKit._texNumber.push(webgl.TEXTURE3);
-                WebGLKit._texNumber.push(webgl.TEXTURE4);
-                WebGLKit._texNumber.push(webgl.TEXTURE5);
-                WebGLKit._texNumber.push(webgl.TEXTURE6);
-                WebGLKit._texNumber.push(webgl.TEXTURE7);
-                WebGLKit._texNumber.push(webgl.TEXTURE8);
-                WebGLKit._texNumber.push(webgl.TEXTURE9);
 
                 WebGLKit.LEQUAL = webgl.LEQUAL;
                 WebGLKit.NEVER = webgl.NEVER;
@@ -259,10 +289,9 @@ namespace egret3d {
                 WebGLKit.ONE_MINUS_DST_COLOR = webgl.ONE_MINUS_DST_COLOR;
 
                 this.capabilities.initialize(webgl);
-
+                //必须在this.capabilities.initialize之后
+                this._constDefines = this._createConstDefines();
             }
         }
-
-
     }
 }

@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * WebGL 渲染系统
      */
     export class WebGLRenderSystem extends paper.BaseSystem {
         protected readonly _interests = [
@@ -10,216 +10,199 @@ namespace egret3d {
             [
                 { componentClass: Egret2DRenderer }
             ],
+            [
+                { componentClass: [DirectLight, SpotLight, PointLight] }
+            ]
         ];
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
-        private readonly _webGL: WebGLRenderingContext = WebGLKit.webgl;
+        private readonly _lightCamera: Camera = this._globalGameObject.getComponent(Camera) || this._globalGameObject.addComponent(Camera);
+        private readonly _webgl: WebGLRenderingContext = WebGLKit.webgl;
         private readonly _stateEnable: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST];
-        private _usedTextureUnits: number = 0;
-        private _texUnitsCache: number[] = [];
+        //
+        private _cacheContext: RenderContext;
+        private _cacheContextVersion: number;
         private _cacheProgram: WebGLProgram;
-
-        private _allocTextureUnit() {
-            const textureUnit = this._usedTextureUnits;
-            if (this._usedTextureUnits >= WebGLKit.capabilities.maxTextures) {
-                console.warn('Trying to use ' + this._usedTextureUnits + ' texture units while this GPU supports only ' + WebGLKit.capabilities.maxTextures);
-            }
-
-            this._usedTextureUnits += 1;
-
-            return textureUnit;
-        }
-
-        private _allocTextureUnits(num: number) {
-            this._texUnitsCache.length = num;
-
-            for (let i = 0; i < num; i++) {
-                this._texUnitsCache[i] = this._allocTextureUnit();
-            }
-
-            return this._texUnitsCache;
-        }
-
-        private _updateUniform(uniform: GLTFUniform) {
-            if (!uniform.extensions.paper.enable || !uniform.extensions.paper.dirty) {
-                return;
-            }
-            const webgl = this._webGL;
-            const paperExtension = uniform.extensions.paper;
-            const location = paperExtension.location;
-            const value = uniform.value;
-            paperExtension.dirty = false;
-            switch (uniform.type) {
-                case gltf.UniformType.BOOL:
-                case gltf.UniformType.Int:
-                    webgl.uniform1i(location, value);
-                    break;
-                case gltf.UniformType.BOOL_VEC2:
-                case gltf.UniformType.INT_VEC2:
-                    webgl.uniform2iv(location, value);
-                    break;
-                case gltf.UniformType.BOOL_VEC3:
-                case gltf.UniformType.INT_VEC3:
-                    webgl.uniform3iv(location, value);
-                    break;
-                case gltf.UniformType.BOOL_VEC4:
-                case gltf.UniformType.INT_VEC4:
-                    webgl.uniform4iv(location, value);
-                    break;
-                case gltf.UniformType.FLOAT:
-                    webgl.uniform1f(location, value);
-                    break;
-                case gltf.UniformType.FLOAT_VEC2:
-                    webgl.uniform2fv(location, value);
-                    break;
-                case gltf.UniformType.FLOAT_VEC3:
-                    webgl.uniform3fv(location, value);
-                    break;
-                case gltf.UniformType.FLOAT_VEC4:
-                    webgl.uniform4fv(location, value);
-                    break;
-                case gltf.UniformType.FLOAT_MAT2:
-                    webgl.uniformMatrix2fv(location, false, value);
-                    break;
-                case gltf.UniformType.FLOAT_MAT3:
-                    webgl.uniformMatrix3fv(location, false, value);
-                    break;
-                case gltf.UniformType.FLOAT_MAT4:
-                    webgl.uniformMatrix4fv(location, false, value);
-                    break;
-                case gltf.UniformType.SAMPLER_2D:
-                    const unit = this._allocTextureUnit();
-                    webgl.uniform1i(location, unit);
-                    webgl.activeTexture(webgl.TEXTURE0 + unit);
-                    webgl.bindTexture(webgl.TEXTURE_2D, (value as Texture).glTexture.texture);
-                    break;
-            }
-        }
-
+        private _cacheMaterial: Material;
+        private _cacheMaterialVerision: number;
+        private _cacheMesh: Mesh;
+        private _cacheMeshVersion: number;
+        private _cacheDefines: string;
+        //
         private _updateState(state: gltf.States) {
             //enable
             for (const e of this._stateEnable) {
-                state.enable.indexOf(e) >= 0 ? this._webGL.enable(e) : this._webGL.disable(e);
+                state.enable.indexOf(e) >= 0 ? this._webgl.enable(e) : this._webgl.disable(e);
             }
             //functions
             for (const e in state.functions) {
                 //
-                (this._webGL[e] as Function).call(this._webGL, state.functions[e]);
+                (this._webgl[e] as Function).call(this._webgl, state.functions[e]);
             }
         }
 
-        private _updateUniforms(context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
-            //
-            const webgl = this._webGL;
+        private _updateContextDefines(context: RenderContext, material: Material) {
+            this._cacheDefines = "";
+            if (context.lightCount > 0) {
+                this._cacheDefines += "#define USE_LIGHT " + context.lightCount + "\n";
+
+                if (context.directLightCount > 0) {
+                    this._cacheDefines += "#define USE_DIRECT_LIGHT " + context.directLightCount + "\n";
+                }
+                if (context.pointLightCount > 0) {
+                    this._cacheDefines += "#define USE_POINT_LIGHT " + context.pointLightCount + "\n";
+                }
+                if (context.spotLightCount > 0) {
+                    this._cacheDefines += "#define USE_SPOT_LIGHT " + context.spotLightCount + "\n";
+                }
+
+                if (context.drawCall.renderer.receiveShadows) {
+                    this._cacheDefines += "#define USE_SHADOW \n";
+                    this._cacheDefines += "#define USE_PCF_SOFT_SHADOW \n";
+                }
+            }
+            //自定义的宏定义TODO
+            this._cacheDefines += material.shaderDefine;
+        }
+
+        private _updateContextUniforms(context: RenderContext, material: Material, technique: gltf.Technique, forceUpdate: boolean) {
+            const needUpdate = this._cacheContext !== context || this._cacheContextVersion !== context.version || forceUpdate;
+            if (!needUpdate) {
+                return;
+            }
+
+            this._cacheContext = context;
+            this._cacheContextVersion = context.version;
+            const webgl = this._webgl;
+
             for (const key in technique.uniforms) {
                 const uniform = technique.uniforms[key];
                 const paperExtension = uniform.extensions.paper;
-                if (!paperExtension.dirty) {
+                if (!paperExtension.enable) {
                     continue;
                 }
-                const location = uniform.extensions.paper.location;
+                const location = paperExtension.location;
                 switch (uniform.semantic) {
                     case gltf.UniformSemanticType.MODEL:
                         webgl.uniformMatrix4fv(location, false, context.matrix_m.rawData);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType.VIEW:
                         webgl.uniformMatrix4fv(location, false, context.matrix_v.rawData);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType.PROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_p.rawData);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._VIEWPROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_vp.rawData);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType.MODELVIEWPROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_mvp.rawData);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._CAMERA_POS:
                         webgl.uniform3fv(location, context.cameraPosition);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._CAMERA_FORWARD:
                         webgl.uniform3fv(location, context.cameraForward);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._CAMERA_UP:
                         webgl.uniform3fv(location, context.cameraUp);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._LIGHTCOUNT:
                         webgl.uniform1f(location, context.lightCount);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._DIRECTLIGHTS:
                         if (context.directLightCount > 0) {
                             webgl.uniform1fv(location, context.directLightArray);
+                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._POINTLIGHTS:
                         if (context.pointLightCount > 0) {
                             webgl.uniform1fv(location, context.pointLightArray);
+                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._SPOTLIGHTS:
                         if (context.spotLightCount > 0) {
                             webgl.uniform1fv(location, context.spotLightArray);
+                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.directShadowMatrix);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._SPOTSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.spotShadowMatrix);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAP:
-                        {
-                            const len = context.directShadowMaps.length;
-                            if (len > 0) {
-                                const units = this._allocTextureUnits(len);
-                                webgl.uniform1iv(location, units);
+                        const directShadowLen = context.directShadowMaps.length;
+                        if (directShadowLen > 0 && uniform.extensions.paper.textureUnits) {
+                            const units = uniform.extensions.paper.textureUnits;
+                            webgl.uniform1iv(location, units);
 
-                                for (let i = 0, l = units.length; i < l; i++) {
-                                    webgl.activeTexture(webgl.TEXTURE0 + units[i]);
-                                    webgl.bindTexture(webgl.TEXTURE_2D, context.directShadowMaps[i]);
-                                }
+                            for (let i = 0, l = units.length; i < l; i++) {
+                                webgl.activeTexture(webgl.TEXTURE0 + units[i]);
+                                webgl.bindTexture(webgl.TEXTURE_2D, context.directShadowMaps[i]);
                             }
+                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._POINTSHADOWMAP:
-                        {
-                            const len = context.pointShadowMaps.length;
-                            if (len > 0) {
-                                const units = this._allocTextureUnits(len);
-                                webgl.uniform1iv(location, units);
+                        const pointShadowLen = context.pointShadowMaps.length;
+                        if (pointShadowLen > 0 && uniform.extensions.paper.textureUnits) {
+                            const units = uniform.extensions.paper.textureUnits;
+                            webgl.uniform1iv(location, units);
 
-                                for (let i = 0, l = units.length; i < l; i++) {
-                                    webgl.activeTexture(webgl.TEXTURE0 + units[i]);
-                                    webgl.bindTexture(webgl.TEXTURE_2D, context.pointShadowMaps[i]);
-                                }
+                            for (let i = 0, l = units.length; i < l; i++) {
+                                webgl.activeTexture(webgl.TEXTURE0 + units[i]);
+                                webgl.bindTexture(webgl.TEXTURE_2D, context.pointShadowMaps[i]);
                             }
+                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._SPOTSHADOWMAP:
-                        {
-                            const len = context.spotShadowMaps.length;
-                            if (len > 0) {
-                                const units = this._allocTextureUnits(len);
-                                webgl.uniform1iv(location, units);
+                        const spotShadowLen = context.spotShadowMaps.length;
+                        if (spotShadowLen > 0 && uniform.extensions.paper.textureUnits) {
+                            const units = uniform.extensions.paper.textureUnits;
+                            webgl.uniform1iv(location, units);
 
-                                for (let i = 0, l = units.length; i < l; i++) {
-                                    webgl.activeTexture(webgl.TEXTURE0 + units[i]);
-                                    webgl.bindTexture(webgl.TEXTURE_2D, context.spotShadowMaps[i]);
-                                }
+                            for (let i = 0, l = units.length; i < l; i++) {
+                                webgl.activeTexture(webgl.TEXTURE0 + units[i]);
+                                webgl.bindTexture(webgl.TEXTURE_2D, context.spotShadowMaps[i]);
                             }
+                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._LIGHTMAPTEX:
-                        const unit = this._allocTextureUnit();
-                        webgl.uniform1i(location, unit);
-                        webgl.activeTexture(webgl.TEXTURE0 + unit);
-                        webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap);
+                        if (paperExtension.textureUnits && paperExtension.textureUnits.length === 1) {
+                            const unit = paperExtension.textureUnits[0];
+                            webgl.uniform1i(location, unit);
+                            webgl.activeTexture(webgl.TEXTURE0 + unit);
+                            webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap);
+                            paperExtension.dirty = false;
+                        }
+                        else {
+                            console.error("Error texture unit");
+                        }
                         break;
                     case gltf.UniformSemanticType._LIGHTMAPINTENSITY:
                         webgl.uniform1f(location, context.lightmapIntensity);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._LIGHTMAPOFFSET:
                         if (context.lightmapOffset) {
                             webgl.uniform4fv(location, context.lightmapOffset);
+                            paperExtension.dirty = false;
                         }
                         else {
                             console.debug("Error light map scale and offset.");
@@ -227,21 +210,103 @@ namespace egret3d {
                         break;
                     case gltf.UniformSemanticType._LIGHTMAPUV:
                         webgl.uniform1f(location, context.lightmapUV);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._BONESVEC4:
                         webgl.uniform4fv(location, context.boneData);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._REFERENCEPOSITION:
                         webgl.uniform4fv(location, context.lightPosition);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._NEARDICTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraNear);
+                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._FARDISTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraFar);
+                        paperExtension.dirty = false;
                         break;
-                    default:
-                        this._updateUniform(uniform);
+                }
+            }
+        }
+
+        private _updateUniforms(context: RenderContext, material: Material, technique: gltf.Technique, forceUpdate: boolean) {
+            const needUpdate = this._cacheMaterial !== material || this._cacheMaterialVerision !== material.version || forceUpdate;
+            if (!needUpdate) {
+                return;
+            }
+
+            this._cacheMaterial = material;
+            this._cacheMaterialVerision = material.version;
+            const webgl = this._webgl;
+            for (const key in technique.uniforms) {
+                const uniform = technique.uniforms[key];
+                const paperExtension = uniform.extensions.paper;
+                if (!paperExtension.dirty || !paperExtension.enable) {
+                    continue;
+                }
+                const location = uniform.extensions.paper.location;
+                const value = uniform.value;
+                switch (uniform.type) {
+                    case gltf.UniformType.BOOL:
+                    case gltf.UniformType.Int:
+                        if (uniform.count) {
+                            webgl.uniform1iv(location, value);
+                        }
+                        else {
+                            webgl.uniform1i(location, value);
+                        }
+                        break;
+                    case gltf.UniformType.BOOL_VEC2:
+                    case gltf.UniformType.INT_VEC2:
+                        webgl.uniform2iv(location, value);
+                        break;
+                    case gltf.UniformType.BOOL_VEC3:
+                    case gltf.UniformType.INT_VEC3:
+                        webgl.uniform3iv(location, value);
+                        break;
+                    case gltf.UniformType.BOOL_VEC4:
+                    case gltf.UniformType.INT_VEC4:
+                        webgl.uniform4iv(location, value);
+                        break;
+                    case gltf.UniformType.FLOAT:
+                        if (uniform.count) {
+                            webgl.uniform1fv(location, value);
+                        }
+                        else {
+                            webgl.uniform1f(location, value);
+                        }
+                        break;
+                    case gltf.UniformType.FLOAT_VEC2:
+                        webgl.uniform2fv(location, value);
+                        break;
+                    case gltf.UniformType.FLOAT_VEC3:
+                        webgl.uniform3fv(location, value);
+                        break;
+                    case gltf.UniformType.FLOAT_VEC4:
+                        webgl.uniform4fv(location, value);
+                        break;
+                    case gltf.UniformType.FLOAT_MAT2:
+                        webgl.uniformMatrix2fv(location, false, value);
+                        break;
+                    case gltf.UniformType.FLOAT_MAT3:
+                        webgl.uniformMatrix3fv(location, false, value);
+                        break;
+                    case gltf.UniformType.FLOAT_MAT4:
+                        webgl.uniformMatrix4fv(location, false, value);
+                        break;
+                    case gltf.UniformType.SAMPLER_2D:
+                        if (paperExtension.textureUnits && paperExtension.textureUnits.length === 1) {
+                            const unit = paperExtension.textureUnits[0];
+                            webgl.uniform1i(location, unit);
+                            webgl.activeTexture(webgl.TEXTURE0 + unit);
+                            webgl.bindTexture(webgl.TEXTURE_2D, (value as Texture).glTexture.texture);
+                        }
+                        else {
+                            console.error("Error texture unit");
+                        }
                         break;
                 }
 
@@ -250,12 +315,19 @@ namespace egret3d {
         }
 
         private _updateAttributes(mesh: Mesh, subMeshIndex: number, technique: gltf.Technique, forceUpdate: boolean) {
+            const needUpdate = this._cacheMesh !== mesh || this._cacheMeshVersion !== mesh._version || forceUpdate;
+            if (!needUpdate) {
+                return;
+            }
+
+            this._cacheMesh = mesh;
+            this._cacheMeshVersion = mesh._version;
             if (0 <= subMeshIndex && subMeshIndex < mesh.glTFMesh.primitives.length) {
                 const glTFAsset = mesh.glTFAsset;
                 const primitive = mesh.glTFMesh.primitives[subMeshIndex];
                 const ibo = mesh.ibos[subMeshIndex];
 
-                const gl = this._webGL;
+                const gl = this._webgl;
                 gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
 
                 if (ibo) {
@@ -288,17 +360,8 @@ namespace egret3d {
             }
         }
 
-        private _useProgram(program: WebGLProgram) {
-            if (this._cacheProgram != program) {
-                this._cacheProgram = program;
-                this._webGL.useProgram(program);
-                return true;
-            }
-            return false;
-        }
-
         private _drawCall(mesh: Mesh, drawCall: DrawCall) {
-            const webGL = this._webGL;
+            const webgl = this._webgl;
             const primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
             const vertexAccessor = mesh.glTFAsset.getAccessor(primitive.attributes.POSITION);
             const bufferOffset = mesh.glTFAsset.getBufferOffset(vertexAccessor);
@@ -307,90 +370,66 @@ namespace egret3d {
                 const indexAccessor = mesh.glTFAsset.getAccessor(primitive.indices);
                 switch (primitive.mode) { // TODO
                     case gltf.MeshPrimitiveMode.Lines:
-                        webGL.drawElements(webGL.LINES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset);
+                        webgl.drawElements(webgl.LINES, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
                         break;
                     case gltf.MeshPrimitiveMode.Triangles:
                     default:
-                        webGL.drawElements(webGL.TRIANGLES, indexAccessor.count, webGL.UNSIGNED_SHORT, bufferOffset);
+                        webgl.drawElements(webgl.TRIANGLES, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
                         break;
                 }
             }
             else {
                 switch (primitive.mode) {
                     case gltf.MeshPrimitiveMode.Lines:
-                        webGL.drawArrays(webGL.LINES, bufferOffset, vertexAccessor.count);
+                        webgl.drawArrays(webgl.LINES, bufferOffset, vertexAccessor.count);
                         break;
                     case gltf.MeshPrimitiveMode.LineLoop:
-                        webGL.drawArrays(webGL.LINE_LOOP, bufferOffset, vertexAccessor.count);
+                        webgl.drawArrays(webgl.LINE_LOOP, bufferOffset, vertexAccessor.count);
                         break;
                     case gltf.MeshPrimitiveMode.LineStrip:
-                        webGL.drawArrays(webGL.LINE_STRIP, bufferOffset, vertexAccessor.count);
+                        webgl.drawArrays(webgl.LINE_STRIP, bufferOffset, vertexAccessor.count);
                         break;
                     case gltf.MeshPrimitiveMode.Triangles:
                     default:
-                        webGL.drawArrays(webGL.TRIANGLES, bufferOffset, vertexAccessor.count);
+                        webgl.drawArrays(webgl.TRIANGLES, bufferOffset, vertexAccessor.count);
                         break;
                 }
             }
         }
-
         private _renderCall(context: RenderContext, drawCall: DrawCall) {
             const renderer = drawCall.renderer;
-            const lightmapIndex = renderer.lightmapIndex;
             context.drawCall = drawCall;
             context.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
             //
             const material = drawCall.material;
             const technique = material._gltfTechnique;
-            this._usedTextureUnits = 0;
+            //Defines
+            this._updateContextDefines(context, material);
             //Program
-            const program = GlProgram.getProgram(context, material);
+            const program = WebGLKit.getProgram(context, material, technique, this._cacheDefines);
             //State
-            this._updateState(drawCall.material._gltfTechnique.states);
+            this._updateState(technique.states);
             //Use Program
-            const force = this._useProgram(program.program);
+            const force = WebGLKit.useProgram(program);
             //Uniform
-            this._updateUniforms(context, technique, force);
+            this._updateContextUniforms(context, material, technique, force);
+            this._updateUniforms(context, material, technique, force);
             //Attribute
             this._updateAttributes(drawCall.mesh, drawCall.subMeshIndex, technique, force);
             //Draw
             this._drawCall(drawCall.mesh, drawCall);
-            //Draw
-
-            // let drawType: string = "base"; // TODO
-
-            // if (drawCall.boneData) {
-            //     context.updateBones(drawCall.boneData);
-            //     drawType = "skin";
-            // }
-
-            // if (lightmapIndex >= 0) {
-            //     const activeScene = paper.Application.sceneManager.activeScene;
-            //     if (activeScene.lightmaps.length > lightmapIndex) {
-            //         context.updateLightmap(
-            //             activeScene.lightmaps[lightmapIndex],
-            //             drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0,
-            //             renderer.lightmapScaleOffset,
-            //             activeScene.lightmapIntensity
-            //         );
-            //         drawType = "lightmap";
-            //     }
-            // }
-
-            // WebGLKit.draw(context, drawType);
         }
-
-
         /**
          * @internal
          * @param camera 
          */
         public _renderCamera(camera: Camera) {
-            //在这里先剔除，然后排序，最后绘制           
-            this._drawCalls.sortAfterFrustumCulling(camera);
+            //在这里先剔除，然后排序，最后绘制
+            const drawCalls = this._drawCalls;
+            drawCalls.sortAfterFrustumCulling(camera);
 
-            const opaqueCalls = this._drawCalls.opaqueCalls;
-            const transparentCalls = this._drawCalls.transparentCalls;
+            const opaqueCalls = drawCalls.opaqueCalls;
+            const transparentCalls = drawCalls.transparentCalls;
 
             //Step1 draw opaque
             for (const drawCall of opaqueCalls) {
@@ -409,9 +448,60 @@ namespace egret3d {
                 }
             }
         }
+        /**
+         * @internal
+         * @param light
+         */
+        public _renderLightShadow(light: BaseLight) {
+            const camera = this._lightCamera;
+            const drawCalls = this._drawCalls;
+            const faceCount = light.type === LightType.Point ? 6 : 1;
+
+            for (let i = 0; i < faceCount; ++i) {
+                (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
+                light.update(camera, i);
+                camera._targetAndViewport(light.renderTarget, false);
+                // render shadow
+                const context = camera.context;
+                if (light.type === LightType.Point) {
+                    context.drawtype = "_distance_package";
+                }
+                else {
+                    context.drawtype = "_depth_package";
+                }
+
+                context.updateCamera(camera, light.matrix);
+                context.updateLightDepth(light);
+
+                drawCalls.shadowFrustumCulling(camera);
+
+                for (const drawCall of drawCalls.shadowCalls) {
+                    //TODO, 现在不支持蒙皮动画阴影
+                    // let drawType = "base";
+                    // if (drawCall.boneData) {
+                    //     context.updateBones(drawCall.boneData);
+                    //     drawType = "skin";
+                    // }
+
+                    this._renderCall(context, drawCall);
+                }
+            }
+
+            GlRenderTarget.useNull(WebGLKit.webgl);
+        }
 
         public onUpdate() {
-            //
+            //Lights
+            const lights = this._groups[2].components as BaseLight[];
+            if (lights.length > 0) {
+                for (const light of lights) {
+                    if (!light.castShadows) {
+                        continue;
+                    }
+                    this._renderLightShadow(light);
+                }
+            }
+            //Cameras
             const cameras = this._groups[0].components as Camera[];
             if (cameras.length > 0) {
                 for (const camera of cameras) {
@@ -428,9 +518,9 @@ namespace egret3d {
                 }
             }
             else {
-                this._webGL.clearColor(0, 0, 0, 1);
-                this._webGL.clearDepth(1.0);
-                this._webGL.clear(WebGLKit.webgl.COLOR_BUFFER_BIT | WebGLKit.webgl.DEPTH_BUFFER_BIT);
+                this._webgl.clearColor(0, 0, 0, 1);
+                this._webgl.clearDepth(1.0);
+                this._webgl.clear(WebGLKit.webgl.COLOR_BUFFER_BIT | WebGLKit.webgl.DEPTH_BUFFER_BIT);
             }
         }
     }

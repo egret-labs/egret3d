@@ -1,9 +1,5 @@
 namespace egret3d {
 
-
-
-
-
     export interface MaterialConfig_UniformFloat4 {
         type: UniformTypeEnum.Float4,
         value: [number, number, number, number]
@@ -52,7 +48,7 @@ namespace egret3d {
         public version: number = 0;
         public $uniforms: UniformTypes = {};
 
-
+        private _cacheDefines:string;
         private _defines: Array<string> = new Array();
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.SHADER, { set: "setShader" })
@@ -204,11 +200,11 @@ namespace egret3d {
         }
 
         public get shaderDefine(): string {
-            let res = "";
+            this._cacheDefines = "";
             for (const key of this._defines) {
-                res += "#define " + key + " \n";
+                this._cacheDefines += "#define " + key + " \n";
             }
-            return res;
+            return this._cacheDefines;
         }
 
         addDefine(key: string) {
@@ -226,147 +222,171 @@ namespace egret3d {
             this.version++;
         }
 
-        setBoolean(_id: string, _bool: boolean) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setBoolean(id: string, value: boolean) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value = _bool;
+                uniform.value = value;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.BOOL, value: _bool, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.BOOL, value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
 
             this.version++;
         }
 
-        setInt(_id: string, _number: number) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setInt(id: string, value: number) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value = _number;
+                uniform.value = value;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.Int, value: _number, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.Int, value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
         }
 
-        setFloat(_id: string, _number: number) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setIntv(id: string, value: Float32Array) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value = _number;
+                uniform.value = value;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.FLOAT, value: _number, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.Int, count: value.length, value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
         }
 
-        setFloatv(_id: string, _numbers: Float32Array) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setFloat(id: string, value: number) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value = _numbers;
+                uniform.value = value;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.FLOAT, count: _numbers.length, value: _numbers, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.FLOAT, value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
         }
 
-        setVector2(_id: string, _vector2: Vector2) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setFloatv(id: string, value: Float32Array) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value[0] = _vector2.x;
-                uniform.value[1] = _vector2.y;
+                uniform.value = value;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.FLOAT, value: new Float32Array(2)[_vector2.x, _vector2.y], extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.FLOAT, count: value.length, value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
         }
 
-        setVector2v(_id: string, _vector2v: Float32Array) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setVector2(id: string, value: Vector2) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value = _vector2v;
+                uniform.value[0] = value.x;
+                uniform.value[1] = value.y;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.FLOAT, count: _vector2v.length, value: _vector2v, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.FLOAT_VEC2, value: new Float32Array(2)[value.x, value.y], extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
         }
 
-        setVector3(_id: string, _vector3: Vector3) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setVector2v(id: string, value: Float32Array) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value[0] = _vector3.x;
-                uniform.value[1] = _vector3.y;
-                uniform.value[2] = _vector3.z;
+                uniform.value = value;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.FLOAT_VEC3, value: new Float32Array(3)[_vector3.x, _vector3.y, _vector3.z], extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.FLOAT_VEC2, count: value.length, value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
         }
 
-        setVector3v(_id: string, _vector3v: Float32Array) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setVector3(id: string, value: Vector3) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value = _vector3v;
+                uniform.value[0] = value.x;
+                uniform.value[1] = value.y;
+                uniform.value[2] = value.z;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.FLOAT_VEC3, count: _vector3v.length, value: _vector3v, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.FLOAT_VEC3, value: new Float32Array(3)[value.x, value.y, value.z], extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
         }
 
-        setVector4(_id: string, _vector4: Vector4) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setVector3v(id: string, value: Float32Array) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value[0] = _vector4.x;
-                uniform.value[1] = _vector4.y;
-                uniform.value[2] = _vector4.z;
-                uniform.value[3] = _vector4.w;
+                uniform.value = value;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.FLOAT_VEC4, value: new Float32Array(4)[_vector4.x, _vector4.y, _vector4.z, _vector4.w], extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.FLOAT_VEC3, count: value.length, value: value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
         }
 
-        setVector4v(_id: string, _vector4v: Float32Array | [number, number, number, number]) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setVector4(id: string, value: Vector4) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value = _vector4v;
+                uniform.value[0] = value.x;
+                uniform.value[1] = value.y;
+                uniform.value[2] = value.z;
+                uniform.value[3] = value.w;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.FLOAT_VEC3, count: _vector4v.length, value: _vector4v, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.FLOAT_VEC4, value: new Float32Array(4)[value.x, value.y, value.z, value.w], extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
         }
 
-        setMatrix(_id: string, _matrix: Matrix) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setVector4v(id: string, value: Float32Array | [number, number, number, number]) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value = _matrix.rawData;
+                uniform.value = value;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.FLOAT_VEC3, value: _matrix.rawData, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.FLOAT_VEC4, count: value.length, value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
         }
 
-        setMatrixv(_id: string, _matrixv: Float32Array) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setMatrix(id: string, value: Matrix) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
-                uniform.value = _matrixv;
+                uniform.value = value.rawData;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.FLOAT_MAT4, count: _matrixv.length, value: _matrixv, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.FLOAT_MAT4, value: value.rawData, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
         }
 
-        setTexture(_id: string, _texture: egret3d.Texture) {
-            let uniform = this._gltfTechnique.uniforms[_id];
+        setMatrixv(id: string, value: Float32Array) {
+            let uniform = this._gltfTechnique.uniforms[id];
+            if (uniform !== undefined) {
+                uniform.value = value;
+                uniform.extensions.paper.dirty = true;
+            } 
+            else {
+                uniform = { type: gltf.UniformType.FLOAT_MAT4, count: value.length, value: value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            }
+            this.version++;
+        }
+
+        setTexture(id: string, value: egret3d.Texture) {
+            let uniform = this._gltfTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value) {
                     let index = this._textureRef.indexOf(uniform.value);
@@ -374,15 +394,16 @@ namespace egret3d {
                         this._textureRef.splice(index, 1);
                     }
                 }
-                uniform.value = _texture;
+                uniform.value = value;
                 uniform.extensions.paper.dirty = true;
-            } else {
-                uniform = { type: gltf.UniformType.SAMPLER_2D, value: _texture, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            } 
+            else {
+                uniform = { type: gltf.UniformType.SAMPLER_2D, value: value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
             this.version++;
 
-            if (_texture) {
-                this._textureRef.push(_texture);
+            if (value) {
+                this._textureRef.push(value);
             }
         }
 

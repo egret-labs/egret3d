@@ -121,6 +121,7 @@ namespace egret3d {
                 dirty: boolean;
                 enable: boolean;
                 location: WebGLUniformLocation;
+                textureUnits?: number[];
             }
         }
     }

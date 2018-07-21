@@ -132,6 +132,7 @@ declare namespace gltf {
         FLOAT_MAT3 = 35675,
         FLOAT_MAT4 = 35676,
         SAMPLER_2D = 35678,
+        SAMPLER_CUBE = 35680,
     }
     /**
      * The shader stage.  All valid values correspond to WebGL enums.
@@ -1010,7 +1011,7 @@ declare namespace gltf {
         /**
          * The uniform type.
          */
-        type: 5124 | 5126 | 35664 | 35665 | 35666 | 35667 | 35668 | 35669 | 35670 | 35671 | 35672 | 35673 | 35674 | 35675 | 35676 | 35678;
+        type: 5124 | 5126 | 35664 | 35665 | 35666 | 35667 | 35668 | 35669 | 35670 | 35671 | 35672 | 35673 | 35674 | 35675 | 35676 | 35678 | 35680;
         /**
          * Identifies a uniform with a well-known meaning.
          */

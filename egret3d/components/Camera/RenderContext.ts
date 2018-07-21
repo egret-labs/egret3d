@@ -266,26 +266,12 @@ namespace egret3d {
             this.version++;
         }
 
-        updateOverlay() {
-            Matrix.identify(this.matrix_mvp);
-
-            this.version++;
-        }
-
         updateModel(matrix: Matrix) {
             Matrix.copy(matrix, this.matrix_m); // clone matrix because getWorldMatrix returns a reference
             Matrix.multiply(this.matrix_v, this.matrix_m, this.matrix_mv);
             // paper._Matrix.inverse(this.matrixModelView, this.matrixNormal);
             // paper.matrixTranspose(this.matrixNormal, this.matrixNormal);
             Matrix.multiply(this.matrix_vp, this.matrix_m, this.matrix_mvp);
-
-            this.version++;
-        }
-
-        // for trial effect
-        updateModeTrail() {
-            Matrix.copy(this.matrix_v, this.matrix_mv);
-            Matrix.copy(this.matrix_vp, this.matrix_mvp);
 
             this.version++;
         }

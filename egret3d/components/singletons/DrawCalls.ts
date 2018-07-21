@@ -36,6 +36,11 @@ namespace egret3d {
          * 透明列表
          */
         public readonly transparentCalls: DrawCall[] = [];
+
+        /**
+         * 阴影列表
+         */
+        public readonly shadowCalls: DrawCall[] = [];
         /**
          * 所有非透明的, 按照从近到远排序
          * @param a 
@@ -62,6 +67,18 @@ namespace egret3d {
                 return a.material.renderQueue - b.material.renderQueue;
             }
         }
+        public shadowFrustumCulling(camera: Camera) {
+            this.shadowCalls.length = 0;
+            for (const drawCall of this.drawCalls) {
+                const drawTarget = drawCall.renderer.gameObject;
+                const visible = (camera.cullingMask & drawTarget.layer) !== 0;
+                if (visible && drawCall.renderer.castShadows) {
+                    if (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.transform))) {
+                        this.shadowCalls.push(drawCall);
+                    }
+                }
+            }
+        }
         public sortAfterFrustumCulling(camera: Camera) {
             //每次根据视锥裁切填充TODO，放到StartSystem
             this.opaqueCalls.length = 0;
@@ -70,12 +87,12 @@ namespace egret3d {
             //
             for (const drawCall of this.drawCalls) {
                 const drawTarget = drawCall.renderer.gameObject;
-                const visible = (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.transform)) && (camera.cullingMask & drawTarget.layer));
+                const visible = ((camera.cullingMask & drawTarget.layer) !== 0 && (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.transform))));
                 //裁切没通过
                 if (visible) {
                     const objPos = drawTarget.transform.getPosition();
                     drawCall.zdist = objPos.getDistance(cameraPos);
-                    if (drawCall.material.renderQueue >= RenderQueue.Transparent) {
+                    if (drawCall.material.renderQueue === RenderQueue.Transparent) {
                         this.transparentCalls.push(drawCall);
                     }
                     else {

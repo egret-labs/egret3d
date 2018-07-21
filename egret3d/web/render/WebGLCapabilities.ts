@@ -1,5 +1,4 @@
 namespace egret3d {
-
     /**
      * get max precision
      * @param gl

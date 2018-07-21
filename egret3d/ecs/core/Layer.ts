@@ -51,4 +51,8 @@ namespace paper {
         UserLayer10 = 0x000800,
         UserLayer11 = 0x000f00
     }
+
+    export function layerTest(cullingMask: CullingMask, layer: Layer) {
+        return (cullingMask & layer) !== 0;
+    }
 }
