@@ -29,7 +29,7 @@ namespace egret3d {
                 return null;
             }
 
-            return paper.deserialize<paper.Scene>(this._raw, this._assets);
+            return paper.deserialize<paper.Scene>(this._raw);
         }
     }
 }

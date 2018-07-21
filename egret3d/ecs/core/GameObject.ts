@@ -1,9 +1,14 @@
 namespace paper {
-
     /**
      * 可以挂载Component的实体类。
      */
     export class GameObject extends SerializableObject {
+        /**
+         * @internal
+         */
+        @paper.serializedField
+        public assetID: string = createAssetID();
+
         /**
          * 是否是静态，启用这个属性可以提升性能
          */
@@ -73,7 +78,7 @@ namespace paper {
         /**
          * 创建GameObject，并添加到当前场景中
          */
-        public constructor(name: string = "NoName", tag: string = "") {
+        public constructor(name: string = "NoName", tag: string = DefaultTags.Untagged) {
             super();
 
             this.name = name;
@@ -379,6 +384,13 @@ namespace paper {
         }
 
         /**
+         * 
+         */
+        public getOrAddComponent<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
+            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
+        }
+
+        /**
          * 针对同级的组件发送消息
          * @param methodName 
          * @param parameter
@@ -518,31 +530,10 @@ namespace paper {
          * 组件列表
          */
         @serializedField
+        @deserializedIgnore
         public get components(): ReadonlyArray<BaseComponent> {
             return this._components;
         }
-        /**
-         * 仅用于反序列化。
-         * @internal
-         */
-        public set components(value: ReadonlyArray<BaseComponent>) {
-            this._components.length = 0;
-            for (const component of value) {
-                if (component instanceof MissingObject) {
-                    this.addComponent(MissingComponent).missingObject = component;
-                }
-                else {
-                    if (component instanceof BaseRenderer) {
-                        this.renderer = component;
-                    }
-
-                    this._components.push(component);
-                }
-            }
-
-            this.transform = this.getComponent(egret3d.Transform) || this.addComponent(egret3d.Transform);
-        }
-
         /**
          * 获取物体所在场景实例。
          */

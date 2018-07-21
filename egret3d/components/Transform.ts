@@ -198,26 +198,6 @@ namespace egret3d {
 
             return children;
         }
-
-        public deserialize(element: any) {
-            super.deserialize(element); // TODO
-
-            this.localPosition.deserialize(element.localPosition);
-            this.localRotation.deserialize(element.localRotation);
-            this.localScale.deserialize(element.localScale);
-
-            this._children.length = 0;
-            if (element.children) {
-                for (let i = 0, l = element.children.length; i < l; i++) {
-                    const child = paper.getDeserializedObject<Transform>(element.children[i]);
-                    if (child) {
-                        child._parent = this;
-                        this._children.push(child);
-                    }
-                }
-            }
-        }
-
         /**
          * 设置父节点 
          */
@@ -847,19 +827,10 @@ namespace egret3d {
          * @language zh_CN
          */
         @paper.serializedField
+        @paper.deserializedIgnore
         public get children(): ReadonlyArray<Transform> {
             return this._children;
-        };
-        /**
-         * 仅用于反序列化。
-         * @internal
-         */
-        public set children(value: ReadonlyArray<Transform>) {
-            this._children.length = 0;
-            for (const component of value) {
-                this._children.push(component);
-            }
-        };
+        }
         /**
          * instance of parent transform
          * @version paper 1.0

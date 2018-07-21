@@ -3,10 +3,12 @@ namespace egret3d {
     export type RunEgretOptions = {
         antialias: boolean;
         defaultScene?: string;
-        isEditor?: boolean;
-        isPlaying?: boolean;
         contentWidth?: number;
         contentHeight?: number;
+
+        isEditor?: boolean;
+        isPlaying?: boolean;
+        systems?: any[];
     }
 
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number }
@@ -25,6 +27,34 @@ namespace egret3d {
         DefaultTextures.init();
         DefaultShaders.init();
         stage.init(canvas, requiredOptions);
+
+        if (!options.systems) {
+            options.systems = [
+                BeginSystem,
+                paper.EnableSystem,
+                paper.StartSystem,
+                //
+                oimo.PhysicsSystem,
+                //
+                paper.UpdateSystem,
+                //
+                AnimationSystem,
+                //
+                paper.LateUpdateSystem,
+                //
+                TrailRendererSystem,
+                MeshRendererSystem,
+                SkinnedMeshRendererSystem,
+                particle.ParticleSystem,
+                Egret2DRendererSystem,
+                LightSystem,
+                CameraSystem,
+                //
+                paper.DisableSystem,
+                paper.EndSystem,
+            ];
+        }
+
         paper.Application.init(options);
     }
 

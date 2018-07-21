@@ -359,9 +359,9 @@ namespace paper.editor {
             let serializeData = serialize(removeComponent);
             let assetsMap = {};
             if (serializeData["assets"]) {
-                (<ISerializedObject[]>serializeData["assets"]).forEach(item => {
-                    assetsMap[item.uuid] = Asset.find(item["url"]);
-                });
+                // (<ISerializedObject[]>serializeData["assets"]).forEach(item => { TODO
+                //     assetsMap[item.uuid] = Asset.find(item["url"]);
+                // });
             }
 
             let data = {
@@ -389,7 +389,7 @@ namespace paper.editor {
         public getComponentByAssetId(gameObject: GameObject, assetId: string): BaseComponent | null {
             for (let i: number = 0; i < gameObject.components.length; i++) {
                 let comp = gameObject.components[i];
-                if (comp.assetUUid === assetId) {
+                if (comp.assetID === assetId) {
                     return comp;
                 }
             }
@@ -511,7 +511,7 @@ namespace paper.editor {
             if ((Editor.editorModel.isPrefabRoot(gameObj) && allRootObjsUUid.indexOf(gameObj.uuid) >= 0)
                 || (Editor.editorModel.isPrefabChild(gameObj) && allRootObjsUUid.indexOf((gameObj as any).prefabEditInfo) >= 0)) {
                 let isPrefabRoot = Editor.editorModel.isPrefabRoot(gameObj);
-                let url = gameObj.prefab.url;
+                let url = gameObj.prefab.name;
                 prefabData[uniqueIndex] = { gameObj, isPrefabRoot, url };
             }
 
@@ -581,9 +581,9 @@ namespace paper.editor {
                 one["serializeData"] = serializeData;
                 let assetsMap = {};
                 if (serializeData["assets"]) { // 认为此时所有资源已经正确加载
-                    (<ISerializedObject[]>serializeData["assets"]).forEach(item => {
-                        assetsMap[item.uuid] = Asset.find(item["url"]); // 获取资源引用
-                    });
+                    // (<ISerializedObject[]>serializeData["assets"]).forEach(item => { TODO
+                    //     assetsMap[item.uuid] = Asset.find(item["url"]); // 获取资源引用
+                    // });
                 }
                 one["assetsMap"] = assetsMap;
                 datas.push(one);
@@ -595,7 +595,7 @@ namespace paper.editor {
             for (let key in prefabRootMap) {
                 let rootObj: GameObject | null = this.getGameObjectByUUid(prefabRootMap[key]);
                 if (rootObj) {
-                    let url: string = rootObj.prefab.url;
+                    let url: string = rootObj.prefab.name;
                     let rootId: number = prefabRootMap[key];
                     let prefabIds: string[] = [];
                     this.getAllIdsFromPrefabInstance(rootObj, prefabIds, rootObj);
@@ -650,7 +650,7 @@ namespace paper.editor {
             for (let key in prefabRootMap) {
                 let rootObj: GameObject | null = this.getGameObjectByUUid(prefabRootMap[key]);
                 if (rootObj) {
-                    let url: string = rootObj.prefab.url;
+                    let url: string = rootObj.prefab.name;
                     let rootId: number = prefabRootMap[key];
                     let prefabIds: string[] = [];
                     this.getAllIdsFromPrefabInstance(rootObj, prefabIds, rootObj);
@@ -925,7 +925,7 @@ namespace paper.editor {
             let camera = cameraObject.addComponent(egret3d.Camera);
             camera.near = 0.1;
             camera.far = 100;
-            camera.backgroundColor = new egret3d.Color(0.13, 0.28, 0.51, 1);
+            camera.backgroundColor.set(0.13, 0.28, 0.51, 1);
             cameraObject.transform.setLocalPosition(0, 10, -10);
             cameraObject.transform.lookAt(new egret3d.Vector3(0, 0, 0));
             return cameraObject;
@@ -973,9 +973,9 @@ namespace paper.editor {
         public createAssetMap(serializeData: ISerializedData): any {
             let assetsMap = {};
             if (serializeData["assets"]) {
-                (<ISerializedObject[]>serializeData["assets"]).forEach(item => {
-                    assetsMap[item.uuid] = Asset.find(item["url"]);
-                });
+                // (<ISerializedObject[]>serializeData["assets"]).forEach(item => { TODO
+                //     assetsMap[item.uuid] = Asset.find(item["url"]);
+                // });
             }
             return assetsMap;
         }

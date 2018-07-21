@@ -17,7 +17,6 @@ namespace paper {
         /**
          * @internal
          */
-        @serializedField
         public _isReseted: boolean = false;
         /**
          * @internal

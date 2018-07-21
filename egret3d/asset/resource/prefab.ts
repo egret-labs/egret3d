@@ -1,37 +1,24 @@
 namespace egret3d {
-
-    export type PrefabConfig = {
-        assets: { uuid: string, hashCode: string, class: string, url: string }[]; // 兼容 hashCode 。
-        objects: any[];
-    }
-
     /**
      * 
      */
     export class BaseObjectAsset extends paper.Asset {
-        protected readonly _assets: { [index: string]: paper.Asset } = {};
-        protected _raw: PrefabConfig = null;
-
-        $parse(json: PrefabConfig, subAssets: paper.Asset[]) {
-
-            this._raw = json;
-            for (let item of subAssets) {
-                this._assets[item.hashCode || item.uuid] = item; // 兼容 hashCode 。
-            }
-        }
+        protected _raw: paper.ISerializedData = null;
         /**
-         * @inheritDoc
+         * @internal
          */
-        dispose() {
-            for (const k in this._assets) {
-                delete this._assets[k];
+        $parse(json: paper.ISerializedData) {
+            this._raw = json;
+        }
+
+        public dispose() {
+            if (this._isBuiltin) {
+                return;
             }
 
             this._raw = null;
         }
-        /**
-         * @inheritDoc
-         */
+
         public caclByteLength() {
             return 0;
         }
@@ -50,9 +37,7 @@ namespace egret3d {
                 return null;
             }
 
-            const gameObject = paper.deserialize<paper.GameObject>(this._raw, this._assets, true);
-
-            return gameObject;
+            return paper.deserialize<paper.GameObject>(this._raw);
         }
     }
 }

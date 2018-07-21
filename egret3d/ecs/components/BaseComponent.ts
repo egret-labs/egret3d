@@ -9,6 +9,11 @@ namespace paper {
         public static _injectGameObject: GameObject;
 
         /**
+         * @internal
+         */
+        @paper.serializedField
+        public assetID: string = createAssetID();
+        /**
          * 组件挂载的 GameObject
          */
         public readonly gameObject: GameObject = BaseComponent._injectGameObject;
@@ -29,11 +34,11 @@ namespace paper {
         }
 
         public serialize(): any {
-            const target = serializeRC(this);
+            const target = createReference(this, false);
             target._enabled = this._enabled;
 
-            if (this.assetUUid) {
-                target.assetUUid = this.assetUUid;
+            if (this.assetID) {
+                target.assetID = this.assetID;
             }
 
             return target;
@@ -43,11 +48,11 @@ namespace paper {
             this._enabled = element._enabled === false ? false : true;
 
             if (element.uuid) {
-                (this as any).uuid = element.uuid;
+                this.uuid = element.uuid;
             }
 
-            if (element.assetUUid) {
-                (this as any).assetUUid = element.assetUUid;
+            if (element.assetID) {
+                this.assetID = element.assetID;
             }
         }
         /**

@@ -34,15 +34,10 @@ namespace RES.processor {
         return stack.join("/");
     }
 
-
-    type TempResult = { url: string, hashCode: number, uuid: string }
-
-    function formatUrlAndSort(assets: any[], path: string, ): TempResult[] {
-        let list: TempResult[] = [];
-        list = assets.map(item => {
-            return { url: combinePath(path + "/", item.url), hashCode: item.hashCode, uuid: item.uuid }
+    function formatUrlAndSort(assets: string[], path: string, ) {
+        return assets.map(item => {
+            return item;
         });
-        return list
     }
 
     async function promisify(loader: egret.ImageLoader | egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
@@ -105,7 +100,7 @@ namespace RES.processor {
             const url = getUrl(resource);
             let shader = new egret3d.Shader(url);
             shader.$parse(data);
-            paper.Asset.register(shader, true);
+            paper.Asset.register(shader);
 
             return shader;
         },
@@ -158,7 +153,7 @@ namespace RES.processor {
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
             t2d.uploadImage(image.source, _mipmap, _linear, true, _repeat);
             texture.glTexture = t2d;
-            paper.Asset.register(texture, true);
+            paper.Asset.register(texture);
 
             return texture;
         },
@@ -183,7 +178,7 @@ namespace RES.processor {
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
             t2d.uploadImage(image.source, true, true, true, true);
             _texture.glTexture = t2d;
-            paper.Asset.register(_texture, true);
+            paper.Asset.register(_texture);
             return _texture;
         },
 
@@ -236,10 +231,10 @@ namespace RES.processor {
                         }
                         break;
                     default:
-                        console.warn(`不支持的 Uniform 参数：${material.url},${i}`);
+                        console.warn(`不支持的 Uniform 参数：${material.name},${i}`);
                 }
             }
-            paper.Asset.register(material, true);
+            paper.Asset.register(material);
             return material;
         },
 
@@ -258,7 +253,7 @@ namespace RES.processor {
             const glTF = new egret3d.GLTFAsset(url);
 
             glTF.parseFromBinary(new Uint32Array(result));
-            paper.Asset.register(glTF, true);
+            paper.Asset.register(glTF);
 
             return glTF;
         },
@@ -273,14 +268,13 @@ namespace RES.processor {
     export const PrefabProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            const data: egret3d.PrefabConfig = await host.load(resource, "json");
+            const data: paper.ISerializedData = await host.load(resource, "json");
             const url = getUrl(resource);
-            const subassets = await loadSubAssets(data, resource)
-
-
             const prefab = new egret3d.Prefab(url);
-            prefab.$parse(data, subassets);
-            paper.Asset.register(prefab, true);
+
+            await loadSubAssets(data, resource)
+            prefab.$parse(data);
+            paper.Asset.register(prefab);
 
             return prefab;
         },
@@ -289,62 +283,38 @@ namespace RES.processor {
             let data = host.get(resource);
             data.dispose();
         }
-
     };
-
-
-    async function loadSubAssets(data: egret3d.PrefabConfig, resource: RES.ResourceInfo) {
-
-        // load ref assets
-        const assets = data.assets;
-        // const result: paper.Asset[] = [];
-        // if (assets) {
-        //     const list = formatUrlAndSort(assets, dirname(resource.url));
-
-        //     for (let item of list) {
-        //         let r = RES.host.resourceConfig["getResource"](item.url);
-        //         if (r) {
-        //             let asset: paper.Asset = await host.load(r);
-        //             asset.hashCode = item.hashCode;
-        //             result.push(asset)
-        //         }
-        //     }
-        // }
-
-        let result: paper.Asset[] = [];
-        const list = formatUrlAndSort(assets, dirname(resource.url));
-        await Promise.all(list.map((async (item) => {
-            let r = RES.host.resourceConfig["getResource"](item.url);
-            if (r) {
-                let asset: paper.Asset = await host.load(r);
-                asset.hashCode = item.hashCode;
-                asset.uuid = item.uuid;
-                result.push(asset)
-            }
-        })))
-
-        return result;
-    }
 
     export const SceneProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            const data = await host.load(resource, "json");
+            const data: paper.ISerializedData = await host.load(resource, "json");
             const url = getUrl(resource);
-            const subassets = await loadSubAssets(data, resource)
+            const rawScene = new egret3d.RawScene(url);
 
-            const scene = new egret3d.RawScene(url);
-            scene.$parse(data, subassets);
-            paper.Asset.register(scene, true);
-            return scene;
+            await loadSubAssets(data, resource)
+            rawScene.$parse(data);
+            paper.Asset.register(rawScene);
+
+            return rawScene;
         },
 
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
         }
-
     };
+
+    async function loadSubAssets(data: paper.ISerializedData, resource: RES.ResourceInfo) {
+        // const list = formatUrlAndSort(data.assets, dirname(resource.url));
+
+        await Promise.all(data.assets.map((async (item) => {
+            const r = RES.host.resourceConfig["getResource"](item);
+            if (r) {
+                await host.load(r);
+            }
+        })));
+    }
 
     RES.processor.map("GLVertexShader", GLVertexShaderProcessor);
     RES.processor.map("GLFragmentShader", GLFragmentShaderProcessor);

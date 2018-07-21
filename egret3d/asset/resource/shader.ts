@@ -110,7 +110,7 @@ namespace egret3d {
                 if (!words) words = property.match(RegexpUtil.vectorRegexp);
                 if (!words) words = property.match(RegexpUtil.textureRegexp);
                 if (!words) {
-                    console.error("Asset (" + this.url + ") property error! info:\n" + property);
+                    console.error("Asset (" + this.name + ") property error! info:\n" + property);
                     return;
                 }
 
@@ -139,7 +139,7 @@ namespace egret3d {
                             break;
 
                         default:
-                            console.log("Asset (" + this.url + ") property error! unknown type : " + type);
+                            console.log("Asset (" + this.name + ") property error! unknown type : " + type);
                             break;
                     }
                 }
@@ -252,10 +252,11 @@ namespace egret3d {
             return pass;
         }
 
-        /**
-         * @inheritDoc
-         */
         public dispose() {
+            if (this._isBuiltin) {
+                return;
+            }
+
             for (const k in this.passes) {
                 delete this.passes[k];
             }
@@ -265,9 +266,6 @@ namespace egret3d {
             }
         }
 
-        /**
-         * @inheritDoc
-         */
         public caclByteLength() {
             return 0;
         }

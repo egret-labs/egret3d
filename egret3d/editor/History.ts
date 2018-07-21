@@ -861,7 +861,7 @@ namespace paper.editor {
             let objects = Application.sceneManager.getActiveScene().gameObjects;
             let result: GameObject[] = [];
             objects.forEach(obj => {
-                if (obj.prefab && obj.prefab.url === prefab.url && Editor.editorModel.isPrefabRoot(obj)) {
+                if (obj.prefab && obj.prefab.name === prefab.name && Editor.editorModel.isPrefabRoot(obj)) {
                     result.push(obj);
                 }
             })
@@ -986,7 +986,7 @@ namespace paper.editor {
                         const { propName, copyValue, valueEditType } = propertyValue;
                         let newValue = await Editor.editorModel.deserializeProperty(copyValue, valueEditType);
                         objects.forEach(object => {
-                            let objectComp = Editor.editorModel.getComponentByAssetId(object, prefabComp.assetUUid);
+                            let objectComp = Editor.editorModel.getComponentByAssetId(object, prefabComp.assetID);
                             if (objectComp !== null) {
                                 let valueType = typeof objectComp[propName];
                                 if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
@@ -1137,7 +1137,7 @@ namespace paper.editor {
                         let addComponent;
 
                         if (this.data.serializeData) {
-                            addComponent = deserialize(this.data.serializeData, this.data.assetsMap, true);
+                            addComponent = deserialize(this.data.serializeData); // 要不要 keep
                             Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
                         } else {
                             addComponent = gameObj.addComponent(compClz);

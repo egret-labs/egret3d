@@ -196,6 +196,7 @@ namespace paper {
          * @internal
          */
         public update() {
+            Time && Time.begin();
             Group.begin();
 
             if (this._registerSystems.length > 0) {
@@ -264,6 +265,7 @@ namespace paper {
             }
 
             Group.end();
+            Time.end();
         }
         /**
          * 

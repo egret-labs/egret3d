@@ -14,8 +14,8 @@ namespace egret3d {
                 { componentClass: Egret2DRenderer }
             ],
         ];
-        protected readonly _cameras: Cameras = this._globalGameObject.getComponent(Cameras) || this._globalGameObject.addComponent(Cameras);
-        protected readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
+        protected readonly _cameras: Cameras = this._globalGameObject.getOrAddComponent(Cameras);
+        protected readonly _drawCalls: DrawCalls = this._globalGameObject.getOrAddComponent(DrawCalls);
 
         private _applyDrawCall(context: RenderContext, drawCall: DrawCall): void {
             const renderer = drawCall.renderer;
@@ -127,9 +127,6 @@ namespace egret3d {
                 WebGLKit.webgl.clearDepth(1.0);
                 WebGLKit.webgl.clear(WebGLKit.webgl.COLOR_BUFFER_BIT | WebGLKit.webgl.DEPTH_BUFFER_BIT);
             }
-
-            WebGLKit.webgl.bindBuffer(WebGLKit.webgl.ARRAY_BUFFER, null);
-            WebGLKit.webgl.bindBuffer(WebGLKit.webgl.ELEMENT_ARRAY_BUFFER, null);
 
             Performance.endCounter("render");
             Performance.updateFPS();

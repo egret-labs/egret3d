@@ -7,69 +7,52 @@ namespace paper {
      */
     export let Time: Clock;
     /**
-     * 组件实体系统的主入口
+     * 
      */
-    export class Application {
+    export class ECS {
+        private static _instance: ECS | null = null;
         /**
-         * 系统管理器
+         * 
          */
-        public static readonly systemManager: SystemManager = SystemManager.getInstance();
+        public static getInstance() {
+            if (!this._instance) {
+                this._instance = new ECS();
+            }
+
+            return this._instance;
+        }
+
+        private constructor() {
+        }
 
         /**
-         * 场景管理器
+         * 系统管理器。
          */
-        public static readonly sceneManager: SceneManager = SceneManager.getInstance();
+        public readonly systemManager: SystemManager = SystemManager.getInstance();
+        /**
+         * 场景管理器。
+         */
+        public readonly sceneManager: SceneManager = SceneManager.getInstance();
 
-        private static _isEditor = false;
-        private static _isFocused = false;
-        private static _isPlaying = false;
-        private static _isRunning = false;
-        private static _bindUpdate: FrameRequestCallback = null as any;
+        private _isEditor = false;
+        private _isFocused = false;
+        private _isPlaying = false;
+        private _isRunning = false;
+        private _bindUpdate: FrameRequestCallback = null as any;
 
-        private static _update() {
+        private _update() {
             if (this._isRunning) {
                 requestAnimationFrame(this._bindUpdate);
             }
 
-            Time.begin();
             this.systemManager.update();
-            Time.end();
         }
 
-        public static init({ isEditor = false, isPlaying = true } = {}) {
-            const systemClasses = [
-                //
-                BeginSystem,
-                EnableSystem,
-                StartSystem,
-                //
-                egret3d.oimo.PhysicsSystem, // TODO 分离
-                //
-                UpdateSystem,
-                //
-                egret3d.AnimationSystem,
-                //
-                LateUpdateSystem,
-                //
-                egret3d.TrailRendererSystem,
-                egret3d.MeshRendererSystem,
-                egret3d.SkinnedMeshRendererSystem,
-                egret3d.particle.ParticleSystem,
-                egret3d.Egret2DRendererSystem,
-                egret3d.LightSystem,
-                egret3d.CameraSystem,
-                //
-                DisableSystem,
-                EndSystem,
-            ];
-
+        public init({ isEditor = false, isPlaying = true, systems = [] as { new(): BaseSystem }[] } = {}) {
             let level = 0;
-            for (const systemClass of systemClasses) {
+            for (const systemClass of systems) {
                 this.systemManager.register(systemClass, level++);
             }
-
-            //
-            Time = this.sceneManager.globalGameObject.getComponent(Clock) || this.sceneManager.globalGameObject.addComponent(Clock);
 
             this._isEditor = isEditor;
             this._isPlaying = isPlaying;
@@ -79,11 +62,11 @@ namespace paper {
         /**
          * 
          */
-        public static pause() {
+        public pause() {
             this._isRunning = false;
         }
 
-        public static resume() {
+        public resume() {
             if (this._isRunning) {
                 return;
             }
@@ -97,30 +80,29 @@ namespace paper {
             this._update();
         }
 
-        public static get isEditor() {
+        public callLater(callback: () => void): void {
+            (this.systemManager.getSystem(paper.LateUpdateSystem) as paper.LateUpdateSystem).callLater(callback);
+        }
+
+        public get isEditor() {
             return this._isEditor;
         }
 
-        public static get isFocused() {
+        public get isFocused() {
             return this._isFocused;
         }
 
-        public static get isPlaying() {
+        public get isPlaying() {
             return this._isPlaying;
         }
 
-        public static get isRunning() {
+        public get isRunning() {
             return this._isRunning;
         }
-
-        /**
-         * @deprecated
-         */
-        public static callLater(callback: () => void): void {
-            (this.systemManager.getSystem(LateUpdateSystem) as LateUpdateSystem).callLater(callback);
-        }
-
-        private constructor() {
-        }
     }
+
+    /**
+     * 
+     */
+    export const Application = ECS.getInstance();
 }

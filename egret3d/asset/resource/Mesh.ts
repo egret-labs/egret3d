@@ -232,33 +232,24 @@ namespace egret3d {
         }
 
         public serialize() {
-            if (!this._glTFAsset.url) {
+            if (!this._glTFAsset.name) {
                 return null;
             }
 
-            const target = paper.serializeC(this);
+            const target = paper.createStruct(this);
             target._glTFMeshIndex = this._glTFMeshIndex;
-            target._glTFAsset = paper.serializeAsset(this._glTFAsset);
+            target._glTFAsset = paper.createAssetReference(this._glTFAsset);
 
             return target;
         }
 
         public deserialize(element: any) {
-            if (element._glTFAsset) {
-                this._glTFMeshIndex = element._glTFMeshIndex;
-                this._glTFAsset = paper.getDeserializedObject(element._glTFAsset) as GLTFAsset;
-            }
-            else { // TODO 旧数据兼容代码。
-                const mesh = paper.getDeserializedObject(element) as any;
-                this._glTFMeshIndex = mesh._glTFMeshIndex;
-                this._glTFAsset = mesh._glTFAsset;
-            }
+            this._glTFMeshIndex = element._glTFMeshIndex;
+            this._glTFAsset = paper.getDeserializedAssetOrComponent(element._glTFAsset) as GLTFAsset;
 
             this.initialize();
         }
-        /**
-         * @inheritDoc
-         */
+
         public dispose() {
             const webgl = WebGLKit.webgl;
 
@@ -277,11 +268,15 @@ namespace egret3d {
             this._glTFMesh = null as any;
             this._vertexBuffer = null as any;
         }
-        /**
-         * @inheritDoc
-         */
+
         public caclByteLength() {
             return 0;
+        }
+        /**
+         * 
+         */
+        public clone() {
+            return new Mesh(this._glTFAsset, this._glTFMeshIndex, this._drawMode);
         }
         /**
          * 

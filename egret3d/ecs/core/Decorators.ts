@@ -16,7 +16,6 @@ namespace paper {
      */
     export const _requireComponentss: { new(): BaseComponent }[][] = [];
 
-    const _tagA: any[] = [];
     const _tagB: any[] = [];
     const _tagC: any[] = [];
     /**
@@ -24,30 +23,7 @@ namespace paper {
      */
     export const enum SerializeKey {
         Serialized = "__serialized",
-        SerializedType = "__serializedType",
         DeserializedIgnore = "__deserializedIgnore",
-    }
-
-    /**
-     * 标记序列化分类
-     * 如果没有标记序列化分类，序列化后的对象只会收集在objects中
-     * 如果被标记了某种序列化分类，序列化后的对象还会被单独收集到一个新的数组中，key即为类名
-     * @internal
-     */
-    export function serializedType(type: string) {
-        return function (clazz: Function) {
-            const classPrototype = clazz.prototype;
-            if (_tagA.indexOf(classPrototype) >= 0) {
-                const types = classPrototype[SerializeKey.SerializedType] as string[];
-                if (types.indexOf(type) < 0) {
-                    types.push(type);
-                }
-            }
-            else {
-                classPrototype[SerializeKey.SerializedType] = [type];
-                _tagA.push(classPrototype);
-            }
-        }
     }
 
     /**

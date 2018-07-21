@@ -417,8 +417,12 @@ namespace egret3d {
         public caclByteLength() {
             return 0; // TODO
         }
-        
+
         public dispose() {
+            if (this._isBuiltin) {
+                return;
+            }
+
             this.buffers.length = 0;
         }
     }

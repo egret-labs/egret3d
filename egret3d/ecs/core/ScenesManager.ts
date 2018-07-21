@@ -102,7 +102,6 @@ namespace paper {
 
             return null;
         }
-
         /**
          * 
          */
@@ -125,7 +124,7 @@ namespace paper {
          */
         public get globalGameObject() {
             if (!this._globalGameObject) {
-                this._globalGameObject = new GameObject("global", "global");
+                this._globalGameObject = new GameObject("global");
                 this._globalGameObject.dontDestroy = true;
             }
 

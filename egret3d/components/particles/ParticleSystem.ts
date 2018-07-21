@@ -28,7 +28,7 @@ namespace egret3d.particle {
                 ]
             }
         ];
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getOrAddComponent(DrawCalls);
         /**
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */
@@ -448,7 +448,7 @@ namespace egret3d.particle {
 
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.batchMesh,
-                    material: renderer.batchMaterial,
+                    material: renderer.batchMaterial || DefaultMaterials.MissingMaterial,
 
                     frustumTest: false,
                     zdist: -1,
