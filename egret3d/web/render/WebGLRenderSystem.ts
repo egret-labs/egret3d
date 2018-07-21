@@ -410,7 +410,7 @@ namespace egret3d {
             //State
             this._updateState(technique.states);
             //Use Program
-            const force = WebGLKit.useProgram(program);
+            const force = WebGLKit.useProgram(program.program);
             //Uniform
             this._updateContextUniforms(context, material, technique, force);
             this._updateUniforms(context, material, technique, force);

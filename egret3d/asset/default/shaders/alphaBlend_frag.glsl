@@ -1,4 +1,5 @@
 
+#include <common>
 uniform sampler2D _MainTex;
 uniform vec4 _TintColor;
 varying highp vec2 xlv_TEXCOORD0;

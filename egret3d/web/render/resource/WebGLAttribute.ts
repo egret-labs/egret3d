@@ -1,15 +1,4 @@
 namespace egret3d {
-
-    // export enum WEBGL_ATTRIBUTE_TYPE {
-    //     FLOAT_VEC2 = 0x8B50,
-    //     FLOAT_VEC3 = 0x8B51,
-    //     FLOAT_VEC4 = 0x8B52,
-    //     FLOAT = 0x1406,
-    //     BYTE = 0xffff,
-    //     UNSIGNED_BYTE = 0x1401,
-    //     UNSIGNED_SHORT = 0x1403
-    // }
-
     // export class WebGLAttribute {
     //     public gl:WebGLRenderingContext;
     //     public name:string;

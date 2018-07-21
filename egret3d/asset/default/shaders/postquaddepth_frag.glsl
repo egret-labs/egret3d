@@ -1,3 +1,4 @@
+#include <common>
 precision mediump float;
 varying highp vec2 xlv_TEXCOORD0;       
 uniform sampler2D _DepthTex;   

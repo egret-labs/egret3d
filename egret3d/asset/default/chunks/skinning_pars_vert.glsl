@@ -1,12 +1,8 @@
-#include <common>
-attribute vec4 _glesVertex;   
-attribute vec4 _glesBlendIndex4;
+#ifdef SKINNING
 attribute vec4 _glesBlendWeight4;
 attribute vec4 _glesMultiTexCoord0;
 uniform highp vec4 glstate_vec4_bones[110];
-uniform highp mat4 glstate_matrix_mvp;
-uniform highp vec4 _MainTex_ST; 
-varying highp vec2 xlv_TEXCOORD0;
+
 mat4 buildMat4(int index)
 {
 	vec4 quat = glstate_vec4_bones[index * 2 + 0];
@@ -42,13 +38,4 @@ highp vec4 calcVertex(highp vec4 srcVertex,highp vec4 blendIndex,highp vec4 blen
 			 + buildMat4(i4)*blendWeight.w;
 	return mat* srcVertex;
 }
-
-
-void main()
-{                                               
-    highp vec4 tmpvar_1 = vec4(calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz, 1.0);
-			 
-    gl_Position = glstate_matrix_mvp *  tmpvar_1;
-
-	xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  
-}
+#endif

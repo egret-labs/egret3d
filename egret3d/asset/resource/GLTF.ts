@@ -108,7 +108,7 @@ namespace egret3d {
         }
     }
     export interface GLTFAttribute extends gltf.Attribute {
-        extensions: {
+        extensions?: {
             paper: {
                 enable: boolean;
                 location: number;
@@ -116,7 +116,7 @@ namespace egret3d {
         }
     }
     export interface GLTFUniform extends gltf.Uniform {
-        extensions: {
+        extensions?: {
             paper: {
                 dirty: boolean;
                 enable: boolean;

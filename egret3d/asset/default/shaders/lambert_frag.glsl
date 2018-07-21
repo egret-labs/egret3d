@@ -1,5 +1,5 @@
 // #extension GL_OES_standard_derivatives : enable
-
+#include <common>
 uniform sampler2D _MainTex;
 uniform vec4 _Color;         
 

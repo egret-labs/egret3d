@@ -1,7 +1,7 @@
 namespace egret3d {
 
     export class WebGLKit {
-        private static _programMap: { [key: string]: WebGLProgram } = {};
+        private static _programMap: { [key: string]: GlProgram } = {};
         private static _vsShaderMap: { [key: string]: WebGLShader } = {};
         private static _fsShaderMap: { [key: string]: WebGLShader } = {};
         private static _constDefines: string;
@@ -16,7 +16,7 @@ namespace egret3d {
                     throw new Error('Can not resolve #include <' + include + '>');
                 }
 
-                return this.parseIncludes(replace);
+                return WebGLKit._parseIncludes(replace);
             }
             //
             return string.replace(pattern, replace);
@@ -25,14 +25,6 @@ namespace egret3d {
         private static _createConstDefines(): string {
             let defines = "precision " + this.capabilities.maxPrecision + " float; \n";
             defines += "precision " + this.capabilities.maxPrecision + " int; \n";
-
-            defines += '#define PI 3.14159265359 \n';
-            defines += '#define EPSILON 1e-6 \n';
-            defines += 'float pow2( const in float x ) { return x*x; } \n';
-            defines += '#define LOG2 1.442695 \n';
-            defines += '#define RECIPROCAL_PI 0.31830988618 \n';
-            defines += '#define saturate(a) clamp( a, 0.0, 1.0 ) \n';
-            defines += '#define whiteCompliment(a) ( 1.0 - saturate( a ) ) \n';
             // defines += '#extension GL_OES_standard_derivatives : enable \n';
 
             return defines;
@@ -90,72 +82,76 @@ namespace egret3d {
         /**
          * extract attributes
          */
-        private static _extractAttributes(gl: WebGLRenderingContext, program: WebGLProgram, technique: gltf.Technique) {
-            const totalAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+        private static _extractAttributes(gl: WebGLRenderingContext, program: GlProgram, technique: gltf.Technique) {
+            const webglProgram = program.program;
+            const totalAttributes = gl.getProgramParameter(webglProgram, gl.ACTIVE_ATTRIBUTES);
             //
-            const webglAttributes: { [key: string]: WebGLActiveInfo } = {};
+            const attributes:{ [key: string]: WebGLActiveAttribute } = {};
             for (var i = 0; i < totalAttributes; i++) {
-                var attribData = gl.getActiveAttrib(program, i);
-                webglAttributes[attribData.name] = attribData;
+                var attribData = gl.getActiveAttrib(webglProgram, i);
+                const location = gl.getAttribLocation(webglProgram, attribData.name);
+                attributes[attribData.name] = { type: attribData.type, size: attribData.size, location };
             }
-            //
-            for (const name in technique.attributes) {
-                const attribute = technique.attributes[name];
-                if (webglAttributes[name]) {
-                    if (webglAttributes[name].type !== attribute.type) {
-                        console.error("Attribute类型不匹配 着色器中类型:" + webglAttributes[name].type + " 文件中类型:" + attribute.type);
-                    }
-                    attribute.extensions.paper.enable = true;
-                    attribute.extensions.paper.location = gl.getAttribLocation(program, name);
-                }
-                else {
-                    attribute.extensions.paper.enable = false;
-                }
-            }
-
-            return webglAttributes;
+            program.attributes = attributes;
         }
 
         /**
          * extract uniforms
          */
-        private static _extractUniforms(gl: WebGLRenderingContext, program: WebGLProgram, technique: gltf.Technique) {
-            const totalUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+        private static _extractUniforms(gl: WebGLRenderingContext, program: GlProgram, technique: gltf.Technique) {
+            const webglProgram = program.program;
+            const totalUniforms = gl.getProgramParameter(webglProgram, gl.ACTIVE_UNIFORMS);
             //
-            const webglUniforms: { [key: string]: WebGLActiveInfo } = {};
+            const uniforms: { [key: string]: WebGLActiveUniform } = {};
             for (var i = 0; i < totalUniforms; i++) {
-                const uniformData = gl.getActiveUniform(program, i);
-                //const name = _uniformsKeyConvert[uniformData.name] ? _uniformsKeyConvert[uniformData.name] : uniformData.name;
-                const name = uniformData.name;
-                webglUniforms[name] = uniformData;
-            }
+                const uniformData = gl.getActiveUniform(webglProgram, i);
+                const location = gl.getUniformLocation(webglProgram, uniformData.name);
 
+                uniforms[uniformData.name] = { type: uniformData.type, size: uniformData.size, location };
+            }
+            program.uniforms = uniforms;
+        }
+        private static _allocAttributes(program: GlProgram, technique: gltf.Technique) {
+            const attributes = program.attributes;
+            for (const name in technique.attributes) {
+                const attribute = technique.attributes[name];
+                if (attributes[name]) {
+                    attribute.extensions.paper.enable = true;
+                    attribute.extensions.paper.location = attributes[name].location;
+                }
+                else {
+                    attribute.extensions.paper.enable = false;
+                }
+            }
+        }
+        private static _allocUniforms(program: GlProgram, technique: gltf.Technique) {
+            const uniforms = program.uniforms;
             for (const name in technique.uniforms) {
                 const uniform = technique.uniforms[name];
-                if (webglUniforms[name]) {
-                    if (webglUniforms[name].type !== uniform.type) {
-                        console.error("Uniform类型不匹配 着色器中类型:" + webglUniforms[name].type + " 文件中类型:" + uniform.type);
+                if (uniforms[name]) {
+                    if (uniforms[name].type !== uniform.type) {
+                        console.error("Uniform类型不匹配 着色器中类型:" + uniforms[name].type + " 文件中类型:" + uniform.type);
                     }
+                    uniform.count = uniforms[name].size;
                     uniform.extensions.paper.enable = true;
-                    uniform.extensions.paper.location = gl.getUniformLocation(program, name);
+                    uniform.extensions.paper.location = uniforms[name].location;
                 }
                 else {
                     uniform.extensions.paper.enable = false;
                     uniform.extensions.paper.location = null;
                 }
             }
-
-            return webglUniforms;
         }
         /**
          * allocTexUnits
          */
-        private static _allocTexUnits(technique: gltf.Technique, webglUniforms: { [key: string]: WebGLActiveInfo }) {
+        private static _allocTexUnits(program: GlProgram, technique: gltf.Technique) {
+            const activeUniforms = program.uniforms;
             let samplerArrayKeys: string[] = [];
             let samplerKeys: string[] = [];
             //排序
-            for (let key in webglUniforms) {
-                const uniform = webglUniforms[key];
+            for (let key in activeUniforms) {
+                const uniform = activeUniforms[key];
                 if (uniform.type == gltf.UniformType.SAMPLER_2D || uniform.type == gltf.UniformType.SAMPLER_CUBE) {
                     if (key.indexOf("[") > -1) {
                         samplerArrayKeys.push(key);
@@ -177,7 +173,7 @@ namespace egret3d {
                     }
                     const textureUnits = uniform.extensions.paper.textureUnits;
                     const count = uniform.count ? uniform.count : 1;
-                    if (webglUniforms[key].size !== count) {
+                    if (activeUniforms[key].size !== count) {
                         console.error("贴图数量不匹配:" + key);
                     }
                     for (let i = 0; i < count; i++) {
@@ -194,13 +190,20 @@ namespace egret3d {
             const shader = material.getShader();
             const name = shader.vertShader.name + "_" + shader.fragShader.name + "_" + defines;
             let program = this._programMap[name];
+            const webgl = this.webgl;
             if (!program) {
-                const webgl = this.webgl;
-                program = this._getWebGLProgram(webgl, shader.vertShader, shader.fragShader, defines);
+                const webglProgram = this._getWebGLProgram(webgl, shader.vertShader, shader.fragShader, defines);
+                program = new GlProgram(webglProgram);
                 this._programMap[name] = program;
                 this._extractAttributes(webgl, program, technique);
-                const uniforms = this._extractUniforms(webgl, program, technique);
-                this._allocTexUnits(technique, uniforms);
+                this._extractUniforms(webgl, program, technique);
+            }
+            //
+            if (technique.program !== program) {
+                technique.program = program;
+                this._allocAttributes(program, technique);
+                this._allocUniforms(program, technique);
+                this._allocTexUnits(program, technique);
             }
             return program;
         }

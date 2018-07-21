@@ -55,17 +55,29 @@ namespace egret3d {
     //     "u_uvCurveMax[0]": "u_uvCurveMax",
     // };
 
-    
+    export interface WebGLActiveAttribute {
+        size: number;
+        type: number;
+        location: number;
+    }
 
-    
+    export interface WebGLActiveUniform {
+        size: number;
+        type: number;
+        location: WebGLUniformLocation;
+    }
+
+
     /**
      * 
      * WebGLProgram的包装类，可以批量上传数据并具有标脏功能
      */
-    // export class GlProgram {
-    //     public program: WebGLProgram;
-    //     public constructor(gl: WebGLRenderingContext, technique: gltf.Technique, vShaderInfo: ShaderInfo, fShaderInfo: ShaderInfo, defines: string) {
-            
-    //     }
-    // }
+    export class GlProgram {
+        public program: WebGLProgram;
+        public attributes: { [key: string]: WebGLActiveAttribute } = {};
+        public uniforms: { [key: string]: WebGLActiveUniform } = {};
+        public constructor(webglProgram: WebGLProgram) {
+            this.program = webglProgram;
+        }
+    }
 }
