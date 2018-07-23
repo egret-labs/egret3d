@@ -26,7 +26,7 @@ namespace egret3d {
         public static SHADOW_DEPTH: Shader;
         public static SHADOW_DISTANCE: Shader;
 
-        public static readonly defaultShaders: { [key: string]: string } = {};
+        // public static readonly defaultShaders: { [key: string]: string } = {};
 
         private static _inited: boolean = false;
 

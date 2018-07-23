@@ -57,6 +57,8 @@ namespace egret3d {
         public readonly vertShader: ShaderInfo = {} as any;//TODO
         public readonly fragShader: ShaderInfo = {} as any;//TODO
 
+        public tempUrl: string;
+
         setVertShader(name: string, src:string){
             this.vertShader.name = name;
             this.vertShader.src = src;

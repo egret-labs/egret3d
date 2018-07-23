@@ -3,7 +3,7 @@ namespace egret3d {
     /**
      * @internal
      */
-    export type TechniqueTemplate = { name: string, technique: gltf.Technique, material: GLTFMaterial, shader: Shader };
+    export type TechniqueTemplate = { name: string, technique: gltf.Technique, material: GLTFMaterial};
     /**
      * @internal
      */
@@ -11,9 +11,9 @@ namespace egret3d {
         private static _inited: boolean = false;
         public static readonly techniqueTemplates: { [key: string]: TechniqueTemplate } = {};
 
-        public static registerTechnique(template: TechniqueTemplate) {
+        public static registerTechnique(technique: gltf.Technique, material: GLTFMaterial) {
             //
-            const technique = template.technique;
+            const template = { name: "shader/lambert", technique, material, shader: egret3d.DefaultShaders.LAMBERT };
             for (const key in technique.attributes) {
                 const att = technique.attributes[key];
                 technique.attributes[key] = { semantic: att.semantic, extensions: { paper: { enable: true, location: -1 } } };
@@ -23,7 +23,7 @@ namespace egret3d {
                 technique.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value: uniform.value, extensions: { paper: { enable: false, location: -1 } } };
             }
 
-            this.techniqueTemplates[template.name] = template;
+            this.techniqueTemplates[technique.name] = template;
         }
 
         public static findTechniqueTemplate(name: string) {
@@ -69,7 +69,7 @@ namespace egret3d {
             {
                 const material: GLTFMaterial = { name: "shader/lambert", alphaMode: "OPAQUE", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
 
-                const technique: gltf.Technique = { name: "shader/lambert", attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.LAMBERT.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesNormal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
                 technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
@@ -92,15 +92,13 @@ namespace egret3d {
                 technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: DefaultTextures.GRAY };
                 technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
 
-                const template = { name: "shader/lambert", technique, material, shader: egret3d.DefaultShaders.LAMBERT };
-
-                this.registerTechnique(template);
+                this.registerTechnique(technique, material);
             }
 
             {
                 const material: GLTFMaterial = { name: "diffuse.shader.json", alphaMode: "OPAQUE", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
 
-                const technique: gltf.Technique = { name: "diffuse.shader.json", attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.DIFFUSE.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
                 technique.attributes["_glesBlendIndex4"] = { semantic: gltf.AttributeSemanticType.JOINT };
@@ -116,15 +114,14 @@ namespace egret3d {
                 technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
                 technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 0, 0] };
                 technique.uniforms["_AlphaCut"] = { type: gltf.UniformType.FLOAT, value: 0 };
-                const template = { name: "diffuse.shader.json", technique, material, shader: egret3d.DefaultShaders.DIFFUSE };
 
-                this.registerTechnique(template);
+                this.registerTechnique(technique, material);
             }
 
             {
                 const material: GLTFMaterial = { name: "particles.shader.json", alphaMode: "BLEND", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
 
-                const technique: gltf.Technique = { name: "particles.shader.json", attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [false], frontFace: [gltf.FrontFace.CCW], blendEquationSeparate: [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD], blendFuncSeparate: [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE] } } };
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.PARTICLE.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [false], frontFace: [gltf.FrontFace.CCW], blendEquationSeparate: [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD], blendFuncSeparate: [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE] } } };
                 technique.attributes["_glesCorner"] = { semantic: gltf.AttributeSemanticType._CORNER };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
@@ -199,29 +196,24 @@ namespace egret3d {
                 technique.uniforms["u_uvCurve[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
                 technique.uniforms["u_uvCurveMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
 
-
-                const template = { name: "particles.shader.json", technique, material, shader: egret3d.DefaultShaders.PARTICLE };
-
-                this.registerTechnique(template);
+                this.registerTechnique(technique, material);
             }
 
             {
                 const material: GLTFMaterial = { name: "shader/depth", alphaMode: "OPAQUE", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
 
-                const technique: gltf.Technique = { name: "shader/depth", attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.SHADOW_DEPTH.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
                 technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: {} };
 
-                const template = { name: "shader/depth", technique, material, shader: egret3d.DefaultShaders.SHADOW_DEPTH };
-
-                this.registerTechnique(template);
+                this.registerTechnique(technique, material);
             }
 
             {
                 const material: GLTFMaterial = { name: "shader/distance", alphaMode: "OPAQUE", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
 
-                const technique: gltf.Technique = { name: "shader/distance", attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.SHADOW_DISTANCE.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
                 technique.uniforms["glstate_matrix_model"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: {} };
@@ -231,9 +223,7 @@ namespace egret3d {
                 technique.uniforms["glstate_nearDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._NEARDICTANCE, value: {} };
                 technique.uniforms["glstate_farDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._FARDISTANCE, value: {} };
 
-                const template = { name: "shader/distance", technique, material, shader: egret3d.DefaultShaders.SHADOW_DISTANCE };
-
-                this.registerTechnique(template);
+                this.registerTechnique(technique, material);
             }
         }
     }

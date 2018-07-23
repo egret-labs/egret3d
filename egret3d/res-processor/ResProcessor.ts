@@ -194,6 +194,27 @@ namespace RES.processor {
 
     };
 
+    //TODO
+    let temp:{[key:string]:string} = {"shader/lambert":"shader/lambert",
+                                        "transparent.shader.json":"diffuse.shader.json",
+                                        "transparent_tintColor.shader.json":"diffuse.shader.json",
+                                        "transparent_alphaCut.shader.json":"diffuse.shader.json",
+                                        "transparent_additive.shader.json":"diffuse.shader.json",
+                                        "transparent_additive_bothside.shader.json":"diffuse.shader.json",
+                                        "transparent_bothside.shader.json":"diffuse.shader.json",
+                                        "shader/diffuse_tintcolor":"diffuse.shader.json",
+                                        "diffuse.shader.json":"diffuse.shader.json",
+                                        "diffuse_bothside.shader.json":"diffuse.shader.json",
+                                        "materialcolor.shader.json":"materialcolor.shader.json",
+                                        "particles.shader.json":"particles.shader.json",
+                                        "particles_additive.shader.json":"particles.shader.json",
+                                        "particles_additive_premultiply.shader.json":"particles.shader.json",
+                                        "particles_blend1.shader.json":"particles.shader.json",
+                                        "particles_blend.shader.json":"particles.shader.json",
+                                        "particles_blend_premultiply.shader.json":"particles.shader.json",
+                                        "shader/depth":"shader/depth",
+                                        "shader/distance":"shader/distance",};
+
     export const MaterialProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
@@ -203,7 +224,8 @@ namespace RES.processor {
 
             //UniformValue已经不放在Material中，改为Technique
             let shaderName = json.shader;
-            const shader = paper.Asset.find<egret3d.Shader>(shaderName);
+            const shader = paper.Asset.find<egret3d.Shader>(temp[shaderName]);
+            shader.tempUrl = shaderName;
             material.setShader(shader);
 
             //现根据shaderName找出对应的Technique，然后再填充
@@ -228,7 +250,6 @@ namespace RES.processor {
                                 }
                             }
                             if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.SAMPLER_2D) {
-                                // gltfTechnique.uniforms[i].value = texture;
                                 material.setTexture(i, texture);
                             }
                             else {
@@ -237,7 +258,6 @@ namespace RES.processor {
                             break;
                         case egret3d.UniformTypeEnum.Float:
                             if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.FLOAT) {
-                                // gltfTechnique.uniforms[i].value = jsonChild.value;
                                 material.setFloat(i, jsonChild.value);
                             }
                             else {
@@ -246,7 +266,6 @@ namespace RES.processor {
                             break;
                         case egret3d.UniformTypeEnum.Float4:
                             if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.FLOAT_VEC4) {
-                                // gltfTechnique.uniforms[i].value = jsonChild.value;
                                 material.setVector4v(i, jsonChild.value);
                             }
                             else {
@@ -257,20 +276,6 @@ namespace RES.processor {
                             console.warn(`不支持的 Uniform 参数：${material.url},${i}`);
                     }
                 }
-
-                //找到对应的Technique TODO
-                // const webglTechnique = paper.Application.sceneManager.globalGameObject.getComponent(egret3d.GLTFWebglGlTechnique);
-                // if (webglTechnique) {
-                //     gltfProgram.vertexShader = webglTechnique.registerShader(techniqueTemplate.vertShader);
-                //     gltfProgram.fragmentShader = webglTechnique.registerShader(techniqueTemplate.fragShader);
-
-                //     gltfTechnique.program = webglTechnique.registerProgram(gltfProgram);
-
-                //     gltfMaterial.extensions.KHR_techniques_webgl.technique = webglTechnique.registerTechnique(gltfTechnique);
-                // }
-                // else{
-                //     console.error("缺少GLTFWebglGlTechnique组件");
-                // }
             }
 
             // let shaderName = json.shader;

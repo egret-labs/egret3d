@@ -39,6 +39,27 @@ namespace egret3d {
         Overlay = 4000
     }
 
+    //TODO
+    let temp:{[key:string]:string} = {"shader/lambert":"shader/lambert",
+                                        "transparent.shader.json":"diffuse.shader.json",
+                                        "transparent_tintColor.shader.json":"diffuse.shader.json",
+                                        "transparent_alphaCut.shader.json":"diffuse.shader.json",
+                                        "transparent_additive.shader.json":"diffuse.shader.json",
+                                        "transparent_additive_bothside.shader.json":"diffuse.shader.json",
+                                        "transparent_bothside.shader.json":"diffuse.shader.json",
+                                        "shader/diffuse_tintcolor":"diffuse.shader.json",
+                                        "diffuse.shader.json":"diffuse.shader.json",
+                                        "diffuse_bothside.shader.json":"diffuse.shader.json",
+                                        "materialcolor.shader.json":"materialcolor.shader.json",
+                                        "particles.shader.json":"particles.shader.json",
+                                        "particles_additive.shader.json":"particles.shader.json",
+                                        "particles_additive_premultiply.shader.json":"particles.shader.json",
+                                        "particles_blend1.shader.json":"particles.shader.json",
+                                        "particles_blend.shader.json":"particles.shader.json",
+                                        "particles_blend_premultiply.shader.json":"particles.shader.json",
+                                        "shader/depth":"shader/depth",
+                                        "shader/distance":"shader/distance",};
+
     //TODO 运行时DrawCall排序优化使用
     let _hashCode: number = 0;
 
@@ -157,10 +178,288 @@ namespace egret3d {
         setShader(shader: Shader) {
             this.shader = shader;
             this.$uniforms = {};
-            const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(shader.url);//TODO
-            if (techniqueTemplate) {
-                this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
-                this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+            if(shader.tempUrl){
+                this.test(shader.tempUrl);
+            }
+            else{
+                this.test(shader.url);
+            }
+        }
+        test(url:string) {
+            //
+            switch (url) {
+                case "shader/lambert": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.LAMBERT.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [true];
+                        this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
+
+                    }
+                    break;
+                }
+                case "transparent.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.DIFFUSE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
+                        this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                        this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+
+                    }
+                    break;
+                }
+                case "transparent_tintColor.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.DIFFUSE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
+                        this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                        this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
+
+                    }
+                    break;
+                }
+                case "transparent_alphaCut.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.DIFFUSE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [true];
+                        this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
+                    }
+                    break;
+                }
+                case "transparent_additive.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.DIFFUSE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
+                        this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                        this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
+
+                    }
+                    break;
+                }
+                case "transparent_additive_bothside.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.DIFFUSE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                        this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
+                    }
+                    break;
+                }
+                case "transparent_bothside.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.DIFFUSE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                        this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                    }
+                    break;
+                }
+                case "shader/diffuse_tintcolor":
+                case "diffuse.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.DIFFUSE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [true];
+                        this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
+                    }
+                    break;
+                }
+                case "diffuse_bothside.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.DIFFUSE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.DEPTH_TEST];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [true];
+                    }
+                    break;
+                }
+                case "materialcolor.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.GIZMOS_COLOR.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.DEPTH_TEST];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [true];
+                    }
+                    break;
+                }
+                case "particles.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.PARTICLE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.DEPTH_TEST];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [true];
+                    }
+                    break;
+                }
+                case "particles_additive.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.PARTICLE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
+                        this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                        this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
+                    }
+                    break;
+                }
+                case "particles_additive_premultiply.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.PARTICLE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                        this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE];
+                    }
+                    break;
+                }
+                case "particles_blend1.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.PARTICLE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [true];
+                        this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                        this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE];
+                    }
+                    break;
+                }
+                case "particles_blend.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.PARTICLE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                        this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                    }
+                    break;
+                }
+                case "particles_blend_premultiply.shader.json": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.PARTICLE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                        this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA];
+                    }
+                    break;
+                }
+                case "shader/depth": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.SHADOW_DEPTH.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.DEPTH_TEST,gltf.EnableState.CULL_FACE];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
+                    }
+                    break;
+                }
+                case "shader/distance": {
+                    const techniqueTemplate = egret3d.DefaultTechnique.findTechniqueTemplate(egret3d.DefaultShaders.SHADOW_DISTANCE.url);//TODO
+                    if (techniqueTemplate) {
+                        this._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(techniqueTemplate.technique);
+                        this._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(techniqueTemplate.material);
+
+                        //
+                        this._gltfTechnique.states.enable = [gltf.EnableState.DEPTH_TEST,gltf.EnableState.CULL_FACE];
+                        this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
+                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
+                    }
+                    break;
+                }
+                default:
+                console.error("错误的shader:" + url);
+                break;
             }
         }
         /**
