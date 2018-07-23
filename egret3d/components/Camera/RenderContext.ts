@@ -56,7 +56,7 @@ namespace egret3d {
         // eyePos: Vector4 = new Vector4();
         public readonly matrix_v: Matrix = new Matrix();
         public readonly matrix_p: Matrix = new Matrix();
-        private readonly matrix_mv: Matrix = new Matrix();
+        public readonly matrix_mv: Matrix = new Matrix();
         public readonly matrix_vp: Matrix = new Matrix();
         //matrixNormal: paper.matrix = new paper.matrix();
 

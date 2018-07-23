@@ -5,7 +5,6 @@ namespace egret3d {
         private static _vsShaderMap: { [key: string]: WebGLShader } = {};
         private static _fsShaderMap: { [key: string]: WebGLShader } = {};
         private static _constDefines: string;
-        private static _cacheProgram: WebGLProgram;
 
         private static _parseIncludes(string) {
             const pattern = /#include +<([\w\d.]+)>/g;
@@ -128,13 +127,16 @@ namespace egret3d {
             const uniforms = program.uniforms;
             for (const name in technique.uniforms) {
                 const uniform = technique.uniforms[name];
-                if (uniforms[name]) {
-                    if (uniforms[name].type !== uniform.type) {
-                        console.error("Uniform类型不匹配 着色器中类型:" + uniforms[name].type + " 文件中类型:" + uniform.type);
+                const webglUniform = uniforms[name];
+                if (webglUniform) {
+                    if (webglUniform.type !== uniform.type) {
+                        console.error("Uniform类型不匹配 着色器中类型:" + webglUniform.type + " 文件中类型:" + uniform.type);
                     }
-                    uniform.count = uniforms[name].size;
+                    if(webglUniform.size > 1){
+                        uniform.count = webglUniform.size;
+                    }                    
                     uniform.extensions.paper.enable = true;
-                    uniform.extensions.paper.location = uniforms[name].location;
+                    uniform.extensions.paper.location = webglUniform.location;
                 }
                 else {
                     uniform.extensions.paper.enable = false;
@@ -186,9 +188,9 @@ namespace egret3d {
             }
         }
 
-        public static getProgram(context: RenderContext, material: Material, technique: gltf.Technique, defines: string) {
+        public static getProgram(context: RenderContext, material: Material, technique: gltf.Technique, defines: string) {  
             const shader = material.getShader();
-            const name = shader.vertShader.name + "_" + shader.fragShader.name + "_" + defines;
+            const name = shader.vertShader.name + "_" + shader.fragShader.name + "_" + defines;//TODO材质标脏可以优化
             let program = this._programMap[name];
             const webgl = this.webgl;
             if (!program) {
@@ -205,27 +207,7 @@ namespace egret3d {
                 this._allocUniforms(program, technique);
                 this._allocTexUnits(program, technique);
             }
-            return program;
-        }
-        public static useProgram(program: WebGLProgram) {
-            if (this._cacheProgram !== program) {
-                this._cacheProgram = program;
-                this.webgl.useProgram(program);
-                return true;
-            }
-
-            return false;
-        }
-        public static zWrite(value: boolean) {
-            this.webgl.depthMask(value);
-        }
-        public static zTest(value: boolean) {
-            let webgl = this.webgl;
-            if (value) {
-                webgl.enable(webgl.DEPTH_TEST);
-            } else {
-                webgl.disable(webgl.DEPTH_TEST);
-            }
+            return program.program;
         }
         public static resetState() {
             // this._activeTextureIndex = -1;
@@ -240,25 +222,25 @@ namespace egret3d {
 
         static webgl: WebGLRenderingContext;
 
-        static FUNC_ADD: number;
-        static FUNC_SUBTRACT: number;
-        static FUNC_REVERSE_SUBTRACT: number;
-        static ONE: number;
-        static ZERO: number;
-        static SRC_ALPHA: number;
-        static SRC_COLOR: number;
-        static ONE_MINUS_SRC_ALPHA: number;
-        static ONE_MINUS_SRC_COLOR: number;
-        static ONE_MINUS_DST_ALPHA: number;
-        static ONE_MINUS_DST_COLOR: number;
-        static LEQUAL: number;
-        static EQUAL: number;
-        static GEQUAL: number;
-        static NOTEQUAL: number;
-        static LESS: number;
-        static GREATER: number;
-        static ALWAYS: number;
-        static NEVER: number;
+        // static FUNC_ADD: number;
+        // static FUNC_SUBTRACT: number;
+        // static FUNC_REVERSE_SUBTRACT: number;
+        // static ONE: number;
+        // static ZERO: number;
+        // static SRC_ALPHA: number;
+        // static SRC_COLOR: number;
+        // static ONE_MINUS_SRC_ALPHA: number;
+        // static ONE_MINUS_SRC_COLOR: number;
+        // static ONE_MINUS_DST_ALPHA: number;
+        // static ONE_MINUS_DST_COLOR: number;
+        // static LEQUAL: number;
+        // static EQUAL: number;
+        // static GEQUAL: number;
+        // static NOTEQUAL: number;
+        // static LESS: number;
+        // static GREATER: number;
+        // static ALWAYS: number;
+        // static NEVER: number;
         static capabilities: WebGLCapabilities = new WebGLCapabilities();
 
 
@@ -269,27 +251,27 @@ namespace egret3d {
             if (!this.webgl) {
                 this.webgl = webgl;
 
-                WebGLKit.LEQUAL = webgl.LEQUAL;
-                WebGLKit.NEVER = webgl.NEVER;
-                WebGLKit.EQUAL = webgl.EQUAL;
-                WebGLKit.GEQUAL = webgl.GEQUAL;
-                WebGLKit.NOTEQUAL = webgl.NOTEQUAL;
-                WebGLKit.LESS = webgl.LESS;
-                WebGLKit.GREATER = webgl.GREATER;
-                WebGLKit.ALWAYS = webgl.ALWAYS;
+                // WebGLKit.LEQUAL = webgl.LEQUAL;
+                // WebGLKit.NEVER = webgl.NEVER;
+                // WebGLKit.EQUAL = webgl.EQUAL;
+                // WebGLKit.GEQUAL = webgl.GEQUAL;
+                // WebGLKit.NOTEQUAL = webgl.NOTEQUAL;
+                // WebGLKit.LESS = webgl.LESS;
+                // WebGLKit.GREATER = webgl.GREATER;
+                // WebGLKit.ALWAYS = webgl.ALWAYS;
 
-                WebGLKit.FUNC_ADD = webgl.FUNC_ADD;
-                WebGLKit.FUNC_SUBTRACT = webgl.FUNC_SUBTRACT;
-                WebGLKit.FUNC_REVERSE_SUBTRACT = webgl.FUNC_REVERSE_SUBTRACT;
+                // WebGLKit.FUNC_ADD = webgl.FUNC_ADD;
+                // WebGLKit.FUNC_SUBTRACT = webgl.FUNC_SUBTRACT;
+                // WebGLKit.FUNC_REVERSE_SUBTRACT = webgl.FUNC_REVERSE_SUBTRACT;
 
-                WebGLKit.ONE = webgl.ONE;
-                WebGLKit.ZERO = webgl.ZERO;
-                WebGLKit.SRC_ALPHA = webgl.SRC_ALPHA;
-                WebGLKit.SRC_COLOR = webgl.SRC_COLOR;
-                WebGLKit.ONE_MINUS_SRC_ALPHA = webgl.ONE_MINUS_SRC_ALPHA;
-                WebGLKit.ONE_MINUS_SRC_COLOR = webgl.ONE_MINUS_SRC_COLOR;
-                WebGLKit.ONE_MINUS_DST_ALPHA = webgl.ONE_MINUS_DST_ALPHA;
-                WebGLKit.ONE_MINUS_DST_COLOR = webgl.ONE_MINUS_DST_COLOR;
+                // WebGLKit.ONE = webgl.ONE;
+                // WebGLKit.ZERO = webgl.ZERO;
+                // WebGLKit.SRC_ALPHA = webgl.SRC_ALPHA;
+                // WebGLKit.SRC_COLOR = webgl.SRC_COLOR;
+                // WebGLKit.ONE_MINUS_SRC_ALPHA = webgl.ONE_MINUS_SRC_ALPHA;
+                // WebGLKit.ONE_MINUS_SRC_COLOR = webgl.ONE_MINUS_SRC_COLOR;
+                // WebGLKit.ONE_MINUS_DST_ALPHA = webgl.ONE_MINUS_DST_ALPHA;
+                // WebGLKit.ONE_MINUS_DST_COLOR = webgl.ONE_MINUS_DST_COLOR;
 
                 this.capabilities.initialize(webgl);
                 //必须在this.capabilities.initialize之后

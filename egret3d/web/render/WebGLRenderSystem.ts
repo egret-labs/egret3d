@@ -247,12 +247,13 @@ namespace egret3d {
                 if (!paperExtension.dirty || !paperExtension.enable) {
                     continue;
                 }
+                
                 const location = uniform.extensions.paper.location;
                 const value = uniform.value;
                 switch (uniform.type) {
                     case gltf.UniformType.BOOL:
                     case gltf.UniformType.Int:
-                        if (uniform.count) {
+                        if (uniform.count && uniform.count > 1) {
                             webgl.uniform1iv(location, value);
                         }
                         else {
@@ -272,7 +273,7 @@ namespace egret3d {
                         webgl.uniform4iv(location, value);
                         break;
                     case gltf.UniformType.FLOAT:
-                        if (uniform.count) {
+                        if (uniform.count && uniform.count > 1) {
                             webgl.uniform1fv(location, value);
                         }
                         else {
@@ -359,7 +360,6 @@ namespace egret3d {
                 console.warn("Error arguments.");
             }
         }
-
         private _drawCall(mesh: Mesh, drawCall: DrawCall) {
             const webgl = this._webgl;
             const primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
@@ -400,8 +400,11 @@ namespace egret3d {
             const renderer = drawCall.renderer;
             context.drawCall = drawCall;
             context.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
+            if(drawCall.boneData){
+                context.updateBones(drawCall.boneData);
+            }
             //
-            const material = drawCall.material;
+            const material = drawCall.shadow || drawCall.material;
             const technique = material._gltfTechnique;
             //Defines
             this._updateContextDefines(context, material);
@@ -410,7 +413,12 @@ namespace egret3d {
             //State
             this._updateState(technique.states);
             //Use Program
-            const force = WebGLKit.useProgram(program.program);
+            let force = false;
+            if(this._cacheProgram !== program){
+                this._cacheProgram = program;
+                this._webgl.useProgram(program);
+                force = true;
+            }
             //Uniform
             this._updateContextUniforms(context, material, technique, force);
             this._updateUniforms(context, material, technique, force);
@@ -463,18 +471,12 @@ namespace egret3d {
                 camera._targetAndViewport(light.renderTarget, false);
                 // render shadow
                 const context = camera.context;
-                if (light.type === LightType.Point) {
-                    context.drawtype = "_distance_package";
-                }
-                else {
-                    context.drawtype = "_depth_package";
-                }
-
                 context.updateCamera(camera, light.matrix);
                 context.updateLightDepth(light);
 
                 drawCalls.shadowFrustumCulling(camera);
 
+                const shadowMaterial = light.type === LightType.Point ? egret3d.DefaultMaterial.SHADOW_DISTANCE : egret3d.DefaultMaterial.SHADOW_DEPTH;
                 for (const drawCall of drawCalls.shadowCalls) {
                     //TODO, 现在不支持蒙皮动画阴影
                     // let drawType = "base";
@@ -482,8 +484,9 @@ namespace egret3d {
                     //     context.updateBones(drawCall.boneData);
                     //     drawType = "skin";
                     // }
-
+                    drawCall.shadow = shadowMaterial;
                     this._renderCall(context, drawCall);
+                    drawCall.shadow = undefined;
                 }
             }
 

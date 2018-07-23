@@ -30,7 +30,7 @@ namespace egret3d {
         public render(camera: Camera, renderSystem: WebGLRenderSystem) {
             const webgl = WebGLKit.webgl;
             camera._targetAndViewport(this.renderTarget, true); // 最后一个参数true 表示不用camera的clear 配置
-            WebGLKit.zWrite(true);
+            webgl.depthMask(true);
             // webgl.depthMask(true); // 开启 zwrite 以便正常 clear depth
             webgl.clearColor(0, 0, 0, 0);
             webgl.clearDepth(1.0);

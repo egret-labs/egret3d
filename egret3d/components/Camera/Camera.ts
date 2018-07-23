@@ -292,14 +292,14 @@ namespace egret3d {
 
             // clear buffer
             if (this.clearOption_Color && this.clearOption_Depth) {
-                WebGLKit.zWrite(true);
+                webgl.depthMask(true);
                 // webgl.depthMask(true);
                 webgl.clearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b, this.backgroundColor.a);
                 webgl.clearDepth(1.0);
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
             else if (this.clearOption_Depth) {
-                WebGLKit.zWrite(true);
+                webgl.depthMask(true);
                 // webgl.depthMask(true);
                 webgl.clearDepth(1.0);
                 webgl.clear(webgl.DEPTH_BUFFER_BIT);

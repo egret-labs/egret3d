@@ -25,6 +25,7 @@ namespace egret3d {
         DefaultTextures.init();
         DefaultShaders.init();
         DefaultTechnique.init();
+        DefaultMaterial.init();
         stage.init(canvas, requiredOptions);
         paper.Application.init(options);
     }

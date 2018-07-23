@@ -43,8 +43,7 @@ namespace egret3d {
                     boneData: renderer.boneBuffer,
                 };
 
-                //TODO
-                // material._gltfTechnique.uniforms["skin"].value = renderer.boneBuffer;
+                material.addDefine("SKINNING");
 
                 this._drawCalls.drawCalls.push(drawCall);
             }

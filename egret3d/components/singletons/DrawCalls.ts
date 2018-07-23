@@ -15,6 +15,8 @@ namespace egret3d {
         zdist: number,
 
         boneData?: Float32Array,
+
+        shadow?: Material,
     };
     /**
      * 

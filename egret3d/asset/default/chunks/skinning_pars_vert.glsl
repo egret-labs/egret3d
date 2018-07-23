@@ -1,7 +1,7 @@
 #ifdef SKINNING
+attribute vec4 _glesBlendIndex4;
 attribute vec4 _glesBlendWeight4;
-attribute vec4 _glesMultiTexCoord0;
-uniform highp vec4 glstate_vec4_bones[110];
+uniform vec4 glstate_vec4_bones[110];
 
 mat4 buildMat4(int index)
 {
@@ -23,19 +23,5 @@ mat4 buildMat4(int index)
 	xz2 + yw2, yz2 - xw2, -xx - yy + zz + ww, 0,
 	translation.x, translation.y, translation.z, 1);
 	return matrix;
-}
-
-highp vec4 calcVertex(highp vec4 srcVertex,highp vec4 blendIndex,highp vec4 blendWeight)
-{
-	int i = int(blendIndex.x);  
-    int i2 =int(blendIndex.y);
-	int i3 =int(blendIndex.z);
-	int i4 =int(blendIndex.w);
-	
-    mat4 mat = buildMat4(i)*blendWeight.x 
-			 + buildMat4(i2)*blendWeight.y 
-			 + buildMat4(i3)*blendWeight.z 
-			 + buildMat4(i4)*blendWeight.w;
-	return mat* srcVertex;
 }
 #endif
