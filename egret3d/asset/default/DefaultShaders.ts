@@ -6,7 +6,6 @@ namespace egret3d {
         public static TRANSPARENT_ADDITIVE: Shader;
         public static TRANSPARENT_BOTH_SIDE: Shader;
         public static TRANSPARENT_ADDITIVE_BOTH_SIDE: Shader;
-        public static DIFFUSE: Shader;
         public static DIFFUSE_TINT_COLOR: Shader;
         public static DIFFUSE_VERT_COLOR: Shader;
         public static DIFFUSE_BOTH_SIDE: Shader;
@@ -14,15 +13,16 @@ namespace egret3d {
         public static UI_FONT: Shader;
         public static LINE: Shader;
         public static MATERIAL_COLOR: Shader;
-        public static LAMBERT: Shader;
         public static LAMBERT_NORMAL: Shader;
         public static GIZMOS_COLOR: Shader;
-        public static PARTICLE: Shader;
         public static PARTICLE_ADDITIVE: Shader;
         public static PARTICLE_ADDITIVE_PREMYLTIPLY: Shader;
         public static PARTICLE_BLEND: Shader;
         public static PARTICLE_BLEND_PREMYLTIPLY: Shader;
 
+        public static LAMBERT: Shader;
+        public static DIFFUSE: Shader;
+        public static PARTICLE: Shader;
         public static SHADOW_DEPTH:Shader;
         public static SHADOW_DISTANCE:Shader;
 
@@ -46,6 +46,11 @@ namespace egret3d {
             this.LAMBERT.setVertShader("def_lambert_vs", ShaderLib.lambert_vert);
             this.LAMBERT.setFragShader("def_lambert_fs", ShaderLib.lambert_frag);
             paper.Asset.register(this.LAMBERT);
+
+            this.PARTICLE = new Shader("particles.shader.json");
+            this.PARTICLE.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+            this.PARTICLE.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+            paper.Asset.register(this.PARTICLE);
 
             this.SHADOW_DEPTH = new Shader("shader/depth");
             this.SHADOW_DEPTH.setVertShader("def_depth_vs", ShaderLib.depthpackage_vert);

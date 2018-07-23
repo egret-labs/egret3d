@@ -76,6 +76,7 @@ namespace egret3d {
         public program: WebGLProgram;
         public attributes: { [key: string]: WebGLActiveAttribute } = {};
         public uniforms: { [key: string]: WebGLActiveUniform } = {};
+        public texUnits: string[] = [];
         public constructor(webglProgram: WebGLProgram) {
             this.program = webglProgram;
         }

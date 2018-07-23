@@ -14,7 +14,6 @@ namespace egret3d {
         /**
          * 
          */
-        public lightmapUV: number = 1;
         public lightCount: number = 0;
         public directLightCount: number = 0;
         public pointLightCount: number = 0;
@@ -22,12 +21,11 @@ namespace egret3d {
         /**
          * 
          */
-        public drawtype: string = "";
-        /**
-         * 
-         */
         public lightmap: Texture | null = null;
+        public lightmapUV: number = 1;
         public lightmapIntensity: number = 1.0;
+        public lightmapOffset: Float32Array | null = null;
+
         public boneData: Float32Array | null = null;
 
         // 15: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
@@ -53,7 +51,6 @@ namespace egret3d {
 
 
         // transforms
-        // eyePos: Vector4 = new Vector4();
         public readonly matrix_v: Matrix = new Matrix();
         public readonly matrix_p: Matrix = new Matrix();
         public readonly matrix_mv: Matrix = new Matrix();
@@ -64,10 +61,6 @@ namespace egret3d {
          * 
          */
         public drawCall: DrawCall;
-        /**
-         * 
-         */
-        public lightmapOffset: Float32Array | null = null;
 
         public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
             this.lightmap = texture;
@@ -104,10 +97,7 @@ namespace egret3d {
         }
 
         public updateLights(lights: ReadonlyArray<BaseLight>) {
-            let allLightCount = 0,
-                directLightCount = 0,
-                pointLightCount = 0,
-                spotLightCount = 0;
+            let allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
                 if (light instanceof DirectLight) {
@@ -153,11 +143,7 @@ namespace egret3d {
             this.pointLightCount = pointLightCount;
             this.spotLightCount = spotLightCount;
 
-            let directLightIndex = 0,
-                pointLightIndex = 0,
-                spotLightIndex = 0,
-                index = 0,
-                size = 0;
+            let directLightIndex = 0, pointLightIndex = 0, spotLightIndex = 0, index = 0, size = 0;
 
             for (const light of lights) {
                 let lightArray = this.directLightArray;
@@ -269,8 +255,6 @@ namespace egret3d {
         updateModel(matrix: Matrix) {
             Matrix.copy(matrix, this.matrix_m); // clone matrix because getWorldMatrix returns a reference
             Matrix.multiply(this.matrix_v, this.matrix_m, this.matrix_mv);
-            // paper._Matrix.inverse(this.matrixModelView, this.matrixNormal);
-            // paper.matrixTranspose(this.matrixNormal, this.matrixNormal);
             Matrix.multiply(this.matrix_vp, this.matrix_m, this.matrix_mvp);
 
             this.version++;
@@ -290,7 +274,6 @@ namespace egret3d {
             this.lightPosition[0] = position.x;
             this.lightPosition[1] = position.y;
             this.lightPosition[2] = position.z;
-            // this.lightPosition[3] = 1.0;
 
             this.lightShadowCameraNear = light.shadowCameraNear;
             this.lightShadowCameraFar = light.shadowCameraFar;

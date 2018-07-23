@@ -13,15 +13,15 @@ namespace egret3d {
 
         public static registerTechnique(template: TechniqueTemplate) {
             //
-            // const technique = template.technique;
-            // for (const key in technique.attributes) {
-            //     const att = technique.attributes[key];
-            //     technique.attributes[key] = { semantic: att.semantic, extensions: { paper: { enable: true, location: -1 } } };
-            // }
-            // for (var key in technique.uniforms) {
-            //     const uniform = technique.uniforms[key];
-            //     technique.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value: uniform.value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
-            // }
+            const technique = template.technique;
+            for (const key in technique.attributes) {
+                const att = technique.attributes[key];
+                technique.attributes[key] = { semantic: att.semantic, extensions: { paper: { enable: true, location: -1 } } };
+            }
+            for (var key in technique.uniforms) {
+                const uniform = technique.uniforms[key];
+                technique.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value: uniform.value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+            }
 
             this.techniqueTemplates[template.name] = template;
         }
@@ -36,15 +36,25 @@ namespace egret3d {
         }
 
         public static cloneTechnique(source: gltf.Technique) {
+            // const json = JSON.stringify(source);
+            // return JSON.parse(json);
             const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {}, states: source.states };
             for (const key in source.attributes) {
-                const att = source.attributes[key];
-                target.attributes[key] = { semantic: att.semantic, extensions: { paper: { enable: true, location: -1 } } };
+                const attribute = source.attributes[key];
+                target.attributes[key] = { semantic: attribute.semantic, extensions: { paper: { enable: true, location: -1 } } };
             }
-            for (var key in source.uniforms) {
+            for (const key in source.uniforms) {
                 const uniform = source.uniforms[key];
                 target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value: uniform.value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
             }
+            for (const key in source.states) {
+                const state = source.states[key];
+                target.states[key] = state;
+            }
+
+            // for(const key in source){
+            //     target[key] = source[key];
+            // }
 
             return target;
         }
@@ -65,7 +75,7 @@ namespace egret3d {
             {
                 const material: GLTFMaterial = { name: "shader/lambert", alphaMode: "OPAQUE", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
 
-                const technique: gltf.Technique = { name: "shader/lambert", attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                const technique: gltf.Technique = { name: "shader/lambert", attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesNormal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
                 technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
@@ -96,7 +106,7 @@ namespace egret3d {
             {
                 const material: GLTFMaterial = { name: "diffuse.shader.json", alphaMode: "OPAQUE", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
 
-                const technique: gltf.Technique = { name: "diffuse.shader.json", attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                const technique: gltf.Technique = { name: "diffuse.shader.json", attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
                 technique.attributes["_glesBlendIndex4"] = { semantic: gltf.AttributeSemanticType.JOINT };
@@ -109,10 +119,94 @@ namespace egret3d {
                 technique.uniforms["glstate_vec4_bones[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._BONESVEC4, value: {} };
 
                 technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: {} };
-                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: DefaultTextures.GRID };
+                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
                 technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 0, 0] };
                 technique.uniforms["_AlphaCut"] = { type: gltf.UniformType.FLOAT, value: 0 };
                 const template = { name: "diffuse.shader.json", technique, material, shader: egret3d.DefaultShaders.DIFFUSE };
+
+                this.registerTechnique(template);
+            }
+
+            {
+                const material: GLTFMaterial = { name: "particles.shader.json", alphaMode: "BLEND", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
+
+                const technique: gltf.Technique = { name: "particles.shader.json", attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [false], frontFace: [gltf.FrontFace.CCW], blendEquationSeparate: [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD], blendFuncSeparate: [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE] } } };
+                technique.attributes["_glesCorner"] = { semantic: gltf.AttributeSemanticType._CORNER };
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+                technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
+                technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+                technique.attributes["_startPosition"] = { semantic: gltf.AttributeSemanticType._START_POSITION };
+                technique.attributes["_startVelocity"] = { semantic: gltf.AttributeSemanticType._START_VELOCITY };
+                technique.attributes["_startColor"] = { semantic: gltf.AttributeSemanticType._START_COLOR };
+                technique.attributes["_startSize"] = { semantic: gltf.AttributeSemanticType._START_SIZE };
+                technique.attributes["_startRotation"] = { semantic: gltf.AttributeSemanticType._START_ROTATION };
+                technique.attributes["_time"] = { semantic: gltf.AttributeSemanticType._TIME };
+                technique.attributes["_random0"] = { semantic: gltf.AttributeSemanticType._RANDOM0 };
+                technique.attributes["_random1"] = { semantic: gltf.AttributeSemanticType._RANDOM1 };
+                technique.attributes["_startWorldPosition"] = { semantic: gltf.AttributeSemanticType._START_POSITION };
+                technique.attributes["_startWorldRotation"] = { semantic: gltf.AttributeSemanticType._START_ROTATION };
+
+                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
+                technique.uniforms["_TintColor"] = { type: gltf.UniformType.FLOAT_VEC4, value: [0.5, 0.5, 0.5, 0.5] };
+
+                technique.uniforms["u_currentTime"] = { type: gltf.UniformType.FLOAT, value: 0 };
+                technique.uniforms["u_gravity"] = { type: gltf.UniformType.FLOAT_VEC3, value: [0, 0, 0] };
+                technique.uniforms["u_worldPosition"] = { type: gltf.UniformType.FLOAT_VEC3, value: [0, 0, 0] };
+                technique.uniforms["u_worldRotation"] = { type: gltf.UniformType.FLOAT_VEC4, value: [0, 0, 0, 1] };
+                technique.uniforms["u_startRotation3D"] = { type: gltf.UniformType.BOOL, value: false };
+                technique.uniforms["u_scalingMode"] = { type: gltf.UniformType.Int, value: 0 };
+                technique.uniforms["u_positionScale"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
+                technique.uniforms["u_sizeScale"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
+                technique.uniforms["glstate_matrix_vp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._VIEWPROJECTION, value: {} };
+
+                technique.uniforms["glstate_cameraPos"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_POS, value: {} };
+                technique.uniforms["glstate_cameraForward"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_FORWARD, value: {} };
+                technique.uniforms["glstate_cameraUp"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_UP, value: {} };
+                technique.uniforms["u_lengthScale"] = { type: gltf.UniformType.FLOAT, value: [1, 1, 1] };
+                technique.uniforms["u_speeaScale"] = { type: gltf.UniformType.FLOAT, value: [1, 1, 1] };
+                technique.uniforms["u_simulationSpace"] = { type: gltf.UniformType.Int, value: 0 };
+                technique.uniforms["u_spaceType"] = { type: gltf.UniformType.Int, value: 0 };
+                technique.uniforms["u_velocityConst"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
+                technique.uniforms["u_velocityCurveX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_velocityCurveY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_velocityCurveZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_velocityConstMax"] = { type: gltf.UniformType.FLOAT_VEC3, value: {} };
+                technique.uniforms["u_velocityCurveMaxX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_velocityCurveMaxY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_velocityCurveMaxZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_colorGradient[0]"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
+                technique.uniforms["u_alphaGradient[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_colorGradientMax[0]"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
+                technique.uniforms["u_alphaGradientMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurve[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveMaxX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveMaxY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveMaxZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationConst"] = { type: gltf.UniformType.FLOAT, value: 0 };
+                technique.uniforms["u_rotationConstMax"] = { type: gltf.UniformType.FLOAT, value: 0 };
+                technique.uniforms["u_rotationCurve[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationConstSeprarate"] = { type: gltf.UniformType.FLOAT_VEC3, value: [] };
+                technique.uniforms["u_rotationConstMaxSeprarate"] = { type: gltf.UniformType.FLOAT_VEC3, value: [] };
+                technique.uniforms["u_rotationCurveX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveW[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveMaxX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveMaxY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveMaxZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveMaxW[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_cycles"] = { type: gltf.UniformType.FLOAT, value: {} };
+                technique.uniforms["u_subUV"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
+                technique.uniforms["u_uvCurve[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_uvCurveMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+
+
+                const template = { name: "particles.shader.json", technique, material, shader: egret3d.DefaultShaders.PARTICLE };
 
                 this.registerTechnique(template);
             }
@@ -138,7 +232,7 @@ namespace egret3d {
 
                 technique.uniforms["glstate_matrix_model"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: {} };
                 technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: {} };
-                
+
                 technique.uniforms["glstate_referencePosition"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._REFERENCEPOSITION, value: {} };
                 technique.uniforms["glstate_nearDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._NEARDICTANCE, value: {} };
                 technique.uniforms["glstate_farDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._FARDISTANCE, value: {} };

@@ -81,7 +81,7 @@ namespace egret3d {
         /**
          * extract attributes
          */
-        private static _extractAttributes(gl: WebGLRenderingContext, program: GlProgram, technique: gltf.Technique) {
+        private static _extractAttributes(gl: WebGLRenderingContext, program: GlProgram) {
             const webglProgram = program.program;
             const totalAttributes = gl.getProgramParameter(webglProgram, gl.ACTIVE_ATTRIBUTES);
             //
@@ -97,7 +97,7 @@ namespace egret3d {
         /**
          * extract uniforms
          */
-        private static _extractUniforms(gl: WebGLRenderingContext, program: GlProgram, technique: gltf.Technique) {
+        private static _extractUniforms(gl: WebGLRenderingContext, program: GlProgram,) {
             const webglProgram = program.program;
             const totalUniforms = gl.getProgramParameter(webglProgram, gl.ACTIVE_UNIFORMS);
             //
@@ -109,6 +109,25 @@ namespace egret3d {
                 uniforms[uniformData.name] = { type: uniformData.type, size: uniformData.size, location };
             }
             program.uniforms = uniforms;
+        }
+        private static _extractTexUnits(program: GlProgram){
+            const activeUniforms = program.uniforms;
+            const samplerArrayKeys: string[] = [];
+            const samplerKeys: string[] = [];
+            //排序
+            for (let key in activeUniforms) {
+                const uniform = activeUniforms[key];
+                if (uniform.type == gltf.UniformType.SAMPLER_2D || uniform.type == gltf.UniformType.SAMPLER_CUBE) {
+                    if (key.indexOf("[") > -1) {
+                        samplerArrayKeys.push(key);
+                    }
+                    else {
+                        samplerKeys.push(key);
+                    }
+                }
+            }
+
+            program.texUnits = samplerKeys.concat(samplerArrayKeys);
         }
         private static _allocAttributes(program: GlProgram, technique: gltf.Technique) {
             const attributes = program.attributes;
@@ -147,27 +166,10 @@ namespace egret3d {
         /**
          * allocTexUnits
          */
-        private static _allocTexUnits(program: GlProgram, technique: gltf.Technique) {
-            const activeUniforms = program.uniforms;
-            let samplerArrayKeys: string[] = [];
-            let samplerKeys: string[] = [];
-            //排序
-            for (let key in activeUniforms) {
-                const uniform = activeUniforms[key];
-                if (uniform.type == gltf.UniformType.SAMPLER_2D || uniform.type == gltf.UniformType.SAMPLER_CUBE) {
-                    if (key.indexOf("[") > -1) {
-                        samplerArrayKeys.push(key);
-                    }
-                    else {
-                        samplerKeys.push(key);
-                    }
-                }
-            }
-
+        private static _allocTexUnits(program: GlProgram, technique: gltf.Technique) {            
             const uniforms = technique.uniforms;
-            const allKeys = samplerKeys.concat(samplerArrayKeys);
             let unitNumber: number = 0;
-            for (const key of allKeys) {
+            for (const key of program.texUnits) {
                 const uniform = uniforms[key];
                 if (uniform && (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE)) {
                     if (!uniform.extensions.paper.textureUnits) {
@@ -175,11 +177,9 @@ namespace egret3d {
                     }
                     const textureUnits = uniform.extensions.paper.textureUnits;
                     const count = uniform.count ? uniform.count : 1;
-                    if (activeUniforms[key].size !== count) {
-                        console.error("贴图数量不匹配:" + key);
-                    }
+                    textureUnits.length = count;
                     for (let i = 0; i < count; i++) {
-                        textureUnits.push(unitNumber++);
+                        textureUnits[i] = unitNumber++;
                     }
                 }
                 else {
@@ -197,8 +197,9 @@ namespace egret3d {
                 const webglProgram = this._getWebGLProgram(webgl, shader.vertShader, shader.fragShader, defines);
                 program = new GlProgram(webglProgram);
                 this._programMap[name] = program;
-                this._extractAttributes(webgl, program, technique);
-                this._extractUniforms(webgl, program, technique);
+                this._extractAttributes(webgl, program);
+                this._extractUniforms(webgl, program);
+                this._extractTexUnits(program);
             }
             //
             if (technique.program !== program) {
@@ -221,26 +222,6 @@ namespace egret3d {
         }
 
         static webgl: WebGLRenderingContext;
-
-        // static FUNC_ADD: number;
-        // static FUNC_SUBTRACT: number;
-        // static FUNC_REVERSE_SUBTRACT: number;
-        // static ONE: number;
-        // static ZERO: number;
-        // static SRC_ALPHA: number;
-        // static SRC_COLOR: number;
-        // static ONE_MINUS_SRC_ALPHA: number;
-        // static ONE_MINUS_SRC_COLOR: number;
-        // static ONE_MINUS_DST_ALPHA: number;
-        // static ONE_MINUS_DST_COLOR: number;
-        // static LEQUAL: number;
-        // static EQUAL: number;
-        // static GEQUAL: number;
-        // static NOTEQUAL: number;
-        // static LESS: number;
-        // static GREATER: number;
-        // static ALWAYS: number;
-        // static NEVER: number;
         static capabilities: WebGLCapabilities = new WebGLCapabilities();
 
 
@@ -250,28 +231,6 @@ namespace egret3d {
 
             if (!this.webgl) {
                 this.webgl = webgl;
-
-                // WebGLKit.LEQUAL = webgl.LEQUAL;
-                // WebGLKit.NEVER = webgl.NEVER;
-                // WebGLKit.EQUAL = webgl.EQUAL;
-                // WebGLKit.GEQUAL = webgl.GEQUAL;
-                // WebGLKit.NOTEQUAL = webgl.NOTEQUAL;
-                // WebGLKit.LESS = webgl.LESS;
-                // WebGLKit.GREATER = webgl.GREATER;
-                // WebGLKit.ALWAYS = webgl.ALWAYS;
-
-                // WebGLKit.FUNC_ADD = webgl.FUNC_ADD;
-                // WebGLKit.FUNC_SUBTRACT = webgl.FUNC_SUBTRACT;
-                // WebGLKit.FUNC_REVERSE_SUBTRACT = webgl.FUNC_REVERSE_SUBTRACT;
-
-                // WebGLKit.ONE = webgl.ONE;
-                // WebGLKit.ZERO = webgl.ZERO;
-                // WebGLKit.SRC_ALPHA = webgl.SRC_ALPHA;
-                // WebGLKit.SRC_COLOR = webgl.SRC_COLOR;
-                // WebGLKit.ONE_MINUS_SRC_ALPHA = webgl.ONE_MINUS_SRC_ALPHA;
-                // WebGLKit.ONE_MINUS_SRC_COLOR = webgl.ONE_MINUS_SRC_COLOR;
-                // WebGLKit.ONE_MINUS_DST_ALPHA = webgl.ONE_MINUS_DST_ALPHA;
-                // WebGLKit.ONE_MINUS_DST_COLOR = webgl.ONE_MINUS_DST_COLOR;
 
                 this.capabilities.initialize(webgl);
                 //必须在this.capabilities.initialize之后

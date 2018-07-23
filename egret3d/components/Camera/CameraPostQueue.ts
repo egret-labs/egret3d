@@ -36,7 +36,7 @@ namespace egret3d {
             webgl.clearDepth(1.0);
             webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
 
-            camera.context.drawtype = "_depth";
+            // camera.context.drawtype = "_depth";
             // camera._renderOnce(scene, context, "_depth");
             renderSystem._renderCamera(camera);
             GlRenderTarget.useNull(webgl);
@@ -89,7 +89,7 @@ namespace egret3d {
         public render(camera: Camera, renderSystem: WebGLRenderSystem) {
             const webgl = WebGLKit.webgl;
             camera._targetAndViewport(this.renderTarget, false);
-            camera.context.drawtype = "";
+            // camera.context.drawtype = "";
 
             // camera._renderOnce(scene, context, "");
             renderSystem._renderCamera(camera);

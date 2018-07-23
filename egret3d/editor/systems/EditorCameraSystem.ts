@@ -29,7 +29,7 @@ namespace paper.editor {
             }
 
             if (camera) {
-                camera.context.drawtype = "";
+                // camera.context.drawtype = "";
                 camera._targetAndViewport(camera.renderTarget, false);
                 // this.$renderCamera(camera); TODO
             }

@@ -26,11 +26,7 @@ namespace egret3d {
                 cameras.sort(this._sortCamera);
 
                 for (const component of cameras) {
-                    component.update(deltaTime);
-
-                    if (lights.length > 0) {
-                        component.context.updateLights(lights); // TODO 性能优化
-                    }
+                    component.update(deltaTime);                   
                 }
             }
 

@@ -37,9 +37,7 @@ void main()
 	#include <particle_affector>
 	gl_Position=glstate_matrix_vp*vec4(center,1.0);
 	v_color = computeColor(_startColor, t);
-	#ifdef DIFFUSEMAP
-		v_texcoord =computeUV(_glesMultiTexCoord0, t);
-	#endif
+	v_texcoord =computeUV(_glesMultiTexCoord0, t);
 	v_discard=0.0;
 }
 

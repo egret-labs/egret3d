@@ -14,29 +14,43 @@ namespace egret3d {
                 { componentClass: [DirectLight, SpotLight, PointLight] }
             ]
         ];
+        private readonly _webgl: WebGLRenderingContext = WebGLKit.webgl;
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
         private readonly _lightCamera: Camera = this._globalGameObject.getComponent(Camera) || this._globalGameObject.addComponent(Camera);
-        private readonly _webgl: WebGLRenderingContext = WebGLKit.webgl;
-        private readonly _stateEnable: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST];
+        private readonly _stateEnables: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST];
         //
-        private _cacheContext: RenderContext;
-        private _cacheContextVersion: number;
-        private _cacheProgram: WebGLProgram;
-        private _cacheMaterial: Material;
-        private _cacheMaterialVerision: number;
-        private _cacheMesh: Mesh;
-        private _cacheMeshVersion: number;
+        private readonly _cacheStateEnable: { [key: string]: boolean } = {};
         private _cacheDefines: string;
+        private _cacheContextVersion: number;
+        private _cacheMaterialVerision: number;
+        private _cacheMeshVersion: number;
+        private _cacheProgram: WebGLProgram;
+        private _cacheContext: RenderContext;
+        private _cacheMaterial: Material;
+        private _cacheMesh: Mesh;
         //
         private _updateState(state: gltf.States) {
-            //enable
-            for (const e of this._stateEnable) {
-                state.enable.indexOf(e) >= 0 ? this._webgl.enable(e) : this._webgl.disable(e);
+            const webgl = this._webgl;
+            const stateEnables = this._stateEnables;
+            const cacheStateEnable = this._cacheStateEnable;
+            for (const e of stateEnables) {
+                if (state.enable.indexOf(e) < 0) {
+                    if (cacheStateEnable[e]) {
+                        webgl.disable(e);
+                        cacheStateEnable[e] = false;
+                    }
+                }
+                else {
+                    if (!cacheStateEnable[e]) {
+                        webgl.enable(e);
+                        cacheStateEnable[e] = true;
+                    }
+                }
             }
             //functions
             for (const e in state.functions) {
                 //
-                (this._webgl[e] as Function).call(this._webgl, state.functions[e]);
+                (webgl[e] as Function).apply(webgl, state.functions[e]);
             }
         }
 
@@ -84,65 +98,51 @@ namespace egret3d {
                 switch (uniform.semantic) {
                     case gltf.UniformSemanticType.MODEL:
                         webgl.uniformMatrix4fv(location, false, context.matrix_m.rawData);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType.VIEW:
                         webgl.uniformMatrix4fv(location, false, context.matrix_v.rawData);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType.PROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_p.rawData);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._VIEWPROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_vp.rawData);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType.MODELVIEWPROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_mvp.rawData);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._CAMERA_POS:
                         webgl.uniform3fv(location, context.cameraPosition);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._CAMERA_FORWARD:
                         webgl.uniform3fv(location, context.cameraForward);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._CAMERA_UP:
                         webgl.uniform3fv(location, context.cameraUp);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._LIGHTCOUNT:
                         webgl.uniform1f(location, context.lightCount);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._DIRECTLIGHTS:
                         if (context.directLightCount > 0) {
                             webgl.uniform1fv(location, context.directLightArray);
-                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._POINTLIGHTS:
                         if (context.pointLightCount > 0) {
                             webgl.uniform1fv(location, context.pointLightArray);
-                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._SPOTLIGHTS:
                         if (context.spotLightCount > 0) {
                             webgl.uniform1fv(location, context.spotLightArray);
-                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.directShadowMatrix);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._SPOTSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.spotShadowMatrix);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAP:
                         const directShadowLen = context.directShadowMaps.length;
@@ -151,10 +151,11 @@ namespace egret3d {
                             webgl.uniform1iv(location, units);
 
                             for (let i = 0, l = units.length; i < l; i++) {
-                                webgl.activeTexture(webgl.TEXTURE0 + units[i]);
-                                webgl.bindTexture(webgl.TEXTURE_2D, context.directShadowMaps[i]);
+                                if (context.directShadowMaps[i]) {
+                                    webgl.activeTexture(webgl.TEXTURE0 + units[i]);
+                                    webgl.bindTexture(webgl.TEXTURE_2D, context.directShadowMaps[i]);
+                                }
                             }
-                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._POINTSHADOWMAP:
@@ -164,10 +165,11 @@ namespace egret3d {
                             webgl.uniform1iv(location, units);
 
                             for (let i = 0, l = units.length; i < l; i++) {
-                                webgl.activeTexture(webgl.TEXTURE0 + units[i]);
-                                webgl.bindTexture(webgl.TEXTURE_2D, context.pointShadowMaps[i]);
+                                if (context.pointShadowMaps[i]) {
+                                    webgl.activeTexture(webgl.TEXTURE0 + units[i]);
+                                    webgl.bindTexture(webgl.TEXTURE_2D, context.pointShadowMaps[i]);
+                                }
                             }
-                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._SPOTSHADOWMAP:
@@ -177,19 +179,19 @@ namespace egret3d {
                             webgl.uniform1iv(location, units);
 
                             for (let i = 0, l = units.length; i < l; i++) {
-                                webgl.activeTexture(webgl.TEXTURE0 + units[i]);
-                                webgl.bindTexture(webgl.TEXTURE_2D, context.spotShadowMaps[i]);
+                                if (context.spotShadowMaps[i]) {
+                                    webgl.activeTexture(webgl.TEXTURE0 + units[i]);
+                                    webgl.bindTexture(webgl.TEXTURE_2D, context.spotShadowMaps[i]);
+                                }
                             }
-                            paperExtension.dirty = false;
                         }
                         break;
                     case gltf.UniformSemanticType._LIGHTMAPTEX:
-                        if (paperExtension.textureUnits && paperExtension.textureUnits.length === 1) {
+                        if (paperExtension.textureUnits && paperExtension.textureUnits.length === 1 && context.lightmap) {
                             const unit = paperExtension.textureUnits[0];
                             webgl.uniform1i(location, unit);
                             webgl.activeTexture(webgl.TEXTURE0 + unit);
                             webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap);
-                            paperExtension.dirty = false;
                         }
                         else {
                             console.error("Error texture unit");
@@ -197,12 +199,10 @@ namespace egret3d {
                         break;
                     case gltf.UniformSemanticType._LIGHTMAPINTENSITY:
                         webgl.uniform1f(location, context.lightmapIntensity);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._LIGHTMAPOFFSET:
                         if (context.lightmapOffset) {
                             webgl.uniform4fv(location, context.lightmapOffset);
-                            paperExtension.dirty = false;
                         }
                         else {
                             console.debug("Error light map scale and offset.");
@@ -210,23 +210,18 @@ namespace egret3d {
                         break;
                     case gltf.UniformSemanticType._LIGHTMAPUV:
                         webgl.uniform1f(location, context.lightmapUV);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._BONESVEC4:
                         webgl.uniform4fv(location, context.boneData);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._REFERENCEPOSITION:
                         webgl.uniform4fv(location, context.lightPosition);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._NEARDICTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraNear);
-                        paperExtension.dirty = false;
                         break;
                     case gltf.UniformSemanticType._FARDISTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraFar);
-                        paperExtension.dirty = false;
                         break;
                 }
             }
@@ -244,10 +239,10 @@ namespace egret3d {
             for (const key in technique.uniforms) {
                 const uniform = technique.uniforms[key];
                 const paperExtension = uniform.extensions.paper;
-                if (!paperExtension.dirty || !paperExtension.enable) {
+                if (!paperExtension.enable || uniform.semantic) {
                     continue;
                 }
-                
+
                 const location = uniform.extensions.paper.location;
                 const value = uniform.value;
                 switch (uniform.type) {
@@ -310,8 +305,6 @@ namespace egret3d {
                         }
                         break;
                 }
-
-                paperExtension.dirty = false;
             }
         }
 
@@ -400,7 +393,7 @@ namespace egret3d {
             const renderer = drawCall.renderer;
             context.drawCall = drawCall;
             context.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
-            if(drawCall.boneData){
+            if (drawCall.boneData) {
                 context.updateBones(drawCall.boneData);
             }
             //
@@ -414,7 +407,7 @@ namespace egret3d {
             this._updateState(technique.states);
             //Use Program
             let force = false;
-            if(this._cacheProgram !== program){
+            if (this._cacheProgram !== program) {
                 this._cacheProgram = program;
                 this._webgl.useProgram(program);
                 force = true;
@@ -469,7 +462,6 @@ namespace egret3d {
                 (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
                 light.update(camera, i);
                 camera._targetAndViewport(light.renderTarget, false);
-                // render shadow
                 const context = camera.context;
                 context.updateCamera(camera, light.matrix);
                 context.updateLightDepth(light);
@@ -478,12 +470,7 @@ namespace egret3d {
 
                 const shadowMaterial = light.type === LightType.Point ? egret3d.DefaultMaterial.SHADOW_DISTANCE : egret3d.DefaultMaterial.SHADOW_DEPTH;
                 for (const drawCall of drawCalls.shadowCalls) {
-                    //TODO, 现在不支持蒙皮动画阴影
-                    // let drawType = "base";
-                    // if (drawCall.boneData) {
-                    //     context.updateBones(drawCall.boneData);
-                    //     drawType = "skin";
-                    // }
+                    //TODO, 现在不支持蒙皮动画阴影                    
                     drawCall.shadow = shadowMaterial;
                     this._renderCall(context, drawCall);
                     drawCall.shadow = undefined;
@@ -491,6 +478,12 @@ namespace egret3d {
             }
 
             GlRenderTarget.useNull(WebGLKit.webgl);
+        }
+
+        public onAwake() {
+            this._cacheStateEnable[gltf.EnableState.BLEND] = false;
+            this._cacheStateEnable[gltf.EnableState.CULL_FACE] = true;
+            this._cacheStateEnable[gltf.EnableState.DEPTH_TEST] = false;
         }
 
         public onUpdate() {
@@ -508,8 +501,10 @@ namespace egret3d {
             const cameras = this._groups[0].components as Camera[];
             if (cameras.length > 0) {
                 for (const camera of cameras) {
+                    if (lights.length > 0) {
+                        camera.context.updateLights(lights); // TODO 性能优化
+                    }
                     if (camera.postQueues.length === 0) {
-                        camera.context.drawtype = "";
                         camera._targetAndViewport(camera.renderTarget, false);
                         this._renderCamera(camera);
                     }

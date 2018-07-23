@@ -228,7 +228,8 @@ namespace RES.processor {
                                 }
                             }
                             if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.SAMPLER_2D) {
-                                gltfTechnique.uniforms[i].value = texture;
+                                // gltfTechnique.uniforms[i].value = texture;
+                                material.setTexture(i, texture);
                             }
                             else {
                                 console.warn(`不存在的 Uniform 参数：${material.url},${i}`);
@@ -236,7 +237,8 @@ namespace RES.processor {
                             break;
                         case egret3d.UniformTypeEnum.Float:
                             if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.FLOAT) {
-                                gltfTechnique.uniforms[i].value = jsonChild.value;
+                                // gltfTechnique.uniforms[i].value = jsonChild.value;
+                                material.setFloat(i, jsonChild.value);
                             }
                             else {
                                 console.warn(`不存在的 Uniform 参数：${material.url},${i}`);
@@ -244,7 +246,8 @@ namespace RES.processor {
                             break;
                         case egret3d.UniformTypeEnum.Float4:
                             if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.FLOAT_VEC4) {
-                                gltfTechnique.uniforms[i].value = jsonChild.value;
+                                // gltfTechnique.uniforms[i].value = jsonChild.value;
+                                material.setVector4v(i, jsonChild.value);
                             }
                             else {
                                 console.warn(`不存在的 Uniform 参数：${material.url},${i}`);

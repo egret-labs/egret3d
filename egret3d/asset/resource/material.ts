@@ -414,30 +414,10 @@ namespace egret3d {
         public clone(): Material {
             let mat: Material = new Material();
             mat.setShader(this.shader);
-            for (let i in this.$uniforms) {
-                let data = this.$uniforms[i];
-                let _uniformType: UniformTypeEnum = data.type;
-                switch (_uniformType) {
-                    case UniformTypeEnum.Texture:
-                        mat.setTexture(i, data.value);
-                        break;
-                    case UniformTypeEnum.Float:
-                        mat.setFloat(i, data.value);
-                        break;
-                    case UniformTypeEnum.Float4:
-                        if (Array.isArray(data.value)) {
-                            mat.setVector4v(i, data.value as any);
-                        } else {
-                            mat.setVector4(i, data.value);
-                        }
-                        break;
-                    case UniformTypeEnum.Float4v:
-                        mat.setVector4v(i, data.value as any);
-                        break;
-                    default:
-                        break;
-                }
-            }
+
+            //
+            mat._gltfTechnique = egret3d.DefaultTechnique.cloneTechnique(this._gltfTechnique);
+            mat._gltfMaterial = egret3d.DefaultTechnique.cloneGLTFMaterial(this._gltfMaterial);
             return mat;
         }
     }
