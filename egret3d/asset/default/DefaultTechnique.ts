@@ -20,7 +20,7 @@ namespace egret3d {
             }
             for (var key in technique.uniforms) {
                 const uniform = technique.uniforms[key];
-                technique.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value: uniform.value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+                technique.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value: uniform.value, extensions: { paper: { enable: false, location: -1 } } };
             }
 
             this.techniqueTemplates[template.name] = template;
@@ -36,8 +36,6 @@ namespace egret3d {
         }
 
         public static cloneTechnique(source: gltf.Technique) {
-            // const json = JSON.stringify(source);
-            // return JSON.parse(json);
             const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {}, states: source.states };
             for (const key in source.attributes) {
                 const attribute = source.attributes[key];
@@ -45,16 +43,12 @@ namespace egret3d {
             }
             for (const key in source.uniforms) {
                 const uniform = source.uniforms[key];
-                target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value: uniform.value, extensions: { paper: { dirty: true, enable: false, location: -1 } } };
+                target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value: uniform.value, extensions: { paper: { enable: false, location: -1 } } };
             }
             for (const key in source.states) {
                 const state = source.states[key];
                 target.states[key] = state;
             }
-
-            // for(const key in source){
-            //     target[key] = source[key];
-            // }
 
             return target;
         }

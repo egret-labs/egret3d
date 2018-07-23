@@ -14,7 +14,7 @@ namespace egret3d {
                 { componentClass: [DirectLight, SpotLight, PointLight] }
             ]
         ];
-        private readonly _webgl: WebGLRenderingContext = WebGLKit.webgl;
+        private readonly _webgl: WebGLRenderingContext = WebGLRenderUtils.webgl;
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
         private readonly _lightCamera: Camera = this._globalGameObject.getComponent(Camera) || this._globalGameObject.addComponent(Camera);
         private readonly _stateEnables: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST];
@@ -402,7 +402,7 @@ namespace egret3d {
             //Defines
             this._updateContextDefines(context, material);
             //Program
-            const program = WebGLKit.getProgram(context, material, technique, this._cacheDefines);
+            const program = WebGLRenderUtils.getProgram(context, material, technique, this._cacheDefines);
             //State
             this._updateState(technique.states);
             //Use Program
@@ -477,7 +477,7 @@ namespace egret3d {
                 }
             }
 
-            GlRenderTarget.useNull(WebGLKit.webgl);
+            GlRenderTarget.useNull(WebGLRenderUtils.webgl);
         }
 
         public onAwake() {
@@ -518,7 +518,7 @@ namespace egret3d {
             else {
                 this._webgl.clearColor(0, 0, 0, 1);
                 this._webgl.clearDepth(1.0);
-                this._webgl.clear(WebGLKit.webgl.COLOR_BUFFER_BIT | WebGLKit.webgl.DEPTH_BUFFER_BIT);
+                this._webgl.clear(WebGLRenderUtils.webgl.COLOR_BUFFER_BIT | WebGLRenderUtils.webgl.DEPTH_BUFFER_BIT);
             }
         }
     }

@@ -1,6 +1,6 @@
 namespace egret3d {
 
-    export class WebGLKit {
+    export class WebGLRenderUtils {
         private static _programMap: { [key: string]: GlProgram } = {};
         private static _vsShaderMap: { [key: string]: WebGLShader } = {};
         private static _fsShaderMap: { [key: string]: WebGLShader } = {};
@@ -15,7 +15,7 @@ namespace egret3d {
                     throw new Error('Can not resolve #include <' + include + '>');
                 }
 
-                return WebGLKit._parseIncludes(replace);
+                return WebGLRenderUtils._parseIncludes(replace);
             }
             //
             return string.replace(pattern, replace);

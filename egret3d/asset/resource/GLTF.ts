@@ -104,7 +104,7 @@ namespace egret3d {
     export interface GLTFMaterial extends gltf.Material {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
-            KHR_blend?: gltf.KhrBlendMaterialExtension;
+            // KHR_blend?: gltf.KhrBlendMaterialExtension;//先使用States
         }
     }
     export interface GLTFAttribute extends gltf.Attribute {
@@ -118,7 +118,6 @@ namespace egret3d {
     export interface GLTFUniform extends gltf.Uniform {
         extensions?: {
             paper: {
-                dirty: boolean;
                 enable: boolean;
                 location: WebGLUniformLocation;
                 textureUnits?: number[];

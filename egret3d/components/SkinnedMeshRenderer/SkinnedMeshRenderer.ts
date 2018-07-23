@@ -229,19 +229,20 @@ namespace egret3d {
 
             let shaderType = ShaderType.SQT;
 
-            if (this._materials.length > 0) {
-                const materialPasses = this._materials[0].getShader().passes["skin"];
-                if (!materialPasses || materialPasses.length === 0) {
-                    shaderType = ShaderType.Matrix;
-                }
-            }
+            //TODO 不支持 pass结构，这里会有影响?
+            // if (this._materials.length > 0) {
+            //     const materialPasses = this._materials[0].getShader().passes["skin"];
+            //     if (!materialPasses || materialPasses.length === 0) {
+            //         shaderType = ShaderType.Matrix;
+            //     }
+            // }
 
             // TODO _bonePoses 应该是动态长度
             switch (shaderType) {
-                case ShaderType.Matrix:
-                    this._maxBoneCount = 24;
-                    this._skeletonMatrixData = new Float32Array(16 * this._maxBoneCount);
-                    break;
+                // case ShaderType.Matrix:
+                //     this._maxBoneCount = 24;
+                //     this._skeletonMatrixData = new Float32Array(16 * this._maxBoneCount);
+                //     break;
 
                 case ShaderType.SQT:
                     this._maxBoneCount = 55;

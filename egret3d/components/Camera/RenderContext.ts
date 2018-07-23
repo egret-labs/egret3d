@@ -63,12 +63,29 @@ namespace egret3d {
         public drawCall: DrawCall;
 
         public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
-            this.lightmap = texture;
-            this.lightmapUV = uv;
-            this.lightmapOffset = offset;
-            this.lightmapIntensity = intensity;
+            if (this.lightmap !== texture) {
+                this.lightmap = texture;
+                this.version++;
+            }
 
-            this.version++;
+            if (this.lightmapUV !== uv) {
+                this.lightmapUV = uv;
+                this.version++;
+            }
+
+            if (this.lightmapOffset !== offset ||
+                this.lightmapOffset[0] !== offset[0] ||
+                this.lightmapOffset[1] !== offset[1] ||
+                this.lightmapOffset[2] !== offset[2] ||
+                this.lightmapOffset[3] !== offset[3]) {
+                this.lightmapOffset = offset;
+                this.version++;
+            }
+
+            if (this.lightmapIntensity !== intensity) {
+                this.lightmapIntensity = intensity;
+                this.version++;
+            }
         }
 
         public updateCamera(camera: Camera, matrix: Matrix) {
@@ -81,19 +98,32 @@ namespace egret3d {
 
             const worldMatrix = matrix.rawData;
 
-            this.cameraPosition[0] = worldMatrix[12];
-            this.cameraPosition[1] = worldMatrix[13];
-            this.cameraPosition[2] = worldMatrix[14];
+            if (this.cameraPosition[0] !== worldMatrix[12] ||
+                this.cameraPosition[1] !== worldMatrix[13] ||
+                this.cameraPosition[2] !== worldMatrix[14]) {
+                this.cameraPosition[0] = worldMatrix[12];
+                this.cameraPosition[1] = worldMatrix[13];
+                this.cameraPosition[2] = worldMatrix[14];
+                this.version++;
+            }
 
-            this.cameraUp[0] = worldMatrix[4];
-            this.cameraUp[1] = worldMatrix[5];
-            this.cameraUp[2] = worldMatrix[6];
+            if (this.cameraUp[0] !== worldMatrix[4] ||
+                this.cameraUp[1] !== worldMatrix[5] ||
+                this.cameraUp[2] !== worldMatrix[6]) {
+                this.cameraUp[0] = worldMatrix[4];
+                this.cameraUp[1] = worldMatrix[5];
+                this.cameraUp[2] = worldMatrix[6];
+                this.version++;
+            }
 
-            this.cameraForward[1] = -worldMatrix[8];
-            this.cameraForward[2] = -worldMatrix[9];
-            this.cameraForward[3] = -worldMatrix[10];
-
-            this.version++;
+            if (this.cameraForward[0] !== worldMatrix[8] ||
+                this.cameraForward[1] !== worldMatrix[9] ||
+                this.cameraForward[2] !== worldMatrix[10]) {
+                this.cameraForward[0] = -worldMatrix[8];
+                this.cameraForward[1] = -worldMatrix[9];
+                this.cameraForward[2] = -worldMatrix[10];
+                this.version++;
+            }
         }
 
         public updateLights(lights: ReadonlyArray<BaseLight>) {
@@ -271,13 +301,21 @@ namespace egret3d {
         public lightShadowCameraFar: number = 0;
         public updateLightDepth(light: BaseLight) {
             const position = light.gameObject.transform.getPosition();
-            this.lightPosition[0] = position.x;
-            this.lightPosition[1] = position.y;
-            this.lightPosition[2] = position.z;
+            if (this.lightPosition[0] !== position.x ||
+                this.lightPosition[1] !== position.y ||
+                this.lightPosition[2] !== position.z) {
+                this.lightPosition[0] = position.x;
+                this.lightPosition[1] = position.y;
+                this.lightPosition[2] = position.z;
+                this.version++;
+            }
 
-            this.lightShadowCameraNear = light.shadowCameraNear;
-            this.lightShadowCameraFar = light.shadowCameraFar;
-
+            if (this.lightShadowCameraNear !== light.shadowCameraNear ||
+                this.lightShadowCameraNear !== light.shadowCameraFar) {
+                this.lightShadowCameraNear = light.shadowCameraNear;
+                this.lightShadowCameraFar = light.shadowCameraFar;
+                this.version++;
+            }
         }
     }
 }

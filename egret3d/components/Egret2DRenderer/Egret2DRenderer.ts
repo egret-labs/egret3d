@@ -49,7 +49,7 @@ namespace egret3d {
         public initialize() {
             super.initialize();
 
-            let context = WebGLKit.webgl;
+            let context = WebGLRenderUtils.webgl;
 
             if (!this.renderer) {
                 this.renderer = egret.web.Renderer.getInstance(context);
@@ -185,13 +185,13 @@ namespace egret3d {
          * 
          */
         public render(context: RenderContext, camera: egret3d.Camera) {
-            let gl = WebGLKit.webgl;
+            let gl = WebGLRenderUtils.webgl;
 
             this.renderer.beforeRender();
 
             this.stage.drawToSurface();
 
-            WebGLKit.resetState(); // 清除3D渲染器中的标脏
+            WebGLRenderUtils.resetState(); // 清除3D渲染器中的标脏
         }
     }
 }

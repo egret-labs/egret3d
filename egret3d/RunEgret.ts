@@ -19,7 +19,7 @@ namespace egret3d {
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound'] //TODO:Sound
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas();
-        WebGLKit.init(canvas, requiredOptions);
+        WebGLRenderUtils.init(canvas, requiredOptions);
         InputManager.init(canvas);
         DefaultMeshes.init();
         DefaultTextures.init();

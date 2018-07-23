@@ -16,7 +16,7 @@ namespace egret3d {
         public constructor() {
             super();
 
-            this.renderTarget = new GlRenderTargetCube(WebGLKit.webgl, 1024, 1024, true); // TODO
+            this.renderTarget = new GlRenderTargetCube(WebGLRenderUtils.webgl, 1024, 1024, true); // TODO
         }
 
         public update(camera: Camera, faceIndex: number) {

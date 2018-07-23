@@ -154,7 +154,7 @@ namespace RES.processor {
             let image = await promisify(loader, resource);
             let texture = new egret3d.Texture(url);
             texture.realName = _name;
-            const gl = egret3d.WebGLKit.webgl;
+            const gl = egret3d.WebGLRenderUtils.webgl;
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
             t2d.uploadImage(image.source, _mipmap, _linear, true, _repeat);
             texture.glTexture = t2d;
@@ -173,7 +173,7 @@ namespace RES.processor {
     export const TextureProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let gl = egret3d.WebGLKit.webgl;
+            let gl = egret3d.WebGLRenderUtils.webgl;
             let url = getUrl(resource);
             let loader = new egret.ImageLoader();
             loader.load(url);

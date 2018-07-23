@@ -49,11 +49,17 @@ namespace egret3d {
          * @param b 
          */
         private _sortOpaque(a: DrawCall, b: DrawCall) {
-            if (a.material.renderQueue === b.material.renderQueue) {
-                return a.zdist - b.zdist;
+            if (a.material.renderQueue !== b.material.renderQueue) {
+                return a.material.renderQueue - b.material.renderQueue;
+            }
+            else if (a.material._gltfTechnique.program && b.material._gltfTechnique.program && a.material._gltfTechnique.program.id !== b.material._gltfTechnique.program.id) {
+                return a.material._gltfTechnique.program.id - b.material._gltfTechnique.program.id;
+            }
+            else if (a.material.id !== b.material.id) {
+                return a.material.id - b.material.id;
             }
             else {
-                return a.material.renderQueue - b.material.renderQueue;
+                return a.zdist - b.zdist;
             }
         }
         /**
@@ -94,7 +100,7 @@ namespace egret3d {
                 if (visible) {
                     const objPos = drawTarget.transform.getPosition();
                     drawCall.zdist = objPos.getDistance(cameraPos);
-                    if (drawCall.material.renderQueue === RenderQueue.Transparent) {
+                    if (drawCall.material.renderQueue >= RenderQueue.Transparent && drawCall.material.renderQueue < RenderQueue.Overlay) {
                         this.transparentCalls.push(drawCall);
                     }
                     else {

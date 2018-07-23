@@ -28,7 +28,7 @@ namespace egret3d {
          * @inheritDoc
          */
         public render(camera: Camera, renderSystem: WebGLRenderSystem) {
-            const webgl = WebGLKit.webgl;
+            const webgl = WebGLRenderUtils.webgl;
             camera._targetAndViewport(this.renderTarget, true); // 最后一个参数true 表示不用camera的clear 配置
             webgl.depthMask(true);
             // webgl.depthMask(true); // 开启 zwrite 以便正常 clear depth
@@ -87,7 +87,7 @@ namespace egret3d {
          * @inheritDoc
          */
         public render(camera: Camera, renderSystem: WebGLRenderSystem) {
-            const webgl = WebGLKit.webgl;
+            const webgl = WebGLRenderUtils.webgl;
             camera._targetAndViewport(this.renderTarget, false);
             // camera.context.drawtype = "";
 

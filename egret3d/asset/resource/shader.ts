@@ -45,14 +45,14 @@ namespace egret3d {
         /**
          * 渲染队列 
          */
-        public renderQueue: RenderQueue = RenderQueue.Geometry;
+        // public renderQueue: RenderQueue = RenderQueue.Geometry;
 
-        public readonly passes: { [id: string]: egret3d.DrawPass[] } = {};
+        // public readonly passes: { [id: string]: egret3d.DrawPass[] } = {};
 
         /**
          * 
          */
-        public readonly defaultValue: { [key: string]: { type: string, value?: any, min?: number, max?: number } } = {};
+        // public readonly defaultValue: { [key: string]: { type: string, value?: any, min?: number, max?: number } } = {};
 
         public readonly vertShader: ShaderInfo = {} as any;//TODO
         public readonly fragShader: ShaderInfo = {} as any;//TODO
@@ -269,13 +269,13 @@ namespace egret3d {
          * @inheritDoc
          */
         public dispose() {
-            for (const k in this.passes) {
-                delete this.passes[k];
-            }
+            // for (const k in this.passes) {
+            //     delete this.passes[k];
+            // }
 
-            for (const k in this.defaultValue) {
-                delete this.defaultValue[k];
-            }
+            // for (const k in this.defaultValue) {
+            //     delete this.defaultValue[k];
+            // }
         }
 
         /**

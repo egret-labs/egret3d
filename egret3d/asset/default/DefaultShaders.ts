@@ -2,29 +2,29 @@ namespace egret3d {
 
     export class DefaultShaders {
 
-        public static TRANSPARENT: Shader;
-        public static TRANSPARENT_ADDITIVE: Shader;
-        public static TRANSPARENT_BOTH_SIDE: Shader;
-        public static TRANSPARENT_ADDITIVE_BOTH_SIDE: Shader;
-        public static DIFFUSE_TINT_COLOR: Shader;
-        public static DIFFUSE_VERT_COLOR: Shader;
-        public static DIFFUSE_BOTH_SIDE: Shader;
-        public static UI: Shader;
-        public static UI_FONT: Shader;
-        public static LINE: Shader;
-        public static MATERIAL_COLOR: Shader;
-        public static LAMBERT_NORMAL: Shader;
-        public static GIZMOS_COLOR: Shader;
-        public static PARTICLE_ADDITIVE: Shader;
-        public static PARTICLE_ADDITIVE_PREMYLTIPLY: Shader;
-        public static PARTICLE_BLEND: Shader;
-        public static PARTICLE_BLEND_PREMYLTIPLY: Shader;
+        // public static TRANSPARENT: Shader;
+        // public static TRANSPARENT_ADDITIVE: Shader;
+        // public static TRANSPARENT_BOTH_SIDE: Shader;
+        // public static TRANSPARENT_ADDITIVE_BOTH_SIDE: Shader;
+        // public static DIFFUSE_TINT_COLOR: Shader;
+        // public static DIFFUSE_VERT_COLOR: Shader;
+        // public static DIFFUSE_BOTH_SIDE: Shader;
+        // public static UI: Shader;
+        // public static UI_FONT: Shader;
+        // public static MATERIAL_COLOR: Shader;
+        // public static LAMBERT_NORMAL: Shader;
+        // public static PARTICLE_ADDITIVE: Shader;
+        // public static PARTICLE_ADDITIVE_PREMYLTIPLY: Shader;
+        // public static PARTICLE_BLEND: Shader;
+        // public static PARTICLE_BLEND_PREMYLTIPLY: Shader;
 
+        public static LINE: Shader;
+        public static GIZMOS_COLOR: Shader;
         public static LAMBERT: Shader;
         public static DIFFUSE: Shader;
         public static PARTICLE: Shader;
-        public static SHADOW_DEPTH:Shader;
-        public static SHADOW_DISTANCE:Shader;
+        public static SHADOW_DEPTH: Shader;
+        public static SHADOW_DISTANCE: Shader;
 
         public static readonly defaultShaders: { [key: string]: string } = {};
 
@@ -36,6 +36,16 @@ namespace egret3d {
             }
 
             this._inited = true;
+
+            this.LINE = new Shader("line.shader.json");
+            this.LINE.setVertShader("def_line_vs", ShaderLib.line_vert);
+            this.LINE.setFragShader("def_line_fs", ShaderLib.line_frag);
+            paper.Asset.register(this.LINE);
+
+            this.GIZMOS_COLOR = new Shader("materialcolor.shader.json");
+            this.GIZMOS_COLOR.setVertShader("def_color_vs", ShaderLib.materialcolor_vert);
+            this.GIZMOS_COLOR.setFragShader("def_color_fs", ShaderLib.line_frag);
+            paper.Asset.register(this.GIZMOS_COLOR);
 
             this.DIFFUSE = new Shader("diffuse.shader.json");
             this.DIFFUSE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);

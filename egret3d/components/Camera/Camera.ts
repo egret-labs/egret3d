@@ -270,7 +270,7 @@ namespace egret3d {
         public _targetAndViewport(target: IRenderTarget | null, withoutClear: boolean) {
             let w: number;
             let h: number;
-            const webgl = WebGLKit.webgl;
+            const webgl = WebGLRenderUtils.webgl;
 
             if (!target) {
                 w = stage.screenViewport.w;
