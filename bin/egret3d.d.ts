@@ -33,6 +33,7 @@ declare namespace paper {
      * 生成 uuid 的方式。
      */
     let createUUID: () => string;
+    let createAssetID: () => any;
     /**
      * 可序列化对象。
      */
@@ -41,54 +42,12 @@ declare namespace paper {
          *
          */
         uuid: string;
-        /**
-         *
-         */
+        assetUUid: string;
         serialize(): any;
         /**
          *
          */
         deserialize(element: any): void;
-    }
-}
-declare namespace paper {
-    /**
-     * 组件基类
-     */
-    abstract class BaseComponent extends SerializableObject {
-        /**
-         * 组件挂载的 GameObject
-         */
-        readonly gameObject: GameObject;
-        /**
-         * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
-         */
-        extras?: any;
-        protected _enabled: boolean;
-        /**
-         * 添加组件后，组件内部初始化。
-         * - 重载此方法时，必须调用 `super.initialize()`。
-         */
-        initialize(config?: any): void;
-        /**
-         * 移除组件后，组件内部卸载。
-         * - 重载此方法时，必须调用 `super.uninitialize()`。
-         */
-        uninitialize(): void;
-        serialize(): any;
-        deserialize(element: any): void;
-        /**
-         *
-         */
-        readonly isDestroyed: boolean;
-        /**
-         * 组件的激活状态。
-         */
-        enabled: boolean;
-        /**
-         * 组件在场景的激活状态。
-         */
-        readonly isActiveAndEnabled: boolean;
     }
 }
 declare namespace paper.editor {
@@ -180,6 +139,79 @@ declare namespace paper.editor {
      * @param classInstance 实例对象
      */
     function getExtraInfo(classInstance: any): PropertyInfo[];
+}
+declare namespace paper {
+    /**
+     * 组件基类
+     */
+    abstract class BaseComponent extends SerializableObject {
+        /**
+         * 组件挂载的 GameObject
+         */
+        readonly gameObject: GameObject;
+        /**
+         * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
+         */
+        extras?: any;
+        protected _enabled: boolean;
+        /**
+         * 添加组件后，组件内部初始化。
+         * - 重载此方法时，必须调用 `super.initialize()`。
+         */
+        initialize(config?: any): void;
+        /**
+         * 移除组件后，组件内部卸载。
+         * - 重载此方法时，必须调用 `super.uninitialize()`。
+         */
+        uninitialize(): void;
+        serialize(): any;
+        deserialize(element: any): void;
+        /**
+         *
+         */
+        readonly isDestroyed: boolean;
+        /**
+         * 组件的激活状态。
+         */
+        enabled: boolean;
+        /**
+         * 组件在场景的激活状态。
+         */
+        readonly isActiveAndEnabled: boolean;
+    }
+}
+declare namespace egret3d {
+    interface IVector2 {
+        x: number;
+        y: number;
+    }
+    class Vector2 implements IVector2, paper.ISerializable {
+        static readonly ZERO: Readonly<Vector2>;
+        static readonly ONE: Readonly<Vector2>;
+        x: number;
+        y: number;
+        constructor(x?: number, y?: number);
+        serialize(): number[];
+        deserialize(element: [number, number]): void;
+        copy(value: Readonly<IVector2>): this;
+        clone(): Vector2;
+        set(x: number, y: number): this;
+        normalize(): this;
+        readonly length: number;
+        readonly sqrtLength: number;
+        static set(x: number, y: number, out: Vector2): Vector2;
+        static normalize(v: Vector2): Vector2;
+        static add(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static subtract(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static multiply(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static dot(v1: Vector2, v2: Vector2): number;
+        static scale(v: Vector2, scaler: number): Vector2;
+        static getLength(v: Vector2): number;
+        static getDistance(v1: Vector2, v2: Vector2): number;
+        static copy(v: Vector2, out: Vector2): Vector2;
+        static equal(v1: Vector2, v2: Vector2, threshold?: number): boolean;
+        static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2;
+    }
 }
 declare namespace egret3d {
     interface IVector3 {
@@ -283,39 +315,6 @@ declare namespace egret3d {
     const helpVector3F: Vector3;
     const helpVector3G: Vector3;
     const helpVector3H: Vector3;
-}
-declare namespace egret3d {
-    interface IVector2 {
-        x: number;
-        y: number;
-    }
-    class Vector2 implements IVector2, paper.ISerializable {
-        static readonly ZERO: Readonly<Vector2>;
-        static readonly ONE: Readonly<Vector2>;
-        x: number;
-        y: number;
-        constructor(x?: number, y?: number);
-        serialize(): number[];
-        deserialize(element: [number, number]): void;
-        copy(value: Readonly<IVector2>): this;
-        clone(): Vector2;
-        set(x: number, y: number): this;
-        normalize(): this;
-        readonly length: number;
-        readonly sqrtLength: number;
-        static set(x: number, y: number, out: Vector2): Vector2;
-        static normalize(v: Vector2): Vector2;
-        static add(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static subtract(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static multiply(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static dot(v1: Vector2, v2: Vector2): number;
-        static scale(v: Vector2, scaler: number): Vector2;
-        static getLength(v: Vector2): number;
-        static getDistance(v1: Vector2, v2: Vector2): number;
-        static copy(v: Vector2, out: Vector2): Vector2;
-        static equal(v1: Vector2, v2: Vector2, threshold?: number): boolean;
-        static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2;
-    }
 }
 declare namespace paper {
     /**
@@ -1292,11 +1291,95 @@ declare namespace gltf {
 }
 declare namespace paper {
     /**
-     * 单例组件基类。
+     *
      */
-    class SingletonComponent extends BaseComponent {
-        initialize(): void;
-        uninitialize(): void;
+    class BaseObjectAsset extends Asset {
+        protected _raw: ISerializedData;
+        dispose(): void;
+        caclByteLength(): number;
+    }
+    /**
+     * 预制体资源。
+     */
+    class Prefab extends BaseObjectAsset {
+        /**
+         * 从当前预制体生成一个实例。
+         */
+        createInstance(): GameObject;
+    }
+}
+declare namespace paper.editor {
+    abstract class BaseState {
+        autoClear: boolean;
+        batchIndex: number;
+        private _isDone;
+        data: any;
+        undo(): boolean;
+        redo(): boolean;
+        isDone: boolean;
+        dispatchEditorModelEvent(type: string, data?: any): void;
+        serialize(): any;
+        deserialize(data: any): void;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    enum JointType {
+        Spherical,
+        Prismatic,
+        Hinge,
+        Cylindrical,
+        ConeTwist,
+        Universal,
+    }
+    /**
+     *
+     */
+    abstract class Joint<T extends OIMO.Joint> extends paper.BaseComponent {
+        /**
+         *
+         */
+        readonly jointType: JointType;
+        protected readonly _anchor: Vector3;
+        protected readonly _values: Float32Array;
+        protected _connectedBody: Rigidbody | null;
+        protected _rigidbody: Rigidbody;
+        protected _oimoJoint: T;
+        protected abstract _createJoint(): T;
+        /**
+         *
+         */
+        getAppliedForce(out?: IVector3): IVector3;
+        /**
+         *
+         */
+        getAppliedTorque(out?: IVector3): IVector3;
+        /**
+         *
+         */
+        collisionEnabled: boolean;
+        /**
+         *
+         */
+        useGlobalAnchor: boolean;
+        /**
+         *
+         */
+        anchor: Readonly<IVector3>;
+        /**
+         *
+         */
+        connectedRigidbody: Rigidbody | null;
+        /**
+         *
+         */
+        readonly rigidbody: Rigidbody;
+        /**
+         *
+         */
+        readonly oimoJoint: T;
     }
 }
 declare namespace egret3d {
@@ -1409,149 +1492,27 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
+     * 单例组件基类。
      */
-    class SystemManager {
-        private static _instance;
-        static getInstance(): SystemManager;
-        private constructor();
-        private readonly _registerSystems;
-        private readonly _systems;
-        private _currentSystem;
-        private _preRegister(systemClass);
-        /**
-         * 注册一个系统到管理器中。
-         */
-        register(systemClass: {
-            new (): BaseSystem;
-        }, after?: {
-            new (): BaseSystem;
-        } | null): void;
-        /**
-         * 注册一个系统到管理器中。
-         */
-        registerBefore(systemClass: {
-            new (): BaseSystem;
-        }, before?: {
-            new (): BaseSystem;
-        } | null): void;
-        /**
-         *
-         */
-        enableSystem(systemClass: {
-            new (): BaseSystem;
-        }): void;
-        /**
-         *
-         */
-        disableSystem(systemClass: {
-            new (): BaseSystem;
-        }): void;
-        /**
-         * 获取一个管理器中指定的系统实例。
-         */
-        getSystem<T extends BaseSystem>(systemClass: {
-            new (): T;
-        }): T;
-        /**
-         *
-         */
-        readonly systems: ReadonlyArray<BaseSystem | null>;
+    class SingletonComponent extends BaseComponent {
+        initialize(): void;
+        uninitialize(): void;
     }
 }
 declare namespace paper {
     /**
-     * 脚本组件。
-     * 生命周期的顺序。
-     * - onAwake();
-     * - onReset();
-     * - onEnable();
-     * - onStart();
-     * - onFixedUpdate();
-     * - onUpdate();
-     * - onLateUpdate();
-     * - onDisable();
-     * - onDestroy();
+     * scene asset
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    abstract class Behaviour extends BaseComponent {
-        initialize(config?: any): void;
-        uninitialize(): void;
-        /**
-         * 组件被初始化时调用。
-         * @see paper.GameObject#addComponent()
-         */
-        onAwake?(config: any): void;
-        /**
-         *
-         */
-        onReset?(): void;
-        /**
-         * 组件被激活或实体被激活时调用。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
-         */
-        onEnable?(): void;
-        /**
-         * 组件开始运行时调用。
-         * - 在整个生命周期中只执行一次。
-         */
-        onStart?(): void;
-        /**
-         *
-         */
-        onFixedUpdate?(currentTimes: number, totalTimes: number): void;
-        /**
-         *
-         */
-        onTriggerEnter?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerStay?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerExit?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionEnter?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionStay?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionExit?(collider: any): void;
-        /**
-         *
-         */
-        onUpdate?(deltaTime: number): void;
-        /**
-         *
-         */
-        onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
-        /**
-         *
-         */
-        onLateUpdate?(deltaTime: number): void;
-        /**
-         * 组件被禁用或实体被禁用时调用。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
-         */
-        onDisable?(): void;
-        /**
-         * 组件被移除或实体被销毁时调用。
-         * @see paper.GameObject#removeComponent()
-         * @see paper.GameObject#destroy()
-         */
-        onDestroy?(): void;
-        /**
-         * @deprecated
-         */
-        onCollide(collider: any): void;
+    /**
+     * 场景数据资源
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    class RawScene extends BaseObjectAsset {
     }
 }
 declare namespace egret3d {
@@ -1561,25 +1522,6 @@ declare namespace egret3d {
         removeEventListener(type: string, listener: Function, thisObject: any): void;
         dispatchEvent(event: any): void;
         private notifyListener(event);
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    class BaseObjectAsset extends paper.Asset {
-        protected _raw: paper.ISerializedData;
-        dispose(): void;
-        caclByteLength(): number;
-    }
-    /**
-     * 预制体资源。
-     */
-    class Prefab extends BaseObjectAsset {
-        /**
-         * 从当前预制体生成一个实例。
-         */
-        createInstance(): paper.GameObject;
     }
 }
 declare namespace egret3d {
@@ -2035,6 +1977,178 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
+     * 脚本组件。
+     * 生命周期的顺序。
+     * - onAwake();
+     * - onReset();
+     * - onEnable();
+     * - onStart();
+     * - onFixedUpdate();
+     * - onUpdate();
+     * - onLateUpdate();
+     * - onDisable();
+     * - onDestroy();
+     */
+    abstract class Behaviour extends BaseComponent {
+        initialize(config?: any): void;
+        uninitialize(): void;
+        /**
+         * 组件被初始化时调用。
+         * @see paper.GameObject#addComponent()
+         */
+        onAwake?(config: any): void;
+        /**
+         *
+         */
+        onReset?(): void;
+        /**
+         * 组件被激活或实体被激活时调用。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
+         */
+        onEnable?(): void;
+        /**
+         * 组件开始运行时调用。
+         * - 在整个生命周期中只执行一次。
+         */
+        onStart?(): void;
+        /**
+         *
+         */
+        onFixedUpdate?(currentTimes: number, totalTimes: number): void;
+        /**
+         *
+         */
+        onTriggerEnter?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerStay?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerExit?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionEnter?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionStay?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionExit?(collider: any): void;
+        /**
+         *
+         */
+        onUpdate?(deltaTime: number): void;
+        /**
+         *
+         */
+        onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
+        /**
+         *
+         */
+        onLateUpdate?(deltaTime: number): void;
+        /**
+         * 组件被禁用或实体被禁用时调用。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
+         */
+        onDisable?(): void;
+        /**
+         * 组件被移除或实体被销毁时调用。
+         * @see paper.GameObject#removeComponent()
+         * @see paper.GameObject#destroy()
+         */
+        onDestroy?(): void;
+        /**
+         * @deprecated
+         */
+        onCollide(collider: any): void;
+    }
+}
+declare namespace paper {
+    /**
+     * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
+     */
+    class SystemManager {
+        private static _instance;
+        static getInstance(): SystemManager;
+        private constructor();
+        private readonly _registerSystems;
+        private readonly _systems;
+        private _currentSystem;
+        private _preRegister(systemClass);
+        /**
+         * 注册一个系统到管理器中。
+         */
+        register(systemClass: {
+            new (): BaseSystem;
+        }, after?: {
+            new (): BaseSystem;
+        } | null): void;
+        /**
+         * 注册一个系统到管理器中。
+         */
+        registerBefore(systemClass: {
+            new (): BaseSystem;
+        }, before?: {
+            new (): BaseSystem;
+        } | null): void;
+        /**
+         *
+         */
+        enableSystem(systemClass: {
+            new (): BaseSystem;
+        }): void;
+        /**
+         *
+         */
+        disableSystem(systemClass: {
+            new (): BaseSystem;
+        }): void;
+        /**
+         * 获取一个管理器中指定的系统实例。
+         */
+        getSystem<T extends BaseSystem>(systemClass: {
+            new (): T;
+        }): T;
+        /**
+         *
+         */
+        readonly systems: ReadonlyArray<BaseSystem | null>;
+    }
+}
+declare namespace paper.editor {
+    interface IEventDispatcher {
+        addEventListener(type: string, fun: Function, thisObj: any): void;
+        removeEventListener(type: string, fun: Function, thisObj: any): void;
+        dispatchEvent(event: BaseEvent): void;
+    }
+    /**
+     * 事件派发器
+     */
+    class EventDispatcher implements IEventDispatcher {
+        __z_e_listeners: any;
+        constructor();
+        addEventListener(type: string, fun: Function, thisObj: any, level?: number): void;
+        removeEventListener(type: string, fun: Function, thisObj: any): void;
+        dispatchEvent(event: BaseEvent): void;
+    }
+    /**
+     * 事件
+     */
+    class BaseEvent {
+        type: string;
+        data: any;
+        constructor(type: string, data?: any);
+    }
+}
+declare namespace paper {
+    /**
      * 场景管理器
      */
     class SceneManager {
@@ -2087,89 +2201,11 @@ declare namespace paper {
         getActiveScene(): Scene;
     }
 }
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
-    enum JointType {
-        Spherical,
-        Prismatic,
-        Hinge,
-        Cylindrical,
-        ConeTwist,
-        Universal,
-    }
-    /**
-     *
-     */
-    abstract class Joint<T extends OIMO.Joint> extends paper.BaseComponent {
-        /**
-         *
-         */
-        readonly jointType: JointType;
-        protected readonly _anchor: Vector3;
-        protected readonly _values: Float32Array;
-        protected _connectedBody: Rigidbody | null;
-        protected _rigidbody: Rigidbody;
-        protected _oimoJoint: T;
-        protected abstract _createJoint(): T;
-        /**
-         *
-         */
-        getAppliedForce(out?: IVector3): IVector3;
-        /**
-         *
-         */
-        getAppliedTorque(out?: IVector3): IVector3;
-        /**
-         *
-         */
-        collisionEnabled: boolean;
-        /**
-         *
-         */
-        useGlobalAnchor: boolean;
-        /**
-         *
-         */
-        anchor: Readonly<IVector3>;
-        /**
-         *
-         */
-        connectedRigidbody: Rigidbody | null;
-        /**
-         *
-         */
-        readonly rigidbody: Rigidbody;
-        /**
-         *
-         */
-        readonly oimoJoint: T;
-    }
-}
 declare namespace paper.editor {
-    interface IEventDispatcher {
-        addEventListener(type: string, fun: Function, thisObj: any): void;
-        removeEventListener(type: string, fun: Function, thisObj: any): void;
-        dispatchEvent(event: BaseEvent): void;
-    }
-    /**
-     * 事件派发器
-     */
-    class EventDispatcher implements IEventDispatcher {
-        __z_e_listeners: any;
-        constructor();
-        addEventListener(type: string, fun: Function, thisObj: any, level?: number): void;
-        removeEventListener(type: string, fun: Function, thisObj: any): void;
-        dispatchEvent(event: BaseEvent): void;
-    }
-    /**
-     * 事件
-     */
-    class BaseEvent {
-        type: string;
-        data: any;
-        constructor(type: string, data?: any);
+    class ModifyPrefabProperty extends BaseState {
+        protected getGameObjectsByPrefab: (prefab: Prefab) => GameObject[];
+        protected equal(a: any, b: any): boolean;
+        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -2332,82 +2368,6 @@ declare namespace egret3d {
         static scale(c: Color, scaler: number): Color;
         static copy(c: Color, out: Color): Color;
         static lerp(c1: Color, c2: Color, value: number, out: Color): Color;
-    }
-}
-declare namespace paper {
-    /**
-     *
-     */
-    interface IUUID {
-        /**
-         *
-         */
-        readonly uuid: string;
-    }
-    /**
-     *
-     */
-    interface IAssetReference {
-        /**
-         *
-         */
-        readonly asset: number;
-    }
-    /**
-     *
-     */
-    interface IClass {
-        /**
-         *
-         */
-        readonly class: string;
-    }
-    /**
-     * 自定义序列化接口。
-     */
-    interface ISerializable {
-        /**
-         *
-         */
-        serialize(): any | ISerializedObject;
-        /**
-         *
-         */
-        deserialize(element: any): void;
-    }
-    /**
-     * 序列化后的数据接口。
-     */
-    interface ISerializedObject extends IUUID, IClass {
-        /**
-         *
-         */
-        [key: string]: any | IUUID | IAssetReference;
-    }
-    /**
-     * 序列化数据接口
-     */
-    interface ISerializedData {
-        /**
-         *
-         */
-        version?: number;
-        /**
-         *
-         */
-        compatibleVersion?: number;
-        /**
-         * 所有资源。
-         */
-        readonly assets: string[];
-        /**
-         * 所有实体。（至多含一个场景）
-         */
-        readonly objects: ISerializedObject[];
-        /**
-         * 所有组件。
-         */
-        readonly components: ISerializedObject[];
     }
 }
 declare namespace paper {
@@ -2924,36 +2884,91 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     * 序列化场景，实体或组件。
+     *
      */
-    function serialize(source: Scene | GameObject | BaseComponent): ISerializedData;
-    /**
-     * 创建指定资源的引用。
-     */
-    function createAssetReference(source: Asset): IAssetReference;
-    /**
-     * 创建指定对象的引用。
-     */
-    function createReference(source: Scene | GameObject | BaseComponent, isOnlyUUID: boolean): any;
-    /**
-     * 创建指定对象的结构体。
-     */
-    function createStruct(source: SerializableObject): any;
-}
-declare namespace egret3d.oimo {
+    const enum HideFlags {
+        /**
+         *
+         */
+        None = 0,
+        /**
+         *
+         */
+        NotEditable = 1,
+        /**
+         *
+         */
+        Hide = 2,
+    }
     /**
      *
      */
-    class RayTester extends paper.Behaviour {
-        private static readonly _material;
-        distance: number;
-        collisionMask: paper.CullingMask;
-        private _hitted;
-        private _meshFilter;
-        private _meshRender;
-        onStart(): void;
-        onUpdate(): void;
+    const enum DefaultTags {
+        Untagged = "",
+        Global = "Global",
+        Respawn = "Respawn",
+        Finish = "Finish",
+        EditorOnly = "EditorOnly",
+        MainCamera = "MainCamera",
+        Player = "Player",
+        GameController = "GameController",
     }
+    /**
+     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
+     * 这个属性可以实现相机的选择性剔除。
+     */
+    const enum Layer {
+        Default = 2,
+        UI = 4,
+        UserLayer1 = 8,
+        UserLayer2 = 16,
+        UserLayer3 = 32,
+        UserLayer4 = 64,
+        UserLayer5 = 128,
+        UserLayer6 = 240,
+        UserLayer7 = 256,
+        UserLayer8 = 512,
+        UserLayer9 = 1024,
+        UserLayer10 = 2048,
+        UserLayer11 = 3840,
+    }
+    /**
+     * culling mask
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * culling mask 枚举。
+     * 相机的cullingmask与renderer的renderLayer相匹配，才会执行渲染。否则将会被跳过。
+     * 这个属性可以实现相机的选择性剔除。
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    const enum CullingMask {
+        Everything = 16777215,
+        Nothing = 1,
+        Default = 2,
+        UI = 4,
+        UserLayer1 = 8,
+        UserLayer2 = 16,
+        UserLayer3 = 32,
+        UserLayer4 = 64,
+        UserLayer5 = 128,
+        UserLayer6 = 240,
+        UserLayer7 = 256,
+        UserLayer8 = 512,
+        UserLayer9 = 1024,
+        UserLayer10 = 2048,
+        UserLayer11 = 3840,
+    }
+}
+declare namespace paper {
+    /**
+     * 克隆
+     */
+    function clone(object: GameObject): GameObject;
 }
 declare namespace egret3d {
     /**
@@ -2990,32 +3005,6 @@ declare namespace paper {
         readonly deltaTime: number;
         readonly unscaledTime: number;
         readonly unscaledDeltaTime: number;
-    }
-}
-declare namespace paper {
-    /**
-     *
-     */
-    class MissingComponent extends BaseComponent {
-        missingObject: any | null;
-        serialize(): any;
-        deserialize(element: any): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * scene asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 场景数据资源
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class RawScene extends BaseObjectAsset {
     }
 }
 declare namespace egret3d {
@@ -3803,19 +3792,10 @@ declare namespace paper {
     /**
      *
      */
-    class ContactColliders extends SingletonComponent {
-        /**
-         *
-         */
-        readonly begin: any[];
-        /**
-         *
-         */
-        readonly stay: any[];
-        /**
-         *
-         */
-        readonly end: any[];
+    class MissingComponent extends BaseComponent {
+        missingObject: any | null;
+        serialize(): any;
+        deserialize(element: any): void;
     }
 }
 declare namespace egret3d {
@@ -4485,9 +4465,22 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     * 克隆
+     *
      */
-    function clone(object: GameObject): GameObject;
+    class ContactColliders extends SingletonComponent {
+        /**
+         *
+         */
+        readonly begin: any[];
+        /**
+         *
+         */
+        readonly stay: any[];
+        /**
+         *
+         */
+        readonly end: any[];
+    }
 }
 declare namespace egret3d {
     /**
@@ -4707,7 +4700,140 @@ declare namespace egret3d {
         readonly boneBuffer: Readonly<Float32Array>;
     }
 }
-declare namespace paper {
+declare namespace egret3d {
+    /**
+     *
+     */
+    const enum TrailRenderEventType {
+        Meterial = "material",
+    }
+    /**
+     * Trail Renderer Component
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 拖尾渲染组件
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    class TrailRenderer extends paper.BaseRenderer {
+        /**
+         * extend direction
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 拖尾延伸方向。
+         * true为单方向延伸，false为双向延伸
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        extenedOneSide: boolean;
+        private _vertexCount;
+        /**
+         *
+         */
+        private _material;
+        /**
+         *
+         */
+        _mesh: Mesh;
+        private _sticks;
+        /**
+         * trail material
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 拖尾的材质
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        material: Material | null;
+        /**
+         * material color
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 材质颜色
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        readonly color: Color;
+        /**
+         * set trail width
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置拖尾宽度
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        width: number;
+        /**
+         * set trail speed（0 - 1）
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置拖尾速度，调节拖尾长短（0-1）
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        speed: number;
+        /**
+         * look at camera
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 拖尾是否朝向相机
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        lookAtCamera: boolean;
+        /**
+         *
+         */
+        $active: boolean;
+        private _reInit;
+        /**
+         *
+         */
+        constructor();
+        /**
+         * @inheritDoc
+         */
+        initialize(): void;
+        /**
+         * @inheritDoc
+         */
+        uninitialize(): void;
+        /**
+         *
+         */
+        update(delta: number): void;
+        private _buildMesh(vertexcount);
+        private _buildData(vertexCount);
+        private _updateTrailData();
+    }
 }
 declare namespace egret3d {
     /**
@@ -5204,85 +5330,13 @@ declare namespace egret3d.particle {
 }
 declare namespace paper {
     /**
-     *
+     * 反序列化。
      */
-    const enum HideFlags {
-        /**
-         *
-         */
-        None = 0,
-        /**
-         *
-         */
-        NotEditable = 1,
-        /**
-         *
-         */
-        Hide = 2,
-    }
+    function deserialize<T extends ISerializable>(data: ISerializedData, isKeepUUID?: boolean): T | null;
     /**
      *
      */
-    const enum DefaultTags {
-        Untagged = "",
-        Global = "Global",
-        Respawn = "Respawn",
-        Finish = "Finish",
-        EditorOnly = "EditorOnly",
-        MainCamera = "MainCamera",
-        Player = "Player",
-        GameController = "GameController",
-    }
-    /**
-     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
-     * 这个属性可以实现相机的选择性剔除。
-     */
-    const enum Layer {
-        Default = 2,
-        UI = 4,
-        UserLayer1 = 8,
-        UserLayer2 = 16,
-        UserLayer3 = 32,
-        UserLayer4 = 64,
-        UserLayer5 = 128,
-        UserLayer6 = 240,
-        UserLayer7 = 256,
-        UserLayer8 = 512,
-        UserLayer9 = 1024,
-        UserLayer10 = 2048,
-        UserLayer11 = 3840,
-    }
-    /**
-     * culling mask
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * culling mask 枚举。
-     * 相机的cullingmask与renderer的renderLayer相匹配，才会执行渲染。否则将会被跳过。
-     * 这个属性可以实现相机的选择性剔除。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    const enum CullingMask {
-        Everything = 16777215,
-        Nothing = 1,
-        Default = 2,
-        UI = 4,
-        UserLayer1 = 8,
-        UserLayer2 = 16,
-        UserLayer3 = 32,
-        UserLayer4 = 64,
-        UserLayer5 = 128,
-        UserLayer6 = 240,
-        UserLayer7 = 256,
-        UserLayer8 = 512,
-        UserLayer9 = 1024,
-        UserLayer10 = 2048,
-        UserLayer11 = 3840,
-    }
+    function getDeserializedAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent;
 }
 declare namespace egret3d.particle {
     /**
@@ -5348,9 +5402,7 @@ declare namespace egret3d.particle {
         onDisable(): void;
     }
 }
-declare namespace egret3d {
-    class Audio extends paper.BaseComponent {
-    }
+declare namespace paper {
 }
 declare namespace egret3d {
     enum WEBGL_UNIFORM_TYPE {
@@ -5406,6 +5458,82 @@ declare namespace egret3d {
         private _resize();
     }
     const stage: Stage3D;
+}
+declare namespace paper {
+    /**
+     *
+     */
+    interface IUUID {
+        /**
+         *
+         */
+        readonly uuid: string;
+    }
+    /**
+     *
+     */
+    interface IAssetReference {
+        /**
+         *
+         */
+        readonly asset: number;
+    }
+    /**
+     *
+     */
+    interface IClass {
+        /**
+         *
+         */
+        readonly class: string;
+    }
+    /**
+     * 自定义序列化接口。
+     */
+    interface ISerializable {
+        /**
+         *
+         */
+        serialize(): any | ISerializedObject;
+        /**
+         *
+         */
+        deserialize(element: any): void;
+    }
+    /**
+     * 序列化后的数据接口。
+     */
+    interface ISerializedObject extends IUUID, IClass {
+        /**
+         *
+         */
+        [key: string]: any | IUUID | IAssetReference;
+    }
+    /**
+     * 序列化数据接口
+     */
+    interface ISerializedData {
+        /**
+         *
+         */
+        version?: number;
+        /**
+         *
+         */
+        compatibleVersion?: number;
+        /**
+         * 所有资源。
+         */
+        readonly assets: string[];
+        /**
+         * 所有实体。（至多含一个场景）
+         */
+        readonly objects: ISerializedObject[];
+        /**
+         * 所有组件。
+         */
+        readonly components: ISerializedObject[];
+    }
 }
 declare namespace paper {
     /**
@@ -5482,11 +5610,11 @@ declare namespace paper {
         private _addGameObjectTo(uuid, fromComponents, fromOffsets, toComponents, toOffsets);
         private _removeGameObjectFrom(uuid, components, offsets);
         private _onAddComponent(component);
+        private _onAddGameObject(gameObject);
         private _onAddUnessentialComponent(component);
         private _onRemoveUnessentialComponent(component);
         private _onRemoveComponent(component);
-        private _begin();
-        private _end();
+        private _update();
         /**
          * 根据关心列表的顺序快速查找指定组件。
          * - 需要确保被查找组件的实体已经被收集。
@@ -5500,63 +5628,6 @@ declare namespace paper {
          * 根据配置收集的实体的组件。
          */
         readonly components: ReadonlyArray<BaseComponent>;
-    }
-}
-declare namespace paper {
-    /**
-     * 场景类
-     */
-    class Scene extends SerializableObject {
-        /**
-         * 场景名称。
-         */
-        name: string;
-        /**
-         * 场景的light map列表。
-         */
-        readonly lightmaps: egret3d.Texture[];
-        /**
-         * lightmap强度
-         */
-        lightmapIntensity: number;
-        /**
-         * 存储着关联的数据
-         * 场景保存时，将场景快照数据保存至对应的资源中
-         */
-        rawScene: egret3d.RawScene | null;
-        /**
-         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
-         */
-        extras?: any;
-        /**
-         * 返回当前激活场景中查找对应名称的GameObject
-         * @param name
-         */
-        find(name: string): GameObject;
-        /**
-         * 返回一个在当前激活场景中查找对应tag的GameObject
-         * @param tag
-         */
-        findWithTag(tag: string): GameObject;
-        /**
-         * 返回一个在当前激活场景中查找对应 uuid 的GameObject
-         * @param uuid
-         */
-        findWithUUID(uuid: string): GameObject;
-        /**
-         * 返回所有在当前激活场景中查找对应tag的GameObject
-         * @param name
-         */
-        findGameObjectsWithTag(tag: string): GameObject[];
-        /**
-         * 获取所有根级GameObject对象
-         */
-        getRootGameObjects(): GameObject[];
-        readonly gameObjectCount: number;
-        /**
-         * 当前场景的所有GameObject对象池
-         */
-        readonly gameObjects: ReadonlyArray<GameObject>;
     }
 }
 declare namespace egret3d {
@@ -6515,6 +6586,61 @@ declare namespace egret3d {
     }
 }
 declare namespace paper {
+    /**
+     * 场景类
+     */
+    class Scene extends SerializableObject {
+        /**
+         * 场景名称。
+         */
+        name: string;
+        /**
+         * 场景的light map列表。
+         */
+        readonly lightmaps: egret3d.Texture[];
+        /**
+         * lightmap强度
+         */
+        lightmapIntensity: number;
+        /**
+         * 存储着关联的数据
+         * 场景保存时，将场景快照数据保存至对应的资源中
+         */
+        rawScene: RawScene | null;
+        /**
+         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+         */
+        extras?: any;
+        /**
+         * 返回当前激活场景中查找对应名称的GameObject
+         * @param name
+         */
+        find(name: string): GameObject;
+        /**
+         * 返回一个在当前激活场景中查找对应tag的GameObject
+         * @param tag
+         */
+        findWithTag(tag: string): GameObject;
+        /**
+         * 返回一个在当前激活场景中查找对应 uuid 的GameObject
+         * @param uuid
+         */
+        findWithUUID(uuid: string): GameObject;
+        /**
+         * 返回所有在当前激活场景中查找对应tag的GameObject
+         * @param name
+         */
+        findGameObjectsWithTag(tag: string): GameObject[];
+        /**
+         * 获取所有根级GameObject对象
+         */
+        getRootGameObjects(): GameObject[];
+        readonly gameObjectCount: number;
+        /**
+         * 当前场景的所有GameObject对象池
+         */
+        readonly gameObjects: ReadonlyArray<GameObject>;
+    }
 }
 declare namespace egret3d {
     class WebGLKit {
@@ -6785,6 +6911,24 @@ declare namespace egret3d {
         private _initFormat(gl, type);
     }
 }
+declare namespace egret3d {
+    /**
+     * @deprecated
+     */
+    const Prefab: typeof paper.Prefab;
+    /**
+     * @deprecated
+     */
+    type Prefab = paper.Prefab;
+    /**
+     * @deprecated
+     */
+    const RawScene: typeof paper.RawScene;
+    /**
+     * @deprecated
+     */
+    type RawScene = paper.RawScene;
+}
 declare namespace paper.editor {
     /**
      * 场景编辑器
@@ -6800,17 +6944,6 @@ declare namespace paper.editor {
 declare namespace paper {
 }
 declare namespace paper {
-    /**
-     *
-     */
-    class UpdateSystem extends BaseSystem {
-        protected readonly _interests: {
-            componentClass: any;
-            type: number;
-            isBehaviour: boolean;
-        }[];
-        onUpdate(deltaTime: number): void;
-    }
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
@@ -6837,40 +6970,6 @@ declare namespace paper.editor {
     enum ModifyObjectType {
         GAMEOBJECT = 0,
         BASECOMPONENT = 1,
-    }
-    class CmdType {
-        /**更改游戏对象基础属性 */
-        static MODIFY_OBJECT_PROPERTY: string;
-        /**修改transform属性 */
-        static MODIFY_COMPONENT_PROPERTY: string;
-        /**选中游戏对象 */
-        static SELECT_GAMEOBJECT: string;
-        /**添加游戏对象 */
-        static ADD_GAMEOBJECT: string;
-        /**移除游戏对象 */
-        static REMOVE_GAMEOBJECTS: string;
-        /**克隆游戏对象 */
-        static DUPLICATE_GAMEOBJECTS: string;
-        /**粘贴游戏对象 */
-        static PASTE_GAMEOBJECTS: string;
-        /**添加组件 */
-        static ADD_COMPONENT: string;
-        /**移除组件 */
-        static REMOVE_COMPONENT: string;
-        /**更改层级 */
-        static UPDATE_GAMEOBJECTS_HIREARCHY: string;
-        /**修改预制体游戏对象属性 */
-        static MODIFY_PREFAB_GAMEOBJECT_PROPERTY: string;
-        /**修改预制体组件属性 */
-        static MODIFY_PREFAB_COMPONENT_PROPERTY: string;
-        /**添加组件 */
-        static ADD_PREFAB_COMPONENT: string;
-        /**移除组件 */
-        static REMOVE_PREFAB_COMPONENT: string;
-        /**修改asset属性 */
-        static MODIFY_ASSET_PROPERTY: string;
-        /**创建prefab */
-        static CREATE_PREFAB: string;
     }
     /**
      * 编辑模型
@@ -6902,67 +7001,35 @@ declare namespace paper.editor {
         removeComponent(gameObjectUUid: string, componentUUid: string): void;
         getComponentById(gameObject: GameObject, componentId: string): BaseComponent | null;
         getComponentByAssetId(gameObject: GameObject, assetId: string): BaseComponent | null;
-        pasteGameObject(target?: egret3d.Transform): void;
-        duplicateGameObjects(gameObjects: GameObject[]): void;
-        private getPrefabDataForDuplicate(gameObjects);
+        copy(objs: GameObject[]): void;
+        pasteGameObject(parent: GameObject): void;
         /**
-         * 设置克隆对象的prefab信息
-         * @param gameObj
-         * @param prefabData
-         * @param uniqueIndex
-         */
-        duplicatePrefabDataToGameObject(gameObj: GameObject, prefabData: any, uniqueIndex: number): void;
-        /**
-         * 收集prefab信息，用于duplicate或者paste后设置新对象的prefab信息
-         * @param gameObject
-         * @param index
-         * @param prefabData
-         */
-        getPrefabDataFromGameObject(gameObj: GameObject, uniqueIndex: number, prefabData: any, allRootObjsUUid: string[]): void;
-        /**
-         * 获取某个游戏对象下所有预制体实例的根对象uuid,用于确定duplicate时选中的对象是否属于一个完整的预制体
-         * @param gameObj
-         * @param rootObjs
-         */
-        private getPrefabRootObjsUUidFromGameObject(gameObj, rootObjsUUids);
-        private getPrefabRootObjByChild(gameObj);
-        deleteGameObject(gameObjects: GameObject[], prefabRootMap?: any): void;
-        _deleteGameObject(gameObjects: GameObject[]): void;
-        /**更改层级 */
-        updateGameObjectsHierarchy(gameObjectUUids: string[], targetUUid: string, dir: 'top' | 'inner' | 'bottom'): void;
-        /**
-         * 清除预制体里游戏对象的prefab引用,root或者持有此root引用的游戏对象
-         * @param rootId 预制体的根id
-         */
-        clearRootPrefabInstance(gameObj: GameObject, rootObj: GameObject): void;
-        /**
-         * 还原prefab
-         * @param rootObj
-         * @param prefab
-         */
-        resetPrefabbyRootId(rootObj: GameObject, prefab: any, prefabIds: string[]): void;
-        /**
-         * 获取预制体实例包含的所有游戏对象id
-         * @param rootObj
-         * @param ids
-         */
-        getAllIdsFromPrefabInstance(gameObj: GameObject, ids: string[], rootObj: GameObject): void;
-        /**
-         * 去重
+         * 克隆游戏对象
          * @param gameObjects
          */
-        unique(gameObjects: GameObject[]): void;
+        duplicateGameObjects(gameObjects: GameObject[]): void;
+        /**
+         * 删除游戏对象
+         * @param gameObjects
+         */
+        deleteGameObject(gameObjects: GameObject[]): void;
+        _deleteGameObject(gameObjects: GameObject[]): void;
+        /**
+         * 更改层级
+         * */
+        updateGameObjectsHierarchy(gameObjects: GameObject[], targetGameobjcet: GameObject, dir: 'top' | 'inner' | 'bottom'): void;
+        /**
+         * 设置对象的层级
+         */
+        setGameObjectsHierarchy(objects: GameObject[], targetObject: GameObject, dir: 'top' | 'inner' | 'bottom'): void;
+        /**
+         * 筛选层级中的顶层游戏对象
+         * @param gameObjects
+         */
+        filtTopHierarchyGameObjects(gameObjects: GameObject[]): void;
         getGameObjectByUUid(uuid: string): GameObject | null;
         getAssetByAssetUrl(url: string): Promise<any>;
-        /**
-         *
-         * @param uuids unique id
-         */
         getGameObjectsByUUids(uuids: string[]): GameObject[];
-        getAllRootIndexsFromGameObject(gameObject: GameObject, indexData: {
-            uuid: string;
-            preIndex: number;
-        }[]): void;
         getAllComponentUUidFromGameObject(gameObject: GameObject, uuids: string[]): void;
         /**
          * call after duplicate/create/paste
@@ -6991,7 +7058,6 @@ declare namespace paper.editor {
          * 序列化场景
          */
         serializeActiveScene(): string;
-        createAssetMap(serializeData: ISerializedData): any;
         isPrefabRoot(gameObj: GameObject): boolean;
         isPrefabChild(gameObj: GameObject): boolean;
         serializeHistory(): string;
@@ -7009,14 +7075,8 @@ declare namespace paper.editor {
          */
         private setGameObjectPrefab(gameObj, prefab, rootObj);
         /**将对象按照层级进行排序
-         * （请确保要排序的游戏对象都在场景中）
          */
         sortGameObjectsForHierarchy(gameobjects: paper.GameObject[]): paper.GameObject[];
-        /**
-         * 设置对象的层级
-         * （请确游戏对象都在场景中）
-         */
-        setGameObjectsHierarchy(objects: GameObject[], targetObject: GameObject, dir: 'top' | 'inner' | 'bottom'): void;
     }
 }
 declare namespace paper.editor {
@@ -7092,9 +7152,8 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
-    type EventData<D> = {
+    type EventData = {
         isUndo: boolean;
-        data: D;
     };
     const EventType: {
         HistoryState: string;
@@ -7129,22 +7188,43 @@ declare namespace paper.editor {
         serialize(): any;
         deserialize(serializeHistory: any): void;
     }
-    abstract class BaseState {
-        autoClear: boolean;
-        batchIndex: number;
-        data: any;
-        private _isDone;
-        undo(): boolean;
-        redo(): boolean;
-        isDone: boolean;
-        dispatchEditorModelEvent(type: string, data?: any): void;
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class UpdateSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: any;
+            type: number;
+            isBehaviour: boolean;
+        }[];
+        onUpdate(deltaTime: number): void;
     }
+}
+declare namespace paper.editor {
+    /**
+     * 状态组
+     * @author 杨宁
+     */
+    class StateGroup extends BaseState {
+        private stateList;
+        static create(stateList: BaseState[]): StateGroup;
+        redo(): boolean;
+        undo(): boolean;
+        serialize(): any;
+        deserialize(data: any): void;
+    }
+}
+declare namespace paper.editor {
     class ModifyGameObjectPropertyState extends BaseState {
         static create(data?: any): ModifyGameObjectPropertyState | null;
         undo(): boolean;
         private modifyProperty(value);
         redo(): boolean;
     }
+}
+declare namespace paper.editor {
     class ModifyComponentPropertyState extends BaseState {
         static toString(): string;
         static create(source: any, key: number | string, value: any, data?: any): ModifyComponentPropertyState | null;
@@ -7152,64 +7232,101 @@ declare namespace paper.editor {
         private modifyProperty(value);
         redo(): boolean;
     }
+}
+declare namespace paper.editor {
     class AddGameObjectState extends BaseState {
         static toString(): string;
         static create(data?: any): AddGameObjectState | null;
         undo(): boolean;
         redo(): boolean;
     }
+}
+declare namespace paper.editor {
     class DeleteGameObjectsState extends BaseState {
         static toString(): string;
-        static create(data?: any): DeleteGameObjectsState | null;
+        static create(gameObjects: GameObject[]): DeleteGameObjectsState;
+        private deleteInfo;
         undo(): boolean;
         redo(): boolean;
+        serialize(): any;
+        deserialize(data: any): void;
     }
+}
+declare namespace paper.editor {
     class DuplicateGameObjectsState extends BaseState {
         static toString(): string;
-        static create(data?: any): DuplicateGameObjectsState | null;
+        static create(objs: GameObject[]): DuplicateGameObjectsState;
+        private duplicateInfo;
+        private addList;
         undo(): boolean;
         redo(): boolean;
+        private clearPrefabInfo(obj);
+        serialize(): any;
+        deserialize(data: any): void;
     }
+}
+declare namespace paper.editor {
     class PasteGameObjectsState extends BaseState {
         static toString(): string;
-        static create(data?: any): PasteGameObjectsState;
+        static create(serializeData: any[], parent: GameObject): PasteGameObjectsState;
+        private pasteInfo;
+        private addList;
         undo(): boolean;
         redo(): boolean;
+        private clearPrefabInfo(obj);
+        serialize(): any;
+        deserialize(data: any): void;
     }
+}
+declare namespace paper.editor {
     class AddComponentState extends BaseState {
         static toString(): string;
         static create(data?: any): AddComponentState | null;
         undo(): boolean;
         redo(): boolean;
     }
+}
+declare namespace paper.editor {
     class RemoveComponentState extends BaseState {
         static toString(): string;
         static create(data?: any): RemoveComponentState | null;
         undo(): boolean;
         redo(): boolean;
     }
+}
+declare namespace paper.editor {
+    /**
+     * 游戏对象层级
+     * @author 杨宁
+     */
     class GameObjectHierarchyState extends BaseState {
-        static toString(): string;
-        static create(data?: any): GameObjectHierarchyState | null;
-        /**对象数组
-         * 数组必须是经过层级排序的
-         */
-        gameObjects: {
-            UUID: string;
-            oldParentUUID: string;
-            oldIndex: number;
-        }[];
-        targetObject: string;
-        targetDir: 'top' | 'inner' | 'bottom';
-        prefabData: any;
+        private gameObjects;
+        private targetObject;
+        private targetDir;
+        static create(gameObjects: GameObject[], targetGameObj: GameObject, dir: 'top' | 'inner' | 'bottom'): GameObjectHierarchyState;
         undo(): boolean;
         redo(): boolean;
     }
-    class ModifyPrefabProperty extends BaseState {
-        protected getGameObjectsByPrefab: (prefab: egret3d.Prefab) => GameObject[];
-        protected equal(a: any, b: any): boolean;
-        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class LateUpdateSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: any;
+            type: number;
+            isBehaviour: boolean;
+        }[];
+        private readonly _laterCalls;
+        onUpdate(deltaTime: number): void;
+        /**
+         *
+         */
+        callLater(callback: () => void): void;
     }
+}
+declare namespace paper.editor {
     class ModifyPrefabGameObjectPropertyState extends ModifyPrefabProperty {
         static toString(): string;
         static create(data?: any): ModifyPrefabGameObjectPropertyState | null;
@@ -7222,6 +7339,8 @@ declare namespace paper.editor {
         undo(): boolean;
         redo(): boolean;
     }
+}
+declare namespace paper.editor {
     class ModifyPrefabComponentPropertyState extends ModifyPrefabProperty {
         static toString(): string;
         static create(data?: any): ModifyPrefabComponentPropertyState | null;
@@ -7229,18 +7348,24 @@ declare namespace paper.editor {
         undo(): boolean;
         redo(): boolean;
     }
+}
+declare namespace paper.editor {
     class RemovePrefabComponentState extends BaseState {
         static toString(): string;
         static create(data?: any): RemovePrefabComponentState | null;
         undo(): boolean;
         redo(): boolean;
     }
+}
+declare namespace paper.editor {
     class AddPrefabComponentState extends BaseState {
         static toString(): string;
         static create(data?: any): AddPrefabComponentState | null;
         undo(): boolean;
         redo(): boolean;
     }
+}
+declare namespace paper.editor {
     class ModifyAssetPropertyState extends BaseState {
         static toString(): string;
         static create(data?: any): ModifyAssetPropertyState | null;
@@ -7248,6 +7373,8 @@ declare namespace paper.editor {
         undo(): boolean;
         redo(): boolean;
     }
+}
+declare namespace paper.editor {
     class CreatePrefabState extends BaseState {
         static toString(): string;
         static create(data?: any): CreatePrefabState | null;
@@ -7259,6 +7386,21 @@ declare namespace paper.editor {
         private setGameObjectPrefab(gameObj, prefab, rootObj);
         undo(): boolean;
         redo(): boolean;
+    }
+}
+declare namespace paper.editor {
+    /**
+     * 预置体结构状态
+     * @author 杨宁
+     */
+    class BreakPrefabStructState extends BaseState {
+        static create(prefabInstanceList: GameObject[]): BreakPrefabStructState;
+        private static makePrefabInfo(gameOjbect);
+        private prefabInfos;
+        redo(): boolean;
+        undo(): boolean;
+        serialize(): any;
+        deserialize(data: any): void;
     }
 }
 declare namespace paper.editor {
@@ -7416,24 +7558,6 @@ declare namespace paper.editor {
     const line_vert: string;
 }
 declare namespace paper {
-    /**
-     *
-     */
-    class LateUpdateSystem extends BaseSystem {
-        protected readonly _interests: {
-            componentClass: any;
-            type: number;
-            isBehaviour: boolean;
-        }[];
-        private readonly _laterCalls;
-        onUpdate(deltaTime: number): void;
-        /**
-         *
-         */
-        callLater(callback: () => void): void;
-    }
-}
-declare namespace paper {
 }
 declare namespace paper {
     /**
@@ -7463,7 +7587,7 @@ declare namespace paper {
         /**
          * 预制体
          */
-        prefab: egret3d.Prefab | null;
+        prefab: Prefab | null;
         /**
          * 变换组件
          */
@@ -7597,6 +7721,24 @@ declare namespace paper {
         static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
     }
 }
+declare namespace paper {
+    /**
+     * 序列化场景，实体或组件。
+     */
+    function serialize(source: Scene | GameObject | BaseComponent): ISerializedData;
+    /**
+     * 创建指定资源的引用。
+     */
+    function createAssetReference(source: Asset): IAssetReference;
+    /**
+     * 创建指定对象的引用。
+     */
+    function createReference(source: Scene | GameObject | BaseComponent, isOnlyUUID: boolean): any;
+    /**
+     * 创建指定对象的结构体。
+     */
+    function createStruct(source: SerializableObject): any;
+}
 declare namespace egret3d.oimo {
     /**
      *
@@ -7682,15 +7824,20 @@ declare namespace egret3d.oimo {
         height: number;
     }
 }
-declare namespace paper {
-    /**
-     * 反序列化。
-     */
-    function deserialize<T extends ISerializable>(data: ISerializedData, isKeepUUID?: boolean): T | null;
+declare namespace egret3d.oimo {
     /**
      *
      */
-    function getDeserializedAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent;
+    class RayTester extends paper.Behaviour {
+        private static readonly _material;
+        distance: number;
+        collisionMask: paper.CullingMask;
+        private _hitted;
+        private _meshFilter;
+        private _meshRender;
+        onStart(): void;
+        onUpdate(): void;
+    }
 }
 declare namespace egret3d.oimo {
     /**
@@ -7958,137 +8105,6 @@ declare namespace egret3d.oimo {
     }
 }
 declare namespace egret3d {
-    /**
-     *
-     */
-    const enum TrailRenderEventType {
-        Meterial = "material",
-    }
-    /**
-     * Trail Renderer Component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 拖尾渲染组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    class TrailRenderer extends paper.BaseRenderer {
-        /**
-         * extend direction
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 拖尾延伸方向。
-         * true为单方向延伸，false为双向延伸
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        extenedOneSide: boolean;
-        private _vertexCount;
-        /**
-         *
-         */
-        private _material;
-        /**
-         *
-         */
-        _mesh: Mesh;
-        private _sticks;
-        /**
-         * trail material
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 拖尾的材质
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        material: Material | null;
-        /**
-         * material color
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 材质颜色
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        readonly color: Color;
-        /**
-         * set trail width
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置拖尾宽度
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        width: number;
-        /**
-         * set trail speed（0 - 1）
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置拖尾速度，调节拖尾长短（0-1）
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        speed: number;
-        /**
-         * look at camera
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 拖尾是否朝向相机
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        lookAtCamera: boolean;
-        /**
-         *
-         */
-        $active: boolean;
-        private _reInit;
-        /**
-         *
-         */
-        constructor();
-        /**
-         * @inheritDoc
-         */
-        initialize(): void;
-        /**
-         * @inheritDoc
-         */
-        uninitialize(): void;
-        /**
-         *
-         */
-        update(delta: number): void;
-        private _buildMesh(vertexcount);
-        private _buildData(vertexCount);
-        private _updateTrailData();
+    class Audio extends paper.BaseComponent {
     }
 }

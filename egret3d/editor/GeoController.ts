@@ -499,21 +499,11 @@ namespace paper.editor {
 
             // 复制粘贴
             if (this.bindKeyboard.isPressed('CONTROL') && this.bindKeyboard.wasPressed('C')) {
-                let clipboard = __global.runtimeModule.getClipborad();
-                let content: any[] = [];
-                for (let i = 0, l = this.selectedGameObjs.length; i < l; i++) {
-                    content.push({
-                        type: "gameObject",
-                        uuid: this.selectedGameObjs[i].uuid
-                    })
-                }
-                let str = JSON.stringify(content);
-                clipboard.writeText(str, "paper");
-                console.log("copy");
+                this.editorModel.copy(this.selectedGameObjs);
             }
 
             if (this.bindKeyboard.isPressed('CONTROL') && this.bindKeyboard.wasPressed('V')) {
-                let parent = this.selectedGameObjs.length > 0 ? this.selectedGameObjs[0].transform.parent : null;
+                let parent = this.selectedGameObjs.length > 0 ? this.selectedGameObjs[0].transform.parent.gameObject : null;
                 this.editorModel.pasteGameObject(parent);
             }
 
