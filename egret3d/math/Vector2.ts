@@ -1,6 +1,11 @@
 namespace egret3d {
 
-    export class Vector2 implements paper.ISerializable {
+    export interface IVector2 {
+        x: number;
+        y: number;
+    }
+
+    export class Vector2 implements IVector2, paper.ISerializable {
 
         public static readonly ZERO: Readonly<Vector2> = new Vector2(0.0, 0.0);
 
@@ -24,7 +29,7 @@ namespace egret3d {
             this.y = element[1];
         }
 
-        public copy(value: Vector2) {
+        public copy(value: Readonly<IVector2>) {
             this.x = value.x;
             this.y = value.y;
 

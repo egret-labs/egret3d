@@ -98,7 +98,7 @@ namespace egret3d {
         public _globalWeight: number = 0.0;
         /**
          * 融合进度。
-         * 
+         * @internal
          */
         public _fadeProgress: number = 0.0;
         /**
@@ -144,7 +144,7 @@ namespace egret3d {
         }
 
         public fadeOut(fadeTime: number) {
-            const globalTime = paper.Time.time;
+            const globalTime = paper.Time.time; //
             const localFadeTime = globalTime - this._fadeTimeStart;
 
             if (this._fadeState > 0) {
@@ -438,7 +438,7 @@ namespace egret3d {
          * 
          */
         public initialize(animationComponent: Animation, animationAsset: GLTFAsset, animationClip: GLTFAnimationClip) {
-            const globalTime = paper.Time.time;
+            const globalTime = paper.Time.time; //
             const assetConfig = animationAsset.config;
             //
             this.animationAsset = animationAsset;
@@ -684,6 +684,10 @@ namespace egret3d {
          */
         public timeScale: number = 1.0;
         /**
+         * @internal
+         */
+        public _addToSystem: boolean = false;
+        /**
          * 动画数据列表。
          */
         @paper.serializedField
@@ -717,21 +721,6 @@ namespace egret3d {
             for (const component of this.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
                 if (component.onAnimationEvent) {
                     component.onAnimationEvent(type, animationState, eventObject);
-                }
-            }
-        }
-
-        public initialize() {
-            super.initialize();
-
-            if (!this._skinnedMeshRenderer) {
-                this._skinnedMeshRenderer = this.gameObject.getComponentsInChildren(SkinnedMeshRenderer)[0];
-
-                if (this._skinnedMeshRenderer) {
-                    for (const bone of this._skinnedMeshRenderer.bones) {
-                        const boneBlendLayer = new BoneBlendLayer();
-                        this._boneBlendLayers.push(boneBlendLayer);
-                    }
                 }
             }
         }
@@ -843,6 +832,11 @@ namespace egret3d {
             fadeTime: number, playTimes: number = -1,
             layer: number = 0, additive: boolean = false,
         ): AnimationState | null {
+            if (!this._addToSystem) {
+                console.warn("The animation component is not add to system yet.");
+                return;
+            }
+
             let animationAsset: GLTFAsset | null = null;
             let animationClip: GLTFAnimationClip | null = null;
 
@@ -918,15 +912,25 @@ namespace egret3d {
         }
     }
 
-    export class AnimationSystem extends paper.BaseSystem<Animation> {
+    export class AnimationSystem extends paper.BaseSystem {
         protected readonly _interests = [
-            {
-                componentClass: Animation
-            }
+            { componentClass: Animation }
         ];
 
-        public onAddGameObject(gameObject: paper.GameObject) {
-            const component = this._getComponent(gameObject, 0);
+        public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
+            const component = group.getComponent(gameObject, 0) as Animation;
+            component._addToSystem = true;
+
+            if (!component._skinnedMeshRenderer) {
+                component._skinnedMeshRenderer = gameObject.getComponentsInChildren(SkinnedMeshRenderer)[0];
+
+                if (component._skinnedMeshRenderer) {
+                    for (const bone of component._skinnedMeshRenderer.bones) {
+                        const boneBlendLayer = new BoneBlendLayer();
+                        component._boneBlendLayers.push(boneBlendLayer);
+                    }
+                }
+            }
 
             if (component.autoPlay) {
                 component.play();
@@ -934,10 +938,16 @@ namespace egret3d {
         }
 
         public onUpdate() { // TODO 应将组件功能尽量移到系统
-            const globalTime = paper.Time.time;
-            for (const component of this._components) {
+            const globalTime = this._clock.time;
+            const components = this._groups[0].components as ReadonlyArray<Animation>;
+            for (const component of components) {
                 component.update(globalTime);
             }
+        }
+
+        public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
+            const component = group.getComponent(gameObject, 0) as Animation;
+            component._addToSystem = false;
         }
     }
 }

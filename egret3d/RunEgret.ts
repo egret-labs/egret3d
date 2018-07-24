@@ -3,10 +3,12 @@ namespace egret3d {
     export type RunEgretOptions = {
         antialias: boolean;
         defaultScene?: string;
-        isEditor?: boolean;
-        isPlaying?: boolean;
         contentWidth?: number;
         contentHeight?: number;
+
+        isEditor?: boolean;
+        isPlaying?: boolean;
+        systems?: any[];
     }
 
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number }
@@ -15,7 +17,8 @@ namespace egret3d {
      * 引擎启动入口
      */
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
-        // (Ammo as any)().then(() => { // TODO WebAssembly load
+        // TODO WebAssembly load
+        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound'] //TODO:Sound
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas();
         WebGLKit.init(canvas, requiredOptions);
@@ -24,10 +27,35 @@ namespace egret3d {
         DefaultTextures.init();
         DefaultShaders.init();
         stage.init(canvas, requiredOptions);
+
+        if (!options.systems) {
+            options.systems = [
+                BeginSystem,
+                paper.EnableSystem,
+                paper.StartSystem,
+                //
+                oimo.PhysicsSystem,
+                //
+                paper.UpdateSystem,
+                //
+                AnimationSystem,
+                //
+                paper.LateUpdateSystem,
+                //
+                TrailRendererSystem,
+                MeshRendererSystem,
+                SkinnedMeshRendererSystem,
+                particle.ParticleSystem,
+                Egret2DRendererSystem,
+                LightSystem,
+                CameraSystem,
+                //
+                paper.DisableSystem,
+                EndSystem,
+            ];
+        }
+
         paper.Application.init(options);
-        //
-        paper.Application.sceneManager.createScene("default");
-        // });
     }
 
     function getMainCanvas() {

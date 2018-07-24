@@ -393,18 +393,22 @@ namespace egret3d {
 
             this._inited = true;
 
-            this.QUAD = this._createDefaultMeshA(_quad);
-            this.QUAD_PARTICLE = this._createDefaultMeshA(_quadParticle);
-            this.PLANE = this._createDefaultMeshA(_plane);
-            this.CIRCLE_LINE = this._createDefaultMeshA(_circleLine);
-            this.CUBE = this._createDefaultMeshA(_cube);
-            this.PYRAMID = this._createDefaultMeshA(_pyramid);
+            this.QUAD = this._createDefaultMeshA(_quad, "builtin/DefaultQuad");
+            this.QUAD_PARTICLE = this._createDefaultMeshA(_quadParticle, "builtin/DefaultQuadParticle");
+            this.PLANE = this._createDefaultMeshA(_plane, "builtin/DefaultPlane");
+            this.CIRCLE_LINE = this._createDefaultMeshA(_circleLine, "builtin/DefaultCircleLine");
+            this.CUBE = this._createDefaultMeshA(_cube, "builtin/DefaultCube");
+            this.PYRAMID = this._createDefaultMeshA(_pyramid, "builtin/DefaultPyramid");
             this.CYLINDER = this.createCylinderCCW(2, 0.5);
             this.SPHERE = this.createSphereCCW();
         }
 
-        private static _createDefaultMeshA(data: DefaultMeshData) {
+        private static _createDefaultMeshA(data: DefaultMeshData, assetName: string) {
             const mesh = new Mesh(data.vbo, data.ibo, _attributesA);
+            mesh.glTFAsset._isBuiltin = true;
+            mesh.glTFAsset.name = assetName;
+
+            paper.Asset.register(mesh.glTFAsset);
 
             return mesh;
         }

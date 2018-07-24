@@ -12,61 +12,44 @@ namespace paper {
      * @platform Web
      * @language zh_CN
      */
-    @serializedType("assets")
     export abstract class Asset extends SerializableObject {
-        private static readonly _assets: { [url: string]: Asset } = {};
-
         /**
-         * 注册资源
-         * 通过此方法注册后，引擎内部可以通过URL字典访问所有注册的资源
-         * 使用外部加载器时，需要在加载完成后注册该资源
+         * @deprecated
          */
-        public static register(asset: Asset, isLoad: boolean = false) {
-            asset._isLoad = isLoad;
-            this._assets[asset.url] = asset;
-        }
-
+        private static readonly _assets: Asset[] = [];
         /**
-         * 获取资源
-         * @param name 资源的url
+         * @deprecated
+         */
+        public static register(asset: Asset) {
+            this._assets[asset.name] = asset;
+        }
+        /**
+         * @deprecated
          */
         public static find<T extends Asset>(name: string) {
             const result = this._assets[name]
             if (!result) {
                 return RES.getRes(name) as T;
             }
-            else {
-                return result as T;
-            }
+
+            return result as T;
         }
 
         /**
          * 
-         * 资源的原始URL
          */
-        @serializedField
-        @deserializedIgnore
-        public url: string = "";
-
+        public name: string = "";
         /**
          * @internal
          */
-        public _isLoad: boolean = false;
+        public _isBuiltin: boolean = false;
         /**
          * 
          */
-        constructor(url: string = "") {
+        public constructor(name: string = "") {
             super();
-            this.url = url;
-        }
-        /**
-         * @inheritDoc
-         */
-        public serialize(): any {
-            const target = serializeRC(this);
-            target.url = this.url;
 
-            return target;
+            this.name = name;
         }
         /**
          * asset byte length
@@ -81,7 +64,6 @@ namespace paper {
          * @language zh_CN
          */
         public abstract caclByteLength(): number;
-
         /**
          * dispose asset
          * @version paper 1.0

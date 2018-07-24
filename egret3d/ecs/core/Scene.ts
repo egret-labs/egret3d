@@ -24,6 +24,11 @@ namespace paper {
          */
         public rawScene: egret3d.RawScene | null = null;
         /**
+         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+         */
+        @paper.serializedField
+        public extras?: any;
+        /**
          * @internal
          */
         public readonly _gameObjects: GameObject[] = [];
@@ -56,24 +61,24 @@ namespace paper {
         /**
          * @internal
          */
-        public _removeGameObject(gameObject: GameObject) {
-            const index = this._gameObjects.indexOf(gameObject);
-            if (index > -1) {
-                this._gameObjects.splice(index, 1);
-            }
-            else {
-                console.debug("Remove game object again.", gameObject.name, gameObject.uuid);
-            }
-        }
-        /**
-         * @internal
-         */
         public _addGameObject(gameObject: GameObject) {
             if (this._gameObjects.indexOf(gameObject) < 0) {
                 this._gameObjects.push(gameObject);
             }
             else {
-                console.debug("Add game object again.", gameObject.name, gameObject.uuid);
+                console.debug("Add game object error.", gameObject.path);
+            }
+        }
+        /**
+         * @internal
+         */
+        public _removeGameObject(gameObject: GameObject) {
+            const index = this._gameObjects.indexOf(gameObject);
+            if (index >= 0) {
+                this._gameObjects.splice(index, 1);
+            }
+            else {
+                console.debug("Remove game object error.", gameObject.path);
             }
         }
         /**

@@ -12,20 +12,39 @@ namespace paper.editor {
         public static async init() {
             // 覆盖生成 uuid 的方式。
             createUUID = generateUuid;
+            createAssetID = generateUuid;
             //启动egret3编辑环境
             this.runEgret();
+            await RES.loadConfig("resource/default.res.json", "resource/");
             //初始化编辑模型
             this._editorModel = new EditorModel();
-            await this.editorModel.init();
         }
-
         private static runEgret() {
-            egret3d.runEgret({ antialias: true, isEditor: true, isPlaying: false });
-
-            Application.systemManager.disableSystem(egret3d.CameraSystem);
-            Application.systemManager.registerBefore(editor.EditorCameraSystem, DestroySystem);
-            Application.systemManager.registerBefore(editor.GizmosSystem, DestroySystem);
+            egret3d.runEgret({
+                antialias: true, isEditor: true, isPlaying: false,
+                systems: [
+                    egret3d.BeginSystem,
+                    paper.EnableSystem,
+                    paper.StartSystem,
+                    //
+                    paper.UpdateSystem,
+                    //
+                    egret3d.AnimationSystem,
+                    //
+                    paper.LateUpdateSystem,
+                    //
+                    egret3d.TrailRendererSystem,
+                    egret3d.MeshRendererSystem,
+                    egret3d.SkinnedMeshRendererSystem,
+                    egret3d.particle.ParticleSystem,
+                    egret3d.Egret2DRendererSystem,
+                    egret3d.LightSystem,
+                    EditorCameraSystem,
+                    //
+                    paper.DisableSystem,
+                    egret3d.EndSystem
+                ]
+            });
         }
     }
-
 }

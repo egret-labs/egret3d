@@ -12,9 +12,7 @@ namespace egret3d {
     export class MeshFilter extends paper.BaseComponent {
         @paper.serializedField
         private _mesh: Mesh | null = null;
-        /**
-         * @inheritDoc
-         */
+
         public uninitialize() {
             super.uninitialize();
 

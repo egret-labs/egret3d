@@ -41,8 +41,6 @@ namespace egret3d {
 
         public root: egret.DisplayObjectContainer;
 
-        private app: paper.Application;
-
         /**
          * @inheritDoc
          */

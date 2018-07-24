@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * TrailRender系统
      */
-    export class TrailRendererSystem extends paper.BaseSystem<TrailRenderer> {
+    export class TrailRendererSystem extends paper.BaseSystem {
         public readonly _interests = [
             {
                 componentClass: TrailRenderer,
@@ -11,12 +11,11 @@ namespace egret3d {
                 ]
             }
         ];
-
         private readonly _matrix: Matrix = new Matrix();
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getOrAddComponent(DrawCalls);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
-            if (!this._enabled || !this._hasGameObject(gameObject)) {
+            if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
                 return;
             }
 
@@ -35,7 +34,7 @@ namespace egret3d {
 
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer._mesh, // TODO
-                    material: renderer.material,
+                    material: renderer.material || DefaultMaterials.MissingMaterial,
 
                     frustumTest: false,
                     zdist: -1,
@@ -48,8 +47,9 @@ namespace egret3d {
         }
 
         public onEnable() {
-            for (const renderer of this._components) {
-                this._updateDrawCalls(renderer.gameObject);
+            const components = this._groups[0].components as ReadonlyArray<TrailRenderer>;
+            for (const component of components) {
+                this._updateDrawCalls(component.gameObject);
             }
         }
 
@@ -65,16 +65,17 @@ namespace egret3d {
             this._drawCalls.removeDrawCalls(gameObject.renderer as TrailRenderer);
         }
 
-        public onUpdate() { // TODO 应将组件功能尽量移到系统
-            const deltaTime = paper.Time.deltaTime;
-            for (const component of this._components) {
+        public onUpdate(deltaTime: number) {
+            const components = this._groups[0].components as ReadonlyArray<TrailRenderer>;
+            for (const component of components) {
                 component.update(deltaTime);
             }
         }
 
         public onDisable() {
-            for (const renderer of this._components) {
-                this._drawCalls.removeDrawCalls(renderer);
+            const components = this._groups[0].components as ReadonlyArray<TrailRenderer>;
+            for (const component of components) {
+                this._drawCalls.removeDrawCalls(component);
             }
         }
     }
