@@ -6,8 +6,8 @@ namespace egret3d {
         protected readonly _interests = [
             { componentClass: [DirectLight, SpotLight, PointLight] },
         ];
-        private readonly _lightCamera: Camera = this._globalGameObject.getComponent(Camera) || this._globalGameObject.addComponent(Camera);
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
+        private readonly _lightCamera: Camera = this._globalGameObject.getOrAddComponent(Camera);
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getOrAddComponent(DrawCalls);
 
         public onUpdate() {
             const activeScene = paper.Application.sceneManager.activeScene;

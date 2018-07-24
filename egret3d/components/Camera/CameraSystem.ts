@@ -94,7 +94,6 @@ namespace egret3d {
             const cameras = this._cameras.cameras;
             if (cameras.length > 0) {
                 const lights = this._groups[1].components as ReadonlyArray<BaseLight>;
-
                 this._cameras.sort(); // TODO
 
                 const activeScene = paper.Application.sceneManager.activeScene;

@@ -32,8 +32,10 @@
         "egret3d/ecs/serialize/Serialize.ts",
         "egret3d/ecs/serialize/SerializableObject.ts",
 
-        "egret3d/ecs/core/Asset.ts",
         "egret3d/ecs/core/Layer.ts",
+        "egret3d/ecs/core/Asset.ts",
+        "egret3d/ecs/core/Prefab.ts",
+        "egret3d/ecs/core/RawScene.ts",
         "egret3d/ecs/core/Scene.ts",
         "egret3d/ecs/core/GameObject.ts",
         "egret3d/ecs/core/SystemManager.ts",
@@ -69,8 +71,6 @@
         "egret3d/math/Matrix.ts",
         "egret3d/math/Math.ts",
         "egret3d/EventDispatcher.ts",
-        "egret3d/asset/resource/prefab.ts",
-        "egret3d/asset/resource/rawscene.ts",
         "egret3d/asset/resource/texture.ts",
         "egret3d/asset/resource/GLTF.ts",
         "egret3d/asset/resource/Mesh.ts",
@@ -141,6 +141,9 @@
         "egret3d/web/render/resource/GLProgram.ts",
         "egret3d/web/render/resource/texture.ts",
         "egret3d/web/render/resource/WebGLAttribute.ts",
+
+        "egret3d/Deprecated.ts",
+
         "egret3d/editor/Editor.ts",
         "egret3d/editor/EditorDecorator.ts",
         "egret3d/editor/EditorModel.ts",

@@ -22,7 +22,7 @@ namespace paper {
          * 存储着关联的数据
          * 场景保存时，将场景快照数据保存至对应的资源中
          */
-        public rawScene: egret3d.RawScene | null = null;
+        public rawScene: RawScene | null = null;
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */

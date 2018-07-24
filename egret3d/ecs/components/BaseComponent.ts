@@ -46,6 +46,14 @@ namespace paper {
                 target.assetID = this.assetID;
             }
 
+            if (this.extras) {
+                target.extras = {};
+
+                for (const k in this.extras) {
+                    target.extras[k] = this.extras[k];
+                }
+            }
+
             return target;
         }
 
@@ -58,6 +66,14 @@ namespace paper {
 
             if (element.assetID) {
                 this.assetID = element.assetID;
+            }
+
+            if (element.extras) {
+                this.extras = {};
+
+                for (const k in element.extras) {
+                    this.extras[k] = element.extras[k];
+                }
             }
         }
         /**

@@ -9,10 +9,11 @@ namespace paper.editor {
 
             if (cameras.length > 0) {
                 const lights = this._groups[1].components as ReadonlyArray<egret3d.BaseLight>;
+                const activeScene = paper.Application.sceneManager.activeScene;
                 this._cameras.sort();
 
-                for (const component of cameras) {
-                    if (component.gameObject === this._globalGameObject) { // Pass global camera.
+                for (const component of cameras) { // TODO 完善所有摄像机的渲染
+                    if (component.gameObject.scene !== activeScene) {
                         continue;
                     }
 

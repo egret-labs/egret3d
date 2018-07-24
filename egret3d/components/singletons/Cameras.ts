@@ -10,10 +10,11 @@ namespace egret3d {
         }
 
         public update(cameras: ReadonlyArray<Camera>, gameObject: Readonly<paper.GameObject | null>) {
+            const globalGameObject = paper.Application.sceneManager.globalGameObject;
             this.cameras.length = 0;
 
             for (const camera of cameras) {
-                if (gameObject && camera.gameObject === gameObject) {
+                if (camera.gameObject === globalGameObject || camera.gameObject === gameObject) {
                     continue;
                 }
 

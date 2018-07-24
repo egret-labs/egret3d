@@ -48,13 +48,11 @@ namespace paper {
          * @param resourceName 资源名称
          */
         public loadScene(resourceName: string, combineStaticObject: boolean = true) {
-            const rawScene = RES.getRes(resourceName) as egret3d.RawScene;
+            const rawScene = RES.getRes(resourceName) as RawScene;
             if (rawScene) {
                 const scene = rawScene.createInstance();
 
                 if (scene) {
-                    scene.rawScene = rawScene;
-
                     if (combineStaticObject && Application.isPlaying) {
                         egret3d.combine(scene.gameObjects);
                     }

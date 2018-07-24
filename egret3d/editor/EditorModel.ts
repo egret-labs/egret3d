@@ -1013,7 +1013,7 @@ namespace paper.editor {
         * @param prefabPath 预置体资源路径
         */
         public async createGameObjectFromPrefab(prefabPath: string, paper: any, RES: any): Promise<paper.GameObject> {
-            const prefab = await RES.getResAsync(prefabPath) as egret3d.Prefab | null;
+            const prefab = await RES.getResAsync(prefabPath) as Prefab | null;
             if (prefab) {
                 const instance = prefab.createInstance();
                 (instance as any).prefabEditInfo = true;
@@ -1028,7 +1028,7 @@ namespace paper.editor {
          * @param gameObj 
          * @param prefab 
          */
-        private setGameObjectPrefab(gameObj: GameObject, prefab: egret3d.Prefab, rootObj: GameObject) {
+        private setGameObjectPrefab(gameObj: GameObject, prefab: Prefab, rootObj: GameObject) {
             if (!gameObj) {
                 return;
             }
