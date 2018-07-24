@@ -557,7 +557,7 @@ namespace paper.editor {
                     let currentIndex = allObjs.indexOf(gameObj);
                     if(currentIndex == preIndex || currentIndex < 0)
                     {
-                        return;
+                        continue;
                     }
                     (allObjs as any).splice(currentIndex,1);
                     (allObjs as any).splice(preIndex,0,gameObj);
@@ -628,7 +628,8 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                Editor.editorModel._deleteGameObject(this.data.addObjs);
+                let duplicateObjs = Editor.editorModel.getGameObjectsByUUids(this.data.duplicateUUids);
+                Editor.editorModel._deleteGameObject(duplicateObjs);
                 const {selectIds} = this.data;
                 this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,selectIds);
                 return true;
@@ -641,7 +642,7 @@ namespace paper.editor {
             if (super.redo()) {
                 let datas = this.data.datas;
                 let prefabData = this.data.prefabData;
-                let addObjs: GameObject[] = [];
+                let duplicateUUids: string[] = [];
                 let selectIds:string[] = [];
 
                 for (let index = 0; index < datas.length; index++) {
@@ -667,11 +668,11 @@ namespace paper.editor {
                     let stru = prefabData[index];
                     Editor.editorModel.duplicatePrefabDataToGameObject(duplicateObj, stru, 0);
 
-                    addObjs.push(duplicateObj);
+                    duplicateUUids.push(duplicateObj.uuid);
                     selectIds.push(duplicateObj.uuid);
                 }
 
-                this.data.addObjs = addObjs;
+                this.data.duplicateUUids = duplicateUUids;
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectIds);
                 return true;
             }
@@ -694,7 +695,8 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                Editor.editorModel._deleteGameObject(this.data.addObjs);
+                let pasteObjs = Editor.editorModel.getGameObjectsByUUids(this.data.duplicateUUids);
+                Editor.editorModel._deleteGameObject(pasteObjs);
                 const {selectIds} = this.data;
                 this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,selectIds);
                 return true;
@@ -706,7 +708,7 @@ namespace paper.editor {
         public redo(): boolean {
             if (super.redo()) {
                 let datas = this.data.datas;
-                let addObjs: GameObject[] = [];
+                let duplicateUUids: string[] = [];
                 let prefabData = this.data.prefabData;
                 let selectIds:string[] = [];
 
@@ -735,11 +737,11 @@ namespace paper.editor {
                     let stru = prefabData[index];
                     Editor.editorModel.duplicatePrefabDataToGameObject(pasteObj, stru, 0);
 
-                    addObjs.push(pasteObj);
+                    duplicateUUids.push(pasteObj.uuid);
                     selectIds.push(pasteObj.uuid);
                 }
 
-                this.data.addObjs = addObjs;
+                this.data.duplicateUUids = duplicateUUids;
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,selectIds);
 
                 return true;
@@ -863,14 +865,14 @@ namespace paper.editor {
         }
     }
 
-    //更改游戏对象层级
-    export class UpdateParentState extends BaseState {
+    //更改索引或者parent
+    export class UpdateIndexOrParentState extends BaseState {
         public static toString(): string {
             return "[class common.UpdateParentState]";
         }
 
-        public static create(data: any = null): UpdateParentState | null {
-            const state = new UpdateParentState();
+        public static create(data: any = null): UpdateIndexOrParentState | null {
+            const state = new UpdateIndexOrParentState();
             state.data = data;
             return state;
         }
@@ -975,8 +977,14 @@ namespace paper.editor {
             return "[class common.ModifyPrefabGameObjectPropertyState]";
         }
 
-        public static create(data: any = null): ModifyPrefabGameObjectPropertyState | null {
+        public static create(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyPrefabGameObjectPropertyState | null {
             const state = new ModifyPrefabGameObjectPropertyState();
+            let data = {
+                cmdType: CmdType.MODIFY_PREFAB_GAMEOBJECT_PROPERTY,
+                gameObjectUUid,
+                newValueList,
+                preValueCopylist,
+            }
             state.data = data;
             return state;
         }
@@ -1045,8 +1053,15 @@ namespace paper.editor {
             return "[class common.ModifyPrefabComponentPropertyState]";
         }
 
-        public static create(data: any = null): ModifyPrefabComponentPropertyState | null {
+        public static create(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyPrefabComponentPropertyState | null {
             const state = new ModifyPrefabComponentPropertyState();
+            let data = {
+                cmdType: CmdType.MODIFY_PREFAB_COMPONENT_PROPERTY,
+                gameObjUUid,
+                componentUUid,
+                newValueList,
+                preValueCopylist,
+            }
             state.data = data;
             return state;
         }
@@ -1344,6 +1359,54 @@ namespace paper.editor {
 
                 //select prefab root
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS,[this.data.cachePrefabUUid]);
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    export class PrefabApplyState extends BaseState
+    {
+        public static toString(): string {
+            return "[class common.PrefabApplyState]";
+        }
+
+        public static create(data: any = null): PrefabApplyState | null {
+            const state = new PrefabApplyState();
+            state.data = data;
+            return state;
+        }
+
+
+        public undo(): boolean {
+            if (super.undo()) {
+                let {modifyGameObjectCmds,modifyComponentCmds} = this.data;
+
+                for (const cmd of modifyGameObjectCmds) {
+                    cmd.undo();
+                }
+
+                for (const cmd of modifyComponentCmds) {
+                    cmd.undo();
+                }
+
+                return true;
+            }
+            return false;
+        }
+
+        public redo(): boolean {
+            if (super.redo()) {
+                let {modifyGameObjectCmds,modifyComponentCmds} = this.data;
+
+                for (const cmd of modifyGameObjectCmds) {
+                    cmd.redo();
+                }
+
+                for (const cmd of modifyComponentCmds) {
+                    cmd.redo();
+                }
                 return true;
             }
 

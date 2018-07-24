@@ -51,7 +51,6 @@ namespace paper.editor {
         public static REMOVE_COMPONENT = "REMOVE_COMPONENT";
         /**更改parent */
         public static UPDATE_PARENT = "UPDATE_PARENT";
-
         /**修改预制体游戏对象属性 */
         public static MODIFY_PREFAB_GAMEOBJECT_PROPERTY = "MODIFY_PREFAB_GAMEOBJECT_PROPERTY";
         /**修改预制体组件属性 */
@@ -60,11 +59,14 @@ namespace paper.editor {
         public static ADD_PREFAB_COMPONENT = "ADD_PREFAB_COMPONENT";
         /**移除组件 */
         public static REMOVE_PREFAB_COMPONENT = "REMOVE_PREFAB_COMPONENT";
-
         /**修改asset属性 */
         public static MODIFY_ASSET_PROPERTY = "MODIFY_ASSET_PROPERTY";
         /**创建prefab */
         public static CREATE_PREFAB = "CREATE_PREFAB";
+        /**prefab apply */
+        public static PREFAB_APPLY = "PREFAB_APPLY";
+        /**prefab revert */
+        public static PREFAB_REVERT = "PREFAB_REVERT";
     }
 
     /**
@@ -166,27 +168,12 @@ namespace paper.editor {
         }
 
         public createModifyPrefabGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]) {
-            let data = {
-                cmdType: CmdType.MODIFY_PREFAB_GAMEOBJECT_PROPERTY,
-                gameObjectUUid,
-                newValueList,
-                preValueCopylist,
-            }
-
-            let state = ModifyPrefabGameObjectPropertyState.create(data);
+            let state = ModifyPrefabGameObjectPropertyState.create(gameObjectUUid,newValueList,preValueCopylist);
             this.addState(state);
         }
 
         public createModifyPrefabComponentPropertyState(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]) {
-            let data = {
-                cmdType: CmdType.MODIFY_PREFAB_COMPONENT_PROPERTY,
-                gameObjUUid,
-                componentUUid,
-                newValueList,
-                preValueCopylist,
-            }
-
-            let state = ModifyPrefabComponentPropertyState.create(data);
+            let state = ModifyPrefabComponentPropertyState.create(gameObjUUid,componentUUid,newValueList,preValueCopylist);
             this.addState(state);
         }
 
@@ -467,6 +454,7 @@ namespace paper.editor {
             this.addState(state);
         }
 
+        //todo:废弃
         private getPrefabDataForDuplicate(gameObjects: GameObject[]): any {
             let prefabData = [];
             for (let index = 0; index < gameObjects.length; index++) {
@@ -482,7 +470,7 @@ namespace paper.editor {
         }
 
         /**
-         * 设置克隆对象的prefab信息
+         * 设置克隆对象的prefab信息（todo:废弃）
          * @param gameObj 
          * @param prefabData 
          * @param uniqueIndex 
@@ -670,7 +658,7 @@ namespace paper.editor {
                 prefabData
             };
 
-            let state = UpdateParentState.create(data);
+            let state = UpdateIndexOrParentState.create(data);
             this.addState(state);
         }
 
@@ -690,6 +678,7 @@ namespace paper.editor {
 
             for (let index = 0; index < gameObj.transform.children.length; index++) {
                 const element = gameObj.transform.children[index];
+                
                 const obj: GameObject = element.gameObject;
                 this.clearRootPrefabInstance(obj, rootObj);
             }
@@ -734,7 +723,6 @@ namespace paper.editor {
                 this.getAllIdsFromPrefabInstance(obj, ids, rootObj);
             }
         }
-
 
         /**
          * 去重
@@ -905,8 +893,8 @@ namespace paper.editor {
             });
         }
 
-        public resetHistory(data:string):void{
-            let history = HistoryUtil.deserialize(JSON.parse(data));
+        public resetHistory(data:any):void{
+            let history = HistoryUtil.deserialize(data);
             this.paperHistory = history;
         }
 
@@ -1036,7 +1024,7 @@ namespace paper.editor {
     public async createGameObjectFromPrefab(prefabPath: string, paper: any, RES: any): Promise<paper.GameObject> {
         const prefab = await RES.getResAsync(prefabPath) as egret3d.Prefab | null;
         if (prefab) {
-            const instance = prefab.createInstance();
+            const instance = prefab.createInstance(false);
             (instance as any).prefabEditInfo = true;
             this.setGameObjectPrefab(instance, prefab, instance);
             return instance;
@@ -1061,6 +1049,36 @@ namespace paper.editor {
             const element = gameObj.transform.children[index];
             const obj: GameObject = element.gameObject;
             this.setGameObjectPrefab(obj, prefab, rootObj);
+        }
+    }
+
+    public getGameObjectsByPrefab = (prefab: egret3d.Prefab): GameObject | null => {
+        let paper = this.backRunTime.paper;
+        let objects = paper.Application.sceneManager.activeScene.gameObjects;
+        for (const obj of objects) {
+            if (obj.prefab && obj.prefab.url === prefab.url && Editor.editorModel.isPrefabRoot(obj)) {
+                return obj;
+            }
+        }
+        return null;
+    }
+
+    //todo
+    public createApplyPrefabState(applyGameObjectPropertyList:any[],applyComponentPropertyList:any[])
+    {
+        //apply gameobject proerty
+
+        for (const p of applyGameObjectPropertyList) {
+            const {gameObjectUUid,newValueList,preValueCopylist} = p;
+            let state = ModifyPrefabGameObjectPropertyState.create(gameObjectUUid,newValueList,preValueCopylist);
+            
+        }
+        
+        //apply component property
+        for (const p of applyGameObjectPropertyList) {
+            const {gameObjectUUid,componentUUid,newValueList,preValueCopylist} = p;
+            let state = ModifyPrefabComponentPropertyState.create(gameObjectUUid,componentUUid,newValueList,preValueCopylist);
+
         }
     }
 

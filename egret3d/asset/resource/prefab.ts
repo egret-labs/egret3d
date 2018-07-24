@@ -65,12 +65,12 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public createInstance() {
+        public createInstance(isCreate:boolean = true) {
             if (!this._raw) {
                 return null;
             }
 
-            const gameObject = paper.deserialize<paper.GameObject>(this._raw, this._assets,true);
+            const gameObject = paper.deserialize<paper.GameObject>(this._raw, this._assets,isCreate);
 
             return gameObject;
         }
