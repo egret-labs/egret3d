@@ -16,13 +16,20 @@ namespace paper {
      * 可序列化对象。
      */
     export abstract class SerializableObject implements IUUID, ISerializable {
+        /**
+         * 
+         */
         @paper.serializedField
         public uuid: string = createUUID();
-
+        /**
+         * 
+         */
         public serialize(): any {
             console.warn("Unimplemented serialize method.");
         }
-
+        /**
+         * 
+         */
         public deserialize(element: any): void {
             console.warn("Unimplemented deserialize method.");
         }

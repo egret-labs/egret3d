@@ -105,17 +105,9 @@ namespace paper {
         /**
          * @internal
          */
-        public static begin() {
+        public static update() {
             for (const group of this._groups) {
-                group._begin();
-            }
-        }
-        /**
-         * @internal
-         */
-        public static end() {
-            for (const group of this._groups) {
-                group._end();
+                group._update();
             }
         }
         /**
@@ -371,31 +363,7 @@ namespace paper {
             }
         }
 
-        private _begin() {
-            if (this._bufferedComponents.length > 0) {
-                for (const k in this._bufferedGameObjects) {
-                    this._addGameObjectTo(k, this._bufferedComponents, this._bufferedGameObjects, this._addedComponents, this._addedGameObjects);
-                    this._addGameObjectTo(k, this._bufferedComponents, this._bufferedGameObjects, this._components, this._gameObjects);
-                    delete this._bufferedGameObjects[k];
-                }
-
-                this._bufferedComponents.length = 0;
-            }
-
-            if (this._bufferedUnessentialComponents.length > 0) {
-                for (const component of this._bufferedUnessentialComponents) {
-                    this._addedUnessentialComponents.push(component);
-
-                    if (this._isBehaviour) {
-                        this._components.push(component);
-                    }
-                }
-
-                this._bufferedUnessentialComponents.length = 0;
-            }
-        }
-
-        private _end() {
+        private _update() {
             if (this._addedComponents.length > 0) {
                 this._addedComponents.length = 0;
 
@@ -431,6 +399,28 @@ namespace paper {
                 }
 
                 this._isRemoved = false;
+            }
+
+            if (this._bufferedComponents.length > 0) {
+                for (const k in this._bufferedGameObjects) {
+                    this._addGameObjectTo(k, this._bufferedComponents, this._bufferedGameObjects, this._addedComponents, this._addedGameObjects);
+                    this._addGameObjectTo(k, this._bufferedComponents, this._bufferedGameObjects, this._components, this._gameObjects);
+                    delete this._bufferedGameObjects[k];
+                }
+
+                this._bufferedComponents.length = 0;
+            }
+
+            if (this._bufferedUnessentialComponents.length > 0) {
+                for (const component of this._bufferedUnessentialComponents) {
+                    this._addedUnessentialComponents.push(component);
+
+                    if (this._isBehaviour) {
+                        this._components.push(component);
+                    }
+                }
+
+                this._bufferedUnessentialComponents.length = 0;
             }
         }
         /**

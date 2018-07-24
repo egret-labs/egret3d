@@ -17,6 +17,11 @@ namespace paper {
          * 组件挂载的 GameObject
          */
         public readonly gameObject: GameObject = BaseComponent._injectGameObject;
+        /**
+         * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
+         */
+        @paper.serializedField
+        public extras?: any;
 
         @serializedField
         protected _enabled: boolean = true;

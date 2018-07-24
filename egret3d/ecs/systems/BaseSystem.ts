@@ -18,10 +18,6 @@ namespace paper {
         private _locked: boolean = false;
         protected _enabled: boolean = true;
         /**
-         * @internal
-         */
-        public _level: number = 0;
-        /**
          * 
          */
         protected readonly _interests: ReadonlyArray<InterestConfig> | ReadonlyArray<ReadonlyArray<InterestConfig>> = [];
@@ -234,12 +230,7 @@ namespace paper {
          * @see paper.Application#systemManager
          */
         public onDestroy?(): void;
-        /**
-         * 
-         */
-        public get locked() {
-            return this._locked;
-        }
+
         /**
          * 该系统是否被激活。
          */
@@ -264,12 +255,6 @@ namespace paper {
             else {
                 this.onDisable && this.onDisable();
             }
-        }
-        /**
-         * 
-         */
-        public get level() {
-            return this._level;
         }
         /**
          * 

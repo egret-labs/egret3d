@@ -15,14 +15,11 @@ namespace paper {
         private constructor() {
         }
 
-        private _currentSystem: BaseSystem = null as any;
         private readonly _registerSystems: (BaseSystem | null)[] = [];
         private readonly _systems: (BaseSystem | null)[] = [];
-        private readonly _unregisterSystems: (BaseSystem | null)[] = [];
+        private _currentSystem: BaseSystem = null as any;
 
         private _preRegister(systemClass: { new(): BaseSystem }) {
-            // TODO 移除可能正在注销但并未反初始化的系统。
-
             if (this.getSystem(systemClass)) {
                 console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
 
@@ -32,129 +29,78 @@ namespace paper {
             return false;
         }
         /**
-         * 注册一个系统到管理器中
-         * @param systemClass 要注册的系统
-         * @param level 系统的优先级，越小越早执行。
+         * 注册一个系统到管理器中。
          */
-        public register(systemClass: { new(): BaseSystem }, level: number = 0) {
+        public register(systemClass: { new(): BaseSystem }, after: { new(): BaseSystem } | null = null) {
             if (this._preRegister(systemClass)) {
                 return;
             }
 
-            let isAdded = false;
+            let index = -1;
             const system = BaseSystem.create(systemClass);
-            system._level = level;
 
-            for (let i = 0, l = this._systems.length; i < l; ++i) {
-                const eachSystem = this._systems[i];
-                if (eachSystem && eachSystem._level > system._level) {
-                    isAdded = true;
-                    this._systems.splice(i, 0, system);
-                    break;
+            if (after) {
+                for (let i = 0, l = this._systems.length; i < l; ++i) {
+                    const eachSystem = this._systems[i];
+                    if (eachSystem && eachSystem.constructor === after) {
+                        index = i + 1;
+                        this._systems.splice(index, 0, system);
+                        break;
+                    }
                 }
             }
 
-            if (!isAdded) {
+            if (index < 0) {
                 this._systems.push(system);
+                this._registerSystems.push(system);
             }
+            else {
+                index = this._registerSystems.indexOf(this._systems[index - 1]);
 
-            this._registerSystems.push(system);
+                if (index < 0) {
+                    this._registerSystems.push(system);
+                }
+                else {
+                    this._systems.splice(index + 1, 0, system);
+                }
+            }
         }
         /**
-         * 注册一个系统到管理器中
-         * @param systemClass 要注册的系统
-         * @param target 加入到目标系统的前面。
+         * 注册一个系统到管理器中。
          */
-        public registerBefore(systemClass: { new(): BaseSystem }, target: { new(): BaseSystem }) {
+        public registerBefore(systemClass: { new(): BaseSystem }, before: { new(): BaseSystem } | null = null) {
             if (this._preRegister(systemClass)) {
                 return;
             }
 
-            let isAdded = false;
+            let index = -1;
             const system = BaseSystem.create(systemClass);
 
-            for (let i = 0, l = this._systems.length; i < l; ++i) {
-                const eachSystem = this._systems[i];
-                if (eachSystem && eachSystem.constructor === target) {
-                    isAdded = true;
-                    system._level = eachSystem.level;
-                    this._systems.splice(i, 0, system);
-                    break;
-                }
-            }
-
-            if (!isAdded) {
-                if (this._systems.length > 0) {
-                    const lastSystem = this._systems[this._systems.length - 1];
-                    if (lastSystem) {
-                        system._level = lastSystem.level;
+            if (before) {
+                for (let i = 0, l = this._systems.length; i < l; ++i) {
+                    const eachSystem = this._systems[i];
+                    if (eachSystem && eachSystem.constructor === before) {
+                        index = i;
+                        this._systems.splice(index, 0, system);
+                        break;
                     }
                 }
-
-                this._systems.push(system);
             }
 
-            this._registerSystems.push(system);
-        }
-        /**
-         * 注册一个系统到管理器中
-         * @param systemClass 要注册的系统
-         * @param target 加入到目标系统的后面。
-         */
-        public registerAfter(systemClass: { new(): BaseSystem }, target: { new(): BaseSystem }) {
-            if (this._preRegister(systemClass)) {
-                return;
+            if (index < 0) {
+                this._systems.unshift(system);
+                this._registerSystems.unshift(system);
             }
+            else {
+                index = this._registerSystems.indexOf(this._systems[index + 1]);
 
-            let isAdded = false;
-            const system = BaseSystem.create(systemClass);
-
-            for (let i = 0, l = this._systems.length; i < l; ++i) {
-                const eachSystem = this._systems[i];
-                if (eachSystem && eachSystem.constructor === target) {
-                    isAdded = true;
-                    system._level = eachSystem.level;
-                    this._systems.splice(i + 1, 0, system);
-                    break;
+                if (index < 0) {
+                    this._registerSystems.unshift(system); //
+                }
+                else {
+                    this._systems.splice(index, 0, system);
                 }
             }
-
-            if (!isAdded) {
-                if (this._systems.length > 0) {
-                    const lastSystem = this._systems[this._systems.length - 1];
-                    if (lastSystem) {
-                        system._level = lastSystem.level;
-                    }
-                }
-
-                this._systems.push(system);
-            }
-
-            this._registerSystems.push(system);
-        }
-        /**
-         * 注销一个管理器中的系统
-         * @param systemClass 要注销的系统
-         */
-        public unregister(systemClass: { new(): BaseSystem }) {
-            // TODO 移除可能正在注册但并未初始化的系统。
-            let index = 0;
-            for (const system of this._systems) {
-                if (system && system.constructor === systemClass) {
-                    system.enabled = false;
-
-                    if (!system.enabled) {
-                        this._unregisterSystems.push(system);
-                        this._systems[index] = null;
-                    }
-
-                    return;
-                }
-
-                index++;
-            }
-
-            console.warn("The system has not been registered.", egret.getQualifiedClassName(systemClass));
         }
         /**
          * 
@@ -196,9 +142,6 @@ namespace paper {
          * @internal
          */
         public update() {
-            Time && Time.begin();
-            Group.begin();
-
             if (this._registerSystems.length > 0) {
                 for (const system of this._registerSystems) {
                     if (system) {
@@ -227,51 +170,14 @@ namespace paper {
                 }
             }
 
-            let index = 0;
-            let removeCount = 0;
-
             for (const system of this._systems) {
                 if (system) {
-                    if (removeCount > 0) {
-                        this._systems[index - removeCount] = system;
-                        this._systems[index] = null;
-                    }
-
                     this._currentSystem = system;
                     system.lateUpdate();
                 }
-                else {
-                    removeCount++;
-                }
-
-                index++;
             }
 
             // Disable.
-
-            if (removeCount > 0) {
-                this._systems.length -= removeCount;
-
-                if (this._unregisterSystems.length > 0) {
-                    for (const system of this._unregisterSystems) {
-                        if (system) {
-                            this._currentSystem = system;
-                            system.uninitialize();
-                        }
-                    }
-
-                    this._unregisterSystems.length = 0;
-                }
-            }
-
-            Group.end();
-            Time.end();
-        }
-        /**
-         * 
-         */
-        public get system() {
-            return this._currentSystem;
         }
         /**
          * 

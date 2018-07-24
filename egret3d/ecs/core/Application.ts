@@ -45,13 +45,14 @@ namespace paper {
                 requestAnimationFrame(this._bindUpdate);
             }
 
+            Time && Time.update();
+            Group.update();
             this.systemManager.update();
         }
 
         public init({ isEditor = false, isPlaying = true, systems = [] as { new(): BaseSystem }[] } = {}) {
-            let level = 0;
             for (const systemClass of systems) {
-                this.systemManager.register(systemClass, level++);
+                this.systemManager.register(systemClass);
             }
 
             this._isEditor = isEditor;

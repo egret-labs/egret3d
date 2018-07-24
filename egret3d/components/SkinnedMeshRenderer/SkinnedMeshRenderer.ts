@@ -265,12 +265,12 @@ namespace egret3d {
             //     }
             // }
         }
-        
+
         public uninitialize() {
             super.uninitialize();
 
             if (this._mesh) {
-                this._mesh.dispose();
+                // this._mesh.dispose();
             }
 
             this._bones.length = 0;
