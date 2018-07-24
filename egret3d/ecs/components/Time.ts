@@ -26,26 +26,26 @@ namespace paper {
         /**
          * @internal
          */
-        public begin(time?: number) {
+        public update(time?: number) {
+            if (this._unscaledTime !== 0.0) {
+                this._lastTime = this._unscaledTime;
+
+                if (this._fixedTime < this.fixedDeltaTime) {
+                }
+                else if (this._fixedTime < this.fixedDeltaTime * this.maxFixedSubSteps) {
+                    this._fixedTime %= this.fixedDeltaTime;
+                }
+                else {
+                    this._fixedTime -= this.fixedDeltaTime * this.maxFixedSubSteps;
+                }
+            }
+
             const now = time || Date.now() * 0.001;
             this._frameCount += 1;
             this._unscaledTime = now - this._beginTime;
             this._unscaledDeltaTime = this._unscaledTime - this._lastTime;
 
             this._fixedTime += this._unscaledDeltaTime;
-        }
-
-        public end() {
-            this._lastTime = this._unscaledTime;
-
-            if (this._fixedTime < this.fixedDeltaTime) {
-            }
-            else if (this._fixedTime < this.fixedDeltaTime * this.maxFixedSubSteps) {
-                this._fixedTime %= this.fixedDeltaTime;
-            }
-            else {
-                this._fixedTime -= this.fixedDeltaTime * this.maxFixedSubSteps;
-            }
         }
 
         public get frameCount() {

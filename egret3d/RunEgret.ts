@@ -51,7 +51,7 @@ namespace egret3d {
                 CameraSystem,
                 //
                 paper.DisableSystem,
-                paper.EndSystem,
+                EndSystem,
             ];
         }
 

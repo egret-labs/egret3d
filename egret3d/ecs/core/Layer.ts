@@ -2,6 +2,23 @@ namespace paper {
     /**
      * 
      */
+    export const enum HideFlags {
+        /**
+         * 
+         */
+        None,
+        /**
+         * 
+         */
+        NotEditable,
+        /**
+         * 
+         */
+        Hide,
+    }
+    /**
+     * 
+     */
     export const enum DefaultTags {
         Untagged = "",
         Global = "Global",

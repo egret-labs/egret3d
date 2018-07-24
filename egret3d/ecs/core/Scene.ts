@@ -24,6 +24,11 @@ namespace paper {
          */
         public rawScene: egret3d.RawScene | null = null;
         /**
+         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+         */
+        @paper.serializedField
+        public extras?: any;
+        /**
          * @internal
          */
         public readonly _gameObjects: GameObject[] = [];

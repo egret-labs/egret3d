@@ -40,6 +40,7 @@ namespace paper {
         public createScene(name: string, isActive: boolean = true) {
             const scene = new Scene(isActive);
             scene.name = name;
+
             return scene;
         }
         /**
@@ -155,7 +156,7 @@ namespace paper {
                 this._scenes.unshift(value);
             }
             else {
-                console.debug("Active scene error.", value.name, value.uuid);
+                console.debug("Active scene error.", value.name);
             }
         }
 

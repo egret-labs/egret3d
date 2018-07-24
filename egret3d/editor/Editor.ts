@@ -42,7 +42,7 @@ namespace paper.editor {
                     EditorCameraSystem,
                     //
                     paper.DisableSystem,
-                    paper.EndSystem
+                    egret3d.EndSystem
                 ]
             });
         }

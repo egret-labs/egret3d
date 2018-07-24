@@ -56,7 +56,6 @@
         "egret3d/ecs/systems/UpdateSystem.ts",
         "egret3d/ecs/systems/LateUpdateSystem.ts",
         "egret3d/ecs/systems/DisableSystem.ts",
-        "egret3d/ecs/systems/EndSystem.ts",
 
         "egret3d/math/Vector2.ts",
         "egret3d/math/Vector3.ts",
@@ -77,6 +76,7 @@
         "egret3d/asset/resource/Mesh.ts",
         
         "egret3d/systems/BeginSystem.ts",
+        "egret3d/systems/EndSystem.ts",
 
         "egret3d/components/Pool.ts",
         "egret3d/components/Transform.ts",
