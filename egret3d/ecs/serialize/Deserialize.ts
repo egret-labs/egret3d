@@ -54,7 +54,9 @@ namespace paper {
             root = root || target;
         }
 
-        for (const source of data.objects) { // 组件实例化。
+        let i = data.objects.length;
+        while (i--) { // 组件实例化。
+            const source = data.objects[i];
             const target = _deserializedData.objects[source.uuid];
             _deserializeObject(source, target);
 
@@ -69,10 +71,11 @@ namespace paper {
                         if (clazz === egret3d.Transform) {
                             const transform = _deserializedData.components[uuid] as egret3d.Transform;
 
-                            if (KEY_CHILDREN in source) {
-                                for (const childUUID of source[KEY_CHILDREN] as IUUID[]) {
+                            if (KEY_CHILDREN in componentSource) {
+                                for (const childUUID of componentSource[KEY_CHILDREN] as IUUID[]) {
                                     const child = _deserializedData.components[childUUID.uuid] as egret3d.Transform;
-                                    child.parent = transform;
+                                    child._parent = transform;
+                                    transform._children.push(child);
                                 }
                             }
                         }

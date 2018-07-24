@@ -59,7 +59,10 @@ namespace egret3d {
          */
         public readonly _children: Transform[] = [];
         private _aabb: AABB = null as any;
-        private _parent: Transform | null = null;
+        /**
+         * @internal
+         */
+        public _parent: Transform | null = null;
 
         private _removeFromChildren(value: Transform) {
             let index = 0;

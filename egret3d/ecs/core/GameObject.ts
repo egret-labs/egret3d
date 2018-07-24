@@ -517,7 +517,7 @@ namespace paper {
                 let parent: egret3d.Transform | null = this.transform.parent;
                 while (parent) {
                     path = parent.gameObject.name + "/" + path;
-                    parent = parent.gameObject.transform;
+                    parent = parent.parent;
                 }
 
                 return this._scene.name + "/" + path;

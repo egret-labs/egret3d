@@ -355,12 +355,6 @@ namespace paper {
                 this._removeGameObjectFrom(uuid, this._bufferedComponents, this._bufferedGameObjects);
             }
             else if (uuid in this._gameObjects) {
-                if (uuid in this._addedGameObjects) { // 
-                    this._removeGameObjectFrom(uuid, this._addedComponents, this._addedGameObjects);
-                }
-
-                this._removeGameObjectFrom(uuid, this._components, this._gameObjects);
-
                 for (const system of Application.systemManager.systems) {
                     if (!system || !system.onRemoveGameObject || system.groups.indexOf(this) < 0) {
                         continue;
@@ -368,6 +362,12 @@ namespace paper {
 
                     system.onRemoveGameObject(gameObject, this);
                 }
+
+                if (uuid in this._addedGameObjects) { // 
+                    this._removeGameObjectFrom(uuid, this._addedComponents, this._addedGameObjects);
+                }
+
+                this._removeGameObjectFrom(uuid, this._components, this._gameObjects);
             }
         }
 

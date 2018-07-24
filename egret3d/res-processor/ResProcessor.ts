@@ -97,8 +97,8 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             let data = await host.load(resource, "json");
-            const url = getUrl(resource);
-            let shader = new egret3d.Shader(url);
+            // const url = getUrl(resource);
+            let shader = new egret3d.Shader(resource.url);
             shader.$parse(data);
             paper.Asset.register(shader);
 
@@ -116,8 +116,6 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             let data = await host.load(resource, "json");
-            let url = getUrl(resource);
-            let filename = getFileName(url);
 
             let _name: string = data["name"];
             let _filterMode: string = data["filterMode"];
@@ -142,12 +140,14 @@ namespace RES.processor {
                 _repeat = true;
             }
 
+            let url = getUrl(resource);
+            let filename = getFileName(resource.url);
             let textureUrl = url.replace(filename, _name);
 
             let loader = new egret.ImageLoader();
             loader.load(textureUrl);
             let image = await promisify(loader, resource);
-            let texture = new egret3d.Texture(url);
+            let texture = new egret3d.Texture(resource.url);
             texture.realName = _name;
             const gl = egret3d.WebGLKit.webgl;
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
@@ -169,11 +169,11 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             let gl = egret3d.WebGLKit.webgl;
-            let url = getUrl(resource);
+            // let url = getUrl(resource);
             let loader = new egret.ImageLoader();
-            loader.load(url);
+            loader.load(resource.url);
             let image = await promisify(loader, resource);
-            let _texture = new egret3d.Texture(url);
+            let _texture = new egret3d.Texture(resource.url);
             let _textureFormat = egret3d.TextureFormatEnum.RGBA;
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
             t2d.uploadImage(image.source, true, true, true, true);
@@ -193,8 +193,8 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             let json = await host.load(resource, "json") as egret3d.MaterialConfig
-            let url = getUrl(resource);
-            let material = new egret3d.Material(url);
+            // let url = getUrl(resource);
+            let material = new egret3d.Material(resource.url);
 
 
             let shaderName = json.shader
@@ -249,8 +249,8 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             const result = await host.load(resource, "bin");
-            const url = getUrl(resource);
-            const glTF = new egret3d.GLTFAsset(url);
+            // const url = getUrl(resource);
+            const glTF = new egret3d.GLTFAsset(resource.url);
 
             glTF.parseFromBinary(new Uint32Array(result));
             paper.Asset.register(glTF);
@@ -269,8 +269,8 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             const data: paper.ISerializedData = await host.load(resource, "json");
-            const url = getUrl(resource);
-            const prefab = new egret3d.Prefab(url);
+            // const url = getUrl(resource);
+            const prefab = new egret3d.Prefab(resource.url);
 
             await loadSubAssets(data, resource)
             prefab.$parse(data);
@@ -289,8 +289,8 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             const data: paper.ISerializedData = await host.load(resource, "json");
-            const url = getUrl(resource);
-            const rawScene = new egret3d.RawScene(url);
+            // const url = getUrl(resource);
+            const rawScene = new egret3d.RawScene(resource.url);
 
             await loadSubAssets(data, resource)
             rawScene.$parse(data);

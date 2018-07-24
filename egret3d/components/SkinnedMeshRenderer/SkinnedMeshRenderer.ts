@@ -217,15 +217,8 @@ namespace egret3d {
             return out;
         }
 
-        /**
-         * @inheritDoc
-         */
         public initialize() {
             super.initialize();
-
-            this.materials = this._materials;
-            this.mesh = this._mesh;
-            this.bones = this._bones;
 
             let shaderType = ShaderType.SQT;
 
@@ -272,9 +265,7 @@ namespace egret3d {
             //     }
             // }
         }
-        /**
-         * @inheritDoc
-         */
+        
         public uninitialize() {
             super.uninitialize();
 

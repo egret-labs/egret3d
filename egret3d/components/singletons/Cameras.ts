@@ -9,10 +9,14 @@ namespace egret3d {
             return a.order - b.order;
         }
 
-        public update(cameras: ReadonlyArray<Camera>) {
+        public update(cameras: ReadonlyArray<Camera>, gameObject: Readonly<paper.GameObject | null>) {
             this.cameras.length = 0;
 
             for (const camera of cameras) {
+                if (gameObject && camera.gameObject === gameObject) {
+                    continue;
+                }
+
                 this.cameras.push(camera);
             }
 

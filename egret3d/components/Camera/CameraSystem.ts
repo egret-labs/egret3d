@@ -78,13 +78,13 @@ namespace egret3d {
 
         public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
             if (group === this._groups[0]) {
-                this._cameras.update(this._groups[0].components as ReadonlyArray<Camera>);
+                this._cameras.update(this._groups[0].components as ReadonlyArray<Camera>, null);
             }
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
             if (group === this._groups[0]) {
-                this._cameras.update(this._groups[0].components as ReadonlyArray<Camera>);
+                this._cameras.update(this._groups[0].components as ReadonlyArray<Camera>, gameObject);
             }
         }
 

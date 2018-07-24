@@ -98,7 +98,7 @@ namespace egret3d {
         public _globalWeight: number = 0.0;
         /**
          * 融合进度。
-         * 
+         * @internal
          */
         public _fadeProgress: number = 0.0;
         /**
@@ -684,6 +684,10 @@ namespace egret3d {
          */
         public timeScale: number = 1.0;
         /**
+         * @internal
+         */
+        public _addToSystem: boolean = false;
+        /**
          * 动画数据列表。
          */
         @paper.serializedField
@@ -717,21 +721,6 @@ namespace egret3d {
             for (const component of this.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
                 if (component.onAnimationEvent) {
                     component.onAnimationEvent(type, animationState, eventObject);
-                }
-            }
-        }
-
-        public initialize() {
-            super.initialize();
-
-            if (!this._skinnedMeshRenderer) {
-                this._skinnedMeshRenderer = this.gameObject.getComponentsInChildren(SkinnedMeshRenderer)[0];
-
-                if (this._skinnedMeshRenderer) {
-                    for (const bone of this._skinnedMeshRenderer.bones) {
-                        const boneBlendLayer = new BoneBlendLayer();
-                        this._boneBlendLayers.push(boneBlendLayer);
-                    }
                 }
             }
         }
@@ -843,6 +832,11 @@ namespace egret3d {
             fadeTime: number, playTimes: number = -1,
             layer: number = 0, additive: boolean = false,
         ): AnimationState | null {
+            if (!this._addToSystem) {
+                console.warn("The animation component is not add to system yet.");
+                return;
+            }
+
             let animationAsset: GLTFAsset | null = null;
             let animationClip: GLTFAnimationClip | null = null;
 
@@ -925,6 +919,18 @@ namespace egret3d {
 
         public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
             const component = group.getComponent(gameObject, 0) as Animation;
+            component._addToSystem = true;
+
+            if (!component._skinnedMeshRenderer) {
+                component._skinnedMeshRenderer = gameObject.getComponentsInChildren(SkinnedMeshRenderer)[0];
+
+                if (component._skinnedMeshRenderer) {
+                    for (const bone of component._skinnedMeshRenderer.bones) {
+                        const boneBlendLayer = new BoneBlendLayer();
+                        component._boneBlendLayers.push(boneBlendLayer);
+                    }
+                }
+            }
 
             if (component.autoPlay) {
                 component.play();
@@ -937,6 +943,11 @@ namespace egret3d {
             for (const component of components) {
                 component.update(globalTime);
             }
+        }
+
+        public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
+            const component = group.getComponent(gameObject, 0) as Animation;
+            component._addToSystem = false;
         }
     }
 }
