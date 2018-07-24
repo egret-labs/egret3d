@@ -5,6 +5,9 @@ namespace paper {
      */
     export let createUUID = () => {
         return (_hashCount++).toString();
+    }   
+    export let createLinkID = () => {
+        return null;
     }
     /**
      * 可序列化对象。
@@ -13,7 +16,7 @@ namespace paper {
         @paper.serializedField
         public uuid: string = createUUID();
         @paper.serializedField
-        public assetUUid: string = createUUID();
+        public assetUUid: string = createLinkID();
 
         public serialize(): any {
             console.warn("Unimplemented serialize method.");
