@@ -39,12 +39,11 @@ namespace paper.editor{
                     let gameObj: GameObject;
 
                     if (element.serializeData) {
-                        gameObj = deserialize(element.serializeData, element.assetsMap);
+                        gameObj = deserialize(element.serializeData, true);
                     } else {
                         gameObj = new GameObject();
                         gameObj.name = "NewGameObject";
                         element.serializeData = serialize(gameObj);
-                        element.assetsMap = Editor.editorModel.createAssetMap(element.serializeData);
                     }
 
                     if (parentUUid) {

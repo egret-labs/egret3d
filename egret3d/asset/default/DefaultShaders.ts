@@ -75,7 +75,7 @@ namespace egret3d {
             const def_alphaCut_fs = Shader.registerFragShader("def_alphaCut", ShaderLib.alphaCut_frag);
 
             {
-                const shader = new Shader("shader/lambert");
+                const shader = new Shader("buildin/lambert.shader.json");
                 shader.renderQueue = RenderQueue.Geometry;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRAY };
                 shader.defaultValue["_Color"] = { type: "Vector4", value: [1, 1, 1, 1] };
@@ -121,7 +121,7 @@ namespace egret3d {
                 paper.Asset.register(shader);
             }
             {
-                const shader = new Shader("shader/lambertnormal");
+                const shader = new Shader("buildin/lambertnormal.shader.json");
                 shader.renderQueue = RenderQueue.Geometry;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRAY };
                 shader.defaultValue["_Color"] = { type: "Vector4", value: [1, 1, 1, 1] };
@@ -158,7 +158,7 @@ namespace egret3d {
                 paper.Asset.register(shader);
             }
             {
-                const sh = new Shader("shader/def");
+                const sh = new Shader("buildin/default.shader.json");
                 sh.renderQueue = RenderQueue.Geometry;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRID };
@@ -178,7 +178,7 @@ namespace egret3d {
             }
             {
                 // 兼容外部引入的 transparent.shader.json
-                const sh = new Shader("transparent.shader.json");
+                const sh = new Shader("buildin/transparent.shader.json");
                 sh.renderQueue = RenderQueue.Transparent;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRID };
@@ -199,7 +199,7 @@ namespace egret3d {
             }
             {
                 // 兼容外部引入的 transparent_tintColor.shader.json
-                const sh = new Shader("transparent_tintColor.shader.json");
+                const sh = new Shader("buildin/transparent_tintColor.shader.json");
                 sh.renderQueue = RenderQueue.Transparent;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRID };
@@ -218,7 +218,7 @@ namespace egret3d {
             }
             {
                 // 兼容外部引入的 transparent_tintColor.shader.json
-                const sh = new Shader("transparent_alphaCut.shader.json");
+                const sh = new Shader("buildin/transparent_alphaCut.shader.json");
                 sh.renderQueue = RenderQueue.AlphaTest;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRID };
@@ -237,7 +237,7 @@ namespace egret3d {
             }
             {
                 // 兼容外部引入的 transparent_additive.shader.json
-                const sh = new Shader("transparent_additive.shader.json");
+                const sh = new Shader("buildin/transparent_additive.shader.json");
                 sh.renderQueue = RenderQueue.Transparent;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRID };
@@ -258,7 +258,7 @@ namespace egret3d {
             }
             {
                 // 兼容外部引入的 transparent_additive_bothside.shader.json
-                const sh = new Shader("transparent_additive_bothside.shader.json");
+                const sh = new Shader("buildin/transparent_additive_bothside.shader.json");
                 sh.renderQueue = RenderQueue.Transparent;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRID };
@@ -279,7 +279,7 @@ namespace egret3d {
             }
             {
                 // 兼容外部引入的 transparent_bothside.shader.json
-                const sh = new Shader("transparent_bothside.shader.json");
+                const sh = new Shader("buildin/transparent_additive_bothside.shader.json");
                 sh.renderQueue = RenderQueue.Transparent;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRID };
@@ -300,7 +300,7 @@ namespace egret3d {
             }
             {
                 // 兼容外部引入的 diffuse.shader.json
-                const sh = new Shader("diffuse.shader.json");
+                const sh = new Shader("buildin/diffuse.shader.json");
                 sh.renderQueue = RenderQueue.Geometry;
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRAY };
                 sh.defaultValue["_MainTex_ST"] = { type: "Vector4", value: [1, 1, 0, 0] };
@@ -366,7 +366,7 @@ namespace egret3d {
                 paper.Asset.register(sh);
             }
             {
-                const sh = new Shader("shader/diffuse_tintcolor");
+                const sh = new Shader("buildin/diffuse_tintcolor.shader.json");
                 sh.renderQueue = RenderQueue.Geometry;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRID };
@@ -387,7 +387,7 @@ namespace egret3d {
                 paper.Asset.register(sh);
             }
             {
-                const sh = new Shader("shader/diffuse_vertcolor");
+                const sh = new Shader("buildin/diffuse_vertcolor.shader.json");
                 sh.renderQueue = RenderQueue.Geometry;
                 sh.passes["base"] = [];
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRID };
@@ -408,7 +408,7 @@ namespace egret3d {
             }
             {
                 // 兼容外部引入的 diffuse_bothside.shader.json
-                const sh = new Shader("diffuse_bothside.shader.json");
+                const sh = new Shader("buildin/diffuse_bothside.shader.json");
                 sh.renderQueue = RenderQueue.Geometry;
                 // sh.defaultAsset = true;
                 sh.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRID };
@@ -466,7 +466,7 @@ namespace egret3d {
                 paper.Asset.register(sh);
             }
             {
-                const sh = new Shader("shader/defui");
+                const sh = new Shader("buildin/default_ui.shader.json");
                 sh.passes["base"] = [];
                 const p = new DrawPass(def_code_vs, def_ui_fs);
                 sh.passes["base"].push(p);
@@ -489,7 +489,7 @@ namespace egret3d {
                 paper.Asset.register(sh);
             }
             {
-                const sh = new Shader("shader/defuifont");
+                const sh = new Shader("buildin/default_uifont.shader.json");
                 sh.passes["base"] = [];
                 const p = new DrawPass(def_uifont_vs, def_uifont_fs);
                 sh.passes["base"].push(p);
@@ -512,7 +512,7 @@ namespace egret3d {
                 paper.Asset.register(sh);
             }
             {
-                const sh = new Shader("line.shader.json");
+                const sh = new Shader("buildin/line.shader.json");
                 sh.renderQueue = RenderQueue.Geometry;
                 // sh.defaultAsset = true;
                 sh.passes["base"] = [];
@@ -529,7 +529,7 @@ namespace egret3d {
                 paper.Asset.register(sh);
             }
             {
-                const sh = new Shader("materialcolor.shader.json");
+                const sh = new Shader("buildin/materialcolor.shader.json");
                 sh.renderQueue = RenderQueue.Geometry;
                 sh.defaultValue["_Color"] = { type: "Vector4", value: [1, 1, 1, 1] };
                 // sh.defaultAsset = true;
@@ -548,7 +548,7 @@ namespace egret3d {
                 paper.Asset.register(sh);
             }
             {
-                const sh = new Shader("gizmos.shader.json");
+                const sh = new Shader("buildin/gizmos.shader.json");
                 sh.renderQueue = RenderQueue.Overlay;
                 sh.defaultValue["_Color"] = { type: "Vector4", value: [1, 1, 1, 1] };
                 // sh.defaultAsset = true;
@@ -567,7 +567,7 @@ namespace egret3d {
                 paper.Asset.register(sh);
             }
             {
-                const shader = new Shader("particles.shader.json");
+                const shader = new Shader("buildin/particles.shader.json");
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRAY };
                 shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
@@ -586,7 +586,7 @@ namespace egret3d {
                 paper.Asset.register(shader);
             }
             {
-                const shader = new Shader("particles_additive.shader.json");
+                const shader = new Shader("buildin/particles_additive.shader.json");
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRAY };
                 shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
@@ -605,7 +605,7 @@ namespace egret3d {
                 paper.Asset.register(shader);
             }
             {
-                const shader = new Shader("particles_additive_premultiply.shader.json");
+                const shader = new Shader("buildin/particles_additive_premultiply.shader.json");
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRAY };
                 shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
@@ -625,7 +625,7 @@ namespace egret3d {
             }
             {
                 //TODO
-                const shader = new Shader("particles_blend1.shader.json");
+                const shader = new Shader("buildin/particles_blend1.shader.json");
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRAY };
                 shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
@@ -644,7 +644,7 @@ namespace egret3d {
                 paper.Asset.register(shader);
             }
             {
-                const shader = new Shader("particles_blend.shader.json");
+                const shader = new Shader("buildin/particles_blend.shader.json");
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRAY };
                 shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };
@@ -664,7 +664,7 @@ namespace egret3d {
             }
 
             {
-                const shader = new Shader("particles_blend_premultiply.shader.json");
+                const shader = new Shader("buildin/particles_blend_premultiply.shader.json");
                 shader.renderQueue = RenderQueue.Transparent;
                 shader.defaultValue["_MainTex"] = { type: "Texture", value: DefaultTextures.GRAY };
                 shader.defaultValue["_TintColor"] = { type: "Vector4", value: [1.0, 1.0, 1.0, 1.0] };

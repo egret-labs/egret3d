@@ -44,12 +44,11 @@ namespace paper.editor{
                         let addComponent;
 
                         if (this.data.serializeData) {
-                            addComponent = deserialize(this.data.serializeData, this.data.assetsMap, true);
+                            addComponent = deserialize(this.data.serializeData, true);
                             Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
                         } else {
                             addComponent = gameObj.addComponent(compClz);
                             this.data.serializeData = serialize(addComponent);
-                            this.data.assetsMap = Editor.editorModel.createAssetMap(this.data.serializeData);
                         }
 
                         element.cacheUUid = addComponent.uuid;

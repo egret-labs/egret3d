@@ -6,7 +6,25 @@ namespace egret3d {
 
     const helpMat4_1: Matrix = new Matrix();
 
-    export class Quaternion implements paper.ISerializable {
+    export class Quaternion implements IVector4, paper.ISerializable {
+
+        private static readonly _instances: Quaternion[] = [];
+
+        public static create(x?: number, y?: number, z?: number, w?: number) {
+            if (this._instances.length > 0) {
+                return this._instances.pop().set(x, y, z, w);
+            }
+
+            return new Quaternion(x, y, z, w);
+        }
+
+        public static release(value: Quaternion) {
+            if (this._instances.indexOf(value) >= 0) {
+                return;
+            }
+
+            this._instances.push(value);
+        }
 
         public x: number;
 
@@ -34,7 +52,7 @@ namespace egret3d {
             this.w = element[3];
         }
 
-        public copy(value: Readonly<Vector4>) {
+        public copy(value: Readonly<IVector4>) {
             this.x = value.x;
             this.y = value.y;
             this.z = value.z;
@@ -44,13 +62,13 @@ namespace egret3d {
         }
 
         public clone() {
-            const value = new Vector4();
+            const value = new Quaternion();
             value.copy(this);
 
             return value;
         }
 
-        public set(x: number, y: number, z: number, w: number) {
+        public set(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -92,7 +110,7 @@ namespace egret3d {
             return this;
         }
 
-        public multiply(value: Readonly<Quaternion>) {
+        public multiply(value: Readonly<IVector4>) {
             const w1 = this.w, x1 = this.x, y1 = this.y, z1 = this.z;
             const w2 = value.w, x2 = value.x, y2 = value.y, z2 = value.z;
 
@@ -106,7 +124,7 @@ namespace egret3d {
             return this;
         }
 
-        public transformVector3(value: Vector3) {
+        public transformVector3(value: IVector3) {
             const x2 = value.x, y2 = value.y, z2 = value.z;
             const x1 = this.w * x2 + this.y * z2 - this.z * y2;
             const y1 = this.w * y2 - this.x * z2 + this.z * x2;
@@ -120,6 +138,9 @@ namespace egret3d {
             return value;
         }
 
+        /**
+         * @deprecated
+         */
         public static set(x: number, y: number, z: number, w: number, out: Quaternion): Quaternion {
             out.x = x;
             out.y = y;

@@ -36,7 +36,7 @@ namespace paper.editor{
                     this.clearPrefabInfo(obj);
                     this.addList.push(obj.uuid);
                 }
-                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, this.addList);\
+                this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, this.addList);
                 return true;
             }
             return false;

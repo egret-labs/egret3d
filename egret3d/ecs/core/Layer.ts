@@ -1,5 +1,17 @@
 namespace paper {
-
+    /**
+     * 
+     */
+    export const enum DefaultTags {
+        Untagged = "",
+        Global = "Global",
+        Respawn = "Respawn",
+        Finish = "Finish",
+        EditorOnly = "EditorOnly",
+        MainCamera = "MainCamera",
+        Player = "Player",
+        GameController = "GameController",
+    }
     /**
      * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
      * 这个属性可以实现相机的选择性剔除。
@@ -19,7 +31,6 @@ namespace paper {
         UserLayer10 = 0x000800,
         UserLayer11 = 0x000f00,
     }
-
     /**
      * culling mask
      * @version paper 1.0

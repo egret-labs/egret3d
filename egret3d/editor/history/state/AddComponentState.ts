@@ -40,13 +40,12 @@ namespace paper.editor{
                 if (gameObject) {
                     let addComponent;
                     if (this.data.serializeData) {
-                        addComponent = deserialize(this.data.serializeData, this.data.assetsMap);
+                        addComponent = deserialize(this.data.serializeData, true);
                         Editor.editorModel.addComponentToGameObject(gameObject, addComponent);
                     } else {
                         let compClz = egret.getDefinitionByName(compClzName);
                         addComponent = gameObject.addComponent(compClz);
                         this.data.serializeData = serialize(addComponent);
-                        this.data.assetsMap = Editor.editorModel.createAssetMap(this.data.serializeData);
                     }
 
                     this.data.cacheUUid = addComponent.uuid;

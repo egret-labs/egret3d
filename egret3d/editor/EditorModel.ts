@@ -311,9 +311,9 @@ namespace paper.editor {
             let serializeData = serialize(removeComponent);
             let assetsMap = {};
             if (serializeData["assets"]) {
-                (<ISerializedObject[]>serializeData["assets"]).forEach(item => {
-                    assetsMap[item.uuid] = Asset.find(item["url"]);
-                });
+                // (<ISerializedObject[]>serializeData["assets"]).forEach(item => { TODO
+                //     assetsMap[item.uuid] = Asset.find(item["url"]);
+                // });
             }
 
             let data = {
@@ -340,7 +340,7 @@ namespace paper.editor {
         public getComponentByAssetId(gameObject: GameObject, assetId: string): BaseComponent | null {
             for (let i: number = 0; i < gameObject.components.length; i++) {
                 let comp = gameObject.components[i];
-                if (comp.assetUUid === assetId) {
+                if (comp.assetID === assetId) {
                     return comp;
                 }
             }
@@ -665,7 +665,7 @@ namespace paper.editor {
             let camera = cameraObject.addComponent(egret3d.Camera);
             camera.near = 0.1;
             camera.far = 100;
-            camera.backgroundColor = new egret3d.Color(0.13, 0.28, 0.51, 1);
+            camera.backgroundColor.set(0.13, 0.28, 0.51, 1);
             cameraObject.transform.setLocalPosition(0, 10, -10);
             cameraObject.transform.lookAt(new egret3d.Vector3(0, 0, 0));
             return cameraObject;
@@ -708,16 +708,6 @@ namespace paper.editor {
             }
             let jsonData = JSON.stringify(data);
             return jsonData;
-        }
-
-        public createAssetMap(serializeData: ISerializedData): any {
-            let assetsMap = {};
-            if (serializeData["assets"]) {
-                (<ISerializedObject[]>serializeData["assets"]).forEach(item => {
-                    assetsMap[item.uuid] = Asset.find(item["url"]);
-                });
-            }
-            return assetsMap;
         }
 
         public isPrefabRoot(gameObj: GameObject): boolean {

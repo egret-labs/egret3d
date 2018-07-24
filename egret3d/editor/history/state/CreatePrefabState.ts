@@ -49,14 +49,13 @@ namespace paper.editor{
                 if (prefab) {
                     let instance;
                     if (this.data.serializeData) {
-                        instance = deserialize(this.data.serializeData, this.data.assetsMap);
+                        instance = deserialize(this.data.serializeData,true);
                         this.setGameObjectPrefab(instance, prefab, instance);
                     } else {
                         instance = prefab.createInstance();
                         (instance as any).prefabEditInfo = true;
                         this.setGameObjectPrefab(instance, prefab, instance);
                         this.data.serializeData = serialize(instance);
-                        this.data.assetsMap = Editor.editorModel.createAssetMap(this.data.serializeData);
                     }
 
                     this.data.cachePrefabUUid = instance.uuid;

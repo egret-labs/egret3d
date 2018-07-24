@@ -62,10 +62,11 @@ namespace egret3d {
         private _textureRef: Texture[] = [];
         private _renderQueue: RenderQueue = -1;
 
-        /**
-         * 释放资源。
-         */
-        dispose() {
+        public dispose() {
+            if (this._isBuiltin) {
+                return;
+            }
+
             delete this.$uniforms;
             delete this._defines;
 

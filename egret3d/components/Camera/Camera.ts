@@ -14,7 +14,6 @@ namespace egret3d {
      * @language
      */
     export class Camera extends paper.BaseComponent {
-
         /**
          * current main camera
          * @version paper 1.0
@@ -28,9 +27,10 @@ namespace egret3d {
          * @language zh_CN
          */
         public static get main() {
-            const entity = paper.GameObject.findWithTag("MainCamera");
-            if (entity) {
-                return entity.getComponent(Camera, true);
+            const gameObject = paper.Application.sceneManager.activeScene.findWithTag(paper.DefaultTags.MainCamera);
+
+            if (gameObject) {
+                return gameObject.getComponent(Camera, true);
             }
 
             return null;
@@ -155,7 +155,7 @@ namespace egret3d {
          * @language
          */
         @paper.serializedField
-        public backgroundColor: Color = new Color(0.13, 0.28, 0.51, 1); // TODO 
+        public readonly backgroundColor: Color = new Color(0.13, 0.28, 0.51, 1);
 
         /**
          * camera viewport

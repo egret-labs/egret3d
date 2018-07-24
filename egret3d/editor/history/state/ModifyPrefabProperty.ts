@@ -4,7 +4,7 @@ namespace paper.editor{
             let objects = Application.sceneManager.getActiveScene().gameObjects;
             let result: GameObject[] = [];
             objects.forEach(obj => {
-                if (obj.prefab && obj.prefab.url === prefab.url && Editor.editorModel.isPrefabRoot(obj)) {
+                if (obj.prefab && obj.prefab.name === prefab.name && Editor.editorModel.isPrefabRoot(obj)) {
                     result.push(obj);
                 }
             })

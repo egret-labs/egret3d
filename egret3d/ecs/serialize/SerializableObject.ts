@@ -6,7 +6,7 @@ namespace paper {
     export let createUUID = () => {
         return (_hashCount++).toString();
     }   
-    export let createLinkID = () => {
+    export let createAssetID = () => {
         return null;
     }
     /**
@@ -15,8 +15,9 @@ namespace paper {
     export abstract class SerializableObject implements IUUID, ISerializable {
         @paper.serializedField
         public uuid: string = createUUID();
+
         @paper.serializedField
-        public assetUUid: string = createLinkID();
+        public assetUUid: string = createAssetID();
 
         public serialize(): any {
             console.warn("Unimplemented serialize method.");

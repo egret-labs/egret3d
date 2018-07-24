@@ -1,9 +1,14 @@
 namespace paper {
-
     /**
      * 可以挂载Component的实体类。
      */
     export class GameObject extends SerializableObject {
+        /**
+         * @internal
+         */
+        @paper.serializedField
+        public assetID: string = createAssetID();
+
         /**
          * 是否是静态，启用这个属性可以提升性能
          */
@@ -39,7 +44,7 @@ namespace paper {
         /**
          * 
          */
-        public renderer: paper.BaseRenderer | null = null as any;
+        public renderer: BaseRenderer | null = null as any;
 
         /**
          * 预制体
@@ -73,7 +78,7 @@ namespace paper {
         /**
          * 创建GameObject，并添加到当前场景中
          */
-        public constructor(name: string = "NoName", tag: string = "") {
+        public constructor(name: string = "NoName", tag: string = DefaultTags.Untagged) {
             super();
 
             this.name = name;
@@ -118,11 +123,11 @@ namespace paper {
             }
 
             for (const component of this._components) {
-                const className = egret.getQualifiedClassName(component);
-                if (className in _requireComponents) {
-                    const requireComponents = _requireComponents[className];
+                const index = _requireComponents.indexOf(component.constructor as any);
+                if (index >= 0) {
+                    const requireComponents = _requireComponentss[index];
                     if (requireComponents.indexOf(value.constructor as any) >= 0) {
-                        console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${className} component.`);
+                        console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${egret.getQualifiedClassName(component)} component.`);
                         return false;
                     }
                 }
@@ -139,7 +144,7 @@ namespace paper {
                 this.renderer = null;
             }
 
-            const destroySystem = Application.systemManager.getSystem(DestroySystem);
+            const destroySystem = Application.systemManager.getSystem(EndSystem);
             if (destroySystem) {
                 destroySystem.bufferComponent(component);
             }
@@ -160,7 +165,7 @@ namespace paper {
         }
 
         private _destroy() {
-            const destroySystem = Application.systemManager.getSystem(DestroySystem);
+            const destroySystem = Application.systemManager.getSystem(EndSystem);
             if (destroySystem) {
                 destroySystem.bufferGameObject(this);
             }
@@ -211,14 +216,14 @@ namespace paper {
                 for (const component of this._components) {
                     if (component instanceof componentClass) {
                         console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the game object (${this.path}) again.`);
-                        return;
+                        return component;
                     }
                 }
             }
 
-            const className = egret.getQualifiedClassName(componentClass);
-            if (className in _requireComponents) {
-                const requireComponents = _requireComponents[className];
+            const index = _requireComponents.indexOf(componentClass);
+            if (index >= 0) {
+                const requireComponents = _requireComponentss[index];
                 for (const requireComponentClass of requireComponents) {
                     this.getComponent(requireComponentClass) || this.addComponent(requireComponentClass);
                 }
@@ -230,7 +235,7 @@ namespace paper {
             if (component instanceof egret3d.Transform) {
                 this.transform = component;
             }
-            else if (component instanceof paper.BaseRenderer) {
+            else if (component instanceof BaseRenderer) {
                 this.renderer = component;
             }
 
@@ -379,6 +384,13 @@ namespace paper {
         }
 
         /**
+         * 
+         */
+        public getOrAddComponent<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
+            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
+        }
+
+        /**
          * 针对同级的组件发送消息
          * @param methodName 
          * @param parameter
@@ -505,7 +517,7 @@ namespace paper {
                 let parent: egret3d.Transform | null = this.transform.parent;
                 while (parent) {
                     path = parent.gameObject.name + "/" + path;
-                    parent = parent.gameObject.transform;
+                    parent = parent.parent;
                 }
 
                 return this._scene.name + "/" + path;
@@ -518,31 +530,10 @@ namespace paper {
          * 组件列表
          */
         @serializedField
+        @deserializedIgnore
         public get components(): ReadonlyArray<BaseComponent> {
             return this._components;
         }
-        /**
-         * 仅用于反序列化。
-         * @internal
-         */
-        public set components(value: ReadonlyArray<BaseComponent>) {
-            this._components.length = 0;
-            for (const component of value) {
-                if (component instanceof MissingObject) {
-                    this.addComponent(MissingComponent).missingObject = component;
-                }
-                else {
-                    if (component instanceof paper.BaseRenderer) {
-                        this.renderer = component;
-                    }
-
-                    this._components.push(component);
-                }
-            }
-
-            this.transform = this.getComponent(egret3d.Transform) || this.addComponent(egret3d.Transform);
-        }
-
         /**
          * 获取物体所在场景实例。
          */

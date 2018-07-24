@@ -18,10 +18,11 @@ namespace egret3d {
          */
         glTexture: egret3d.ITexture;
 
-        /**
-         * @inheritDoc
-         */
         public dispose() {
+            if (this._isBuiltin) {
+                return;
+            }
+
             this.glTexture.dispose(WebGLKit.webgl);
         }
 
