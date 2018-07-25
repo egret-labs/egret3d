@@ -127,12 +127,8 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createAddComponentToPrefab(stateData: any) {
-            const data = {
-                ...stateData
-            }
-
-            const state = AddPrefabComponentState.create(data);
+        public createAddComponentToPrefab(sourceData:any,instanceDatas:any[]) {
+            const state = AddPrefabComponentState.create(sourceData,instanceDatas);
             this.addState(state);
         }
 
@@ -616,8 +612,8 @@ namespace paper.editor {
             });
         }
 
-        public resetHistory(data: string): void {
-            let history = History.instance.deserialize(JSON.parse(data));
+        public resetHistory(data:any): void {
+            History.instance.deserialize(data);
         }
 
         private _editCamera: GameObject;
@@ -822,23 +818,26 @@ namespace paper.editor {
             return gameobjects;
         }
 
-    //todo
     public createApplyPrefabState(applyGameObjectPropertyList:any[],applyComponentPropertyList:any[])
     {
-        //apply gameobject proerty
+        let group:BaseState[] = [];
 
+        //apply gameobject proerty
         for (const p of applyGameObjectPropertyList) {
             const {gameObjectUUid,newValueList,preValueCopylist} = p;
             let state = ModifyPrefabGameObjectPropertyState.create(gameObjectUUid,newValueList,preValueCopylist);
-            
+            group.push(state);
         }
         
         //apply component property
         for (const p of applyGameObjectPropertyList) {
             const {gameObjectUUid,componentUUid,newValueList,preValueCopylist} = p;
             let state = ModifyPrefabComponentPropertyState.create(gameObjectUUid,componentUUid,newValueList,preValueCopylist);
-
+            group.push(state);
         }
+
+        let applyPrefabState = StateGroup.create(group);
+        this.addState(applyPrefabState);
     }
 
     }
