@@ -4,9 +4,21 @@ namespace paper {
      */
     export abstract class BaseComponent extends SerializableObject {
         /**
+         * 
+         */
+        public static index: number = -1;
+        /**
          * @internal
          */
-        public static _injectGameObject: GameObject;
+        public static readonly _componentClasses: any[] = [];
+        private static _injectGameObject: GameObject = null as any;
+        /**
+         * @internal
+         */
+        public static create<T extends BaseComponent>(componentClass: { new(): T }, gameObject: GameObject): T {
+            this._injectGameObject = gameObject;
+            return new componentClass();
+        }
 
         /**
          * @internal
@@ -25,6 +37,26 @@ namespace paper {
 
         @serializedField
         protected _enabled: boolean = true;
+        /**
+         * 禁止实例化组件实例。
+         * @protected
+         */
+        public constructor() {
+            super();
+
+            if (BaseComponent._injectGameObject) {
+                if (this.constructor["index"] < 0) {
+                    this.constructor["index"] = BaseComponent._componentClasses.length;
+                    BaseComponent._componentClasses.push(this.constructor);
+                }
+
+                BaseComponent._injectGameObject = null as any;
+            }
+            else {
+                throw new Error("Create an instance of a component is not allowed.");
+            }
+
+        }
         /**
          * 添加组件后，组件内部初始化。
          * - 重载此方法时，必须调用 `super.initialize()`。

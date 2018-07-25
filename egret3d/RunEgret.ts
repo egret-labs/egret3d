@@ -47,6 +47,7 @@ namespace egret3d {
                 SkinnedMeshRendererSystem,
                 particle.ParticleSystem,
                 Egret2DRendererSystem,
+                //
                 LightSystem,
                 CameraSystem,
                 //

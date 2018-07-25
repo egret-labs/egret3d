@@ -25,7 +25,7 @@ namespace paper {
          */
         componentClass: { new(): BaseComponent }[] | { new(): BaseComponent };
         /**
-         * 
+         * @internal
          */
         isBehaviour?: boolean;
         /**
@@ -173,7 +173,7 @@ namespace paper {
 
             for (const scene of paper.Application.sceneManager.scenes) {
                 for (const gameObject of scene.gameObjects) {
-                    this._onAddGameObject(gameObject);
+                    this._addGameObject(gameObject);
                 }
             }
         }
@@ -223,52 +223,7 @@ namespace paper {
         }
 
         private _onAddComponent(component: BaseComponent) {
-            this._onAddGameObject(component.gameObject);
-        }
-
-        private _onAddGameObject(gameObject: GameObject) {
-            const uuid = gameObject.uuid;
-
-            if (gameObject === this._globalGameObject) { // Pass global game object.
-                return;
-            }
-
-            if (uuid in this._bufferedGameObjects || uuid in this._gameObjects) { // Buffered or added.
-                return;
-            }
-
-            const backupLength = this._bufferedComponents.length;
-
-            for (const config of this._interestConfig) {
-                if (config.type && (config.type & InterestType.Unessential)) {
-                    continue;
-                }
-
-                const isExtends = config.type && (config.type & InterestType.Extends) !== 0;
-                const isExculde = config.type && (config.type & InterestType.Exculde) !== 0;
-                let insterestComponent: BaseComponent | null = null;
-
-                if (Array.isArray(config.componentClass)) {
-                    for (const componentClass of config.componentClass) {
-                        insterestComponent = gameObject.getComponent(componentClass, isExtends); // TODO 更快的查找方式
-                        if (insterestComponent) { // Anyone.
-                            break;
-                        }
-                    }
-                }
-                else {
-                    insterestComponent = gameObject.getComponent(config.componentClass, isExtends); // TODO 更快的查找方式
-                }
-
-                if (isExculde ? insterestComponent : !insterestComponent) {
-                    this._bufferedComponents.length = backupLength;
-                    return;
-                }
-
-                this._bufferedComponents.push(insterestComponent as any); // ts
-            }
-
-            this._bufferedGameObjects[uuid] = backupLength;
+            this._addGameObject(component.gameObject);
         }
 
         private _onAddUnessentialComponent(component: BaseComponent) {
@@ -349,7 +304,55 @@ namespace paper {
         }
 
         private _onRemoveComponent(component: BaseComponent) {
-            const gameObject = component.gameObject;
+            this._removeGameObject(component.gameObject);
+        }
+
+        private _addGameObject(gameObject: GameObject) {
+            const uuid = gameObject.uuid;
+
+            if (gameObject === this._globalGameObject) { // Pass global game object.
+                return;
+            }
+
+            if (uuid in this._bufferedGameObjects || uuid in this._gameObjects) { // Buffered or added.
+                return;
+            }
+
+            const backupLength = this._bufferedComponents.length;
+
+            for (const config of this._interestConfig) {
+                if (config.type && (config.type & InterestType.Unessential)) {
+                    continue;
+                }
+
+                const isExtends = config.type && (config.type & InterestType.Extends) !== 0;
+                const isExculde = config.type && (config.type & InterestType.Exculde) !== 0;
+                let insterestComponent: BaseComponent | null = null;
+
+                if (Array.isArray(config.componentClass)) {
+                    for (const componentClass of config.componentClass) {
+                        insterestComponent = gameObject.getComponent(componentClass, isExtends); // TODO 更快的查找方式
+                        if (insterestComponent) { // Anyone.
+                            break;
+                        }
+                    }
+                }
+                else {
+                    insterestComponent = gameObject.getComponent(config.componentClass, isExtends); // TODO 更快的查找方式
+                }
+
+                if (isExculde ? insterestComponent : !insterestComponent) {
+                    this._bufferedComponents.length = backupLength;
+                    return;
+                }
+
+                this._bufferedComponents.push(insterestComponent as any); // ts
+            }
+
+            this._bufferedGameObjects[uuid] = backupLength;
+        }
+
+        private _removeGameObject(gameObject: GameObject) {
             const uuid = gameObject.uuid;
 
             if (uuid in this._bufferedGameObjects) {

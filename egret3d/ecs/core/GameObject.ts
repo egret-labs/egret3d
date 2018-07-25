@@ -57,7 +57,6 @@ namespace paper {
 
         @serializedField
         private _activeSelf: boolean = true;
-
         /**
          * @internal
          */
@@ -66,10 +65,7 @@ namespace paper {
          * @internal
          */
         public _activeDirty: boolean = true;
-        /**
-         * @internal
-         */
-        public readonly _components: BaseComponent[] = [];
+        private readonly _components: BaseComponent[] = [];
         private _scene: Scene = null as any;
         /**
          * 创建 GameObject，并添加到当前场景中。
@@ -208,34 +204,53 @@ namespace paper {
          * 根据类型名获取组件
          */
         public addComponent<T extends BaseComponent>(componentClass: { new(): T }, config?: any): T {
+            // disallowMultipleComponents.
             if (_disallowMultipleComponents.indexOf(componentClass) >= 0) {
-                for (const component of this._components) {
-                    if (component instanceof componentClass) {
-                        console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the game object (${this.path}) again.`);
-                        return component;
-                    }
+                const component = this.getComponent(componentClass);
+                if (component) {
+                    console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the game object (${this.path}) again.`);
+                    return component;
                 }
-            }
 
+                // for (const component of this._components) {
+                //     if (component instanceof componentClass) {
+                //     }
+                // }
+            }
+            // requireComponents.
             const index = _requireComponents.indexOf(componentClass);
             if (index >= 0) {
-                const requireComponents = _requireComponentss[index];
-                for (const requireComponentClass of requireComponents) {
-                    this.getComponent(requireComponentClass) || this.addComponent(requireComponentClass);
+                for (const requireComponentClass of _requireComponentss[index]) {
+                    this.getOrAddComponent(requireComponentClass);
                 }
             }
 
-            BaseComponent._injectGameObject = this;
-            const component = new componentClass();
-
-            if (component instanceof egret3d.Transform) {
-                this.transform = component;
+            const component = BaseComponent.create(componentClass, this);
+            // Linked reference.
+            if (component.constructor === egret3d.Transform) {
+                this.transform = <any>component as egret3d.Transform;
             }
             else if (component instanceof BaseRenderer) {
                 this.renderer = component;
             }
 
-            this._components.push(component);
+            const componentIndex = componentClass.index;
+
+            const existedComponent = this._components[componentIndex] as T;
+            if (existedComponent) {
+                if (existedComponent.constructor === GroupComponent) {
+                    (<any>existedComponent as GroupComponent<T>)._addComponent(component);
+                }
+                else {
+                    const groupComponent = BaseComponent.create(GroupComponent, this);
+                    groupComponent.componentIndex = componentIndex;
+                    groupComponent.componentClass = componentClass;
+                    groupComponent._addComponent(component);
+                }
+            }
+            else {
+                this._components[componentIndex] = component;
+            }
 
             if (config) {
                 component.initialize(config);
@@ -256,23 +271,27 @@ namespace paper {
          */
         public removeComponent<T extends BaseComponent>(componentInstanceOrClass: { new(): T } | T, isExtends: boolean = false) {
             if (componentInstanceOrClass instanceof BaseComponent) {
-                let index = 0;
-                for (const component of this._components) {
-                    if (component === componentInstanceOrClass) {
-                        if (!this._canRemoveComponent(component)) {
-                            return;
-                        }
-
-                        this._removeComponentReference(component);
-                        this._components.splice(index, 1);
-
-                        return;
-                    }
-
-                    index++;
+                if (!this._canRemoveComponent(componentInstanceOrClass)) {
+                    return;
                 }
+
+                this._removeComponentReference(componentInstanceOrClass);
             }
             else {
+                for (const component of this._components) { 
+                    if () { 
+                        
+                    }
+                }
+
+
+                const component = this.getComponent(componentInstanceOrClass);
+                if (!this._canRemoveComponent(component)) {
+                    return;
+                }
+
+                this._removeComponentReference(component);
+
                 let i = this._components.length;
                 while (i--) {
                     const component = this._components[i];
@@ -310,7 +329,7 @@ namespace paper {
             }
             else {
                 for (const component of this._components) {
-                    if (component instanceof egret3d.Transform) {
+                    if (component.constructor === egret3d.Transform) {
                         continue;
                     }
 

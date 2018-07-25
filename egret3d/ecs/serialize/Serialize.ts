@@ -158,25 +158,25 @@ namespace paper {
                     return createAssetReference(source);
                 }
 
-                if (source instanceof Scene || source instanceof GameObject || source instanceof BaseComponent) {
+                if (source.constructor === Scene || source.constructor === GameObject || source instanceof BaseComponent) {
                     if (parent) {
-                        if (source instanceof Scene) { // Cannot serialize scene reference.
+                        if (source.constructor === Scene) { // Cannot serialize scene reference.
                             return null;
                         }
 
-                        if (parent instanceof Scene) {
+                        if (parent.constructor === Scene) {
                             if (key === KEY_GAMEOBJECTS) {
                                 _serializeObject(source);
                                 return createReference(source, true);
                             }
                         }
-                        else if (parent instanceof GameObject) {
+                        else if (parent.constructor === GameObject) {
                             if (key === KEY_COMPONENTS) {
                                 _serializeObject(source);
                                 return createReference(source, true);
                             }
                         }
-                        else if (parent instanceof egret3d.Transform) {
+                        else if (parent.constructor === egret3d.Transform) {
                             if (key === KEY_CHILDREN) {
                                 _serializeObject((source as egret3d.Transform).gameObject);
                                 return createReference(source, true);

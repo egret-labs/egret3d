@@ -60,7 +60,7 @@ namespace paper {
             const target = _deserializedData.objects[source.uuid];
             _deserializeObject(source, target);
 
-            if (target instanceof GameObject && KEY_COMPONENTS in source) {
+            if (target.constructor === GameObject && KEY_COMPONENTS in source) {
                 for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
                     const uuid = componentUUID.uuid;
                     const componentSource = components[uuid];
@@ -80,7 +80,7 @@ namespace paper {
                             }
                         }
                         else {
-                            const component = target.addComponent(clazz);
+                            const component = (target as GameObject).addComponent(clazz);
                             _deserializedData.components[uuid] = component;
 
                             if (clazz === Behaviour) {
@@ -89,7 +89,7 @@ namespace paper {
                         }
                     }
                     else {
-                        const component = target.addComponent(MissingComponent);
+                        const component = (target as GameObject).addComponent(MissingComponent);
                         component.missingObject = componentSource;
                         _deserializedData.components[uuid] = component;
 
@@ -103,7 +103,7 @@ namespace paper {
             const uuid = componentSource.uuid;
             const component = _deserializedData.components[uuid];
 
-            if (component instanceof MissingComponent) {
+            if (component.constructor === MissingComponent) {
                 continue;
             }
 
