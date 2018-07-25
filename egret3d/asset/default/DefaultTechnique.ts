@@ -3,7 +3,7 @@ namespace egret3d {
     /**
      * @internal
      */
-    export type TechniqueTemplate = { name: string, technique: gltf.Technique, material: GLTFMaterial};
+    export type TechniqueTemplate = { name: string, technique: gltf.Technique, material: GLTFMaterial };
     /**
      * @internal
      */
@@ -36,7 +36,7 @@ namespace egret3d {
         }
 
         public static createTechnique(source: gltf.Technique) {
-            const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {}, states: source.states };
+            const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } };
             for (const key in source.attributes) {
                 const attribute = source.attributes[key];
                 target.attributes[key] = { semantic: attribute.semantic, extensions: { paper: { enable: true, location: -1 } } };
@@ -44,19 +44,14 @@ namespace egret3d {
             for (const key in source.uniforms) {
                 const uniform = source.uniforms[key];
                 target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value: uniform.value, extensions: { paper: { enable: false, location: -1 } } };
-                if(Array.isArray(uniform.value)){
+                if (Array.isArray(uniform.value)) {
                     target.uniforms[key].value = [];
                     target.uniforms[key].value.length = uniform.value.length;
-                    for(let i = 0; i < uniform.value.length; i++){
+                    for (let i = 0; i < uniform.value.length; i++) {
                         target.uniforms[key].value[i] = uniform.value[i];
                     }
                 }
             }
-            // for (const key in source.states) {
-            //     const state = source.states[key];
-            //     target.states[key] = state;
-            // }
-
             return target;
         }
 

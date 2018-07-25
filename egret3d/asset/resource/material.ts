@@ -394,6 +394,7 @@ namespace egret3d {
                         this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
                         this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
                         this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
                         this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
                         this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE];
                         this._renderQueue = RenderQueue.Transparent;
@@ -426,6 +427,7 @@ namespace egret3d {
                         this._gltfTechnique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
                         this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
                         this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
                         this._gltfTechnique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
                         this._gltfTechnique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
                         this._renderQueue = RenderQueue.Transparent;
@@ -457,7 +459,7 @@ namespace egret3d {
                         //
                         this._gltfTechnique.states.enable = [gltf.EnableState.DEPTH_TEST,gltf.EnableState.CULL_FACE];
                         this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.depthMask = [true];
                         this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
                         this._gltfTechnique.states.functions.cullFace = [gltf.CullFace.BACK];
                         this._renderQueue = RenderQueue.Geometry;
@@ -473,7 +475,7 @@ namespace egret3d {
                         //
                         this._gltfTechnique.states.enable = [gltf.EnableState.DEPTH_TEST,gltf.EnableState.CULL_FACE];
                         this._gltfTechnique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                        this._gltfTechnique.states.functions.depthMask = [false];
+                        this._gltfTechnique.states.functions.depthMask = [true];
                         this._gltfTechnique.states.functions.frontFace = [gltf.FrontFace.CCW];
                         this._gltfTechnique.states.functions.cullFace = [gltf.CullFace.BACK];
                         this._renderQueue = RenderQueue.Geometry;
@@ -761,8 +763,6 @@ namespace egret3d {
                     }
                 }
             }
-            // mat._gltfTechnique = egret3d.DefaultTechnique.createTechnique(this._gltfTechnique);
-            // mat._gltfMaterial = egret3d.DefaultTechnique.createGLTFMaterial(this._gltfMaterial);
             return mat;
         }
     }

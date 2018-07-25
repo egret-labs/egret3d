@@ -33,24 +33,19 @@ namespace egret3d {
             const webgl = this._webgl;
             const stateEnables = this._stateEnables;
             const cacheStateEnable = this._cacheStateEnable;
+            const functions = state.functions;
+            //TODO WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
             for (const e of stateEnables) {
-                if (state.enable.indexOf(e) < 0) {
-                    if (cacheStateEnable[e]) {
-                        webgl.disable(e);
-                        cacheStateEnable[e] = false;
-                    }
-                }
-                else {
-                    if (!cacheStateEnable[e]) {
-                        webgl.enable(e);
-                        cacheStateEnable[e] = true;
-                    }
+                const b = state.enable.indexOf(e) >= 0;
+                if(cacheStateEnable[e] !== b){
+                    cacheStateEnable[e] = b;
+                    b ? webgl.enable(e) : webgl.disable(e);
                 }
             }
             //functions
-            for (const e in state.functions) {
+            for (const fun in functions) {
                 //
-                (webgl[e] as Function).apply(webgl, state.functions[e]);
+                (webgl[fun] as Function).apply(webgl, functions[fun]);
             }
         }
 
@@ -109,6 +104,7 @@ namespace egret3d {
                         webgl.uniformMatrix4fv(location, false, context.matrix_vp.rawData);
                         break;
                     case gltf.UniformSemanticType.MODELVIEWPROJECTION:
+                        var f = new Float32Array(context.matrix_mvp.rawData);
                         webgl.uniformMatrix4fv(location, false, context.matrix_mvp.rawData);
                         break;
                     case gltf.UniformSemanticType._CAMERA_POS:
@@ -341,7 +337,7 @@ namespace egret3d {
                         const accessor = glTFAsset.getAccessor(accessorIndex);
                         const bufferOffset = glTFAsset.getBufferOffset(accessor);
                         const typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
-                        gl.vertexAttribPointer(location, typeCount, accessor.componentType, accessor.normalized ? true : false, 0, bufferOffset);
+                        gl.vertexAttribPointer(location, typeCount, accessor.componentType, accessor.normalized ? true : false, 0, bufferOffset);//TODO normalized应该来源于mesh，应该还没有
                         gl.enableVertexAttribArray(location);
                     }
                     else {
@@ -485,12 +481,6 @@ namespace egret3d {
             }
 
             GlRenderTarget.useNull(WebGLRenderUtils.webgl);
-        }
-
-        public onAwake() {
-            this._cacheStateEnable[gltf.EnableState.BLEND] = false;
-            this._cacheStateEnable[gltf.EnableState.CULL_FACE] = true;
-            this._cacheStateEnable[gltf.EnableState.DEPTH_TEST] = false;
         }
 
         public onUpdate() {

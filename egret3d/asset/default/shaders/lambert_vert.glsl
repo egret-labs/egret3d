@@ -17,8 +17,6 @@ varying vec2 xlv_TEXCOORD0;
 #include <inverse>
 
 void main() {   
-    vec4 tmpVertex;
-    tmpVertex.w = 1.0;
     #include <skinning_base_vert>
 
     vec3 tmpNormal;      
