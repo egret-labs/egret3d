@@ -2,21 +2,22 @@ namespace egret3d {
 
     export class DefaultShaders {
 
-        // public static TRANSPARENT: Shader;
-        // public static TRANSPARENT_ADDITIVE: Shader;
-        // public static TRANSPARENT_BOTH_SIDE: Shader;
-        // public static TRANSPARENT_ADDITIVE_BOTH_SIDE: Shader;
-        // public static DIFFUSE_TINT_COLOR: Shader;
-        // public static DIFFUSE_VERT_COLOR: Shader;
-        // public static DIFFUSE_BOTH_SIDE: Shader;
-        // public static UI: Shader;
-        // public static UI_FONT: Shader;
-        // public static MATERIAL_COLOR: Shader;
-        // public static LAMBERT_NORMAL: Shader;
-        // public static PARTICLE_ADDITIVE: Shader;
-        // public static PARTICLE_ADDITIVE_PREMYLTIPLY: Shader;
-        // public static PARTICLE_BLEND: Shader;
-        // public static PARTICLE_BLEND_PREMYLTIPLY: Shader;
+        public static TRANSPARENT: Shader;
+        public static TRANSPARENT_ALPHACUT:Shader;
+        public static TRANSPARENT_ADDITIVE: Shader;
+        public static TRANSPARENT_BOTH_SIDE: Shader;
+        public static TRANSPARENT_ADDITIVE_BOTH_SIDE: Shader;
+        public static DIFFUSE_TINT_COLOR: Shader;
+        public static DIFFUSE_VERT_COLOR: Shader;
+        public static DIFFUSE_BOTH_SIDE: Shader;
+        public static UI: Shader;
+        public static UI_FONT: Shader;
+        public static MATERIAL_COLOR: Shader;
+        public static LAMBERT_NORMAL: Shader;
+        public static PARTICLE_ADDITIVE: Shader;
+        public static PARTICLE_ADDITIVE_PREMYLTIPLY: Shader;
+        public static PARTICLE_BLEND: Shader;
+        public static PARTICLE_BLEND_PREMYLTIPLY: Shader;
 
         public static LINE: Shader;
         public static GIZMOS_COLOR: Shader;
@@ -73,6 +74,82 @@ namespace egret3d {
             paper.Asset.register(this.SHADOW_DISTANCE);
 
             //
+            this.TRANSPARENT = new Shader("transparent.shader.json");
+            this.TRANSPARENT.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+            this.TRANSPARENT.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+            paper.Asset.register(this.TRANSPARENT);
+
+            //
+            this.TRANSPARENT_ADDITIVE = new Shader("transparent_additive.shader.json");
+            this.TRANSPARENT_ADDITIVE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+            this.TRANSPARENT_ADDITIVE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+            paper.Asset.register(this.TRANSPARENT_ADDITIVE);
+
+            this.DIFFUSE_TINT_COLOR = new Shader("transparent_tintColor.shader.json");
+            this.DIFFUSE_TINT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+            this.DIFFUSE_TINT_COLOR.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+            paper.Asset.register(this.DIFFUSE_TINT_COLOR);
+
+            
+            this.TRANSPARENT_ALPHACUT = new Shader("transparent_alphaCut.shader.json");
+            this.TRANSPARENT_ALPHACUT.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+            this.TRANSPARENT_ALPHACUT.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+            paper.Asset.register(this.TRANSPARENT_ALPHACUT);
+
+            this.TRANSPARENT_BOTH_SIDE = new Shader("transparent_bothside.shader.json");
+            this.TRANSPARENT_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+            this.TRANSPARENT_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+            paper.Asset.register(this.TRANSPARENT_BOTH_SIDE);
+
+            this.TRANSPARENT_ADDITIVE_BOTH_SIDE = new Shader("transparent_additive_bothside.shader.json");
+            this.TRANSPARENT_ADDITIVE_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+            this.TRANSPARENT_ADDITIVE_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+            paper.Asset.register(this.TRANSPARENT_ADDITIVE_BOTH_SIDE);
+
+            this.DIFFUSE_TINT_COLOR = new Shader("shader/diffuse_tintcolor");
+            this.DIFFUSE_TINT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+            this.DIFFUSE_TINT_COLOR.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+            paper.Asset.register(this.DIFFUSE_TINT_COLOR);
+
+            this.DIFFUSE_VERT_COLOR = new Shader("shader/diffuse_vertcolor");
+            this.DIFFUSE_VERT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+            this.DIFFUSE_VERT_COLOR.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+            paper.Asset.register(this.DIFFUSE_VERT_COLOR);
+
+            this.DIFFUSE_BOTH_SIDE = new Shader("diffuse_bothside.shader.json");
+            this.DIFFUSE_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+            this.DIFFUSE_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+            paper.Asset.register(this.DIFFUSE_BOTH_SIDE);
+
+            this.MATERIAL_COLOR = new Shader("materialcolor.shader.json");
+            this.MATERIAL_COLOR.setVertShader("def_diffuse_vs", ShaderLib.materialcolor_vert);
+            this.MATERIAL_COLOR.setFragShader("def_diffuse_fs", ShaderLib.line_frag);
+            paper.Asset.register(this.MATERIAL_COLOR);
+
+            this.PARTICLE_ADDITIVE = new Shader("particles_additive.shader.json");
+            this.PARTICLE_ADDITIVE.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+            this.PARTICLE_ADDITIVE.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+            paper.Asset.register(this.PARTICLE_ADDITIVE);
+
+            this.PARTICLE_ADDITIVE_PREMYLTIPLY = new Shader("particles_additive_premultiply.shader.json");
+            this.PARTICLE_ADDITIVE_PREMYLTIPLY.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+            this.PARTICLE_ADDITIVE_PREMYLTIPLY.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+            paper.Asset.register(this.PARTICLE_ADDITIVE_PREMYLTIPLY);
+
+            this.PARTICLE_BLEND = new Shader("particles_blend.shader.json");
+            this.PARTICLE_BLEND.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+            this.PARTICLE_BLEND.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+            paper.Asset.register(this.PARTICLE_BLEND);
+
+            this.PARTICLE_BLEND_PREMYLTIPLY = new Shader("particles_blend_premultiply.shader.json");
+            this.PARTICLE_BLEND_PREMYLTIPLY.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+            this.PARTICLE_BLEND_PREMYLTIPLY.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+            paper.Asset.register(this.PARTICLE_BLEND_PREMYLTIPLY);
+
+            const t = new Shader("particles_blend1.shader.json");
+            t.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+            t.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+            paper.Asset.register(t);
         }
 
         // public static init2() {

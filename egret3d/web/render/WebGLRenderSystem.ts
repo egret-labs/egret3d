@@ -425,6 +425,7 @@ namespace egret3d {
          * @param camera 
          */
         public _renderCamera(camera: Camera) {
+            camera._targetAndViewport(camera.renderTarget, false);
             //在这里先剔除，然后排序，最后绘制
             const drawCalls = this._drawCalls;
             drawCalls.sortAfterFrustumCulling(camera);
@@ -446,6 +447,12 @@ namespace egret3d {
             for (const egret2DRenderer of egret2DRenderers) {
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                     egret2DRenderer.render(camera.context, camera);
+
+                    //clear State
+                    for (const key in this._cacheStateEnable) {
+                        delete this._cacheStateEnable[key];
+                    }
+                    this._cacheProgram = undefined;
                 }
             }
         }
@@ -505,7 +512,6 @@ namespace egret3d {
                         camera.context.updateLights(lights); // TODO 性能优化
                     }
                     if (camera.postQueues.length === 0) {
-                        camera._targetAndViewport(camera.renderTarget, false);
                         this._renderCamera(camera);
                     }
                     else {

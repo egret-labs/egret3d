@@ -204,8 +204,8 @@ declare namespace gltf {
         TEXCOORD_1 = "TEXCOORD_",
         COLOR_0 = "COLOR_0",
         COLOR_1 = "COLOR_1",
-        JOINT = "JOINT",
-        WEIGHT = "WEIGHT",
+        JOINTS_0 = "JOINTS_0",
+        WEIGHTS_0 = "WEIGHTS_0",
 
         _CORNER = "CORNER",
         _START_POSITION = "START_POSITION",

@@ -224,8 +224,7 @@ namespace RES.processor {
 
             //UniformValue已经不放在Material中，改为Technique
             let shaderName = json.shader;
-            const shader = paper.Asset.find<egret3d.Shader>(temp[shaderName]);
-            shader.tempUrl = shaderName;
+            const shader = paper.Asset.find<egret3d.Shader>(shaderName);
             material.setShader(shader);
 
             //现根据shaderName找出对应的Technique，然后再填充
@@ -394,7 +393,7 @@ namespace RES.processor {
             if (r) {
                 let asset: paper.Asset = await host.load(r);
                 asset.hashCode = item.hashCode;
-                asset.uuid = item.uuid;
+                asset.uuid = item.uuid || asset.uuid;
                 result.push(asset)
             }
         })))

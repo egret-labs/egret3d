@@ -9,7 +9,9 @@
 			 + boneMatZ*_glesBlendWeight4.z 
 			 + boneMatW*_glesBlendWeight4.w;
     
-    tmpVertex.xyz = (mat* _glesVertex).xyz;
+    highp vec4 tmpVertex = vec4((mat* _glesVertex).xyz, 1.0);
+	// highp vec4 tmpVertex = vec4(calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz, 1.0);
 #else
-    tmpVertex.xyz = _glesVertex.xyz;
+    // tmpVertex.xyz = _glesVertex.xyz;
+	highp vec4 tmpVertex = vec4(_glesVertex.xyz, 1.0);
 #endif
