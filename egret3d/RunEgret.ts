@@ -7,6 +7,9 @@ namespace egret3d {
         isPlaying?: boolean;
         contentWidth?: number;
         contentHeight?: number;
+        option?: RequiredRuntimeOptions;
+        canvas?: HTMLCanvasElement;
+        webgl?: WebGLRenderingContext;
     }
 
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number }
@@ -19,7 +22,11 @@ namespace egret3d {
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound'] //TODO:Sound
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas();
-        WebGLRenderUtils.init(canvas, requiredOptions);
+        //TODO
+        options.canvas = canvas;
+        options.option = requiredOptions;
+        options.webgl = <WebGLRenderingContext>canvas.getContext('webgl', options) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
+        WebGLCapabilities.webgl = options.webgl;
         InputManager.init(canvas);
         DefaultMeshes.init();
         DefaultTextures.init();
@@ -197,7 +204,7 @@ declare namespace gltf {
         ALWAYS = 519,
     }
 
-    export const enum AttributeSemanticType{
+    export const enum AttributeSemanticType {
         POSITION = "POSITION",
         NORMAL = "NORMAL",
         TEXCOORD_0 = "TEXCOORD_0",
@@ -238,7 +245,7 @@ declare namespace gltf {
         JOINTMATRIX = "JOINTMATRIX",
 
         _VIEWPROJECTION = "_VIEWPROJECTION",
-        _CAMERA_POS = "_CAMERA_POS",        
+        _CAMERA_POS = "_CAMERA_POS",
         _CAMERA_UP = "CAMERA_UP",
         _CAMERA_FORWARD = "_CAMERA_FORWARD",
         _DIRECTLIGHTS = "_DIRECTLIGHTS",

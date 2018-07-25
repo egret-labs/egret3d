@@ -22,7 +22,7 @@ namespace egret3d {
          * @inheritDoc
          */
         public dispose() {
-            this.glTexture.dispose(WebGLRenderUtils.webgl);
+            this.glTexture.dispose(WebGLCapabilities.webgl);
         }
 
         /**

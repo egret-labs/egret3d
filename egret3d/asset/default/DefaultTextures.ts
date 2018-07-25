@@ -8,7 +8,7 @@ namespace egret3d {
 
         static init() {
 
-            const gl = WebGLRenderUtils.webgl;
+            const gl = WebGLCapabilities.webgl;
 
             const t1 = new Texture("white");
             t1.glTexture = GlTexture2D.createColorTexture(gl, 255, 255, 255);

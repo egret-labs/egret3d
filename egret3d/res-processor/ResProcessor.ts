@@ -154,7 +154,7 @@ namespace RES.processor {
             let image = await promisify(loader, resource);
             let texture = new egret3d.Texture(url);
             texture.realName = _name;
-            const gl = egret3d.WebGLRenderUtils.webgl;
+            const gl = egret3d.WebGLCapabilities.webgl;
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
             t2d.uploadImage(image.source, _mipmap, _linear, true, _repeat);
             texture.glTexture = t2d;
@@ -173,7 +173,7 @@ namespace RES.processor {
     export const TextureProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let gl = egret3d.WebGLRenderUtils.webgl;
+            let gl = egret3d.WebGLCapabilities.webgl;
             let url = getUrl(resource);
             let loader = new egret.ImageLoader();
             loader.load(url);
@@ -228,7 +228,7 @@ namespace RES.processor {
             material.setShader(shader);
 
             //现根据shaderName找出对应的Technique，然后再填充
-            if (material._gltfMaterial && material._gltfTechnique) {
+            if (material._gltfTechnique) {
                 const gltfTechnique = material._gltfTechnique;
 
                 const mapUniform = json.mapUniform;

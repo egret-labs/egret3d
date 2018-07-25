@@ -60,7 +60,7 @@ namespace egret3d {
         public readonly ibos: (WebGLBuffer | null)[] = [];
         public vbo: WebGLBuffer = null as any;
         protected _getDrawMode(mode: MeshDrawMode) {
-            const webgl = WebGLRenderUtils.webgl;
+            const webgl = WebGLCapabilities.webgl;
 
             switch (mode) {
                 case MeshDrawMode.Static:
@@ -260,7 +260,7 @@ namespace egret3d {
          * @inheritDoc
          */
         public dispose() {
-            const webgl = WebGLRenderUtils.webgl;
+            const webgl = WebGLCapabilities.webgl;
 
             if (this.vbo) {
                 webgl.deleteBuffer(this.vbo);
@@ -314,7 +314,7 @@ namespace egret3d {
             this._cacheVertexCount();
 
             // 暂时实现在这里，应该下放到 web，并将此类抽象。
-            const webgl = WebGLRenderUtils.webgl;
+            const webgl = WebGLCapabilities.webgl;
             const vbo = webgl.createBuffer();
 
             if (vbo) {
@@ -383,7 +383,7 @@ namespace egret3d {
                 );
 
                 const accessor = this._glTFAsset.getAccessor(primitive.indices);
-                const webgl = WebGLRenderUtils.webgl;
+                const webgl = WebGLCapabilities.webgl;
                 const ibo = webgl.createBuffer();
 
                 if (ibo) {
@@ -528,7 +528,7 @@ namespace egret3d {
 
         public uploadVertexSubData(uploadAttributes: gltf.MeshAttribute[], startVertexIndex: number, vertexCount: number, subMeshIndex: number = 0) {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const webgl = WebGLRenderUtils.webgl;
+                const webgl = WebGLCapabilities.webgl;
                 const primitive = this._glTFMesh.primitives[subMeshIndex];
 
                 webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
@@ -561,7 +561,7 @@ namespace egret3d {
          */
         public uploadSubVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]), subMeshIndex: number = 0) {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const webgl = WebGLRenderUtils.webgl;
+                const webgl = WebGLCapabilities.webgl;
                 const primitive = this._glTFMesh.primitives[subMeshIndex];
                 const attributes = primitive.attributes;
                 webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
@@ -604,7 +604,7 @@ namespace egret3d {
          */
         public uploadSubIndexBuffer(subMeshIndex: number = 0) {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const webgl = WebGLRenderUtils.webgl;
+                const webgl = WebGLCapabilities.webgl;
                 const primitive = this._glTFMesh.primitives[subMeshIndex];
 
                 if (primitive.indices !== undefined) {

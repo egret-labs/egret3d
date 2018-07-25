@@ -26,6 +26,10 @@ namespace paper {
         private static _isRunning = false;
         private static _bindUpdate: FrameRequestCallback = null as any;
 
+        public static _option:egret3d.RequiredRuntimeOptions;//TODO临时
+        public static _canvas:HTMLCanvasElement;//TODO临时
+        public static _webgl:WebGLRenderingContext;////TODO临时
+
         private static _update() {
             if (this._isRunning) {
                 requestAnimationFrame(this._bindUpdate);
@@ -35,7 +39,7 @@ namespace paper {
             this.systemManager.update();
         }
 
-        public static init({ isEditor = false, isPlaying = true } = {}) {
+        public static init({ isEditor = false, isPlaying = true, option = {}, canvas = {}, webgl = {} } = {}) {
             const systemClasses = [
                 //
                 BeginSystem,
@@ -73,6 +77,10 @@ namespace paper {
 
             this._isEditor = isEditor;
             this._isPlaying = isPlaying;
+
+            this._option = option as egret3d.RequiredRuntimeOptions;
+            this._canvas = canvas as HTMLCanvasElement;
+            this._webgl = webgl as WebGLRenderingContext;
             this.resume();
         }
 

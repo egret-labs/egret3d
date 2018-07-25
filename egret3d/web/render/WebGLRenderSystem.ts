@@ -14,7 +14,7 @@ namespace egret3d {
                 { componentClass: [DirectLight, SpotLight, PointLight] }
             ]
         ];
-        private readonly _webgl: WebGLRenderingContext = WebGLRenderUtils.webgl;
+        private readonly _webgl: WebGLRenderingContext = WebGLCapabilities.webgl;
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
         private readonly _lightCamera: Camera = this._globalGameObject.getComponent(Camera) || this._globalGameObject.addComponent(Camera);
         private readonly _stateEnables: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST];
@@ -37,7 +37,7 @@ namespace egret3d {
             //TODO WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
             for (const e of stateEnables) {
                 const b = state.enable.indexOf(e) >= 0;
-                if(cacheStateEnable[e] !== b){
+                if (cacheStateEnable[e] !== b) {
                     cacheStateEnable[e] = b;
                     b ? webgl.enable(e) : webgl.disable(e);
                 }
@@ -63,7 +63,6 @@ namespace egret3d {
                 if (context.spotLightCount > 0) {
                     this._cacheDefines += "#define USE_SPOT_LIGHT " + context.spotLightCount + "\n";
                 }
-
                 if (context.drawCall.renderer.receiveShadows) {
                     this._cacheDefines += "#define USE_SHADOW \n";
                     this._cacheDefines += "#define USE_PCF_SOFT_SHADOW \n";
@@ -398,7 +397,7 @@ namespace egret3d {
             //Defines
             this._updateContextDefines(context, material);
             //Program
-            const program = WebGLRenderUtils.getProgram(context, material, technique, this._cacheDefines);
+            const program = GlProgram.getProgram(context, material, technique, this._cacheDefines);
             //State
             this._updateState(technique.states);
             //Use Program
@@ -425,10 +424,9 @@ namespace egret3d {
             //在这里先剔除，然后排序，最后绘制
             const drawCalls = this._drawCalls;
             drawCalls.sortAfterFrustumCulling(camera);
-
+            //
             const opaqueCalls = drawCalls.opaqueCalls;
             const transparentCalls = drawCalls.transparentCalls;
-
             //Step1 draw opaque
             for (const drawCall of opaqueCalls) {
                 this._renderCall(camera.context, drawCall);
@@ -437,7 +435,6 @@ namespace egret3d {
             for (const drawCall of transparentCalls) {
                 this._renderCall(camera.context, drawCall);
             }
-
             // Egret2D渲染不加入DrawCallList的排序
             const egret2DRenderers = this._groups[1].components as ReadonlyArray<Egret2DRenderer>;
             for (const egret2DRenderer of egret2DRenderers) {
@@ -470,9 +467,10 @@ namespace egret3d {
                 context.updateLightDepth(light);
 
                 drawCalls.shadowFrustumCulling(camera);
-
+                //
+                const shadowCalls = drawCalls.shadowCalls;
                 const shadowMaterial = light.type === LightType.Point ? egret3d.DefaultMaterial.SHADOW_DISTANCE : egret3d.DefaultMaterial.SHADOW_DEPTH;
-                for (const drawCall of drawCalls.shadowCalls) {
+                for (const drawCall of shadowCalls) {
                     //TODO, 现在不支持蒙皮动画阴影                    
                     drawCall.shadow = shadowMaterial;
                     this._renderCall(context, drawCall);
@@ -480,7 +478,7 @@ namespace egret3d {
                 }
             }
 
-            GlRenderTarget.useNull(WebGLRenderUtils.webgl);
+            GlRenderTarget.useNull(WebGLCapabilities.webgl);
         }
 
         public onUpdate() {
@@ -512,9 +510,10 @@ namespace egret3d {
                 }
             }
             else {
-                this._webgl.clearColor(0, 0, 0, 1);
-                this._webgl.clearDepth(1.0);
-                this._webgl.clear(WebGLRenderUtils.webgl.COLOR_BUFFER_BIT | WebGLRenderUtils.webgl.DEPTH_BUFFER_BIT);
+                const webgl = this._webgl;
+                webgl.clearColor(0, 0, 0, 1);
+                webgl.clearDepth(1.0);
+                webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
         }
     }

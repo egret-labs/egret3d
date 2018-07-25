@@ -15,7 +15,7 @@ namespace paper.editor {
             this._editorCamera = editorCamera;
             this.camera = this._editorCamera.getComponent(egret3d.Camera);
             this.context = this.camera.context;
-            this.webgl = egret3d.WebGLRenderUtils.webgl;
+            this.webgl = egret3d.WebGLCapabilities.webgl;
             this._enabled = true;
             this.initPrg();
             this.lineVertexBuffer = this.webgl.createBuffer();

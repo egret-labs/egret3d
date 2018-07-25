@@ -34,9 +34,9 @@ namespace paper.editor {
                 // this.$renderCamera(camera); TODO
             }
             else {
-                egret3d.WebGLRenderUtils.webgl.clearColor(0, 0, 0, 1);
-                egret3d.WebGLRenderUtils.webgl.clearDepth(1.0);
-                egret3d.WebGLRenderUtils.webgl.clear(egret3d.WebGLRenderUtils.webgl.COLOR_BUFFER_BIT | egret3d.WebGLRenderUtils.webgl.DEPTH_BUFFER_BIT);
+                egret3d.WebGLCapabilities.webgl.clearColor(0, 0, 0, 1);
+                egret3d.WebGLCapabilities.webgl.clearDepth(1.0);
+                egret3d.WebGLCapabilities.webgl.clear(egret3d.WebGLCapabilities.webgl.COLOR_BUFFER_BIT | egret3d.WebGLCapabilities.webgl.DEPTH_BUFFER_BIT);
             }
         }
     }
