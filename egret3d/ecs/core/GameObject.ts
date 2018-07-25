@@ -40,7 +40,7 @@ namespace paper {
          * 预制体
          */
         @serializedField
-        public prefab: egret3d.Prefab | null = null;
+        public prefab: Prefab | null = null;
         /**
          * 变换组件
          */

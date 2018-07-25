@@ -170,6 +170,12 @@ namespace paper {
                     this.interestCount++;
                 }
             }
+
+            for (const scene of paper.Application.sceneManager.scenes) {
+                for (const gameObject of scene.gameObjects) {
+                    this._onAddGameObject(gameObject);
+                }
+            }
         }
 
         private _addGameObjectTo(
@@ -217,7 +223,10 @@ namespace paper {
         }
 
         private _onAddComponent(component: BaseComponent) {
-            const gameObject = component.gameObject;
+            this._onAddGameObject(component.gameObject);
+        }
+
+        private _onAddGameObject(gameObject: GameObject) {
             const uuid = gameObject.uuid;
 
             if (gameObject === this._globalGameObject) { // Pass global game object.

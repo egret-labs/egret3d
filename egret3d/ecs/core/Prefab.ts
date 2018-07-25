@@ -1,13 +1,13 @@
-namespace egret3d {
+namespace paper {
     /**
      * 
      */
-    export class BaseObjectAsset extends paper.Asset {
-        protected _raw: paper.ISerializedData = null;
+    export class BaseObjectAsset extends Asset {
+        protected _raw: ISerializedData = null;
         /**
          * @internal
          */
-        $parse(json: paper.ISerializedData) {
+        $parse(json: ISerializedData) {
             this._raw = json;
         }
 
@@ -37,7 +37,12 @@ namespace egret3d {
                 return null;
             }
 
-            return paper.deserialize<paper.GameObject>(this._raw);
+            const gameObject = paper.deserialize<GameObject>(this._raw);
+            if (gameObject) {
+                gameObject.prefab = this;
+            }
+
+            return gameObject;
         }
     }
 }

@@ -270,7 +270,7 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             const data: paper.ISerializedData = await host.load(resource, "json");
             // const url = getUrl(resource);
-            const prefab = new egret3d.Prefab(resource.url);
+            const prefab = new paper.Prefab(resource.url);
 
             await loadSubAssets(data, resource)
             prefab.$parse(data);
@@ -290,7 +290,7 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             const data: paper.ISerializedData = await host.load(resource, "json");
             // const url = getUrl(resource);
-            const rawScene = new egret3d.RawScene(resource.url);
+            const rawScene = new paper.RawScene(resource.url);
 
             await loadSubAssets(data, resource)
             rawScene.$parse(data);
