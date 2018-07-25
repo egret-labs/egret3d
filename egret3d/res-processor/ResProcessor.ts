@@ -194,27 +194,6 @@ namespace RES.processor {
 
     };
 
-    //TODO
-    let temp:{[key:string]:string} = {"shader/lambert":"shader/lambert",
-                                        "transparent.shader.json":"diffuse.shader.json",
-                                        "transparent_tintColor.shader.json":"diffuse.shader.json",
-                                        "transparent_alphaCut.shader.json":"diffuse.shader.json",
-                                        "transparent_additive.shader.json":"diffuse.shader.json",
-                                        "transparent_additive_bothside.shader.json":"diffuse.shader.json",
-                                        "transparent_bothside.shader.json":"diffuse.shader.json",
-                                        "shader/diffuse_tintcolor":"diffuse.shader.json",
-                                        "diffuse.shader.json":"diffuse.shader.json",
-                                        "diffuse_bothside.shader.json":"diffuse.shader.json",
-                                        "materialcolor.shader.json":"materialcolor.shader.json",
-                                        "particles.shader.json":"particles.shader.json",
-                                        "particles_additive.shader.json":"particles.shader.json",
-                                        "particles_additive_premultiply.shader.json":"particles.shader.json",
-                                        "particles_blend1.shader.json":"particles.shader.json",
-                                        "particles_blend.shader.json":"particles.shader.json",
-                                        "particles_blend_premultiply.shader.json":"particles.shader.json",
-                                        "shader/depth":"shader/depth",
-                                        "shader/distance":"shader/distance",};
-
     export const MaterialProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {

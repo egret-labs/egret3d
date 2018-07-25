@@ -101,12 +101,6 @@ namespace egret3d {
          */
         stringVariable: string;
     }
-    export interface GLTFMaterial extends gltf.Material {
-        extensions: {
-            KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
-            // KHR_blend?: gltf.KhrBlendMaterialExtension;//先使用States
-        }
-    }
     export interface GLTFAttribute extends gltf.Attribute {
         extensions?: {
             paper: {
@@ -122,79 +116,6 @@ namespace egret3d {
                 location: WebGLUniformLocation;
                 textureUnits?: number[];
             }
-        }
-    }
-    export interface GLTFTechnique extends gltf.Technique {
-
-    }
-    export class GLTFWebglGlTechnique extends paper.BaseComponent {
-        /**
-        * An array of shaders.
-        */
-        public shaders: gltf.Shader[];
-        /**
-         * An array of techniques.
-         */
-        public techniques: gltf.Technique[];
-        /**
-         * An array of programs.
-         */
-        public programs: gltf.Program[];
-
-        public registerShader(shader: gltf.Shader) {
-            let index = this.shaders.indexOf(shader);
-            if (index >= 0) {
-                return index;
-            }
-
-            //
-            index = this.shaders.length;
-            this.shaders.push(shader);
-
-            return index;
-        }
-
-        public registerTechnique(technique: gltf.Technique) {
-            let index = this.techniques.indexOf(technique);
-            if (index >= 0) {
-                return index;
-            }
-
-            index = this.techniques.length;
-            this.techniques.push(technique);
-
-            return index;
-        }
-
-        public registerProgram(program: gltf.Program) {
-            let index = this.programs.indexOf(program);
-            if (index >= 0) {
-                return index;
-            }
-
-            index = this.programs.length;
-            this.programs.push(program);
-
-            return index;
-        }
-
-        public findShader(name: string) {
-            for (var shader of this.shaders) {
-                if (shader.name === name) {
-                    return shader;
-                }
-            }
-
-            return null;
-        }
-
-        public findTechnique(index: number) {
-            if (index >= 0 && index < this.techniques.length - 1) {
-                return this.techniques[index];
-            }
-
-            console.error("获取Technique错误:" + index);
-            return null;
         }
     }
     /**

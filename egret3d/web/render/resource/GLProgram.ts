@@ -1,5 +1,5 @@
 namespace egret3d {
-    let _programMap: { [key: string]: GlProgram } = {};
+    let programMap: { [key: string]: GlProgram } = {};
     let vsShaderMap: { [key: string]: WebGLShader } = {};
     let fsShaderMap: { [key: string]: WebGLShader } = {};
 
@@ -42,8 +42,8 @@ namespace egret3d {
         const totalAttributes = gl.getProgramParameter(webglProgram, gl.ACTIVE_ATTRIBUTES);
         //
         const attributes: { [key: string]: WebGLActiveAttribute } = {};
-        for (var i = 0; i < totalAttributes; i++) {
-            var attribData = gl.getActiveAttrib(webglProgram, i);
+        for (let i = 0; i < totalAttributes; i++) {
+            const attribData = gl.getActiveAttrib(webglProgram, i);
             const location = gl.getAttribLocation(webglProgram, attribData.name);
             attributes[attribData.name] = { type: attribData.type, size: attribData.size, location };
         }
@@ -57,7 +57,7 @@ namespace egret3d {
         const totalUniforms = gl.getProgramParameter(webglProgram, gl.ACTIVE_UNIFORMS);
         //
         const uniforms: { [key: string]: WebGLActiveUniform } = {};
-        for (var i = 0; i < totalUniforms; i++) {
+        for (let i = 0; i < totalUniforms; i++) {
             const uniformData = gl.getActiveUniform(webglProgram, i);
             const location = gl.getUniformLocation(webglProgram, uniformData.name);
 
@@ -91,12 +91,13 @@ namespace egret3d {
         const attributes = program.attributes;
         for (const name in technique.attributes) {
             const attribute = technique.attributes[name];
+            const paperExtension = attribute.extensions.paper;            
             if (attributes[name]) {
-                attribute.extensions.paper.enable = true;
-                attribute.extensions.paper.location = attributes[name].location;
+                paperExtension.enable = true;
+                paperExtension.location = attributes[name].location;
             }
             else {
-                attribute.extensions.paper.enable = false;
+                paperExtension.enable = false;
             }
         }
     }
@@ -105,6 +106,7 @@ namespace egret3d {
         for (const name in technique.uniforms) {
             const uniform = technique.uniforms[name];
             const webglUniform = uniforms[name];
+            const paperExtension = uniform.extensions.paper;
             if (webglUniform) {
                 if (webglUniform.type !== uniform.type) {
                     console.error("Uniform类型不匹配 着色器中类型:" + webglUniform.type + " 文件中类型:" + uniform.type);
@@ -112,12 +114,12 @@ namespace egret3d {
                 if (webglUniform.size > 1) {
                     uniform.count = webglUniform.size;
                 }
-                uniform.extensions.paper.enable = true;
-                uniform.extensions.paper.location = webglUniform.location;
+                paperExtension.enable = true;
+                paperExtension.location = webglUniform.location;
             }
             else {
-                uniform.extensions.paper.enable = false;
-                uniform.extensions.paper.location = null;
+                paperExtension.enable = false;
+                paperExtension.location = null;
             }
         }
     }
@@ -127,13 +129,14 @@ namespace egret3d {
     function allocTexUnits(program: GlProgram, technique: gltf.Technique) {
         const uniforms = technique.uniforms;
         let unitNumber: number = 0;
-        for (const key of program.texUnits) {
-            const uniform = uniforms[key];
+        for (const name of program.texUnits) {
+            const uniform = uniforms[name];
             if (uniform && (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE)) {
-                if (!uniform.extensions.paper.textureUnits) {
-                    uniform.extensions.paper.textureUnits = [];
+                const paperExtension = uniform.extensions.paper;
+                if (!paperExtension.textureUnits) {
+                    paperExtension.textureUnits = [];
                 }
-                const textureUnits = uniform.extensions.paper.textureUnits;
+                const textureUnits = paperExtension.textureUnits;
                 const count = uniform.count ? uniform.count : 1;
                 textureUnits.length = count;
                 for (let i = 0; i < count; i++) {
@@ -141,7 +144,7 @@ namespace egret3d {
                 }
             }
             else {
-                console.error(technique.name + " technique缺少Uniform定义:" + key);
+                console.error(technique.name + " technique缺少Uniform定义:" + name);
             }
         }
     }
@@ -223,12 +226,12 @@ namespace egret3d {
         public static getProgram(context: RenderContext, material: Material, technique: gltf.Technique, defines: string) {
             const shader = material.getShader();
             const name = shader.vertShader.name + "_" + shader.fragShader.name + "_" + defines;//TODO材质标脏可以优化
-            let program = _programMap[name];
+            let program = programMap[name];
             const webgl = WebGLCapabilities.webgl;
             if (!program) {
                 const webglProgram = getWebGLProgram(webgl, shader.vertShader, shader.fragShader, defines);
                 program = new GlProgram(webglProgram);
-                _programMap[name] = program;
+                programMap[name] = program;
                 extractAttributes(webgl, program);
                 extractUniforms(webgl, program);
                 extractTexUnits(program);

@@ -27,8 +27,6 @@ namespace egret3d {
         public static SHADOW_DEPTH: Shader;
         public static SHADOW_DISTANCE: Shader;
 
-        // public static readonly defaultShaders: { [key: string]: string } = {};
-
         private static _inited: boolean = false;
 
         public static init() {
@@ -122,7 +120,7 @@ namespace egret3d {
             paper.Asset.register(this.DIFFUSE_BOTH_SIDE);
 
             this.MATERIAL_COLOR = new Shader("materialcolor.shader.json");
-            this.MATERIAL_COLOR.setVertShader("def_diffuse_vs", ShaderLib.materialcolor_vert);
+            this.MATERIAL_COLOR.setVertShader("def_materialcolor_vs", ShaderLib.materialcolor_vert);
             this.MATERIAL_COLOR.setFragShader("def_diffuse_fs", ShaderLib.line_frag);
             paper.Asset.register(this.MATERIAL_COLOR);
 

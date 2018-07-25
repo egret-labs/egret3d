@@ -34,29 +34,6 @@ namespace egret3d {
         Overlay = 4000
     }
 
-    //TODO
-    let temp: { [key: string]: string } = {
-        "shader/lambert": "shader/lambert",
-        "transparent.shader.json": "diffuse.shader.json",
-        "transparent_tintColor.shader.json": "diffuse.shader.json",
-        "transparent_alphaCut.shader.json": "diffuse.shader.json",
-        "transparent_additive.shader.json": "diffuse.shader.json",
-        "transparent_additive_bothside.shader.json": "diffuse.shader.json",
-        "transparent_bothside.shader.json": "diffuse.shader.json",
-        "shader/diffuse_tintcolor": "diffuse.shader.json",
-        "diffuse.shader.json": "diffuse.shader.json",
-        "diffuse_bothside.shader.json": "diffuse.shader.json",
-        "materialcolor.shader.json": "materialcolor.shader.json",
-        "particles.shader.json": "particles.shader.json",
-        "particles_additive.shader.json": "particles.shader.json",
-        "particles_additive_premultiply.shader.json": "particles.shader.json",
-        "particles_blend1.shader.json": "particles.shader.json",
-        "particles_blend.shader.json": "particles.shader.json",
-        "particles_blend_premultiply.shader.json": "particles.shader.json",
-        "shader/depth": "shader/depth",
-        "shader/distance": "shader/distance",
-    };
-
     //TODO 运行时DrawCall排序优化使用
     let _hashCode: number = 0;
 
@@ -81,15 +58,10 @@ namespace egret3d {
         @paper.deserializedIgnore
         private _textureRef: Texture[] = [];
         private _renderQueue: RenderQueue = -1;
-
         /**
          * @internal
          */
-        // public _gltfMaterial: GLTFMaterial = null as any;
-        /**
-         * @internal
-         */
-        public _gltfTechnique: GLTFTechnique = null as any;
+        public _gltfTechnique: gltf.Technique = null as any;
 
         /**
          * 释放资源。
@@ -121,7 +93,6 @@ namespace egret3d {
             switch (url) {
                 case "shader/lambert": {
                     this._gltfTechnique = egret3d.DefaultTechnique.createTechniqueByTemplate(egret3d.DefaultShaders.LAMBERT.url);
-                    // this._gltfMaterial = egret3d.DefaultTechnique.createGLTFMaterial(techniqueTemplate.material);
 
                     //
                     this._gltfTechnique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
