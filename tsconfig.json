@@ -154,7 +154,7 @@
         "egret3d/editor/history/state/StateGroup.ts",
         "egret3d/editor/history/state/ModifyGameObjectPropertyState.ts",
         "egret3d/editor/history/state/ModifyComponentPropertyState.ts",
-        "egret3d/editor/history/state/AddGameObjectState.ts",
+        "egret3d/editor/history/state/CreateGameObjectState.ts",
         "egret3d/editor/history/state/DeleteGameObjectsState.ts",
         "egret3d/editor/history/state/DuplicateGameObjectsState.ts",
         "egret3d/editor/history/state/PasteGameObjectsState.ts",
