@@ -121,6 +121,30 @@ namespace egret3d {
             }
 
             {
+                const material: GLTFMaterial = { name: "shader/diffuse_tintcolor", alphaMode: "OPAQUE", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
+
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.DIFFUSE_TINT_COLOR.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+                technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+                technique.attributes["_glesBlendIndex4"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
+                technique.attributes["_glesBlendWeight4"] = { semantic: gltf.AttributeSemanticType.WEIGHTS_0 };
+
+                technique.uniforms["glstate_lightmapOffset"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._LIGHTMAPOFFSET, value: [] };
+                technique.uniforms["glstate_lightmapUV"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPUV, value: {} };
+                technique.uniforms["_LightmapTex"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._LIGHTMAPTEX, value: {} };
+                technique.uniforms["_LightmapIntensity"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPINTENSITY, value: 1.0 };
+                technique.uniforms["glstate_vec4_bones[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._BONESVEC4, value: [] };
+
+                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: egret3d.DefaultTextures.GRAY };
+                technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 0, 0] };
+                technique.uniforms["_AlphaCut"] = { type: gltf.UniformType.FLOAT, value: 0 };
+                technique.uniforms["_TintColor"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
+
+                this.registerTechnique(technique, material);
+            }
+
+            {
                 const material: GLTFMaterial = { name: "particles.shader.json", alphaMode: "BLEND", doubleSided: false, extensions: { KHR_techniques_webgl: { technique: -1 } } };
 
                 const technique: gltf.Technique = { name: egret3d.DefaultShaders.PARTICLE.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [false], frontFace: [gltf.FrontFace.CCW], blendEquationSeparate: [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD], blendFuncSeparate: [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE] } } };

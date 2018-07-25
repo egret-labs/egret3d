@@ -108,7 +108,7 @@ namespace egret3d {
 
             this.DIFFUSE_TINT_COLOR = new Shader("shader/diffuse_tintcolor");
             this.DIFFUSE_TINT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-            this.DIFFUSE_TINT_COLOR.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+            this.DIFFUSE_TINT_COLOR.setFragShader("def_diffuse_tinit_fs", ShaderLib.tintcolor_frag);
             paper.Asset.register(this.DIFFUSE_TINT_COLOR);
 
             this.DIFFUSE_VERT_COLOR = new Shader("shader/diffuse_vertcolor");
