@@ -21,7 +21,7 @@ namespace paper.editor {
         }
         private static runEgret() {
             egret3d.runEgret({
-                antialias: true, isEditor: true, isPlaying: false,
+                antialias: false,
                 systems: [
                     egret3d.BeginSystem,
                     paper.EnableSystem,

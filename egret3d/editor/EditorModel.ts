@@ -244,18 +244,8 @@ namespace paper.editor {
             }
         }
 
-        public createGameObject(parentUUids: string[]) {
-            let datas = [];
-
-            for (let index = 0; index < parentUUids.length; index++) {
-                const parentUUid = parentUUids[index];
-                datas.push({ parentUUid });
-            }
-
-            let data = {
-                datas,
-            };
-            let state = AddGameObjectState.create(data);
+        public createGameObject(parentList:GameObject[],createType:string) {
+            let state = CreateGameObjectState.create(parentList,createType);
             this.addState(state);
         }
 
@@ -442,9 +432,20 @@ namespace paper.editor {
                     }
                     for (let i: number = 0; i < objects.length; i++) {
                         let obj = objects[i];
-                        obj.transform.parent = targetObject.transform.parent;
-                        let transform = (targetObject.transform.parent.children as Array<egret3d.Transform>).pop();
-                        (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(index, 0, transform);
+                        if (obj.transform.parent === targetObject.transform.parent) {
+                            let oldIndex=targetObject.transform.parent.children.indexOf(obj.transform);
+                            (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(oldIndex,1);
+                            switch (dir) {
+                                case 'top': index = targetObject.transform.parent.children.indexOf(targetObject.transform); break;
+                                case 'bottom': index = targetObject.transform.parent.children.indexOf(targetObject.transform) + 1; break;
+                            }
+                            (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(index, 0, obj.transform);
+                        }
+                        else {
+                            obj.transform.parent = targetObject.transform.parent;
+                            let transform = (targetObject.transform.parent.children as Array<egret3d.Transform>).pop();
+                            (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(index, 0, transform);
+                        }
                     }
                 }
                 else {

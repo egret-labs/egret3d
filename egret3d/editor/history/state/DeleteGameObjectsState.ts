@@ -40,9 +40,9 @@ namespace paper.editor {
                 for (let i: number = 0; i < this.deleteInfo.length; i++) {
                     let info = this.deleteInfo[i];
                     let obj: GameObject = deserialize(info.serializeData,true);
-                    let oldParentObj = Editor.editorModel.getGameObjectByUUid(info[i].oldParentUUID);
+                    let oldParentObj = Editor.editorModel.getGameObjectByUUid(info.oldParentUUID);
                     if (oldParentObj) {
-                        let oldTargetTransform = oldParentObj.transform.children[info[i].oldIndex];
+                        let oldTargetTransform = oldParentObj.transform.children[info.oldIndex];
                         if (oldTargetTransform) {
                             Editor.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, 'top');
                         }
@@ -55,7 +55,7 @@ namespace paper.editor {
                         let all = paper.Application.sceneManager.activeScene.gameObjects as Array<GameObject>;
                         let currentIndex = all.indexOf(obj);
                         all.splice(currentIndex, 1);
-                        all.splice(info[i].oldIndex, 0, obj);
+                        all.splice(info.oldIndex, 0, obj);
                     }
                 }
 

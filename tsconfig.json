@@ -45,6 +45,7 @@
 
         "egret3d/ecs/components/BaseComponent.ts",
         "egret3d/ecs/components/SingletonComponent.ts",
+        "egret3d/ecs/components/GroupComponent.ts",
         "egret3d/ecs/components/Time.ts",
         "egret3d/ecs/components/MissingComponent.ts",
         "egret3d/ecs/components/ContactColliders.ts",
@@ -154,7 +155,7 @@
         "egret3d/editor/history/state/StateGroup.ts",
         "egret3d/editor/history/state/ModifyGameObjectPropertyState.ts",
         "egret3d/editor/history/state/ModifyComponentPropertyState.ts",
-        "egret3d/editor/history/state/AddGameObjectState.ts",
+        "egret3d/editor/history/state/CreateGameObjectState.ts",
         "egret3d/editor/history/state/DeleteGameObjectsState.ts",
         "egret3d/editor/history/state/DuplicateGameObjectsState.ts",
         "egret3d/editor/history/state/PasteGameObjectsState.ts",
@@ -178,7 +179,7 @@
         "egret3d/editor/gizmo/GizmoShader.ts",
         "egret3d/editor/gizmo/GizmoShaderLibs.ts",
         
-        "libs/oimo.d.ts",
+        "libs/oimo/oimo.d.ts",
         "egret3d/oimo/RaycastInfo.ts",
         "egret3d/oimo/Rigidbody.ts",
         "egret3d/oimo/collider/Collider.ts",

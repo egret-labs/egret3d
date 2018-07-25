@@ -11,7 +11,7 @@ namespace paper.editor {
 
         public static create(gameObjects: GameObject[], targetGameObj: GameObject, dir: 'top' | 'inner' | 'bottom'): GameObjectHierarchyState {
             //筛选
-            gameObjects=gameObjects.concat();
+            gameObjects = gameObjects.concat();
             Editor.editorModel.filtTopHierarchyGameObjects(gameObjects);
             //必须进行层级排序
             let objs = Editor.editorModel.sortGameObjectsForHierarchy(gameObjects);
@@ -44,13 +44,27 @@ namespace paper.editor {
                     let obj = Editor.editorModel.getGameObjectByUUid(this.gameObjects[index].UUID);
                     let oldParentObj = Editor.editorModel.getGameObjectByUUid(this.gameObjects[index].oldParentUUID);
                     if (oldParentObj) {
+                        let dir:'top'|'inner'|'bottom' = 'top';
+                        //同级移动
+                        if (obj.transform.parent&&obj.transform.parent.gameObject === oldParentObj) {
+                            let oldIndex = this.gameObjects[index].oldIndex;
+                            let currentIndex = obj.transform.parent.children.indexOf(obj.transform);
+                            if (currentIndex > oldIndex) {
+                                dir = 'top';
+                            }
+                            else if (currentIndex < oldIndex) {
+                                dir = 'bottom';
+                            }
+                        }
                         let oldTargetTransform = oldParentObj.transform.children[this.gameObjects[index].oldIndex];
                         if (oldTargetTransform) {
-                            Editor.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, 'top');
+                            Editor.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, dir);
                         }
                         else {
-                            Editor.editorModel.setGameObjectsHierarchy([obj], oldParentObj, 'inner');
+                            dir='inner';
+                            Editor.editorModel.setGameObjectsHierarchy([obj], oldParentObj, dir);
                         }
+
                     }
                     else {
                         obj.transform.parent = null;

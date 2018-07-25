@@ -1,21 +1,22 @@
-namespace paper.editor{
+namespace paper.editor {
     //粘贴游戏对象
     export class PasteGameObjectsState extends BaseState {
         public static toString(): string {
             return "[class common.PasteGameObjectsState]";
         }
 
-        public static create(serializeData: any [],parent:GameObject): PasteGameObjectsState {
+        public static create(serializeData: any[], parent: GameObject): PasteGameObjectsState {
             const state = new PasteGameObjectsState();
-            let parentUUID:string=parent?parent.uuid:null;
-            state.pasteInfo={parentUUID:parentUUID,serializeData:serializeData};
+            let parentUUID: string = parent ? parent.uuid : null;
+            state.pasteInfo = { parentUUID: parentUUID, serializeData: serializeData };
             return state;
         }
-        private pasteInfo:{parentUUID:string,serializeData:any[]};
-        private addList:string[];
+        private pasteInfo: { parentUUID: string, serializeData: any[] };
+        private cacheSerializeData: any[];
+        private addList: string[];
         public undo(): boolean {
             if (super.undo()) {
-                let objs=Editor.editorModel.getGameObjectsByUUids(this.addList);
+                let objs = Editor.editorModel.getGameObjectsByUUids(this.addList);
                 Editor.editorModel._deleteGameObject(objs);
                 this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
                 return true;
@@ -25,16 +26,24 @@ namespace paper.editor{
 
         public redo(): boolean {
             if (super.redo()) {
-                let parent=Editor.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
-                for(let i:number=0;i<this.pasteInfo.serializeData.length;i++){
-                    let info=this.pasteInfo.serializeData[i];
-                    let obj:GameObject=deserialize(info);
-                    if(parent){
-                        obj.transform.parent=parent.transform;
+                this.addList=[];
+                let parent = Editor.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
+                let serializeDataList = this.cacheSerializeData ? this.cacheSerializeData : this.pasteInfo.serializeData;
+                let keepUID = this.cacheSerializeData ? true : false;
+                for (let i: number = 0; i < serializeDataList.length; i++) {
+                    let info = serializeDataList[i];
+                    let obj: GameObject = deserialize(info, keepUID);
+                    if (parent) {
+                        obj.transform.parent = parent.transform;
                     }
                     //清理预置体信息
                     this.clearPrefabInfo(obj);
                     this.addList.push(obj.uuid);
+                    if (serializeDataList === this.pasteInfo.serializeData) {
+                        if (!this.cacheSerializeData)
+                            this.cacheSerializeData = [];
+                        this.cacheSerializeData.push(serialize(obj));
+                    }
                 }
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, this.addList);
                 return true;
@@ -50,12 +59,12 @@ namespace paper.editor{
                 }
             }
         }
-        public serialize():any{
-            return {pasteInfo:this.pasteInfo,addList:this.addList};
+        public serialize(): any {
+            return { pasteInfo: this.pasteInfo, addList: this.addList };
         }
-        public deserialize(data:any):void{
-            this.addList=data.addList;
-            this.pasteInfo=data.pasteInfo;
+        public deserialize(data: any): void {
+            this.addList = data.addList;
+            this.pasteInfo = data.pasteInfo;
         }
     }
 }
