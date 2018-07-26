@@ -52,8 +52,8 @@ namespace egret3d {
             if (a.material.renderQueue !== b.material.renderQueue) {
                 return a.material.renderQueue - b.material.renderQueue;
             }
-            else if (a.material._gltfTechnique.program && b.material._gltfTechnique.program && a.material._gltfTechnique.program.id !== b.material._gltfTechnique.program.id) {
-                return a.material._gltfTechnique.program.id - b.material._gltfTechnique.program.id;
+            else if (a.material._glTFTechnique.program && b.material._glTFTechnique.program && a.material._glTFTechnique.program.id !== b.material._glTFTechnique.program.id) {
+                return a.material._glTFTechnique.program.id - b.material._glTFTechnique.program.id;
             }
             else if (a.material.id !== b.material.id) {
                 return a.material.id - b.material.id;

@@ -1,80 +1,71 @@
 namespace paper {
+    const VERSION: number = 2;
+    const VERSIONS = [VERSION];
+
     const KEY_GAMEOBJECTS: keyof Scene = "gameObjects";
     const KEY_COMPONENTS: keyof GameObject = "components";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
     const KEY_SERIALIZE: keyof ISerializable = "serialize";
-    const KEY_DESERIALIZE: keyof ISerializable = "deserialize";
 
-    let _sourcePath: string = "";
-    const _serializeds: string[] = []; // 缓存序列化记录，提高查找效率
-    let _serializeData: ISerializedData | null = null;
-
+    const _serializeds: string[] = [];
+    let _serializeData: ISerializedData = null as any;
     /**
-     * 序列化方法
-     * 只有 ISerializable 参与序列化
-     * 只有被标记的对象属性 参与序列化
-     * 序列化后，输出 ISerializeData
-     * 对象在objects中按生成顺序，root一定是第一个元素。
-     * 允许依赖标记对序列化对象数据分类，以便单独处理一些对象（例如资源等等，但资源的路径这里不做处理，在方法外由开发者自行处理）
+     * 序列化场景，实体或组件。
      */
-    export function serialize(source: SerializableObject, sourcePath: string = ""): ISerializedData {
-        _serializeData = { objects: [] };
-        _sourcePath = sourcePath;
-
-        if (!_sourcePath && source instanceof Scene) {
-            const rawScene = (<Scene>source).rawScene;
-            _sourcePath = rawScene ? rawScene.url : "";
+    export function serialize(source: Scene | GameObject | BaseComponent): ISerializedData {
+        if (_serializeData) {
+            throw new Error("The serialization is not complete.");
         }
 
+        _serializeData = { version: VERSION, assets: [], objects: [], components: [] };
         _serializeObject(source);
         _serializeds.length = 0;
 
-        const data = _serializeData;
-        _serializeData = null;
+        const serializeData = _serializeData;
+        _serializeData = null as any;
 
-        return data;
+        return serializeData;
     }
     /**
-     * 
+     * 创建指定资源的引用。
      */
-    export function serializeAsset(source: Asset) {
-        const target = _serializeObject(source);
-
-        if (_sourcePath && source._isLoad) {
-            target.url = egret3d.utils.getRelativePath(source.url, _sourcePath);
+    export function createAssetReference(source: Asset): IAssetReference {
+        if (!source.name) {
+            return { asset: -1 };
         }
 
-        if (!source.url) {
-            return null;
+        let index = _serializeData.assets.indexOf(source.name);
+
+        if (index < 0) {
+            index = _serializeData.assets.length;
+            _serializeData.assets.push(source.name);
         }
 
-        return serializeR(source);
+        return { asset: index };
     }
     /**
-     * 
+     * 创建指定对象的引用。
      */
-    export function serializeRC(source: SerializableObject): any {
+    export function createReference(source: Scene | GameObject | BaseComponent, isOnlyUUID: boolean): any {
+        if (isOnlyUUID) {
+            return { uuid: source.uuid };
+        }
+
         const className = egret.getQualifiedClassName(source);
-        return { uuid: source.uuid, class: findClassCode(className) || className };
+        return { uuid: source.uuid, class: _findClassCode(className) || className };
     }
     /**
-     * 
+     * 创建指定对象的结构体。
      */
-    export function serializeR(source: SerializableObject): any {
-        return { uuid: source.uuid };
-    }
-    /**
-     * 
-     */
-    export function serializeC(source: SerializableObject): any {
+    export function createStruct(source: SerializableObject): any {
         const className = egret.getQualifiedClassName(source);
-        return { class: findClassCode(className) || className };
+        return { class: _findClassCode(className) || className };
     }
     /**
-     * 
+     * @internal
      */
     export function getTypesFromPrototype(classPrototype: any, typeKey: string, types: string[] | null = null) {
-        if ((typeKey in classPrototype)) {
+        if (typeKey in classPrototype) {
             types = types || [];
 
             for (const type of classPrototype[typeKey] as string[]) {
@@ -89,31 +80,34 @@ namespace paper {
         return types;
     }
 
-    function _serializeObject(source: SerializableObject, isStruct: boolean = false, parentHasCustomDeserialize: boolean = false) {
+    function _findClassCode(name: string) {
+        for (let key in serializeClassMap) {
+            if (serializeClassMap[key] === name) {
+                return key;
+            }
+        }
+
+        return "";
+    }
+
+    function _serializeObject(source: SerializableObject, isStruct: boolean = false) {
         if (_serializeds.indexOf(source.uuid) >= 0) {
-            return serializeR(source);
+            return createReference(source as (Scene | GameObject | BaseComponent), true);
         }
 
         const classPrototype = source.constructor.prototype;
         const hasCustomSerialize = classPrototype.hasOwnProperty(KEY_SERIALIZE);
         const target = hasCustomSerialize ?
             classPrototype[KEY_SERIALIZE].apply(source) :
-            (parentHasCustomDeserialize ? {} : (isStruct ? serializeC(source) : serializeRC(source)));
+            (isStruct ? createStruct(source) : createReference(source as (Scene | GameObject | BaseComponent), false));
 
-        if (!isStruct && _serializeData) {
+        if (!isStruct) { // Scene | GameObject | BaseComponent
             _serializeds.push(source.uuid);
-            // Add to custom.
-            if (SerializeKey.SerializedType in source) { // TODO 原型静态依赖
-                for (const type of source[SerializeKey.SerializedType] as string[]) {
-                    if (type in _serializeData) {
-                        _serializeData[type].push(target);
-                    }
-                    else {
-                        _serializeData[type] = [target];
-                    }
-                }
+
+            if (source instanceof BaseComponent) {
+                _serializeData.components.push(target);
             }
-            else { // Add to default.
+            else {
                 _serializeData.objects.push(target);
             }
         }
@@ -161,35 +155,39 @@ namespace paper {
                 // TODO es6
 
                 if (source instanceof Asset) {
-                    return serializeAsset(source);
+                    return createAssetReference(source);
                 }
 
                 if (source instanceof Scene || source instanceof GameObject || source instanceof BaseComponent) {
                     if (parent) {
+                        if (source instanceof Scene) { // Cannot serialize scene reference.
+                            return null;
+                        }
+
                         if (parent instanceof Scene) {
                             if (key === KEY_GAMEOBJECTS) {
                                 _serializeObject(source);
-                                return serializeR(source);
+                                return createReference(source, true);
                             }
                         }
                         else if (parent instanceof GameObject) {
                             if (key === KEY_COMPONENTS) {
                                 _serializeObject(source);
-                                return serializeR(source);
+                                return createReference(source, true);
                             }
                         }
                         else if (parent instanceof egret3d.Transform) {
                             if (key === KEY_CHILDREN) {
                                 _serializeObject((source as egret3d.Transform).gameObject);
-                                return serializeR(source);
+                                return createReference(source, true);
                             }
                         }
                     }
 
-                    return serializeRC(source);
+                    return createReference(source, false);
                 }
 
-                return _serializeObject(source, true, parent && parent.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE)); // Other class.
+                return _serializeObject(source, true); // Other class.
             }
 
             default:

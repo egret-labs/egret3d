@@ -71,7 +71,7 @@ namespace egret3d {
             }
 
             if (this._mesh) {
-                this._mesh.dispose();
+                // this._mesh.dispose(); TODO
             }
 
             this._mesh = mesh;
@@ -217,15 +217,8 @@ namespace egret3d {
             return out;
         }
 
-        /**
-         * @inheritDoc
-         */
         public initialize() {
             super.initialize();
-
-            this.materials = this._materials;
-            this.mesh = this._mesh;
-            this.bones = this._bones;
 
             let shaderType = ShaderType.SQT;
 
@@ -273,22 +266,18 @@ namespace egret3d {
             //     }
             // }
         }
-        /**
-         * @inheritDoc
-         */
+
         public uninitialize() {
             super.uninitialize();
 
             if (this._mesh) {
-                this._mesh.dispose();
+                // this._mesh.dispose();
             }
 
             this._bones.length = 0;
             this._mesh = null;
         }
-        /**
-         * @inheritDoc
-         */
+
         public serialize() {
             const target = super.serialize();
             target.center = [this.center.x, this.center.y, this.center.z];
@@ -306,7 +295,8 @@ namespace egret3d {
             target._materials.length = materials.length;
             for (let i = 0, l = materials.length; i < l; i++) {
                 const material = materials[i];
-                target._materials[i] = paper.serializeAsset(material);
+                target._materials[i] = material.serialize();
+                // target._materials[i] = paper.createAssetReference(material);
             }
 
             const bones = this._bones;
@@ -318,9 +308,7 @@ namespace egret3d {
 
             return target;
         }
-        /**
-         * @inheritDoc
-         */
+
         public deserialize(element: any) {
             super.deserialize(element);
 
@@ -333,20 +321,23 @@ namespace egret3d {
             }
 
             if (element.rootBone) {
-                this.rootBone = paper.getDeserializedObject(element.rootBone);
+                this.rootBone = paper.getDeserializedAssetOrComponent(element.rootBone) as egret3d.Transform;
             }
 
             this._materials.length = 0;
             if (element._materials) {
                 for (let i = 0, l = element._materials.length; i < l; i++) {
-                    this._materials.push(paper.getDeserializedObject<Material>(element._materials[i]));
+                    var material = new Material();
+                    material.deserialize(element._materials[i]);
+                    this._materials.push(material);
+                    // this._materials.push(paper.getDeserializedAssetOrComponent(element._materials[i]) as Material);
                 }
             }
 
             this._bones.length = 0;
             if (element._bones) {
                 for (let i = 0, l = element._bones.length; i < l; i++) {
-                    this._bones.push(paper.getDeserializedObject<Transform>(element._bones[i]));
+                    this._bones.push(paper.getDeserializedAssetOrComponent(element._bones[i]) as egret3d.Transform);
                 }
             }
         }

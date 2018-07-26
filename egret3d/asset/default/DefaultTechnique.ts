@@ -63,7 +63,7 @@ namespace egret3d {
             this._inited = true;
             //
             {
-                const technique: gltf.Technique = { name: egret3d.DefaultShaders.LAMBERT.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.LAMBERT.name, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesNormal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
                 technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
@@ -90,7 +90,7 @@ namespace egret3d {
             }
 
             {
-                const technique: gltf.Technique = { name: egret3d.DefaultShaders.DIFFUSE.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.DIFFUSE.name, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
                 technique.attributes["_glesBlendIndex4"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
@@ -111,7 +111,7 @@ namespace egret3d {
             }
 
             {
-                const technique: gltf.Technique = { name: egret3d.DefaultShaders.DIFFUSE_TINT_COLOR.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.DIFFUSE_TINT_COLOR.name, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
                 technique.attributes["_glesBlendIndex4"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
@@ -133,7 +133,17 @@ namespace egret3d {
             }
 
             {
-                const technique: gltf.Technique = { name: egret3d.DefaultShaders.PARTICLE.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [false], frontFace: [gltf.FrontFace.CCW], blendEquationSeparate: [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD], blendFuncSeparate: [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE] } } };
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.MATERIAL_COLOR.name, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+
+                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+                technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1,1,1,1] };
+
+                this.registerTechnique(technique);
+            }
+
+            {
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.PARTICLE.name, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [false], frontFace: [gltf.FrontFace.CCW], blendEquationSeparate: [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD], blendFuncSeparate: [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE] } } };
                 technique.attributes["_glesCorner"] = { semantic: gltf.AttributeSemanticType._CORNER };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
@@ -212,7 +222,7 @@ namespace egret3d {
             }
 
             {
-                const technique: gltf.Technique = { name: egret3d.DefaultShaders.SHADOW_DEPTH.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.SHADOW_DEPTH.name, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
                 technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
@@ -221,7 +231,7 @@ namespace egret3d {
             }
 
             {
-                const technique: gltf.Technique = { name: egret3d.DefaultShaders.SHADOW_DISTANCE.url, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
+                const technique: gltf.Technique = { name: egret3d.DefaultShaders.SHADOW_DISTANCE.name, attributes: {}, uniforms: {}, states: { enable: [gltf.EnableState.DEPTH_TEST], functions: { depthFunc: [gltf.DepthFunc.LEQUAL], depthMask: [true], frontFace: [gltf.FrontFace.CCW] } } };
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
                 technique.uniforms["glstate_matrix_model"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };

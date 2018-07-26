@@ -9,9 +9,19 @@ namespace paper {
         public static _injectGameObject: GameObject;
 
         /**
+         * @internal
+         */
+        @paper.serializedField
+        public assetID: string = createAssetID();
+        /**
          * 组件挂载的 GameObject
          */
         public readonly gameObject: GameObject = BaseComponent._injectGameObject;
+        /**
+         * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
+         */
+        @paper.serializedField
+        public extras?: any;
 
         @serializedField
         protected _enabled: boolean = true;
@@ -29,11 +39,19 @@ namespace paper {
         }
 
         public serialize(): any {
-            const target = serializeRC(this);
+            const target = createReference(this, false);
             target._enabled = this._enabled;
 
-            if (this.assetUUid) {
-                target.assetUUid = this.assetUUid;
+            if (this.assetID) {
+                target.assetID = this.assetID;
+            }
+
+            if (this.extras) {
+                target.extras = {};
+
+                for (const k in this.extras) {
+                    target.extras[k] = this.extras[k];
+                }
             }
 
             return target;
@@ -43,11 +61,19 @@ namespace paper {
             this._enabled = element._enabled === false ? false : true;
 
             if (element.uuid) {
-                (this as any).uuid = element.uuid;
+                this.uuid = element.uuid;
             }
 
-            if (element.assetUUid) {
-                (this as any).assetUUid = element.assetUUid;
+            if (element.assetID) {
+                this.assetID = element.assetID;
+            }
+
+            if (element.extras) {
+                this.extras = {};
+
+                for (const k in element.extras) {
+                    this.extras[k] = element.extras[k];
+                }
             }
         }
         /**

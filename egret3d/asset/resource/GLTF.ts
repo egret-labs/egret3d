@@ -1,4 +1,15 @@
 namespace egret3d {
+    export interface GLTFEgret extends gltf.GLTF {
+        extensions?: {
+            paper?: {
+                shaders?: string,
+                renderQueue?: number;
+            }
+
+            KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
+        }
+
+    }
     /**
      * @private
      */
@@ -101,6 +112,13 @@ namespace egret3d {
          */
         stringVariable: string;
     }
+
+    export interface GLTFMaterial extends gltf.Material {
+        extensions?: {
+            KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
+        }
+    }
+
     export interface GLTFAttribute extends gltf.Attribute {
         extensions?: {
             paper: {
@@ -202,8 +220,8 @@ namespace egret3d {
         /**
          * 
          */
-        public static createGLTFAsset(url: string = ""): GLTFAsset {
-            const glftAsset = new GLTFAsset(url);
+        public static createGLTFAsset(): GLTFAsset {
+            const glftAsset = new GLTFAsset("");
 
             glftAsset.config = {
                 asset: {
@@ -215,6 +233,20 @@ namespace egret3d {
 
             return glftAsset;
         }
+        public static createGLTFExtensionsAsset(url: string = ""): GLTFAsset {
+            const glftAsset = new GLTFAsset(url);
+
+            glftAsset.config = {
+                asset: {
+                    version: "2.0"
+                },
+                extensions: { KHR_techniques_webgl: {} },
+                extensionsRequired: ["egret"],
+                extensionsUsed: ["egret"],
+            } as GLTFEgret;
+
+            return glftAsset;
+        }
         /**
          * Buffer 列表。
          */
@@ -222,11 +254,11 @@ namespace egret3d {
         /**
          * 配置。
          */
-        public config: gltf.GLTF = null as any;
+        public config: GLTFEgret = null as any;
         /**
          * @internal
          */
-        public parse(config: gltf.GLTF, buffers: Uint32Array[]) {
+        public parse(config: GLTFEgret, buffers: Uint32Array[]) {
             this.config = config;
             for (const buffer of buffers) {
                 this.buffers.push(buffer);
@@ -436,6 +468,10 @@ namespace egret3d {
         }
 
         public dispose() {
+            if (this._isBuiltin) {
+                return;
+            }
+
             this.buffers.length = 0;
         }
     }

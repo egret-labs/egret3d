@@ -18,16 +18,16 @@ namespace egret3d {
         return string.replace(pattern, replace);
     }
 
-    function getWebGLShader(type: number, gl: WebGLRenderingContext, info: ShaderInfo, defines: string): WebGLShader {
+    function getWebGLShader(type: number, gl: WebGLRenderingContext, info: gltf.Shader, defines: string): WebGLShader {
         let shader = gl.createShader(type);
         //
-        gl.shaderSource(shader, WebGLCapabilities.commonDefines + defines + parseIncludes(info.src));
+        gl.shaderSource(shader, WebGLCapabilities.commonDefines + defines + parseIncludes(info.uri));
         gl.compileShader(shader);
         let parameter = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
         if (!parameter) {
             if (confirm("shader compile:" + info.name + " " + type + " error! ->" + gl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
                 gl.deleteShader(shader);
-                alert(info.src);
+                alert(info.uri);
             }
             return null;
         }
@@ -148,7 +148,7 @@ namespace egret3d {
             }
         }
     }
-    function getWebGLProgram(gl: WebGLRenderingContext, vs: ShaderInfo, fs: ShaderInfo, defines: string): WebGLProgram {
+    function getWebGLProgram(gl: WebGLRenderingContext, vs: gltf.Shader, fs: gltf.Shader, defines: string): WebGLProgram {
         let program = gl.createProgram();
 
         let key = vs.name + defines;
@@ -223,13 +223,16 @@ namespace egret3d {
             this.program = webglProgram;
         }
 
-        public static getProgram(context: RenderContext, material: Material, technique: gltf.Technique, defines: string) {
-            const shader = material.getShader();
-            const name = shader.vertShader.name + "_" + shader.fragShader.name + "_" + defines;//TODO材质标脏可以优化
+        public static getProgram(material: Material, technique: gltf.Technique, defines: string) {
+            const shader = material._glTFShader;
+            const extensions = shader.config.extensions.KHR_techniques_webgl;
+            const vertexShader = extensions.shaders[0];
+            const fragShader = extensions.shaders[1];
+            const name = vertexShader.name + "_" + fragShader.name + "_" + defines;//TODO材质标脏可以优化
             let program = programMap[name];
             const webgl = WebGLCapabilities.webgl;
             if (!program) {
-                const webglProgram = getWebGLProgram(webgl, shader.vertShader, shader.fragShader, defines);
+                const webglProgram = getWebGLProgram(webgl, vertexShader, fragShader, defines);
                 program = new GlProgram(webglProgram);
                 programMap[name] = program;
                 extractAttributes(webgl, program);

@@ -12,7 +12,7 @@ namespace egret3d {
                 ]
             }
         ];
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getOrAddComponent(DrawCalls);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
             if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
@@ -36,7 +36,8 @@ namespace egret3d {
 
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
-                    material: material,
+                    material: renderer.materials[primitive.material || 0] || DefaultMaterials.MissingMaterial,
+					
                     frustumTest: false,
                     zdist: -1,
 

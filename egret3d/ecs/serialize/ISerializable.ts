@@ -11,7 +11,16 @@ namespace paper {
     /**
      * 
      */
-    export interface IStruct {
+    export interface IAssetReference {
+        /**
+         * 
+         */
+        readonly asset: number;
+    }
+    /**
+     * 
+     */
+    export interface IClass {
         /**
          * 
          */
@@ -24,7 +33,7 @@ namespace paper {
         /**
          * 
          */
-        serialize(): any | IUUID | ISerializedObject;
+        serialize(): any | ISerializedObject;
         /**
          * 
          */
@@ -34,11 +43,11 @@ namespace paper {
     /**
      * 序列化后的数据接口。
      */
-    export interface ISerializedObject extends IUUID, IStruct {
+    export interface ISerializedObject extends IUUID, IClass {
         /**
          * 
          */
-        [key: string]: any | IUUID;
+        [key: string]: any | IUUID | IAssetReference;
     }
 
     /**
@@ -48,10 +57,22 @@ namespace paper {
         /**
          * 
          */
-        readonly objects: ISerializedObject[];
+        version?: number;
         /**
          * 
          */
-        [key: string]: ISerializedObject[];
+        compatibleVersion?: number;
+        /**
+         * 所有资源。
+         */
+        readonly assets: string[];
+        /**
+         * 所有实体。（至多含一个场景）
+         */
+        readonly objects: ISerializedObject[];
+        /**
+         * 所有组件。
+         */
+        readonly components: ISerializedObject[];
     }
 }

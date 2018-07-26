@@ -72,7 +72,7 @@ namespace egret3d {
             this._cacheDefines += material.shaderDefine;
         }
 
-        private _updateContextUniforms(context: RenderContext, material: Material, technique: gltf.Technique, forceUpdate: boolean) {
+        private _updateContextUniforms(context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
             const needUpdate = this._cacheContext !== context || this._cacheContextVersion !== context.version || forceUpdate;
             if (!needUpdate) {
                 return;
@@ -393,11 +393,11 @@ namespace egret3d {
             }
             //
             const material = drawCall.shadow || drawCall.material;
-            const technique = material._gltfTechnique;
+            const technique = material._glTFTechnique;
             //Defines
             this._updateContextDefines(context, material);
             //Program
-            const program = GlProgram.getProgram(context, material, technique, this._cacheDefines);
+            const program = GlProgram.getProgram(material, technique, this._cacheDefines);
             //State
             this._updateState(technique.states);
             //Use Program
@@ -408,7 +408,7 @@ namespace egret3d {
                 force = true;
             }
             //Uniform
-            this._updateContextUniforms(context, material, technique, force);
+            this._updateContextUniforms(context, technique, force);
             this._updateUniforms(context, material, technique, force);
             //Attribute
             this._updateAttributes(drawCall.mesh, drawCall.subMeshIndex, technique, force);
@@ -469,7 +469,7 @@ namespace egret3d {
                 drawCalls.shadowFrustumCulling(camera);
                 //
                 const shadowCalls = drawCalls.shadowCalls;
-                const shadowMaterial = light.type === LightType.Point ? egret3d.DefaultMaterial.SHADOW_DISTANCE : egret3d.DefaultMaterial.SHADOW_DEPTH;
+                const shadowMaterial = light.type === LightType.Point ? egret3d.DefaultMaterials.ShadowDistance : egret3d.DefaultMaterials.ShadowDepth;
                 for (const drawCall of shadowCalls) {
                     //TODO, 现在不支持蒙皮动画阴影                    
                     drawCall.shadow = shadowMaterial;
@@ -482,13 +482,15 @@ namespace egret3d {
         }
 
         public onUpdate() {
+            const activeScene = paper.Application.sceneManager.activeScene;
             //Lights
             const lights = this._groups[2].components as BaseLight[];
             if (lights.length > 0) {
                 for (const light of lights) {
-                    if (!light.castShadows) {
+                    if (!light.castShadows || light.gameObject.scene !== activeScene) {
                         continue;
                     }
+
                     this._renderLightShadow(light);
                 }
             }
@@ -496,6 +498,10 @@ namespace egret3d {
             const cameras = this._groups[0].components as Camera[];
             if (cameras.length > 0) {
                 for (const camera of cameras) {
+                    if(camera.gameObject.scene !== activeScene){
+                        continue;
+                    }
+
                     if (lights.length > 0) {
                         camera.context.updateLights(lights); // TODO 性能优化
                     }

@@ -232,33 +232,24 @@ namespace egret3d {
         }
 
         public serialize() {
-            if (!this._glTFAsset.url) {
+            if (!this._glTFAsset.name) {
                 return null;
             }
 
-            const target = paper.serializeC(this);
+            const target = paper.createStruct(this);
             target._glTFMeshIndex = this._glTFMeshIndex;
-            target._glTFAsset = paper.serializeAsset(this._glTFAsset);
+            target._glTFAsset = paper.createAssetReference(this._glTFAsset);
 
             return target;
         }
 
         public deserialize(element: any) {
-            if (element._glTFAsset) {
-                this._glTFMeshIndex = element._glTFMeshIndex;
-                this._glTFAsset = paper.getDeserializedObject(element._glTFAsset) as GLTFAsset;
-            }
-            else { // TODO 旧数据兼容代码。
-                const mesh = paper.getDeserializedObject(element) as any;
-                this._glTFMeshIndex = mesh._glTFMeshIndex;
-                this._glTFAsset = mesh._glTFAsset;
-            }
+            this._glTFMeshIndex = element._glTFMeshIndex;
+            this._glTFAsset = paper.getDeserializedAssetOrComponent(element._glTFAsset) as GLTFAsset;
 
             this.initialize();
         }
-        /**
-         * @inheritDoc
-         */
+
         public dispose() {
             const webgl = WebGLCapabilities.webgl;
 
@@ -277,11 +268,15 @@ namespace egret3d {
             this._glTFMesh = null as any;
             this._vertexBuffer = null as any;
         }
-        /**
-         * @inheritDoc
-         */
+
         public caclByteLength() {
             return 0;
+        }
+        /**
+         * 
+         */
+        public clone() {
+            return new Mesh(this._glTFAsset, this._glTFMeshIndex, this._drawMode);
         }
         /**
          * 
@@ -467,63 +462,6 @@ namespace egret3d {
             console.warn("Error arguments.");
 
             return null;
-        }
-
-        public getAttribute<T extends (Vector4 | Vector3 | Vector2)>(vertexIndex: number, attributeType: gltf.MeshAttribute, subMeshIndex: number = 0, result?: T) {
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const attributeIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType];
-                if (attributeIndex !== undefined) {
-                    const accessor = this._glTFAsset.getAccessor(attributeIndex);
-                    if (0 <= vertexIndex && vertexIndex < accessor.count) {
-                        // const bufferOffset = this._glTFAsset.getBufferOffset(accessor);
-                        // const typeCount= GLTFAsset.getComponentTypeCount(accessor.componentType);
-                        // const offset = bufferOffset / typeCount + vertexIndex * typeCount;
-                        const typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
-                        const offset = vertexIndex * typeCount;
-                        const buffers = this._glTFAsset.createTypeArrayFromAccessor(accessor);
-                        switch (accessor.type) {
-                            case gltf.AccessorType.VEC2: {
-                                if (!result) {
-                                    result = new Vector2() as any;
-                                }
-
-                                (result as Vector2).x = buffers[offset];
-                                (result as Vector2).y = buffers[offset + 1];
-                                break;
-                            }
-
-                            case gltf.AccessorType.VEC3: {
-                                if (!result) {
-                                    result = new Vector3() as any;
-                                }
-
-                                (result as Vector3).x = buffers[offset];
-                                (result as Vector3).y = buffers[offset + 1];
-                                (result as Vector3).z = buffers[offset + 2];
-                                break;
-                            }
-
-                            case gltf.AccessorType.VEC4: {
-                                if (!result) {
-                                    result = new Vector4() as any;
-                                }
-
-                                (result as Vector4).x = buffers[offset];
-                                (result as Vector4).y = buffers[offset + 1];
-                                (result as Vector4).z = buffers[offset + 2];
-                                (result as Vector4).w = buffers[offset + 3];
-                                break;
-                            }
-                        }
-
-                        return result;
-                    }
-                }
-            }
-
-            console.warn("Error arguments.");
-
-            return result;
         }
 
         public uploadVertexSubData(uploadAttributes: gltf.MeshAttribute[], startVertexIndex: number, vertexCount: number, subMeshIndex: number = 0) {
@@ -720,6 +658,65 @@ namespace egret3d {
             return this._glTFMesh;
         }
 
+        /**
+         * @deprecated
+         */
+        public getAttribute<T extends (Vector4 | Vector3 | Vector2)>(vertexIndex: number, attributeType: gltf.MeshAttribute, subMeshIndex: number = 0, result?: T) {
+            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
+                const attributeIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType];
+                if (attributeIndex !== undefined) {
+                    const accessor = this._glTFAsset.getAccessor(attributeIndex);
+                    if (0 <= vertexIndex && vertexIndex < accessor.count) {
+                        // const bufferOffset = this._glTFAsset.getBufferOffset(accessor);
+                        // const typeCount= GLTFAsset.getComponentTypeCount(accessor.componentType);
+                        // const offset = bufferOffset / typeCount + vertexIndex * typeCount;
+                        const typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
+                        const offset = vertexIndex * typeCount;
+                        const buffers = this._glTFAsset.createTypeArrayFromAccessor(accessor);
+                        switch (accessor.type) {
+                            case gltf.AccessorType.VEC2: {
+                                if (!result) {
+                                    result = new Vector2() as any;
+                                }
+
+                                (result as Vector2).x = buffers[offset];
+                                (result as Vector2).y = buffers[offset + 1];
+                                break;
+                            }
+
+                            case gltf.AccessorType.VEC3: {
+                                if (!result) {
+                                    result = new Vector3() as any;
+                                }
+
+                                (result as Vector3).x = buffers[offset];
+                                (result as Vector3).y = buffers[offset + 1];
+                                (result as Vector3).z = buffers[offset + 2];
+                                break;
+                            }
+
+                            case gltf.AccessorType.VEC4: {
+                                if (!result) {
+                                    result = new Vector4() as any;
+                                }
+
+                                (result as Vector4).x = buffers[offset];
+                                (result as Vector4).y = buffers[offset + 1];
+                                (result as Vector4).z = buffers[offset + 2];
+                                (result as Vector4).w = buffers[offset + 3];
+                                break;
+                            }
+                        }
+
+                        return result;
+                    }
+                }
+            }
+
+            console.warn("Error arguments.");
+
+            return result;
+        }
         /**
          * @deprecated
          */

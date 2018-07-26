@@ -499,21 +499,11 @@ namespace paper.editor {
 
             // 复制粘贴
             if (this.bindKeyboard.isPressed('CONTROL') && this.bindKeyboard.wasPressed('C')) {
-                let clipboard = __global.runtimeModule.getClipborad();
-                let content: any[] = [];
-                for (let i = 0, l = this.selectedGameObjs.length; i < l; i++) {
-                    content.push({
-                        type: "gameObject",
-                        uuid: this.selectedGameObjs[i].uuid
-                    })
-                }
-                let str = JSON.stringify(content);
-                clipboard.writeText(str, "paper");
-                console.log("copy");
+                this.editorModel.copy(this.selectedGameObjs);
             }
 
             if (this.bindKeyboard.isPressed('CONTROL') && this.bindKeyboard.wasPressed('V')) {
-                let parent = this.selectedGameObjs.length > 0 ? this.selectedGameObjs[0].transform.parent : null;
+                let parent = this.selectedGameObjs.length > 0 ? this.selectedGameObjs[0].transform.parent.gameObject : null;
                 this.editorModel.pasteGameObject(parent);
             }
 
@@ -710,8 +700,7 @@ namespace paper.editor {
             mesh.mesh = egret3d.DefaultMeshes.SPHERE;
             let renderer = ball.addComponent(egret3d.MeshRenderer);
 
-            let mat = new egret3d.Material();
-            mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
+            let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
             mat.setVector4v("_Color", [0.8, 0.8, 0.4, 0.1]);
             renderer.materials = [mat];
 
@@ -817,8 +806,7 @@ namespace paper.editor {
             }
             let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
 
-            let mat = new egret3d.Material();
-            mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
+            let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
             mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
             renderer.materials = [mat];
 

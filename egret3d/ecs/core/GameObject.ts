@@ -1,5 +1,4 @@
 namespace paper {
-
     /**
      * 可以挂载Component的实体类。
      */
@@ -10,48 +9,51 @@ namespace paper {
         @serializedField
         @editor.property(editor.EditType.CHECKBOX)
         public isStatic: boolean = false;
-
+        /**
+         * 
+         */
+        @serializedField
+        public hideFlags: HideFlags = HideFlags.None;
         /**
          * 层级
          */
         @serializedField
-        @deserializedIgnore
+        @deserializedIgnore // TODO remove
         public layer: Layer = Layer.Default;
-
         /**
          * 名称
          */
         @serializedField
         @editor.property(editor.EditType.TEXT)
         public name: string = "";
-
         /**
          * 标签
          */
         @serializedField
         public tag: string = "";
-
         /**
-         * 变换组件
+         * @internal
          */
-        public transform: egret3d.Transform = null as any;
-
-        /**
-         * 
-         */
-        public renderer: BaseRenderer | null = null as any;
-
+        @paper.serializedField
+        public assetID: string = createAssetID();
         /**
          * 预制体
          */
         @serializedField
-        public prefab: egret3d.Prefab | null = null;
-
+        public prefab: Prefab | null = null;
         /**
-         * @internal
+         * 变换组件
          */
-        @serializedField
-        private prefabEditInfo: boolean | string | null = null;
+        public transform: egret3d.Transform = null as any;
+        /**
+         * 
+         */
+        public renderer: BaseRenderer | null = null as any;
+        /**
+         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+         */
+        @paper.serializedField
+        public extras?: any;
 
         @serializedField
         private _activeSelf: boolean = true;
@@ -69,11 +71,10 @@ namespace paper {
          */
         public readonly _components: BaseComponent[] = [];
         private _scene: Scene = null as any;
-
         /**
-         * 创建GameObject，并添加到当前场景中
+         * 创建 GameObject，并添加到当前场景中。
          */
-        public constructor(name: string = "NoName", tag: string = "") {
+        public constructor(name: string = "NoName", tag: string = DefaultTags.Untagged) {
             super();
 
             this.name = name;
@@ -139,7 +140,7 @@ namespace paper {
                 this.renderer = null;
             }
 
-            const destroySystem = Application.systemManager.getSystem(EndSystem);
+            const destroySystem = Application.systemManager.getSystem(DisableSystem);
             if (destroySystem) {
                 destroySystem.bufferComponent(component);
             }
@@ -160,7 +161,7 @@ namespace paper {
         }
 
         private _destroy() {
-            const destroySystem = Application.systemManager.getSystem(EndSystem);
+            const destroySystem = Application.systemManager.getSystem(DisableSystem);
             if (destroySystem) {
                 destroySystem.bufferGameObject(this);
             }
@@ -379,6 +380,13 @@ namespace paper {
         }
 
         /**
+         * 
+         */
+        public getOrAddComponent<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
+            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
+        }
+
+        /**
          * 针对同级的组件发送消息
          * @param methodName 
          * @param parameter
@@ -505,7 +513,7 @@ namespace paper {
                 let parent: egret3d.Transform | null = this.transform.parent;
                 while (parent) {
                     path = parent.gameObject.name + "/" + path;
-                    parent = parent.gameObject.transform;
+                    parent = parent.parent;
                 }
 
                 return this._scene.name + "/" + path;
@@ -518,31 +526,10 @@ namespace paper {
          * 组件列表
          */
         @serializedField
+        @deserializedIgnore
         public get components(): ReadonlyArray<BaseComponent> {
             return this._components;
         }
-        /**
-         * 仅用于反序列化。
-         * @internal
-         */
-        public set components(value: ReadonlyArray<BaseComponent>) {
-            this._components.length = 0;
-            for (const component of value) {
-                if (component instanceof MissingObject) {
-                    this.addComponent(MissingComponent).missingObject = component;
-                }
-                else {
-                    if (component instanceof BaseRenderer) {
-                        this.renderer = component;
-                    }
-
-                    this._components.push(component);
-                }
-            }
-
-            this.transform = this.getComponent(egret3d.Transform) || this.addComponent(egret3d.Transform);
-        }
-
         /**
          * 获取物体所在场景实例。
          */

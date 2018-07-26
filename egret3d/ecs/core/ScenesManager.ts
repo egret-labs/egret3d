@@ -40,22 +40,21 @@ namespace paper {
         public createScene(name: string, isActive: boolean = true) {
             const scene = new Scene(isActive);
             scene.name = name;
+
             return scene;
         }
         /**
          * 加载场景
          * @param resourceName 资源名称
          */
-        public loadScene(resourceName: string) {
-            const rawScene = RES.getRes(resourceName) as egret3d.RawScene;
+        public loadScene(resourceName: string, combineStaticObject: boolean = true) {
+            const rawScene = RES.getRes(resourceName) as RawScene;
             if (rawScene) {
                 const scene = rawScene.createInstance();
 
                 if (scene) {
-                    scene.rawScene = rawScene;
-
-                    if (Application.isPlaying) {
-                        egret3d.autoCombine(scene);
+                    if (combineStaticObject && Application.isPlaying) {
+                        egret3d.combine(scene.gameObjects);
                     }
 
                     return scene;
@@ -102,7 +101,6 @@ namespace paper {
 
             return null;
         }
-
         /**
          * 
          */
@@ -125,7 +123,7 @@ namespace paper {
          */
         public get globalGameObject() {
             if (!this._globalGameObject) {
-                this._globalGameObject = new GameObject("global", "global");
+                this._globalGameObject = new GameObject("global");
                 this._globalGameObject.dontDestroy = true;
             }
 
@@ -156,7 +154,7 @@ namespace paper {
                 this._scenes.unshift(value);
             }
             else {
-                console.debug("Active scene error.", value.name, value.uuid);
+                console.debug("Active scene error.", value.name);
             }
         }
 

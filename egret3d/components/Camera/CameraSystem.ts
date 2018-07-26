@@ -6,27 +6,31 @@ namespace egret3d {
         protected readonly _interests = [
             [
                 { componentClass: Camera }
-            ],
-            [
-                { componentClass: [DirectLight, SpotLight, PointLight] }
             ]
         ];
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);       
+        protected readonly _cameras: Cameras = this._globalGameObject.getOrAddComponent(Cameras);
 
-        protected _sortCamera(a: Camera, b: Camera) {
-            return a.order - b.order;
+        public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
+            if (group === this._groups[0]) {
+                this._cameras.update(this._groups[0].components as ReadonlyArray<Camera>, null);
+            }
+        }
+
+        public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
+            if (group === this._groups[0]) {
+                this._cameras.update(this._groups[0].components as ReadonlyArray<Camera>, gameObject);
+            }
         }
 
         public onUpdate(deltaTime: number) {
             Performance.startCounter("render");
 
-            const cameras = this._groups[0].components as Camera[];
+            const cameras = this._cameras.cameras;
             if (cameras.length > 0) {
-                const lights = this._groups[1].components as ReadonlyArray<BaseLight>;
-                cameras.sort(this._sortCamera);
+                this._cameras.sort(); // TODO
 
                 for (const component of cameras) {
-                    component.update(deltaTime);                   
+                    component.update(deltaTime);  
                 }
             }
 

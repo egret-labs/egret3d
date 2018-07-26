@@ -17,26 +17,14 @@ namespace paper {
         /**
          * @internal
          */
-        @serializedField
         public _isReseted: boolean = false;
         /**
          * @internal
          */
         public _isStarted: boolean = false;
-        /**
-         * @internal
-         */
-        public _isTriggerEnabled: boolean = false;
-        /**
-         * @internal
-         */
-        public _isCollisionEnabled: boolean = false;
 
         public initialize(config?: any) {
             super.initialize(config);
-
-            this._isTriggerEnabled = Boolean(this.onTriggerEnter || this.onTriggerStay || this.onTriggerExit);
-            this._isCollisionEnabled = Boolean(this.onCollisionEnter || this.onCollisionStay || this.onCollisionExit);
 
             if (!Application.isEditor || _executeInEditModeComponents.indexOf(this.constructor as any) >= 0) {
                 this.onAwake && this.onAwake(config);

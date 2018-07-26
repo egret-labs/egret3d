@@ -2,16 +2,16 @@ namespace egret3d {
 
     export class DefaultShaders {
 
-        public static TRANSPARENT: Shader;
-        public static TRANSPARENT_ALPHACUT:Shader;
-        public static TRANSPARENT_ADDITIVE: Shader;
-        public static TRANSPARENT_BOTH_SIDE: Shader;
-        public static TRANSPARENT_ADDITIVE_BOTH_SIDE: Shader;
+        // public static TRANSPARENT: Shader;
+        // public static TRANSPARENT_ALPHACUT: Shader;
+        // public static TRANSPARENT_ADDITIVE: Shader;
+        // public static TRANSPARENT_BOTH_SIDE: Shader;
+        // public static TRANSPARENT_ADDITIVE_BOTH_SIDE: Shader;
         public static DIFFUSE_TINT_COLOR: Shader;
         public static DIFFUSE_VERT_COLOR: Shader;
         public static DIFFUSE_BOTH_SIDE: Shader;
-        public static UI: Shader;
-        public static UI_FONT: Shader;
+        // public static UI: Shader;
+        // public static UI_FONT: Shader;
         public static MATERIAL_COLOR: Shader;
         public static LAMBERT_NORMAL: Shader;
         public static PARTICLE_ADDITIVE: Shader;
@@ -19,15 +19,43 @@ namespace egret3d {
         public static PARTICLE_BLEND: Shader;
         public static PARTICLE_BLEND_PREMYLTIPLY: Shader;
 
-        public static LINE: Shader;
-        public static GIZMOS_COLOR: Shader;
-        public static LAMBERT: Shader;
-        public static DIFFUSE: Shader;
-        public static PARTICLE: Shader;
-        public static SHADOW_DEPTH: Shader;
-        public static SHADOW_DISTANCE: Shader;
+        // public static LINE: Shader;
+        // public static GIZMOS_COLOR: Shader;
+        // public static LAMBERT: Shader;
+        // public static DIFFUSE: Shader;
+        // public static PARTICLE: Shader;
+        // public static SHADOW_DEPTH: Shader;
+        // public static SHADOW_DISTANCE: Shader;
+
+        public static LINE: GLTFAsset;
+        public static DIFFUSE: GLTFAsset;
+        public static LAMBERT: GLTFAsset;
+        public static GIZMOS_COLOR: GLTFAsset;
+        public static VERT_COLOR: GLTFAsset;
+        public static SHADOW_DEPTH: GLTFAsset;
+        public static SHADOW_DISTANCE: GLTFAsset;
+        public static PARTICLE: GLTFAsset;
 
         private static _inited: boolean = false;
+
+        public static createBuildinShader(url: string, vertName: string, vertSource: string, fragName: string, fragSource: string, renderQueue: number) {
+            const asset = GLTFAsset.createGLTFExtensionsAsset(url);
+
+            const KHRExtensions = asset.config.extensions.KHR_techniques_webgl;
+            KHRExtensions.shaders = [];
+
+            KHRExtensions.shaders.push({ type: gltf.ShaderStage.VERTEX_SHADER, name: vertName, uri: vertSource });
+            KHRExtensions.shaders.push({ type: gltf.ShaderStage.FRAGMENT_SHADER, name: fragName, uri: fragSource });
+
+            KHRExtensions.techniques = [];
+            KHRExtensions.techniques.push({} as any);
+
+            asset.config.extensions.paper.renderQueue = renderQueue;
+
+            paper.Asset.register(asset);
+
+            return asset;
+        }
 
         public static init() {
             if (this._inited) {
@@ -36,119 +64,326 @@ namespace egret3d {
 
             this._inited = true;
 
-            this.LINE = new Shader("line.shader.json");
-            this.LINE.setVertShader("def_line_vs", ShaderLib.line_vert);
-            this.LINE.setFragShader("def_line_fs", ShaderLib.line_frag);
-            paper.Asset.register(this.LINE);
+            {
+                const shader = this.createBuildinShader("buildin/depth.shader.json", "depth_vs", ShaderLib.depthpackage_vert, "depth_fs", ShaderLib.depthpackage_frag, RenderQueue.Geometry);
+                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
-            this.GIZMOS_COLOR = new Shader("materialcolor.shader.json");
-            this.GIZMOS_COLOR.setVertShader("def_color_vs", ShaderLib.materialcolor_vert);
-            this.GIZMOS_COLOR.setFragShader("def_color_fs", ShaderLib.line_frag);
-            paper.Asset.register(this.GIZMOS_COLOR);
+                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
-            this.DIFFUSE = new Shader("diffuse.shader.json");
-            this.DIFFUSE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-            this.DIFFUSE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-            paper.Asset.register(this.DIFFUSE);
+                this.SHADOW_DEPTH = shader;
+            }
 
-            this.LAMBERT = new Shader("shader/lambert");
-            this.LAMBERT.setVertShader("def_lambert_vs", ShaderLib.lambert_vert);
-            this.LAMBERT.setFragShader("def_lambert_fs", ShaderLib.lambert_frag);
-            paper.Asset.register(this.LAMBERT);
+            {
+                const shader = this.createBuildinShader("buildin/distance.shader.json", "distance_vs", ShaderLib.distancepackage_vert, "distance_fs", ShaderLib.distancepackage_frag, RenderQueue.Geometry);
+                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
-            this.PARTICLE = new Shader("particles.shader.json");
-            this.PARTICLE.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-            this.PARTICLE.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-            paper.Asset.register(this.PARTICLE);
+                technique.uniforms["glstate_matrix_model"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };
+                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
-            this.SHADOW_DEPTH = new Shader("shader/depth");
-            this.SHADOW_DEPTH.setVertShader("def_depth_vs", ShaderLib.depthpackage_vert);
-            this.SHADOW_DEPTH.setFragShader("def_depth_fs", ShaderLib.depthpackage_frag);
-            paper.Asset.register(this.SHADOW_DEPTH);
+                technique.uniforms["glstate_referencePosition"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._REFERENCEPOSITION, value: [] };
+                technique.uniforms["glstate_nearDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._NEARDICTANCE, value: {} };
+                technique.uniforms["glstate_farDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._FARDISTANCE, value: {} };
 
-            this.SHADOW_DISTANCE = new Shader("shader/distance");
-            this.SHADOW_DISTANCE.setVertShader("def_distance_vs", ShaderLib.distancepackage_vert);
-            this.SHADOW_DISTANCE.setFragShader("def_distance_fs", ShaderLib.distancepackage_frag);
-            paper.Asset.register(this.SHADOW_DISTANCE);
+                this.SHADOW_DISTANCE = shader;
+            }
 
-            //
-            this.TRANSPARENT = new Shader("transparent.shader.json");
-            this.TRANSPARENT.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-            this.TRANSPARENT.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-            paper.Asset.register(this.TRANSPARENT);
+            {
+                const shader = this.createBuildinShader("buildin/line.shader.json", "line_vs", ShaderLib.line_vert, "line_fs", ShaderLib.line_frag, RenderQueue.Geometry);
+                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+                technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
 
-            //
-            this.TRANSPARENT_ADDITIVE = new Shader("transparent_additive.shader.json");
-            this.TRANSPARENT_ADDITIVE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-            this.TRANSPARENT_ADDITIVE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-            paper.Asset.register(this.TRANSPARENT_ADDITIVE);
+                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
-            this.DIFFUSE_TINT_COLOR = new Shader("transparent_tintColor.shader.json");
-            this.DIFFUSE_TINT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-            this.DIFFUSE_TINT_COLOR.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-            paper.Asset.register(this.DIFFUSE_TINT_COLOR);
+                this.LINE = shader;
+            }
 
-            
-            this.TRANSPARENT_ALPHACUT = new Shader("transparent_alphaCut.shader.json");
-            this.TRANSPARENT_ALPHACUT.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-            this.TRANSPARENT_ALPHACUT.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-            paper.Asset.register(this.TRANSPARENT_ALPHACUT);
+            {
+                const shader = this.createBuildinShader("buildin/diffuse.shader.json", "diffuse_vs", ShaderLib.diffuse_vert, "diffuse_fs", ShaderLib.diffuse_frag, RenderQueue.Geometry);
+                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
 
-            this.TRANSPARENT_BOTH_SIDE = new Shader("transparent_bothside.shader.json");
-            this.TRANSPARENT_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-            this.TRANSPARENT_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-            paper.Asset.register(this.TRANSPARENT_BOTH_SIDE);
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+                technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+                technique.attributes["_glesBlendIndex4"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
+                technique.attributes["_glesBlendWeight4"] = { semantic: gltf.AttributeSemanticType.WEIGHTS_0 };
 
-            this.TRANSPARENT_ADDITIVE_BOTH_SIDE = new Shader("transparent_additive_bothside.shader.json");
-            this.TRANSPARENT_ADDITIVE_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-            this.TRANSPARENT_ADDITIVE_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-            paper.Asset.register(this.TRANSPARENT_ADDITIVE_BOTH_SIDE);
+                technique.uniforms["glstate_lightmapOffset"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._LIGHTMAPOFFSET, value: [] };
+                technique.uniforms["glstate_lightmapUV"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPUV, value: {} };
+                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+                technique.uniforms["glstate_vec4_bones[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._BONESVEC4, value: [] };
 
-            this.DIFFUSE_TINT_COLOR = new Shader("shader/diffuse_tintcolor");
-            this.DIFFUSE_TINT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-            this.DIFFUSE_TINT_COLOR.setFragShader("def_diffuse_tinit_fs", ShaderLib.tintcolor_frag);
-            paper.Asset.register(this.DIFFUSE_TINT_COLOR);
+                technique.uniforms["_LightmapTex"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._LIGHTMAPTEX, value: {} };
+                technique.uniforms["_LightmapIntensity"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPINTENSITY, value: 1.0 };
+                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: egret3d.DefaultTextures.GRAY };
+                technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 0, 0] };
+                technique.uniforms["_AlphaCut"] = { type: gltf.UniformType.FLOAT, value: 0 };
 
-            this.DIFFUSE_VERT_COLOR = new Shader("shader/diffuse_vertcolor");
-            this.DIFFUSE_VERT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-            this.DIFFUSE_VERT_COLOR.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-            paper.Asset.register(this.DIFFUSE_VERT_COLOR);
+                this.DIFFUSE = shader;
+            }
 
-            this.DIFFUSE_BOTH_SIDE = new Shader("diffuse_bothside.shader.json");
-            this.DIFFUSE_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-            this.DIFFUSE_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-            paper.Asset.register(this.DIFFUSE_BOTH_SIDE);
+            {
+                const shader = this.createBuildinShader("buildin/lambert.shader.json", "lambert_vs", ShaderLib.lambert_vert, "lambert_fs", ShaderLib.lambert_frag, RenderQueue.Geometry);
 
-            this.MATERIAL_COLOR = new Shader("materialcolor.shader.json");
-            this.MATERIAL_COLOR.setVertShader("def_materialcolor_vs", ShaderLib.materialcolor_vert);
-            this.MATERIAL_COLOR.setFragShader("def_diffuse_fs", ShaderLib.line_frag);
-            paper.Asset.register(this.MATERIAL_COLOR);
+                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+                technique.attributes["_glesNormal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
+                technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+                technique.attributes["_glesBlendIndex4"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
+                technique.attributes["_glesBlendWeight4"] = { semantic: gltf.AttributeSemanticType.WEIGHTS_0 };
 
-            this.PARTICLE_ADDITIVE = new Shader("particles_additive.shader.json");
-            this.PARTICLE_ADDITIVE.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-            this.PARTICLE_ADDITIVE.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-            paper.Asset.register(this.PARTICLE_ADDITIVE);
+                technique.uniforms["glstate_directionalShadowMatrix[0]"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._DIRECTIONSHADOWMAT, value: [] };
+                technique.uniforms["glstate_directionalShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._DIRECTIONSHADOWMAP, value: [] };
+                technique.uniforms["glstate_directLights[0]"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._DIRECTLIGHTS, value: [] };
+                technique.uniforms["glstate_pointShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_CUBE, semantic: gltf.UniformSemanticType._POINTSHADOWMAP, value: [] };
+                technique.uniforms["glstate_pointLights[0]"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._POINTLIGHTS, value: [] };
+                technique.uniforms["glstate_spotShadowMatrix[0]"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._SPOTSHADOWMAT, value: [] };
+                technique.uniforms["glstate_spotShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._SPOTSHADOWMAP, value: [] };
+                technique.uniforms["glstate_spotLights[0]"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._SPOTLIGHTS, value: [] };
+                technique.uniforms["glstate_vec4_bones[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._BONESVEC4, value: [] };
 
-            this.PARTICLE_ADDITIVE_PREMYLTIPLY = new Shader("particles_additive_premultiply.shader.json");
-            this.PARTICLE_ADDITIVE_PREMYLTIPLY.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-            this.PARTICLE_ADDITIVE_PREMYLTIPLY.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-            paper.Asset.register(this.PARTICLE_ADDITIVE_PREMYLTIPLY);
+                technique.uniforms["_NormalTex"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._SPOTSHADOWMAP, value: {} };
+                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+                technique.uniforms["glstate_matrix_model"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };
+                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: DefaultTextures.GRAY };
+                technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
 
-            this.PARTICLE_BLEND = new Shader("particles_blend.shader.json");
-            this.PARTICLE_BLEND.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-            this.PARTICLE_BLEND.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-            paper.Asset.register(this.PARTICLE_BLEND);
+                this.LAMBERT = shader;
+            }
 
-            this.PARTICLE_BLEND_PREMYLTIPLY = new Shader("particles_blend_premultiply.shader.json");
-            this.PARTICLE_BLEND_PREMYLTIPLY.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-            this.PARTICLE_BLEND_PREMYLTIPLY.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-            paper.Asset.register(this.PARTICLE_BLEND_PREMYLTIPLY);
+            {
+                const shader = this.createBuildinShader("buildin/color.shader.json", "color_vs", ShaderLib.materialcolor_vert, "color_fs", ShaderLib.line_frag, RenderQueue.Geometry);
 
-            const t = new Shader("particles_blend1.shader.json");
-            t.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-            t.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-            paper.Asset.register(t);
+                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+
+                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+                technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
+
+                this.GIZMOS_COLOR = shader;
+            }
+
+            {
+                const shader = this.createBuildinShader("buildin/vertcolor.shader.json", "vertcolor_vs", ShaderLib.vertcolor_vert, "vertcolor_fs", ShaderLib.vertcolor_frag, RenderQueue.Geometry);
+
+                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+                technique.attributes["_glesNormal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
+                technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
+                technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+
+                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+
+                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
+                technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_MAT4, value: {} };
+
+                this.VERT_COLOR = shader;
+            }
+
+            {
+                const shader = this.createBuildinShader("buildin/particle.shader.json", "particle_vs", ShaderLib.particlesystem_vert, "particle_fs", ShaderLib.particlesystem_frag, RenderQueue.Transparent);
+
+                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                technique.attributes["_glesCorner"] = { semantic: gltf.AttributeSemanticType._CORNER };
+                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+                technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
+                technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+                technique.attributes["_startPosition"] = { semantic: gltf.AttributeSemanticType._START_POSITION };
+                technique.attributes["_startVelocity"] = { semantic: gltf.AttributeSemanticType._START_VELOCITY };
+                technique.attributes["_startColor"] = { semantic: gltf.AttributeSemanticType._START_COLOR };
+                technique.attributes["_startSize"] = { semantic: gltf.AttributeSemanticType._START_SIZE };
+                technique.attributes["_startRotation"] = { semantic: gltf.AttributeSemanticType._START_ROTATION };
+                technique.attributes["_time"] = { semantic: gltf.AttributeSemanticType._TIME };
+                technique.attributes["_random0"] = { semantic: gltf.AttributeSemanticType._RANDOM0 };
+                technique.attributes["_random1"] = { semantic: gltf.AttributeSemanticType._RANDOM1 };
+                technique.attributes["_startWorldPosition"] = { semantic: gltf.AttributeSemanticType._START_POSITION };
+                technique.attributes["_startWorldRotation"] = { semantic: gltf.AttributeSemanticType._START_ROTATION };
+
+                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: egret3d.DefaultTextures.GRAY };
+                technique.uniforms["_TintColor"] = { type: gltf.UniformType.FLOAT_VEC4, value: [0.5, 0.5, 0.5, 0.5] };
+
+                technique.uniforms["u_currentTime"] = { type: gltf.UniformType.FLOAT, value: 0 };
+                technique.uniforms["u_gravity"] = { type: gltf.UniformType.FLOAT_VEC3, value: [0, 0, 0] };
+                technique.uniforms["u_worldPosition"] = { type: gltf.UniformType.FLOAT_VEC3, value: [0, 0, 0] };
+                technique.uniforms["u_worldRotation"] = { type: gltf.UniformType.FLOAT_VEC4, value: [0, 0, 0, 1] };
+                technique.uniforms["u_startRotation3D"] = { type: gltf.UniformType.BOOL, value: false };
+                technique.uniforms["u_scalingMode"] = { type: gltf.UniformType.Int, value: 0 };
+                technique.uniforms["u_positionScale"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
+                technique.uniforms["u_sizeScale"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
+                technique.uniforms["glstate_matrix_vp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._VIEWPROJECTION, value: [] };
+
+                technique.uniforms["glstate_cameraPos"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_POS, value: [] };
+                technique.uniforms["glstate_cameraForward"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_FORWARD, value: [] };
+                technique.uniforms["glstate_cameraUp"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_UP, value: [] };
+                technique.uniforms["u_lengthScale"] = { type: gltf.UniformType.FLOAT, value: [1, 1, 1] };
+                technique.uniforms["u_speeaScale"] = { type: gltf.UniformType.FLOAT, value: [1, 1, 1] };
+                technique.uniforms["u_simulationSpace"] = { type: gltf.UniformType.Int, value: 0 };
+                technique.uniforms["u_spaceType"] = { type: gltf.UniformType.Int, value: 0 };
+                technique.uniforms["u_velocityConst"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
+                technique.uniforms["u_velocityCurveX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_velocityCurveY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_velocityCurveZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_velocityConstMax"] = { type: gltf.UniformType.FLOAT_VEC3, value: [] };
+                technique.uniforms["u_velocityCurveMaxX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_velocityCurveMaxY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_velocityCurveMaxZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_colorGradient[0]"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
+                technique.uniforms["u_alphaGradient[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_colorGradientMax[0]"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
+                technique.uniforms["u_alphaGradientMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurve[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveMaxX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveMaxY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_sizeCurveMaxZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationConst"] = { type: gltf.UniformType.FLOAT, value: 0 };
+                technique.uniforms["u_rotationConstMax"] = { type: gltf.UniformType.FLOAT, value: 0 };
+                technique.uniforms["u_rotationCurve[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationConstSeprarate"] = { type: gltf.UniformType.FLOAT_VEC3, value: [] };
+                technique.uniforms["u_rotationConstMaxSeprarate"] = { type: gltf.UniformType.FLOAT_VEC3, value: [] };
+                technique.uniforms["u_rotationCurveX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveW[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveMaxX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveMaxY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveMaxZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_rotationCurveMaxW[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_cycles"] = { type: gltf.UniformType.FLOAT, value: {} };
+                technique.uniforms["u_subUV"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
+                technique.uniforms["u_uvCurve[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+                technique.uniforms["u_uvCurveMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
+
+                this.PARTICLE = shader;
+            }
+
         }
+
+        // public static init() {
+        //     if (this._inited) {
+        //         return;
+        //     }
+
+        //     this._inited = true;
+
+        //     this.LINE = new Shader("buildin/line.shader.json");
+        //     this.LINE.setVertShader("def_line_vs", ShaderLib.line_vert);
+        //     this.LINE.setFragShader("def_line_fs", ShaderLib.line_frag);
+        //     paper.Asset.register(this.LINE);
+
+        //     this.GIZMOS_COLOR = new Shader("buildin/materialcolor.shader.json");
+        //     this.GIZMOS_COLOR.setVertShader("def_color_vs", ShaderLib.materialcolor_vert);
+        //     this.GIZMOS_COLOR.setFragShader("def_color_fs", ShaderLib.line_frag);
+        //     paper.Asset.register(this.GIZMOS_COLOR);
+
+        //     this.DIFFUSE = new Shader("buildin/diffuse.shader.json");
+        //     this.DIFFUSE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+        //     this.DIFFUSE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+        //     paper.Asset.register(this.DIFFUSE);
+
+        //     this.LAMBERT = new Shader("buildin/lambert.shader.json");
+        //     this.LAMBERT.setVertShader("def_lambert_vs", ShaderLib.lambert_vert);
+        //     this.LAMBERT.setFragShader("def_lambert_fs", ShaderLib.lambert_frag);
+        //     paper.Asset.register(this.LAMBERT);
+
+        //     this.PARTICLE = new Shader("buildin/particles.shader.json");
+        //     this.PARTICLE.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+        //     this.PARTICLE.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+        //     paper.Asset.register(this.PARTICLE);
+
+        //     this.SHADOW_DEPTH = new Shader("buildin/depth.shader.json");
+        //     this.SHADOW_DEPTH.setVertShader("def_depth_vs", ShaderLib.depthpackage_vert);
+        //     this.SHADOW_DEPTH.setFragShader("def_depth_fs", ShaderLib.depthpackage_frag);
+        //     paper.Asset.register(this.SHADOW_DEPTH);
+
+        //     this.SHADOW_DISTANCE = new Shader("buildin/distance.shader.json");
+        //     this.SHADOW_DISTANCE.setVertShader("def_distance_vs", ShaderLib.distancepackage_vert);
+        //     this.SHADOW_DISTANCE.setFragShader("def_distance_fs", ShaderLib.distancepackage_frag);
+        //     paper.Asset.register(this.SHADOW_DISTANCE);
+
+        //     //
+        //     this.TRANSPARENT = new Shader("buildin/transparent.shader.json");
+        //     this.TRANSPARENT.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+        //     this.TRANSPARENT.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+        //     paper.Asset.register(this.TRANSPARENT);
+
+        //     //
+        //     this.TRANSPARENT_ADDITIVE = new Shader("buildin/transparent_additive.shader.json");
+        //     this.TRANSPARENT_ADDITIVE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+        //     this.TRANSPARENT_ADDITIVE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+        //     paper.Asset.register(this.TRANSPARENT_ADDITIVE);
+
+        //     this.DIFFUSE_TINT_COLOR = new Shader("buildin/transparent_tintColor.shader.json");
+        //     this.DIFFUSE_TINT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+        //     this.DIFFUSE_TINT_COLOR.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+        //     paper.Asset.register(this.DIFFUSE_TINT_COLOR);
+
+
+        //     this.TRANSPARENT_ALPHACUT = new Shader("buildin/transparent_alphaCut.shader.json");
+        //     this.TRANSPARENT_ALPHACUT.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+        //     this.TRANSPARENT_ALPHACUT.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+        //     paper.Asset.register(this.TRANSPARENT_ALPHACUT);
+
+        //     this.TRANSPARENT_BOTH_SIDE = new Shader("buildin/transparent_bothside.shader.json");
+        //     this.TRANSPARENT_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+        //     this.TRANSPARENT_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+        //     paper.Asset.register(this.TRANSPARENT_BOTH_SIDE);
+
+        //     this.TRANSPARENT_ADDITIVE_BOTH_SIDE = new Shader("buildin/transparent_additive_bothside.shader.json");
+        //     this.TRANSPARENT_ADDITIVE_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+        //     this.TRANSPARENT_ADDITIVE_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+        //     paper.Asset.register(this.TRANSPARENT_ADDITIVE_BOTH_SIDE);
+
+        //     this.DIFFUSE_TINT_COLOR = new Shader("buildin/diffuse_tintcolor.shader.json");
+        //     this.DIFFUSE_TINT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+        //     this.DIFFUSE_TINT_COLOR.setFragShader("def_diffuse_tinit_fs", ShaderLib.tintcolor_frag);
+        //     paper.Asset.register(this.DIFFUSE_TINT_COLOR);
+
+        //     this.DIFFUSE_VERT_COLOR = new Shader("buildin/diffuse_vertcolor.shader.json");
+        //     this.DIFFUSE_VERT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+        //     this.DIFFUSE_VERT_COLOR.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+        //     paper.Asset.register(this.DIFFUSE_VERT_COLOR);
+
+        //     this.DIFFUSE_BOTH_SIDE = new Shader("buildin/diffuse_bothside.shader.json");
+        //     this.DIFFUSE_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
+        //     this.DIFFUSE_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
+        //     paper.Asset.register(this.DIFFUSE_BOTH_SIDE);
+
+        //     this.MATERIAL_COLOR = new Shader("buildin/materialcolor.shader.json");
+        //     this.MATERIAL_COLOR.setVertShader("def_materialcolor_vs", ShaderLib.materialcolor_vert);
+        //     this.MATERIAL_COLOR.setFragShader("def_diffuse_fs", ShaderLib.line_frag);
+        //     paper.Asset.register(this.MATERIAL_COLOR);
+
+        //     this.PARTICLE_ADDITIVE = new Shader("buildin/particles_additive.shader.json");
+        //     this.PARTICLE_ADDITIVE.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+        //     this.PARTICLE_ADDITIVE.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+        //     paper.Asset.register(this.PARTICLE_ADDITIVE);
+
+        //     this.PARTICLE_ADDITIVE_PREMYLTIPLY = new Shader("buildin/particles_additive_premultiply.shader.json");
+        //     this.PARTICLE_ADDITIVE_PREMYLTIPLY.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+        //     this.PARTICLE_ADDITIVE_PREMYLTIPLY.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+        //     paper.Asset.register(this.PARTICLE_ADDITIVE_PREMYLTIPLY);
+
+        //     this.PARTICLE_BLEND = new Shader("buildin/particles_blend.shader.json");
+        //     this.PARTICLE_BLEND.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+        //     this.PARTICLE_BLEND.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+        //     paper.Asset.register(this.PARTICLE_BLEND);
+
+        //     this.PARTICLE_BLEND_PREMYLTIPLY = new Shader("buildin/particles_blend_premultiply.shader.json");
+        //     this.PARTICLE_BLEND_PREMYLTIPLY.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+        //     this.PARTICLE_BLEND_PREMYLTIPLY.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+        //     paper.Asset.register(this.PARTICLE_BLEND_PREMYLTIPLY);
+
+        //     const t = new Shader("buildin/particles_blend1.shader.json");
+        //     t.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
+        //     t.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
+        //     paper.Asset.register(t);
+        // }
 
         // public static init2() {
         //     if (this._inited) {

@@ -50,12 +50,11 @@ namespace egret3d {
         public readonly vertShader: ShaderInfo = {} as any;//TODO
         public readonly fragShader: ShaderInfo = {} as any;//TODO
 
-        setVertShader(name: string, src:string){
+        setVertShader(name: string, src: string) {
             this.vertShader.name = name;
             this.vertShader.src = src;
         }
-
-        setFragShader(name: string, src:string){
+        setFragShader(name: string, src: string) {
             this.fragShader.name = name;
             this.fragShader.src = src;
         }
@@ -65,20 +64,13 @@ namespace egret3d {
          * 
          */
         $parse(json: any) {
-            
-        }        
 
-        /**
-         * @inheritDoc
-         */
+        }
+
         public dispose() {
-            // for (const k in this.passes) {
-            //     delete this.passes[k];
-            // }
-
-            // for (const k in this.defaultValue) {
-            //     delete this.defaultValue[k];
-            // }
+            if (this._isBuiltin) {
+                return;
+            }
         }
         /**
          * @inheritDoc

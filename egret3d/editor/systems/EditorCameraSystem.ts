@@ -4,15 +4,16 @@ namespace paper.editor {
      */
     export class EditorCameraSystem extends egret3d.CameraSystem {
         public onUpdate(deltaTime: number) {
-            const cameras = this._groups[0].components as egret3d.Camera[];
+            const cameras = this._cameras.cameras;
             let camera: egret3d.Camera | null = null;
 
             if (cameras.length > 0) {
                 const lights = this._groups[1].components as ReadonlyArray<egret3d.BaseLight>;
-                cameras.sort(this._sortCamera);
+                const activeScene = paper.Application.sceneManager.activeScene;
+                this._cameras.sort();
 
-                for (const component of cameras) {
-                    if (component.gameObject === this._globalGameObject) { // Pass global camera.
+                for (const component of cameras) { // TODO 完善所有摄像机的渲染
+                    if (component.gameObject.scene !== activeScene) {
                         continue;
                     }
 
