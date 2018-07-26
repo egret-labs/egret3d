@@ -13,7 +13,6 @@ namespace egret3d {
 
         public static registerTechnique(technique: gltf.Technique) {
             //
-            // const template = { name: "shader/lambert", technique, shader: egret3d.DefaultShaders.LAMBERT };
             for (const key in technique.attributes) {
                 const att = technique.attributes[key];
                 technique.attributes[key] = { semantic: att.semantic, extensions: { paper: { enable: true, location: -1 } } };
@@ -55,12 +54,6 @@ namespace egret3d {
             }
             return target;
         }
-
-        // public static createGLTFMaterial(source: GLTFMaterial) {
-        //     const target: GLTFMaterial = { name: source.name, alphaMode: source.alphaMode, doubleSided: source.doubleSided, extensions: { KHR_techniques_webgl: { technique: -1 } } };
-
-        //     return target;
-        // }
 
         public static init() {
             if (this._inited) {

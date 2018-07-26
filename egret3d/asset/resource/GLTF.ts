@@ -202,8 +202,8 @@ namespace egret3d {
         /**
          * 
          */
-        public static createGLTFAsset(): GLTFAsset {
-            const glftAsset = new GLTFAsset("");
+        public static createGLTFAsset(url: string = ""): GLTFAsset {
+            const glftAsset = new GLTFAsset(url);
 
             glftAsset.config = {
                 asset: {
