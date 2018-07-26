@@ -2,13 +2,9 @@ namespace paper.editor {
     //只有编辑模式可以执行，编辑相机
     export class Gizmo {
         private static _editorCamera: GameObject = null;
-
         private static _enabled: boolean = false;
-
         private static webgl: WebGLRenderingContext;
-
         private static context: egret3d.RenderContext;
-
         private static camera: egret3d.Camera;
 
         public static Enabled(editorCamera) {

@@ -35,9 +35,17 @@ namespace paper.editor {
         public setBackRuntime(back: any): void {
             this.backRunTime = back;
         }
+        private history: History;
+        /**
+         * 初始化
+         * @param history 
+         */
+        public init(history: History): void {
+            this.history = history;
+        }
 
         public addState(state: BaseState) {
-            state && History.instance.add(state);
+            state && this.history.add(state);
         }
 
         public getEditType(propName: string, target: any): editor.EditType | null {
@@ -261,8 +269,8 @@ namespace paper.editor {
             }
         }
 
-        public createGameObject(parentList:GameObject[],createType:string) {
-            let state = CreateGameObjectState.create(parentList,createType);
+        public createGameObject(parentList: GameObject[], createType: string) {
+            let state = CreateGameObjectState.create(parentList, createType);
             this.addState(state);
         }
 
@@ -450,8 +458,8 @@ namespace paper.editor {
                     for (let i: number = 0; i < objects.length; i++) {
                         let obj = objects[i];
                         if (obj.transform.parent === targetObject.transform.parent) {
-                            let oldIndex=targetObject.transform.parent.children.indexOf(obj.transform);
-                            (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(oldIndex,1);
+                            let oldIndex = targetObject.transform.parent.children.indexOf(obj.transform);
+                            (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(oldIndex, 1);
                             switch (dir) {
                                 case 'top': index = targetObject.transform.parent.children.indexOf(targetObject.transform); break;
                                 case 'bottom': index = targetObject.transform.parent.children.indexOf(targetObject.transform) + 1; break;
@@ -615,66 +623,22 @@ namespace paper.editor {
                 target[propName] = value;
             }
         }
-        /**选择游戏对象 */
+        /**当前选中的对象 */
+        public currentSelected: GameObject[];
+        /**
+         * 选择游戏对象
+         *  */
         public selectGameObject(objs: GameObject[]): void {
+            this.currentSelected = objs;
             this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, objs));
         }
-
-        // 切换场景，参数是场景编号
-        public switchScene(url: string) {
-            Application.sceneManager.unloadAllScene();
-            Application.callLater(() => {
-                this.loadEditScene(url).then(() => {
-                    this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_SCENE, url));
-                });
-            });
-        }
-
-        public resetHistory(data: string): void {
-            let history = History.instance.deserialize(JSON.parse(data));
-        }
-
-        private _editCamera: GameObject;
-        public geoController: GeoController;
-        private async loadEditScene(url: string) {
-            //由于新引擎场景加载方式存在问题，这里预先载入一下场景资源
-            await RES.getResAsync(url);
-            Application.sceneManager.loadScene(url);
-            let camera = GameObject.findWithTag("EditorCamera");
-            if (camera) {
-                this._editCamera = camera;
-            } else {
-                this._editCamera = this.createEditCamera();
-            }
-            this.geoController = new GeoController(this);
-            // 开启几何画板
-            Gizmo.Enabled(this._editCamera);
-            let script = this._editCamera.addComponent(EditorCameraScript);
-            script.editorModel = this;
-            script.moveSpeed = 10;
-            script.rotateSpeed = 0.5;
-            let pickScript = this._editCamera.addComponent(PickGameObjectScript);
-            pickScript.editorModel = this;
-            this.geoController.cameraScript = script;
-        }
-
-        private createEditCamera(): GameObject {
-            let cameraObject = new GameObject();
-            cameraObject.name = "EditorCamera";
-            cameraObject.tag = "EditorCamera";
-
-            let camera = cameraObject.addComponent(egret3d.Camera);
-            camera.near = 0.1;
-            camera.far = 100;
-            camera.backgroundColor.set(0.13, 0.28, 0.51, 1);
-            cameraObject.transform.setLocalPosition(0, 10, -10);
-            cameraObject.transform.lookAt(new egret3d.Vector3(0, 0, 0));
-            return cameraObject;
-        }
+        /**当前编辑模式 */
+        public currentEditMode: string;
         /**
          * 切换编辑模式
          */
         public changeEditMode(mode: string) {
+            this.currentEditMode = mode;
             this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_EDIT_MODE, mode));
         }
         /**
@@ -682,33 +646,6 @@ namespace paper.editor {
          */
         public changeEditType(type: string) {
             this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_EDIT_TYPE, type));
-        }
-        /**
-         * 序列化场景
-         */
-        public serializeActiveScene(): string {
-            let scene = Application.sceneManager.activeScene;
-
-            if (this._editCamera) {
-                scene._removeGameObject(this._editCamera);
-            }
-            let len = this.geoController.controllerPool.length;
-            if (len > 0) {
-                for (let i = 0; i < len; i++) {
-                    scene._removeGameObject(this.geoController.controllerPool[i]);
-                }
-            }
-            let data = serialize(scene);
-            if (len > 0) {
-                for (let i = 0; i < len; i++) {
-                    scene._addGameObject(this.geoController.controllerPool[i]);
-                }
-            }
-            if (this._editCamera) {
-                scene._addGameObject(this._editCamera);
-            }
-            let jsonData = JSON.stringify(data);
-            return jsonData;
         }
 
         public isPrefabRoot(gameObj: GameObject): boolean {
@@ -727,18 +664,6 @@ namespace paper.editor {
             return false;
         }
 
-        public serializeHistory(): string {
-            const historyData = History.instance.serialize();
-            return JSON.stringify(historyData);
-        }
-
-        public undo = () => {
-            History.instance.back();
-        }
-
-        public redo = () => {
-            History.instance.forward();
-        }
         /**
         * 从一个预置体文件创建实例
         * @param prefabPath 预置体资源路径
