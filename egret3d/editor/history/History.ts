@@ -8,13 +8,6 @@ namespace paper.editor {
     };
 
     export class History {
-        private static _instance: History;
-        public static get instance(): History {
-            if (!this._instance) {
-                this._instance = new History();
-            }
-            return this._instance;
-        }
         public dispatcher: EventDispatcher | null = null;
         private _locked: 0 | 1 | 2 | 3 = 0;
         private _index: number = -1;
