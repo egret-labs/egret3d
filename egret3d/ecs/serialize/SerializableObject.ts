@@ -19,9 +19,6 @@ namespace paper {
         @paper.serializedField
         public uuid: string = createUUID();
 
-        @paper.serializedField
-        public assetUUid: string = createAssetID();
-
         public serialize(): any {
             console.warn("Unimplemented serialize method.");
         }

@@ -143,13 +143,8 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createPrefabState(prefab: any, selectIds: string[]) {
-            const data = {
-                prefab,
-                selectIds
-            }
-
-            const state = CreatePrefabState.create(data);
+        public createPrefabState(prefab: any) {
+            const state = CreatePrefabState.create({prefab});
             this.addState(state);
         }
 
@@ -695,16 +690,14 @@ namespace paper.editor {
         }
 
         public isPrefabRoot(gameObj: GameObject): boolean {
-            let prefabInfo = (gameObj as any).prefabEditInfo;
-            if (typeof (prefabInfo) == "boolean" && prefabInfo === true) {
+            if (gameObj.extras.isPrefabRoot === true) {
                 return true;
             }
             return false;
         }
 
         public isPrefabChild(gameObj: GameObject): boolean {
-            let prefabInfo = (gameObj as any).prefabEditInfo;
-            if (typeof (prefabInfo) == "string") {
+            if (gameObj.extras.isPrefabRoot === false) {
                 return true;
             }
             return false;
@@ -730,7 +723,7 @@ namespace paper.editor {
             const prefab = await RES.getResAsync(prefabPath) as Prefab | null;
             if (prefab) {
                 const instance = prefab.createInstance();
-                (instance as any).prefabEditInfo = true;
+                instance.extras.isPrefabRoot = true;
                 this.setGameObjectPrefab(instance, prefab, instance);
                 return instance;
             }
@@ -742,13 +735,14 @@ namespace paper.editor {
          * @param gameObj 
          * @param prefab 
          */
-        private setGameObjectPrefab(gameObj: GameObject, prefab: Prefab, rootObj: GameObject) {
+        public setGameObjectPrefab(gameObj: GameObject, prefab: Prefab, rootObj: GameObject) {
             if (!gameObj) {
                 return;
             }
             (gameObj as any).prefab = prefab;
             if (gameObj != rootObj) {
-                (gameObj as any).prefabEditInfo = rootObj.uuid;
+                gameObj.extras.isPrefabRoot = false;
+                gameObj.extras.prefabRootId = rootObj.uuid;
             }
             for (let index = 0; index < gameObj.transform.children.length; index++) {
                 const element = gameObj.transform.children[index];
@@ -756,6 +750,7 @@ namespace paper.editor {
                 this.setGameObjectPrefab(obj, prefab, rootObj);
             }
         }
+
         /**将对象按照层级进行排序
          */
         public sortGameObjectsForHierarchy(gameobjects: paper.GameObject[]): paper.GameObject[] {
@@ -825,15 +820,15 @@ namespace paper.editor {
 
         //apply gameobject proerty
         for (const p of applyGameObjectPropertyList) {
-            const {gameObjectUUid,newValueList,preValueCopylist} = p;
-            let state = ModifyPrefabGameObjectPropertyState.create(gameObjectUUid,newValueList,preValueCopylist);
+            const {gameObjUUid,newValueList,preValueCopylist} = p;
+            let state = ModifyPrefabGameObjectPropertyState.create(gameObjUUid,newValueList,preValueCopylist);
             group.push(state);
         }
         
         //apply component property
-        for (const p of applyGameObjectPropertyList) {
-            const {gameObjectUUid,componentUUid,newValueList,preValueCopylist} = p;
-            let state = ModifyPrefabComponentPropertyState.create(gameObjectUUid,componentUUid,newValueList,preValueCopylist);
+        for (const p of applyComponentPropertyList) {
+            const {gameObjUUid,componentUUid,newValueList,preValueCopylist} = p;
+            let state = ModifyPrefabComponentPropertyState.create(gameObjUUid,componentUUid,newValueList,preValueCopylist);
             group.push(state);
         }
 

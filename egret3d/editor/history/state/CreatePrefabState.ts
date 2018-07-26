@@ -11,32 +11,12 @@ namespace paper.editor{
             return state;
         }
 
-        /**
-         * 设置children prefab属性
-         * @param gameObj 
-         * @param prefab 
-         */
-        private setGameObjectPrefab(gameObj: paper.GameObject, prefab: egret3d.Prefab, rootObj: paper.GameObject) {
-            if (!gameObj) {
-                return;
-            }
-            (gameObj as any).prefab = prefab;
-            if (gameObj != rootObj) {
-                (gameObj as any).prefabEditInfo = rootObj.uuid;
-            }
-            for (let index = 0; index < gameObj.transform.children.length; index++) {
-                const element = gameObj.transform.children[index];
-                const obj: paper.GameObject = element.gameObject;
-                this.setGameObjectPrefab(obj, prefab, rootObj);
-            }
-        }
-
         public undo(): boolean {
             if (super.undo()) {
                 let deleteUUid: string = this.data.cachePrefabUUid;
                 let gameObj = Editor.editorModel.getGameObjectByUUid(deleteUUid);
                 Editor.editorModel._deleteGameObject([gameObj]);
-                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, [this.data.selectIds]);
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, []);
                 return true;
 
             }
@@ -47,14 +27,14 @@ namespace paper.editor{
             if (super.redo()) {
                 const { prefab } = this.data;
                 if (prefab) {
-                    let instance;
+                    let instance:GameObject;
                     if (this.data.serializeData) {
                         instance = deserialize(this.data.serializeData,true);
-                        this.setGameObjectPrefab(instance, prefab, instance);
+                        Editor.editorModel.setGameObjectPrefab(instance,prefab,instance);
                     } else {
                         instance = prefab.createInstance();
-                        (instance as any).prefabEditInfo = true;
-                        this.setGameObjectPrefab(instance, prefab, instance);
+                        instance.extras.isPrefabRoot = true;
+                        Editor.editorModel.setGameObjectPrefab(instance,prefab,instance);
                         this.data.serializeData = serialize(instance);
                     }
 
