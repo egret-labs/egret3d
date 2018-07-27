@@ -1,6 +1,5 @@
 namespace paper.editor{
-    //修改预制体游戏对象属性
-    export class ModifyPrefabGameObjectPropertyState extends ModifyPrefabProperty {
+    export class ModifyPrefabGameObjectPropertyState extends BaseState {
         public static toString(): string {
             return "[class common.ModifyPrefabGameObjectPropertyState]";
         }
@@ -16,6 +15,10 @@ namespace paper.editor{
             return state;
         }
 
+        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any) {
+            this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
+        }
+
         /**
          * 修改预制体游戏对象属性,目前只支持修改根对象
          * @param gameObjectId 
@@ -26,25 +29,15 @@ namespace paper.editor{
             if (!prefabObj) {
                 return;
             }
-            let objects = this.getGameObjectsByPrefab(prefabObj.prefab);
+            let objects = Editor.editorModel.getRootGameObjectsByPrefab(prefabObj.prefab);
             let editInfoList = editor.getEditInfo(prefabObj);
             valueList.forEach(async (propertyValue) => {
                 const { propName, copyValue, valueEditType } = propertyValue;
                 let newValue = await Editor.editorModel.deserializeProperty(copyValue, valueEditType);
                 objects.forEach(object => {
-                    let valueType = typeof object[propName];
-
-                    if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
-                        if (object[propName] === prefabObj[propName]) {
-                            Editor.editorModel.setTargetProperty(propName, object, newValue);
-                            this.dispathPropertyEvent(object, propName, newValue);
-                        }
-                    }
-                    else {
-                        if (this.equal(object[propName], prefabObj[propName])) {
-                            Editor.editorModel.setTargetProperty(propName, object, newValue);
-                            this.dispathPropertyEvent(object, propName, newValue);
-                        }
+                    if (Editor.editorModel.compareValue(object[propName], prefabObj[propName])) {
+                        Editor.editorModel.setTargetProperty(propName, object, newValue);
+                        this.dispathPropertyEvent(object, propName, newValue);
                     }
                 });
 

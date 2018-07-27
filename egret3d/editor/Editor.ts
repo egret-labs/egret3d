@@ -100,13 +100,14 @@ namespace paper.editor {
         public static redo() {
             this.history.forward();
         }
-        public static deserializeHistory(data: string): void {
-            let history = this.history.deserialize(JSON.parse(data));
+        public static deserializeHistory(data: any): void {
+            this.history.deserialize(data);
         }
         public static serializeHistory(): string {
             const historyData = this.history.serialize();
             return JSON.stringify(historyData);
         }
+
 
         /**
          * 序列化场景

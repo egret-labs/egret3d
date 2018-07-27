@@ -1,6 +1,6 @@
 namespace paper.editor{
     //修改预制体组件属性
-    export class ModifyPrefabComponentPropertyState extends ModifyPrefabProperty {
+    export class ModifyPrefabComponentPropertyState extends BaseState {
         public static toString(): string {
             return "[class common.ModifyPrefabComponentPropertyState]";
         }
@@ -17,12 +17,16 @@ namespace paper.editor{
             return state;
         }
 
+        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any) {
+            this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
+        }
+
         public async modifyPrefabComponentPropertyValues(gameObjUUid: string, componentUUid: string, valueList: any[]): Promise<void> {
             let prefabObj = Editor.editorModel.getGameObjectByUUid(gameObjUUid);
             if (!prefabObj) {
                 return;
             }
-            let objects = this.getGameObjectsByPrefab(prefabObj.prefab);
+            let objects = Editor.editorModel.getRootGameObjectsByPrefab(prefabObj.prefab);
             for (let k: number = 0; k < prefabObj.components.length; k++) {
                 let prefabComp = prefabObj.components[k];
                 let editInfoList = editor.getEditInfo(prefabComp);
@@ -33,18 +37,9 @@ namespace paper.editor{
                         objects.forEach(object => {
                             let objectComp = Editor.editorModel.getComponentByAssetId(object, prefabComp.assetID);
                             if (objectComp !== null) {
-                                let valueType = typeof objectComp[propName];
-                                if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
-                                    if (objectComp[propName] === prefabComp[propName]) {
-                                        Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
-                                        this.dispathPropertyEvent(objectComp, propName, newValue);
-                                    }
-                                }
-                                else {
-                                    if (this.equal(objectComp[propName], prefabComp[propName])) {
-                                        Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
-                                        this.dispathPropertyEvent(objectComp, propName, newValue);
-                                    }
+                                if (Editor.editorModel.compareValue(objectComp[propName],prefabComp[propName])) {
+                                    Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
+                                    this.dispathPropertyEvent(objectComp, propName, newValue);
                                 }
                             } else {
                                 console.warn(`{prefabComp.assetId} not match!`)
