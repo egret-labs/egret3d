@@ -8,9 +8,6 @@ namespace paper {
          */
         public static _injectGameObject: GameObject;
 
-        /**
-         * @internal
-         */
         @paper.serializedField
         public assetID: string = createAssetID();
         /**

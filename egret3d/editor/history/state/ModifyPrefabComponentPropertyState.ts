@@ -1,14 +1,24 @@
 namespace paper.editor{
     //修改预制体组件属性
-    export class ModifyPrefabComponentPropertyState extends ModifyPrefabProperty {
+    export class ModifyPrefabComponentPropertyState extends BaseState {
         public static toString(): string {
             return "[class common.ModifyPrefabComponentPropertyState]";
         }
 
-        public static create(data: any = null): ModifyPrefabComponentPropertyState | null {
+        public static create(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyPrefabComponentPropertyState | null {
             const state = new ModifyPrefabComponentPropertyState();
+            let data = {
+                gameObjUUid,
+                componentUUid,
+                newValueList,
+                preValueCopylist,
+            }
             state.data = data;
             return state;
+        }
+
+        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any) {
+            this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
         }
 
         public async modifyPrefabComponentPropertyValues(gameObjUUid: string, componentUUid: string, valueList: any[]): Promise<void> {
@@ -16,7 +26,7 @@ namespace paper.editor{
             if (!prefabObj) {
                 return;
             }
-            let objects = this.getGameObjectsByPrefab(prefabObj.prefab);
+            let objects = Editor.editorModel.getRootGameObjectsByPrefab(prefabObj.prefab);
             for (let k: number = 0; k < prefabObj.components.length; k++) {
                 let prefabComp = prefabObj.components[k];
                 let editInfoList = editor.getEditInfo(prefabComp);
@@ -25,23 +35,14 @@ namespace paper.editor{
                         const { propName, copyValue, valueEditType } = propertyValue;
                         let newValue = await Editor.editorModel.deserializeProperty(copyValue, valueEditType);
                         objects.forEach(object => {
-                            let objectComp = Editor.editorModel.getComponentByAssetId(object, prefabComp.assetUUid);
+                            let objectComp = Editor.editorModel.getComponentByAssetId(object, prefabComp.assetID);
                             if (objectComp !== null) {
-                                let valueType = typeof objectComp[propName];
-                                if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
-                                    if (objectComp[propName] === prefabComp[propName]) {
-                                        Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
-                                        this.dispathPropertyEvent(objectComp, propName, newValue);
-                                    }
-                                }
-                                else {
-                                    if (this.equal(objectComp[propName], prefabComp[propName])) {
-                                        Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
-                                        this.dispathPropertyEvent(objectComp, propName, newValue);
-                                    }
+                                if (Editor.editorModel.compareValue(objectComp[propName],prefabComp[propName])) {
+                                    Editor.editorModel.setTargetProperty(propName, objectComp, newValue);
+                                    this.dispathPropertyEvent(objectComp, propName, newValue);
                                 }
                             } else {
-                                console.warn(`{prefabComp.assetUUid} not match!`)
+                                console.warn(`{prefabComp.assetId} not match!`)
                             }
 
                         });
