@@ -240,6 +240,7 @@ namespace egret3d {
 
                 const location = uniform.extensions.paper.location;
                 const value = uniform.value;
+                // const value = material._glTFMaterial.extensions.KHR_techniques_webgl.values[key];
                 switch (uniform.type) {
                     case gltf.UniformType.BOOL:
                     case gltf.UniformType.Int:

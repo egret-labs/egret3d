@@ -34,7 +34,7 @@ namespace egret3d {
         DefaultMeshes.init();
         DefaultTextures.init();
         DefaultShaders.init();
-        DefaultTechnique.init();
+        // DefaultTechnique.init();
         stage.init(canvas, requiredOptions);
 
         if (!options.systems) {
@@ -1151,7 +1151,7 @@ declare namespace gltf {
         /**
          * The index of the technique.
          */
-        technique: GLTFIndex;
+        technique: string;
         /**
          * Dictionary object of uniform values.
          */

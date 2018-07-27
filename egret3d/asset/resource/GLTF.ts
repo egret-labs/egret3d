@@ -2,7 +2,6 @@ namespace egret3d {
     export interface GLTFEgret extends gltf.GLTF {
         extensions?: {
             paper?: {
-                shaders?: string,
                 renderQueue?: number;
             }
 
@@ -116,6 +115,9 @@ namespace egret3d {
     export interface GLTFMaterial extends gltf.Material {
         extensions?: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
+            paper: {
+                renderQueue: number;
+            }
         }
     }
 
@@ -246,6 +248,35 @@ namespace egret3d {
             } as GLTFEgret;
 
             return glftAsset;
+        }
+
+        public static createTechnique(source: gltf.Technique) {
+            const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } };
+            for (const key in source.attributes) {
+                const attribute = source.attributes[key];
+                target.attributes[key] = { semantic: attribute.semantic, extensions: { paper: { enable: true, location: -1 } } };
+            }
+            for (const key in source.uniforms) {
+                const uniform = source.uniforms[key];
+                const value = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value;
+                target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value, extensions: { paper: { enable: false, location: -1 } } };
+            }
+
+            const states = source.states;
+            const targetStates = target.states;
+            if (states.enable) {
+                targetStates.enable = states.enable.concat();
+            }
+
+            for (const fun in states.functions) {
+                if (Array.isArray(states.functions[fun])) {
+                    targetStates.functions[fun] = states.functions[fun].concat();
+                }
+                else {
+                    targetStates.functions[fun] = states.functions[fun];
+                }
+            }
+            return target;
         }
         /**
          * Buffer 列表。

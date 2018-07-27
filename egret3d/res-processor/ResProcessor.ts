@@ -265,8 +265,8 @@ namespace RES.processor {
     export const GLTFProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, resource.type === "GLTF" ? RES.processor.JsonProcessor : RES.processor.BinaryProcessor);
-            const url = getUrl(resource);
-            const glTF = new egret3d.GLTFAsset(url);
+            // const url = getUrl(resource);
+            const glTF = new egret3d.GLTFAsset(resource.url);
 
             if (resource.type === "GLTF") {
                 const glTFBuffers = (result as gltf.GLTF).buffers;
@@ -279,7 +279,7 @@ namespace RES.processor {
                         if (r) {
                             const buffer = await host.load(r, RES.processor.BinaryProcessor);
                             if (buffer) {
-                                buffers.push(buffer);
+                                buffers.push(new Uint32Array(buffer));
                             }
                             else {
                                 console.error("Load glTF resource error.", url);
@@ -287,6 +287,30 @@ namespace RES.processor {
                         }
                     }
                 }
+                glTF.parse(result, buffers);
+                if(glTF.config.materials && glTF.config.materials.length > 0){
+                    for(const mat of glTF.config.materials){
+                        const values = mat.extensions.KHR_techniques_webgl.values;
+                        for(const key in values){
+                            const value = values[key];
+                            if(typeof value === "string"){
+                                const url = combinePath(dirname(resource.url) + "/", value)
+                                let texture = paper.Asset.find<egret3d.Texture>(url);
+                                if (!texture) {
+                                    const r = RES.host.resourceConfig["getResource"](url);
+                                    if (r) {
+                                        texture = await RES.getResAsync(r.name)
+                                    }
+                                    else {
+                                        texture = egret3d.DefaultTextures.GRID;
+                                    }
+                                }
+                                values[key] = texture;
+                            }
+                        }
+                    }
+                }
+               
                 //
                 const extensions = glTF.config.extensions;
                 if (extensions && extensions.KHR_techniques_webgl) {
@@ -314,10 +338,9 @@ namespace RES.processor {
                     }
                 }
 
-                glTF.parse(result, buffers);
             }
             else {
-                glTF.parseFromBinary(result);
+                glTF.parseFromBinary(new Uint32Array(result));
             }
 
             paper.Asset.register(glTF);
@@ -389,6 +412,7 @@ namespace RES.processor {
     RES.processor.map("Texture", TextureProcessor);
     RES.processor.map("TextureDesc", TextureDescProcessor);
     // RES.processor.map("Material", MaterialProcessor);
+    RES.processor.map("GLTF", GLTFProcessor);
     RES.processor.map("GLTFBinary", GLTFProcessor);
     RES.processor.map("Prefab", PrefabProcessor);
     RES.processor.map("Scene", SceneProcessor);
