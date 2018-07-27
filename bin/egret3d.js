@@ -22213,6 +22213,25 @@ var paper;
                 var applyPrefabState = editor.StateGroup.create(group);
                 this.addState(applyPrefabState);
             };
+            EditorModel.prototype.createRevertPrefabState = function (modifyGameObjectPropertyList, modifyComponentPropertyList) {
+                var group = [];
+                //revert gameobject proerty
+                for (var _i = 0, modifyGameObjectPropertyList_1 = modifyGameObjectPropertyList; _i < modifyGameObjectPropertyList_1.length; _i++) {
+                    var p = modifyGameObjectPropertyList_1[_i];
+                    var gameObjUUid = p.gameObjUUid, newValueList = p.newValueList, preValueCopylist = p.preValueCopylist;
+                    var state = editor.ModifyGameObjectPropertyState.create(gameObjUUid, newValueList, preValueCopylist);
+                    group.push(state);
+                }
+                //apply component property
+                for (var _a = 0, modifyComponentPropertyList_1 = modifyComponentPropertyList; _a < modifyComponentPropertyList_1.length; _a++) {
+                    var p = modifyComponentPropertyList_1[_a];
+                    var gameObjUUid = p.gameObjUUid, componentUUid = p.componentUUid, newValueList = p.newValueList, preValueCopylist = p.preValueCopylist;
+                    var state = editor.ModifyComponentPropertyState.create(gameObjUUid, componentUUid, newValueList, preValueCopylist);
+                    group.push(state);
+                }
+                var revertPrefabState = editor.StateGroup.create(group);
+                this.addState(revertPrefabState);
+            };
             EditorModel.prototype.compareValue = function (a, b) {
                 if (typeof a != typeof b) {
                     throw new Error("diffrent type");

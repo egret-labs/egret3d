@@ -7035,6 +7035,7 @@ declare namespace paper.editor {
          */
         sortGameObjectsForHierarchy(gameobjects: paper.GameObject[]): paper.GameObject[];
         createApplyPrefabState(applyGameObjectPropertyList: any[], applyComponentPropertyList: any[]): void;
+        createRevertPrefabState(modifyGameObjectPropertyList: any[], modifyComponentPropertyList: any[]): void;
         compareValue(a: any, b: any): boolean;
         private equal(a, b);
         getRootGameObjectsByPrefab: (prefab: Prefab) => GameObject[];

@@ -44,7 +44,7 @@ namespace paper.editor{
                         const { propName, copyValue, valueEditType } = propertyValue;
                         let newValue = await Editor.editorModel.deserializeProperty(copyValue, valueEditType);
                         Editor.editorModel.setTargetProperty(propName, modifyObj, newValue);
-                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
+                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: gameObj, propName: propName, propValue: newValue })
                     });
                 }
             }

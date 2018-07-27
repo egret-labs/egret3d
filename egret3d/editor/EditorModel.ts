@@ -708,6 +708,28 @@ namespace paper.editor {
             this.addState(applyPrefabState);
         }
 
+        public createRevertPrefabState(modifyGameObjectPropertyList:any[],modifyComponentPropertyList:any[])
+        {
+            let group: BaseState[] = [];
+
+            //revert gameobject proerty
+            for (const p of modifyGameObjectPropertyList) {
+                const { gameObjUUid, newValueList, preValueCopylist } = p;
+                let state = ModifyGameObjectPropertyState.create(gameObjUUid, newValueList, preValueCopylist);
+                group.push(state);
+            }
+
+            //revert component property
+            for (const p of modifyComponentPropertyList) {
+                const { gameObjUUid, componentUUid, newValueList, preValueCopylist } = p;
+                let state = ModifyComponentPropertyState.create(gameObjUUid, componentUUid, newValueList, preValueCopylist);
+                group.push(state);
+            }
+
+            let revertPrefabState = StateGroup.create(group);
+            this.addState(revertPrefabState);
+        }
+
         public compareValue(a:any,b:any):boolean
         {
             if (typeof a != typeof b) {
