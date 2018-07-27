@@ -13,7 +13,7 @@ namespace paper {
      */
     export function deserialize<T extends ISerializable>(data: ISerializedData, isKeepUUID: boolean = false): T | null {
         if (_deserializedData) {
-            throw new Error("The deserialization is not complete.");
+            console.debug("The deserialization is not complete.");
         }
 
         _isKeepUUID = isKeepUUID;

@@ -64,11 +64,12 @@ namespace paper.editor {
         private static async loadEditScene(url: string) {
             //由于新引擎场景加载方式存在问题，这里预先载入一下场景资源
             await RES.getResAsync(url);
-            Application.sceneManager.loadScene(url);
+            this.loadScene(url, true, true);
+
             let camera = this.createEditCamera();
             // 开启几何画板
             Gizmo.Enabled(camera);
-            
+
             let script = camera.addComponent(EditorCameraScript);
             script.editorModel = this.editorModel;
             script.moveSpeed = 10;
@@ -79,6 +80,22 @@ namespace paper.editor {
 
             let pickScript = camera.addComponent(PickGameObjectScript);
             pickScript.editorModel = this.editorModel;
+        }
+        //此方法是对Application.sceneManager.loadScene的一个重写，增加keepUUID参数
+        private static loadScene(resourceName: string, combineStaticObject: boolean = true, keepUUID: boolean = false) {
+            const rawScene = RES.getRes(resourceName) as RawScene;
+            if (rawScene) {
+                const scene = rawScene.createInstance(keepUUID);
+
+                if (scene) {
+                    if (combineStaticObject && Application.isPlaying) {
+                        egret3d.combine(scene.gameObjects);
+                    }
+
+                    return scene;
+                }
+            }
+            return null;
         }
         private static createEditCamera(): GameObject {
             let cameraObject = new GameObject();

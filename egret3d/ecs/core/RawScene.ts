@@ -15,12 +15,12 @@ namespace paper {
         /**
          * @internal
          */
-        public createInstance() {
+        public createInstance(isKeepUUID: boolean = false) {
             if (!this._raw) {
                 return null;
             }
 
-            const scene = deserialize<Scene>(this._raw);
+            const scene = deserialize<Scene>(this._raw,isKeepUUID);
 
             if (scene) { 
                 scene.rawScene = this;
