@@ -12,12 +12,7 @@ namespace egret3d {
      */
     export class PointLight extends BaseLight {
         public readonly type: LightType = LightType.Point;
-
-        public constructor() {
-            super();
-
-            this.renderTarget = new GlRenderTargetCube(WebGLKit.webgl, 1024, 1024, true); // TODO
-        }
+        public renderTarget: IRenderTarget = new GlRenderTarget(WebGLKit.webgl, 1024, 1024, true); // TODO
 
         public update(camera: Camera, faceIndex: number) {
             const position = this.gameObject.transform.getPosition();

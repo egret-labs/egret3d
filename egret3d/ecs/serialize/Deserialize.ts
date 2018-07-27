@@ -7,11 +7,11 @@ namespace paper {
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
 
     let _isKeepUUID: boolean = false;
-    let _deserializedData: { assets: string[], objects: { [key: string]: Scene | GameObject }, components: { [key: string]: BaseComponent } } | null = null;
+    let _deserializedData: { assets: string[], objects: { [key: string]: Scene | GameObject }, components: { [key: string]: BaseComponent } } = null as any;
     /**
      * 反序列化。
      */
-    export function deserialize<T extends ISerializable>(data: ISerializedData, isKeepUUID: boolean = false): T | null {
+    export function deserialize(data: ISerializedData, isKeepUUID: boolean = false): SerializableObject | null {
         if (_deserializedData) {
             throw new Error("The deserialization is not complete.");
         }
@@ -110,19 +110,19 @@ namespace paper {
             _deserializeObject(componentSource, component);
         }
 
-        _deserializedData = null;
+        _deserializedData = null as any;
 
-        return root as any;
+        return root;
     }
     /**
      * 
      */
     export function getDeserializedAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent {
         if (KEY_ASSET in source) {
-            return paper.Asset.find(_deserializedData.assets[source[KEY_ASSET]]);
+            return paper.Asset.find(_deserializedData.assets[(source as IAssetReference)[KEY_ASSET]]);
         }
 
-        const uuid = source[KEY_UUID];
+        const uuid = (source as IUUID)[KEY_UUID];
 
         return _deserializedData.components[uuid] || _deserializedData.objects[uuid] as GameObject;
     }
@@ -153,12 +153,12 @@ namespace paper {
 
                 if (
                     SerializeKey.DeserializedIgnore in target &&
-                    (target[SerializeKey.DeserializedIgnore] as string).indexOf(k) >= 0
+                    ((target as any)[SerializeKey.DeserializedIgnore] as string).indexOf(k) >= 0
                 ) {
                     continue;
                 }
 
-                target[k] = _deserializeChild(source[k], target[k]);
+                (target as any)[k] = _deserializeChild(source[k], (target as any)[k]);
             }
         }
     }
@@ -176,7 +176,7 @@ namespace paper {
                 if (target) {
                     if (ArrayBuffer.isView(target)) {
                         for (let i = 0, l = Math.min(source.length, (target as Uint8Array).length); i < l; ++i) {
-                            target[i] = source[i];
+                            (target as Uint8Array)[i] = source[i];
                         }
 
                         return target;
@@ -233,7 +233,7 @@ namespace paper {
                         else { // Component.
                             for (const gameObject of Application.sceneManager.activeScene.gameObjects) {
                                 for (const component of gameObject.components) {
-                                    if (component.uuid === uuid) {
+                                    if (component && component.uuid === uuid) {
                                         return component;
                                     }
                                 }

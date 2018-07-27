@@ -21,7 +21,6 @@ namespace paper {
      */
     export const enum DefaultTags {
         Untagged = "",
-        Global = "Global",
         Respawn = "Respawn",
         Finish = "Finish",
         EditorOnly = "EditorOnly",

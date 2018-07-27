@@ -17,16 +17,6 @@ namespace egret3d {
          */
         frustumTest: boolean = false;
 
-        constructor() {
-            super();
-
-            this.stage = new egret.Stage();
-            this.stage.maxTouches = 98;
-            this.root = new egret.DisplayObjectContainer();
-            this.stage.addChild(this.root);
-        }
-
-
 
         public stage: egret.Stage;
 
@@ -46,6 +36,11 @@ namespace egret3d {
          */
         public initialize() {
             super.initialize();
+
+            this.stage = new egret.Stage();
+            this.stage.maxTouches = 98;
+            this.root = new egret.DisplayObjectContainer();
+            this.stage.addChild(this.root);
 
             let context = WebGLKit.webgl;
 

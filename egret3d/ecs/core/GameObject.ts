@@ -4,6 +4,16 @@ namespace paper {
      */
     export class GameObject extends SerializableObject {
         /**
+         * 创建 GameObject，并添加到当前场景中。
+         */
+        public static create(name: string = "NoName", tag: string = DefaultTags.Untagged) {
+            const gameObect = new GameObject(name, tag);
+            // gameObect.addComponent(egret3d.Transform);
+            // gameObect._addToScene(Application.sceneManager.activeScene);
+            return gameObect;
+        }
+
+        /**
          * 是否是静态，启用这个属性可以提升性能
          */
         @serializedField
@@ -35,7 +45,7 @@ namespace paper {
          * @internal
          */
         @paper.serializedField
-        public assetID: string = createAssetID();
+        public assetID?: string = createAssetID();
         /**
          * 预制体
          */
@@ -48,7 +58,7 @@ namespace paper {
         /**
          * 
          */
-        public renderer: BaseRenderer | null = null as any;
+        public renderer: BaseRenderer | null = null;
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
@@ -65,10 +75,10 @@ namespace paper {
          * @internal
          */
         public _activeDirty: boolean = true;
-        private readonly _components: BaseComponent[] = [];
+        private readonly _components: ComponentArray = [];
         private _scene: Scene = null as any;
         /**
-         * 创建 GameObject，并添加到当前场景中。
+         * @deprecated
          */
         public constructor(name: string = "NoName", tag: string = DefaultTags.Untagged) {
             super();
@@ -78,82 +88,6 @@ namespace paper {
             this.addComponent(egret3d.Transform);
 
             this._addToScene(Application.sceneManager.activeScene);
-        }
-        /**
-         * @internal
-         */
-        public _activeInHierarchyDirty(prevActive: boolean) {
-            this._activeDirty = true;
-            const currentActive = this.activeInHierarchy;
-
-            if (currentActive !== prevActive) {
-                for (const component of this._components) {
-                    if (component.enabled) {
-                        EventPool.dispatchEvent(currentActive ? EventPool.EventType.Enabled : EventPool.EventType.Disabled, component);
-                    }
-                }
-            }
-
-            for (const child of this.transform.children) {
-                child.gameObject._activeInHierarchyDirty(prevActive);
-            }
-        }
-
-        private _addToScene(value: Scene): any {
-            if (this._scene) {
-                this._scene._removeGameObject(this);
-            }
-
-            this._scene = value;
-            this._scene._addGameObject(this);
-        }
-
-        private _canRemoveComponent<T extends BaseComponent>(value: T) {
-            if (value === this.transform as any) {
-                console.warn("Cannot remove the transform component from a game object.");
-                return false;
-            }
-
-            for (const component of this._components) {
-                const index = _requireComponents.indexOf(component.constructor as any);
-                if (index >= 0) {
-                    const requireComponents = _requireComponentss[index];
-                    if (requireComponents.indexOf(value.constructor as any) >= 0) {
-                        console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${egret.getQualifiedClassName(component)} component.`);
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        private _removeComponentReference(component: BaseComponent) {
-            component.enabled = false;
-            (component as any).gameObject = null;
-
-            if (component === this.renderer) {
-                this.renderer = null;
-            }
-
-            const destroySystem = Application.systemManager.getSystem(DisableSystem);
-            if (destroySystem) {
-                destroySystem.bufferComponent(component);
-            }
-        }
-
-        private _getComponentsInChildren<T extends BaseComponent>(componentClass: { new(): T }, child: GameObject, array: T[], isExtends: boolean = false) {
-            const components = child._components;
-
-            for (const component of components) {
-                if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentClass)) : component.constructor === componentClass) {
-                    array.push(component as T);
-                }
-            }
-
-            for (const childOfChild of child.transform.children) {
-                this._getComponentsInChildren(componentClass, childOfChild.gameObject, array, isExtends);
-            }
         }
 
         private _destroy() {
@@ -167,7 +101,11 @@ namespace paper {
             }
 
             for (const component of this._components) {
-                this._removeComponentReference(component);
+                if (!component) {
+                    continue;
+                }
+
+                this._removeComponent(component, null);
             }
 
             this.transform = null as any;
@@ -178,6 +116,132 @@ namespace paper {
             this._scene = null as any;
         }
 
+        private _addToScene(value: Scene): any {
+            if (this._scene) {
+                this._scene._removeGameObject(this);
+            }
+
+            this._scene = value;
+            this._scene._addGameObject(this);
+        }
+
+        private _canRemoveComponent(value: BaseComponent) {
+            if (value === this.transform) {
+                console.warn("Cannot remove the transform component from a game object.");
+                return false;
+            }
+
+            for (let component of this._components) {
+                if (!component) {
+                    continue;
+                }
+
+                if (component.constructor === GroupComponent) {
+                    component = (component as GroupComponent).components[0]; // 只检查第一个。
+                }
+
+                const componentClasses = _requireComponents[(component.constructor as ComponentClass<BaseComponent>).componentIndex];
+                if (componentClasses && componentClasses.indexOf(value.constructor as ComponentClass<BaseComponent>) >= 0) {
+                    console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${egret.getQualifiedClassName(component)} component.`);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private _removeComponent(value: BaseComponent, groupComponent: GroupComponent | null) {
+            value.enabled = false;
+            (value as any).gameObject = null;
+
+            if (value === this.renderer) {
+                this.renderer = null;
+            }
+
+            const destroySystem = Application.systemManager.getSystem(DisableSystem);
+            if (destroySystem) {
+                destroySystem.bufferComponent(value);
+            }
+
+            if (groupComponent) {
+                groupComponent._removeComponent(value);
+
+                if (groupComponent.components.length === 0) {
+                    this._removeComponent(groupComponent, null);
+                }
+            }
+            else if (value.constructor === GroupComponent) {
+                groupComponent = value as GroupComponent;
+                delete this._components[groupComponent.componentIndex];
+
+                for (const componentInGroup of groupComponent.components) {
+                    this._removeComponent(componentInGroup, groupComponent);
+                }
+            }
+            else {
+                delete this._components[(value.constructor as any).index]; // TODO 字符串依赖。
+            }
+        }
+
+        private _getComponentsInChildren(componentClass: ComponentClass<BaseComponent>, child: GameObject, components: BaseComponent[], isExtends: boolean = false) {
+            for (const component of child._components) {
+                if (!component) {
+                    continue;
+                }
+
+                if (component.constructor === GroupComponent) {
+                    const groupComponent = component as GroupComponent;
+                    if (isExtends ? groupComponent.components[0] instanceof componentClass : groupComponent.componentClass === componentClass) {
+                        for (const componentInGroup of groupComponent.components) {
+                            components.push(componentInGroup);
+                        }
+                    }
+                }
+                else if (isExtends ? component instanceof componentClass : component.constructor === componentClass) {
+                    components.push(component);
+                }
+            }
+
+            for (const childOfChild of child.transform.children) {
+                this._getComponentsInChildren(componentClass, childOfChild.gameObject, components, isExtends);
+            }
+        }
+
+        private _getComponent(componentClass: ComponentClass<BaseComponent>) {
+            const componentIndex = componentClass.index;
+            return componentIndex < 0 ? null : this._components[componentIndex];
+        }
+        /**
+         * @internal
+         */
+        public _activeInHierarchyDirty(prevActive: boolean) {
+            this._activeDirty = true;
+            const currentActive = this.activeInHierarchy;
+
+            if (currentActive !== prevActive) {
+                for (const component of this._components) {
+                    if (!component) {
+                        continue;
+                    }
+
+                    if (component.enabled) {
+                        EventPool.dispatchEvent(currentActive ? EventPool.EventType.Enabled : EventPool.EventType.Disabled, component);
+                    }
+
+                    if (component.constructor === GroupComponent) {
+                        for (const componentInGroup of (component as GroupComponent).components) {
+                            if (componentInGroup.enabled) {
+                                EventPool.dispatchEvent(currentActive ? EventPool.EventType.Enabled : EventPool.EventType.Disabled, componentInGroup);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (const child of this.transform.children) {
+                child.gameObject._activeInHierarchyDirty(prevActive);
+            }
+        }
         /**
          * 
          */
@@ -203,49 +267,43 @@ namespace paper {
         /**
          * 根据类型名获取组件
          */
-        public addComponent<T extends BaseComponent>(componentClass: { new(): T }, config?: any): T {
+        public addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T {
+            BaseComponent.register(componentClass);
+            const componentIndex = componentClass.index;
+            const existedComponent = this._components[componentIndex];
             // disallowMultipleComponents.
-            if (_disallowMultipleComponents.indexOf(componentClass) >= 0) {
-                const component = this.getComponent(componentClass);
-                if (component) {
-                    console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the game object (${this.path}) again.`);
-                    return component;
-                }
-
-                // for (const component of this._components) {
-                //     if (component instanceof componentClass) {
-                //     }
-                // }
+            if (_disallowMultipleComponents[componentIndex] && existedComponent) {
+                console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the game object (${this.path}) again.`);
+                return existedComponent as T;
             }
             // requireComponents.
-            const index = _requireComponents.indexOf(componentClass);
-            if (index >= 0) {
-                for (const requireComponentClass of _requireComponentss[index]) {
+            const componentClasses = _requireComponents[componentClass.componentIndex];
+            if (componentClasses) {
+                for (const requireComponentClass of componentClasses) {
                     this.getOrAddComponent(requireComponentClass);
                 }
             }
-
-            const component = BaseComponent.create(componentClass, this);
             // Linked reference.
-            if (component.constructor === egret3d.Transform) {
+            const component = BaseComponent.create(componentClass, this);
+            if (componentClass === egret3d.Transform as any) {
                 this.transform = <any>component as egret3d.Transform;
             }
             else if (component instanceof BaseRenderer) {
                 this.renderer = component;
             }
-
-            const componentIndex = componentClass.index;
-
-            const existedComponent = this._components[componentIndex] as T;
+            // Add component.
             if (existedComponent) {
                 if (existedComponent.constructor === GroupComponent) {
-                    (<any>existedComponent as GroupComponent<T>)._addComponent(component);
+                    (existedComponent as GroupComponent)._addComponent(component);
                 }
                 else {
-                    const groupComponent = BaseComponent.create(GroupComponent, this);
+                    const groupComponent = BaseComponent.create(GroupComponent as any, this) as GroupComponent;
+                    groupComponent.initialize();
                     groupComponent.componentIndex = componentIndex;
                     groupComponent.componentClass = componentClass;
+                    groupComponent._addComponent(existedComponent);
                     groupComponent._addComponent(component);
+                    this._components[componentIndex] = groupComponent;
                 }
             }
             else {
@@ -269,73 +327,122 @@ namespace paper {
         /**
          * 移除组件
          */
-        public removeComponent<T extends BaseComponent>(componentInstanceOrClass: { new(): T } | T, isExtends: boolean = false) {
+        public removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends: boolean = false) {
             if (componentInstanceOrClass instanceof BaseComponent) {
                 if (!this._canRemoveComponent(componentInstanceOrClass)) {
                     return;
                 }
 
-                this._removeComponentReference(componentInstanceOrClass);
+                this._removeComponent(componentInstanceOrClass, null);
+            }
+            else if (isExtends) {
+                for (let component of this._components) {
+                    if (!component) {
+                        continue;
+                    }
+
+                    let groupComponent: GroupComponent | null = null;
+                    if (component.constructor === GroupComponent) {
+                        groupComponent = component as GroupComponent;
+                        component = groupComponent.components[0];
+                    }
+
+                    if (groupComponent) {
+                        if (
+                            !(groupComponent.components[0] instanceof componentInstanceOrClass) ||
+                            (groupComponent.components.length === 1 && !this._canRemoveComponent(groupComponent.components[0]))
+                        ) {
+                            continue;
+                        }
+                    }
+                    else if (
+                        !(component instanceof componentInstanceOrClass) ||
+                        !this._canRemoveComponent(component)
+                    ) {
+                        continue;
+                    }
+
+                    this._removeComponent(component, groupComponent);
+                }
             }
             else {
-                for (const component of this._components) { 
-                    if () { 
-                        
-                    }
-                }
-
-
-                const component = this.getComponent(componentInstanceOrClass);
-                if (!this._canRemoveComponent(component)) {
+                let component = this._getComponent(componentInstanceOrClass);
+                if (!component) {
                     return;
                 }
 
-                this._removeComponentReference(component);
+                let groupComponent: GroupComponent | null = null;
+                if (component.constructor === GroupComponent) {
+                    groupComponent = component as GroupComponent;
+                    component = groupComponent.components[0];
+                }
 
-                let i = this._components.length;
-                while (i--) {
-                    const component = this._components[i];
-                    if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentInstanceOrClass)) : component.constructor === componentInstanceOrClass) {
-                        if (!this._canRemoveComponent(component)) {
-                            return;
-                        }
-
-                        this._removeComponentReference(component);
-                        this._components.splice(i, 1);
-
+                if (groupComponent) {
+                    if (groupComponent.components.length === 1 && !this._canRemoveComponent(groupComponent.components[0])) {
                         return;
                     }
                 }
+                else if (!this._canRemoveComponent(component)) {
+                    return;
+                }
+
+                this._removeComponent(component, groupComponent);
             }
         }
 
         /**
          * 移除自身的所有组件
          */
-        public removeAllComponents<T extends BaseComponent>(componentClass?: { new(): T }, isExtends: boolean = false) {
+        public removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends: boolean = false) {
             if (componentClass) {
-                let i = this._components.length;
-                while (i--) {
-                    const component = this._components[i];
-                    if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentClass)) : component.constructor === componentClass) {
-                        if (!this._canRemoveComponent(component)) {
-                            return;
+                if (isExtends) {
+                    for (const component of this._components) {
+                        if (!component) {
+                            continue;
                         }
 
-                        this._removeComponentReference(component);
-                        this._components.splice(i, 1);
+                        if (component.constructor === GroupComponent) {
+                            const groupComponent = component as GroupComponent;
+                            if (
+                                !(groupComponent.components[0] instanceof componentClass) ||
+                                !this._canRemoveComponent(groupComponent.components[0])
+                            ) {
+                                continue;
+                            }
+                        }
+                        else if (!this._canRemoveComponent(component)) {
+                            continue;
+                        }
+
+                        this._removeComponent(component, null);
                     }
+                }
+                else {
+                    const component = this._getComponent(componentClass);
+                    if (!component) {
+                        return;
+                    }
+
+                    if (component.constructor === GroupComponent) {
+                        const groupComponent = component as GroupComponent;
+                        if (!this._canRemoveComponent(groupComponent.components[0])) {
+                            return;
+                        }
+                    }
+                    else if (!this._canRemoveComponent(component)) {
+                        return;
+                    }
+
+                    this._removeComponent(component, null);
                 }
             }
             else {
                 for (const component of this._components) {
-                    if (component.constructor === egret3d.Transform) {
+                    if (!component || component.constructor === egret3d.Transform) {
                         continue;
                     }
 
-                    this._removeComponentReference(component);
-                    this._components.length = 0;
-                    this._components.push(this.transform);
+                    this._removeComponent(component, null);
                 }
             }
         }
@@ -343,30 +450,61 @@ namespace paper {
         /**
          * 根据类型名获取组件
          */
-        public getComponent<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
+        public getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
             if (isExtends) {
                 for (const component of this._components) {
-                    if (egret.is(component, egret.getQualifiedClassName(componentClass))) {
+                    if (!component) {
+                        continue;
+                    }
+
+                    if (component.constructor === GroupComponent) {
+                        const groupComponent = component as GroupComponent;
+                        if (groupComponent.components[0] instanceof componentClass) {
+                            return groupComponent.components[0] as T;
+                        }
+                    }
+                    else if (component instanceof componentClass) {
                         return component as T;
+                    }
+                }
+
+                return null;
+            }
+
+            const componentIndex = componentClass.index;
+            return componentIndex < 0 ? null : this._components[componentIndex] as (T | undefined) || null;
+        }
+
+        public getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
+            const components: T[] = [];
+
+            if (isExtends) {
+                for (const component of this._components) {
+                    if (!component) {
+                        continue;
+                    }
+
+                    if (component.constructor === GroupComponent && (component as GroupComponent).components[0] instanceof componentClass) {
+                        for (const componentInGroup of (component as GroupComponent).components) {
+                            components.push(componentInGroup as T);
+                        }
+                    }
+                    else if (component instanceof componentClass) {
+                        components.push(component as T);
                     }
                 }
             }
             else {
-                for (const component of this._components) {
-                    if (component.constructor === componentClass) {
-                        return component as T;
+                const component = this._getComponent(componentClass);
+                if (component) {
+                    if (component.constructor === GroupComponent && (component as GroupComponent).components[0] instanceof componentClass) {
+                        for (const componentInGroup of (component as GroupComponent).components) {
+                            components.push(componentInGroup as T);
+                        }
                     }
-                }
-            }
-
-            return null;
-        }
-
-        public getComponents<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
-            const components: T[] = [];
-            for (const component of this._components) {
-                if (isExtends ? egret.is(component, egret.getQualifiedClassName(componentClass)) : component.constructor === componentClass) {
-                    components.push(component as any);
+                    else if (component instanceof componentClass) {
+                        components.push(component as T);
+                    }
                 }
             }
 
@@ -376,12 +514,12 @@ namespace paper {
         /**
          * 搜索自己和父节点中所有特定类型的组件
          */
-        public getComponentInParent<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
+        public getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
             let result: T | null = null;
             let parent = this.transform.parent;
 
             while (!result && parent) {
-                result = parent.gameObject.getComponent(componentClass, isExtends);
+                result = parent.gameObject.getComponent(componentClass, isExtends) as T | null; // 
                 parent = parent.parent;
             }
 
@@ -391,7 +529,7 @@ namespace paper {
         /**
          * 搜索自己和子节点中所有特定类型的组件
          */
-        public getComponentsInChildren<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
+        public getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
             const components: T[] = [];
             this._getComponentsInChildren(componentClass, this, components, isExtends);
 
@@ -401,7 +539,7 @@ namespace paper {
         /**
          * 
          */
-        public getOrAddComponent<T extends BaseComponent>(componentClass: { new(): T }, isExtends: boolean = false) {
+        public getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
             return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
         }
 
@@ -412,7 +550,7 @@ namespace paper {
          */
         public sendMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {
-                if (component.isActiveAndEnabled && component.constructor instanceof Behaviour) {
+                if (component && component.isActiveAndEnabled && component.constructor instanceof Behaviour) {
                     if (methodName in component) {
                         (component as any)[methodName](parameter);
                     }
@@ -546,7 +684,7 @@ namespace paper {
          */
         @serializedField
         @deserializedIgnore
-        public get components(): ReadonlyArray<BaseComponent> {
+        public get components(): Readonly<ComponentArray> {
             return this._components;
         }
         /**

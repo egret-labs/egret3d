@@ -705,6 +705,7 @@ namespace egret3d {
          * @internal
          */
         public readonly _animationNames: string[] = [];
+        private _fadeInParamter: any[] | null = null;
         /**
          * 最后一个播放的动画状态。
          * 当进行动画混合时，该值通常没有任何意义。
@@ -728,6 +729,11 @@ namespace egret3d {
          * 
          */
         public update(globalTime: number) {
+            if (this._fadeInParamter) {
+                this.fadeIn.apply(this, this._fadeInParamter);
+                this._fadeInParamter = null;
+            }
+
             const blendNodes = this._blendNodes;
             const blendNodeCount = blendNodes.length;
 
@@ -834,7 +840,8 @@ namespace egret3d {
         ): AnimationState | null {
             if (!this._addToSystem) {
                 console.warn("The animation component is not add to system yet.");
-                return;
+                this._fadeInParamter = arguments as any;
+                return null;
             }
 
             let animationAsset: GLTFAsset | null = null;
@@ -911,14 +918,16 @@ namespace egret3d {
             return this._animations;
         }
     }
-
+    /**
+     * 
+     */
     export class AnimationSystem extends paper.BaseSystem {
         protected readonly _interests = [
             { componentClass: Animation }
         ];
 
         public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
-            const component = group.getComponent(gameObject, 0) as Animation;
+            const component = gameObject.getComponent(Animation) as Animation;
             component._addToSystem = true;
 
             if (!component._skinnedMeshRenderer) {
@@ -939,15 +948,13 @@ namespace egret3d {
 
         public onUpdate() { // TODO 应将组件功能尽量移到系统
             const globalTime = this._clock.time;
-            const components = this._groups[0].components as ReadonlyArray<Animation>;
-            for (const component of components) {
-                component.update(globalTime);
+            for (const gameObject of this._groups[0].gameObjects) {
+                (gameObject.getComponent(Animation) as Animation).update(globalTime);
             }
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
-            const component = group.getComponent(gameObject, 0) as Animation;
-            component._addToSystem = false;
+            (gameObject.getComponent(Animation) as Animation)._addToSystem = false;
         }
     }
 }

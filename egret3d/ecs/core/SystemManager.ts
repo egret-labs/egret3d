@@ -15,7 +15,7 @@ namespace paper {
         private constructor() {
         }
 
-        private readonly _systems: (BaseSystem | null)[] = [];
+        private readonly _systems: BaseSystem[] = [];
         private _currentSystem: BaseSystem = null as any;
 
         private _preRegister(systemClass: { new(): BaseSystem }) {
@@ -148,7 +148,7 @@ namespace paper {
         /**
          * 
          */
-        public get systems(): ReadonlyArray<BaseSystem | null> {
+        public get systems(): ReadonlyArray<BaseSystem> {
             return this._systems;
         }
     }

@@ -4,12 +4,7 @@ namespace egret3d {
      */
     export class DirectLight extends BaseLight {
         public readonly type: LightType = LightType.Direction;
-
-        public constructor() {
-            super();
-
-            this.renderTarget = new GlRenderTarget(WebGLKit.webgl, 1024, 1024, true); // TODO
-        }
+        public renderTarget: IRenderTarget = new GlRenderTarget(WebGLKit.webgl, 1024, 1024, true); // TODO
 
         public update(camera: Camera, faceIndex: number) {
             camera.near = this.shadowCameraNear;

@@ -20,9 +20,9 @@ namespace paper {
                 return null;
             }
 
-            const scene = deserialize<Scene>(this._raw);
+            const scene = deserialize(this._raw) as Scene | null;
 
-            if (scene) { 
+            if (scene) {
                 scene.rawScene = this;
             }
 

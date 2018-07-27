@@ -24,7 +24,7 @@ namespace egret3d {
                 return;
             }
 
-            const filter = this._groups[0].getComponent(gameObject, 0) as MeshFilter;
+            const filter = gameObject.getComponent(MeshFilter) as MeshFilter;
             const renderer = gameObject.renderer as MeshRenderer;
             if (!filter.mesh || renderer.materials.length === 0) {
                 return;
@@ -54,9 +54,8 @@ namespace egret3d {
         }
 
         public onEnable() {
-            const components = this._groups[0].components as ReadonlyArray<MeshFilter | MeshRenderer>;
-            for (let i = 0, l = components.length; i < l; i += 2) {
-                this._updateDrawCalls(components[i].gameObject);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._updateDrawCalls(gameObject);
             }
         }
 
@@ -69,10 +68,8 @@ namespace egret3d {
         }
 
         public onDisable() {
-            const components = this._groups[0].components as ReadonlyArray<MeshFilter | MeshRenderer>;
-            for (let i = 0, l = components.length; i < l; i += 2) {
-                const renderer = components[i + 1] as MeshRenderer;
-                this._drawCalls.removeDrawCalls(renderer);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._drawCalls.removeDrawCalls(gameObject.renderer as MeshRenderer);
             }
         }
     }

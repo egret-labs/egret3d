@@ -216,7 +216,7 @@ namespace egret3d {
             }
         }
         /**
-         * 从二进制数据中解析资源。
+         * @internal
          */
         public parseFromBinary(array: Uint32Array) {
             let index = 0;
@@ -282,7 +282,7 @@ namespace egret3d {
                 case gltf.ComponentType.UnsignedShort:
                     return new Uint16Array(buffer.buffer, bufferOffset, bufferView.byteLength / Uint16Array.BYTES_PER_ELEMENT);
 
-                case gltf.ComponentType.UnsignedInt:
+                case gltf.ComponentType.Int:
                     return new Int32Array(buffer.buffer, bufferOffset, bufferView.byteLength / Int32Array.BYTES_PER_ELEMENT);
 
                 case gltf.ComponentType.UnsignedInt:
@@ -317,7 +317,7 @@ namespace egret3d {
                 case gltf.ComponentType.UnsignedShort:
                     return new Uint16Array(buffer.buffer, bufferOffset, bufferCount);
 
-                case gltf.ComponentType.UnsignedInt:
+                case gltf.ComponentType.Int:
                     return new Int32Array(buffer.buffer, bufferOffset, bufferCount);
 
                 case gltf.ComponentType.UnsignedInt:

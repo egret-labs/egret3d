@@ -68,8 +68,8 @@ namespace egret3d {
             }
 
             // Egret2D渲染不加入DrawCallList的排序
-            const egret2DRenderers = this._groups[2].components as ReadonlyArray<Egret2DRenderer>;
-            for (const egret2DRenderer of egret2DRenderers) {
+            for (const gameObject of this._groups[2].gameObjects) {
+                const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                     egret2DRenderer.render(camera.context, camera);
                 }
@@ -78,13 +78,13 @@ namespace egret3d {
 
         public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
             if (group === this._groups[0]) {
-                this._cameras.update(this._groups[0].components as ReadonlyArray<Camera>, null);
+                this._cameras.update(this._groups[0].gameObjects);
             }
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
             if (group === this._groups[0]) {
-                this._cameras.update(this._groups[0].components as ReadonlyArray<Camera>, gameObject);
+                this._cameras.update(this._groups[0].gameObjects);
             }
         }
 
@@ -93,7 +93,7 @@ namespace egret3d {
 
             const cameras = this._cameras.cameras;
             if (cameras.length > 0) {
-                const lights = this._groups[1].components as ReadonlyArray<BaseLight>;
+                const lightGameObjects = this._groups[1].gameObjects;
                 this._cameras.sort(); // TODO
 
                 const activeScene = paper.Application.sceneManager.activeScene;
@@ -105,9 +105,9 @@ namespace egret3d {
                         continue;
                     }
 
-                    if (lights.length > 0) {
-                        component.context.updateLights(lights); // TODO 性能优化
-                    }
+                    // if (lights.length > 0) {
+                    //     component.context.updateLights(lights); // TODO 性能优化
+                    // }
 
                     if (component.postQueues.length === 0) {
                         component.context.drawtype = "";

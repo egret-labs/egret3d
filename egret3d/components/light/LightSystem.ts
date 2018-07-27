@@ -13,9 +13,9 @@ namespace egret3d {
             const activeScene = paper.Application.sceneManager.activeScene;
             const camera = this._lightCamera;
             const drawCalls = this._drawCalls.drawCalls;
-            const components = this._groups[0].components as ReadonlyArray<BaseLight>;
 
-            for (const light of components) {
+            for (const gameObject of this._groups[0].gameObjects) {
+                const light = gameObject.getComponent(BaseLight as any, true) as BaseLight;
                 if (!light.castShadows) {
                     continue;;
                 }

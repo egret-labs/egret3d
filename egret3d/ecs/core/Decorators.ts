@@ -2,19 +2,15 @@ namespace paper {
     /**
      * @internal
      */
-    export const _executeInEditModeComponents: { new(): BaseComponent }[] = [];
+    export const _executeInEditModeComponents: ComponentClassArray = [];
     /**
      * @internal
      */
-    export const _disallowMultipleComponents: { new(): BaseComponent }[] = [];
+    export const _disallowMultipleComponents: ComponentClassArray = [];
     /**
      * @internal
      */
-    export const _requireComponents: { new(): BaseComponent }[] = [];
-    /**
-     * @internal
-     */
-    export const _requireComponentss: { new(): BaseComponent }[][] = [];
+    export const _requireComponents: (ComponentClass<BaseComponent>[] | undefined)[] = [];
 
     const _tagB: any[] = [];
     const _tagC: any[] = [];
@@ -62,31 +58,32 @@ namespace paper {
     /**
      * 标记脚本组件是否在编辑模式也拥有生命周期。
      */
-    export function executeInEditMode<T extends BaseComponent>(target: { new(): T }) {
-        _executeInEditModeComponents.push(target);
+    export function executeInEditMode(target: ComponentClass<BaseComponent>) {
+        BaseComponent.register(target);
+        _executeInEditModeComponents[target.index] = _executeInEditModeComponents[target.index] || target;
     }
     /**
      * 
      */
-    export function disallowMultipleComponent<T extends BaseComponent>(target: { new(): T }) {
-        _disallowMultipleComponents.push(target);
+    export function disallowMultipleComponent(target: ComponentClass<BaseComponent>) {
+        BaseComponent.register(target);
+        _disallowMultipleComponents[target.index] = _disallowMultipleComponents[target.index] || target;
     }
-    /**
+    /**T
      * 
      */
-    export function requireComponent<R extends BaseComponent>(requireTarget: { new(): R }) {
-        return function (target: any) {
+    export function requireComponent(requireTarget: ComponentClass<BaseComponent>) {
+        return function (target: ComponentClass<BaseComponent>) {
             // `egret.getQualifiedClassName()` cannot work here.
-
-            let index = _requireComponents.indexOf(target);
-            if (index < 0) {
-                index = _requireComponents.length;
-                _requireComponents.push(target);
-                _requireComponentss.push([]);
+            BaseComponent.register(target, true);
+            if (!_requireComponents[target.componentIndex]) {
+                _requireComponents[target.componentIndex] = [];
             }
 
-            const components = _requireComponentss[index];
-            components.push(requireTarget);
+            const components = _requireComponents[target.componentIndex] as ComponentClassArray;
+            if (components.indexOf(requireTarget) < 0) {
+                components.push(requireTarget);
+            }
         };
     }
 }

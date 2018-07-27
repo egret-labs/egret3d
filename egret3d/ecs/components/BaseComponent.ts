@@ -1,22 +1,62 @@
 namespace paper {
     /**
+     * 
+     */
+    export type ComponentClass<T extends BaseComponent> = { new(): T, level: number, componentIndex: number, index: number };
+    /**
+     * 
+     */
+    export type ComponentClassArray = (ComponentClass<BaseComponent> | undefined)[];
+    /**
+     * 
+     */
+    export type ComponentArray = (BaseComponent | undefined)[];
+    /**
      * 组件基类
      */
     export abstract class BaseComponent extends SerializableObject {
         /**
          * 
          */
+        public static level: number = -1;
+        /**
+         * 
+         */
+        public static componentIndex: number = -1;
+        /**
+         * 
+         */
         public static index: number = -1;
+        private static _createEnabled: GameObject = null as any;
+        private static _componentCount: number = 0;
+        private static readonly _componentClasses: ComponentClass<BaseComponent>[] = [];
         /**
          * @internal
          */
-        public static readonly _componentClasses: any[] = [];
-        private static _injectGameObject: GameObject = null as any;
+        public static register(target: ComponentClass<BaseComponent>, onlyComponentIndex: boolean = false) {
+            if (target === BaseComponent as any) {
+                return;
+            }
+
+            if (target.level < 0) {
+                target.level = (target.prototype.__proto__.constructor as ComponentClass<BaseComponent>).level + 1;
+                target.componentIndex = this._componentCount++;
+            }
+
+            if (!onlyComponentIndex) {
+                if (target.index < 0) {
+                    target.index = this._componentClasses.length;
+                    this._componentClasses.push(target);
+                }
+            }
+        }
         /**
          * @internal
          */
-        public static create<T extends BaseComponent>(componentClass: { new(): T }, gameObject: GameObject): T {
-            this._injectGameObject = gameObject;
+        public static create<T extends BaseComponent>(componentClass: ComponentClass<T>, gameObject: GameObject): T {
+            this.register(componentClass);
+            BaseComponent._createEnabled = gameObject;
+
             return new componentClass();
         }
 
@@ -24,11 +64,11 @@ namespace paper {
          * @internal
          */
         @paper.serializedField
-        public assetID: string = createAssetID();
+        public assetID?: string = createAssetID();
         /**
          * 组件挂载的 GameObject
          */
-        public readonly gameObject: GameObject = BaseComponent._injectGameObject;
+        public readonly gameObject: GameObject = null as any;
         /**
          * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
          */
@@ -38,19 +78,15 @@ namespace paper {
         @serializedField
         protected _enabled: boolean = true;
         /**
-         * 禁止实例化组件实例。
+         * 禁止实例化组件。
          * @protected
          */
         public constructor() {
             super();
 
-            if (BaseComponent._injectGameObject) {
-                if (this.constructor["index"] < 0) {
-                    this.constructor["index"] = BaseComponent._componentClasses.length;
-                    BaseComponent._componentClasses.push(this.constructor);
-                }
-
-                BaseComponent._injectGameObject = null as any;
+            if (BaseComponent._createEnabled) {
+                this.gameObject = BaseComponent._createEnabled;
+                BaseComponent._createEnabled = null as any;
             }
             else {
                 throw new Error("Create an instance of a component is not allowed.");

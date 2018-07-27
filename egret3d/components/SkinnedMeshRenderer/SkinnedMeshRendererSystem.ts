@@ -50,9 +50,8 @@ namespace egret3d {
         }
 
         public onEnable() {
-            const components = this._groups[0].components as ReadonlyArray<SkinnedMeshRenderer>;
-            for (const renderer of components) {
-                this._updateDrawCalls(renderer.gameObject);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._updateDrawCalls(gameObject);
             }
         }
 
@@ -69,9 +68,8 @@ namespace egret3d {
         }
 
         public onDisable() {
-            const components = this._groups[0].components as ReadonlyArray<SkinnedMeshRenderer>;
-            for (const renderer of components) {
-                this._drawCalls.removeDrawCalls(renderer);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._drawCalls.removeDrawCalls(gameObject.renderer as SkinnedMeshRenderer);
             }
         }
     }

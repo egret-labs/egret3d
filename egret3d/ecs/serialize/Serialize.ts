@@ -116,7 +116,7 @@ namespace paper {
             const serializedKeys = getTypesFromPrototype(classPrototype, SerializeKey.Serialized);
             if (serializedKeys && serializedKeys.length > 0) {
                 for (const key of serializedKeys) {
-                    target[key] = _serializeChild(source[key], source, key);
+                    target[key] = _serializeChild((source as any)[key], source, key);
                 }
             }
         }
@@ -124,7 +124,7 @@ namespace paper {
         return target;
     }
 
-    function _serializeChild(source: any, parent: any, key: string | null) {
+    function _serializeChild(source: any, parent: any, key: string | null): any {
         if (source === null || source === undefined) {
             return source;
         }

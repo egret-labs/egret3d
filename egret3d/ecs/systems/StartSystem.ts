@@ -12,10 +12,11 @@ namespace paper {
                 return;
             }
 
-            if (this._isEditorUpdate()) {
-                if (_executeInEditModeComponents.indexOf(component.constructor as any) < 0) {
-                    return;
-                }
+            if (
+                this._isEditorUpdate() &&
+                !_executeInEditModeComponents[(component.constructor as ComponentClass<Behaviour>).index]
+            ) {
+                return;
             }
 
             component._isStarted = true;

@@ -9,6 +9,10 @@ namespace paper {
     /**
      * 
      */
+    export let Application: ECS;
+    /**
+     * 
+     */
     export class ECS {
         private static _instance: ECS | null = null;
         /**
@@ -102,8 +106,5 @@ namespace paper {
         }
     }
 
-    /**
-     * 
-     */
-    export const Application = ECS.getInstance();
+    Application = ECS.getInstance();
 }

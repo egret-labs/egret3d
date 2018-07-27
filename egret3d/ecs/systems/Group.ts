@@ -23,11 +23,7 @@ namespace paper {
         /**
          * 关心的组件或组件列表。
          */
-        componentClass: { new(): BaseComponent }[] | { new(): BaseComponent };
-        /**
-         * @internal
-         */
-        isBehaviour?: boolean;
+        componentClass: ComponentClass<BaseComponent>[] | ComponentClass<BaseComponent>;
         /**
          * 
          */
@@ -55,15 +51,7 @@ namespace paper {
          * @internal
          */
         public static create(interestConfig: ReadonlyArray<InterestConfig>): Group {
-            let isBehaviour = false;
             interestConfig = Array.isArray(interestConfig) ? interestConfig : [interestConfig];
-
-            for (const config of interestConfig) {
-                if (config.isBehaviour) {
-                    isBehaviour = true;
-                    break;
-                }
-            }
 
             for (const group of this._groups) {
                 if (group._interestConfig.length !== interestConfig.length) {
@@ -97,7 +85,7 @@ namespace paper {
                 }
             }
 
-            const group = new Group(interestConfig, isBehaviour);
+            const group = new Group(interestConfig);
             this._groups.push(group);
 
             return group;
@@ -111,31 +99,30 @@ namespace paper {
             }
         }
         /**
-         * 每个实体关心的组件总数。
+         * 
          */
-        public readonly interestCount: number = 0;
+        public locked: boolean = false;
+        public readonly name: string = "";
 
         private _isRemoved: boolean = false;
         private readonly _isBehaviour: boolean = false;
-        private readonly _bufferedComponents: BaseComponent[] = [];
-        private readonly _bufferedUnessentialComponents: BaseComponent[] = [];
+        private readonly _bufferedGameObjects: (GameObject)[] = [];
         /**
          * @internal
          */
-        public readonly _addedComponents: BaseComponent[] = [];
+        public readonly _addedGameObjects: (GameObject | null)[] = [];
+        private _gameObjects: GameObject[] = [];
+        private readonly _bufferedComponents: (BaseComponent)[] = [];
         /**
          * @internal
          */
-        public readonly _addedUnessentialComponents: BaseComponent[] = [];
-        private readonly _components: BaseComponent[] = [];
-        private readonly _bufferedGameObjects: { [key: string]: number } = {};
-        private readonly _addedGameObjects: { [key: string]: number } = {};
-        private readonly _gameObjects: { [key: string]: number } = {};
+        public readonly _addedComponents: (BaseComponent | null)[] = [];
+        private _components: BaseComponent[] = [];
         private readonly _interestConfig: ReadonlyArray<InterestConfig> = null as any;
         private readonly _globalGameObject: GameObject = Application.sceneManager.globalGameObject;
 
-        private constructor(interestConfig: ReadonlyArray<InterestConfig>, isBehaviour: boolean) {
-            this._isBehaviour = isBehaviour;
+        private constructor(interestConfig: ReadonlyArray<InterestConfig>) {
+            this._isBehaviour = interestConfig.length === 1 && interestConfig[0].type !== undefined && (interestConfig[0].type as InterestType & InterestType.Unessential) !== 0;
             this._interestConfig = interestConfig;
             this._onAddComponent = this._onAddComponent.bind(this);
             this._onRemoveComponent = this._onRemoveComponent.bind(this);
@@ -166,8 +153,6 @@ namespace paper {
                         EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddComponent);
                         EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveComponent);
                     }
-
-                    this.interestCount++;
                 }
             }
 
@@ -178,124 +163,71 @@ namespace paper {
             }
         }
 
-        private _addGameObjectTo(
-            uuid: string,
-            fromComponents: BaseComponent[], fromOffsets: { [key: string]: number },
-            toComponents: BaseComponent[], toOffsets: { [key: string]: number },
-        ) {
-            const interestCount = this.interestCount;
-            const offset = fromOffsets[uuid];
-            toOffsets[uuid] = toComponents.length;
-
-            for (let i = 0, l = interestCount; i < l; ++i) {
-                const component = fromComponents[offset + i];
-                toComponents.push(component);
-            }
-        }
-
-        private _removeGameObjectFrom(
-            uuid: string,
-            components: BaseComponent[], offsets: { [key: string]: number }
-        ) {
-            const interestCount = this.interestCount;
-            const offset = offsets[uuid];
-            const backupLength = components.length;
-
-            if (backupLength > interestCount) {
-                let lastGameObject: GameObject | null = null;
-
-                for (let i = 0; i < interestCount; ++i) {
-                    if (!lastGameObject) {
-                        lastGameObject = components[backupLength - interestCount].gameObject;
-                    }
-
-                    components[offset + i] = components[backupLength - interestCount + i];
-                }
-
-                if (lastGameObject) {
-                    offsets[lastGameObject.uuid] = offset;
-                }
-            }
-
-            components.length -= interestCount;
-
-            delete offsets[uuid];
-        }
-
         private _onAddComponent(component: BaseComponent) {
             this._addGameObject(component.gameObject);
         }
 
         private _onAddUnessentialComponent(component: BaseComponent) {
             const gameObject = component.gameObject;
-            const uuid = gameObject.uuid;
 
             if (gameObject === this._globalGameObject) { // Pass global game object.
                 return;
             }
 
-            if (this._isBehaviour) {
-                if (this._bufferedUnessentialComponents.indexOf(component) >= 0 || this._components.indexOf(component) >= 0) { // Buffered or added.
-                    return;
-                }
-
-                this._bufferedUnessentialComponents.push(component);
-                return;
-            }
-
             if (
-                !(uuid in this._bufferedGameObjects || uuid in this._gameObjects) || // Uninclude.
-                this._bufferedUnessentialComponents.indexOf(component) >= 0 || this._addedUnessentialComponents.indexOf(component) >= 0 // Buffered or added.
+                !this._isBehaviour &&
+                this._bufferedGameObjects.indexOf(gameObject) < 0 && this._gameObjects.indexOf(gameObject) < 0 // Uninclude.
             ) {
                 return;
             }
 
-            this._bufferedUnessentialComponents.push(component);
+            if (this._bufferedComponents.indexOf(component) >= 0 || this._components.indexOf(component) >= 0) { // Buffered or added.
+                return;
+            }
+
+            this._bufferedComponents.push(component);
         }
 
         private _onRemoveUnessentialComponent(component: BaseComponent) {
-            if (this._isBehaviour) {
-                let index = this._bufferedUnessentialComponents.indexOf(component);
-                if (index >= 0) { // Buffered.
-                    this._bufferedUnessentialComponents.splice(index, 1);
-                    return;
-                }
+            const gameObject = component.gameObject;
 
+            if (gameObject === this._globalGameObject) { // Pass global game object.
+                return;
+            }
+
+            let index = this._bufferedComponents.indexOf(component);
+            if (index >= 0) { // Buffered.
+                this._bufferedComponents.splice(index, 1);
+                return;
+            }
+
+            if (this._isBehaviour) {
                 index = this._components.indexOf(component);
-                if (index < 0) {
+                if (index < 0) { // Uninclude.
                     return;
                 }
 
                 this._isRemoved = true;
                 this._components[index] = null as any;
 
-                index = this._addedUnessentialComponents.indexOf(component);
-                if (index >= 0) { //
-                    this._addedUnessentialComponents.splice(index, 1);
+                index = this._addedComponents.indexOf(component);
+                if (index >= 0) {
+                    this._addedComponents[index] = null;
                 }
             }
             else {
-                const gameObject = component.gameObject;
-                const uuid = gameObject.uuid;
-
-                if (!(uuid in this._bufferedGameObjects || uuid in this._gameObjects)) { // Uninclude.
+                if (this._gameObjects.indexOf(gameObject) < 0) { // Uninclude.
                     return;
                 }
 
-                let index = this._bufferedUnessentialComponents.indexOf(component);
-                if (index >= 0) { // Buffered.
-                    this._bufferedUnessentialComponents.splice(index, 1);
-                    return;
-                }
-
-                index = this._addedUnessentialComponents.indexOf(component);
-                if (index >= 0) { //
-                    this._addedUnessentialComponents.splice(index, 1);
+                index = this._addedComponents.indexOf(component);
+                if (index >= 0) {
+                    this._addedComponents[index] = null;
                 }
             }
 
             for (const system of Application.systemManager.systems) {
-                if (!system || !system.onRemoveComponent || system.groups.indexOf(this) < 0) {
+                if (!system.onRemoveComponent || system.groups.indexOf(this) < 0) {
                     continue;
                 }
 
@@ -308,17 +240,16 @@ namespace paper {
         }
 
         private _addGameObject(gameObject: GameObject) {
-            const uuid = gameObject.uuid;
-
             if (gameObject === this._globalGameObject) { // Pass global game object.
                 return;
             }
 
-            if (uuid in this._bufferedGameObjects || uuid in this._gameObjects) { // Buffered or added.
+            if (
+                this._bufferedGameObjects.indexOf(gameObject) >= 0 ||
+                this._gameObjects.indexOf(gameObject) >= 0
+            ) { // Buffered or added.
                 return;
             }
-
-            const backupLength = this._bufferedComponents.length;
 
             for (const config of this._interestConfig) {
                 if (config.type && (config.type & InterestType.Unessential)) {
@@ -331,66 +262,71 @@ namespace paper {
 
                 if (Array.isArray(config.componentClass)) {
                     for (const componentClass of config.componentClass) {
-                        insterestComponent = gameObject.getComponent(componentClass, isExtends); // TODO 更快的查找方式
+                        insterestComponent = gameObject.getComponent(componentClass as any, isExtends);
                         if (insterestComponent) { // Anyone.
                             break;
                         }
                     }
                 }
                 else {
-                    insterestComponent = gameObject.getComponent(config.componentClass, isExtends); // TODO 更快的查找方式
+                    insterestComponent = gameObject.getComponent(config.componentClass as any, isExtends);
                 }
 
                 if (isExculde ? insterestComponent : !insterestComponent) {
-                    this._bufferedComponents.length = backupLength;
                     return;
                 }
-
-                this._bufferedComponents.push(insterestComponent as any); // ts
             }
 
-            this._bufferedGameObjects[uuid] = backupLength;
+            this._bufferedGameObjects.push(gameObject);
         }
 
         private _removeGameObject(gameObject: GameObject) {
-            const uuid = gameObject.uuid;
-
-            if (uuid in this._bufferedGameObjects) {
-                this._removeGameObjectFrom(uuid, this._bufferedComponents, this._bufferedGameObjects);
+            let index = this._bufferedGameObjects.indexOf(gameObject);
+            if (index >= 0) {
+                this._bufferedGameObjects.splice(index, 1);
             }
-            else if (uuid in this._gameObjects) {
-                for (const system of Application.systemManager.systems) {
-                    if (!system || !system.onRemoveGameObject || system.groups.indexOf(this) < 0) {
-                        continue;
+            else {
+                index = this._gameObjects.indexOf(gameObject);
+                if (index >= 0) {
+
+                    if (this.locked) {
+                        this.locked = false;
+                        this._gameObjects = this._gameObjects.concat();
                     }
 
-                    system.onRemoveGameObject(gameObject, this);
-                }
+                    this._gameObjects.splice(index, 1);
 
-                if (uuid in this._addedGameObjects) { // 
-                    this._removeGameObjectFrom(uuid, this._addedComponents, this._addedGameObjects);
-                }
+                    index = this._addedGameObjects.indexOf(gameObject);
+                    if (index >= 0) {
+                        this._addedGameObjects[index] = null;
+                    }
 
-                this._removeGameObjectFrom(uuid, this._components, this._gameObjects);
+                    for (const system of Application.systemManager.systems) {
+                        if (!system.onRemoveGameObject || system.groups.indexOf(this) < 0) {
+                            continue;
+                        }
+
+                        system.onRemoveGameObject(gameObject, this);
+                    }
+                }
             }
         }
 
         private _update() {
-            if (this._addedComponents.length > 0) {
-                this._addedComponents.length = 0;
+            this.locked = false;
 
-                for (const k in this._addedGameObjects) {
-                    delete this._addedGameObjects[k];
-                }
+            if (this._addedGameObjects.length > 0) {
+                this._addedGameObjects.length = 0;
             }
 
-            if (this._addedUnessentialComponents.length > 0) {
-                this._addedUnessentialComponents.length = 0;
+            if (this._addedComponents.length > 0) {
+                this._addedComponents.length = 0;
             }
 
             if (this._isRemoved) {
                 let index = 0;
                 let removeCount = 0;
+                this._isRemoved = false;
 
                 for (const component of this._components) {
                     if (component) {
@@ -409,47 +345,48 @@ namespace paper {
                 if (removeCount > 0) {
                     this._components.length -= removeCount;
                 }
+            }
 
-                this._isRemoved = false;
+            if (this._bufferedGameObjects.length > 0) {
+                for (const gameObject of this._bufferedGameObjects) {
+                    if (!gameObject) {
+                        continue;
+                    }
+
+                    this._addedGameObjects.push(gameObject);
+                    this._gameObjects.push(gameObject);
+                }
+
+                this._bufferedGameObjects.length = 0;
             }
 
             if (this._bufferedComponents.length > 0) {
-                for (const k in this._bufferedGameObjects) {
-                    this._addGameObjectTo(k, this._bufferedComponents, this._bufferedGameObjects, this._addedComponents, this._addedGameObjects);
-                    this._addGameObjectTo(k, this._bufferedComponents, this._bufferedGameObjects, this._components, this._gameObjects);
-                    delete this._bufferedGameObjects[k];
+                for (const component of this._bufferedComponents) {
+                    if (!component) {
+                        continue;
+                    }
+
+                    this._addedComponents.push(component);
+                    this._components.push(component);
                 }
 
                 this._bufferedComponents.length = 0;
             }
-
-            if (this._bufferedUnessentialComponents.length > 0) {
-                for (const component of this._bufferedUnessentialComponents) {
-                    this._addedUnessentialComponents.push(component);
-
-                    if (this._isBehaviour) {
-                        this._components.push(component);
-                    }
-                }
-
-                this._bufferedUnessentialComponents.length = 0;
-            }
-        }
-        /**
-         * 根据关心列表的顺序快速查找指定组件。
-         * - 需要确保被查找组件的实体已经被收集。
-         */
-        public getComponent(gameObject: GameObject, componentOffset: number) {
-            return this._components[this._gameObjects[gameObject.uuid] + componentOffset];
         }
         /**
          * 判断实体是否被收集。
          */
         public hasGameObject(gameObject: GameObject) {
-            return gameObject.uuid in this._gameObjects;
+            return this._gameObjects.indexOf(gameObject) >= 0;
         }
         /**
-         * 根据配置收集的实体的组件。
+         * 
+         */
+        public get gameObjects(): ReadonlyArray<GameObject> {
+            return this._gameObjects;
+        }
+        /**
+         * 
          */
         public get components(): ReadonlyArray<BaseComponent> {
             return this._components;

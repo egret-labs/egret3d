@@ -14,7 +14,7 @@ namespace paper {
 
             if (this._isEditorUpdate()) {
                 for (const component of components) {
-                    if (component && _executeInEditModeComponents.indexOf(component.constructor as any) >= 0) {
+                    if (component && !_executeInEditModeComponents[(component.constructor as ComponentClass<Behaviour>).index]) {
                         component.onLateUpdate && component.onLateUpdate(deltaTime);
                     }
                 }

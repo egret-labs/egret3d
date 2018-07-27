@@ -42,7 +42,6 @@ namespace egret3d {
                 //
                 paper.LateUpdateSystem,
                 //
-                TrailRendererSystem,
                 MeshRendererSystem,
                 SkinnedMeshRendererSystem,
                 particle.ParticleSystem,
