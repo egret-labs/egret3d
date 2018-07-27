@@ -61,10 +61,8 @@ namespace paper {
         const className = egret.getQualifiedClassName(source);
         return { class: _findClassCode(className) || className };
     }
-    /**
-     * @internal
-     */
-    export function getTypesFromPrototype(classPrototype: any, typeKey: string, types: string[] | null = null) {
+    
+    function _getTypesFromPrototype(classPrototype: any, typeKey: string, types: string[] | null = null) {
         if (typeKey in classPrototype) {
             types = types || [];
 
@@ -74,7 +72,7 @@ namespace paper {
         }
 
         if (classPrototype.__proto__) {
-            getTypesFromPrototype(classPrototype.__proto__, typeKey, types);
+            _getTypesFromPrototype(classPrototype.__proto__, typeKey, types);
         }
 
         return types;
@@ -113,7 +111,7 @@ namespace paper {
         }
 
         if (!hasCustomSerialize) {
-            const serializedKeys = getTypesFromPrototype(classPrototype, SerializeKey.Serialized);
+            const serializedKeys = _getTypesFromPrototype(classPrototype, SerializeKey.Serialized);
             if (serializedKeys && serializedKeys.length > 0) {
                 for (const key of serializedKeys) {
                     target[key] = _serializeChild((source as any)[key], source, key);

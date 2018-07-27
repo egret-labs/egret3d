@@ -4,30 +4,26 @@ namespace paper {
      */
     export class SingletonComponent extends BaseComponent {
         /**
-         * @internal
+         * 
          */
-        public static readonly _instances: { [key: string]: SingletonComponent } = {};
+        public static instance: SingletonComponent = null as any;
 
         public initialize() {
             super.initialize();
 
-            const className = egret.getQualifiedClassName(this);
-
-            if (className in SingletonComponent._instances) {
-                console.error("Cannot add singleton component again.", className);
+            if (!(this.constructor as SingletonComponentClass<SingletonComponent>).instance) {
+                (this.constructor as SingletonComponentClass<SingletonComponent>).instance = this;
             }
             else {
-                SingletonComponent._instances[className] = this;
+                console.error("Cannot add singleton component again.", egret.getQualifiedClassName(this));
             }
         }
 
         public uninitialize() {
             super.uninitialize();
 
-            const className = egret.getQualifiedClassName(this);
-
-            if (className in SingletonComponent._instances && SingletonComponent._instances[className] === this) {
-                delete SingletonComponent._instances[className];
+            if ((this.constructor as SingletonComponentClass<SingletonComponent>).instance === this) {
+                (this.constructor as SingletonComponentClass<SingletonComponent>).instance = null as any;
             }
         }
     }

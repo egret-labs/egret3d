@@ -14,7 +14,7 @@ namespace paper {
 
             if (
                 this._isEditorUpdate() &&
-                !_executeInEditModeComponents[(component.constructor as ComponentClass<Behaviour>).index]
+                !(component.constructor as ComponentClass<Behaviour>).executeInEditMode
             ) {
                 return;
             }

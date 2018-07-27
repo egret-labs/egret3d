@@ -140,8 +140,8 @@ namespace paper {
                     component = (component as GroupComponent).components[0]; // 只检查第一个。
                 }
 
-                const componentClasses = _requireComponents[(component.constructor as ComponentClass<BaseComponent>).componentIndex];
-                if (componentClasses && componentClasses.indexOf(value.constructor as ComponentClass<BaseComponent>) >= 0) {
+                const requireComponents = (component.constructor as ComponentClass<BaseComponent>).requireComponents;
+                if (requireComponents && requireComponents.indexOf(value.constructor as ComponentClass<BaseComponent>) >= 0) {
                     console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${egret.getQualifiedClassName(component)} component.`);
                     return false;
                 }
@@ -263,23 +263,21 @@ namespace paper {
 
             this._destroy();
         }
-
         /**
-         * 根据类型名获取组件
+         * 添加组件。
          */
         public addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T {
             BaseComponent.register(componentClass);
             const componentIndex = componentClass.index;
             const existedComponent = this._components[componentIndex];
             // disallowMultipleComponents.
-            if (_disallowMultipleComponents[componentIndex] && existedComponent) {
+            if (componentClass.disallowMultiple && existedComponent) {
                 console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the game object (${this.path}) again.`);
                 return existedComponent as T;
             }
             // requireComponents.
-            const componentClasses = _requireComponents[componentClass.componentIndex];
-            if (componentClasses) {
-                for (const requireComponentClass of componentClasses) {
+            if (componentClass.requireComponents) {
+                for (const requireComponentClass of componentClass.requireComponents) {
                     this.getOrAddComponent(requireComponentClass);
                 }
             }
@@ -323,9 +321,8 @@ namespace paper {
 
             return component;
         }
-
         /**
-         * 移除组件
+         * 移除组件。
          */
         public removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends: boolean = false) {
             if (componentInstanceOrClass instanceof BaseComponent) {
@@ -389,9 +386,8 @@ namespace paper {
                 this._removeComponent(component, groupComponent);
             }
         }
-
         /**
-         * 移除自身的所有组件
+         * 移除所有组件。
          */
         public removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends: boolean = false) {
             if (componentClass) {
@@ -446,9 +442,8 @@ namespace paper {
                 }
             }
         }
-
         /**
-         * 根据类型名获取组件
+         * 获取组件。
          */
         public getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
             if (isExtends) {
@@ -474,7 +469,9 @@ namespace paper {
             const componentIndex = componentClass.index;
             return componentIndex < 0 ? null : this._components[componentIndex] as (T | undefined) || null;
         }
-
+        /**
+         * 
+         */
         public getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
             const components: T[] = [];
 
@@ -510,7 +507,6 @@ namespace paper {
 
             return components;
         }
-
         /**
          * 搜索自己和父节点中所有特定类型的组件
          */
@@ -525,7 +521,6 @@ namespace paper {
 
             return result;
         }
-
         /**
          * 搜索自己和子节点中所有特定类型的组件
          */
@@ -535,14 +530,12 @@ namespace paper {
 
             return components;
         }
-
         /**
-         * 
+         * 获取组件，如果未添加该组件，则添加该组件。
          */
         public getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
             return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
         }
-
         /**
          * 针对同级的组件发送消息
          * @param methodName 
@@ -560,7 +553,6 @@ namespace paper {
                 }
             }
         }
-
         /**
          * 针对直接父级发送消息
          * @param methodName 
@@ -574,7 +566,6 @@ namespace paper {
                 parent.gameObject.sendMessage(methodName, parameter, requireReceiver);
             }
         }
-
         /**
          * 群发消息
          * @param methodName 

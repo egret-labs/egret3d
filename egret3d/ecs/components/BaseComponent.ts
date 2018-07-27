@@ -2,7 +2,28 @@ namespace paper {
     /**
      * 
      */
-    export type ComponentClass<T extends BaseComponent> = { new(): T, level: number, componentIndex: number, index: number };
+    export type ComponentClass<T extends BaseComponent> = {
+        new(): T;
+        executeInEditMode: boolean;
+        disallowMultiple: boolean;
+        /**
+         * @internal
+         */
+        level: number;
+        /**
+         * @internal
+         */
+        componentIndex: number;
+        /**
+         * @internal
+         */
+        index: number;
+        requireComponents: ComponentClass<BaseComponent>[] | null;
+    };
+    /**
+     * 
+     */
+    export type SingletonComponentClass<T extends SingletonComponent> = ComponentClass<T> & { instance: T };
     /**
      * 
      */
@@ -16,24 +37,37 @@ namespace paper {
      */
     export abstract class BaseComponent extends SerializableObject {
         /**
-         * 
+         * 是否在编辑模式拥有生命周期。
+         */
+        public static executeInEditMode: boolean = false;
+        /**
+         * 是否禁止在同一实体上添加多个实例。
+         */
+        public static disallowMultiple: boolean = false;
+        /**
+         * @internal
          */
         public static level: number = -1;
         /**
-         * 
+         * @internal
          */
         public static componentIndex: number = -1;
         /**
-         * 
+         * @internal
          */
         public static index: number = -1;
+        /**
+         * 依赖的其他组件。
+         */
+        public static requireComponents: ComponentClass<BaseComponent>[] | null = null;
+
         private static _createEnabled: GameObject = null as any;
         private static _componentCount: number = 0;
         private static readonly _componentClasses: ComponentClass<BaseComponent>[] = [];
         /**
          * @internal
          */
-        public static register(target: ComponentClass<BaseComponent>, onlyComponentIndex: boolean = false) {
+        public static register(target: ComponentClass<BaseComponent>) {
             if (target === BaseComponent as any) {
                 return;
             }
@@ -43,11 +77,9 @@ namespace paper {
                 target.componentIndex = this._componentCount++;
             }
 
-            if (!onlyComponentIndex) {
-                if (target.index < 0) {
-                    target.index = this._componentClasses.length;
-                    this._componentClasses.push(target);
-                }
+            if (target.index < 0) {
+                target.index = this._componentClasses.length;
+                this._componentClasses.push(target);
             }
         }
         /**
@@ -166,10 +198,7 @@ namespace paper {
             const currentEnabled = this.isActiveAndEnabled;
 
             if (currentEnabled !== prevEnabled) {
-                EventPool.dispatchEvent(
-                    currentEnabled ? EventPool.EventType.Enabled : EventPool.EventType.Disabled,
-                    this
-                );
+                EventPool.dispatchEvent(currentEnabled ? EventPool.EventType.Enabled : EventPool.EventType.Disabled, this);
             }
         }
         /**
