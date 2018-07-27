@@ -30,7 +30,6 @@ namespace paper.editor{
                 return;
             }
             let objects = Editor.editorModel.getRootGameObjectsByPrefab(prefabObj.prefab);
-            let editInfoList = editor.getEditInfo(prefabObj);
             valueList.forEach(async (propertyValue) => {
                 const { propName, copyValue, valueEditType } = propertyValue;
                 let newValue = await Editor.editorModel.deserializeProperty(copyValue, valueEditType);

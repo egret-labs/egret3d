@@ -1,45 +1,58 @@
 namespace paper.editor{
+    type ModifyComponentPropertyStateData = {gameObjUUid:string,componentUUid:string,newValueList:any[],preValueCopylist:any[]};
+
     //修改组件属性属性
     export class ModifyComponentPropertyState extends BaseState {
         public static toString(): string {
             return "[class common.ModifyComponentPropertyState]";
         }
 
-        public static create(source: any, key: number | string, value: any, data: any = null): ModifyComponentPropertyState | null {
+        public static create(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyComponentPropertyState | null {
             const state = new ModifyComponentPropertyState();
+            let data:ModifyComponentPropertyStateData = {
+                gameObjUUid,
+                componentUUid,
+                newValueList,
+                preValueCopylist,
+            }
             state.data = data;
             return state;
         }
 
+        private get stateData():ModifyComponentPropertyStateData
+        {
+            return this.data as ModifyComponentPropertyStateData;
+        }
+
         public undo(): boolean {
             if (super.undo()) {
-                const { preValue } = this.data;
-                this.modifyProperty(preValue);
+                this.modifyProperty(this.stateData.preValueCopylist);
                 return true;
             }
             return false;
         }
 
-        private async modifyProperty(value: any): Promise<void> {
-            const { propName, componentUUid, gameObjectUUid, editType } = this.data;
+        private async modifyProperty(valueList: any[]): Promise<void> {
+            const gameObjectUUid = this.stateData.gameObjUUid;
+            const componentUUid = this.stateData.componentUUid;
             let gameObj: GameObject | null = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
             let modifyObj: BaseComponent | null;
             if (gameObj) {
                 modifyObj = Editor.editorModel.getComponentById(gameObj, componentUUid);
-            }
-            if (modifyObj && value !== undefined) {
-                let toValue = await Editor.editorModel.deserializeProperty(value, editType);
-                if (toValue !== null) {
-                    Editor.editorModel.setTargetProperty(propName, modifyObj, toValue);
-                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: toValue });
+                if (modifyObj) {
+                    valueList.forEach(async (propertyValue) => {
+                        const { propName, copyValue, valueEditType } = propertyValue;
+                        let newValue = await Editor.editorModel.deserializeProperty(copyValue, valueEditType);
+                        Editor.editorModel.setTargetProperty(propName, modifyObj, newValue);
+                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
+                    });
                 }
             }
         }
 
         public redo(): boolean {
             if (super.redo()) {
-                const { newValue } = this.data;
-                this.modifyProperty(newValue);
+                this.modifyProperty(this.stateData.newValueList);
                 return true;
             }
             return false;

@@ -42,7 +42,6 @@ declare namespace paper {
          *
          */
         uuid: string;
-        assetUUid: string;
         serialize(): any;
         /**
          *
@@ -129,6 +128,7 @@ declare namespace paper.editor {
      * @param classInstance 实例对象
      */
     function getEditInfo(classInstance: any): PropertyInfo[];
+    function getEditInfoByPrototype(classInstance: any): PropertyInfo[];
     /**
      * 装饰器:属性
      * @param editType 编辑类型
@@ -145,6 +145,7 @@ declare namespace paper {
      * 组件基类
      */
     abstract class BaseComponent extends SerializableObject {
+        assetID: string;
         /**
          * 组件挂载的 GameObject
          */
@@ -178,39 +179,6 @@ declare namespace paper {
          * 组件在场景的激活状态。
          */
         readonly isActiveAndEnabled: boolean;
-    }
-}
-declare namespace egret3d {
-    interface IVector2 {
-        x: number;
-        y: number;
-    }
-    class Vector2 implements IVector2, paper.ISerializable {
-        static readonly ZERO: Readonly<Vector2>;
-        static readonly ONE: Readonly<Vector2>;
-        x: number;
-        y: number;
-        constructor(x?: number, y?: number);
-        serialize(): number[];
-        deserialize(element: [number, number]): void;
-        copy(value: Readonly<IVector2>): this;
-        clone(): Vector2;
-        set(x: number, y: number): this;
-        normalize(): this;
-        readonly length: number;
-        readonly sqrtLength: number;
-        static set(x: number, y: number, out: Vector2): Vector2;
-        static normalize(v: Vector2): Vector2;
-        static add(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static subtract(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static multiply(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static dot(v1: Vector2, v2: Vector2): number;
-        static scale(v: Vector2, scaler: number): Vector2;
-        static getLength(v: Vector2): number;
-        static getDistance(v1: Vector2, v2: Vector2): number;
-        static copy(v: Vector2, out: Vector2): Vector2;
-        static equal(v1: Vector2, v2: Vector2, threshold?: number): boolean;
-        static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2;
     }
 }
 declare namespace egret3d {
@@ -378,6 +346,39 @@ declare namespace paper {
         abstract dispose(): void;
     }
 }
+declare namespace egret3d {
+    interface IVector2 {
+        x: number;
+        y: number;
+    }
+    class Vector2 implements IVector2, paper.ISerializable {
+        static readonly ZERO: Readonly<Vector2>;
+        static readonly ONE: Readonly<Vector2>;
+        x: number;
+        y: number;
+        constructor(x?: number, y?: number);
+        serialize(): number[];
+        deserialize(element: [number, number]): void;
+        copy(value: Readonly<IVector2>): this;
+        clone(): Vector2;
+        set(x: number, y: number): this;
+        normalize(): this;
+        readonly length: number;
+        readonly sqrtLength: number;
+        static set(x: number, y: number, out: Vector2): Vector2;
+        static normalize(v: Vector2): Vector2;
+        static add(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static subtract(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static multiply(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static dot(v1: Vector2, v2: Vector2): number;
+        static scale(v: Vector2, scaler: number): Vector2;
+        static getLength(v: Vector2): number;
+        static getDistance(v1: Vector2, v2: Vector2): number;
+        static copy(v: Vector2, out: Vector2): Vector2;
+        static equal(v1: Vector2, v2: Vector2, threshold?: number): boolean;
+        static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2;
+    }
+}
 declare namespace paper {
     /**
      * 系统基类。
@@ -497,6 +498,25 @@ declare namespace paper {
         lightmapIndex: number;
         readonly lightmapScaleOffset: Float32Array;
         setLightmapScaleOffset(scaleX: number, scaleY: number, offsetX: number, offsetY: number): void;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class BaseObjectAsset extends Asset {
+        protected _raw: ISerializedData;
+        dispose(): void;
+        caclByteLength(): number;
+    }
+    /**
+     * 预制体资源。
+     */
+    class Prefab extends BaseObjectAsset {
+        /**
+         * 从当前预制体生成一个实例。
+         */
+        createInstance(): GameObject;
     }
 }
 declare namespace egret3d {
@@ -1291,35 +1311,56 @@ declare namespace gltf {
 }
 declare namespace paper {
     /**
-     *
+     * 场景管理器
      */
-    class BaseObjectAsset extends Asset {
-        protected _raw: ISerializedData;
-        dispose(): void;
-        caclByteLength(): number;
-    }
-    /**
-     * 预制体资源。
-     */
-    class Prefab extends BaseObjectAsset {
+    class SceneManager {
+        private static _instance;
+        static getInstance(): SceneManager;
+        private constructor();
+        private readonly _scenes;
+        private _globalScene;
+        private _globalGameObject;
         /**
-         * 从当前预制体生成一个实例。
+         * 创建一个空场景并激活
          */
-        createInstance(): GameObject;
-    }
-}
-declare namespace paper.editor {
-    abstract class BaseState {
-        autoClear: boolean;
-        batchIndex: number;
-        private _isDone;
-        data: any;
-        undo(): boolean;
-        redo(): boolean;
-        isDone: boolean;
-        dispatchEditorModelEvent(type: string, data?: any): void;
-        serialize(): any;
-        deserialize(data: any): void;
+        createScene(name: string, isActive?: boolean): Scene;
+        /**
+         * 加载场景
+         * @param resourceName 资源名称
+         */
+        loadScene(resourceName: string, combineStaticObject?: boolean): Scene;
+        /**
+         * 卸载指定场景。
+         */
+        unloadScene(scene: Scene): void;
+        /**
+         * 卸载所有场景。
+         */
+        unloadAllScene(): void;
+        /**
+         *
+         */
+        getSceneByName(name: string): Scene;
+        /**
+         *
+         */
+        readonly scenes: ReadonlyArray<Scene>;
+        /**
+         *
+         */
+        readonly globalScene: Scene;
+        /**
+         *
+         */
+        readonly globalGameObject: GameObject;
+        /**
+         * 获取当前激活的场景
+         */
+        activeScene: Scene;
+        /**
+         * @deprecated
+         */
+        getActiveScene(): Scene;
     }
 }
 declare namespace egret3d.oimo {
@@ -1452,44 +1493,6 @@ declare namespace egret3d {
         static lerp(srca: Quaternion, srcb: Quaternion, out: Quaternion, t: number): Quaternion;
     }
 }
-declare namespace egret3d {
-    /**
-     *
-     */
-    interface IRectangle {
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-    }
-    /**
-     * 矩形可序列化对象
-     */
-    class Rectangle implements IRectangle, paper.ISerializable {
-        /**
-         *
-         */
-        x: number;
-        /**
-         *
-         */
-        y: number;
-        /**
-         *
-         */
-        w: number;
-        /**
-         *
-         */
-        h: number;
-        /**
-         *
-         */
-        constructor(x?: number, y?: number, w?: number, h?: number);
-        serialize(): number[];
-        deserialize(element: number[]): void;
-    }
-}
 declare namespace paper {
     /**
      * 单例组件基类。
@@ -1497,6 +1500,22 @@ declare namespace paper {
     class SingletonComponent extends BaseComponent {
         initialize(): void;
         uninitialize(): void;
+    }
+}
+declare namespace egret3d {
+    class Color implements paper.ISerializable {
+        r: number;
+        g: number;
+        b: number;
+        a: number;
+        constructor(r?: number, g?: number, b?: number, a?: number);
+        serialize(): number[];
+        deserialize(element: Readonly<[number, number, number, number]>): void;
+        set(r?: number, g?: number, b?: number, a?: number): this;
+        static multiply(c1: Color, c2: Color, out: Color): Color;
+        static scale(c: Color, scaler: number): Color;
+        static copy(c: Color, out: Color): Color;
+        static lerp(c1: Color, c2: Color, value: number, out: Color): Color;
     }
 }
 declare namespace paper {
@@ -2147,65 +2166,18 @@ declare namespace paper.editor {
         constructor(type: string, data?: any);
     }
 }
-declare namespace paper {
-    /**
-     * 场景管理器
-     */
-    class SceneManager {
-        private static _instance;
-        static getInstance(): SceneManager;
-        private constructor();
-        private readonly _scenes;
-        private _globalScene;
-        private _globalGameObject;
-        /**
-         * 创建一个空场景并激活
-         */
-        createScene(name: string, isActive?: boolean): Scene;
-        /**
-         * 加载场景
-         * @param resourceName 资源名称
-         */
-        loadScene(resourceName: string, combineStaticObject?: boolean): Scene;
-        /**
-         * 卸载指定场景。
-         */
-        unloadScene(scene: Scene): void;
-        /**
-         * 卸载所有场景。
-         */
-        unloadAllScene(): void;
-        /**
-         *
-         */
-        getSceneByName(name: string): Scene;
-        /**
-         *
-         */
-        readonly scenes: ReadonlyArray<Scene>;
-        /**
-         *
-         */
-        readonly globalScene: Scene;
-        /**
-         *
-         */
-        readonly globalGameObject: GameObject;
-        /**
-         * 获取当前激活的场景
-         */
-        activeScene: Scene;
-        /**
-         * @deprecated
-         */
-        getActiveScene(): Scene;
-    }
-}
 declare namespace paper.editor {
-    class ModifyPrefabProperty extends BaseState {
-        protected getGameObjectsByPrefab: (prefab: Prefab) => GameObject[];
-        protected equal(a: any, b: any): boolean;
-        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
+    abstract class BaseState {
+        autoClear: boolean;
+        batchIndex: number;
+        private _isDone;
+        data: any;
+        undo(): boolean;
+        redo(): boolean;
+        isDone: boolean;
+        dispatchEditorModelEvent(type: string, data?: any): void;
+        serialize(): any;
+        deserialize(data: any): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -2355,19 +2327,56 @@ declare namespace egret3d.oimo {
     }
 }
 declare namespace egret3d {
-    class Color implements paper.ISerializable {
-        r: number;
-        g: number;
-        b: number;
-        a: number;
-        constructor(r?: number, g?: number, b?: number, a?: number);
+    /**
+     *
+     */
+    interface IRectangle {
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+    }
+    /**
+     * 矩形可序列化对象
+     */
+    class Rectangle implements IRectangle, paper.ISerializable {
+        /**
+         *
+         */
+        x: number;
+        /**
+         *
+         */
+        y: number;
+        /**
+         *
+         */
+        w: number;
+        /**
+         *
+         */
+        h: number;
+        /**
+         *
+         */
+        constructor(x?: number, y?: number, w?: number, h?: number);
         serialize(): number[];
-        deserialize(element: Readonly<[number, number, number, number]>): void;
-        set(r?: number, g?: number, b?: number, a?: number): this;
-        static multiply(c1: Color, c2: Color, out: Color): Color;
-        static scale(c: Color, scaler: number): Color;
-        static copy(c: Color, out: Color): Color;
-        static lerp(c1: Color, c2: Color, value: number, out: Color): Color;
+        deserialize(element: number[]): void;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class RayTester extends paper.Behaviour {
+        private static readonly _material;
+        distance: number;
+        collisionMask: paper.CullingMask;
+        private _hitted;
+        private _meshFilter;
+        private _meshRender;
+        onStart(): void;
+        onUpdate(): void;
     }
 }
 declare namespace paper {
@@ -5338,71 +5347,11 @@ declare namespace paper {
      */
     function getDeserializedAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent;
 }
-declare namespace egret3d.particle {
-    /**
-     *
-     */
-    class ParticleSystem extends paper.BaseSystem {
-        protected readonly _interests: ({
-            componentClass: typeof ParticleComponent;
-            listeners: {
-                type: ParticleCompEventType;
-                listener: any;
-            }[];
-        } | {
-            componentClass: typeof ParticleRenderer;
-            listeners: {
-                type: ParticleRendererEventType;
-                listener: (comp: ParticleRenderer) => void;
-            }[];
-        })[];
-        private readonly _drawCalls;
-        /**
-        * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
-        */
-        private _onUpdateBatchMesh(comp);
-        private _onRenderUpdate(render, type);
-        /**
-         *
-         * @param render 渲染模式改变
-         */
-        private _onRenderMode(render);
-        private _onMainUpdate(component, type);
-        /**
-         * 更新速率模块
-         * @param component
-         */
-        private _onShapeChanged(comp);
-        /**
-         * 更新速率模块
-         * @param component
-         */
-        private _onVelocityOverLifetime(comp);
-        /**
-         * 更新颜色模块
-         * @param component
-         */
-        private _onColorOverLifetime(comp);
-        /**
-         * 更新大小模块
-         * @param component
-         */
-        private _onSizeOverLifetime(comp);
-        /**
-         * 更新旋转模块
-         * @param comp
-         */
-        private _onRotationOverLifetime(comp);
-        private _onTextureSheetAnimation(comp);
-        private _updateDrawCalls(gameObject);
-        onEnable(): void;
-        onAddGameObject(gameObject: paper.GameObject, group: paper.Group): void;
-        onRemoveGameObject(gameObject: paper.GameObject): void;
-        onUpdate(deltaTime: number): void;
-        onDisable(): void;
-    }
-}
 declare namespace paper {
+}
+declare namespace egret3d {
+    class Audio extends paper.BaseComponent {
+    }
 }
 declare namespace egret3d {
     enum WEBGL_UNIFORM_TYPE {
@@ -6934,11 +6883,26 @@ declare namespace paper.editor {
      * 场景编辑器
      **/
     class Editor {
-        static readonly editorModel: EditorModel;
         private static _editorModel;
+        /**编辑模型 */
+        static readonly editorModel: EditorModel;
+        private static history;
         /**初始化 */
         static init(): Promise<void>;
         private static runEgret();
+        /**切换场景 */
+        static switchScene(url: string): void;
+        private static geoController;
+        private static loadEditScene(url);
+        private static createEditCamera();
+        static undo(): void;
+        static redo(): void;
+        static deserializeHistory(data: any): void;
+        static serializeHistory(): string;
+        /**
+         * 序列化场景
+         */
+        static serializeActiveScene(): string;
     }
 }
 declare namespace paper {
@@ -6977,20 +6941,26 @@ declare namespace paper.editor {
     class EditorModel extends EventDispatcher {
         backRunTime: any;
         setBackRuntime(back: any): void;
+        private history;
+        /**
+         * 初始化
+         * @param history
+         */
+        init(history: History): void;
         addState(state: BaseState): void;
         getEditType(propName: string, target: any): editor.EditType | null;
-        setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean;
-        createModifyGameObjectPropertyState(propName: string, propValue: any, target: GameObject, editType: editor.EditType, add?: boolean): ModifyGameObjectPropertyState;
-        createModifyComponent(propName: string, propValue: any, target: BaseComponent, editType: editor.EditType, add?: boolean): any;
+        setTransformProperty(propName: string, propValue: any, target: BaseComponent): void;
+        createModifyGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): void;
+        createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any;
         createModifyPrefabGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): void;
         createModifyPrefabComponentPropertyState(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): void;
         createRemoveComponentFromPrefab(stateData: any): void;
-        createAddComponentToPrefab(stateData: any): void;
+        createAddComponentToPrefab(sourceData: any, instanceDatas: any[]): void;
         createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]): void;
-        createPrefabState(prefab: any, selectIds: string[]): void;
+        createPrefabState(prefab: any): void;
         serializeProperty(value: any, editType: editor.EditType): any;
         deserializeProperty(serializeData: any, editType: editor.EditType): Promise<any>;
-        createGameObject(parentUUids: string[]): void;
+        createGameObject(parentList: GameObject[], createType: string): void;
         addComponent(gameObjectUUid: string, compClzName: string): void;
         /**
         *  TODO:因gameobject未提供通过组件实例添加组件的方法，暂时这样处理
@@ -7030,22 +7000,16 @@ declare namespace paper.editor {
         getGameObjectByUUid(uuid: string): GameObject | null;
         getAssetByAssetUrl(url: string): Promise<any>;
         getGameObjectsByUUids(uuids: string[]): GameObject[];
-        getAllComponentUUidFromGameObject(gameObject: GameObject, uuids: string[]): void;
-        /**
-         * call after duplicate/create/paste
-         * @param instance
-         */
-        generateGameobjectUUids(instance: paper.GameObject): void;
         private findOptionSetName(propName, target);
         setTargetProperty(propName: string, target: any, value: any): void;
-        /**选择游戏对象 */
+        /**当前选中的对象 */
+        currentSelected: GameObject[];
+        /**
+         * 选择游戏对象
+         *  */
         selectGameObject(objs: GameObject[]): void;
-        switchScene(url: string): void;
-        resetHistory(data: string): void;
-        private _editCamera;
-        geoController: GeoController;
-        private loadEditScene(url);
-        private createEditCamera();
+        /**当前编辑模式 */
+        currentEditMode: string;
         /**
          * 切换编辑模式
          */
@@ -7054,15 +7018,8 @@ declare namespace paper.editor {
          * 切换编辑类型
          */
         changeEditType(type: string): void;
-        /**
-         * 序列化场景
-         */
-        serializeActiveScene(): string;
         isPrefabRoot(gameObj: GameObject): boolean;
         isPrefabChild(gameObj: GameObject): boolean;
-        serializeHistory(): string;
-        undo: () => void;
-        redo: () => void;
         /**
         * 从一个预置体文件创建实例
         * @param prefabPath 预置体资源路径
@@ -7073,10 +7030,14 @@ declare namespace paper.editor {
          * @param gameObj
          * @param prefab
          */
-        private setGameObjectPrefab(gameObj, prefab, rootObj);
+        setGameObjectPrefab(gameObj: GameObject, prefab: Prefab, rootObj: GameObject): void;
         /**将对象按照层级进行排序
          */
         sortGameObjectsForHierarchy(gameobjects: paper.GameObject[]): paper.GameObject[];
+        createApplyPrefabState(applyGameObjectPropertyList: any[], applyComponentPropertyList: any[]): void;
+        compareValue(a: any, b: any): boolean;
+        private equal(a, b);
+        getRootGameObjectsByPrefab: (prefab: Prefab) => GameObject[];
     }
 }
 declare namespace paper.editor {
@@ -7161,8 +7122,6 @@ declare namespace paper.editor {
         HistoryFree: string;
     };
     class History {
-        private static _instance;
-        static readonly instance: History;
         dispatcher: EventDispatcher | null;
         private _locked;
         private _index;
@@ -7218,27 +7177,37 @@ declare namespace paper.editor {
 }
 declare namespace paper.editor {
     class ModifyGameObjectPropertyState extends BaseState {
-        static create(data?: any): ModifyGameObjectPropertyState | null;
+        static create(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyGameObjectPropertyState | null;
+        private readonly stateData;
         undo(): boolean;
-        private modifyProperty(value);
+        private modifyProperty(valueList);
         redo(): boolean;
     }
 }
 declare namespace paper.editor {
     class ModifyComponentPropertyState extends BaseState {
         static toString(): string;
-        static create(source: any, key: number | string, value: any, data?: any): ModifyComponentPropertyState | null;
+        static create(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyComponentPropertyState | null;
+        private readonly stateData;
         undo(): boolean;
-        private modifyProperty(value);
+        private modifyProperty(valueList);
         redo(): boolean;
     }
 }
 declare namespace paper.editor {
-    class AddGameObjectState extends BaseState {
+    class CreateGameObjectState extends BaseState {
         static toString(): string;
-        static create(data?: any): AddGameObjectState | null;
+        static create(parentList: GameObject[], createType: string): CreateGameObjectState | null;
+        infos: {
+            parentUUID: string;
+            serializeData: any;
+        }[];
+        createType: string;
+        addList: string[];
+        private isFirst;
         undo(): boolean;
         redo(): boolean;
+        private createGameObjectByType(createType);
     }
 }
 declare namespace paper.editor {
@@ -7259,6 +7228,7 @@ declare namespace paper.editor {
         private duplicateInfo;
         private addList;
         undo(): boolean;
+        private firstDo;
         redo(): boolean;
         private clearPrefabInfo(obj);
         serialize(): any;
@@ -7270,6 +7240,7 @@ declare namespace paper.editor {
         static toString(): string;
         static create(serializeData: any[], parent: GameObject): PasteGameObjectsState;
         private pasteInfo;
+        private cacheSerializeData;
         private addList;
         undo(): boolean;
         redo(): boolean;
@@ -7308,28 +7279,11 @@ declare namespace paper.editor {
         redo(): boolean;
     }
 }
-declare namespace paper {
-    /**
-     *
-     */
-    class LateUpdateSystem extends BaseSystem {
-        protected readonly _interests: {
-            componentClass: any;
-            type: number;
-            isBehaviour: boolean;
-        }[];
-        private readonly _laterCalls;
-        onUpdate(deltaTime: number): void;
-        /**
-         *
-         */
-        callLater(callback: () => void): void;
-    }
-}
 declare namespace paper.editor {
-    class ModifyPrefabGameObjectPropertyState extends ModifyPrefabProperty {
+    class ModifyPrefabGameObjectPropertyState extends BaseState {
         static toString(): string;
-        static create(data?: any): ModifyPrefabGameObjectPropertyState | null;
+        static create(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyPrefabGameObjectPropertyState | null;
+        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
         /**
          * 修改预制体游戏对象属性,目前只支持修改根对象
          * @param gameObjectId
@@ -7341,9 +7295,10 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
-    class ModifyPrefabComponentPropertyState extends ModifyPrefabProperty {
+    class ModifyPrefabComponentPropertyState extends BaseState {
         static toString(): string;
-        static create(data?: any): ModifyPrefabComponentPropertyState | null;
+        static create(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyPrefabComponentPropertyState | null;
+        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
         modifyPrefabComponentPropertyValues(gameObjUUid: string, componentUUid: string, valueList: any[]): Promise<void>;
         undo(): boolean;
         redo(): boolean;
@@ -7360,8 +7315,9 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class AddPrefabComponentState extends BaseState {
         static toString(): string;
-        static create(data?: any): AddPrefabComponentState | null;
+        static create(sourceData: any, instanceDatas: any[]): AddPrefabComponentState | null;
         undo(): boolean;
+        private removeComponent(data);
         redo(): boolean;
     }
 }
@@ -7378,12 +7334,6 @@ declare namespace paper.editor {
     class CreatePrefabState extends BaseState {
         static toString(): string;
         static create(data?: any): CreatePrefabState | null;
-        /**
-         * 设置children prefab属性
-         * @param gameObj
-         * @param prefab
-         */
-        private setGameObjectPrefab(gameObj, prefab, rootObj);
         undo(): boolean;
         redo(): boolean;
     }
@@ -7558,6 +7508,24 @@ declare namespace paper.editor {
     const line_vert: string;
 }
 declare namespace paper {
+    /**
+     *
+     */
+    class LateUpdateSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: any;
+            type: number;
+            isBehaviour: boolean;
+        }[];
+        private readonly _laterCalls;
+        onUpdate(deltaTime: number): void;
+        /**
+         *
+         */
+        callLater(callback: () => void): void;
+    }
+}
+declare namespace paper {
 }
 declare namespace paper {
     /**
@@ -7584,6 +7552,7 @@ declare namespace paper {
          * 标签
          */
         tag: string;
+        assetID: string;
         /**
          * 预制体
          */
@@ -7599,7 +7568,10 @@ declare namespace paper {
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
-        extras?: any;
+        extras: {
+            isPrefabRoot?: boolean;
+            prefabRootId?: string;
+        };
         private _activeSelf;
         private _scene;
         /**
@@ -7721,24 +7693,6 @@ declare namespace paper {
         static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
     }
 }
-declare namespace paper {
-    /**
-     * 序列化场景，实体或组件。
-     */
-    function serialize(source: Scene | GameObject | BaseComponent): ISerializedData;
-    /**
-     * 创建指定资源的引用。
-     */
-    function createAssetReference(source: Asset): IAssetReference;
-    /**
-     * 创建指定对象的引用。
-     */
-    function createReference(source: Scene | GameObject | BaseComponent, isOnlyUUID: boolean): any;
-    /**
-     * 创建指定对象的结构体。
-     */
-    function createStruct(source: SerializableObject): any;
-}
 declare namespace egret3d.oimo {
     /**
      *
@@ -7824,20 +7778,23 @@ declare namespace egret3d.oimo {
         height: number;
     }
 }
-declare namespace egret3d.oimo {
+declare namespace paper {
     /**
-     *
+     * 序列化场景，实体或组件。
      */
-    class RayTester extends paper.Behaviour {
-        private static readonly _material;
-        distance: number;
-        collisionMask: paper.CullingMask;
-        private _hitted;
-        private _meshFilter;
-        private _meshRender;
-        onStart(): void;
-        onUpdate(): void;
-    }
+    function serialize(source: Scene | GameObject | BaseComponent): ISerializedData;
+    /**
+     * 创建指定资源的引用。
+     */
+    function createAssetReference(source: Asset): IAssetReference;
+    /**
+     * 创建指定对象的引用。
+     */
+    function createReference(source: Scene | GameObject | BaseComponent, isOnlyUUID: boolean): any;
+    /**
+     * 创建指定对象的结构体。
+     */
+    function createStruct(source: SerializableObject): any;
 }
 declare namespace egret3d.oimo {
     /**
@@ -8104,7 +8061,67 @@ declare namespace egret3d.oimo {
         gravity: Readonly<IVector3>;
     }
 }
-declare namespace egret3d {
-    class Audio extends paper.BaseComponent {
+declare namespace egret3d.particle {
+    /**
+     *
+     */
+    class ParticleSystem extends paper.BaseSystem {
+        protected readonly _interests: ({
+            componentClass: typeof ParticleComponent;
+            listeners: {
+                type: ParticleCompEventType;
+                listener: any;
+            }[];
+        } | {
+            componentClass: typeof ParticleRenderer;
+            listeners: {
+                type: ParticleRendererEventType;
+                listener: (comp: ParticleRenderer) => void;
+            }[];
+        })[];
+        private readonly _drawCalls;
+        /**
+        * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
+        */
+        private _onUpdateBatchMesh(comp);
+        private _onRenderUpdate(render, type);
+        /**
+         *
+         * @param render 渲染模式改变
+         */
+        private _onRenderMode(render);
+        private _onMainUpdate(component, type);
+        /**
+         * 更新速率模块
+         * @param component
+         */
+        private _onShapeChanged(comp);
+        /**
+         * 更新速率模块
+         * @param component
+         */
+        private _onVelocityOverLifetime(comp);
+        /**
+         * 更新颜色模块
+         * @param component
+         */
+        private _onColorOverLifetime(comp);
+        /**
+         * 更新大小模块
+         * @param component
+         */
+        private _onSizeOverLifetime(comp);
+        /**
+         * 更新旋转模块
+         * @param comp
+         */
+        private _onRotationOverLifetime(comp);
+        private _onTextureSheetAnimation(comp);
+        private _updateDrawCalls(gameObject);
+        onEnable(): void;
+        onAddGameObject(gameObject: paper.GameObject, group: paper.Group): void;
+        onRemoveGameObject(gameObject: paper.GameObject): void;
+        onUpdate(deltaTime: number): void;
+        onDisable(): void;
     }
 }

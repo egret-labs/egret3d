@@ -68,52 +68,35 @@ namespace paper.editor {
             return null;
         }
 
-        public setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean {
-            let editType: editor.EditType = this.getEditType(propName, target);
-            if (editType === null) {
-                return false;
+        public setTransformProperty(propName: string, propValue: any, target: BaseComponent):void
+        {
+            let valueEditType:paper.editor.EditType | null = this.getEditType(propName,target);
+
+            if (valueEditType != null) {
+                let newPropertyData = {
+                    propName,
+                    copyValue:this.serializeProperty(propValue,valueEditType),
+                    valueEditType
+                } 
+    
+                let prePropertyData = {
+                    propName,
+                    copyValue:this.serializeProperty(target[propName],valueEditType),
+                    valueEditType
+                }
+    
+                this.createModifyComponent(target.gameObject.uuid,target.uuid,[newPropertyData],[prePropertyData]);
             }
-            if (target instanceof GameObject) {
-                this.createModifyGameObjectPropertyState(propName, propValue, target, editType);
-            } else if (target instanceof BaseComponent) {
-                this.createModifyComponent(propName, propValue, target, editType);
-            }
-            return true;
+        }
+        
+        public createModifyGameObjectPropertyState(gameObjectUUid:string,newValueList:any[],preValueCopylist:any[]) {
+            let state = ModifyGameObjectPropertyState.create(gameObjectUUid,newValueList,preValueCopylist);
+            this.addState(state);
         }
 
-        public createModifyGameObjectPropertyState(propName: string, propValue: any, target: GameObject, editType: editor.EditType, add: boolean = true) {
-            let preValue = this.serializeProperty(target[propName], editType);
-            let newValue = this.serializeProperty(propValue, editType);
-            let uuid = target.uuid;
-            let data = {
-                propName,
-                newValue,
-                preValue,
-                uuid,
-                editType
-            }
-
-            let state = ModifyGameObjectPropertyState.create(data);
-            add && this.addState(state);
-            return state;
-        }
-
-        public createModifyComponent(propName: string, propValue: any, target: BaseComponent, editType: editor.EditType, add: boolean = true): any {
-            let preValue = this.serializeProperty(target[propName], editType);
-            let newValue = this.serializeProperty(propValue, editType);
-            let componentUUid = target.uuid;
-            let gameObjectUUid = target.gameObject.uuid;
-            let data = {
-                propName,
-                newValue,
-                preValue,
-                editType,
-                componentUUid,
-                gameObjectUUid,
-            }
-            let state = ModifyComponentPropertyState.create(target, propName, propValue, data);
-            add && this.addState(state);
-            return state;
+        public createModifyComponent(gameObjectUUid:string,componentUUid:string,newValueList:any[],preValueCopylist:any[]): any {
+            let state = ModifyComponentPropertyState.create(gameObjectUUid,componentUUid,newValueList,preValueCopylist);
+            this.addState(state);
         }
 
         public createModifyPrefabGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]) {
