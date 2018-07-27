@@ -392,6 +392,8 @@ namespace paper.editor {
          */
         public setGameObjectsHierarchy(objects: GameObject[], targetObject: GameObject, dir: 'top' | 'inner' | 'bottom'): void {
             objects = objects.concat();
+            //剔除所有父级
+            objects.forEach(obj => { obj.transform.parent = null; });
             objects.reverse();
             if (dir === 'inner') {
                 let index = targetObject.transform.children.length;
@@ -411,20 +413,9 @@ namespace paper.editor {
                     }
                     for (let i: number = 0; i < objects.length; i++) {
                         let obj = objects[i];
-                        if (obj.transform.parent === targetObject.transform.parent) {
-                            let oldIndex = targetObject.transform.parent.children.indexOf(obj.transform);
-                            (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(oldIndex, 1);
-                            switch (dir) {
-                                case 'top': index = targetObject.transform.parent.children.indexOf(targetObject.transform); break;
-                                case 'bottom': index = targetObject.transform.parent.children.indexOf(targetObject.transform) + 1; break;
-                            }
-                            (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(index, 0, obj.transform);
-                        }
-                        else {
-                            obj.transform.parent = targetObject.transform.parent;
-                            let transform = (targetObject.transform.parent.children as Array<egret3d.Transform>).pop();
-                            (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(index, 0, transform);
-                        }
+                        obj.transform.parent = targetObject.transform.parent;
+                        let transform = (targetObject.transform.parent.children as Array<egret3d.Transform>).pop();
+                        (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(index, 0, transform);
                     }
                 }
                 else {
@@ -439,7 +430,6 @@ namespace paper.editor {
                     }
                     for (let i: number = 0; i < objects.length; i++) {
                         let obj = objects[i];
-                        obj.transform.parent = null;
                         all.splice(index, 0, obj);
                     }
                 }
@@ -742,11 +732,11 @@ namespace paper.editor {
                 }
             }
             else {
-                if (this.equal(a,b)) {
+                if (this.equal(a, b)) {
                     return true;
                 }
             }
-            return false; 
+            return false;
         }
 
         private equal(a: any, b: any): boolean {
