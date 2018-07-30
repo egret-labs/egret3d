@@ -120,7 +120,6 @@
         "egret3d/res-processor/ResProcessor.ts",
         "egret3d/asset/default/DefaultShaders.ts",
         "egret3d/asset/default/DefaultMeshes.ts",
-        "egret3d/asset/default/DefaultTechnique.ts",
         "egret3d/util/regexputil.ts",
         "egret3d/util/stream.ts",
         "egret3d/util/utils.ts",
