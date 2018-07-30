@@ -34,14 +34,18 @@ namespace paper {
             return { asset: -1 };
         }
 
-        let index = _serializeData.assets.indexOf(source.name);
+        if (_serializeData.assets) {
+            let index = _serializeData.assets.indexOf(source.name);
 
-        if (index < 0) {
-            index = _serializeData.assets.length;
-            _serializeData.assets.push(source.name);
+            if (index < 0) {
+                index = _serializeData.assets.length;
+                _serializeData.assets.push(source.name);
+            }
+
+            return { asset: index };
         }
 
-        return { asset: index };
+        return { asset: -1 };
     }
     /**
      * 创建指定对象的引用。
@@ -61,7 +65,7 @@ namespace paper {
         const className = egret.getQualifiedClassName(source);
         return { class: _findClassCode(className) || className };
     }
-    
+
     function _getTypesFromPrototype(classPrototype: any, typeKey: string, types: string[] | null = null) {
         if (typeKey in classPrototype) {
             types = types || [];
@@ -103,10 +107,14 @@ namespace paper {
             _serializeds.push(source.uuid);
 
             if (source instanceof BaseComponent) {
-                _serializeData.components.push(target);
+                if (_serializeData.components) {
+                    _serializeData.components.push(target);
+                }
             }
             else {
-                _serializeData.objects.push(target);
+                if (_serializeData.objects) {
+                    _serializeData.objects.push(target);
+                }
             }
         }
 

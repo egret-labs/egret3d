@@ -179,7 +179,7 @@ namespace paper {
                 }
             }
             else {
-                delete this._components[(value.constructor as any).index]; // TODO 字符串依赖。
+                delete this._components[(value.constructor as ComponentClass<BaseComponent>).index];
             }
         }
 

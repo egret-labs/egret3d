@@ -80,11 +80,17 @@ namespace egret3d {
             if (group === this._groups[0]) {
                 this._cameras.update(this._groups[0].gameObjects);
             }
+            else if (group === this._groups[1]) {
+                this._cameras.updateLight(this._groups[1].gameObjects);
+            }
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
             if (group === this._groups[0]) {
                 this._cameras.update(this._groups[0].gameObjects);
+            }
+            else if (group === this._groups[1]) {
+                this._cameras.updateLight(this._groups[1].gameObjects);
             }
         }
 
@@ -93,7 +99,7 @@ namespace egret3d {
 
             const cameras = this._cameras.cameras;
             if (cameras.length > 0) {
-                const lightGameObjects = this._groups[1].gameObjects;
+                const lights = this._cameras.lights;
                 this._cameras.sort(); // TODO
 
                 const activeScene = paper.Application.sceneManager.activeScene;
@@ -105,9 +111,9 @@ namespace egret3d {
                         continue;
                     }
 
-                    // if (lights.length > 0) {
-                    //     component.context.updateLights(lights); // TODO 性能优化
-                    // }
+                    if (lights.length > 0) {
+                        component.context.updateLights(lights); // TODO 性能优化
+                    }
 
                     if (component.postQueues.length === 0) {
                         component.context.drawtype = "";
