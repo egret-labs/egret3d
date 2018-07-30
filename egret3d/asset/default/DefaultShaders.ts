@@ -1,30 +1,22 @@
 namespace egret3d {
+    /**
+     * @private
+     */
+    enum BlendModeEnum {
+        Close,
+        Blend,
+        Blend_PreMultiply,
+        Add,
+        Add_PreMultiply,
+    }
 
     export class DefaultShaders {
 
-        // public static TRANSPARENT: Shader;
-        // public static TRANSPARENT_ALPHACUT: Shader;
-        // public static TRANSPARENT_ADDITIVE: Shader;
-        // public static TRANSPARENT_BOTH_SIDE: Shader;
-        // public static TRANSPARENT_ADDITIVE_BOTH_SIDE: Shader;
-        public static DIFFUSE_VERT_COLOR: Shader;
-        // public static UI: Shader;
-        // public static UI_FONT: Shader;
-        public static MATERIAL_COLOR: Shader;
-        public static LAMBERT_NORMAL: Shader;
-        // public static PARTICLE_ADDITIVE: Shader;
-        // public static PARTICLE_ADDITIVE_PREMYLTIPLY: Shader;
-        // public static PARTICLE_BLEND: Shader;
-        // public static PARTICLE_BLEND_PREMYLTIPLY: Shader;
+        // public static DIFFUSE_VERT_COLOR: Shader;
+        // public static LAMBERT_NORMAL: Shader;
 
-        // public static LINE: Shader;
-        // public static GIZMOS_COLOR: Shader;
-        // public static LAMBERT: Shader;
-        // public static DIFFUSE: Shader;
-        // public static PARTICLE: Shader;
-        // public static SHADOW_DEPTH: Shader;
-        // public static SHADOW_DISTANCE: Shader;
-
+        public static SHADOW_DEPTH: GLTFAsset;
+        public static SHADOW_DISTANCE: GLTFAsset;
         public static LINE: GLTFAsset;
         public static DIFFUSE: GLTFAsset;
         public static DIFFUSE_TINT_COLOR: GLTFAsset;
@@ -37,9 +29,8 @@ namespace egret3d {
         public static TRANSPARENT_ADDITIVE_BOTH_SIDE: GLTFAsset;
         public static LAMBERT: GLTFAsset;
         public static GIZMOS_COLOR: GLTFAsset;
+        public static MATERIAL_COLOR: GLTFAsset;
         public static VERT_COLOR: GLTFAsset;
-        public static SHADOW_DEPTH: GLTFAsset;
-        public static SHADOW_DISTANCE: GLTFAsset;
         public static PARTICLE: GLTFAsset;
         public static PARTICLE_ADDITIVE: GLTFAsset;
         public static PARTICLE_ADDITIVE_PREMYLTIPLY: GLTFAsset;
@@ -63,6 +54,100 @@ namespace egret3d {
             asset.config.extensions.paper = { renderQueue };
 
             return asset;
+        }
+
+        private static _setBlend(technique: gltf.Technique, blend: BlendModeEnum) {
+            const funs = technique.states.functions;
+            const enables = technique.states.enable;
+            switch (blend) {
+                case BlendModeEnum.Add:
+                    funs.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    funs.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
+                    break;
+                case BlendModeEnum.Add_PreMultiply:
+                    funs.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    funs.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE];
+                    break;
+                case BlendModeEnum.Blend:
+                    funs.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    funs.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                    break;
+                case BlendModeEnum.Blend_PreMultiply:
+                    funs.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    funs.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA];
+                    break;
+                default:
+                    delete funs.blendEquationSeparate;
+                    delete funs.blendFuncSeparate;
+                    break;
+            }
+            const index = enables.indexOf(gltf.EnableState.BLEND);
+            if (blend === BlendModeEnum.Close) {
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+            else {
+                if (index < 0) {
+                    enables.push(gltf.EnableState.BLEND);
+                }
+            }
+        }
+
+        private static _setCullFace(technique: gltf.Technique, cull: boolean, frontFace?: gltf.FrontFace, cullFace?: gltf.CullFace) {
+            const funs = technique.states.functions;
+            const enables = technique.states.enable;
+            const index = enables.indexOf(gltf.EnableState.CULL_FACE);
+            if (cull && frontFace && cullFace) {
+                funs.frontFace = [frontFace];
+                funs.cullFace = [cullFace];
+                if (index < 0) {
+                    enables.push(gltf.EnableState.CULL_FACE);
+                }
+            }
+            else {
+                delete funs.frontFace;
+                delete funs.cullFace;
+
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+        }
+
+        private static _setDepth(technique: gltf.Technique, zTest: boolean, zWrite: boolean) {
+            const funs = technique.states.functions;
+            const enables = technique.states.enable;
+            const index = enables.indexOf(gltf.EnableState.DEPTH_TEST);
+            if (zTest) {
+                if (index < 0) {
+                    enables.push(gltf.EnableState.DEPTH_TEST);
+                }
+                funs.depthFunc = [gltf.DepthFunc.LEQUAL];
+            }
+            else {
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+            if (zWrite) {
+                funs.depthMask = [true];
+            }
+            else {
+                funs.depthMask = [false];
+            }
+        }
+
+        private static _createColorShaderTemplate(url: string) {
+            const shader = this.createBuildinShader(url, "color_vs", ShaderLib.materialcolor_vert, "color_fs", ShaderLib.line_frag, RenderQueue.Geometry);
+
+            const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+            technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+
+            technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+            technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
+
+            return shader;
         }
 
         private static _createDiffuseShaderTemplate(url: string) {
@@ -107,10 +192,10 @@ namespace egret3d {
             technique.uniforms["glstate_spotShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._SPOTSHADOWMAP, value: [] };
             technique.uniforms["glstate_spotLights[0]"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._SPOTLIGHTS, value: [] };
             technique.uniforms["glstate_vec4_bones[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._BONESVEC4, value: [] };
-
-            technique.uniforms["_NormalTex"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._SPOTSHADOWMAP, value: {} };
             technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
             technique.uniforms["glstate_matrix_model"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };
+
+            technique.uniforms["_NormalTex"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._SPOTSHADOWMAP, value: {} };
             technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: DefaultTextures.GRAY };
             technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
             return shader;
@@ -132,12 +217,16 @@ namespace egret3d {
             technique.attributes["_time"] = { semantic: gltf.AttributeSemanticType._TIME };
             technique.attributes["_random0"] = { semantic: gltf.AttributeSemanticType._RANDOM0 };
             technique.attributes["_random1"] = { semantic: gltf.AttributeSemanticType._RANDOM1 };
-            technique.attributes["_startWorldPosition"] = { semantic: gltf.AttributeSemanticType._START_POSITION };
-            technique.attributes["_startWorldRotation"] = { semantic: gltf.AttributeSemanticType._START_ROTATION };
+            technique.attributes["_startWorldPosition"] = { semantic: gltf.AttributeSemanticType._WORLD_POSITION };
+            technique.attributes["_startWorldRotation"] = { semantic: gltf.AttributeSemanticType._WORLD_ROTATION };
+
+            technique.uniforms["glstate_matrix_vp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._VIEWPROJECTION, value: [] };
+            technique.uniforms["glstate_cameraPos"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_POS, value: [] };
+            technique.uniforms["glstate_cameraForward"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_FORWARD, value: [] };
+            technique.uniforms["glstate_cameraUp"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_UP, value: [] };
 
             technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: egret3d.DefaultTextures.GRAY };
             technique.uniforms["_TintColor"] = { type: gltf.UniformType.FLOAT_VEC4, value: [0.5, 0.5, 0.5, 0.5] };
-
             technique.uniforms["u_currentTime"] = { type: gltf.UniformType.FLOAT, value: 0 };
             technique.uniforms["u_gravity"] = { type: gltf.UniformType.FLOAT_VEC3, value: [0, 0, 0] };
             technique.uniforms["u_worldPosition"] = { type: gltf.UniformType.FLOAT_VEC3, value: [0, 0, 0] };
@@ -146,11 +235,6 @@ namespace egret3d {
             technique.uniforms["u_scalingMode"] = { type: gltf.UniformType.Int, value: 0 };
             technique.uniforms["u_positionScale"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
             technique.uniforms["u_sizeScale"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
-            technique.uniforms["glstate_matrix_vp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._VIEWPROJECTION, value: [] };
-
-            technique.uniforms["glstate_cameraPos"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_POS, value: [] };
-            technique.uniforms["glstate_cameraForward"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_FORWARD, value: [] };
-            technique.uniforms["glstate_cameraUp"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_UP, value: [] };
             technique.uniforms["u_lengthScale"] = { type: gltf.UniformType.FLOAT, value: [1, 1, 1] };
             technique.uniforms["u_speeaScale"] = { type: gltf.UniformType.FLOAT, value: [1, 1, 1] };
             technique.uniforms["u_simulationSpace"] = { type: gltf.UniformType.Int, value: 0 };
@@ -212,11 +296,9 @@ namespace egret3d {
                 technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
                 //
-                technique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.SHADOW_DEPTH = shader;
@@ -235,11 +317,9 @@ namespace egret3d {
                 technique.uniforms["glstate_nearDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._NEARDICTANCE, value: {} };
                 technique.uniforms["glstate_farDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._FARDISTANCE, value: {} };
 
-                technique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.SHADOW_DISTANCE = shader;
@@ -254,11 +334,9 @@ namespace egret3d {
 
                 technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
-                technique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.LINE = shader;
@@ -268,11 +346,9 @@ namespace egret3d {
             {
                 const shader = this._createDiffuseShaderTemplate("buildin/diffuse.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.DIFFUSE = shader;
@@ -282,11 +358,9 @@ namespace egret3d {
             {
                 const shader = this._createDiffuseShaderTemplate("buildin/diffuse_tintcolor.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
                 this.DIFFUSE_TINT_COLOR = shader;
                 paper.Asset.register(shader);
@@ -295,9 +369,9 @@ namespace egret3d {
             {
                 const shader = this._createDiffuseShaderTemplate("buildin/diffuse_bothside.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [gltf.EnableState.DEPTH_TEST];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [true];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
                 this.DIFFUSE_BOTH_SIDE = shader;
                 paper.Asset.register(shader);
@@ -306,13 +380,9 @@ namespace egret3d {
             {
                 const shader = this._createDiffuseShaderTemplate("buildin/transparent.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
-                technique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
-                technique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Blend);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT = shader;
@@ -322,13 +392,9 @@ namespace egret3d {
             {
                 const shader = this._createDiffuseShaderTemplate("buildin/transparent_tintColor.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
-                technique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
-                technique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Add);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT_TINTCOLOR = shader;
@@ -338,11 +404,9 @@ namespace egret3d {
             {
                 const shader = this._createDiffuseShaderTemplate("buildin/transparent_alphaCut.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT_ALPHACUT = shader;
@@ -352,13 +416,9 @@ namespace egret3d {
             {
                 const shader = this._createDiffuseShaderTemplate("buildin/transparent_additive.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
-                technique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
-                technique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Add);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT_ADDITIVE = shader;
@@ -368,11 +428,9 @@ namespace egret3d {
             {
                 const shader = this._createDiffuseShaderTemplate("buildin/transparent_additive_bothside.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
-                technique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Add);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT_ADDITIVE_BOTH_SIDE = shader;
@@ -382,11 +440,9 @@ namespace egret3d {
             {
                 const shader = this._createDiffuseShaderTemplate("buildin/transparent_bothside.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
-                technique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Blend);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT_ADDITIVE_BOTH_SIDE = shader;
@@ -397,11 +453,9 @@ namespace egret3d {
                 const shader = this._createLambertShaderTemplate();
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
 
-                technique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.LAMBERT = shader;
@@ -409,24 +463,28 @@ namespace egret3d {
             }
 
             {
-                const shader = this.createBuildinShader("buildin/color.shader.gltf", "color_vs", ShaderLib.materialcolor_vert, "color_fs", ShaderLib.line_frag, RenderQueue.Geometry);
-
+                const shader = this._createColorShaderTemplate("buildin/gizmos.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
-                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
-                technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
-
-                technique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
-                technique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
-                technique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                this._setDepth(technique, false, false);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Blend);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Overlay;
 
                 this.GIZMOS_COLOR = shader;
+                paper.Asset.register(shader);
+            }
+
+            {
+                const shader = this._createColorShaderTemplate("buildin/materialcolor.shader.gltf");
+                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Close);
+                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+
+                this.MATERIAL_COLOR = shader;
                 paper.Asset.register(shader);
             }
 
@@ -444,11 +502,9 @@ namespace egret3d {
                 technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
                 technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_MAT4, value: {} };
 
-                technique.states.enable = [gltf.EnableState.DEPTH_TEST, gltf.EnableState.CULL_FACE];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [gltf.FrontFace.CCW];
-                technique.states.functions.cullFace = [gltf.CullFace.BACK];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.VERT_COLOR = shader;
@@ -459,10 +515,9 @@ namespace egret3d {
                 const shader = this._createParticleShaderTemplate("buildin/particle.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [gltf.EnableState.DEPTH_TEST];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [true];
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Close);
 
                 this.PARTICLE = shader;
                 paper.Asset.register(shader);
@@ -472,11 +527,9 @@ namespace egret3d {
                 const shader = this._createParticleShaderTemplate("buildin/particles_additive.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
-                technique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Add);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.PARTICLE_ADDITIVE = shader;
@@ -487,11 +540,9 @@ namespace egret3d {
                 const shader = this._createParticleShaderTemplate("buildin/particles_additive_premultiply.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
-                technique.states.functions.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Add_PreMultiply);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.PARTICLE_ADDITIVE_PREMYLTIPLY = shader;
@@ -502,11 +553,10 @@ namespace egret3d {
                 const shader = this._createParticleShaderTemplate("buildin/particles_blend1.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
-                technique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Blend);
+                technique.states.functions.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
                 shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 paper.Asset.register(shader);
@@ -516,11 +566,9 @@ namespace egret3d {
                 const shader = this._createParticleShaderTemplate("buildin/particles_blend.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
-                technique.states.functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Blend);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.PARTICLE_BLEND = shader;
@@ -531,11 +579,9 @@ namespace egret3d {
                 const shader = this._createParticleShaderTemplate("buildin/particles_blend_premultiply.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [gltf.EnableState.BLEND, gltf.EnableState.DEPTH_TEST];
-                technique.states.functions.depthFunc = [gltf.DepthFunc.LEQUAL];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
-                technique.states.functions.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Blend_PreMultiply);
                 shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.PARTICLE_BLEND_PREMYLTIPLY = shader;
@@ -543,127 +589,6 @@ namespace egret3d {
             }
 
         }
-
-        // public static init() {
-        //     if (this._inited) {
-        //         return;
-        //     }
-
-        //     this._inited = true;
-
-        //     this.LINE = new Shader("buildin/line.shader.gltf");
-        //     this.LINE.setVertShader("def_line_vs", ShaderLib.line_vert);
-        //     this.LINE.setFragShader("def_line_fs", ShaderLib.line_frag);
-        //     paper.Asset.register(this.LINE);
-
-        //     this.GIZMOS_COLOR = new Shader("buildin/materialcolor.shader.gltf");
-        //     this.GIZMOS_COLOR.setVertShader("def_color_vs", ShaderLib.materialcolor_vert);
-        //     this.GIZMOS_COLOR.setFragShader("def_color_fs", ShaderLib.line_frag);
-        //     paper.Asset.register(this.GIZMOS_COLOR);
-
-        //     this.DIFFUSE = new Shader("buildin/diffuse.shader.gltf");
-        //     this.DIFFUSE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-        //     this.DIFFUSE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-        //     paper.Asset.register(this.DIFFUSE);
-
-        //     this.LAMBERT = new Shader("buildin/lambert.shader.gltf");
-        //     this.LAMBERT.setVertShader("def_lambert_vs", ShaderLib.lambert_vert);
-        //     this.LAMBERT.setFragShader("def_lambert_fs", ShaderLib.lambert_frag);
-        //     paper.Asset.register(this.LAMBERT);
-
-        //     this.PARTICLE = new Shader("buildin/particles.shader.gltf");
-        //     this.PARTICLE.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-        //     this.PARTICLE.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-        //     paper.Asset.register(this.PARTICLE);
-
-        //     this.SHADOW_DEPTH = new Shader("buildin/depth.shader.gltf");
-        //     this.SHADOW_DEPTH.setVertShader("def_depth_vs", ShaderLib.depthpackage_vert);
-        //     this.SHADOW_DEPTH.setFragShader("def_depth_fs", ShaderLib.depthpackage_frag);
-        //     paper.Asset.register(this.SHADOW_DEPTH);
-
-        //     this.SHADOW_DISTANCE = new Shader("buildin/distance.shader.gltf");
-        //     this.SHADOW_DISTANCE.setVertShader("def_distance_vs", ShaderLib.distancepackage_vert);
-        //     this.SHADOW_DISTANCE.setFragShader("def_distance_fs", ShaderLib.distancepackage_frag);
-        //     paper.Asset.register(this.SHADOW_DISTANCE);
-
-        //     //
-        //     this.TRANSPARENT = new Shader("buildin/transparent.shader.gltf");
-        //     this.TRANSPARENT.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-        //     this.TRANSPARENT.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-        //     paper.Asset.register(this.TRANSPARENT);
-
-        //     //
-        //     this.TRANSPARENT_ADDITIVE = new Shader("buildin/transparent_additive.shader.gltf");
-        //     this.TRANSPARENT_ADDITIVE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-        //     this.TRANSPARENT_ADDITIVE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-        //     paper.Asset.register(this.TRANSPARENT_ADDITIVE);
-
-        //     this.DIFFUSE_TINT_COLOR = new Shader("buildin/transparent_tintColor.shader.gltf");
-        //     this.DIFFUSE_TINT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-        //     this.DIFFUSE_TINT_COLOR.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-        //     paper.Asset.register(this.DIFFUSE_TINT_COLOR);
-
-
-        //     this.TRANSPARENT_ALPHACUT = new Shader("buildin/transparent_alphaCut.shader.gltf");
-        //     this.TRANSPARENT_ALPHACUT.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-        //     this.TRANSPARENT_ALPHACUT.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-        //     paper.Asset.register(this.TRANSPARENT_ALPHACUT);
-
-        //     this.TRANSPARENT_BOTH_SIDE = new Shader("buildin/transparent_bothside.shader.gltf");
-        //     this.TRANSPARENT_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-        //     this.TRANSPARENT_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-        //     paper.Asset.register(this.TRANSPARENT_BOTH_SIDE);
-
-        //     this.TRANSPARENT_ADDITIVE_BOTH_SIDE = new Shader("buildin/transparent_additive_bothside.shader.gltf");
-        //     this.TRANSPARENT_ADDITIVE_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-        //     this.TRANSPARENT_ADDITIVE_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-        //     paper.Asset.register(this.TRANSPARENT_ADDITIVE_BOTH_SIDE);
-
-        //     this.DIFFUSE_TINT_COLOR = new Shader("buildin/diffuse_tintcolor.shader.gltf");
-        //     this.DIFFUSE_TINT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-        //     this.DIFFUSE_TINT_COLOR.setFragShader("def_diffuse_tinit_fs", ShaderLib.tintcolor_frag);
-        //     paper.Asset.register(this.DIFFUSE_TINT_COLOR);
-
-        //     this.DIFFUSE_VERT_COLOR = new Shader("buildin/diffuse_vertcolor.shader.gltf");
-        //     this.DIFFUSE_VERT_COLOR.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-        //     this.DIFFUSE_VERT_COLOR.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-        //     paper.Asset.register(this.DIFFUSE_VERT_COLOR);
-
-        //     this.DIFFUSE_BOTH_SIDE = new Shader("buildin/diffuse_bothside.shader.gltf");
-        //     this.DIFFUSE_BOTH_SIDE.setVertShader("def_diffuse_vs", ShaderLib.diffuse_vert);
-        //     this.DIFFUSE_BOTH_SIDE.setFragShader("def_diffuse_fs", ShaderLib.diffuse_frag);
-        //     paper.Asset.register(this.DIFFUSE_BOTH_SIDE);
-
-        //     this.MATERIAL_COLOR = new Shader("buildin/materialcolor.shader.gltf");
-        //     this.MATERIAL_COLOR.setVertShader("def_materialcolor_vs", ShaderLib.materialcolor_vert);
-        //     this.MATERIAL_COLOR.setFragShader("def_diffuse_fs", ShaderLib.line_frag);
-        //     paper.Asset.register(this.MATERIAL_COLOR);
-
-        //     this.PARTICLE_ADDITIVE = new Shader("buildin/particles_additive.shader.gltf");
-        //     this.PARTICLE_ADDITIVE.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-        //     this.PARTICLE_ADDITIVE.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-        //     paper.Asset.register(this.PARTICLE_ADDITIVE);
-
-        //     this.PARTICLE_ADDITIVE_PREMYLTIPLY = new Shader("buildin/particles_additive_premultiply.shader.gltf");
-        //     this.PARTICLE_ADDITIVE_PREMYLTIPLY.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-        //     this.PARTICLE_ADDITIVE_PREMYLTIPLY.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-        //     paper.Asset.register(this.PARTICLE_ADDITIVE_PREMYLTIPLY);
-
-        //     this.PARTICLE_BLEND = new Shader("buildin/particles_blend.shader.gltf");
-        //     this.PARTICLE_BLEND.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-        //     this.PARTICLE_BLEND.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-        //     paper.Asset.register(this.PARTICLE_BLEND);
-
-        //     this.PARTICLE_BLEND_PREMYLTIPLY = new Shader("buildin/particles_blend_premultiply.shader.gltf");
-        //     this.PARTICLE_BLEND_PREMYLTIPLY.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-        //     this.PARTICLE_BLEND_PREMYLTIPLY.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-        //     paper.Asset.register(this.PARTICLE_BLEND_PREMYLTIPLY);
-
-        //     const t = new Shader("buildin/particles_blend1.shader.gltf");
-        //     t.setVertShader("def_particle_vs", ShaderLib.particlesystem_vert);
-        //     t.setFragShader("def_particle_fs", ShaderLib.particlesystem_frag);
-        //     paper.Asset.register(t);
-        // }
 
         // public static init2() {
         //     if (this._inited) {

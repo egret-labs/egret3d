@@ -2,42 +2,42 @@ namespace egret3d {
     /**
      * uniform类型枚举 TODO 使用gltf.UniformType代替
      */
-    export enum UniformTypeEnum {
-        Texture,
-        Int,
-        Boolean,
-        Float,
-        Floatv,
-        Float2,
-        Float2v,
-        Float3,
-        Float3v,
-        Float4,
-        Float4v,
-        Float4x4,
-        Float4x4v,
-    }
+    // export enum UniformTypeEnum {
+    //     Texture,
+    //     Int,
+    //     Boolean,
+    //     Float,
+    //     Floatv,
+    //     Float2,
+    //     Float2v,
+    //     Float3,
+    //     Float3v,
+    //     Float4,
+    //     Float4v,
+    //     Float4x4,
+    //     Float4x4v,
+    // }
 
-    export enum ShowFaceStateEnum {
-        ALL,
-        CCW,
-        CW,
-    }
+    // export enum ShowFaceStateEnum {
+    //     ALL,
+    //     CCW,
+    //     CW,
+    // }
 
-    export enum DrawModeEnum {
-        VboTri,
-        VboLine,
-        EboTri,
-        EboLine,
-    }
+    // export enum DrawModeEnum {
+    //     VboTri,
+    //     VboLine,
+    //     EboTri,
+    //     EboLine,
+    // }
 
-    export enum BlendModeEnum {
-        Close,
-        Blend,
-        Blend_PreMultiply,
-        Add,
-        Add_PreMultiply,
-    }
+    // export enum BlendModeEnum {
+    //     Close,
+    //     Blend,
+    //     Blend_PreMultiply,
+    //     Add,
+    //     Add_PreMultiply,
+    // }
 
     // export class DrawPass {
 

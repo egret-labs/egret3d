@@ -28,10 +28,6 @@ namespace egret3d {
         /**
         * @internal
         */
-        public _gltfUnifromMap: { [k: string]: gltf.UniformValue; };
-        /**
-        * @internal
-        */
         public _glTFTechnique: gltf.Technique = null as any;
         /**
          * @internal
@@ -78,7 +74,6 @@ namespace egret3d {
             this._glTFMaterialIndex = 0;
             this._glTFAsset = null;
             this._glTFMaterial = null;
-            this._gltfUnifromMap = null;
             this._glTFTechnique = null;
             this._glTFShader = null;
 
@@ -176,7 +171,8 @@ namespace egret3d {
             }
             if (!this._glTFShader.config ||
                 !this._glTFShader.config.extensions ||
-                !this._glTFShader.config.extensions.KHR_techniques_webgl) {
+                !this._glTFShader.config.extensions.KHR_techniques_webgl ||
+                this._glTFShader.config.extensions.KHR_techniques_webgl.techniques.length <= 0) {
                 console.error("找不到着色器扩展KHR_techniques_webgl");
             }
             //
@@ -185,12 +181,12 @@ namespace egret3d {
             if (!this._glTFTechnique) {
                 console.error("Error glTF asset.");
             }
-            this._gltfUnifromMap = this._glTFMaterial.extensions.KHR_techniques_webgl.values;
+            const gltfUnifromMap = this._glTFMaterial.extensions.KHR_techniques_webgl.values;
             const uniformMap = this._glTFTechnique.uniforms;
             //使用Shader替换Material中没有默认值的Uniform
-            for (const key in this._gltfUnifromMap) {
+            for (const key in gltfUnifromMap) {
                 if (uniformMap[key]) {
-                    const value = this._gltfUnifromMap[key];
+                    const value = gltfUnifromMap[key];
                     if (Array.isArray(value)) {
                         uniformMap[key].value = value.concat();
                     }

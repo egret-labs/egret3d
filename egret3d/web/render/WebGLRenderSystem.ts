@@ -28,8 +28,13 @@ namespace egret3d {
         private _cacheContext: RenderContext;
         private _cacheMaterial: Material;
         private _cacheMesh: Mesh;
+        private _cacheState: gltf.States;
         //
         private _updateState(state: gltf.States) {
+            if (this._cacheState === state) {
+                return;
+            }
+            this._cacheState = state;
             const webgl = this._webgl;
             const stateEnables = this._stateEnables;
             const cacheStateEnable = this._cacheStateEnable;
@@ -240,7 +245,6 @@ namespace egret3d {
 
                 const location = uniform.extensions.paper.location;
                 const value = uniform.value;
-                // const value = material._glTFMaterial.extensions.KHR_techniques_webgl.values[key];
                 switch (uniform.type) {
                     case gltf.UniformType.BOOL:
                     case gltf.UniformType.Int:
@@ -447,6 +451,7 @@ namespace egret3d {
                         delete this._cacheStateEnable[key];
                     }
                     this._cacheProgram = undefined;
+                    this._cacheState = undefined;
                 }
             }
         }
@@ -499,7 +504,7 @@ namespace egret3d {
             const cameras = this._groups[0].components as Camera[];
             if (cameras.length > 0) {
                 for (const camera of cameras) {
-                    if(camera.gameObject.scene !== activeScene){
+                    if (camera.gameObject.scene !== activeScene) {
                         continue;
                     }
 
