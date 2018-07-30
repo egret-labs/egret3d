@@ -41,9 +41,7 @@ namespace paper {
          */
         @serializedField
         public tag: string = "";
-        /**
-         * @internal
-         */
+        
         @paper.serializedField
         public assetID?: string = createAssetID();
         /**
@@ -63,7 +61,7 @@ namespace paper {
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @paper.serializedField
-        public extras?: any;
+        public extras:{isPrefabRoot?:boolean,prefabRootId?:string} = {};
 
         @serializedField
         private _activeSelf: boolean = true;

@@ -15,7 +15,7 @@ namespace paper.editor {
         }
         private static makePrefabInfo(gameOjbect: GameObject): { uuid: string, editInfo: any, prefab: string }[] {
             let makeInfo = (target: GameObject, result: { uuid: string, editInfo: any, prefab: string }[] = []) => {
-                result.push({ uuid: target.uuid, editInfo: target['prefabEditInfo'], prefab: target.prefab.name });
+                result.push({ uuid: target.uuid, editInfo: {...target.extras}, prefab: target.prefab.name });
                 target.transform.children.forEach(transform => {
                     let obj = transform.gameObject;
                     if (Editor.editorModel.isPrefabChild(obj) && !Editor.editorModel.isPrefabRoot(obj)) {
@@ -45,7 +45,7 @@ namespace paper.editor {
             let objs = Editor.editorModel.getGameObjectsByUUids(ids);
             objs.forEach(obj => { 
                 obj.prefab = null; 
-                obj['prefabEditInfo'] = undefined;
+                obj.extras = {};
             });
             return true;
         }
@@ -56,7 +56,7 @@ namespace paper.editor {
                 b: for (let k: number = 0; k < this.prefabInfos.length; k++) {
                     let info = this.prefabInfos[k];
                     if (obj.uuid === info.uuid) {
-                        obj['prefabEditInfo'] = info.editInfo;
+                        obj.extras = info.editInfo;
                         obj.prefab = paper.Asset.find(info.prefab);
                         break b;
                     }

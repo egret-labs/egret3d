@@ -11,9 +11,9 @@ namespace paper {
     /**
      * 反序列化。
      */
-    export function deserialize(data: ISerializedData, isKeepUUID: boolean = false): Scene | GameObject | BaseComponent | null {
+    export function deserialize<T extends (Scene | GameObject | BaseComponent)>(data: ISerializedData, isKeepUUID: boolean = false): T | null {
         if (_deserializedData) {
-            throw new Error("The deserialization is not complete.");
+            console.debug("The deserialization is not complete.");
         }
 
         _isKeepUUID = isKeepUUID;
@@ -21,7 +21,7 @@ namespace paper {
 
         const sceneClassName = egret.getQualifiedClassName(paper.Scene);
         const components: { [key: string]: ISerializedObject } = {};
-        let root: Scene | GameObject | BaseComponent | null = null;
+        let root: T | null = null;
 
         if (data.components) {
             for (const componentSource of data.components) { // Mapping components.
@@ -54,7 +54,7 @@ namespace paper {
                 }
 
                 _deserializedData.objects[source.uuid] = target;
-                root = root || target;
+                root = root || target as T;
             }
 
             let i = data.objects.length;
@@ -82,7 +82,7 @@ namespace paper {
                                     }
                                 }
 
-                                root = root || transform;
+                                root = root || transform as any;
                             }
                             else {
                                 const component = (target as GameObject).addComponent(clazz);
@@ -92,14 +92,14 @@ namespace paper {
                                     (component as Behaviour)._isReseted = true;
                                 }
 
-                                root = root || component;
+                                root = root || component as any;
                             }
                         }
                         else {
                             const component = (target as GameObject).addComponent(MissingComponent);
                             component.missingObject = componentSource;
                             _deserializedData.components[uuid] = component;
-                            root = root || component;
+                            root = root || component as any;
 
                             console.warn(`Class ${className} is not defined.`);
                         }

@@ -14,7 +14,7 @@ namespace paper {
      */
     export function serialize(source: Scene | GameObject | BaseComponent): ISerializedData {
         if (_serializeData) {
-            throw new Error("The serialization is not complete.");
+            console.debug("The deserialization is not complete.");
         }
 
         _serializeData = { version: VERSION, assets: [], objects: [], components: [] };

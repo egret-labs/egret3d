@@ -20,7 +20,7 @@ namespace paper.editor {
                 duplicateInfo.push({ UUID, parentUUID, serializeData });
             }
             const state = new DuplicateGameObjectsState();
-            state.data = duplicateInfo;
+            state.duplicateInfo = duplicateInfo;
             return state;
         }
         //克隆信息列表
@@ -32,20 +32,19 @@ namespace paper.editor {
             if (super.undo()) {
                 let objs = Editor.editorModel.getGameObjectsByUUids(this.addList);
                 Editor.editorModel._deleteGameObject(objs);
-                const { selectIds } = this.data;
                 this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, objs);
                 return true;
             }
 
             return false;
         }
-
+        private firstDo:boolean=true;
         public redo(): boolean {
             if (super.redo()) {
                 this.addList = [];
                 for (let i: number = 0; i < this.duplicateInfo.length; i++) {
                     let info = this.duplicateInfo[i];
-                    let obj: GameObject = deserialize(info.serializeData);
+                    let obj: GameObject = deserialize(info.serializeData,!this.firstDo);
                     let parent = Editor.editorModel.getGameObjectByUUid(info.parentUUID);
                     if (parent) {
                         obj.transform.parent = parent.transform;
@@ -53,8 +52,12 @@ namespace paper.editor {
                     //清理预置体信息
                     this.clearPrefabInfo(obj);
                     this.addList.push(obj.uuid);
+                    if(this.firstDo){
+                        info.serializeData=serialize(obj);
+                    }
                 }
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, this.addList);
+                this.firstDo=false;
                 return true;
             }
 
@@ -63,7 +66,7 @@ namespace paper.editor {
         private clearPrefabInfo(obj: GameObject): void {
             if (Editor.editorModel.isPrefabChild(obj)) {
                 obj.prefab = null;
-                obj['prefabEditInfo'] = undefined;
+                obj.extras = {};
                 for (let i: number = 0; i < obj.transform.children.length; i++) {
                     this.clearPrefabInfo(obj.transform.children[i].gameObject);
                 }

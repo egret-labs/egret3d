@@ -92,9 +92,6 @@ namespace paper {
             return new componentClass();
         }
 
-        /**
-         * @internal
-         */
         @paper.serializedField
         public assetID?: string = createAssetID();
         /**
