@@ -488,6 +488,7 @@ namespace egret3d {
         }
 
         public onUpdate() {
+            // Performance.startCounter("render");
             const activeScene = paper.Application.sceneManager.activeScene;
             //Lights
             const lights = this._groups[2].components as BaseLight[];
@@ -527,6 +528,8 @@ namespace egret3d {
                 webgl.clearDepth(1.0);
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
+
+            // Performance.endCounter("render");
         }
     }
 }

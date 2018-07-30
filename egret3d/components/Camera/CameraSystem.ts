@@ -23,7 +23,6 @@ namespace egret3d {
         }
 
         public onUpdate(deltaTime: number) {
-            Performance.startCounter("render");
 
             const cameras = this._cameras.cameras;
             if (cameras.length > 0) {
@@ -33,9 +32,6 @@ namespace egret3d {
                     component.update(deltaTime);  
                 }
             }
-
-            Performance.endCounter("render");
-            Performance.updateFPS();
         }
     }
 }
