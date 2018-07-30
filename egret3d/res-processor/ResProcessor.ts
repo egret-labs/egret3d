@@ -57,60 +57,60 @@ namespace RES.processor {
         })
     }
 
-    export const GLVertexShaderProcessor: RES.processor.Processor = {
+    // export const GLVertexShaderProcessor: RES.processor.Processor = {
 
-        async onLoadStart(host, resource) {
-            let text = await host.load(resource, "text");
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
-            return egret3d.Shader.registerVertShader(name, text);
-        },
+    //     async onLoadStart(host, resource) {
+    //         let text = await host.load(resource, "text");
+    //         let url = getUrl(resource);
+    //         let filename = getFileName(url);
+    //         let name = filename.substring(0, filename.indexOf("."));
+    //         return egret3d.Shader.registerVertShader(name, text);
+    //     },
 
-        async onRemoveStart(host, resource) {
+    //     async onRemoveStart(host, resource) {
 
-        }
+    //     }
 
-        // getData(host, resource, key, subkey) { //可选函数
+    //     // getData(host, resource, key, subkey) { //可选函数
 
-        // }
+    //     // }
 
-    };
+    // };
 
-    export const GLFragmentShaderProcessor: RES.processor.Processor = {
+    // export const GLFragmentShaderProcessor: RES.processor.Processor = {
 
-        async onLoadStart(host, resource) {
-            let text = await host.load(resource, "text");
-            let url = getUrl(resource);
-            let filename = getFileName(url);
-            let name = filename.substring(0, filename.indexOf("."));
-            return egret3d.Shader.registerFragShader(name, text);
-        },
+    //     async onLoadStart(host, resource) {
+    //         let text = await host.load(resource, "text");
+    //         let url = getUrl(resource);
+    //         let filename = getFileName(url);
+    //         let name = filename.substring(0, filename.indexOf("."));
+    //         return egret3d.Shader.registerFragShader(name, text);
+    //     },
 
-        async onRemoveStart(host, resource) {
+    //     async onRemoveStart(host, resource) {
 
-        }
+    //     }
 
-    };
+    // };
 
-    export const ShaderProcessor: RES.processor.Processor = {
+    // export const ShaderProcessor: RES.processor.Processor = {
 
-        async onLoadStart(host, resource) {
-            let data = await host.load(resource, "json");
-            // const url = getUrl(resource);
-            let shader = new egret3d.Shader(resource.url);
-            shader.$parse(data);
-            paper.Asset.register(shader);
+    //     async onLoadStart(host, resource) {
+    //         let data = await host.load(resource, "json");
+    //         // const url = getUrl(resource);
+    //         let shader = new egret3d.Shader(resource.url);
+    //         shader.$parse(data);
+    //         paper.Asset.register(shader);
 
-            return shader;
-        },
+    //         return shader;
+    //     },
 
-        async onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-        }
+    //     async onRemoveStart(host, resource) {
+    //         let data = host.get(resource);
+    //         data.dispose();
+    //     }
 
-    };
+    // };
 
     export const TextureDescProcessor: RES.processor.Processor = {
 
@@ -406,9 +406,9 @@ namespace RES.processor {
         })));
     }
 
-    RES.processor.map("GLVertexShader", GLVertexShaderProcessor);
-    RES.processor.map("GLFragmentShader", GLFragmentShaderProcessor);
-    RES.processor.map("Shader", ShaderProcessor);
+    // RES.processor.map("GLVertexShader", GLVertexShaderProcessor);
+    // RES.processor.map("GLFragmentShader", GLFragmentShaderProcessor);
+    // RES.processor.map("Shader", ShaderProcessor);
     RES.processor.map("Texture", TextureProcessor);
     RES.processor.map("TextureDesc", TextureDescProcessor);
     // RES.processor.map("Material", MaterialProcessor);

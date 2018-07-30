@@ -115,8 +115,6 @@
         "egret3d/web/render/Stage3D.ts",
         "egret3d/web/render/WebGLCapabilities.ts",
         "egret3d/asset/resource/Material.ts",
-        "egret3d/asset/resource/DrawPass.ts",
-        "egret3d/asset/resource/shader.ts",
         "egret3d/math/Ray.ts",
         "egret3d/asset/default/ShaderLib.ts",
         "egret3d/asset/default/ShaderChunk.ts",

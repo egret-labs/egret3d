@@ -5631,190 +5631,71 @@ declare namespace egret3d.particle {
         readonly isAlive: boolean;
     }
 }
-declare namespace egret3d.particle {
-    const BillboardPerVertexCount = 37;
-    const MeshPerVertexCount = 42;
-    const enum ParticleRendererEventType {
-        Mesh = "mesh",
-        Materials = "materials",
-        RenderMode = "renderMode",
-        LengthScaleChanged = "lengthScale",
-        VelocityScaleChanged = "velocityScale",
-    }
-    const enum ParticleSortMode {
-        None = 0,
-        Distance = 1,
-        OldestInFront = 2,
-        YoungestInFront = 3,
-    }
-    const enum ParticleRenderSpace {
-        View = 0,
-        World = 1,
-        Local = 2,
-        Facing = 3,
-    }
-    const enum ParticleRenderMode {
-        Billboard = 0,
-        Stretch = 1,
-        HorizontalBillboard = 2,
-        VerticalBillboard = 3,
-        Mesh = 4,
-        None = 5,
-    }
-    /**
-     * 粒子着色器用到的属性
-     */
-    const enum ParticleMaterialAttribute {
-        POSITION = "POSITION",
-        COLOR_0 = "COLOR_0",
-        TEXCOORD_0 = "TEXCOORD_0",
-        CORNER = "CORNER",
-        START_POSITION = "START_POSITION",
-        START_VELOCITY = "START_VELOCITY",
-        START_COLOR = "START_COLOR",
-        START_SIZE = "START_SIZE",
-        START_ROTATION = "START_ROTATION",
-        TIME = "TIME",
-        RANDOM0 = "RANDOM0",
-        RANDOM1 = "RANDOM1",
-        WORLD_POSITION = "WORLD_POSITION",
-        WORLD_ROTATION = "WORLD_ROTATION",
-    }
-    /**
-     * 粒子着色器用到的变量
-     */
-    const enum ParticleMaterialUniform {
-        WORLD_POSITION = "u_worldPosition",
-        WORLD_ROTATION = "u_worldRotation",
-        POSITION_SCALE = "u_positionScale",
-        SIZE_SCALE = "u_sizeScale",
-        SCALING_MODE = "u_scalingMode",
-        GRAVIT = "u_gravity",
-        START_ROTATION3D = "u_startRotation3D",
-        SIMULATION_SPACE = "u_simulationSpace",
-        CURRENTTIME = "u_currentTime",
-        ALPHAS_GRADIENT = "u_alphaGradient[0]",
-        COLOR_GRADIENT = "u_colorGradient[0]",
-        ALPHA_GRADIENT_MAX = "u_alphaGradientMax[0]",
-        COLOR_GRADIENT_MAX = "u_colorGradientMax[0]",
-        VELOCITY_CONST = "u_velocityConst",
-        VELOCITY_CURVE_X = "u_velocityCurveX[0]",
-        VELOCITY_CURVE_Y = "u_velocityCurveY[0]",
-        VELOCITY_CURVE_Z = "u_velocityCurveZ[0]",
-        VELOCITY_CONST_MAX = "u_velocityConstMax",
-        VELOCITY_CURVE_MAX_X = "u_velocityCurveMaxX[0]",
-        VELOCITY_CURVE_MAX_Y = "u_velocityCurveMaxY[0]",
-        VELOCITY_CURVE_MAX_Z = "u_velocityCurveMaxZ[0]",
-        SPACE_TYPE = "u_spaceType",
-        SIZE_CURVE = "u_sizeCurve[0]",
-        SIZE_CURVE_X = "u_sizeCurveX[0]",
-        SIZE_CURVE_Y = "u_sizeCurveY[0]",
-        SIZE_CURVE_Z = "u_sizeCurveZ[0]",
-        SIZE_CURVE_MAX = "u_sizeCurveMax[0]",
-        SIZE_CURVE_MAX_X = "u_sizeCurveMaxX[0]",
-        SIZE_CURVE_MAX_Y = "u_sizeCurveMaxY[0]",
-        SIZE_CURVE_MAX_Z = "u_sizeCurveMaxZ[0]",
-        ROTATION_CONST = "u_rotationConst",
-        ROTATION_CONST_SEPRARATE = "u_rotationConstSeprarate",
-        ROTATION_CURVE = "u_rotationCurve[0]",
-        ROTATE_CURVE_X = "u_rotationCurveX[0]",
-        ROTATE_CURVE_y = "u_rotationCurveY[0]",
-        ROTATE_CURVE_Z = "u_rotationCurveZ[0]",
-        ROTATE_CURVE_W = "u_rotationCurveW[0]",
-        ROTATION_CONST_MAX = "u_rotationConstMax",
-        ROTATION_CONST_MAX_SEPRARATE = "u_rotationConstMaxSeprarate",
-        ROTATION_CURVE_MAX = "u_rotationCurveMax[0]",
-        ROTATION_CURVE_MAX_X = "u_rotationCurveMaxX[0]",
-        ROTATION_CURVE_MAX_Y = "u_rotationCurveMaxY[0]",
-        ROTATION_CURVE_MAX_Z = "u_rotationCurveMaxZ[0]",
-        ROTATION_CURVE_MAX_W = "u_rotationCurveMaxW[0]",
-        CYCLES = "u_cycles",
-        SUB_UV = "u_subUV",
-        UV_CURVE = "u_uvCurve[0]",
-        UV_CURVE_MAX = "u_uvCurveMax[0]",
-        LENGTH_SCALE = "u_lengthScale",
-        SPEED_SCALE = "u_speeaScale",
-    }
-    /**
-     * 粒子着色器用到的宏定义
-     */
-    const enum ParticleMaterialDefine {
-        SPHERHBILLBOARD = "SPHERHBILLBOARD",
-        STRETCHEDBILLBOARD = "STRETCHEDBILLBOARD",
-        HORIZONTALBILLBOARD = "HORIZONTALBILLBOARD",
-        VERTICALBILLBOARD = "VERTICALBILLBOARD",
-        ROTATIONOVERLIFETIME = "ROTATIONOVERLIFETIME",
-        ROTATIONCONSTANT = "ROTATIONCONSTANT",
-        ROTATIONTWOCONSTANTS = "ROTATIONTWOCONSTANTS",
-        ROTATIONSEPERATE = "ROTATIONSEPERATE",
-        ROTATIONCURVE = "ROTATIONCURVE",
-        ROTATIONTWOCURVES = "ROTATIONTWOCURVES",
-        TEXTURESHEETANIMATIONCURVE = "TEXTURESHEETANIMATIONCURVE",
-        TEXTURESHEETANIMATIONTWOCURVE = "TEXTURESHEETANIMATIONTWOCURVE",
-        VELOCITYCONSTANT = "VELOCITYCONSTANT",
-        VELOCITYCURVE = "VELOCITYCURVE",
-        VELOCITYTWOCONSTANT = "VELOCITYTWOCONSTANT",
-        VELOCITYTWOCURVE = "VELOCITYTWOCURVE",
-        COLOROGRADIENT = "COLOROGRADIENT",
-        COLORTWOGRADIENTS = "COLORTWOGRADIENTS",
-        SIZECURVE = "SIZECURVE",
-        SIZETWOCURVES = "SIZETWOCURVES",
-        SIZECURVESEPERATE = "SIZECURVESEPERATE",
-        SIZETWOCURVESSEPERATE = "SIZETWOCURVESSEPERATE",
-        RENDERMESH = "RENDERMESH",
-        SHAPE = "SHAPE",
-    }
-    /**
-     * 渲染类型为Mesh的属性格式
-     */
-    const MeshShaderAttributeFormat: {
-        key: string;
-        type: gltf.AccessorType;
-    }[];
-    /**
-     * 渲染类型为Billboard的属性格式
-     */
-    const BillboardShaderAttributeFormat: {
-        key: string;
-        type: gltf.AccessorType;
-    }[];
-    class ParticleRenderer extends paper.BaseRenderer {
-        private _mesh;
-        private readonly _materials;
-        velocityScale: number;
-        _renderMode: ParticleRenderMode;
-        lengthScale: number;
-        uninitialize(): void;
-        /**
-         * mesh model
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 组件挂载的 mesh 模型
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        mesh: Mesh | null;
-        /**
-         * material list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 材质数组
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        materials: ReadonlyArray<Material>;
-        renderMode: ParticleRenderMode;
-    }
-}
 declare namespace paper {
+}
+declare namespace egret3d.particle {
+    /**
+     *
+     */
+    class ParticleSystem extends paper.BaseSystem {
+        protected readonly _interests: ({
+            componentClass: typeof ParticleComponent;
+            listeners: {
+                type: ParticleCompEventType;
+                listener: any;
+            }[];
+        } | {
+            componentClass: typeof ParticleRenderer;
+            listeners: {
+                type: ParticleRendererEventType;
+                listener: (comp: ParticleRenderer) => void;
+            }[];
+        })[];
+        private readonly _drawCalls;
+        /**
+        * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
+        */
+        private _onUpdateBatchMesh(comp);
+        private _onRenderUpdate(render, type);
+        /**
+         *
+         * @param render 渲染模式改变
+         */
+        private _onRenderMode(render);
+        private _onMainUpdate(component, type);
+        /**
+         * 更新速率模块
+         * @param component
+         */
+        private _onShapeChanged(comp);
+        /**
+         * 更新速率模块
+         * @param component
+         */
+        private _onVelocityOverLifetime(comp);
+        /**
+         * 更新颜色模块
+         * @param component
+         */
+        private _onColorOverLifetime(comp);
+        /**
+         * 更新大小模块
+         * @param component
+         */
+        private _onSizeOverLifetime(comp);
+        /**
+         * 更新旋转模块
+         * @param comp
+         */
+        private _onRotationOverLifetime(comp);
+        private _onTextureSheetAnimation(comp);
+        private _updateDrawCalls(gameObject);
+        onEnable(): void;
+        onAddGameObject(gameObject: paper.GameObject, group: paper.Group): void;
+        onRemoveGameObject(gameObject: paper.GameObject): void;
+        onUpdate(deltaTime: number): void;
+        onDisable(): void;
+    }
 }
 declare namespace egret3d {
     class Audio extends paper.BaseComponent {
@@ -5920,94 +5801,6 @@ declare namespace egret3d {
         readonly shader: GLTFAsset;
         renderQueue: RenderQueue;
         readonly shaderDefine: string;
-    }
-}
-declare namespace egret3d {
-    /**
-     * uniform类型枚举 TODO 使用gltf.UniformType代替
-     */
-    enum UniformTypeEnum {
-        Texture = 0,
-        Int = 1,
-        Boolean = 2,
-        Float = 3,
-        Floatv = 4,
-        Float2 = 5,
-        Float2v = 6,
-        Float3 = 7,
-        Float3v = 8,
-        Float4 = 9,
-        Float4v = 10,
-        Float4x4 = 11,
-        Float4x4v = 12,
-    }
-    enum ShowFaceStateEnum {
-        ALL = 0,
-        CCW = 1,
-        CW = 2,
-    }
-    enum DrawModeEnum {
-        VboTri = 0,
-        VboLine = 1,
-        EboTri = 2,
-        EboLine = 3,
-    }
-    enum BlendModeEnum {
-        Close = 0,
-        Blend = 1,
-        Blend_PreMultiply = 2,
-        Add = 3,
-        Add_PreMultiply = 4,
-    }
-}
-declare namespace egret3d {
-    type ShaderInfo = {
-        name: string;
-        src: string;
-    };
-    /**
-     * shader asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 着色器资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Shader extends paper.Asset {
-        private static readonly _vertShaderInfoMap;
-        private static readonly _fragShaderInfoMap;
-        /**
-         *
-         */
-        static registerVertShader(name: string, src: string): ShaderInfo;
-        /**
-         *
-         */
-        static registerFragShader(name: string, src: string): ShaderInfo;
-        /**
-         * 渲染队列
-         */
-        /**
-         *
-         */
-        readonly vertShader: ShaderInfo;
-        readonly fragShader: ShaderInfo;
-        setVertShader(name: string, src: string): void;
-        setFragShader(name: string, src: string): void;
-        /**
-         * TODO 应补全接口和枚举。
-         *
-         */
-        $parse(json: any): void;
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
     }
 }
 declare namespace egret3d {
@@ -6151,9 +5944,6 @@ declare namespace egret3d {
     }
 }
 declare namespace RES.processor {
-    const GLVertexShaderProcessor: RES.processor.Processor;
-    const GLFragmentShaderProcessor: RES.processor.Processor;
-    const ShaderProcessor: RES.processor.Processor;
     const TextureDescProcessor: RES.processor.Processor;
     const TextureProcessor: RES.processor.Processor;
     const MaterialProcessor: RES.processor.Processor;
@@ -6163,9 +5953,8 @@ declare namespace RES.processor {
 }
 declare namespace egret3d {
     class DefaultShaders {
-        static DIFFUSE_VERT_COLOR: Shader;
-        static MATERIAL_COLOR: Shader;
-        static LAMBERT_NORMAL: Shader;
+        static SHADOW_DEPTH: GLTFAsset;
+        static SHADOW_DISTANCE: GLTFAsset;
         static LINE: GLTFAsset;
         static DIFFUSE: GLTFAsset;
         static DIFFUSE_TINT_COLOR: GLTFAsset;
@@ -6178,9 +5967,8 @@ declare namespace egret3d {
         static TRANSPARENT_ADDITIVE_BOTH_SIDE: GLTFAsset;
         static LAMBERT: GLTFAsset;
         static GIZMOS_COLOR: GLTFAsset;
+        static MATERIAL_COLOR: GLTFAsset;
         static VERT_COLOR: GLTFAsset;
-        static SHADOW_DEPTH: GLTFAsset;
-        static SHADOW_DISTANCE: GLTFAsset;
         static PARTICLE: GLTFAsset;
         static PARTICLE_ADDITIVE: GLTFAsset;
         static PARTICLE_ADDITIVE_PREMYLTIPLY: GLTFAsset;
@@ -6188,6 +5976,10 @@ declare namespace egret3d {
         static PARTICLE_BLEND_PREMYLTIPLY: GLTFAsset;
         private static _inited;
         static createBuildinShader(url: string, vertName: string, vertSource: string, fragName: string, fragSource: string, renderQueue: number): GLTFAsset;
+        private static _setBlend(technique, blend);
+        private static _setCullFace(technique, cull, frontFace?, cullFace?);
+        private static _setDepth(technique, zTest, zWrite);
+        private static _createColorShaderTemplate(url);
         private static _createDiffuseShaderTemplate(url);
         private static _createLambertShaderTemplate();
         private static _createParticleShaderTemplate(url);
@@ -6903,6 +6695,7 @@ declare namespace egret3d {
         private _cacheContext;
         private _cacheMaterial;
         private _cacheMesh;
+        private _cacheState;
         private _updateState(state);
         private _updateContextDefines(context, material);
         private _updateContextUniforms(context, technique, forceUpdate);
@@ -8327,66 +8120,185 @@ declare namespace egret3d.oimo {
     }
 }
 declare namespace egret3d.particle {
+    const BillboardPerVertexCount = 37;
+    const MeshPerVertexCount = 42;
+    const enum ParticleRendererEventType {
+        Mesh = "mesh",
+        Materials = "materials",
+        RenderMode = "renderMode",
+        LengthScaleChanged = "lengthScale",
+        VelocityScaleChanged = "velocityScale",
+    }
+    const enum ParticleSortMode {
+        None = 0,
+        Distance = 1,
+        OldestInFront = 2,
+        YoungestInFront = 3,
+    }
+    const enum ParticleRenderSpace {
+        View = 0,
+        World = 1,
+        Local = 2,
+        Facing = 3,
+    }
+    const enum ParticleRenderMode {
+        Billboard = 0,
+        Stretch = 1,
+        HorizontalBillboard = 2,
+        VerticalBillboard = 3,
+        Mesh = 4,
+        None = 5,
+    }
     /**
-     *
+     * 粒子着色器用到的属性
      */
-    class ParticleSystem extends paper.BaseSystem {
-        protected readonly _interests: ({
-            componentClass: typeof ParticleComponent;
-            listeners: {
-                type: ParticleCompEventType;
-                listener: any;
-            }[];
-        } | {
-            componentClass: typeof ParticleRenderer;
-            listeners: {
-                type: ParticleRendererEventType;
-                listener: (comp: ParticleRenderer) => void;
-            }[];
-        })[];
-        private readonly _drawCalls;
+    const enum ParticleMaterialAttribute {
+        POSITION = "POSITION",
+        COLOR_0 = "COLOR_0",
+        TEXCOORD_0 = "TEXCOORD_0",
+        CORNER = "CORNER",
+        START_POSITION = "START_POSITION",
+        START_VELOCITY = "START_VELOCITY",
+        START_COLOR = "START_COLOR",
+        START_SIZE = "START_SIZE",
+        START_ROTATION = "START_ROTATION",
+        TIME = "TIME",
+        RANDOM0 = "RANDOM0",
+        RANDOM1 = "RANDOM1",
+        WORLD_POSITION = "WORLD_POSITION",
+        WORLD_ROTATION = "WORLD_ROTATION",
+    }
+    /**
+     * 粒子着色器用到的变量
+     */
+    const enum ParticleMaterialUniform {
+        WORLD_POSITION = "u_worldPosition",
+        WORLD_ROTATION = "u_worldRotation",
+        POSITION_SCALE = "u_positionScale",
+        SIZE_SCALE = "u_sizeScale",
+        SCALING_MODE = "u_scalingMode",
+        GRAVIT = "u_gravity",
+        START_ROTATION3D = "u_startRotation3D",
+        SIMULATION_SPACE = "u_simulationSpace",
+        CURRENTTIME = "u_currentTime",
+        ALPHAS_GRADIENT = "u_alphaGradient[0]",
+        COLOR_GRADIENT = "u_colorGradient[0]",
+        ALPHA_GRADIENT_MAX = "u_alphaGradientMax[0]",
+        COLOR_GRADIENT_MAX = "u_colorGradientMax[0]",
+        VELOCITY_CONST = "u_velocityConst",
+        VELOCITY_CURVE_X = "u_velocityCurveX[0]",
+        VELOCITY_CURVE_Y = "u_velocityCurveY[0]",
+        VELOCITY_CURVE_Z = "u_velocityCurveZ[0]",
+        VELOCITY_CONST_MAX = "u_velocityConstMax",
+        VELOCITY_CURVE_MAX_X = "u_velocityCurveMaxX[0]",
+        VELOCITY_CURVE_MAX_Y = "u_velocityCurveMaxY[0]",
+        VELOCITY_CURVE_MAX_Z = "u_velocityCurveMaxZ[0]",
+        SPACE_TYPE = "u_spaceType",
+        SIZE_CURVE = "u_sizeCurve[0]",
+        SIZE_CURVE_X = "u_sizeCurveX[0]",
+        SIZE_CURVE_Y = "u_sizeCurveY[0]",
+        SIZE_CURVE_Z = "u_sizeCurveZ[0]",
+        SIZE_CURVE_MAX = "u_sizeCurveMax[0]",
+        SIZE_CURVE_MAX_X = "u_sizeCurveMaxX[0]",
+        SIZE_CURVE_MAX_Y = "u_sizeCurveMaxY[0]",
+        SIZE_CURVE_MAX_Z = "u_sizeCurveMaxZ[0]",
+        ROTATION_CONST = "u_rotationConst",
+        ROTATION_CONST_SEPRARATE = "u_rotationConstSeprarate",
+        ROTATION_CURVE = "u_rotationCurve[0]",
+        ROTATE_CURVE_X = "u_rotationCurveX[0]",
+        ROTATE_CURVE_y = "u_rotationCurveY[0]",
+        ROTATE_CURVE_Z = "u_rotationCurveZ[0]",
+        ROTATE_CURVE_W = "u_rotationCurveW[0]",
+        ROTATION_CONST_MAX = "u_rotationConstMax",
+        ROTATION_CONST_MAX_SEPRARATE = "u_rotationConstMaxSeprarate",
+        ROTATION_CURVE_MAX = "u_rotationCurveMax[0]",
+        ROTATION_CURVE_MAX_X = "u_rotationCurveMaxX[0]",
+        ROTATION_CURVE_MAX_Y = "u_rotationCurveMaxY[0]",
+        ROTATION_CURVE_MAX_Z = "u_rotationCurveMaxZ[0]",
+        ROTATION_CURVE_MAX_W = "u_rotationCurveMaxW[0]",
+        CYCLES = "u_cycles",
+        SUB_UV = "u_subUV",
+        UV_CURVE = "u_uvCurve[0]",
+        UV_CURVE_MAX = "u_uvCurveMax[0]",
+        LENGTH_SCALE = "u_lengthScale",
+        SPEED_SCALE = "u_speeaScale",
+    }
+    /**
+     * 粒子着色器用到的宏定义
+     */
+    const enum ParticleMaterialDefine {
+        SPHERHBILLBOARD = "SPHERHBILLBOARD",
+        STRETCHEDBILLBOARD = "STRETCHEDBILLBOARD",
+        HORIZONTALBILLBOARD = "HORIZONTALBILLBOARD",
+        VERTICALBILLBOARD = "VERTICALBILLBOARD",
+        ROTATIONOVERLIFETIME = "ROTATIONOVERLIFETIME",
+        ROTATIONCONSTANT = "ROTATIONCONSTANT",
+        ROTATIONTWOCONSTANTS = "ROTATIONTWOCONSTANTS",
+        ROTATIONSEPERATE = "ROTATIONSEPERATE",
+        ROTATIONCURVE = "ROTATIONCURVE",
+        ROTATIONTWOCURVES = "ROTATIONTWOCURVES",
+        TEXTURESHEETANIMATIONCURVE = "TEXTURESHEETANIMATIONCURVE",
+        TEXTURESHEETANIMATIONTWOCURVE = "TEXTURESHEETANIMATIONTWOCURVE",
+        VELOCITYCONSTANT = "VELOCITYCONSTANT",
+        VELOCITYCURVE = "VELOCITYCURVE",
+        VELOCITYTWOCONSTANT = "VELOCITYTWOCONSTANT",
+        VELOCITYTWOCURVE = "VELOCITYTWOCURVE",
+        COLOROGRADIENT = "COLOROGRADIENT",
+        COLORTWOGRADIENTS = "COLORTWOGRADIENTS",
+        SIZECURVE = "SIZECURVE",
+        SIZETWOCURVES = "SIZETWOCURVES",
+        SIZECURVESEPERATE = "SIZECURVESEPERATE",
+        SIZETWOCURVESSEPERATE = "SIZETWOCURVESSEPERATE",
+        RENDERMESH = "RENDERMESH",
+        SHAPE = "SHAPE",
+    }
+    /**
+     * 渲染类型为Mesh的属性格式
+     */
+    const MeshShaderAttributeFormat: {
+        key: string;
+        type: gltf.AccessorType;
+    }[];
+    /**
+     * 渲染类型为Billboard的属性格式
+     */
+    const BillboardShaderAttributeFormat: {
+        key: string;
+        type: gltf.AccessorType;
+    }[];
+    class ParticleRenderer extends paper.BaseRenderer {
+        private _mesh;
+        private readonly _materials;
+        velocityScale: number;
+        _renderMode: ParticleRenderMode;
+        lengthScale: number;
+        uninitialize(): void;
         /**
-        * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
-        */
-        private _onUpdateBatchMesh(comp);
-        private _onRenderUpdate(render, type);
-        /**
-         *
-         * @param render 渲染模式改变
+         * mesh model
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        private _onRenderMode(render);
-        private _onMainUpdate(component, type);
         /**
-         * 更新速率模块
-         * @param component
+         * 组件挂载的 mesh 模型
+         * @version paper 1.0
+         * @platform Web
+         * @language
          */
-        private _onShapeChanged(comp);
+        mesh: Mesh | null;
         /**
-         * 更新速率模块
-         * @param component
+         * material list
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        private _onVelocityOverLifetime(comp);
         /**
-         * 更新颜色模块
-         * @param component
+         * 材质数组
+         * @version paper 1.0
+         * @platform Web
+         * @language
          */
-        private _onColorOverLifetime(comp);
-        /**
-         * 更新大小模块
-         * @param component
-         */
-        private _onSizeOverLifetime(comp);
-        /**
-         * 更新旋转模块
-         * @param comp
-         */
-        private _onRotationOverLifetime(comp);
-        private _onTextureSheetAnimation(comp);
-        private _updateDrawCalls(gameObject);
-        onEnable(): void;
-        onAddGameObject(gameObject: paper.GameObject, group: paper.Group): void;
-        onRemoveGameObject(gameObject: paper.GameObject): void;
-        onUpdate(deltaTime: number): void;
-        onDisable(): void;
+        materials: ReadonlyArray<Material>;
+        renderMode: ParticleRenderMode;
     }
 }

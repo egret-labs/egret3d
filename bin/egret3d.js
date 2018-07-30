@@ -14568,269 +14568,6 @@ var egret3d;
         __reflect(ParticleComponent.prototype, "egret3d.particle.ParticleComponent");
     })(particle = egret3d.particle || (egret3d.particle = {}));
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var particle;
-    (function (particle) {
-        particle.BillboardPerVertexCount = 37;
-        particle.MeshPerVertexCount = 42;
-        /**
-         * 渲染类型为Mesh的属性格式
-         */
-        particle.MeshShaderAttributeFormat = [
-            { key: "POSITION" /* POSITION */, type: "VEC3" /* VEC3 */ },
-            { key: "COLOR_0" /* COLOR_0 */, type: "VEC4" /* VEC4 */ },
-            { key: "TEXCOORD_0" /* TEXCOORD_0 */, type: "VEC2" /* VEC2 */ },
-            { key: "START_POSITION" /* START_POSITION */, type: "VEC3" /* VEC3 */ },
-            { key: "START_VELOCITY" /* START_VELOCITY */, type: "VEC3" /* VEC3 */ },
-            { key: "START_COLOR" /* START_COLOR */, type: "VEC4" /* VEC4 */ },
-            { key: "START_SIZE" /* START_SIZE */, type: "VEC3" /* VEC3 */ },
-            { key: "START_ROTATION" /* START_ROTATION */, type: "VEC3" /* VEC3 */ },
-            { key: "TIME" /* TIME */, type: "VEC2" /* VEC2 */ },
-            { key: "RANDOM0" /* RANDOM0 */, type: "VEC4" /* VEC4 */ },
-            { key: "RANDOM1" /* RANDOM1 */, type: "VEC4" /* VEC4 */ },
-            { key: "WORLD_POSITION" /* WORLD_POSITION */, type: "VEC3" /* VEC3 */ },
-            { key: "WORLD_ROTATION" /* WORLD_ROTATION */, type: "VEC4" /* VEC4 */ },
-        ];
-        /**
-         * 渲染类型为Billboard的属性格式
-         */
-        particle.BillboardShaderAttributeFormat = [
-            { key: "CORNER" /* CORNER */, type: "VEC2" /* VEC2 */ },
-            { key: "TEXCOORD_0" /* TEXCOORD_0 */, type: "VEC2" /* VEC2 */ },
-            { key: "START_POSITION" /* START_POSITION */, type: "VEC3" /* VEC3 */ },
-            { key: "START_VELOCITY" /* START_VELOCITY */, type: "VEC3" /* VEC3 */ },
-            { key: "START_COLOR" /* START_COLOR */, type: "VEC4" /* VEC4 */ },
-            { key: "START_SIZE" /* START_SIZE */, type: "VEC3" /* VEC3 */ },
-            { key: "START_ROTATION" /* START_ROTATION */, type: "VEC3" /* VEC3 */ },
-            { key: "TIME" /* TIME */, type: "VEC2" /* VEC2 */ },
-            { key: "RANDOM0" /* RANDOM0 */, type: "VEC4" /* VEC4 */ },
-            { key: "RANDOM1" /* RANDOM1 */, type: "VEC4" /* VEC4 */ },
-            { key: "WORLD_POSITION" /* WORLD_POSITION */, type: "VEC3" /* VEC3 */ },
-            { key: "WORLD_ROTATION" /* WORLD_ROTATION */, type: "VEC4" /* VEC4 */ },
-        ];
-        var ParticleRenderer = (function (_super) {
-            __extends(ParticleRenderer, _super);
-            function ParticleRenderer() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._materials = [];
-                _this._renderMode = 0 /* Billboard */;
-                return _this;
-            }
-            ParticleRenderer.prototype.uninitialize = function () {
-                _super.prototype.uninitialize.call(this);
-                this._mesh = null;
-                this._materials.length = 0;
-                this._renderMode = 0 /* Billboard */;
-                this.velocityScale = 1.0;
-                this.lengthScale = 1.0;
-            };
-            /**
-             * @internal
-             * @param key
-             */
-            ParticleRenderer.prototype._addShaderDefine = function (key) {
-                if (!this.batchMaterial && this._materials.length > 0) {
-                    this.batchMaterial = this._materials[0];
-                }
-                if (this.batchMaterial) {
-                    this.batchMaterial.addDefine(key);
-                }
-            };
-            /**
-             * @internal
-             * @param key
-             */
-            ParticleRenderer.prototype._removeShaderDefine = function (key) {
-                if (!this.batchMaterial && this._materials.length > 0) {
-                    this.batchMaterial = this._materials[0];
-                }
-                if (this.batchMaterial) {
-                    this.batchMaterial.removeDefine(key);
-                }
-            };
-            /**
-             * @internal
-             * @param key
-             */
-            ParticleRenderer.prototype._setBoolean = function (_id, _value) {
-                if (this.batchMaterial) {
-                    this.batchMaterial.setBoolean(_id, _value);
-                }
-            };
-            /**
-             * @internal
-             * @param key
-             */
-            ParticleRenderer.prototype._setInt = function (_id, _value) {
-                if (this.batchMaterial) {
-                    this.batchMaterial.setInt(_id, _value);
-                }
-            };
-            /**
-             * @internal
-             * @param key
-             */
-            ParticleRenderer.prototype._setFloat = function (_id, _value) {
-                if (this.batchMaterial) {
-                    this.batchMaterial.setFloat(_id, _value);
-                }
-            };
-            /**
-             * @internal
-             * @param key
-             */
-            ParticleRenderer.prototype._setVector2 = function (_id, _value) {
-                if (this.batchMaterial) {
-                    this.batchMaterial.setVector2(_id, _value);
-                }
-            };
-            /**
-             * @internal
-             * @param key
-             */
-            ParticleRenderer.prototype._setVector2v = function (_id, _value) {
-                if (this.batchMaterial) {
-                    this.batchMaterial.setVector2v(_id, _value);
-                }
-            };
-            /**
-             * @internal
-             * @param key
-             */
-            ParticleRenderer.prototype._setVector3 = function (_id, _value) {
-                if (this.batchMaterial) {
-                    this.batchMaterial.setVector3(_id, _value);
-                }
-            };
-            /**
-             * @internal
-             * @param key
-             */
-            ParticleRenderer.prototype._setVector4 = function (_id, _value) {
-                if (this.batchMaterial) {
-                    this.batchMaterial.setVector4(_id, _value);
-                }
-            };
-            /**
-             * @internal
-             * @param key
-             */
-            ParticleRenderer.prototype._setVector3v = function (_id, _value) {
-                if (this.batchMaterial) {
-                    this.batchMaterial.setVector3v(_id, _value);
-                }
-            };
-            /**
-             * @internal
-             * @param key
-             */
-            ParticleRenderer.prototype._setVector4v = function (_id, _value) {
-                if (this.batchMaterial) {
-                    this.batchMaterial.setVector4v(_id, _value);
-                }
-            };
-            Object.defineProperty(ParticleRenderer.prototype, "mesh", {
-                /**
-                 * mesh model
-                 * @version paper 1.0
-                 * @platform Web
-                 * @language en_US
-                 */
-                /**
-                 * 组件挂载的 mesh 模型
-                 * @version paper 1.0
-                 * @platform Web
-                 * @language
-                 */
-                get: function () {
-                    return this._mesh;
-                },
-                set: function (mesh) {
-                    if (this._mesh === mesh) {
-                        return;
-                    }
-                    this._mesh = mesh;
-                    paper.EventPool.dispatchEvent("mesh" /* Mesh */, this);
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ParticleRenderer.prototype, "materials", {
-                /**
-                 * material list
-                 * @version paper 1.0
-                 * @platform Web
-                 * @language en_US
-                 */
-                /**
-                 * 材质数组
-                 * @version paper 1.0
-                 * @platform Web
-                 * @language
-                 */
-                get: function () {
-                    return this._materials;
-                },
-                set: function (value) {
-                    if (value === this._materials) {
-                        return;
-                    }
-                    this._materials.length = 0;
-                    for (var _i = 0, value_4 = value; _i < value_4.length; _i++) {
-                        var material = value_4[_i];
-                        this._materials.push(material);
-                    }
-                    paper.EventPool.dispatchEvent("materials" /* Materials */, this);
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ParticleRenderer.prototype, "renderMode", {
-                get: function () {
-                    return this._renderMode;
-                },
-                set: function (value) {
-                    if (this._renderMode === value) {
-                        return;
-                    }
-                    var old = this._renderMode;
-                    this._renderMode = value;
-                    paper.EventPool.dispatchEvent("renderMode" /* RenderMode */, this);
-                },
-                enumerable: true,
-                configurable: true
-            });
-            __decorate([
-                paper.serializedField
-            ], ParticleRenderer.prototype, "_mesh", void 0);
-            __decorate([
-                paper.serializedField
-            ], ParticleRenderer.prototype, "_materials", void 0);
-            __decorate([
-                paper.serializedField
-            ], ParticleRenderer.prototype, "velocityScale", void 0);
-            __decorate([
-                paper.serializedField
-            ], ParticleRenderer.prototype, "_renderMode", void 0);
-            __decorate([
-                paper.serializedField
-            ], ParticleRenderer.prototype, "lengthScale", void 0);
-            __decorate([
-                paper.editor.property(paper.editor.EditType.MESH)
-            ], ParticleRenderer.prototype, "mesh", null);
-            __decorate([
-                paper.editor.property(paper.editor.EditType.ARRAY)
-            ], ParticleRenderer.prototype, "materials", null);
-            ParticleRenderer = __decorate([
-                paper.disallowMultipleComponent
-            ], ParticleRenderer);
-            return ParticleRenderer;
-        }(paper.BaseRenderer));
-        particle.ParticleRenderer = ParticleRenderer;
-        __reflect(ParticleRenderer.prototype, "egret3d.particle.ParticleRenderer");
-    })(particle = egret3d.particle || (egret3d.particle = {}));
-})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     /**
@@ -14883,6 +14620,490 @@ var paper;
         "egret3d.Light": "egret3d.DirectLight",
     };
 })(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    var particle;
+    (function (particle) {
+        /**
+         *
+         */
+        var ParticleSystem = (function (_super) {
+            __extends(ParticleSystem, _super);
+            function ParticleSystem() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._interests = [
+                    {
+                        componentClass: particle.ParticleComponent,
+                        listeners: [
+                            { type: "rotation3DChanged" /* StartRotation3DChanged */, listener: function (comp) { _this._onMainUpdate(comp, "rotation3DChanged" /* StartRotation3DChanged */); } },
+                            { type: "simulationSpace" /* SimulationSpaceChanged */, listener: function (comp) { _this._onMainUpdate(comp, "simulationSpace" /* SimulationSpaceChanged */); } },
+                            { type: "scaleMode" /* ScaleModeChanged */, listener: function (comp) { _this._onMainUpdate(comp, "scaleMode" /* ScaleModeChanged */); } },
+                            { type: "velocityChanged" /* VelocityChanged */, listener: _this._onVelocityOverLifetime.bind(_this) },
+                            { type: "colorChanged" /* ColorChanged */, listener: _this._onColorOverLifetime.bind(_this) },
+                            { type: "sizeChanged" /* SizeChanged */, listener: _this._onSizeOverLifetime.bind(_this) },
+                            { type: "rotationChanged" /* RotationChanged */, listener: _this._onRotationOverLifetime.bind(_this) },
+                            { type: "textureSheetChanged" /* TextureSheetChanged */, listener: _this._onTextureSheetAnimation.bind(_this) },
+                        ]
+                    },
+                    {
+                        componentClass: particle.ParticleRenderer,
+                        listeners: [
+                            { type: "mesh" /* Mesh */, listener: function (comp) { _this._updateDrawCalls(comp.gameObject); } },
+                            { type: "materials" /* Materials */, listener: function (comp) { _this._updateDrawCalls(comp.gameObject); } },
+                            { type: "lengthScale" /* LengthScaleChanged */, listener: function (comp) { _this._onRenderUpdate(comp, "lengthScale" /* LengthScaleChanged */); } },
+                            { type: "velocityScale" /* VelocityScaleChanged */, listener: function (comp) { _this._onRenderUpdate(comp, "velocityScale" /* VelocityScaleChanged */); } },
+                            { type: "renderMode" /* RenderMode */, listener: function (comp) { _this._onRenderUpdate(comp, "renderMode" /* RenderMode */); } },
+                        ]
+                    }
+                ];
+                _this._drawCalls = _this._globalGameObject.getOrAddComponent(egret3d.DrawCalls);
+                return _this;
+            }
+            /**
+            * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
+            */
+            ParticleSystem.prototype._onUpdateBatchMesh = function (comp) {
+                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
+                comp.initBatcher();
+                //
+                this._onRenderUpdate(renderer, "renderMode" /* RenderMode */);
+                this._onRenderUpdate(renderer, "lengthScale" /* LengthScaleChanged */);
+                this._onRenderUpdate(renderer, "velocityScale" /* VelocityScaleChanged */);
+                //
+                this._onMainUpdate(comp, "rotation3DChanged" /* StartRotation3DChanged */);
+                this._onMainUpdate(comp, "simulationSpace" /* SimulationSpaceChanged */);
+                this._onMainUpdate(comp, "scaleMode" /* ScaleModeChanged */);
+                this._onShapeChanged(comp);
+                this._onVelocityOverLifetime(comp);
+                this._onColorOverLifetime(comp);
+                this._onSizeOverLifetime(comp);
+                this._onRotationOverLifetime(comp);
+                this._onTextureSheetAnimation(comp);
+            };
+            ParticleSystem.prototype._onRenderUpdate = function (render, type) {
+                if (!this._enabled || !this._groups[0].hasGameObject(render.gameObject)) {
+                    return;
+                }
+                switch (type) {
+                    case "renderMode" /* RenderMode */: {
+                        this._onRenderMode(render);
+                        break;
+                    }
+                    case "lengthScale" /* LengthScaleChanged */: {
+                        render._setFloat("u_lengthScale" /* LENGTH_SCALE */, render.lengthScale);
+                        break;
+                    }
+                    case "velocityScale" /* VelocityScaleChanged */: {
+                        render._setFloat("u_speeaScale" /* SPEED_SCALE */, render.velocityScale);
+                        break;
+                    }
+                }
+            };
+            /**
+             *
+             * @param render 渲染模式改变
+             */
+            ParticleSystem.prototype._onRenderMode = function (render) {
+                render._removeShaderDefine("SPHERHBILLBOARD" /* SPHERHBILLBOARD */);
+                render._removeShaderDefine("STRETCHEDBILLBOARD" /* STRETCHEDBILLBOARD */);
+                render._removeShaderDefine("HORIZONTALBILLBOARD" /* HORIZONTALBILLBOARD */);
+                render._removeShaderDefine("VERTICALBILLBOARD" /* VERTICALBILLBOARD */);
+                render._removeShaderDefine("RENDERMESH" /* RENDERMESH */);
+                var mode = render.renderMode;
+                switch (mode) {
+                    case 0 /* Billboard */: {
+                        render._addShaderDefine("SPHERHBILLBOARD" /* SPHERHBILLBOARD */);
+                        break;
+                    }
+                    case 1 /* Stretch */: {
+                        render._addShaderDefine("STRETCHEDBILLBOARD" /* STRETCHEDBILLBOARD */);
+                        break;
+                    }
+                    case 2 /* HorizontalBillboard */: {
+                        render._addShaderDefine("HORIZONTALBILLBOARD" /* HORIZONTALBILLBOARD */);
+                        break;
+                    }
+                    case 3 /* VerticalBillboard */: {
+                        render._addShaderDefine("VERTICALBILLBOARD" /* VERTICALBILLBOARD */);
+                        break;
+                    }
+                    case 4 /* Mesh */: {
+                        render._addShaderDefine("RENDERMESH" /* RENDERMESH */);
+                        break;
+                    }
+                    default: {
+                        throw "_onRenderMode:invalid renderMode";
+                    }
+                }
+            };
+            ParticleSystem.prototype._onMainUpdate = function (component, type) {
+                if (!this._enabled || !this._groups[0].hasGameObject(component.gameObject)) {
+                    return;
+                }
+                var renderer = this._groups[0].getComponent(component.gameObject, 1);
+                var mainModule = component.main;
+                switch (type) {
+                    case "rotation3DChanged" /* StartRotation3DChanged */: {
+                        renderer._setBoolean("u_startRotation3D" /* START_ROTATION3D */, mainModule._startRotation3D);
+                        break;
+                    }
+                    case "simulationSpace" /* SimulationSpaceChanged */: {
+                        renderer._setInt("u_simulationSpace" /* SIMULATION_SPACE */, mainModule._simulationSpace);
+                        break;
+                    }
+                    case "scaleMode" /* ScaleModeChanged */: {
+                        renderer._setInt("u_scalingMode" /* SCALING_MODE */, mainModule._scaleMode);
+                        break;
+                    }
+                }
+            };
+            /**
+             * 更新速率模块
+             * @param component
+             */
+            ParticleSystem.prototype._onShapeChanged = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
+                renderer._removeShaderDefine("SHAPE" /* SHAPE */);
+                if (comp.shape.enable) {
+                    renderer._addShaderDefine("SHAPE" /* SHAPE */);
+                }
+            };
+            /**
+             * 更新速率模块
+             * @param component
+             */
+            ParticleSystem.prototype._onVelocityOverLifetime = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
+                renderer._removeShaderDefine("VELOCITYCONSTANT" /* VELOCITYCONSTANT */);
+                renderer._removeShaderDefine("VELOCITYCURVE" /* VELOCITYCURVE */);
+                renderer._removeShaderDefine("VELOCITYTWOCONSTANT" /* VELOCITYTWOCONSTANT */);
+                renderer._removeShaderDefine("VELOCITYTWOCURVE" /* VELOCITYTWOCURVE */);
+                var velocityModule = comp.velocityOverLifetime;
+                if (velocityModule.enable) {
+                    var mode = velocityModule._mode;
+                    switch (mode) {
+                        case 0 /* Constant */: {
+                            renderer._addShaderDefine("VELOCITYCONSTANT" /* VELOCITYCONSTANT */);
+                            //
+                            var vec3 = new egret3d.Vector3(velocityModule._x.evaluate(), velocityModule._y.evaluate(), velocityModule._z.evaluate());
+                            renderer._setVector3("u_velocityConst" /* VELOCITY_CONST */, vec3);
+                            break;
+                        }
+                        case 1 /* Curve */: {
+                            renderer._addShaderDefine("VELOCITYCURVE" /* VELOCITYCURVE */);
+                            //
+                            renderer._setVector2v("u_velocityCurveX[0]" /* VELOCITY_CURVE_X */, velocityModule._x.curve.floatValues);
+                            renderer._setVector2v("u_velocityCurveY[0]" /* VELOCITY_CURVE_Y */, velocityModule._y.curve.floatValues);
+                            renderer._setVector2v("u_velocityCurveZ[0]" /* VELOCITY_CURVE_Z */, velocityModule._z.curve.floatValues);
+                            break;
+                        }
+                        case 3 /* TwoConstants */: {
+                            renderer._addShaderDefine("VELOCITYTWOCONSTANT" /* VELOCITYTWOCONSTANT */);
+                            //
+                            var minVec3 = new egret3d.Vector3(velocityModule._x.constantMin, velocityModule._y.constantMin, velocityModule._z.constantMin);
+                            var maxVec3 = new egret3d.Vector3(velocityModule._x.constantMax, velocityModule._y.constantMax, velocityModule._z.constantMax);
+                            renderer._setVector3("u_velocityConst" /* VELOCITY_CONST */, minVec3);
+                            renderer._setVector3("u_velocityConstMax" /* VELOCITY_CONST_MAX */, maxVec3);
+                            break;
+                        }
+                        case 2 /* TwoCurves */: {
+                            renderer._addShaderDefine("VELOCITYTWOCURVE" /* VELOCITYTWOCURVE */);
+                            //
+                            renderer._setVector2v("u_velocityCurveX[0]" /* VELOCITY_CURVE_X */, velocityModule._x.curveMin.floatValues);
+                            renderer._setVector2v("u_velocityCurveY[0]" /* VELOCITY_CURVE_Y */, velocityModule._y.curveMin.floatValues);
+                            renderer._setVector2v("u_velocityCurveZ[0]" /* VELOCITY_CURVE_Z */, velocityModule._z.curveMin.floatValues);
+                            renderer._setVector2v("u_velocityCurveMaxX[0]" /* VELOCITY_CURVE_MAX_X */, velocityModule._x.curveMax.floatValues);
+                            renderer._setVector2v("u_velocityCurveMaxY[0]" /* VELOCITY_CURVE_MAX_Y */, velocityModule._y.curveMax.floatValues);
+                            renderer._setVector2v("u_velocityCurveMaxZ[0]" /* VELOCITY_CURVE_MAX_Z */, velocityModule._z.curveMax.floatValues);
+                            break;
+                        }
+                    }
+                    renderer._setInt("u_spaceType" /* SPACE_TYPE */, velocityModule._space);
+                }
+            };
+            /**
+             * 更新颜色模块
+             * @param component
+             */
+            ParticleSystem.prototype._onColorOverLifetime = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
+                renderer._removeShaderDefine("COLOROGRADIENT" /* COLOROGRADIENT */);
+                renderer._removeShaderDefine("COLORTWOGRADIENTS" /* COLORTWOGRADIENTS */);
+                var colorModule = comp.colorOverLifetime;
+                if (colorModule.enable) {
+                    var color = colorModule._color;
+                    switch (color.mode) {
+                        case 1 /* Gradient */: {
+                            renderer._addShaderDefine("COLOROGRADIENT" /* COLOROGRADIENT */);
+                            //
+                            renderer._setVector2v("u_alphaGradient[0]" /* ALPHAS_GRADIENT */, color.gradient.alphaValues);
+                            renderer._setVector4v("u_colorGradient[0]" /* COLOR_GRADIENT */, color.gradient.colorValues);
+                            break;
+                        }
+                        case 3 /* TwoGradients */: {
+                            renderer._addShaderDefine("COLORTWOGRADIENTS" /* COLORTWOGRADIENTS */);
+                            //
+                            renderer._setVector2v("u_alphaGradient[0]" /* ALPHAS_GRADIENT */, color.gradientMin.alphaValues);
+                            renderer._setVector2v("u_alphaGradientMax[0]" /* ALPHA_GRADIENT_MAX */, color.gradientMax.alphaValues);
+                            renderer._setVector4v("u_colorGradient[0]" /* COLOR_GRADIENT */, color.gradientMin.colorValues);
+                            renderer._setVector4v("u_colorGradientMax[0]" /* COLOR_GRADIENT_MAX */, color.gradientMax.colorValues);
+                            break;
+                        }
+                    }
+                }
+            };
+            /**
+             * 更新大小模块
+             * @param component
+             */
+            ParticleSystem.prototype._onSizeOverLifetime = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
+                renderer._removeShaderDefine("SIZECURVE" /* SIZECURVE */);
+                renderer._removeShaderDefine("SIZECURVESEPERATE" /* SIZECURVESEPERATE */);
+                renderer._removeShaderDefine("SIZETWOCURVES" /* SIZETWOCURVES */);
+                renderer._removeShaderDefine("SIZETWOCURVESSEPERATE" /* SIZETWOCURVESSEPERATE */);
+                var sizeModule = comp.sizeOverLifetime;
+                if (sizeModule.enable) {
+                    var separateAxes = sizeModule._separateAxes;
+                    var mode = sizeModule._x.mode;
+                    switch (mode) {
+                        case 1 /* Curve */: {
+                            if (separateAxes) {
+                                renderer._addShaderDefine("SIZECURVESEPERATE" /* SIZECURVESEPERATE */);
+                                //
+                                renderer._setVector2v("u_sizeCurveX[0]" /* SIZE_CURVE_X */, sizeModule._x.curve.floatValues);
+                                renderer._setVector2v("u_sizeCurveY[0]" /* SIZE_CURVE_Y */, sizeModule._y.curve.floatValues);
+                                renderer._setVector2v("u_sizeCurveZ[0]" /* SIZE_CURVE_Z */, sizeModule._z.curve.floatValues);
+                            }
+                            else {
+                                renderer._addShaderDefine("SIZECURVE" /* SIZECURVE */);
+                                //
+                                renderer._setVector2v("u_sizeCurve[0]" /* SIZE_CURVE */, sizeModule._size.curve.floatValues);
+                            }
+                            break;
+                        }
+                        case 2 /* TwoCurves */: {
+                            if (separateAxes) {
+                                renderer._addShaderDefine("SIZETWOCURVESSEPERATE" /* SIZETWOCURVESSEPERATE */);
+                                //
+                                renderer._setVector2v("u_sizeCurveX[0]" /* SIZE_CURVE_X */, sizeModule._x.curveMin.floatValues);
+                                renderer._setVector2v("u_sizeCurveY[0]" /* SIZE_CURVE_Y */, sizeModule._y.curveMin.floatValues);
+                                renderer._setVector2v("u_sizeCurveZ[0]" /* SIZE_CURVE_Z */, sizeModule._z.curveMin.floatValues);
+                                renderer._setVector2v("u_sizeCurveMaxX[0]" /* SIZE_CURVE_MAX_X */, sizeModule._x.curveMax.floatValues);
+                                renderer._setVector2v("u_sizeCurveMaxY[0]" /* SIZE_CURVE_MAX_Y */, sizeModule._y.curveMax.floatValues);
+                                renderer._setVector2v("u_sizeCurveMaxZ[0]" /* SIZE_CURVE_MAX_Z */, sizeModule._z.curveMax.floatValues);
+                            }
+                            else {
+                                renderer._addShaderDefine("SIZETWOCURVES" /* SIZETWOCURVES */);
+                                //
+                                renderer._setVector2v("u_sizeCurve[0]" /* SIZE_CURVE */, sizeModule._size.curveMin.floatValues);
+                                renderer._setVector2v("u_sizeCurveMax[0]" /* SIZE_CURVE_MAX */, sizeModule._size.curveMax.floatValues);
+                            }
+                            break;
+                        }
+                    }
+                }
+            };
+            /**
+             * 更新旋转模块
+             * @param comp
+             */
+            ParticleSystem.prototype._onRotationOverLifetime = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
+                renderer._removeShaderDefine("ROTATIONOVERLIFETIME" /* ROTATIONOVERLIFETIME */);
+                renderer._removeShaderDefine("ROTATIONCONSTANT" /* ROTATIONCONSTANT */);
+                renderer._removeShaderDefine("ROTATIONTWOCONSTANTS" /* ROTATIONTWOCONSTANTS */);
+                renderer._removeShaderDefine("ROTATIONSEPERATE" /* ROTATIONSEPERATE */);
+                renderer._removeShaderDefine("ROTATIONCURVE" /* ROTATIONCURVE */);
+                renderer._removeShaderDefine("ROTATIONTWOCURVES" /* ROTATIONTWOCURVES */);
+                var rotationModule = comp.rotationOverLifetime;
+                if (rotationModule.enable) {
+                    var mode = comp.rotationOverLifetime._x.mode;
+                    var separateAxes = rotationModule._separateAxes;
+                    if (separateAxes) {
+                        renderer._addShaderDefine("ROTATIONSEPERATE" /* ROTATIONSEPERATE */);
+                    }
+                    else {
+                        renderer._addShaderDefine("ROTATIONOVERLIFETIME" /* ROTATIONOVERLIFETIME */);
+                    }
+                    switch (mode) {
+                        case 0 /* Constant */: {
+                            renderer._addShaderDefine("ROTATIONCONSTANT" /* ROTATIONCONSTANT */);
+                            //
+                            if (separateAxes) {
+                                renderer._setVector3("u_rotationConstSeprarate" /* ROTATION_CONST_SEPRARATE */, new egret3d.Vector3(rotationModule._x.constant, rotationModule._y.constant, rotationModule._z.constant));
+                            }
+                            else {
+                                renderer._setFloat("u_rotationConst" /* ROTATION_CONST */, rotationModule._z.constant);
+                            }
+                            break;
+                        }
+                        case 3 /* TwoConstants */: {
+                            renderer._addShaderDefine("ROTATIONTWOCONSTANTS" /* ROTATIONTWOCONSTANTS */);
+                            //
+                            if (separateAxes) {
+                                renderer._setVector3("u_rotationConstSeprarate" /* ROTATION_CONST_SEPRARATE */, new egret3d.Vector3(rotationModule._x.constantMin, rotationModule._y.constantMin, rotationModule._z.constantMin));
+                                renderer._setVector3("u_rotationConstMaxSeprarate" /* ROTATION_CONST_MAX_SEPRARATE */, new egret3d.Vector3(rotationModule._x.constantMax, rotationModule._y.constantMax, rotationModule._z.constantMax));
+                            }
+                            else {
+                                renderer._setFloat("u_rotationConst" /* ROTATION_CONST */, rotationModule._z.constantMin);
+                                renderer._setFloat("u_rotationConstMax" /* ROTATION_CONST_MAX */, rotationModule._z.constantMax);
+                            }
+                            break;
+                        }
+                        case 1 /* Curve */: {
+                            renderer._addShaderDefine("ROTATIONCURVE" /* ROTATIONCURVE */);
+                            //
+                            if (separateAxes) {
+                                renderer._setVector2v("u_rotationCurveX[0]" /* ROTATE_CURVE_X */, rotationModule._x.curve.floatValues);
+                                renderer._setVector2v("u_rotationCurveY[0]" /* ROTATE_CURVE_y */, rotationModule._y.curve.floatValues);
+                                renderer._setVector2v("u_rotationCurveZ[0]" /* ROTATE_CURVE_Z */, rotationModule._z.curve.floatValues);
+                            }
+                            else {
+                                renderer._setVector2v("u_rotationCurve[0]" /* ROTATION_CURVE */, rotationModule._z.curve.floatValues);
+                            }
+                            break;
+                        }
+                        case 2 /* TwoCurves */: {
+                            renderer._addShaderDefine("ROTATIONTWOCURVES" /* ROTATIONTWOCURVES */);
+                            //
+                            if (separateAxes) {
+                                renderer._setVector2v("u_rotationCurveX[0]" /* ROTATE_CURVE_X */, rotationModule._x.curveMin.floatValues);
+                                renderer._setVector2v("u_rotationCurveY[0]" /* ROTATE_CURVE_y */, rotationModule._y.curveMin.floatValues);
+                                renderer._setVector2v("u_rotationCurveZ[0]" /* ROTATE_CURVE_Z */, rotationModule._z.curveMin.floatValues);
+                                renderer._setVector2v("u_rotationCurveMaxX[0]" /* ROTATION_CURVE_MAX_X */, rotationModule._x.curveMax.floatValues);
+                                renderer._setVector2v("u_rotationCurveMaxY[0]" /* ROTATION_CURVE_MAX_Y */, rotationModule._y.curveMax.floatValues);
+                                renderer._setVector2v("u_rotationCurveMaxZ[0]" /* ROTATION_CURVE_MAX_Z */, rotationModule._z.curveMax.floatValues);
+                            }
+                            else {
+                                renderer._setVector2v("u_rotationCurve[0]" /* ROTATION_CURVE */, rotationModule._z.curveMin.floatValues);
+                                renderer._setVector2v("u_rotationCurveMax[0]" /* ROTATION_CURVE_MAX */, rotationModule._z.curveMin.floatValues);
+                            }
+                            break;
+                        }
+                    }
+                }
+            };
+            ParticleSystem.prototype._onTextureSheetAnimation = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
+                renderer._removeShaderDefine("TEXTURESHEETANIMATIONCURVE" /* TEXTURESHEETANIMATIONCURVE */);
+                renderer._removeShaderDefine("TEXTURESHEETANIMATIONTWOCURVE" /* TEXTURESHEETANIMATIONTWOCURVE */);
+                var module = comp.textureSheetAnimation;
+                if (module.enable) {
+                    var type = module._frameOverTime.mode;
+                    switch (type) {
+                        case 1 /* Curve */: {
+                            renderer._addShaderDefine("TEXTURESHEETANIMATIONCURVE" /* TEXTURESHEETANIMATIONCURVE */);
+                            //
+                            renderer._setVector2v("u_uvCurve[0]" /* UV_CURVE */, module._frameOverTime.curve.floatValues);
+                            break;
+                        }
+                        case 2 /* TwoCurves */: {
+                            renderer._addShaderDefine("TEXTURESHEETANIMATIONTWOCURVE" /* TEXTURESHEETANIMATIONTWOCURVE */);
+                            //
+                            renderer._setVector2v("u_uvCurve[0]" /* UV_CURVE */, module._frameOverTime.curveMin.floatValues);
+                            renderer._setVector2v("u_uvCurveMax[0]" /* UV_CURVE_MAX */, module._frameOverTime.curveMax.floatValues);
+                            break;
+                        }
+                    }
+                    if (type === 1 /* Curve */ || type === 2 /* TwoCurves */) {
+                        renderer._setFloat("u_cycles" /* CYCLES */, module._cycleCount);
+                        renderer._setVector4v("u_subUV" /* SUB_UV */, module.floatValues);
+                    }
+                }
+            };
+            ParticleSystem.prototype._updateDrawCalls = function (gameObject) {
+                if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
+                    return;
+                }
+                var component = this._groups[0].getComponent(gameObject, 0);
+                var renderer = this._groups[0].getComponent(gameObject, 1);
+                //
+                this._onUpdateBatchMesh(component);
+                if (!renderer.batchMesh || !renderer.batchMaterial) {
+                    return;
+                }
+                //
+                this._drawCalls.removeDrawCalls(renderer);
+                //
+                this._drawCalls.renderers.push(renderer);
+                //
+                var subMeshIndex = 0;
+                var primitives = renderer.batchMesh.glTFMesh.primitives;
+                if (primitives.length !== 1) {
+                    console.error("ParticleSystem : materials.length != 1");
+                }
+                if (renderer._renderMode === 5 /* None */) {
+                    console.error("ParticleSystem : error renderMode");
+                }
+                for (var _i = 0, primitives_1 = primitives; _i < primitives_1.length; _i++) {
+                    var primitive = primitives_1[_i];
+                    var drawCall = {
+                        renderer: renderer,
+                        subMeshIndex: subMeshIndex++,
+                        mesh: renderer.batchMesh,
+                        material: renderer.batchMaterial || egret3d.DefaultMaterials.MissingMaterial,
+                        frustumTest: false,
+                        zdist: -1,
+                    };
+                    this._drawCalls.drawCalls.push(drawCall);
+                }
+            };
+            ParticleSystem.prototype.onEnable = function () {
+                var components = this._groups[0].components;
+                for (var i = 0, l = components.length; i < l; i += 2) {
+                    this._updateDrawCalls(components[i].gameObject);
+                }
+            };
+            ParticleSystem.prototype.onAddGameObject = function (gameObject, group) {
+                this._updateDrawCalls(gameObject);
+                var component = group.getComponent(gameObject, 0);
+                if (component.main.playOnAwake) {
+                    component.play();
+                }
+            };
+            ParticleSystem.prototype.onRemoveGameObject = function (gameObject) {
+                this._drawCalls.removeDrawCalls(gameObject.renderer);
+                // component.stop();
+            };
+            ParticleSystem.prototype.onUpdate = function (deltaTime) {
+                var components = this._groups[0].components;
+                for (var i = 0, l = components.length; i < l; i += 2) {
+                    var particleComp = components[i];
+                    particleComp.update(deltaTime);
+                }
+            };
+            ParticleSystem.prototype.onDisable = function () {
+                var components = this._groups[0].components;
+                for (var i = 0, l = components.length; i < l; i += 2) {
+                    var renderer = components[i + 1];
+                    this._drawCalls.removeDrawCalls(renderer);
+                }
+            };
+            return ParticleSystem;
+        }(paper.BaseSystem));
+        particle.ParticleSystem = ParticleSystem;
+        __reflect(ParticleSystem.prototype, "egret3d.particle.ParticleSystem");
+    })(particle = egret3d.particle || (egret3d.particle = {}));
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     var Audio = (function (_super) {
@@ -15134,7 +15355,6 @@ var egret3d;
             this._glTFMaterialIndex = 0;
             this._glTFAsset = null;
             this._glTFMaterial = null;
-            this._gltfUnifromMap = null;
             this._glTFTechnique = null;
             this._glTFShader = null;
             this._cacheDefines = "";
@@ -15215,7 +15435,8 @@ var egret3d;
             }
             if (!this._glTFShader.config ||
                 !this._glTFShader.config.extensions ||
-                !this._glTFShader.config.extensions.KHR_techniques_webgl) {
+                !this._glTFShader.config.extensions.KHR_techniques_webgl ||
+                this._glTFShader.config.extensions.KHR_techniques_webgl.techniques.length <= 0) {
                 console.error("找不到着色器扩展KHR_techniques_webgl");
             }
             //
@@ -15224,12 +15445,12 @@ var egret3d;
             if (!this._glTFTechnique) {
                 console.error("Error glTF asset.");
             }
-            this._gltfUnifromMap = this._glTFMaterial.extensions.KHR_techniques_webgl.values;
+            var gltfUnifromMap = this._glTFMaterial.extensions.KHR_techniques_webgl.values;
             var uniformMap = this._glTFTechnique.uniforms;
             //使用Shader替换Material中没有默认值的Uniform
-            for (var key in this._gltfUnifromMap) {
+            for (var key in gltfUnifromMap) {
                 if (uniformMap[key]) {
-                    var value = this._gltfUnifromMap[key];
+                    var value = gltfUnifromMap[key];
                     if (Array.isArray(value)) {
                         uniformMap[key].value = value.concat();
                     }
@@ -15461,189 +15682,6 @@ var egret3d;
     }(paper.SerializableObject));
     egret3d.Material = Material;
     __reflect(Material.prototype, "egret3d.Material");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * uniform类型枚举 TODO 使用gltf.UniformType代替
-     */
-    var UniformTypeEnum;
-    (function (UniformTypeEnum) {
-        UniformTypeEnum[UniformTypeEnum["Texture"] = 0] = "Texture";
-        UniformTypeEnum[UniformTypeEnum["Int"] = 1] = "Int";
-        UniformTypeEnum[UniformTypeEnum["Boolean"] = 2] = "Boolean";
-        UniformTypeEnum[UniformTypeEnum["Float"] = 3] = "Float";
-        UniformTypeEnum[UniformTypeEnum["Floatv"] = 4] = "Floatv";
-        UniformTypeEnum[UniformTypeEnum["Float2"] = 5] = "Float2";
-        UniformTypeEnum[UniformTypeEnum["Float2v"] = 6] = "Float2v";
-        UniformTypeEnum[UniformTypeEnum["Float3"] = 7] = "Float3";
-        UniformTypeEnum[UniformTypeEnum["Float3v"] = 8] = "Float3v";
-        UniformTypeEnum[UniformTypeEnum["Float4"] = 9] = "Float4";
-        UniformTypeEnum[UniformTypeEnum["Float4v"] = 10] = "Float4v";
-        UniformTypeEnum[UniformTypeEnum["Float4x4"] = 11] = "Float4x4";
-        UniformTypeEnum[UniformTypeEnum["Float4x4v"] = 12] = "Float4x4v";
-    })(UniformTypeEnum = egret3d.UniformTypeEnum || (egret3d.UniformTypeEnum = {}));
-    var ShowFaceStateEnum;
-    (function (ShowFaceStateEnum) {
-        ShowFaceStateEnum[ShowFaceStateEnum["ALL"] = 0] = "ALL";
-        ShowFaceStateEnum[ShowFaceStateEnum["CCW"] = 1] = "CCW";
-        ShowFaceStateEnum[ShowFaceStateEnum["CW"] = 2] = "CW";
-    })(ShowFaceStateEnum = egret3d.ShowFaceStateEnum || (egret3d.ShowFaceStateEnum = {}));
-    var DrawModeEnum;
-    (function (DrawModeEnum) {
-        DrawModeEnum[DrawModeEnum["VboTri"] = 0] = "VboTri";
-        DrawModeEnum[DrawModeEnum["VboLine"] = 1] = "VboLine";
-        DrawModeEnum[DrawModeEnum["EboTri"] = 2] = "EboTri";
-        DrawModeEnum[DrawModeEnum["EboLine"] = 3] = "EboLine";
-    })(DrawModeEnum = egret3d.DrawModeEnum || (egret3d.DrawModeEnum = {}));
-    var BlendModeEnum;
-    (function (BlendModeEnum) {
-        BlendModeEnum[BlendModeEnum["Close"] = 0] = "Close";
-        BlendModeEnum[BlendModeEnum["Blend"] = 1] = "Blend";
-        BlendModeEnum[BlendModeEnum["Blend_PreMultiply"] = 2] = "Blend_PreMultiply";
-        BlendModeEnum[BlendModeEnum["Add"] = 3] = "Add";
-        BlendModeEnum[BlendModeEnum["Add_PreMultiply"] = 4] = "Add_PreMultiply";
-    })(BlendModeEnum = egret3d.BlendModeEnum || (egret3d.BlendModeEnum = {}));
-    // export class DrawPass {
-    //     public state_showface: ShowFaceStateEnum = ShowFaceStateEnum.CCW;
-    //     public state_zwrite: boolean = false;
-    //     public state_ztest: boolean = false;
-    //     // public state_ztest_method: number = WebGLKit.LEQUAL;
-    //     public state_ztest_method: number = 0;
-    //     public state_blend: boolean = false;
-    //     public state_blendEquation: number = 0;
-    //     public state_blendSrcRGB: number = 0;
-    //     public state_blendDestRGB: number = 0;
-    //     public state_blendSrcAlpha: number = 0;
-    //     public state_blendDestALpha: number = 0;
-    //     public vShaderInfo: ShaderInfo;
-    //     public fShaderInfo: ShaderInfo;
-    //     constructor(vShaderInfo: ShaderInfo, fShaderInfo: ShaderInfo) {
-    //         this.vShaderInfo = vShaderInfo;
-    //         this.fShaderInfo = fShaderInfo;
-    //     }
-    //     public setAlphaBlend(mode: BlendModeEnum) {
-    //         // if (mode === BlendModeEnum.Add) {
-    //         //     this.state_blend = true;
-    //         //     this.state_blendEquation = WebGLKit.FUNC_ADD;
-    //         //     this.state_blendSrcRGB = WebGLKit.SRC_ALPHA;
-    //         //     this.state_blendDestRGB = WebGLKit.ONE;
-    //         //     this.state_blendSrcAlpha = WebGLKit.SRC_ALPHA;
-    //         //     this.state_blendDestALpha = WebGLKit.ONE;
-    //         // }
-    //         // else if (mode === BlendModeEnum.Add_PreMultiply) {
-    //         //     this.state_blend = true;
-    //         //     this.state_blendEquation = WebGLKit.FUNC_ADD;
-    //         //     this.state_blendSrcRGB = WebGLKit.ONE;
-    //         //     this.state_blendDestRGB = WebGLKit.ONE;
-    //         //     this.state_blendSrcAlpha = WebGLKit.ONE;
-    //         //     this.state_blendDestALpha = WebGLKit.ONE;
-    //         // }
-    //         // else if (mode === BlendModeEnum.Blend) {
-    //         //     this.state_blend = true;
-    //         //     this.state_blendEquation = WebGLKit.FUNC_ADD;
-    //         //     this.state_blendSrcRGB = WebGLKit.SRC_ALPHA;
-    //         //     this.state_blendDestRGB = WebGLKit.ONE_MINUS_SRC_ALPHA;
-    //         //     this.state_blendSrcAlpha = WebGLKit.ONE;
-    //         //     this.state_blendDestALpha = WebGLKit.ONE_MINUS_SRC_ALPHA;
-    //         // }
-    //         // else if (mode === BlendModeEnum.Blend_PreMultiply) {
-    //         //     this.state_blend = true;
-    //         //     this.state_blendEquation = WebGLKit.FUNC_ADD;
-    //         //     this.state_blendSrcRGB = WebGLKit.ONE;
-    //         //     this.state_blendDestRGB = WebGLKit.ONE_MINUS_SRC_ALPHA;
-    //         //     this.state_blendSrcAlpha = WebGLKit.ONE;
-    //         //     this.state_blendDestALpha = WebGLKit.ONE_MINUS_SRC_ALPHA;
-    //         // }
-    //         // else if (mode === BlendModeEnum.Close) {
-    //         //     this.state_blend = false;
-    //         // }
-    //     }
-    // }
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * shader asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 着色器资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var Shader = (function (_super) {
-        __extends(Shader, _super);
-        function Shader() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * 渲染队列
-             */
-            // public renderQueue: RenderQueue = RenderQueue.Geometry;
-            /**
-             *
-             */
-            // public readonly defaultValue: { [key: string]: { type: string, value?: any, min?: number, max?: number } } = {};
-            _this.vertShader = {}; //TODO
-            _this.fragShader = {}; //TODO
-            return _this;
-        }
-        /**
-         *
-         */
-        Shader.registerVertShader = function (name, src) {
-            var info = {
-                name: name,
-                src: src
-            };
-            this._vertShaderInfoMap[name] = info;
-            return info;
-        };
-        /**
-         *
-         */
-        Shader.registerFragShader = function (name, src) {
-            var info = {
-                name: name,
-                src: src
-            };
-            this._fragShaderInfoMap[name] = info;
-            return info;
-        };
-        Shader.prototype.setVertShader = function (name, src) {
-            this.vertShader.name = name;
-            this.vertShader.src = src;
-        };
-        Shader.prototype.setFragShader = function (name, src) {
-            this.fragShader.name = name;
-            this.fragShader.src = src;
-        };
-        /**
-         * TODO 应补全接口和枚举。
-         *
-         */
-        Shader.prototype.$parse = function (json) {
-        };
-        Shader.prototype.dispose = function () {
-            if (this._isBuiltin) {
-                return;
-            }
-        };
-        /**
-         * @inheritDoc
-         */
-        Shader.prototype.caclByteLength = function () {
-            return 0;
-        };
-        Shader._vertShaderInfoMap = {};
-        Shader._fragShaderInfoMap = {};
-        return Shader;
-    }(paper.Asset));
-    egret3d.Shader = Shader;
-    __reflect(Shader.prototype, "egret3d.Shader");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -16137,86 +16175,44 @@ var RES;
                 });
             });
         }
-        processor.GLVertexShaderProcessor = {
-            onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var text, url, filename, name;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "text")];
-                            case 1:
-                                text = _a.sent();
-                                url = getUrl(resource);
-                                filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                return [2 /*return*/, egret3d.Shader.registerVertShader(name, text)];
-                        }
-                    });
-                });
-            },
-            onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        return [2 /*return*/];
-                    });
-                });
-            }
-            // getData(host, resource, key, subkey) { //可选函数
-            // }
-        };
-        processor.GLFragmentShaderProcessor = {
-            onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var text, url, filename, name;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "text")];
-                            case 1:
-                                text = _a.sent();
-                                url = getUrl(resource);
-                                filename = getFileName(url);
-                                name = filename.substring(0, filename.indexOf("."));
-                                return [2 /*return*/, egret3d.Shader.registerFragShader(name, text)];
-                        }
-                    });
-                });
-            },
-            onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        return [2 /*return*/];
-                    });
-                });
-            }
-        };
-        processor.ShaderProcessor = {
-            onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data, shader;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "json")];
-                            case 1:
-                                data = _a.sent();
-                                shader = new egret3d.Shader(resource.url);
-                                shader.$parse(data);
-                                paper.Asset.register(shader);
-                                return [2 /*return*/, shader];
-                        }
-                    });
-                });
-            },
-            onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
-            }
-        };
+        // export const GLVertexShaderProcessor: RES.processor.Processor = {
+        //     async onLoadStart(host, resource) {
+        //         let text = await host.load(resource, "text");
+        //         let url = getUrl(resource);
+        //         let filename = getFileName(url);
+        //         let name = filename.substring(0, filename.indexOf("."));
+        //         return egret3d.Shader.registerVertShader(name, text);
+        //     },
+        //     async onRemoveStart(host, resource) {
+        //     }
+        //     // getData(host, resource, key, subkey) { //可选函数
+        //     // }
+        // };
+        // export const GLFragmentShaderProcessor: RES.processor.Processor = {
+        //     async onLoadStart(host, resource) {
+        //         let text = await host.load(resource, "text");
+        //         let url = getUrl(resource);
+        //         let filename = getFileName(url);
+        //         let name = filename.substring(0, filename.indexOf("."));
+        //         return egret3d.Shader.registerFragShader(name, text);
+        //     },
+        //     async onRemoveStart(host, resource) {
+        //     }
+        // };
+        // export const ShaderProcessor: RES.processor.Processor = {
+        //     async onLoadStart(host, resource) {
+        //         let data = await host.load(resource, "json");
+        //         // const url = getUrl(resource);
+        //         let shader = new egret3d.Shader(resource.url);
+        //         shader.$parse(data);
+        //         paper.Asset.register(shader);
+        //         return shader;
+        //     },
+        //     async onRemoveStart(host, resource) {
+        //         let data = host.get(resource);
+        //         data.dispose();
+        //     }
+        // };
         processor.TextureDescProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
@@ -16616,9 +16612,9 @@ var RES;
                 });
             });
         }
-        RES.processor.map("GLVertexShader", processor.GLVertexShaderProcessor);
-        RES.processor.map("GLFragmentShader", processor.GLFragmentShaderProcessor);
-        RES.processor.map("Shader", processor.ShaderProcessor);
+        // RES.processor.map("GLVertexShader", GLVertexShaderProcessor);
+        // RES.processor.map("GLFragmentShader", GLFragmentShaderProcessor);
+        // RES.processor.map("Shader", ShaderProcessor);
         RES.processor.map("Texture", processor.TextureProcessor);
         RES.processor.map("TextureDesc", processor.TextureDescProcessor);
         // RES.processor.map("Material", MaterialProcessor);
@@ -16630,6 +16626,17 @@ var RES;
 })(RES || (RES = {}));
 var egret3d;
 (function (egret3d) {
+    /**
+     * @private
+     */
+    var BlendModeEnum;
+    (function (BlendModeEnum) {
+        BlendModeEnum[BlendModeEnum["Close"] = 0] = "Close";
+        BlendModeEnum[BlendModeEnum["Blend"] = 1] = "Blend";
+        BlendModeEnum[BlendModeEnum["Blend_PreMultiply"] = 2] = "Blend_PreMultiply";
+        BlendModeEnum[BlendModeEnum["Add"] = 3] = "Add";
+        BlendModeEnum[BlendModeEnum["Add_PreMultiply"] = 4] = "Add_PreMultiply";
+    })(BlendModeEnum || (BlendModeEnum = {}));
     var DefaultShaders = (function () {
         function DefaultShaders() {
         }
@@ -16643,6 +16650,92 @@ var egret3d;
             KHRExtensions.techniques.push({ attributes: {}, uniforms: {}, states: { enable: [], functions: {} } });
             asset.config.extensions.paper = { renderQueue: renderQueue };
             return asset;
+        };
+        DefaultShaders._setBlend = function (technique, blend) {
+            var funs = technique.states.functions;
+            var enables = technique.states.enable;
+            switch (blend) {
+                case BlendModeEnum.Add:
+                    funs.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    funs.blendFuncSeparate = [770 /* SRC_ALPHA */, 1 /* ONE */, 770 /* SRC_ALPHA */, 1 /* ONE */];
+                    break;
+                case BlendModeEnum.Add_PreMultiply:
+                    funs.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    funs.blendFuncSeparate = [1 /* ONE */, 1 /* ONE */, 1 /* ONE */, 1 /* ONE */];
+                    break;
+                case BlendModeEnum.Blend:
+                    funs.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    funs.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
+                    break;
+                case BlendModeEnum.Blend_PreMultiply:
+                    funs.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    funs.blendFuncSeparate = [1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */, 1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */];
+                    break;
+                default:
+                    delete funs.blendEquationSeparate;
+                    delete funs.blendFuncSeparate;
+                    break;
+            }
+            var index = enables.indexOf(3042 /* BLEND */);
+            if (blend === BlendModeEnum.Close) {
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+            else {
+                if (index < 0) {
+                    enables.push(3042 /* BLEND */);
+                }
+            }
+        };
+        DefaultShaders._setCullFace = function (technique, cull, frontFace, cullFace) {
+            var funs = technique.states.functions;
+            var enables = technique.states.enable;
+            var index = enables.indexOf(2884 /* CULL_FACE */);
+            if (cull && frontFace && cullFace) {
+                funs.frontFace = [frontFace];
+                funs.cullFace = [cullFace];
+                if (index < 0) {
+                    enables.push(2884 /* CULL_FACE */);
+                }
+            }
+            else {
+                delete funs.frontFace;
+                delete funs.cullFace;
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+        };
+        DefaultShaders._setDepth = function (technique, zTest, zWrite) {
+            var funs = technique.states.functions;
+            var enables = technique.states.enable;
+            var index = enables.indexOf(2929 /* DEPTH_TEST */);
+            if (zTest) {
+                if (index < 0) {
+                    enables.push(2929 /* DEPTH_TEST */);
+                }
+                funs.depthFunc = [515 /* LEQUAL */];
+            }
+            else {
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+            if (zWrite) {
+                funs.depthMask = [true];
+            }
+            else {
+                funs.depthMask = [false];
+            }
+        };
+        DefaultShaders._createColorShaderTemplate = function (url) {
+            var shader = this.createBuildinShader(url, "color_vs", egret3d.ShaderLib.materialcolor_vert, "color_fs", egret3d.ShaderLib.line_frag, egret3d.RenderQueue.Geometry);
+            var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+            technique.attributes["_glesVertex"] = { semantic: "POSITION" /* POSITION */ };
+            technique.uniforms["glstate_matrix_mvp"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */, value: [] };
+            technique.uniforms["_Color"] = { type: 35666 /* FLOAT_VEC4 */, value: [1, 1, 1, 1] };
+            return shader;
         };
         DefaultShaders._createDiffuseShaderTemplate = function (url) {
             var shader = this.createBuildinShader(url, "diffuse_vs", egret3d.ShaderLib.diffuse_vert, "diffuse_fs", egret3d.ShaderLib.diffuse_frag, egret3d.RenderQueue.Geometry);
@@ -16679,9 +16772,9 @@ var egret3d;
             technique.uniforms["glstate_spotShadowMap[0]"] = { type: 35678 /* SAMPLER_2D */, semantic: "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */, value: [] };
             technique.uniforms["glstate_spotLights[0]"] = { type: 5126 /* FLOAT */, semantic: "_SPOTLIGHTS" /* _SPOTLIGHTS */, value: [] };
             technique.uniforms["glstate_vec4_bones[0]"] = { type: 35666 /* FLOAT_VEC4 */, semantic: "_BONESVEC4" /* _BONESVEC4 */, value: [] };
-            technique.uniforms["_NormalTex"] = { type: 35678 /* SAMPLER_2D */, semantic: "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */, value: {} };
             technique.uniforms["glstate_matrix_mvp"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */, value: [] };
             technique.uniforms["glstate_matrix_model"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "MODEL" /* MODEL */, value: [] };
+            technique.uniforms["_NormalTex"] = { type: 35678 /* SAMPLER_2D */, semantic: "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */, value: {} };
             technique.uniforms["_MainTex"] = { type: 35678 /* SAMPLER_2D */, value: egret3d.DefaultTextures.GRAY };
             technique.uniforms["_Color"] = { type: 35666 /* FLOAT_VEC4 */, value: [1, 1, 1, 1] };
             return shader;
@@ -16701,8 +16794,12 @@ var egret3d;
             technique.attributes["_time"] = { semantic: "TIME" /* _TIME */ };
             technique.attributes["_random0"] = { semantic: "RANDOM0" /* _RANDOM0 */ };
             technique.attributes["_random1"] = { semantic: "RANDOM1" /* _RANDOM1 */ };
-            technique.attributes["_startWorldPosition"] = { semantic: "START_POSITION" /* _START_POSITION */ };
-            technique.attributes["_startWorldRotation"] = { semantic: "START_ROTATION" /* _START_ROTATION */ };
+            technique.attributes["_startWorldPosition"] = { semantic: "WORLD_POSITION" /* _WORLD_POSITION */ };
+            technique.attributes["_startWorldRotation"] = { semantic: "WORLD_ROTATION" /* _WORLD_ROTATION */ };
+            technique.uniforms["glstate_matrix_vp"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "_VIEWPROJECTION" /* _VIEWPROJECTION */, value: [] };
+            technique.uniforms["glstate_cameraPos"] = { type: 35665 /* FLOAT_VEC3 */, semantic: "_CAMERA_POS" /* _CAMERA_POS */, value: [] };
+            technique.uniforms["glstate_cameraForward"] = { type: 35665 /* FLOAT_VEC3 */, semantic: "_CAMERA_FORWARD" /* _CAMERA_FORWARD */, value: [] };
+            technique.uniforms["glstate_cameraUp"] = { type: 35665 /* FLOAT_VEC3 */, semantic: "CAMERA_UP" /* _CAMERA_UP */, value: [] };
             technique.uniforms["_MainTex"] = { type: 35678 /* SAMPLER_2D */, value: egret3d.DefaultTextures.GRAY };
             technique.uniforms["_TintColor"] = { type: 35666 /* FLOAT_VEC4 */, value: [0.5, 0.5, 0.5, 0.5] };
             technique.uniforms["u_currentTime"] = { type: 5126 /* FLOAT */, value: 0 };
@@ -16713,10 +16810,6 @@ var egret3d;
             technique.uniforms["u_scalingMode"] = { type: 5124 /* Int */, value: 0 };
             technique.uniforms["u_positionScale"] = { type: 35665 /* FLOAT_VEC3 */, value: [1, 1, 1] };
             technique.uniforms["u_sizeScale"] = { type: 35665 /* FLOAT_VEC3 */, value: [1, 1, 1] };
-            technique.uniforms["glstate_matrix_vp"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "_VIEWPROJECTION" /* _VIEWPROJECTION */, value: [] };
-            technique.uniforms["glstate_cameraPos"] = { type: 35665 /* FLOAT_VEC3 */, semantic: "_CAMERA_POS" /* _CAMERA_POS */, value: [] };
-            technique.uniforms["glstate_cameraForward"] = { type: 35665 /* FLOAT_VEC3 */, semantic: "_CAMERA_FORWARD" /* _CAMERA_FORWARD */, value: [] };
-            technique.uniforms["glstate_cameraUp"] = { type: 35665 /* FLOAT_VEC3 */, semantic: "CAMERA_UP" /* _CAMERA_UP */, value: [] };
             technique.uniforms["u_lengthScale"] = { type: 5126 /* FLOAT */, value: [1, 1, 1] };
             technique.uniforms["u_speeaScale"] = { type: 5126 /* FLOAT */, value: [1, 1, 1] };
             technique.uniforms["u_simulationSpace"] = { type: 5124 /* Int */, value: 0 };
@@ -16772,11 +16865,9 @@ var egret3d;
                 technique.attributes["_glesVertex"] = { semantic: "POSITION" /* POSITION */ };
                 technique.uniforms["glstate_matrix_mvp"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */, value: [] };
                 //
-                technique.states.enable = [2929 /* DEPTH_TEST */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Geometry;
                 this.SHADOW_DEPTH = shader;
                 paper.Asset.register(shader);
@@ -16790,11 +16881,9 @@ var egret3d;
                 technique.uniforms["glstate_referencePosition"] = { type: 35666 /* FLOAT_VEC4 */, semantic: "_REFERENCEPOSITION" /* _REFERENCEPOSITION */, value: [] };
                 technique.uniforms["glstate_nearDistance"] = { type: 5126 /* FLOAT */, semantic: "_NEARDICTANCE" /* _NEARDICTANCE */, value: {} };
                 technique.uniforms["glstate_farDistance"] = { type: 5126 /* FLOAT */, semantic: "_FARDISTANCE" /* _FARDISTANCE */, value: {} };
-                technique.states.enable = [2929 /* DEPTH_TEST */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Geometry;
                 this.SHADOW_DISTANCE = shader;
                 paper.Asset.register(shader);
@@ -16805,11 +16894,9 @@ var egret3d;
                 technique.attributes["_glesVertex"] = { semantic: "POSITION" /* POSITION */ };
                 technique.attributes["_glesColor"] = { semantic: "COLOR_0" /* COLOR_0 */ };
                 technique.uniforms["glstate_matrix_mvp"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */, value: [] };
-                technique.states.enable = [2929 /* DEPTH_TEST */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Geometry;
                 this.LINE = shader;
                 paper.Asset.register(shader);
@@ -16817,11 +16904,9 @@ var egret3d;
             {
                 var shader = this._createDiffuseShaderTemplate("buildin/diffuse.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [2929 /* DEPTH_TEST */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Geometry;
                 this.DIFFUSE = shader;
                 paper.Asset.register(shader);
@@ -16829,11 +16914,9 @@ var egret3d;
             {
                 var shader = this._createDiffuseShaderTemplate("buildin/diffuse_tintcolor.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [2929 /* DEPTH_TEST */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Geometry;
                 this.DIFFUSE_TINT_COLOR = shader;
                 paper.Asset.register(shader);
@@ -16841,9 +16924,9 @@ var egret3d;
             {
                 var shader = this._createDiffuseShaderTemplate("buildin/diffuse_bothside.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [2929 /* DEPTH_TEST */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [true];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Geometry;
                 this.DIFFUSE_BOTH_SIDE = shader;
                 paper.Asset.register(shader);
@@ -16851,13 +16934,9 @@ var egret3d;
             {
                 var shader = this._createDiffuseShaderTemplate("buildin/transparent.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [3042 /* BLEND */, 2929 /* DEPTH_TEST */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
-                technique.states.functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                technique.states.functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Blend);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Transparent;
                 this.TRANSPARENT = shader;
                 paper.Asset.register(shader);
@@ -16865,13 +16944,9 @@ var egret3d;
             {
                 var shader = this._createDiffuseShaderTemplate("buildin/transparent_tintColor.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [3042 /* BLEND */, 2929 /* DEPTH_TEST */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
-                technique.states.functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                technique.states.functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 1 /* ONE */, 770 /* SRC_ALPHA */, 1 /* ONE */];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Add);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Transparent;
                 this.TRANSPARENT_TINTCOLOR = shader;
                 paper.Asset.register(shader);
@@ -16879,11 +16954,9 @@ var egret3d;
             {
                 var shader = this._createDiffuseShaderTemplate("buildin/transparent_alphaCut.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [2929 /* DEPTH_TEST */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Transparent;
                 this.TRANSPARENT_ALPHACUT = shader;
                 paper.Asset.register(shader);
@@ -16891,13 +16964,9 @@ var egret3d;
             {
                 var shader = this._createDiffuseShaderTemplate("buildin/transparent_additive.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [3042 /* BLEND */, 2929 /* DEPTH_TEST */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
-                technique.states.functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                technique.states.functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 1 /* ONE */, 770 /* SRC_ALPHA */, 1 /* ONE */];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Add);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Transparent;
                 this.TRANSPARENT_ADDITIVE = shader;
                 paper.Asset.register(shader);
@@ -16905,11 +16974,9 @@ var egret3d;
             {
                 var shader = this._createDiffuseShaderTemplate("buildin/transparent_additive_bothside.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [3042 /* BLEND */, 2929 /* DEPTH_TEST */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                technique.states.functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 1 /* ONE */, 770 /* SRC_ALPHA */, 1 /* ONE */];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Add);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Transparent;
                 this.TRANSPARENT_ADDITIVE_BOTH_SIDE = shader;
                 paper.Asset.register(shader);
@@ -16917,11 +16984,9 @@ var egret3d;
             {
                 var shader = this._createDiffuseShaderTemplate("buildin/transparent_bothside.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [3042 /* BLEND */, 2929 /* DEPTH_TEST */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                technique.states.functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Blend);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Transparent;
                 this.TRANSPARENT_ADDITIVE_BOTH_SIDE = shader;
                 paper.Asset.register(shader);
@@ -16929,30 +16994,31 @@ var egret3d;
             {
                 var shader = this._createLambertShaderTemplate();
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.states.enable = [2929 /* DEPTH_TEST */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Geometry;
                 this.LAMBERT = shader;
                 paper.Asset.register(shader);
             }
             {
-                var shader = this.createBuildinShader("buildin/color.shader.gltf", "color_vs", egret3d.ShaderLib.materialcolor_vert, "color_fs", egret3d.ShaderLib.line_frag, egret3d.RenderQueue.Geometry);
+                var shader = this._createColorShaderTemplate("buildin/gizmos.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                technique.attributes["_glesVertex"] = { semantic: "POSITION" /* POSITION */ };
-                technique.uniforms["glstate_matrix_mvp"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */, value: [] };
-                technique.uniforms["_Color"] = { type: 35666 /* FLOAT_VEC4 */, value: [1, 1, 1, 1] };
-                technique.states.enable = [3042 /* BLEND */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
-                technique.states.functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                technique.states.functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
+                this._setDepth(technique, false, false);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Blend);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Overlay;
                 this.GIZMOS_COLOR = shader;
+                paper.Asset.register(shader);
+            }
+            {
+                var shader = this._createColorShaderTemplate("buildin/materialcolor.shader.gltf");
+                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Close);
+                shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Geometry;
+                this.MATERIAL_COLOR = shader;
                 paper.Asset.register(shader);
             }
             {
@@ -16965,11 +17031,9 @@ var egret3d;
                 technique.uniforms["glstate_matrix_mvp"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */, value: [] };
                 technique.uniforms["_MainTex"] = { type: 35678 /* SAMPLER_2D */, value: {} };
                 technique.uniforms["_MainTex_ST"] = { type: 35676 /* FLOAT_MAT4 */, value: {} };
-                technique.states.enable = [2929 /* DEPTH_TEST */, 2884 /* CULL_FACE */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.frontFace = [2305 /* CCW */];
-                technique.states.functions.cullFace = [1029 /* BACK */];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setBlend(technique, BlendModeEnum.Close);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Geometry;
                 this.VERT_COLOR = shader;
                 paper.Asset.register(shader);
@@ -16978,10 +17042,9 @@ var egret3d;
                 var shader = this._createParticleShaderTemplate("buildin/particle.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [2929 /* DEPTH_TEST */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [true];
-                shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Geometry;
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Close);
                 this.PARTICLE = shader;
                 paper.Asset.register(shader);
             }
@@ -16989,11 +17052,9 @@ var egret3d;
                 var shader = this._createParticleShaderTemplate("buildin/particles_additive.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [3042 /* BLEND */, 2929 /* DEPTH_TEST */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                technique.states.functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 1 /* ONE */, 770 /* SRC_ALPHA */, 1 /* ONE */];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Add);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Transparent;
                 this.PARTICLE_ADDITIVE = shader;
                 paper.Asset.register(shader);
@@ -17002,11 +17063,9 @@ var egret3d;
                 var shader = this._createParticleShaderTemplate("buildin/particles_additive_premultiply.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [3042 /* BLEND */, 2929 /* DEPTH_TEST */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                technique.states.functions.blendFuncSeparate = [1 /* ONE */, 1 /* ONE */, 1 /* ONE */, 1 /* ONE */];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Add_PreMultiply);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Transparent;
                 this.PARTICLE_ADDITIVE_PREMYLTIPLY = shader;
                 paper.Asset.register(shader);
@@ -17015,11 +17074,10 @@ var egret3d;
                 var shader = this._createParticleShaderTemplate("buildin/particles_blend1.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [3042 /* BLEND */, 2929 /* DEPTH_TEST */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                technique.states.functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Blend);
+                technique.states.functions.depthFunc = [514 /* EQUAL */]; //TODO
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Transparent;
                 paper.Asset.register(shader);
             }
@@ -17027,11 +17085,9 @@ var egret3d;
                 var shader = this._createParticleShaderTemplate("buildin/particles_blend.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [3042 /* BLEND */, 2929 /* DEPTH_TEST */];
-                technique.states.functions.depthFunc = [514 /* EQUAL */]; //TODO
-                technique.states.functions.depthMask = [true];
-                technique.states.functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                technique.states.functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Blend);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Transparent;
                 this.PARTICLE_BLEND = shader;
                 paper.Asset.register(shader);
@@ -17040,11 +17096,9 @@ var egret3d;
                 var shader = this._createParticleShaderTemplate("buildin/particles_blend_premultiply.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
-                technique.states.enable = [3042 /* BLEND */, 2929 /* DEPTH_TEST */];
-                technique.states.functions.depthFunc = [515 /* LEQUAL */];
-                technique.states.functions.depthMask = [false];
-                technique.states.functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                technique.states.functions.blendFuncSeparate = [1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */, 1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */];
+                this._setDepth(technique, true, false);
+                this._setCullFace(technique, false);
+                this._setBlend(technique, BlendModeEnum.Blend_PreMultiply);
                 shader.config.extensions.paper.renderQueue = egret3d.RenderQueue.Transparent;
                 this.PARTICLE_BLEND_PREMYLTIPLY = shader;
                 paper.Asset.register(shader);
@@ -19586,6 +19640,10 @@ var egret3d;
         }
         //
         WebGLRenderSystem.prototype._updateState = function (state) {
+            if (this._cacheState === state) {
+                return;
+            }
+            this._cacheState = state;
             var webgl = this._webgl;
             var stateEnables = this._stateEnables;
             var cacheStateEnable = this._cacheStateEnable;
@@ -19786,7 +19844,6 @@ var egret3d;
                 }
                 var location_2 = uniform.extensions.paper.location;
                 var value = uniform.value;
-                // const value = material._glTFMaterial.extensions.KHR_techniques_webgl.values[key];
                 switch (uniform.type) {
                     case 35670 /* BOOL */:
                     case 5124 /* Int */:
@@ -19988,6 +20045,7 @@ var egret3d;
                         delete this._cacheStateEnable[key];
                     }
                     this._cacheProgram = undefined;
+                    this._cacheState = undefined;
                 }
             }
         };
@@ -27967,483 +28025,262 @@ var egret3d;
 (function (egret3d) {
     var particle;
     (function (particle) {
+        particle.BillboardPerVertexCount = 37;
+        particle.MeshPerVertexCount = 42;
         /**
-         *
+         * 渲染类型为Mesh的属性格式
          */
-        var ParticleSystem = (function (_super) {
-            __extends(ParticleSystem, _super);
-            function ParticleSystem() {
+        particle.MeshShaderAttributeFormat = [
+            { key: "POSITION" /* POSITION */, type: "VEC3" /* VEC3 */ },
+            { key: "COLOR_0" /* COLOR_0 */, type: "VEC4" /* VEC4 */ },
+            { key: "TEXCOORD_0" /* TEXCOORD_0 */, type: "VEC2" /* VEC2 */ },
+            { key: "START_POSITION" /* START_POSITION */, type: "VEC3" /* VEC3 */ },
+            { key: "START_VELOCITY" /* START_VELOCITY */, type: "VEC3" /* VEC3 */ },
+            { key: "START_COLOR" /* START_COLOR */, type: "VEC4" /* VEC4 */ },
+            { key: "START_SIZE" /* START_SIZE */, type: "VEC3" /* VEC3 */ },
+            { key: "START_ROTATION" /* START_ROTATION */, type: "VEC3" /* VEC3 */ },
+            { key: "TIME" /* TIME */, type: "VEC2" /* VEC2 */ },
+            { key: "RANDOM0" /* RANDOM0 */, type: "VEC4" /* VEC4 */ },
+            { key: "RANDOM1" /* RANDOM1 */, type: "VEC4" /* VEC4 */ },
+            { key: "WORLD_POSITION" /* WORLD_POSITION */, type: "VEC3" /* VEC3 */ },
+            { key: "WORLD_ROTATION" /* WORLD_ROTATION */, type: "VEC4" /* VEC4 */ },
+        ];
+        /**
+         * 渲染类型为Billboard的属性格式
+         */
+        particle.BillboardShaderAttributeFormat = [
+            { key: "CORNER" /* CORNER */, type: "VEC2" /* VEC2 */ },
+            { key: "TEXCOORD_0" /* TEXCOORD_0 */, type: "VEC2" /* VEC2 */ },
+            { key: "START_POSITION" /* START_POSITION */, type: "VEC3" /* VEC3 */ },
+            { key: "START_VELOCITY" /* START_VELOCITY */, type: "VEC3" /* VEC3 */ },
+            { key: "START_COLOR" /* START_COLOR */, type: "VEC4" /* VEC4 */ },
+            { key: "START_SIZE" /* START_SIZE */, type: "VEC3" /* VEC3 */ },
+            { key: "START_ROTATION" /* START_ROTATION */, type: "VEC3" /* VEC3 */ },
+            { key: "TIME" /* TIME */, type: "VEC2" /* VEC2 */ },
+            { key: "RANDOM0" /* RANDOM0 */, type: "VEC4" /* VEC4 */ },
+            { key: "RANDOM1" /* RANDOM1 */, type: "VEC4" /* VEC4 */ },
+            { key: "WORLD_POSITION" /* WORLD_POSITION */, type: "VEC3" /* VEC3 */ },
+            { key: "WORLD_ROTATION" /* WORLD_ROTATION */, type: "VEC4" /* VEC4 */ },
+        ];
+        var ParticleRenderer = (function (_super) {
+            __extends(ParticleRenderer, _super);
+            function ParticleRenderer() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._interests = [
-                    {
-                        componentClass: particle.ParticleComponent,
-                        listeners: [
-                            { type: "rotation3DChanged" /* StartRotation3DChanged */, listener: function (comp) { _this._onMainUpdate(comp, "rotation3DChanged" /* StartRotation3DChanged */); } },
-                            { type: "simulationSpace" /* SimulationSpaceChanged */, listener: function (comp) { _this._onMainUpdate(comp, "simulationSpace" /* SimulationSpaceChanged */); } },
-                            { type: "scaleMode" /* ScaleModeChanged */, listener: function (comp) { _this._onMainUpdate(comp, "scaleMode" /* ScaleModeChanged */); } },
-                            { type: "velocityChanged" /* VelocityChanged */, listener: _this._onVelocityOverLifetime.bind(_this) },
-                            { type: "colorChanged" /* ColorChanged */, listener: _this._onColorOverLifetime.bind(_this) },
-                            { type: "sizeChanged" /* SizeChanged */, listener: _this._onSizeOverLifetime.bind(_this) },
-                            { type: "rotationChanged" /* RotationChanged */, listener: _this._onRotationOverLifetime.bind(_this) },
-                            { type: "textureSheetChanged" /* TextureSheetChanged */, listener: _this._onTextureSheetAnimation.bind(_this) },
-                        ]
-                    },
-                    {
-                        componentClass: particle.ParticleRenderer,
-                        listeners: [
-                            { type: "mesh" /* Mesh */, listener: function (comp) { _this._updateDrawCalls(comp.gameObject); } },
-                            { type: "materials" /* Materials */, listener: function (comp) { _this._updateDrawCalls(comp.gameObject); } },
-                            { type: "lengthScale" /* LengthScaleChanged */, listener: function (comp) { _this._onRenderUpdate(comp, "lengthScale" /* LengthScaleChanged */); } },
-                            { type: "velocityScale" /* VelocityScaleChanged */, listener: function (comp) { _this._onRenderUpdate(comp, "velocityScale" /* VelocityScaleChanged */); } },
-                            { type: "renderMode" /* RenderMode */, listener: function (comp) { _this._onRenderUpdate(comp, "renderMode" /* RenderMode */); } },
-                        ]
-                    }
-                ];
-                _this._drawCalls = _this._globalGameObject.getOrAddComponent(egret3d.DrawCalls);
+                _this._materials = [];
+                _this._renderMode = 0 /* Billboard */;
                 return _this;
             }
-            /**
-            * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
-            */
-            ParticleSystem.prototype._onUpdateBatchMesh = function (comp) {
-                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
-                comp.initBatcher();
-                //
-                this._onRenderUpdate(renderer, "renderMode" /* RenderMode */);
-                this._onRenderUpdate(renderer, "lengthScale" /* LengthScaleChanged */);
-                this._onRenderUpdate(renderer, "velocityScale" /* VelocityScaleChanged */);
-                //
-                this._onMainUpdate(comp, "rotation3DChanged" /* StartRotation3DChanged */);
-                this._onMainUpdate(comp, "simulationSpace" /* SimulationSpaceChanged */);
-                this._onMainUpdate(comp, "scaleMode" /* ScaleModeChanged */);
-                this._onShapeChanged(comp);
-                this._onVelocityOverLifetime(comp);
-                this._onColorOverLifetime(comp);
-                this._onSizeOverLifetime(comp);
-                this._onRotationOverLifetime(comp);
-                this._onTextureSheetAnimation(comp);
-            };
-            ParticleSystem.prototype._onRenderUpdate = function (render, type) {
-                if (!this._enabled || !this._groups[0].hasGameObject(render.gameObject)) {
-                    return;
-                }
-                switch (type) {
-                    case "renderMode" /* RenderMode */: {
-                        this._onRenderMode(render);
-                        break;
-                    }
-                    case "lengthScale" /* LengthScaleChanged */: {
-                        render._setFloat("u_lengthScale" /* LENGTH_SCALE */, render.lengthScale);
-                        break;
-                    }
-                    case "velocityScale" /* VelocityScaleChanged */: {
-                        render._setFloat("u_speeaScale" /* SPEED_SCALE */, render.velocityScale);
-                        break;
-                    }
-                }
+            ParticleRenderer.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                this._mesh = null;
+                this._materials.length = 0;
+                this._renderMode = 0 /* Billboard */;
+                this.velocityScale = 1.0;
+                this.lengthScale = 1.0;
             };
             /**
-             *
-             * @param render 渲染模式改变
+             * @internal
+             * @param key
              */
-            ParticleSystem.prototype._onRenderMode = function (render) {
-                render._removeShaderDefine("SPHERHBILLBOARD" /* SPHERHBILLBOARD */);
-                render._removeShaderDefine("STRETCHEDBILLBOARD" /* STRETCHEDBILLBOARD */);
-                render._removeShaderDefine("HORIZONTALBILLBOARD" /* HORIZONTALBILLBOARD */);
-                render._removeShaderDefine("VERTICALBILLBOARD" /* VERTICALBILLBOARD */);
-                render._removeShaderDefine("RENDERMESH" /* RENDERMESH */);
-                var mode = render.renderMode;
-                switch (mode) {
-                    case 0 /* Billboard */: {
-                        render._addShaderDefine("SPHERHBILLBOARD" /* SPHERHBILLBOARD */);
-                        break;
-                    }
-                    case 1 /* Stretch */: {
-                        render._addShaderDefine("STRETCHEDBILLBOARD" /* STRETCHEDBILLBOARD */);
-                        break;
-                    }
-                    case 2 /* HorizontalBillboard */: {
-                        render._addShaderDefine("HORIZONTALBILLBOARD" /* HORIZONTALBILLBOARD */);
-                        break;
-                    }
-                    case 3 /* VerticalBillboard */: {
-                        render._addShaderDefine("VERTICALBILLBOARD" /* VERTICALBILLBOARD */);
-                        break;
-                    }
-                    case 4 /* Mesh */: {
-                        render._addShaderDefine("RENDERMESH" /* RENDERMESH */);
-                        break;
-                    }
-                    default: {
-                        throw "_onRenderMode:invalid renderMode";
-                    }
+            ParticleRenderer.prototype._addShaderDefine = function (key) {
+                if (!this.batchMaterial && this._materials.length > 0) {
+                    this.batchMaterial = this._materials[0];
                 }
-            };
-            ParticleSystem.prototype._onMainUpdate = function (component, type) {
-                if (!this._enabled || !this._groups[0].hasGameObject(component.gameObject)) {
-                    return;
-                }
-                var renderer = this._groups[0].getComponent(component.gameObject, 1);
-                var mainModule = component.main;
-                switch (type) {
-                    case "rotation3DChanged" /* StartRotation3DChanged */: {
-                        renderer._setBoolean("u_startRotation3D" /* START_ROTATION3D */, mainModule._startRotation3D);
-                        break;
-                    }
-                    case "simulationSpace" /* SimulationSpaceChanged */: {
-                        renderer._setInt("u_simulationSpace" /* SIMULATION_SPACE */, mainModule._simulationSpace);
-                        break;
-                    }
-                    case "scaleMode" /* ScaleModeChanged */: {
-                        renderer._setInt("u_scalingMode" /* SCALING_MODE */, mainModule._scaleMode);
-                        break;
-                    }
+                if (this.batchMaterial) {
+                    this.batchMaterial.addDefine(key);
                 }
             };
             /**
-             * 更新速率模块
-             * @param component
+             * @internal
+             * @param key
              */
-            ParticleSystem.prototype._onShapeChanged = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
+            ParticleRenderer.prototype._removeShaderDefine = function (key) {
+                if (!this.batchMaterial && this._materials.length > 0) {
+                    this.batchMaterial = this._materials[0];
                 }
-                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
-                renderer._removeShaderDefine("SHAPE" /* SHAPE */);
-                if (comp.shape.enable) {
-                    renderer._addShaderDefine("SHAPE" /* SHAPE */);
+                if (this.batchMaterial) {
+                    this.batchMaterial.removeDefine(key);
                 }
             };
             /**
-             * 更新速率模块
-             * @param component
+             * @internal
+             * @param key
              */
-            ParticleSystem.prototype._onVelocityOverLifetime = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
-                }
-                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
-                renderer._removeShaderDefine("VELOCITYCONSTANT" /* VELOCITYCONSTANT */);
-                renderer._removeShaderDefine("VELOCITYCURVE" /* VELOCITYCURVE */);
-                renderer._removeShaderDefine("VELOCITYTWOCONSTANT" /* VELOCITYTWOCONSTANT */);
-                renderer._removeShaderDefine("VELOCITYTWOCURVE" /* VELOCITYTWOCURVE */);
-                var velocityModule = comp.velocityOverLifetime;
-                if (velocityModule.enable) {
-                    var mode = velocityModule._mode;
-                    switch (mode) {
-                        case 0 /* Constant */: {
-                            renderer._addShaderDefine("VELOCITYCONSTANT" /* VELOCITYCONSTANT */);
-                            //
-                            var vec3 = new egret3d.Vector3(velocityModule._x.evaluate(), velocityModule._y.evaluate(), velocityModule._z.evaluate());
-                            renderer._setVector3("u_velocityConst" /* VELOCITY_CONST */, vec3);
-                            break;
-                        }
-                        case 1 /* Curve */: {
-                            renderer._addShaderDefine("VELOCITYCURVE" /* VELOCITYCURVE */);
-                            //
-                            renderer._setVector2v("u_velocityCurveX[0]" /* VELOCITY_CURVE_X */, velocityModule._x.curve.floatValues);
-                            renderer._setVector2v("u_velocityCurveY[0]" /* VELOCITY_CURVE_Y */, velocityModule._y.curve.floatValues);
-                            renderer._setVector2v("u_velocityCurveZ[0]" /* VELOCITY_CURVE_Z */, velocityModule._z.curve.floatValues);
-                            break;
-                        }
-                        case 3 /* TwoConstants */: {
-                            renderer._addShaderDefine("VELOCITYTWOCONSTANT" /* VELOCITYTWOCONSTANT */);
-                            //
-                            var minVec3 = new egret3d.Vector3(velocityModule._x.constantMin, velocityModule._y.constantMin, velocityModule._z.constantMin);
-                            var maxVec3 = new egret3d.Vector3(velocityModule._x.constantMax, velocityModule._y.constantMax, velocityModule._z.constantMax);
-                            renderer._setVector3("u_velocityConst" /* VELOCITY_CONST */, minVec3);
-                            renderer._setVector3("u_velocityConstMax" /* VELOCITY_CONST_MAX */, maxVec3);
-                            break;
-                        }
-                        case 2 /* TwoCurves */: {
-                            renderer._addShaderDefine("VELOCITYTWOCURVE" /* VELOCITYTWOCURVE */);
-                            //
-                            renderer._setVector2v("u_velocityCurveX[0]" /* VELOCITY_CURVE_X */, velocityModule._x.curveMin.floatValues);
-                            renderer._setVector2v("u_velocityCurveY[0]" /* VELOCITY_CURVE_Y */, velocityModule._y.curveMin.floatValues);
-                            renderer._setVector2v("u_velocityCurveZ[0]" /* VELOCITY_CURVE_Z */, velocityModule._z.curveMin.floatValues);
-                            renderer._setVector2v("u_velocityCurveMaxX[0]" /* VELOCITY_CURVE_MAX_X */, velocityModule._x.curveMax.floatValues);
-                            renderer._setVector2v("u_velocityCurveMaxY[0]" /* VELOCITY_CURVE_MAX_Y */, velocityModule._y.curveMax.floatValues);
-                            renderer._setVector2v("u_velocityCurveMaxZ[0]" /* VELOCITY_CURVE_MAX_Z */, velocityModule._z.curveMax.floatValues);
-                            break;
-                        }
-                    }
-                    renderer._setInt("u_spaceType" /* SPACE_TYPE */, velocityModule._space);
+            ParticleRenderer.prototype._setBoolean = function (_id, _value) {
+                if (this.batchMaterial) {
+                    this.batchMaterial.setBoolean(_id, _value);
                 }
             };
             /**
-             * 更新颜色模块
-             * @param component
+             * @internal
+             * @param key
              */
-            ParticleSystem.prototype._onColorOverLifetime = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
-                }
-                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
-                renderer._removeShaderDefine("COLOROGRADIENT" /* COLOROGRADIENT */);
-                renderer._removeShaderDefine("COLORTWOGRADIENTS" /* COLORTWOGRADIENTS */);
-                var colorModule = comp.colorOverLifetime;
-                if (colorModule.enable) {
-                    var color = colorModule._color;
-                    switch (color.mode) {
-                        case 1 /* Gradient */: {
-                            renderer._addShaderDefine("COLOROGRADIENT" /* COLOROGRADIENT */);
-                            //
-                            renderer._setVector2v("u_alphaGradient[0]" /* ALPHAS_GRADIENT */, color.gradient.alphaValues);
-                            renderer._setVector4v("u_colorGradient[0]" /* COLOR_GRADIENT */, color.gradient.colorValues);
-                            break;
-                        }
-                        case 3 /* TwoGradients */: {
-                            renderer._addShaderDefine("COLORTWOGRADIENTS" /* COLORTWOGRADIENTS */);
-                            //
-                            renderer._setVector2v("u_alphaGradient[0]" /* ALPHAS_GRADIENT */, color.gradientMin.alphaValues);
-                            renderer._setVector2v("u_alphaGradientMax[0]" /* ALPHA_GRADIENT_MAX */, color.gradientMax.alphaValues);
-                            renderer._setVector4v("u_colorGradient[0]" /* COLOR_GRADIENT */, color.gradientMin.colorValues);
-                            renderer._setVector4v("u_colorGradientMax[0]" /* COLOR_GRADIENT_MAX */, color.gradientMax.colorValues);
-                            break;
-                        }
-                    }
+            ParticleRenderer.prototype._setInt = function (_id, _value) {
+                if (this.batchMaterial) {
+                    this.batchMaterial.setInt(_id, _value);
                 }
             };
             /**
-             * 更新大小模块
-             * @param component
+             * @internal
+             * @param key
              */
-            ParticleSystem.prototype._onSizeOverLifetime = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
-                }
-                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
-                renderer._removeShaderDefine("SIZECURVE" /* SIZECURVE */);
-                renderer._removeShaderDefine("SIZECURVESEPERATE" /* SIZECURVESEPERATE */);
-                renderer._removeShaderDefine("SIZETWOCURVES" /* SIZETWOCURVES */);
-                renderer._removeShaderDefine("SIZETWOCURVESSEPERATE" /* SIZETWOCURVESSEPERATE */);
-                var sizeModule = comp.sizeOverLifetime;
-                if (sizeModule.enable) {
-                    var separateAxes = sizeModule._separateAxes;
-                    var mode = sizeModule._x.mode;
-                    switch (mode) {
-                        case 1 /* Curve */: {
-                            if (separateAxes) {
-                                renderer._addShaderDefine("SIZECURVESEPERATE" /* SIZECURVESEPERATE */);
-                                //
-                                renderer._setVector2v("u_sizeCurveX[0]" /* SIZE_CURVE_X */, sizeModule._x.curve.floatValues);
-                                renderer._setVector2v("u_sizeCurveY[0]" /* SIZE_CURVE_Y */, sizeModule._y.curve.floatValues);
-                                renderer._setVector2v("u_sizeCurveZ[0]" /* SIZE_CURVE_Z */, sizeModule._z.curve.floatValues);
-                            }
-                            else {
-                                renderer._addShaderDefine("SIZECURVE" /* SIZECURVE */);
-                                //
-                                renderer._setVector2v("u_sizeCurve[0]" /* SIZE_CURVE */, sizeModule._size.curve.floatValues);
-                            }
-                            break;
-                        }
-                        case 2 /* TwoCurves */: {
-                            if (separateAxes) {
-                                renderer._addShaderDefine("SIZETWOCURVESSEPERATE" /* SIZETWOCURVESSEPERATE */);
-                                //
-                                renderer._setVector2v("u_sizeCurveX[0]" /* SIZE_CURVE_X */, sizeModule._x.curveMin.floatValues);
-                                renderer._setVector2v("u_sizeCurveY[0]" /* SIZE_CURVE_Y */, sizeModule._y.curveMin.floatValues);
-                                renderer._setVector2v("u_sizeCurveZ[0]" /* SIZE_CURVE_Z */, sizeModule._z.curveMin.floatValues);
-                                renderer._setVector2v("u_sizeCurveMaxX[0]" /* SIZE_CURVE_MAX_X */, sizeModule._x.curveMax.floatValues);
-                                renderer._setVector2v("u_sizeCurveMaxY[0]" /* SIZE_CURVE_MAX_Y */, sizeModule._y.curveMax.floatValues);
-                                renderer._setVector2v("u_sizeCurveMaxZ[0]" /* SIZE_CURVE_MAX_Z */, sizeModule._z.curveMax.floatValues);
-                            }
-                            else {
-                                renderer._addShaderDefine("SIZETWOCURVES" /* SIZETWOCURVES */);
-                                //
-                                renderer._setVector2v("u_sizeCurve[0]" /* SIZE_CURVE */, sizeModule._size.curveMin.floatValues);
-                                renderer._setVector2v("u_sizeCurveMax[0]" /* SIZE_CURVE_MAX */, sizeModule._size.curveMax.floatValues);
-                            }
-                            break;
-                        }
-                    }
+            ParticleRenderer.prototype._setFloat = function (_id, _value) {
+                if (this.batchMaterial) {
+                    this.batchMaterial.setFloat(_id, _value);
                 }
             };
             /**
-             * 更新旋转模块
-             * @param comp
+             * @internal
+             * @param key
              */
-            ParticleSystem.prototype._onRotationOverLifetime = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
+            ParticleRenderer.prototype._setVector2 = function (_id, _value) {
+                if (this.batchMaterial) {
+                    this.batchMaterial.setVector2(_id, _value);
                 }
-                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
-                renderer._removeShaderDefine("ROTATIONOVERLIFETIME" /* ROTATIONOVERLIFETIME */);
-                renderer._removeShaderDefine("ROTATIONCONSTANT" /* ROTATIONCONSTANT */);
-                renderer._removeShaderDefine("ROTATIONTWOCONSTANTS" /* ROTATIONTWOCONSTANTS */);
-                renderer._removeShaderDefine("ROTATIONSEPERATE" /* ROTATIONSEPERATE */);
-                renderer._removeShaderDefine("ROTATIONCURVE" /* ROTATIONCURVE */);
-                renderer._removeShaderDefine("ROTATIONTWOCURVES" /* ROTATIONTWOCURVES */);
-                var rotationModule = comp.rotationOverLifetime;
-                if (rotationModule.enable) {
-                    var mode = comp.rotationOverLifetime._x.mode;
-                    var separateAxes = rotationModule._separateAxes;
-                    if (separateAxes) {
-                        renderer._addShaderDefine("ROTATIONSEPERATE" /* ROTATIONSEPERATE */);
+            };
+            /**
+             * @internal
+             * @param key
+             */
+            ParticleRenderer.prototype._setVector2v = function (_id, _value) {
+                if (this.batchMaterial) {
+                    this.batchMaterial.setVector2v(_id, _value);
+                }
+            };
+            /**
+             * @internal
+             * @param key
+             */
+            ParticleRenderer.prototype._setVector3 = function (_id, _value) {
+                if (this.batchMaterial) {
+                    this.batchMaterial.setVector3(_id, _value);
+                }
+            };
+            /**
+             * @internal
+             * @param key
+             */
+            ParticleRenderer.prototype._setVector4 = function (_id, _value) {
+                if (this.batchMaterial) {
+                    this.batchMaterial.setVector4(_id, _value);
+                }
+            };
+            /**
+             * @internal
+             * @param key
+             */
+            ParticleRenderer.prototype._setVector3v = function (_id, _value) {
+                if (this.batchMaterial) {
+                    this.batchMaterial.setVector3v(_id, _value);
+                }
+            };
+            /**
+             * @internal
+             * @param key
+             */
+            ParticleRenderer.prototype._setVector4v = function (_id, _value) {
+                if (this.batchMaterial) {
+                    this.batchMaterial.setVector4v(_id, _value);
+                }
+            };
+            Object.defineProperty(ParticleRenderer.prototype, "mesh", {
+                /**
+                 * mesh model
+                 * @version paper 1.0
+                 * @platform Web
+                 * @language en_US
+                 */
+                /**
+                 * 组件挂载的 mesh 模型
+                 * @version paper 1.0
+                 * @platform Web
+                 * @language
+                 */
+                get: function () {
+                    return this._mesh;
+                },
+                set: function (mesh) {
+                    if (this._mesh === mesh) {
+                        return;
                     }
-                    else {
-                        renderer._addShaderDefine("ROTATIONOVERLIFETIME" /* ROTATIONOVERLIFETIME */);
+                    this._mesh = mesh;
+                    paper.EventPool.dispatchEvent("mesh" /* Mesh */, this);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(ParticleRenderer.prototype, "materials", {
+                /**
+                 * material list
+                 * @version paper 1.0
+                 * @platform Web
+                 * @language en_US
+                 */
+                /**
+                 * 材质数组
+                 * @version paper 1.0
+                 * @platform Web
+                 * @language
+                 */
+                get: function () {
+                    return this._materials;
+                },
+                set: function (value) {
+                    if (value === this._materials) {
+                        return;
                     }
-                    switch (mode) {
-                        case 0 /* Constant */: {
-                            renderer._addShaderDefine("ROTATIONCONSTANT" /* ROTATIONCONSTANT */);
-                            //
-                            if (separateAxes) {
-                                renderer._setVector3("u_rotationConstSeprarate" /* ROTATION_CONST_SEPRARATE */, new egret3d.Vector3(rotationModule._x.constant, rotationModule._y.constant, rotationModule._z.constant));
-                            }
-                            else {
-                                renderer._setFloat("u_rotationConst" /* ROTATION_CONST */, rotationModule._z.constant);
-                            }
-                            break;
-                        }
-                        case 3 /* TwoConstants */: {
-                            renderer._addShaderDefine("ROTATIONTWOCONSTANTS" /* ROTATIONTWOCONSTANTS */);
-                            //
-                            if (separateAxes) {
-                                renderer._setVector3("u_rotationConstSeprarate" /* ROTATION_CONST_SEPRARATE */, new egret3d.Vector3(rotationModule._x.constantMin, rotationModule._y.constantMin, rotationModule._z.constantMin));
-                                renderer._setVector3("u_rotationConstMaxSeprarate" /* ROTATION_CONST_MAX_SEPRARATE */, new egret3d.Vector3(rotationModule._x.constantMax, rotationModule._y.constantMax, rotationModule._z.constantMax));
-                            }
-                            else {
-                                renderer._setFloat("u_rotationConst" /* ROTATION_CONST */, rotationModule._z.constantMin);
-                                renderer._setFloat("u_rotationConstMax" /* ROTATION_CONST_MAX */, rotationModule._z.constantMax);
-                            }
-                            break;
-                        }
-                        case 1 /* Curve */: {
-                            renderer._addShaderDefine("ROTATIONCURVE" /* ROTATIONCURVE */);
-                            //
-                            if (separateAxes) {
-                                renderer._setVector2v("u_rotationCurveX[0]" /* ROTATE_CURVE_X */, rotationModule._x.curve.floatValues);
-                                renderer._setVector2v("u_rotationCurveY[0]" /* ROTATE_CURVE_y */, rotationModule._y.curve.floatValues);
-                                renderer._setVector2v("u_rotationCurveZ[0]" /* ROTATE_CURVE_Z */, rotationModule._z.curve.floatValues);
-                            }
-                            else {
-                                renderer._setVector2v("u_rotationCurve[0]" /* ROTATION_CURVE */, rotationModule._z.curve.floatValues);
-                            }
-                            break;
-                        }
-                        case 2 /* TwoCurves */: {
-                            renderer._addShaderDefine("ROTATIONTWOCURVES" /* ROTATIONTWOCURVES */);
-                            //
-                            if (separateAxes) {
-                                renderer._setVector2v("u_rotationCurveX[0]" /* ROTATE_CURVE_X */, rotationModule._x.curveMin.floatValues);
-                                renderer._setVector2v("u_rotationCurveY[0]" /* ROTATE_CURVE_y */, rotationModule._y.curveMin.floatValues);
-                                renderer._setVector2v("u_rotationCurveZ[0]" /* ROTATE_CURVE_Z */, rotationModule._z.curveMin.floatValues);
-                                renderer._setVector2v("u_rotationCurveMaxX[0]" /* ROTATION_CURVE_MAX_X */, rotationModule._x.curveMax.floatValues);
-                                renderer._setVector2v("u_rotationCurveMaxY[0]" /* ROTATION_CURVE_MAX_Y */, rotationModule._y.curveMax.floatValues);
-                                renderer._setVector2v("u_rotationCurveMaxZ[0]" /* ROTATION_CURVE_MAX_Z */, rotationModule._z.curveMax.floatValues);
-                            }
-                            else {
-                                renderer._setVector2v("u_rotationCurve[0]" /* ROTATION_CURVE */, rotationModule._z.curveMin.floatValues);
-                                renderer._setVector2v("u_rotationCurveMax[0]" /* ROTATION_CURVE_MAX */, rotationModule._z.curveMin.floatValues);
-                            }
-                            break;
-                        }
+                    this._materials.length = 0;
+                    for (var _i = 0, value_4 = value; _i < value_4.length; _i++) {
+                        var material = value_4[_i];
+                        this._materials.push(material);
                     }
-                }
-            };
-            ParticleSystem.prototype._onTextureSheetAnimation = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
-                }
-                var renderer = this._groups[0].getComponent(comp.gameObject, 1);
-                renderer._removeShaderDefine("TEXTURESHEETANIMATIONCURVE" /* TEXTURESHEETANIMATIONCURVE */);
-                renderer._removeShaderDefine("TEXTURESHEETANIMATIONTWOCURVE" /* TEXTURESHEETANIMATIONTWOCURVE */);
-                var module = comp.textureSheetAnimation;
-                if (module.enable) {
-                    var type = module._frameOverTime.mode;
-                    switch (type) {
-                        case 1 /* Curve */: {
-                            renderer._addShaderDefine("TEXTURESHEETANIMATIONCURVE" /* TEXTURESHEETANIMATIONCURVE */);
-                            //
-                            renderer._setVector2v("u_uvCurve[0]" /* UV_CURVE */, module._frameOverTime.curve.floatValues);
-                            break;
-                        }
-                        case 2 /* TwoCurves */: {
-                            renderer._addShaderDefine("TEXTURESHEETANIMATIONTWOCURVE" /* TEXTURESHEETANIMATIONTWOCURVE */);
-                            //
-                            renderer._setVector2v("u_uvCurve[0]" /* UV_CURVE */, module._frameOverTime.curveMin.floatValues);
-                            renderer._setVector2v("u_uvCurveMax[0]" /* UV_CURVE_MAX */, module._frameOverTime.curveMax.floatValues);
-                            break;
-                        }
+                    paper.EventPool.dispatchEvent("materials" /* Materials */, this);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(ParticleRenderer.prototype, "renderMode", {
+                get: function () {
+                    return this._renderMode;
+                },
+                set: function (value) {
+                    if (this._renderMode === value) {
+                        return;
                     }
-                    if (type === 1 /* Curve */ || type === 2 /* TwoCurves */) {
-                        renderer._setFloat("u_cycles" /* CYCLES */, module._cycleCount);
-                        renderer._setVector4v("u_subUV" /* SUB_UV */, module.floatValues);
-                    }
-                }
-            };
-            ParticleSystem.prototype._updateDrawCalls = function (gameObject) {
-                if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
-                    return;
-                }
-                var component = this._groups[0].getComponent(gameObject, 0);
-                var renderer = this._groups[0].getComponent(gameObject, 1);
-                //
-                this._onUpdateBatchMesh(component);
-                if (!renderer.batchMesh || !renderer.batchMaterial) {
-                    return;
-                }
-                //
-                this._drawCalls.removeDrawCalls(renderer);
-                //
-                this._drawCalls.renderers.push(renderer);
-                //
-                var subMeshIndex = 0;
-                var primitives = renderer.batchMesh.glTFMesh.primitives;
-                if (primitives.length !== 1) {
-                    console.error("ParticleSystem : materials.length != 1");
-                }
-                if (renderer._renderMode === 5 /* None */) {
-                    console.error("ParticleSystem : error renderMode");
-                }
-                for (var _i = 0, primitives_1 = primitives; _i < primitives_1.length; _i++) {
-                    var primitive = primitives_1[_i];
-                    var drawCall = {
-                        renderer: renderer,
-                        subMeshIndex: subMeshIndex++,
-                        mesh: renderer.batchMesh,
-                        material: renderer.batchMaterial || egret3d.DefaultMaterials.MissingMaterial,
-                        frustumTest: false,
-                        zdist: -1,
-                    };
-                    this._drawCalls.drawCalls.push(drawCall);
-                }
-            };
-            ParticleSystem.prototype.onEnable = function () {
-                var components = this._groups[0].components;
-                for (var i = 0, l = components.length; i < l; i += 2) {
-                    this._updateDrawCalls(components[i].gameObject);
-                }
-            };
-            ParticleSystem.prototype.onAddGameObject = function (gameObject, group) {
-                this._updateDrawCalls(gameObject);
-                var component = group.getComponent(gameObject, 0);
-                if (component.main.playOnAwake) {
-                    component.play();
-                }
-            };
-            ParticleSystem.prototype.onRemoveGameObject = function (gameObject) {
-                this._drawCalls.removeDrawCalls(gameObject.renderer);
-                // component.stop();
-            };
-            ParticleSystem.prototype.onUpdate = function (deltaTime) {
-                var components = this._groups[0].components;
-                for (var i = 0, l = components.length; i < l; i += 2) {
-                    var particleComp = components[i];
-                    particleComp.update(deltaTime);
-                }
-            };
-            ParticleSystem.prototype.onDisable = function () {
-                var components = this._groups[0].components;
-                for (var i = 0, l = components.length; i < l; i += 2) {
-                    var renderer = components[i + 1];
-                    this._drawCalls.removeDrawCalls(renderer);
-                }
-            };
-            return ParticleSystem;
-        }(paper.BaseSystem));
-        particle.ParticleSystem = ParticleSystem;
-        __reflect(ParticleSystem.prototype, "egret3d.particle.ParticleSystem");
+                    var old = this._renderMode;
+                    this._renderMode = value;
+                    paper.EventPool.dispatchEvent("renderMode" /* RenderMode */, this);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], ParticleRenderer.prototype, "_mesh", void 0);
+            __decorate([
+                paper.serializedField
+            ], ParticleRenderer.prototype, "_materials", void 0);
+            __decorate([
+                paper.serializedField
+            ], ParticleRenderer.prototype, "velocityScale", void 0);
+            __decorate([
+                paper.serializedField
+            ], ParticleRenderer.prototype, "_renderMode", void 0);
+            __decorate([
+                paper.serializedField
+            ], ParticleRenderer.prototype, "lengthScale", void 0);
+            __decorate([
+                paper.editor.property(paper.editor.EditType.MESH)
+            ], ParticleRenderer.prototype, "mesh", null);
+            __decorate([
+                paper.editor.property(paper.editor.EditType.ARRAY)
+            ], ParticleRenderer.prototype, "materials", null);
+            ParticleRenderer = __decorate([
+                paper.disallowMultipleComponent
+            ], ParticleRenderer);
+            return ParticleRenderer;
+        }(paper.BaseRenderer));
+        particle.ParticleRenderer = ParticleRenderer;
+        __reflect(ParticleRenderer.prototype, "egret3d.particle.ParticleRenderer");
     })(particle = egret3d.particle || (egret3d.particle = {}));
 })(egret3d || (egret3d = {}));
