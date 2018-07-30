@@ -8,6 +8,8 @@ namespace egret3d {
             //
             InputManager.update(deltaTime);
             //
+            
+            Performance.updateFPS();
             Performance.endCounter(egret3d.PerformanceType.All);
         }
     }

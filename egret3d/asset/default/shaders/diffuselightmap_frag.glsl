@@ -1,3 +1,4 @@
+#include <common>
 uniform sampler2D _MainTex;
 uniform sampler2D _LightmapTex;
 uniform lowp float _LightmapIntensity;

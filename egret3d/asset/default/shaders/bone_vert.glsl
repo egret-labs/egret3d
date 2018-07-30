@@ -1,3 +1,4 @@
+#include <common>
 attribute vec4 _glesVertex;   
 attribute vec4 _glesBlendIndex4;
 attribute vec4 _glesBlendWeight4;

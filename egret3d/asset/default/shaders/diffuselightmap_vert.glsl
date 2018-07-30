@@ -1,3 +1,4 @@
+#include <common>
 attribute vec4 _glesVertex;
 attribute vec4 _glesMultiTexCoord0;
 attribute vec4 _glesMultiTexCoord1;

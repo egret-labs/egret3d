@@ -43,6 +43,11 @@ namespace paper {
         private _isPlaying = false;
         private _isRunning = false;
         private _bindUpdate: FrameRequestCallback = null as any;
+		
+		public _option:egret3d.RequiredRuntimeOptions;//TODO临时
+        public _canvas:HTMLCanvasElement;//TODO临时
+        public _webgl:WebGLRenderingContext;////TODO临时
+
 
         private _update() {
             if (this._isRunning) {
@@ -54,13 +59,17 @@ namespace paper {
             this.systemManager.update();
         }
 
-        public init({ isEditor = false, isPlaying = true, systems = [] as { new(): BaseSystem }[] } = {}) {
+        public init({ isEditor = false, isPlaying = true, systems = [] as { new(): BaseSystem }[], option = {}, canvas = {}, webgl = {}} = {}) {
             for (const systemClass of systems) {
                 this.systemManager.register(systemClass);
             }
 
             this._isEditor = isEditor;
             this._isPlaying = isPlaying;
+
+            this._option = option as egret3d.RequiredRuntimeOptions;
+            this._canvas = canvas as HTMLCanvasElement;
+            this._webgl = webgl as WebGLRenderingContext;
             this.resume();
         }
 

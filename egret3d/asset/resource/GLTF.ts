@@ -1,4 +1,14 @@
 namespace egret3d {
+    export interface GLTFEgret extends gltf.GLTF {
+        extensions?: {
+            paper?: {
+                renderQueue?: number;
+            }
+
+            KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
+        }
+
+    }
     /**
      * @private
      */
@@ -101,6 +111,33 @@ namespace egret3d {
          */
         stringVariable: string;
     }
+
+    export interface GLTFMaterial extends gltf.Material {
+        extensions?: {
+            KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
+            paper: {
+                renderQueue: number;
+            }
+        }
+    }
+
+    export interface GLTFAttribute extends gltf.Attribute {
+        extensions?: {
+            paper: {
+                enable: boolean;
+                location: number;
+            }
+        }
+    }
+    export interface GLTFUniform extends gltf.Uniform {
+        extensions?: {
+            paper: {
+                enable: boolean;
+                location: WebGLUniformLocation;
+                textureUnits?: number[];
+            }
+        }
+    }
     /**
      * glTF 资源。
      */
@@ -198,6 +235,49 @@ namespace egret3d {
 
             return glftAsset;
         }
+        public static createGLTFExtensionsAsset(url: string = ""): GLTFAsset {
+            const glftAsset = new GLTFAsset(url);
+
+            glftAsset.config = {
+                asset: {
+                    version: "2.0"
+                },
+                extensions: { KHR_techniques_webgl: {} },
+                extensionsRequired: ["egret"],
+                extensionsUsed: ["egret"],
+            } as GLTFEgret;
+
+            return glftAsset;
+        }
+
+        public static createTechnique(source: gltf.Technique) {
+            const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } };
+            for (const key in source.attributes) {
+                const attribute = source.attributes[key];
+                target.attributes[key] = { semantic: attribute.semantic, extensions: { paper: { enable: true, location: -1 } } };
+            }
+            for (const key in source.uniforms) {
+                const uniform = source.uniforms[key];
+                const value = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value;
+                target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value, extensions: { paper: { enable: false, location: -1 } } };
+            }
+
+            const states = source.states;
+            const targetStates = target.states;
+            if (states.enable) {
+                targetStates.enable = states.enable.concat();
+            }
+
+            for (const fun in states.functions) {
+                if (Array.isArray(states.functions[fun])) {
+                    targetStates.functions[fun] = states.functions[fun].concat();
+                }
+                else {
+                    targetStates.functions[fun] = states.functions[fun];
+                }
+            }
+            return target;
+        }
         /**
          * Buffer 列表。
          */
@@ -205,11 +285,11 @@ namespace egret3d {
         /**
          * 配置。
          */
-        public config: gltf.GLTF = null as any;
+        public config: GLTFEgret = null as any;
         /**
          * @internal
          */
-        public parse(config: gltf.GLTF, buffers: Uint32Array[]) {
+        public parse(config: GLTFEgret, buffers: Uint32Array[]) {
             this.config = config;
             for (const buffer of buffers) {
                 this.buffers.push(buffer);

@@ -42,10 +42,8 @@ namespace egret3d {
             this.root = new egret.DisplayObjectContainer();
             this.stage.addChild(this.root);
 
-            let context = WebGLKit.webgl;
-
             if (!this.renderer) {
-                this.renderer = egret.web.Renderer.getInstance(context);
+                this.renderer = egret.web.Renderer.getInstance(WebGLCapabilities.webgl);
             }
 
             let stage = this.stage;
@@ -178,13 +176,13 @@ namespace egret3d {
          * 
          */
         public render(context: RenderContext, camera: egret3d.Camera) {
-            let gl = WebGLKit.webgl;
+            let gl = WebGLCapabilities.webgl;
 
             this.renderer.beforeRender();
 
             this.stage.drawToSurface();
 
-            WebGLKit.resetState(); // 清除3D渲染器中的标脏
+            // WebGLRenderUtils.resetState(); // 清除3D渲染器中的标脏
         }
     }
 }

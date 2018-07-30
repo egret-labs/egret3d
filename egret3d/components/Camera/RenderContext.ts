@@ -14,7 +14,6 @@ namespace egret3d {
         /**
          * 
          */
-        public lightmapUV: number = 1;
         public lightCount: number = 0;
         public directLightCount: number = 0;
         public pointLightCount: number = 0;
@@ -22,12 +21,11 @@ namespace egret3d {
         /**
          * 
          */
-        public drawtype: string = "";
-        /**
-         * 
-         */
         public lightmap: Texture | null = null;
+        public lightmapUV: number = 1;
         public lightmapIntensity: number = 1.0;
+        public lightmapOffset: Float32Array | null = null;
+
         public boneData: Float32Array | null = null;
 
         // 15: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
@@ -47,16 +45,15 @@ namespace egret3d {
         public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
 
         //
-        public readonly cameraPosition: Vector3 = new Vector3();
-        public readonly cameraForward: Vector3 = new Vector3();
-        public readonly cameraUp: Vector3 = new Vector3();
+        public readonly cameraPosition: Float32Array = new Float32Array(3);
+        public readonly cameraForward: Float32Array = new Float32Array(3);
+        public readonly cameraUp: Float32Array = new Float32Array(3);
 
 
         // transforms
-        // eyePos: Vector4 = new Vector4();
         public readonly matrix_v: Matrix = new Matrix();
         public readonly matrix_p: Matrix = new Matrix();
-        private readonly matrix_mv: Matrix = new Matrix();
+        public readonly matrix_mv: Matrix = new Matrix();
         public readonly matrix_vp: Matrix = new Matrix();
         //matrixNormal: paper.matrix = new paper.matrix();
 
@@ -64,18 +61,31 @@ namespace egret3d {
          * 
          */
         public drawCall: DrawCall;
-        /**
-         * 
-         */
-        public lightmapOffset: Float32Array | null = null;
 
         public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
-            this.lightmap = texture;
-            this.lightmapUV = uv;
-            this.lightmapOffset = offset;
-            this.lightmapIntensity = intensity;
+            if (this.lightmap !== texture) {
+                this.lightmap = texture;
+                this.version++;
+            }
 
-            this.version++;
+            if (this.lightmapUV !== uv) {
+                this.lightmapUV = uv;
+                this.version++;
+            }
+
+            if (this.lightmapOffset !== offset ||
+                this.lightmapOffset[0] !== offset[0] ||
+                this.lightmapOffset[1] !== offset[1] ||
+                this.lightmapOffset[2] !== offset[2] ||
+                this.lightmapOffset[3] !== offset[3]) {
+                this.lightmapOffset = offset;
+                this.version++;
+            }
+
+            if (this.lightmapIntensity !== intensity) {
+                this.lightmapIntensity = intensity;
+                this.version++;
+            }
         }
 
         public updateCamera(camera: Camera, matrix: Matrix) {
@@ -88,26 +98,36 @@ namespace egret3d {
 
             const worldMatrix = matrix.rawData;
 
-            this.cameraPosition.x = worldMatrix[12];
-            this.cameraPosition.y = worldMatrix[13];
-            this.cameraPosition.z = worldMatrix[14];
+            if (this.cameraPosition[0] !== worldMatrix[12] ||
+                this.cameraPosition[1] !== worldMatrix[13] ||
+                this.cameraPosition[2] !== worldMatrix[14]) {
+                this.cameraPosition[0] = worldMatrix[12];
+                this.cameraPosition[1] = worldMatrix[13];
+                this.cameraPosition[2] = worldMatrix[14];
+                this.version++;
+            }
 
-            this.cameraUp.x = worldMatrix[4];
-            this.cameraUp.y = worldMatrix[5];
-            this.cameraUp.z = worldMatrix[6];
+            if (this.cameraUp[0] !== worldMatrix[4] ||
+                this.cameraUp[1] !== worldMatrix[5] ||
+                this.cameraUp[2] !== worldMatrix[6]) {
+                this.cameraUp[0] = worldMatrix[4];
+                this.cameraUp[1] = worldMatrix[5];
+                this.cameraUp[2] = worldMatrix[6];
+                this.version++;
+            }
 
-            this.cameraForward.x = -worldMatrix[8];
-            this.cameraForward.y = -worldMatrix[9];
-            this.cameraForward.z = -worldMatrix[10];
-
-            this.version++;
+            if (this.cameraForward[0] !== worldMatrix[8] ||
+                this.cameraForward[1] !== worldMatrix[9] ||
+                this.cameraForward[2] !== worldMatrix[10]) {
+                this.cameraForward[0] = -worldMatrix[8];
+                this.cameraForward[1] = -worldMatrix[9];
+                this.cameraForward[2] = -worldMatrix[10];
+                this.version++;
+            }
         }
 
         public updateLights(lights: ReadonlyArray<BaseLight>) {
-            let allLightCount = 0,
-                directLightCount = 0,
-                pointLightCount = 0,
-                spotLightCount = 0;
+            let allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
                 if (light instanceof DirectLight) {
@@ -153,11 +173,7 @@ namespace egret3d {
             this.pointLightCount = pointLightCount;
             this.spotLightCount = spotLightCount;
 
-            let directLightIndex = 0,
-                pointLightIndex = 0,
-                spotLightIndex = 0,
-                index = 0,
-                size = 0;
+            let directLightIndex = 0, pointLightIndex = 0, spotLightIndex = 0, index = 0, size = 0;
 
             for (const light of lights) {
                 let lightArray = this.directLightArray;
@@ -266,26 +282,10 @@ namespace egret3d {
             this.version++;
         }
 
-        updateOverlay() {
-            Matrix.identify(this.matrix_mvp);
-
-            this.version++;
-        }
-
         updateModel(matrix: Matrix) {
             Matrix.copy(matrix, this.matrix_m); // clone matrix because getWorldMatrix returns a reference
             Matrix.multiply(this.matrix_v, this.matrix_m, this.matrix_mv);
-            // paper._Matrix.inverse(this.matrixModelView, this.matrixNormal);
-            // paper.matrixTranspose(this.matrixNormal, this.matrixNormal);
             Matrix.multiply(this.matrix_vp, this.matrix_m, this.matrix_mvp);
-
-            this.version++;
-        }
-
-        // for trial effect
-        updateModeTrail() {
-            Matrix.copy(this.matrix_v, this.matrix_mv);
-            Matrix.copy(this.matrix_vp, this.matrix_mvp);
 
             this.version++;
         }
@@ -301,14 +301,21 @@ namespace egret3d {
         public lightShadowCameraFar: number = 0;
         public updateLightDepth(light: BaseLight) {
             const position = light.gameObject.transform.getPosition();
-            this.lightPosition[0] = position.x;
-            this.lightPosition[1] = position.y;
-            this.lightPosition[2] = position.z;
-            // this.lightPosition[3] = 1.0;
+            if (this.lightPosition[0] !== position.x ||
+                this.lightPosition[1] !== position.y ||
+                this.lightPosition[2] !== position.z) {
+                this.lightPosition[0] = position.x;
+                this.lightPosition[1] = position.y;
+                this.lightPosition[2] = position.z;
+                this.version++;
+            }
 
-            this.lightShadowCameraNear = light.shadowCameraNear;
-            this.lightShadowCameraFar = light.shadowCameraFar;
-
+            if (this.lightShadowCameraNear !== light.shadowCameraNear ||
+                this.lightShadowCameraNear !== light.shadowCameraFar) {
+                this.lightShadowCameraNear = light.shadowCameraNear;
+                this.lightShadowCameraFar = light.shadowCameraFar;
+                this.version++;
+            }
         }
     }
 }

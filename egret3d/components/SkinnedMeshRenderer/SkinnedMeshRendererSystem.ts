@@ -30,20 +30,21 @@ namespace egret3d {
             //
             let subMeshIndex = 0;
             for (const primitive of renderer.mesh.glTFMesh.primitives) {
+                const material = renderer.materials[primitive.material || 0];
                 const drawCall: DrawCall = {
                     renderer: renderer,
 
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
                     material: renderer.materials[primitive.material || 0] || DefaultMaterials.MissingMaterial,
-
+					
                     frustumTest: false,
                     zdist: -1,
 
                     boneData: renderer.boneBuffer,
-
-                    disable: false,
                 };
+
+                material.addDefine("SKINNING");
 
                 this._drawCalls.drawCalls.push(drawCall);
             }

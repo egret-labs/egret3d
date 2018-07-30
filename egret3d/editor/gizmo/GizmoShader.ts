@@ -39,7 +39,7 @@ namespace paper.editor {
         }
 
         public use() {
-            egret3d.WebGLKit.useProgram(this.prg);
+            this.gl.useProgram(this.prg);
         }
 
         public setFloat(name: string, value: number) {

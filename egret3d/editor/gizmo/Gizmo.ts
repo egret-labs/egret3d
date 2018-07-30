@@ -11,7 +11,7 @@ namespace paper.editor {
             this._editorCamera = editorCamera;
             this.camera = this._editorCamera.getComponent(egret3d.Camera);
             this.context = this.camera.context;
-            this.webgl = egret3d.WebGLKit.webgl;
+            this.webgl = egret3d.WebGLCapabilities.webgl;
             this._enabled = true;
             this.initPrg();
             this.lineVertexBuffer = this.webgl.createBuffer();
@@ -88,9 +88,9 @@ namespace paper.editor {
 
         public static DrawLine(posStart: egret3d.Vector3, posEnd: egret3d.Vector3, size?: number, color?: number[]) {
             if (!this._enabled) return;
-            egret3d.WebGLKit.zTest(true);
             let gl = this.webgl;
             let prg = this.glProgram_line;
+            gl.enable(gl.DEPTH_TEST);
 
             this.verticesLine = [
                 posStart.x, posStart.y, posStart.z,
@@ -113,9 +113,9 @@ namespace paper.editor {
 
         public static DrawCoord() {
             if (!this._enabled) return;
-            egret3d.WebGLKit.zTest(true);
             let gl = this.webgl;
             let prg = this.glProgram_line;
+            gl.enable(gl.DEPTH_TEST);
 
             prg.use();
             let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
@@ -257,9 +257,9 @@ namespace paper.editor {
 
         private static DrawCylinder(transform: egret3d.Transform, color: egret3d.Color) {
             if (!this._enabled) return;
-            egret3d.WebGLKit.zTest(true);
             let gl = this.webgl;
             let prg = this.glProgram_line;
+            gl.enable(gl.DEPTH_TEST);
 
             prg.use();
             let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
@@ -286,9 +286,9 @@ namespace paper.editor {
 
         public static DrawCameraSquare(obj: GameObject, color: number[]) {
             if (!this._enabled) return;
-            egret3d.WebGLKit.zTest(true);
             let gl = this.webgl;
             let prg = this.glProgram_line;
+            gl.enable(gl.DEPTH_TEST);
 
             this.getCameraSquare(obj);
 
@@ -398,9 +398,9 @@ namespace paper.editor {
 
         public static DrawArrow(m: egret3d.Matrix, color: number[], fixSize?: boolean) {
             if (!this._enabled) return;
-            egret3d.WebGLKit.zTest(false);
             let gl = this.webgl;
             let prg = this.glProgram_line;
+            gl.disable(gl.DEPTH_TEST);
 
             prg.use();
             let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");

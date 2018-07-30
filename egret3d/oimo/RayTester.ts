@@ -9,7 +9,7 @@ namespace egret3d.oimo {
      * 
      */
     export class RayTester extends paper.Behaviour {
-        private static readonly _material: Material = new Material("line");
+        private static _material: Material;
 
         @paper.serializedField
         public distance: number = 10.0;
@@ -51,7 +51,7 @@ namespace egret3d.oimo {
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
             mesh.uploadSubVertexBuffer(_attributes);
 
-            RayTester._material.setShader(DefaultShaders.LINE);
+            RayTester._material = new Material(egret3d.DefaultShaders.LINE);
             this._meshRender.materials = [RayTester._material];
             this._meshFilter.mesh = mesh;
         }

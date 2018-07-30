@@ -1,9 +1,10 @@
+#include <common>
 attribute vec4 _glesVertex;   
 attribute vec4 _glesBlendIndex4;
 attribute vec4 _glesBlendWeight4;
 attribute vec4 _glesMultiTexCoord0;
-uniform highp mat4 glstate_matrix_mvp;
 uniform highp vec4 glstate_vec4_bones[110];
+uniform highp mat4 glstate_matrix_mvp;
 uniform highp vec4 _MainTex_ST; 
 varying highp vec2 xlv_TEXCOORD0;
 mat4 buildMat4(int index)
@@ -45,9 +46,7 @@ highp vec4 calcVertex(highp vec4 srcVertex,highp vec4 blendIndex,highp vec4 blen
 
 void main()
 {                                               
-    highp vec4 tmpvar_1;                        
-    tmpvar_1.w = 1.0;                           
-    tmpvar_1.xyz = calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz;  
+    highp vec4 tmpvar_1 = vec4(calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz, 1.0);
 			 
     gl_Position = glstate_matrix_mvp *  tmpvar_1;
 

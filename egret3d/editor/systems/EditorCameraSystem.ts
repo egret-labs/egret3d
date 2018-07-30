@@ -30,14 +30,14 @@ namespace paper.editor {
             }
 
             if (camera) {
-                camera.context.drawtype = "";
+                // camera.context.drawtype = "";
                 camera._targetAndViewport(camera.renderTarget, false);
-                this.$renderCamera(camera);
+                // this.$renderCamera(camera); TODO
             }
             else {
-                egret3d.WebGLKit.webgl.clearColor(0, 0, 0, 1);
-                egret3d.WebGLKit.webgl.clearDepth(1.0);
-                egret3d.WebGLKit.webgl.clear(egret3d.WebGLKit.webgl.COLOR_BUFFER_BIT | egret3d.WebGLKit.webgl.DEPTH_BUFFER_BIT);
+                egret3d.WebGLCapabilities.webgl.clearColor(0, 0, 0, 1);
+                egret3d.WebGLCapabilities.webgl.clearDepth(1.0);
+                egret3d.WebGLCapabilities.webgl.clear(egret3d.WebGLCapabilities.webgl.COLOR_BUFFER_BIT | egret3d.WebGLCapabilities.webgl.DEPTH_BUFFER_BIT);
             }
         }
     }

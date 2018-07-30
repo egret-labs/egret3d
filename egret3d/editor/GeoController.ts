@@ -700,8 +700,7 @@ namespace paper.editor {
             mesh.mesh = egret3d.DefaultMeshes.SPHERE;
             let renderer = ball.addComponent(egret3d.MeshRenderer);
 
-            let mat = new egret3d.Material();
-            mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
+            let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
             mat.setVector4v("_Color", [0.8, 0.8, 0.4, 0.1]);
             renderer.materials = [mat];
 
@@ -807,8 +806,7 @@ namespace paper.editor {
             }
             let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
 
-            let mat = new egret3d.Material();
-            mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
+            let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
             mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
             renderer.materials = [mat];
 
