@@ -5,7 +5,7 @@ namespace egret3d {
         defaultScene?: string;
         contentWidth?: number;
         contentHeight?: number;
-		
+
         option?: RequiredRuntimeOptions;
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
@@ -56,7 +56,6 @@ namespace egret3d {
                 particle.ParticleSystem,
                 Egret2DRendererSystem,
                 //
-                LightSystem,
                 CameraSystem,
                 WebGLRenderSystem,
                 //

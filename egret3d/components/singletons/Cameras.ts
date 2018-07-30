@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * 
      */
-    export class Cameras extends paper.SingletonComponent {
+    export class CamerasAndLights extends paper.SingletonComponent {
         public readonly cameras: Camera[] = [];
         public readonly lights: BaseLight[] = [];
 

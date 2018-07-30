@@ -6,34 +6,42 @@ namespace egret3d {
         protected readonly _interests = [
             [
                 { componentClass: Camera }
+            ],
+            [
+                { componentClass: [DirectLight, PointLight, SpotLight] }
             ]
         ];
-        protected readonly _cameras: Cameras = this._globalGameObject.getOrAddComponent(Cameras);
+        protected readonly _camerasAndLights: CamerasAndLights = this._globalGameObject.getOrAddComponent(CamerasAndLights);
 
         public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
             if (group === this._groups[0]) {
-                this._cameras.updateCamera(this._groups[0].gameObjects);
+                this._camerasAndLights.updateCamera(this._groups[0].gameObjects);
             }
             else if (group === this._groups[1]) {
-                this._cameras.updateLight(this._groups[1].gameObjects);
+                this._camerasAndLights.updateLight(this._groups[1].gameObjects);
             }
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
             if (group === this._groups[0]) {
-                this._cameras.updateCamera(this._groups[0].gameObjects);
+                this._camerasAndLights.updateCamera(this._groups[0].gameObjects);
             }
             else if (group === this._groups[1]) {
-                this._cameras.updateLight(this._groups[1].gameObjects);
+                this._camerasAndLights.updateLight(this._groups[1].gameObjects);
             }
         }
 
         public onUpdate(deltaTime: number) {
-            const cameras = this._cameras.cameras;
+            const cameras = this._camerasAndLights.cameras;
             if (cameras.length > 0) {
-                this._cameras.sort();
+                const camerasScene = paper.Application.sceneManager.camerasScene || paper.Application.sceneManager.activeScene;
+                this._camerasAndLights.sort();
 
                 for (const component of cameras) {
+                    if (component.gameObject.scene !== camerasScene) {
+                        continue;
+                    }
+
                     component.update(deltaTime);
                 }
             }

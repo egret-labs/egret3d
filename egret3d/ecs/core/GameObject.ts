@@ -6,8 +6,8 @@ namespace paper {
         /**
          * 创建 GameObject，并添加到当前场景中。
          */
-        public static create(name: string = "NoName", tag: string = DefaultTags.Untagged) {
-            const gameObect = new GameObject(name, tag);
+        public static create(name: string = "NoName", tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
+            const gameObect = new GameObject(name, tag, scene);
             // gameObect.addComponent(egret3d.Transform);
             // gameObect._addToScene(Application.sceneManager.activeScene);
             return gameObect;
@@ -41,7 +41,7 @@ namespace paper {
          */
         @serializedField
         public tag: string = "";
-        
+
         @paper.serializedField
         public assetID?: string = createAssetID();
         /**
@@ -61,7 +61,7 @@ namespace paper {
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @paper.serializedField
-        public extras:{isPrefabRoot?:boolean,prefabRootId?:string} = {};
+        public extras: { isPrefabRoot?: boolean, prefabRootId?: string } = {};
 
         @serializedField
         private _activeSelf: boolean = true;
@@ -78,14 +78,15 @@ namespace paper {
         /**
          * @deprecated
          */
-        public constructor(name: string = "NoName", tag: string = DefaultTags.Untagged) {
+        public constructor(name: string = "NoName", tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
             super();
 
             this.name = name;
             this.tag = tag;
+            //
+            this._addToScene(scene || Application.sceneManager.activeScene);
+            //
             this.addComponent(egret3d.Transform);
-
-            this._addToScene(Application.sceneManager.activeScene);
         }
 
         private _destroy() {

@@ -3,7 +3,7 @@ namespace paper {
     const KEY_ASSET: keyof IAssetReference = "asset";
     const KEY_CLASS: keyof IClass = "class";
     const KEY_DESERIALIZE: keyof ISerializable = "deserialize";
-    const KEY_COMPONENTS: keyof paper.GameObject = "components";
+    const KEY_COMPONENTS: keyof GameObject = "components";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
 
     let _isKeepUUID: boolean = false;
@@ -19,7 +19,7 @@ namespace paper {
         _isKeepUUID = isKeepUUID;
         _deserializedData = { assets: data.assets || [], objects: {}, components: {} };
 
-        const sceneClassName = egret.getQualifiedClassName(paper.Scene);
+        const sceneClassName = egret.getQualifiedClassName(Scene);
         const components: { [key: string]: ISerializedObject } = {};
         let root: T | null = null;
 
@@ -35,10 +35,10 @@ namespace paper {
                 let target: Scene | GameObject;
 
                 if (className === sceneClassName) {
-                    target = new paper.Scene();
+                    target = Application.sceneManager.createScene("");
                 }
                 else {
-                    target = new paper.GameObject();
+                    target = GameObject.create();
 
                     if (KEY_COMPONENTS in source) { // Mapping transfrom components.
                         for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
@@ -130,7 +130,7 @@ namespace paper {
      */
     export function getDeserializedAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent {
         if (KEY_ASSET in source) {
-            return paper.Asset.find(_deserializedData.assets[(source as IAssetReference)[KEY_ASSET]]);
+            return Asset.find(_deserializedData.assets[(source as IAssetReference)[KEY_ASSET]]);
         }
 
         const uuid = (source as IUUID)[KEY_UUID];

@@ -130,6 +130,7 @@ namespace egret3d {
             let allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
+                
                 if (light instanceof DirectLight) {
                     directLightCount++;
                 }

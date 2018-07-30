@@ -27,6 +27,7 @@ namespace paper {
         MainCamera = "MainCamera",
         Player = "Player",
         GameController = "GameController",
+        Global = "global",
     }
     /**
      * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。

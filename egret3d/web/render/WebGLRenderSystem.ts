@@ -15,10 +15,12 @@ namespace egret3d {
             ]
         ];
         private readonly _webgl: WebGLRenderingContext = WebGLCapabilities.webgl;
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
-        private readonly _lightCamera: Camera = this._globalGameObject.getComponent(Camera) || this._globalGameObject.addComponent(Camera);
+        private readonly _camerasAndLights: CamerasAndLights = this._globalGameObject.getOrAddComponent(CamerasAndLights);
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getOrAddComponent(DrawCalls);
+        private readonly _lightCamera: Camera = this._globalGameObject.getOrAddComponent(Camera);
         private readonly _stateEnables: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST];
         //
+        private readonly _filteredLights: BaseLight[] = [];
         private readonly _cacheStateEnable: { [key: string]: boolean } = {};
         private _cacheDefines: string;
         private _cacheContextVersion: number;
@@ -108,7 +110,6 @@ namespace egret3d {
                         webgl.uniformMatrix4fv(location, false, context.matrix_vp.rawData);
                         break;
                     case gltf.UniformSemanticType.MODELVIEWPROJECTION:
-                        var f = new Float32Array(context.matrix_mvp.rawData);
                         webgl.uniformMatrix4fv(location, false, context.matrix_mvp.rawData);
                         break;
                     case gltf.UniformSemanticType._CAMERA_POS:
@@ -441,8 +442,8 @@ namespace egret3d {
                 this._renderCall(camera.context, drawCall);
             }
             // Egret2D渲染不加入DrawCallList的排序
-            const egret2DRenderers = this._groups[1].components as ReadonlyArray<Egret2DRenderer>;
-            for (const egret2DRenderer of egret2DRenderers) {
+            for (const gameObject of this._groups[1].gameObjects) {
+                const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                     egret2DRenderer.render(camera.context, camera);
 
@@ -489,29 +490,37 @@ namespace egret3d {
 
         public onUpdate() {
             // Performance.startCounter("render");
-            const activeScene = paper.Application.sceneManager.activeScene;
-            //Lights
-            const lights = this._groups[2].components as BaseLight[];
+            const cameras = this._camerasAndLights.cameras;
+            const lights = this._camerasAndLights.lights;
+            const filteredLights = this._filteredLights;;
+            const camerasScene = paper.Application.sceneManager.camerasScene || paper.Application.sceneManager.activeScene;
+            const lightsScene = paper.Application.sceneManager.lightsScene || paper.Application.sceneManager.activeScene;
+            // Lights.
+            if (filteredLights.length > 0) {
+                filteredLights.length = 0;
+            }
+
             if (lights.length > 0) {
                 for (const light of lights) {
-                    if (!light.castShadows || light.gameObject.scene !== activeScene) {
+                    if (!light.castShadows || light.gameObject.scene !== lightsScene) {
                         continue;
                     }
 
+                    filteredLights.push(light);
                     this._renderLightShadow(light);
                 }
             }
-            //Cameras
-            const cameras = this._groups[0].components as Camera[];
+            // Cameras.
             if (cameras.length > 0) {
                 for (const camera of cameras) {
-                    if (camera.gameObject.scene !== activeScene) {
+                    if (camera.gameObject.scene !== camerasScene) {
                         continue;
                     }
 
-                    if (lights.length > 0) {
-                        camera.context.updateLights(lights); // TODO 性能优化
+                    if (filteredLights.length > 0) {
+                        camera.context.updateLights(filteredLights); // TODO 性能优化
                     }
+
                     if (camera.postQueues.length === 0) {
                         this._renderCamera(camera);
                     }
