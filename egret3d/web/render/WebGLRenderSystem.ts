@@ -92,7 +92,7 @@ namespace egret3d {
             for (const key in technique.uniforms) {
                 const uniform = technique.uniforms[key];
                 const paperExtension = uniform.extensions.paper;
-                if (!paperExtension.enable) {
+                if (!paperExtension.enable || !uniform.semantic) {
                     continue;
                 }
                 const location = paperExtension.location;
@@ -489,7 +489,7 @@ namespace egret3d {
         }
 
         public onUpdate() {
-            // Performance.startCounter("render");
+            Performance.startCounter("render");
             const cameras = this._camerasAndLights.cameras;
             const lights = this._camerasAndLights.lights;
             const filteredLights = this._filteredLights;;
@@ -538,7 +538,7 @@ namespace egret3d {
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
 
-            // Performance.endCounter("render");
+            Performance.endCounter("render");
         }
     }
 }

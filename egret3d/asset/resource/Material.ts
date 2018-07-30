@@ -96,11 +96,6 @@ namespace egret3d {
             const mat: Material = new Material(this._glTFShader);
 
             mat._glTFMaterial.extensions.paper.renderQueue = this._glTFMaterial.extensions.paper.renderQueue;
-            // for (const key in this._gltfUnifromMap) {
-            //     const value = Array.isArray(this._gltfUnifromMap[key]) ? this._gltfUnifromMap[key].concat() : this._gltfUnifromMap[key];
-            //     mat._gltfUnifromMap[key] = value;
-            // }
-            //
             const unifroms = this._glTFTechnique.uniforms;
             const targetUniforms = mat._glTFTechnique.uniforms;
             for (const key in unifroms) {

@@ -86,8 +86,7 @@ namespace egret3d {
         public initialize() {
             super.initialize();
 
-            this.webgl = paper.Application._webgl;
-            WebGLCapabilities.webgl = this.webgl;
+            this.webgl = WebGLCapabilities.webgl;
             
             const gl = this.webgl;
             this.version = parseFloat(/^WebGL\ ([0-9])/.exec(gl.getParameter(gl.VERSION))[1]);

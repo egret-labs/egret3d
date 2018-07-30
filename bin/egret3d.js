@@ -8619,14 +8619,16 @@ var egret3d;
          * @param b
          */
         DrawCalls.prototype._sortOpaque = function (a, b) {
-            if (a.material.renderQueue !== b.material.renderQueue) {
-                return a.material.renderQueue - b.material.renderQueue;
+            var aMat = a.material;
+            var bMat = b.material;
+            if (aMat.renderQueue !== bMat.renderQueue) {
+                return aMat.renderQueue - bMat.renderQueue;
             }
-            else if (a.material._glTFTechnique.program && b.material._glTFTechnique.program && a.material._glTFTechnique.program.id !== b.material._glTFTechnique.program.id) {
-                return a.material._glTFTechnique.program.id - b.material._glTFTechnique.program.id;
+            else if (aMat._glTFTechnique.program !== bMat._glTFTechnique.program) {
+                return aMat._glTFTechnique.program - bMat._glTFTechnique.program;
             }
-            else if (a.material.id !== b.material.id) {
-                return a.material.id - b.material.id;
+            else if (aMat.id !== bMat.id) {
+                return aMat.id - bMat.id;
             }
             else {
                 return a.zdist - b.zdist;
@@ -15128,8 +15130,7 @@ var egret3d;
         }
         WebGLCapabilities.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            this.webgl = paper.Application._webgl;
-            WebGLCapabilities.webgl = this.webgl;
+            this.webgl = WebGLCapabilities.webgl;
             var gl = this.webgl;
             this.version = parseFloat(/^WebGL\ ([0-9])/.exec(gl.getParameter(gl.VERSION))[1]);
             this.maxPrecision = getMaxPrecision(gl, this.precision);
@@ -15240,11 +15241,6 @@ var egret3d;
         Material.prototype.clone = function () {
             var mat = new Material(this._glTFShader);
             mat._glTFMaterial.extensions.paper.renderQueue = this._glTFMaterial.extensions.paper.renderQueue;
-            // for (const key in this._gltfUnifromMap) {
-            //     const value = Array.isArray(this._gltfUnifromMap[key]) ? this._gltfUnifromMap[key].concat() : this._gltfUnifromMap[key];
-            //     mat._gltfUnifromMap[key] = value;
-            // }
-            //
             var unifroms = this._glTFTechnique.uniforms;
             var targetUniforms = mat._glTFTechnique.uniforms;
             for (var key in unifroms) {
@@ -19413,7 +19409,7 @@ var egret3d;
             for (var key in technique.uniforms) {
                 var uniform = technique.uniforms[key];
                 var paperExtension = uniform.extensions.paper;
-                if (!paperExtension.enable) {
+                if (!paperExtension.enable || !uniform.semantic) {
                     continue;
                 }
                 var location_1 = paperExtension.location;
@@ -19796,7 +19792,7 @@ var egret3d;
             egret3d.GlRenderTarget.useNull(egret3d.WebGLCapabilities.webgl);
         };
         WebGLRenderSystem.prototype.onUpdate = function () {
-            // Performance.startCounter("render");
+            egret3d.Performance.startCounter("render");
             var cameras = this._camerasAndLights.cameras;
             var lights = this._camerasAndLights.lights;
             var filteredLights = this._filteredLights;
@@ -19844,7 +19840,7 @@ var egret3d;
                 webgl.clearDepth(1.0);
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
-            // Performance.endCounter("render");
+            egret3d.Performance.endCounter("render");
         };
         return WebGLRenderSystem;
     }(paper.BaseSystem));
@@ -20641,8 +20637,8 @@ var egret3d;
                 extractTexUnits(program);
             }
             //
-            if (technique.program !== program) {
-                technique.program = program;
+            if (technique.program !== program.id) {
+                technique.program = program.id;
                 allocAttributes(program, technique);
                 allocUniforms(program, technique);
                 allocTexUnits(program, technique);

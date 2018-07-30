@@ -240,8 +240,8 @@ namespace egret3d {
                 extractTexUnits(program);
             }
             //
-            if (technique.program !== program) {
-                technique.program = program;
+            if (technique.program !== program.id) {
+                technique.program = program.id;
                 allocAttributes(program, technique);
                 allocUniforms(program, technique);
                 allocTexUnits(program, technique);

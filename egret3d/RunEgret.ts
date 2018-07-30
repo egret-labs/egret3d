@@ -1082,7 +1082,7 @@ declare namespace gltf {
         /**
          * The index of the program.
          */
-        program?: egret3d.GlProgram;
+        program?: GLTFIndex;
         /**
          * A dictionary object of `Attribute` objects.
          */
