@@ -118,6 +118,30 @@ namespace paper.editor {
     }
 
 
+    export function getEditInfoByPrototype(classInstance: any): PropertyInfo[] {
+        function _getEditInfo(proto: any): PropertyInfo[] {
+            let classInfo;
+            let extendsInfo;
+
+            if (proto && Object.getPrototypeOf(proto)) {
+                classInfo = propertyMap[Object.getPrototypeOf(proto).constructor.name];
+            }
+
+            if (classInfo) {
+                extendsInfo = _getEditInfo(Object.getPrototypeOf(proto));
+                extendsInfo = extendsInfo.concat(classInfo.propertyList);
+                return extendsInfo;
+            }else{
+                if (proto) {
+                    extendsInfo = _getEditInfo(Object.getPrototypeOf(proto));
+                    return extendsInfo;
+                }
+            }
+            return [];
+        }
+        return _getEditInfo(classInstance);
+    }
+
     let extraPropertyMap: { [key: string]: { extends: string, propertyList: PropertyInfo[] } } = {};
     /**
      * 装饰器:属性

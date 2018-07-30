@@ -66,7 +66,7 @@ namespace paper.editor {
         private clearPrefabInfo(obj: GameObject): void {
             if (Editor.editorModel.isPrefabChild(obj)) {
                 obj.prefab = null;
-                obj['prefabEditInfo'] = undefined;
+                obj.extras = {};
                 for (let i: number = 0; i < obj.transform.children.length; i++) {
                     this.clearPrefabInfo(obj.transform.children[i].gameObject);
                 }
