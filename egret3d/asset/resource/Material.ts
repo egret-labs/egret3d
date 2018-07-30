@@ -21,10 +21,10 @@ namespace egret3d {
         private _glTFMaterialIndex: number = 0;
         @paper.serializedField
         private _glTFAsset: GLTFAsset = null as any;
-        public _glTFMaterial: GLTFMaterial = null as any;
         private _cacheDefines: string = '';
         private _textureRef: Texture[] = [];//TODO
         private readonly _defines: Array<string> = new Array();
+        public _glTFMaterial: GLTFMaterial = null as any;
         /**
         * @internal
         */
