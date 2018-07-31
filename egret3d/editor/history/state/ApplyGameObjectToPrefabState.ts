@@ -44,6 +44,7 @@ namespace paper.editor{
                         //set extras
                         obj.extras.isPrefabRoot = false;
                         obj.extras.prefabRootId = parentObj.extras.prefabRootId;
+                        obj.prefab = parentObj.prefab;
                         this.stateData.addList.push(obj.uuid);
                     }
                 }

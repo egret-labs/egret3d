@@ -787,7 +787,7 @@ namespace paper.editor {
             paper = __global['paper'];
             objects = paper.Application.sceneManager.activeScene.gameObjects;   
             for (let i: number = 0; i < objects.length; i++) {
-                if (objects[i].assetID === parentAssetId && objects[i] != gameObj) {
+                if (objects[i].assetID === parentAssetId && objects[i].transform.children.indexOf(gameObj.transform) < 0) {
                     parentIds.push(objects[i].uuid);
                 }
             }
