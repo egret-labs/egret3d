@@ -16969,7 +16969,7 @@ var egret3d;
                 paper.Asset.register(shader);
             }
             {
-                var shader = this._createParticleShaderTemplate("buildin/particles_additive.shader.gltf");
+                var shader = this._createParticleShaderTemplate("buildin/particle_additive.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
                 this._setDepth(technique, true, false);
@@ -16980,7 +16980,7 @@ var egret3d;
                 paper.Asset.register(shader);
             }
             {
-                var shader = this._createParticleShaderTemplate("buildin/particles_additive_premultiply.shader.gltf");
+                var shader = this._createParticleShaderTemplate("buildin/particle_additive_premultiply.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
                 this._setDepth(technique, true, false);
@@ -16991,7 +16991,7 @@ var egret3d;
                 paper.Asset.register(shader);
             }
             {
-                var shader = this._createParticleShaderTemplate("buildin/particles_blend1.shader.gltf");
+                var shader = this._createParticleShaderTemplate("buildin/particle_blend1.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
                 this._setDepth(technique, true, true);
@@ -17002,7 +17002,7 @@ var egret3d;
                 paper.Asset.register(shader);
             }
             {
-                var shader = this._createParticleShaderTemplate("buildin/particles_blend.shader.gltf");
+                var shader = this._createParticleShaderTemplate("buildin/particle_blend.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
                 this._setDepth(technique, true, false);
@@ -17013,7 +17013,7 @@ var egret3d;
                 paper.Asset.register(shader);
             }
             {
-                var shader = this._createParticleShaderTemplate("buildin/particles_blend_premultiply.shader.gltf");
+                var shader = this._createParticleShaderTemplate("buildin/particle_blend_premultiply.shader.gltf");
                 var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
                 this._setDepth(technique, true, false);

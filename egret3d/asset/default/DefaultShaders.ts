@@ -524,7 +524,7 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particles_additive.shader.gltf");
+                const shader = this._createParticleShaderTemplate("buildin/particle_additive.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
                 this._setDepth(technique, true, false);
@@ -537,7 +537,7 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particles_additive_premultiply.shader.gltf");
+                const shader = this._createParticleShaderTemplate("buildin/particle_additive_premultiply.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
                 this._setDepth(technique, true, false);
@@ -550,7 +550,7 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particles_blend1.shader.gltf");
+                const shader = this._createParticleShaderTemplate("buildin/particle_blend1.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
                 this._setDepth(technique, true, true);
@@ -563,7 +563,7 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particles_blend.shader.gltf");
+                const shader = this._createParticleShaderTemplate("buildin/particle_blend.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
                 this._setDepth(technique, true, false);
@@ -576,7 +576,7 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particles_blend_premultiply.shader.gltf");
+                const shader = this._createParticleShaderTemplate("buildin/particle_blend_premultiply.shader.gltf");
                 const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
                 //
                 this._setDepth(technique, true, false);
