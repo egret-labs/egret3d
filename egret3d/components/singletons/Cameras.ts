@@ -2,26 +2,28 @@ namespace egret3d {
     /**
      * 
      */
-    export class Cameras extends paper.SingletonComponent {
+    export class CamerasAndLights extends paper.SingletonComponent {
         public readonly cameras: Camera[] = [];
+        public readonly lights: BaseLight[] = [];
 
         private _sortCamera(a: Camera, b: Camera) {
             return a.order - b.order;
         }
 
-        public update(cameras: ReadonlyArray<Camera>, gameObject: Readonly<paper.GameObject | null>) {
-            const globalGameObject = paper.Application.sceneManager.globalGameObject;
+        public updateCamera(gameObjects: ReadonlyArray<paper.GameObject>) {
             this.cameras.length = 0;
 
-            for (const camera of cameras) {
-                if (camera.gameObject === globalGameObject || camera.gameObject === gameObject) {
-                    continue;
-                }
-
-                this.cameras.push(camera);
+            for (const gameObject of gameObjects) {
+                this.cameras.push(gameObject.getComponent(Camera) as Camera);
             }
+        }
 
-            this.sort();
+        public updateLight(gameObjects: ReadonlyArray<paper.GameObject>) {
+            this.lights.length = 0;
+
+            for (const gameObject of gameObjects) {
+                this.lights.push(gameObject.getComponent(BaseLight as any, true) as BaseLight);
+            }
         }
 
         public sort() {

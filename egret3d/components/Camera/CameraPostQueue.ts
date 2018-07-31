@@ -12,7 +12,7 @@ namespace egret3d {
         /**
          * 
          */
-        render(camera: Camera, renderSystem: CameraSystem): void;
+        render(camera: Camera, renderSystem: WebGLRenderSystem): void;
     }
 
     /**
@@ -27,18 +27,18 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        public render(camera: Camera, renderSystem: CameraSystem) {
-            const webgl = WebGLKit.webgl;
+        public render(camera: Camera, renderSystem: WebGLRenderSystem) {
+            const webgl = WebGLCapabilities.webgl;
             camera._targetAndViewport(this.renderTarget, true); // 最后一个参数true 表示不用camera的clear 配置
-            WebGLKit.zWrite(true);
+            webgl.depthMask(true);
             // webgl.depthMask(true); // 开启 zwrite 以便正常 clear depth
             webgl.clearColor(0, 0, 0, 0);
             webgl.clearDepth(1.0);
             webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
 
-            camera.context.drawtype = "_depth";
+            // camera.context.drawtype = "_depth";
             // camera._renderOnce(scene, context, "_depth");
-            renderSystem.$renderCamera(camera);
+            renderSystem._renderCamera(camera);
             GlRenderTarget.useNull(webgl);
         }
     }
@@ -86,13 +86,13 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        public render(camera: Camera, renderSystem: CameraSystem) {
-            const webgl = WebGLKit.webgl;
+        public render(camera: Camera, renderSystem: WebGLRenderSystem) {
+            const webgl = WebGLCapabilities.webgl;
             camera._targetAndViewport(this.renderTarget, false);
-            camera.context.drawtype = "";
+            // camera.context.drawtype = "";
 
             // camera._renderOnce(scene, context, "");
-            renderSystem.$renderCamera(camera);
+            renderSystem._renderCamera(camera);
             GlRenderTarget.useNull(webgl);
         }
     }

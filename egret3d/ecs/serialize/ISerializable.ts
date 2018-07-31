@@ -65,14 +65,14 @@ namespace paper {
         /**
          * 所有资源。
          */
-        readonly assets: string[];
+        readonly assets?: string[];
         /**
          * 所有实体。（至多含一个场景）
          */
-        readonly objects: ISerializedObject[];
+        readonly objects?: ISerializedObject[];
         /**
          * 所有组件。
          */
-        readonly components: ISerializedObject[];
+        readonly components?: ISerializedObject[];
     }
 }

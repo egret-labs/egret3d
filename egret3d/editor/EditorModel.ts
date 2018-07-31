@@ -757,7 +757,7 @@ namespace paper.editor {
         }
 
         public getRootGameObjectsByPrefab = (prefab: egret3d.Prefab): GameObject[] => {
-            let objects = Application.sceneManager.getActiveScene().gameObjects;
+            let objects = Application.sceneManager.activeScene.gameObjects;
             let result: GameObject[] = [];
             objects.forEach(obj => {
                 if (obj.prefab && obj.prefab.name === prefab.name && Editor.editorModel.isPrefabRoot(obj)) {

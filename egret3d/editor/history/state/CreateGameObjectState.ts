@@ -65,9 +65,7 @@ namespace paper.editor {
                 case 'cube':
                     obj = new paper.GameObject();
                     obj.name = "cube";
-                    let mat = new egret3d.Material();
-                    const shader = egret3d.DefaultShaders.MATERIAL_COLOR;
-                    mat.setShader(shader);
+                    let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
                     mat.setVector4v("_Color", [1, 0, 0, 1]);
                     let mesh = obj.addComponent(egret3d.MeshFilter);
                     mesh.mesh = egret3d.DefaultMeshes.CUBE;

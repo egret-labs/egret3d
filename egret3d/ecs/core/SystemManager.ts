@@ -15,8 +15,7 @@ namespace paper {
         private constructor() {
         }
 
-        private readonly _registerSystems: (BaseSystem | null)[] = [];
-        private readonly _systems: (BaseSystem | null)[] = [];
+        private readonly _systems: BaseSystem[] = [];
         private _currentSystem: BaseSystem = null as any;
 
         private _preRegister(systemClass: { new(): BaseSystem }) {
@@ -52,18 +51,9 @@ namespace paper {
 
             if (index < 0) {
                 this._systems.push(system);
-                this._registerSystems.push(system);
             }
-            else {
-                index = this._registerSystems.indexOf(this._systems[index - 1]);
 
-                if (index < 0) {
-                    this._registerSystems.push(system);
-                }
-                else {
-                    this._systems.splice(index + 1, 0, system);
-                }
-            }
+            system.initialize();
         }
         /**
          * 注册一个系统到管理器中。
@@ -89,18 +79,9 @@ namespace paper {
 
             if (index < 0) {
                 this._systems.unshift(system);
-                this._registerSystems.unshift(system);
             }
-            else {
-                index = this._registerSystems.indexOf(this._systems[index + 1]);
 
-                if (index < 0) {
-                    this._registerSystems.unshift(system); //
-                }
-                else {
-                    this._systems.splice(index, 0, system);
-                }
-            }
+            system.initialize();
         }
         /**
          * 
@@ -142,26 +123,13 @@ namespace paper {
          * @internal
          */
         public update() {
-            if (this._registerSystems.length > 0) {
-                for (const system of this._registerSystems) {
-                    if (system) {
-                        this._currentSystem = system;
-                        system.initialize();
-                    }
+            for (const system of this._systems) {
+                if (system && system.enabled && !system._started) {
+                    this._currentSystem = system;
+                    system._started = true;
+                    system.onStart && system.onStart();
                 }
-
-                for (const system of this._registerSystems) {
-                    if (system && system.enabled && !system._started) {
-                        this._currentSystem = system;
-                        system._started = true;
-                        system.onStart && system.onStart();
-                    }
-                }
-
-                this._registerSystems.length = 0;
             }
-
-            // Enable.
 
             for (const system of this._systems) {
                 if (system) {
@@ -176,13 +144,11 @@ namespace paper {
                     system.lateUpdate();
                 }
             }
-
-            // Disable.
         }
         /**
          * 
          */
-        public get systems(): ReadonlyArray<BaseSystem | null> {
+        public get systems(): ReadonlyArray<BaseSystem> {
             return this._systems;
         }
     }

@@ -37,7 +37,7 @@ namespace egret3d {
      * @platform Web
      * @language
      */
-    @paper.disallowMultipleComponent
+    @paper.disallowMultiple
     export class SkinnedMeshRenderer extends paper.BaseRenderer {
         /**
          * 
@@ -222,19 +222,20 @@ namespace egret3d {
 
             let shaderType = ShaderType.SQT;
 
-            if (this._materials.length > 0) {
-                const materialPasses = this._materials[0].getShader().passes["skin"];
-                if (!materialPasses || materialPasses.length === 0) {
-                    shaderType = ShaderType.Matrix;
-                }
-            }
+            //TODO 不支持 pass结构，这里会有影响?
+            // if (this._materials.length > 0) {
+            //     const materialPasses = this._materials[0].getShader().passes["skin"];
+            //     if (!materialPasses || materialPasses.length === 0) {
+            //         shaderType = ShaderType.Matrix;
+            //     }
+            // }
 
             // TODO _bonePoses 应该是动态长度
             switch (shaderType) {
-                case ShaderType.Matrix:
-                    this._maxBoneCount = 24;
-                    this._skeletonMatrixData = new Float32Array(16 * this._maxBoneCount);
-                    break;
+                // case ShaderType.Matrix:
+                //     this._maxBoneCount = 24;
+                //     this._skeletonMatrixData = new Float32Array(16 * this._maxBoneCount);
+                //     break;
 
                 case ShaderType.SQT:
                     this._maxBoneCount = 55;
@@ -294,7 +295,8 @@ namespace egret3d {
             target._materials.length = materials.length;
             for (let i = 0, l = materials.length; i < l; i++) {
                 const material = materials[i];
-                target._materials[i] = paper.createAssetReference(material);
+                target._materials[i] = material.serialize();
+                // target._materials[i] = paper.createAssetReference(material);
             }
 
             const bones = this._bones;
@@ -325,7 +327,10 @@ namespace egret3d {
             this._materials.length = 0;
             if (element._materials) {
                 for (let i = 0, l = element._materials.length; i < l; i++) {
-                    this._materials.push(paper.getDeserializedAssetOrComponent(element._materials[i]) as Material);
+                    var material = new Material();
+                    material.deserialize(element._materials[i]);
+                    this._materials.push(material);
+                    // this._materials.push(paper.getDeserializedAssetOrComponent(element._materials[i]) as Material);
                 }
             }
 

@@ -8,7 +8,7 @@ namespace egret3d {
 
         static init() {
 
-            const gl = WebGLKit.webgl;
+            const gl = WebGLCapabilities.webgl;
 
             const t1 = new Texture("buildin/white.image.json");
             t1.glTexture = GlTexture2D.createColorTexture(gl, 255, 255, 255);

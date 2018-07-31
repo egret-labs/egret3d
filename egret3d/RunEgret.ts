@@ -6,6 +6,10 @@ namespace egret3d {
         contentWidth?: number;
         contentHeight?: number;
 
+        option?: RequiredRuntimeOptions;
+        canvas?: HTMLCanvasElement;
+        webgl?: WebGLRenderingContext;
+
         isEditor?: boolean;
         isPlaying?: boolean;
         systems?: any[];
@@ -21,11 +25,16 @@ namespace egret3d {
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound'] //TODO:Sound
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas();
-        WebGLKit.init(canvas, requiredOptions);
+        //TODO
+        options.canvas = canvas;
+        options.option = requiredOptions;
+        options.webgl = <WebGLRenderingContext>canvas.getContext('webgl', options) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
+        WebGLCapabilities.webgl = options.webgl;
         InputManager.init(canvas);
         DefaultMeshes.init();
         DefaultTextures.init();
         DefaultShaders.init();
+        // DefaultTechnique.init();
         stage.init(canvas, requiredOptions);
 
         if (!options.systems) {
@@ -42,13 +51,13 @@ namespace egret3d {
                 //
                 paper.LateUpdateSystem,
                 //
-                TrailRendererSystem,
                 MeshRendererSystem,
                 SkinnedMeshRendererSystem,
                 particle.ParticleSystem,
                 Egret2DRendererSystem,
-                LightSystem,
+                //
                 CameraSystem,
+                WebGLRenderSystem,
                 //
                 paper.DisableSystem,
                 EndSystem,
@@ -139,6 +148,153 @@ declare namespace gltf {
         Triangles = 4,
         TrianglesStrip = 5,
         TrianglesFan = 6,
+    }
+
+    /**
+     * The uniform type.  All valid values correspond to WebGL enums.
+     */
+    export const enum UniformType {
+        Int = 5124,
+        FLOAT = 5126,
+        FLOAT_VEC2 = 35664,
+        FLOAT_VEC3 = 35665,
+        FLOAT_VEC4 = 35666,
+        INT_VEC2 = 35667,
+        INT_VEC3 = 35668,
+        INT_VEC4 = 35669,
+        BOOL = 35670,
+        BOOL_VEC2 = 35671,
+        BOOL_VEC3 = 35672,
+        BOOL_VEC4 = 35673,
+        FLOAT_MAT2 = 35674,
+        FLOAT_MAT3 = 35675,
+        FLOAT_MAT4 = 35676,
+        SAMPLER_2D = 35678,
+        SAMPLER_CUBE = 35680,
+    }
+    /**
+     * The shader stage.  All valid values correspond to WebGL enums.
+     */
+    export const enum ShaderStage {
+        FRAGMENT_SHADER = 35632,
+        VERTEX_SHADER = 35633,
+    }
+
+    export const enum EnableState {
+        BLEND = 3042,
+        CULL_FACE = 2884,
+        DEPTH_TEST = 2929,
+        POLYGON_OFFSET_FILL = 32823,
+        SAMPLE_ALPHA_TO_COVERAGE = 32926,
+    }
+
+    export const enum BlendEquation {
+        FUNC_ADD = 32774,
+        FUNC_SUBTRACT = 32778,
+        FUNC_REVERSE_SUBTRACT = 32779,
+    }
+
+    export const enum BlendFactor {
+        ZERO = 0,
+        ONE = 1,
+        SRC_COLOR = 768,
+        ONE_MINUS_SRC_COLOR = 769,
+        DST_COLOR = 774,
+        ONE_MINUS_DST_COLOR = 775,
+        SRC_ALPHA = 770,
+        ONE_MINUS_SRC_ALPHA = 771,
+        DST_ALPHA = 772,
+        ONE_MINUS_DST_ALPHA = 773,
+        CONSTANT_COLOR = 32769,
+        ONE_MINUS_CONSTANT_COLOR = 32770,
+        CONSTANT_ALPHA = 32771,
+        ONE_MINUS_CONSTANT_ALPHA = 32772,
+        SRC_ALPHA_SATURATE = 776,
+    }
+
+    export const enum CullFace {
+        FRONT = 1028,
+        BACK = 1029,
+        FRONT_AND_BACK = 1032,
+    }
+
+    export const enum FrontFace {
+        CW = 2304,
+        CCW = 2305,
+    }
+
+    export const enum DepthFunc {
+        NEVER = 512,
+        LESS = 513,
+        LEQUAL = 515,
+        EQUAL = 514,
+        GREATER = 516,
+        NOTEQUAL = 517,
+        GEQUAL = 518,
+        ALWAYS = 519,
+    }
+
+    export const enum AttributeSemanticType {
+        POSITION = "POSITION",
+        NORMAL = "NORMAL",
+        TEXCOORD_0 = "TEXCOORD_0",
+        TEXCOORD_1 = "TEXCOORD_",
+        COLOR_0 = "COLOR_0",
+        COLOR_1 = "COLOR_1",
+        JOINTS_0 = "JOINTS_0",
+        WEIGHTS_0 = "WEIGHTS_0",
+
+        _CORNER = "CORNER",
+        _START_POSITION = "START_POSITION",
+        _START_VELOCITY = "START_VELOCITY",
+        _START_COLOR = "START_COLOR",
+        _START_SIZE = "START_SIZE",
+        _START_ROTATION = "START_ROTATION",
+        _TIME = "TIME",
+        _RANDOM0 = "RANDOM0",
+        _RANDOM1 = "RANDOM1",
+        _WORLD_POSITION = "WORLD_POSITION",
+        _WORLD_ROTATION = "WORLD_ROTATION",
+    }
+
+    export const enum UniformSemanticType {
+        LOCAL = "LOCAL",
+        MODEL = "MODEL",
+        VIEW = "VIEW",
+        PROJECTION = "PROJECTION",
+        MODELVIEW = "MODELVIEW",
+        MODELVIEWPROJECTION = "MODELVIEWPROJECTION",
+        MODELINVERSE = "MODELINVERSE",
+        VIEWINVERSE = "VIEWINVERSE",
+        PROJECTIONINVERSE = "PROJECTIONINVERSE",
+        MODELVIEWINVERSE = "MODELVIEWINVERSE",
+        MODELVIEWPROJECTIONINVERSE = "MODELVIEWPROJECTIONINVERSE",
+        MODELINVERSETRANSPOSE = "MODELINVERSETRANSPOSE",
+        MODELVIEWINVERSETRANSPOSE = "MODELVIEWINVERSETRANSPOSE",
+        VIEWPORT = "VIEWPORT",
+        JOINTMATRIX = "JOINTMATRIX",
+
+        _VIEWPROJECTION = "_VIEWPROJECTION",
+        _CAMERA_POS = "_CAMERA_POS",
+        _CAMERA_UP = "CAMERA_UP",
+        _CAMERA_FORWARD = "_CAMERA_FORWARD",
+        _DIRECTLIGHTS = "_DIRECTLIGHTS",
+        _POINTLIGHTS = "_POINTLIGHTS",
+        _SPOTLIGHTS = "_SPOTLIGHTS",
+        _LIGHTCOUNT = "_LIGHTCOUNT",
+        _DIRECTIONSHADOWMAT = "_DIRECTIONSHADOWMAT",
+        _SPOTSHADOWMAT = "_SPOTSHADOWMAT",
+        _DIRECTIONSHADOWMAP = "_DIRECTIONSHADOWMAP",
+        _POINTSHADOWMAP = "_POINTSHADOWMAP",
+        _SPOTSHADOWMAP = "_SPOTSHADOWMAP",
+        _LIGHTMAPTEX = "_LIGHTMAPTEX",
+        _LIGHTMAPINTENSITY = "_LIGHTMAPINTENSITY",
+        _LIGHTMAPOFFSET = "_LIGHTMAPOFFSET",
+        _BONESVEC4 = "_BONESVEC4",
+        _LIGHTMAPUV = "_LIGHTMAPUV",
+        _REFERENCEPOSITION = "_REFERENCEPOSITION",
+        _NEARDICTANCE = "_NEARDICTANCE",
+        _FARDISTANCE = "_FARDISTANCE",
     }
 
     export const enum AccessorType {
@@ -855,5 +1011,226 @@ declare namespace gltf {
         extensions?: any;
         extras?: any;
         // [k: string]: any;
+    }
+    /**
+    * A vertex or fragment shader. Exactly one of `uri` or `bufferView` must be provided for the GLSL source.
+    */
+    export interface Shader {
+        /**
+         * The uri of the GLSL source.
+         */
+        uri?: string;
+        /**
+         * The shader stage.
+         */
+        type: 35632 | 35633;
+        /**
+         * The index of the bufferView that contains the GLSL shader source. Use this instead of the shader's uri property.
+         */
+        bufferView?: GLTFIndex;
+        name: any;
+        extensions?: any;
+        extras?: any;
+        [k: string]: any;
+    }
+    /**
+     * An attribute input to a technique and the corresponding semantic.
+     */
+    export interface Attribute {
+        /**
+         * Identifies a mesh attribute semantic.
+         */
+        semantic: string;
+        extensions?: any;
+        extras?: any;
+        [k: string]: any;
+    }
+    export type UniformValue = any;
+    /**
+     * A uniform input to a technique, and an optional semantic and value.
+     */
+    export interface Uniform {
+        /**
+         * When defined, the uniform is an array of count elements of the specified type.  Otherwise, the uniform is not an array.
+         */
+        count?: number;
+        /**
+         * The index of the node whose transform is used as the uniform's value.
+         */
+        node?: GLTFIndex;
+        /**
+         * The uniform type.
+         */
+        type: 5124 | 5126 | 35664 | 35665 | 35666 | 35667 | 35668 | 35669 | 35670 | 35671 | 35672 | 35673 | 35674 | 35675 | 35676 | 35678 | 35680;
+        /**
+         * Identifies a uniform with a well-known meaning.
+         */
+        semantic?: string;
+        /**
+         * The value of the uniform.
+         */
+        value: UniformValue;
+        name?: any;
+        extensions?: any;
+        extras?: any;
+        [k: string]: any;
+    }
+    /**
+     * A template for material appearances.
+     */
+    export interface Technique {
+        /**
+         * The index of the program.
+         */
+        program?: GLTFIndex;
+        /**
+         * A dictionary object of `Attribute` objects.
+         */
+        attributes: {
+            /**
+             * An attribute input to a technique and the corresponding semantic.
+             */
+            [k: string]: egret3d.GLTFAttribute;
+        };
+        /**
+         * A dictionary object of `Uniform` objects.
+         */
+        uniforms: {
+            /**
+             * A uniform input to a technique, and an optional semantic and value.
+             */
+            [k: string]: egret3d.GLTFUniform;
+        };
+        name: any;
+        states: States;
+        extensions?: any;
+        extras?: any;
+        [k: string]: any;
+    }
+    /**
+     * A shader program, including its vertex and fragment shaders.
+     */
+    export interface Program {
+        /**
+         * The index of the fragment shader.
+         */
+        fragmentShader: GLTFIndex;
+        /**
+         * The index of the vertex shader.
+         */
+        vertexShader: GLTFIndex;
+        /**
+         * The names of required WebGL 1.0 extensions.
+         */
+        glExtensions?: string[];
+        name?: any;
+        extensions?: any;
+        extras?: any;
+        [k: string]: any;
+    }
+    export interface KhrTechniqueWebglGlTfExtension {
+        /**
+         * An array of shaders.
+         */
+        shaders: Shader[];
+        /**
+         * An array of techniques.
+         */
+        techniques: Technique[];
+        /**
+         * An array of programs.
+         */
+        programs: Program[];
+    }
+
+    /**
+    * The technique to use for a material and any additional uniform values.
+    */
+    export interface KhrTechniquesWebglMaterialExtension {
+        /**
+         * The index of the technique.
+         */
+        technique: string;
+        /**
+         * Dictionary object of uniform values.
+         */
+        values?: {
+            [k: string]: UniformValue;
+        };
+        [k: string]: any;
+    }
+    /**
+    * The technique to use for a material and any additional uniform values.
+    */
+    export interface KhrBlendMaterialExtension {
+        blendEquation: number[];
+        blendFactors: number[];
+    }
+
+    /**
+ * Arguments for fixed-function rendering state functions other than `enable()`/`disable()`.
+ */
+    export interface Functions {
+        /**
+         * Floating-point values passed to `blendColor()`. [red, green, blue, alpha]
+         */
+        blendColor?: number[];
+        /**
+         * Integer values passed to `blendEquationSeparate()`.
+         */
+        blendEquationSeparate?: (32774 | 32778 | 32779)[];
+        /**
+         * Integer values passed to `blendFuncSeparate()`.
+         */
+        blendFuncSeparate?: (0 | 1 | 768 | 769 | 774 | 775 | 770 | 771 | 772 | 773 | 32769 | 32770 | 32771 | 32772 | 776)[];
+        /**
+         * Boolean values passed to `colorMask()`. [red, green, blue, alpha].
+         */
+        colorMask?: boolean[];
+        /**
+         * Integer value passed to `cullFace()`.
+         */
+        cullFace?: (1028 | 1029 | 1032)[];
+        /**
+         * Integer values passed to `depthFunc()`.
+         */
+        depthFunc?: (512 | 513 | 515 | 514 | 516 | 517 | 518 | 519)[];
+        /**
+         * Boolean value passed to `depthMask()`.
+         */
+        depthMask?: boolean[];
+        /**
+         * Floating-point values passed to `depthRange()`. [zNear, zFar]
+         */
+        depthRange?: number[];
+        /**
+         * Integer value passed to `frontFace()`.
+         */
+        frontFace?: (2304 | 2305)[];
+        /**
+         * Floating-point value passed to `lineWidth()`.
+         */
+        lineWidth?: number[];
+        /**
+         * Floating-point value passed to `polygonOffset()`.  [factor, units]
+         */
+        polygonOffset?: number[];
+        extensions?: any;
+        extras?: any;
+    }
+    /**
+     * Fixed-function rendering states.
+     */
+    export interface States {
+        /**
+         * WebGL states to enable.
+         */
+        enable?: (3042 | 2884 | 2929 | 32823 | 32926)[];
+        /**
+         * Arguments for fixed-function rendering state functions other than `enable()`/`disable()`.
+         */
+        functions?: Functions;
+        extensions?: any;
+        extras?: any;
     }
 }

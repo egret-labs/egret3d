@@ -1,3 +1,4 @@
+#include <common>
 precision mediump float;
 uniform sampler2D _MainTex;
 varying lowp vec4 xlv_COLOR;

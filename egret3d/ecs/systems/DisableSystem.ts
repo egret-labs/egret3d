@@ -8,17 +8,18 @@ namespace paper {
         ];
         private readonly _bufferedComponents: BaseComponent[] = [];
         private readonly _bufferedGameObjects: GameObject[] = [];
-        private readonly _contactColliders: paper.ContactColliders = this._globalGameObject.getComponent(paper.ContactColliders) || this._globalGameObject.addComponent(paper.ContactColliders);
+        private readonly _contactColliders: paper.ContactColliders = this._globalGameObject.getOrAddComponent(paper.ContactColliders);
 
         public onRemoveComponent(component: Behaviour) {
             if (!component) {
                 return;
             }
 
-            if (this._isEditorUpdate()) {
-                if (_executeInEditModeComponents.indexOf(component.constructor as any) < 0) {
-                    return;
-                }
+            if (
+                this._isEditorUpdate() &&
+                !(component.constructor as ComponentClass<Behaviour>).executeInEditMode
+            ) {
+                return;
             }
 
             component.onDisable && component.onDisable();

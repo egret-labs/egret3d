@@ -15,8 +15,18 @@ namespace paper {
         private constructor() {
         }
 
+        /**
+         * 
+         */
+        public camerasScene: Scene | null = null;
+        /**
+         * 
+         */
+        public lightsScene: Scene | null = null;
+
         private readonly _scenes: Scene[] = [];
         private _globalScene: Scene | null = null;
+        private _editorScene: Scene | null = null;
         private _globalGameObject: GameObject | null = null;
         /**
          * @internal
@@ -47,13 +57,13 @@ namespace paper {
          * 加载场景
          * @param resourceName 资源名称
          */
-        public loadScene(resourceName: string, combineStaticObject: boolean = true) {
+        public loadScene(resourceName: string, combineStaticObjects: boolean = true) {
             const rawScene = RES.getRes(resourceName) as RawScene;
             if (rawScene) {
                 const scene = rawScene.createInstance();
 
                 if (scene) {
-                    if (combineStaticObject && Application.isPlaying) {
+                    if (combineStaticObjects && Application.isPlaying) {
                         egret3d.combine(scene.gameObjects);
                     }
 
@@ -67,13 +77,15 @@ namespace paper {
          * 卸载指定场景。
          */
         public unloadScene(scene: Scene) {
-            if (scene === this._globalScene) {
+            if (
+                scene === this._globalScene ||
+                scene === this._editorScene
+            ) {
                 console.warn("Cannot unload global scene.");
                 return;
             }
 
             const index = this._scenes.indexOf(scene);
-
             if (index >= 0) {
                 scene._destroy();
                 this._scenes.splice(index, 1);
@@ -82,12 +94,17 @@ namespace paper {
         /**
          * 卸载所有场景。
          */
-        public unloadAllScene() {
-            for (const scene of this._scenes) {
-                scene._destroy();
-            }
+        public unloadAllScene(excludes?: ReadonlyArray<Scene>) {
+            let i = this._scenes.length;
+            while (i--) {
+                const scene = this._scenes[i];
 
-            this._scenes.length = 0;
+                if (excludes && excludes.indexOf(scene) >= 0) {
+                    continue;
+                }
+
+                this.unloadScene(scene);
+            }
         }
         /**
          * 
@@ -112,25 +129,14 @@ namespace paper {
          */
         public get globalScene() {
             if (!this._globalScene) {
-                this._globalScene = this.createScene("global", false);
+                this._globalScene = this.createScene(DefaultTags.Global, false);
                 this._scenes.pop(); // Remove global scene from scenes.
             }
 
             return this._globalScene;
         }
         /**
-         * 
-         */
-        public get globalGameObject() {
-            if (!this._globalGameObject) {
-                this._globalGameObject = new GameObject("global");
-                this._globalGameObject.dontDestroy = true;
-            }
-
-            return this._globalGameObject;
-        }
-        /**
-         * 获取当前激活的场景
+         * 当前激活的场景。
          */
         public get activeScene() {
             if (this._scenes.length === 0) {
@@ -143,7 +149,8 @@ namespace paper {
             if (
                 this._scenes.length <= 1 ||
                 this._scenes[0] === value ||
-                this._globalScene === value // Cannot active global scene.
+                this._globalScene === value || // Cannot active global scene.
+                this._editorScene === value // Cannot active editor scene.
             ) {
                 return;
             }
@@ -156,6 +163,28 @@ namespace paper {
             else {
                 console.debug("Active scene error.", value.name);
             }
+        }
+        /**
+         * 
+         */
+        public get editorScene() {
+            if (!this._editorScene) {
+                this._editorScene = this.createScene(DefaultTags.EditorOnly, false);
+                this._scenes.pop(); // Remove editor scene from scenes.
+            }
+
+            return this._editorScene;
+        }
+        /**
+         * 
+         */
+        public get globalGameObject() {
+            if (!this._globalGameObject) {
+                this._globalGameObject = GameObject.create(DefaultTags.Global, DefaultTags.Global, this.globalScene);
+                this._globalGameObject.dontDestroy = true;
+            }
+
+            return this._globalGameObject;
         }
 
         /**
