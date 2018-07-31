@@ -5785,7 +5785,6 @@ declare namespace egret3d {
         private _cacheDefines;
         private _textureRef;
         private readonly _defines;
-        _glTFMaterial: GLTFMaterial;
         version: number;
         constructor();
         constructor(shader: GLTFAsset);

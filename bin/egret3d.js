@@ -8754,7 +8754,7 @@ var egret3d;
         CameraSystem.prototype.onUpdate = function (deltaTime) {
             var cameras = this._camerasAndLights.cameras;
             if (cameras.length > 0) {
-                var camerasScene = paper.Application.sceneManager.camerasScene || paper.Application.sceneManager.activeScene;
+                var camerasScene = paper.Application.sceneManager.activeScene;
                 this._camerasAndLights.sort();
                 for (var _i = 0, cameras_1 = cameras; _i < cameras_1.length; _i++) {
                     var component = cameras_1[_i];
@@ -15231,7 +15231,14 @@ var egret3d;
             _this._cacheDefines = '';
             _this._textureRef = []; //TODO
             _this._defines = new Array();
+            /**
+            * @internal
+            */
             _this._glTFMaterial = null;
+            /**
+            * @internal
+            */
+            _this._glTFMaterialPaperExt = null;
             /**
             * @internal
             */
@@ -15269,6 +15276,7 @@ var egret3d;
             this._glTFMaterialIndex = 0;
             this._glTFAsset = null;
             this._glTFMaterial = null;
+            this._glTFMaterialPaperExt = null;
             this._glTFTechnique = null;
             this._glTFShader = null;
             this._cacheDefines = "";
@@ -15347,6 +15355,10 @@ var egret3d;
                 !this._glTFShader.config.extensions.KHR_techniques_webgl ||
                 this._glTFShader.config.extensions.KHR_techniques_webgl.techniques.length <= 0) {
                 console.error("找不到着色器扩展KHR_techniques_webgl");
+            }
+            this._glTFMaterialPaperExt = this._glTFMaterial.extensions.paper;
+            if (this._glTFMaterialPaperExt.renderQueue === -1) {
+                this._glTFMaterialPaperExt.renderQueue = this._glTFShader.config.extensions.paper.renderQueue;
             }
             //
             var template = this._glTFShader.config.extensions.KHR_techniques_webgl.techniques[0];
@@ -15560,11 +15572,10 @@ var egret3d;
         });
         Object.defineProperty(Material.prototype, "renderQueue", {
             get: function () {
-                var renderQueue = this._glTFMaterial.extensions.paper.renderQueue;
-                return renderQueue === -1 ? this._glTFShader.config.extensions.paper.renderQueue : renderQueue;
+                return this._glTFMaterialPaperExt.renderQueue;
             },
             set: function (value) {
-                this._glTFMaterial.extensions.paper.renderQueue = value;
+                this._glTFMaterialPaperExt.renderQueue = value;
             },
             enumerable: true,
             configurable: true

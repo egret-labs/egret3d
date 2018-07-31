@@ -24,7 +24,14 @@ namespace egret3d {
         private _cacheDefines: string = '';
         private _textureRef: Texture[] = [];//TODO
         private readonly _defines: Array<string> = new Array();
+        /**
+        * @internal
+        */
         public _glTFMaterial: GLTFMaterial = null as any;
+        /**
+        * @internal
+        */
+        public _glTFMaterialPaperExt: { renderQueue: number } = null;
         /**
         * @internal
         */
@@ -74,6 +81,7 @@ namespace egret3d {
             this._glTFMaterialIndex = 0;
             this._glTFAsset = null;
             this._glTFMaterial = null;
+            this._glTFMaterialPaperExt = null;
             this._glTFTechnique = null;
             this._glTFShader = null;
 
@@ -169,6 +177,10 @@ namespace egret3d {
                 !this._glTFShader.config.extensions.KHR_techniques_webgl ||
                 this._glTFShader.config.extensions.KHR_techniques_webgl.techniques.length <= 0) {
                 console.error("找不到着色器扩展KHR_techniques_webgl");
+            }
+            this._glTFMaterialPaperExt = this._glTFMaterial.extensions.paper;
+            if(this._glTFMaterialPaperExt.renderQueue === -1){
+                this._glTFMaterialPaperExt.renderQueue = this._glTFShader.config.extensions.paper.renderQueue;
             }
             //
             const template = this._glTFShader.config.extensions.KHR_techniques_webgl.techniques[0];
@@ -396,13 +408,11 @@ namespace egret3d {
         }
 
         public set renderQueue(value: RenderQueue) {
-            this._glTFMaterial.extensions.paper.renderQueue = value;
+            this._glTFMaterialPaperExt.renderQueue = value;
         }
 
         public get renderQueue(): RenderQueue {
-            const renderQueue = this._glTFMaterial.extensions.paper.renderQueue;
-
-            return renderQueue === -1 ? this._glTFShader.config.extensions.paper.renderQueue : renderQueue;
+            return this._glTFMaterialPaperExt.renderQueue;
         }
 
         public get shaderDefine(): string {
