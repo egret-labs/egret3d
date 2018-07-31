@@ -118,8 +118,8 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createAddComponentToPrefab(sourceData: any, instanceDatas: any[]) {
-            const state = AddPrefabComponentState.create(sourceData, instanceDatas);
+        public createAddComponentToPrefab(serializeData: any, gameObjIds: string[]) {
+            const state = AddPrefabComponentState.create(serializeData, gameObjIds);
             this.addState(state);
         }
 
@@ -677,20 +677,24 @@ namespace paper.editor {
             return gameobjects;
         }
 
-        public createApplyPrefabState(applyGameObjectPropertyList: any[], applyComponentPropertyList: any[]) {
+        public createApplyPrefabState(applyGameObjectPropertyList: any[], applyComponentPropertyList: any[],addGameObjectList:any[]) {
             let group: BaseState[] = [];
 
-            //apply gameobject proerty
             for (const p of applyGameObjectPropertyList) {
                 const { gameObjUUid, newValueList, preValueCopylist } = p;
                 let state = ModifyPrefabGameObjectPropertyState.create(gameObjUUid, newValueList, preValueCopylist);
                 group.push(state);
             }
 
-            //apply component property
             for (const p of applyComponentPropertyList) {
                 const { gameObjUUid, componentUUid, newValueList, preValueCopylist } = p;
                 let state = ModifyPrefabComponentPropertyState.create(gameObjUUid, componentUUid, newValueList, preValueCopylist);
+                group.push(state);
+            }
+            
+            for (const p of addGameObjectList) {
+                const {serializeData,parentIds} = p;
+                let state = ApplyGameObjectToPrefabState.create(serializeData,parentIds);
                 group.push(state);
             }
 
@@ -715,6 +719,7 @@ namespace paper.editor {
                 let state = ModifyComponentPropertyState.create(gameObjUUid, componentUUid, newValueList, preValueCopylist);
                 group.push(state);
             }
+
 
             let revertPrefabState = StateGroup.create(group);
             this.addState(revertPrefabState);
@@ -767,6 +772,27 @@ namespace paper.editor {
             return result;
         }
 
+        public getApplyGameobjectParentUUids = (gameObj:GameObject):string[] => {
+            let parentAssetId = gameObj.transform.parent.gameObject.assetID;
+            let parentIds:string[] = [];
 
+            let paper = this.backRunTime.paper;
+            let objects = paper.Application.sceneManager.activeScene.gameObjects;
+            for (let i: number = 0; i < objects.length; i++) {
+                if (objects[i].assetID === parentAssetId) {
+                    parentIds.push(objects[i].uuid);
+                }
+            }
+
+            paper = __global['paper'];
+            objects = paper.Application.sceneManager.activeScene.gameObjects;   
+            for (let i: number = 0; i < objects.length; i++) {
+                if (objects[i].assetID === parentAssetId && objects[i] != gameObj) {
+                    parentIds.push(objects[i].uuid);
+                }
+            }
+
+            return parentIds;
+        }
     }
 }
