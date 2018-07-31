@@ -265,7 +265,7 @@ namespace egret3d.particle {
         direction.y = temp.y * sinValue;
         direction.z = cosValue;
 
-        direction = Vector3.normalize(direction);
+        Vector3.normalize(direction);
         const len = Math.random() * shape.length;
         direction.x = direction.x * len;
         direction.y = direction.y * len;

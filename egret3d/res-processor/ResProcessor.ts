@@ -34,15 +34,10 @@ namespace RES.processor {
         return stack.join("/");
     }
 
-
-    type TempResult = { url: string, hashCode: number, uuid: string }
-
-    function formatUrlAndSort(assets: any[], path: string, ): TempResult[] {
-        let list: TempResult[] = [];
-        list = assets.map(item => {
-            return { url: combinePath(path + "/", item.url), hashCode: item.hashCode, uuid: item.uuid }
+    function formatUrlAndSort(assets: string[], path: string, ) {
+        return assets.map(item => {
+            return item;
         });
-        return list
     }
 
     async function promisify(loader: egret.ImageLoader | egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
@@ -102,10 +97,10 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             let data = await host.load(resource, "json");
-            const url = getUrl(resource);
-            let shader = new egret3d.Shader(url);
+            // const url = getUrl(resource);
+            let shader = new egret3d.Shader(resource.url);
             shader.$parse(data);
-            paper.Asset.register(shader, true);
+            paper.Asset.register(shader);
 
             return shader;
         },
@@ -121,8 +116,6 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             let data = await host.load(resource, "json");
-            let url = getUrl(resource);
-            let filename = getFileName(url);
 
             let _name: string = data["name"];
             let _filterMode: string = data["filterMode"];
@@ -147,18 +140,20 @@ namespace RES.processor {
                 _repeat = true;
             }
 
+            let url = getUrl(resource);
+            let filename = getFileName(resource.url);
             let textureUrl = url.replace(filename, _name);
 
             let loader = new egret.ImageLoader();
             loader.load(textureUrl);
             let image = await promisify(loader, resource);
-            let texture = new egret3d.Texture(url);
+            let texture = new egret3d.Texture(resource.url);
             texture.realName = _name;
             const gl = egret3d.WebGLKit.webgl;
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
             t2d.uploadImage(image.source, _mipmap, _linear, true, _repeat);
             texture.glTexture = t2d;
-            paper.Asset.register(texture, true);
+            paper.Asset.register(texture);
 
             return texture;
         },
@@ -174,16 +169,16 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             let gl = egret3d.WebGLKit.webgl;
-            let url = getUrl(resource);
+            // let url = getUrl(resource);
             let loader = new egret.ImageLoader();
-            loader.load(url);
+            loader.load(resource.url);
             let image = await promisify(loader, resource);
-            let _texture = new egret3d.Texture(url);
+            let _texture = new egret3d.Texture(resource.url);
             let _textureFormat = egret3d.TextureFormatEnum.RGBA;
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
             t2d.uploadImage(image.source, true, true, true, true);
             _texture.glTexture = t2d;
-            paper.Asset.register(_texture, true);
+            paper.Asset.register(_texture);
             return _texture;
         },
 
@@ -198,8 +193,8 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             let json = await host.load(resource, "json") as egret3d.MaterialConfig
-            let url = getUrl(resource);
-            let material = new egret3d.Material(url);
+            // let url = getUrl(resource);
+            let material = new egret3d.Material(resource.url);
 
 
             let shaderName = json.shader
@@ -236,10 +231,10 @@ namespace RES.processor {
                         }
                         break;
                     default:
-                        console.warn(`不支持的 Uniform 参数：${material.url},${i}`);
+                        console.warn(`不支持的 Uniform 参数：${material.name},${i}`);
                 }
             }
-            paper.Asset.register(material, true);
+            paper.Asset.register(material);
             return material;
         },
 
@@ -254,11 +249,11 @@ namespace RES.processor {
 
         async onLoadStart(host, resource) {
             const result = await host.load(resource, "bin");
-            const url = getUrl(resource);
-            const glTF = new egret3d.GLTFAsset(url);
+            // const url = getUrl(resource);
+            const glTF = new egret3d.GLTFAsset(resource.url);
 
             glTF.parseFromBinary(new Uint32Array(result));
-            paper.Asset.register(glTF, true);
+            paper.Asset.register(glTF);
 
             return glTF;
         },
@@ -273,14 +268,13 @@ namespace RES.processor {
     export const PrefabProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            const data: egret3d.PrefabConfig = await host.load(resource, "json");
-            const url = getUrl(resource);
-            const subassets = await loadSubAssets(data, resource)
+            const data: paper.ISerializedData = await host.load(resource, "json");
+            // const url = getUrl(resource);
+            const prefab = new paper.Prefab(resource.url);
 
-
-            const prefab = new egret3d.Prefab(url);
-            prefab.$parse(data, subassets);
-            paper.Asset.register(prefab, true);
+            await loadSubAssets(data, resource)
+            prefab.$parse(data);
+            paper.Asset.register(prefab);
 
             return prefab;
         },
@@ -289,62 +283,38 @@ namespace RES.processor {
             let data = host.get(resource);
             data.dispose();
         }
-
     };
-
-
-    async function loadSubAssets(data: egret3d.PrefabConfig, resource: RES.ResourceInfo) {
-
-        // load ref assets
-        const assets = data.assets;
-        // const result: paper.Asset[] = [];
-        // if (assets) {
-        //     const list = formatUrlAndSort(assets, dirname(resource.url));
-
-        //     for (let item of list) {
-        //         let r = RES.host.resourceConfig["getResource"](item.url);
-        //         if (r) {
-        //             let asset: paper.Asset = await host.load(r);
-        //             asset.hashCode = item.hashCode;
-        //             result.push(asset)
-        //         }
-        //     }
-        // }
-
-        let result: paper.Asset[] = [];
-        const list = formatUrlAndSort(assets, dirname(resource.url));
-        await Promise.all(list.map((async (item) => {
-            let r = RES.host.resourceConfig["getResource"](item.url);
-            if (r) {
-                let asset: paper.Asset = await host.load(r);
-                asset.hashCode = item.hashCode;
-                asset.uuid = item.uuid;
-                result.push(asset)
-            }
-        })))
-
-        return result;
-    }
 
     export const SceneProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            const data = await host.load(resource, "json");
-            const url = getUrl(resource);
-            const subassets = await loadSubAssets(data, resource)
+            const data: paper.ISerializedData = await host.load(resource, "json");
+            // const url = getUrl(resource);
+            const rawScene = new paper.RawScene(resource.url);
 
-            const scene = new egret3d.RawScene(url);
-            scene.$parse(data, subassets);
-            paper.Asset.register(scene, true);
-            return scene;
+            await loadSubAssets(data, resource)
+            rawScene.$parse(data);
+            paper.Asset.register(rawScene);
+
+            return rawScene;
         },
 
         async onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
         }
-
     };
+
+    async function loadSubAssets(data: paper.ISerializedData, resource: RES.ResourceInfo) {
+        // const list = formatUrlAndSort(data.assets, dirname(resource.url));
+
+        await Promise.all(data.assets.map((async (item) => {
+            const r = RES.host.resourceConfig["getResource"](item);
+            if (r) {
+                await host.load(r);
+            }
+        })));
+    }
 
     RES.processor.map("GLVertexShader", GLVertexShaderProcessor);
     RES.processor.map("GLFragmentShader", GLFragmentShaderProcessor);

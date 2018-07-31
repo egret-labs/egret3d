@@ -191,25 +191,6 @@ namespace egret3d.particle {
          */
         public batchMaterial: Material;
 
-        public deserialize(element: any): void {
-            super.deserialize(element);
-
-            if (element._mesh) {
-                this._mesh = new (Mesh as any)(); //
-                (this._mesh as Mesh).deserialize(element._mesh);
-            }
-
-            this.velocityScale = element.velocityScale;
-            this._renderMode = element._renderMode;
-            this.lengthScale = element.lengthScale;
-
-            if (element._materials) {
-                this._materials.length = 0;
-                for (let i = 0, l = element._materials.length; i < l; i++) {
-                    this._materials.push(paper.getDeserializedObject<Material>(element._materials[i]));
-                }
-            }
-        }
         public uninitialize() {
             super.uninitialize();
 

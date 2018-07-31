@@ -2,8 +2,7 @@ namespace egret3d {
     /**
      * TODO 需要完善
      */
-    export class SkinnedMeshRendererSystem extends paper.BaseSystem<SkinnedMeshRenderer> {
-
+    export class SkinnedMeshRendererSystem extends paper.BaseSystem {
         protected readonly _interests = [
             {
                 componentClass: SkinnedMeshRenderer,
@@ -13,10 +12,10 @@ namespace egret3d {
                 ]
             }
         ];
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
+        private readonly _drawCalls: DrawCalls = this._globalGameObject.getOrAddComponent(DrawCalls);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
-            if (!this._enabled || !this._hasGameObject(gameObject)) {
+            if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
                 return;
             }
 
@@ -36,7 +35,7 @@ namespace egret3d {
 
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
-                    material: renderer.materials[primitive.material || 0],
+                    material: renderer.materials[primitive.material || 0] || DefaultMaterials.MissingMaterial,
 
                     frustumTest: false,
                     zdist: -1,
@@ -51,7 +50,8 @@ namespace egret3d {
         }
 
         public onEnable() {
-            for (const renderer of this._components) {
+            const components = this._groups[0].components as ReadonlyArray<SkinnedMeshRenderer>;
+            for (const renderer of components) {
                 this._updateDrawCalls(renderer.gameObject);
             }
         }
@@ -61,10 +61,6 @@ namespace egret3d {
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            if (!this._enabled) {
-                return;
-            }
-
             this._drawCalls.removeDrawCalls(gameObject.renderer as SkinnedMeshRenderer);
         }
 
@@ -73,7 +69,8 @@ namespace egret3d {
         }
 
         public onDisable() {
-            for (const renderer of this._components) {
+            const components = this._groups[0].components as ReadonlyArray<SkinnedMeshRenderer>;
+            for (const renderer of components) {
                 this._drawCalls.removeDrawCalls(renderer);
             }
         }

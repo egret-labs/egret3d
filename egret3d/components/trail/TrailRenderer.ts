@@ -197,7 +197,8 @@ namespace egret3d {
                     let cameraPosition = Vector3.copy(camera.gameObject.transform.getPosition(), helpVec3_1);
                     let cameraDirection = Vector3.subtract(cameraPosition, this._sticks[0].location, helpVec3_2);
                     Vector3.normalize(cameraDirection);
-                    let direction: Vector3 = Vector3.subtract(targetPosition, this._sticks[0].location, helpVec3_3);
+                    let direction: Vector3 = helpVec3_3;
+                    Vector3.subtract(targetPosition, this._sticks[0].location, direction);
                     Vector3.normalize(direction);
                     Vector3.cross(cameraDirection, direction, this._sticks[0].up);
                     Vector3.scale(this._sticks[0].up, this.width);

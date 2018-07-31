@@ -3,6 +3,24 @@ namespace egret3d {
     const _helpVectorA: Vector3 = new Vector3();
 
     export class Matrix {
+        private static readonly _instances: Matrix[] = [];
+
+        public static create() {
+            if (this._instances.length > 0) {
+                return this._instances.pop();
+            }
+
+            return new Matrix();
+        }
+
+        public static release(value: Matrix) {
+            if (this._instances.indexOf(value) >= 0) {
+                return;
+            }
+
+            this._instances.push(value);
+        }
+
         public readonly rawData: Float32Array;
 
         public constructor(rawData: Float32Array | null = null) {

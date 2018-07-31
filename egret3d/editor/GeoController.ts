@@ -188,7 +188,7 @@ namespace paper.editor {
                     egret3d.Vector3.subtract(hit, this._dragOffset, hit);
 
                     if (this._dragMode == DRAG_MODE.BALL) {
-                        this.editorModel.setProperty("position", hit, this.selectedGameObjs[0].transform);
+                        this.editorModel.setTransformProperty("position", hit, this.selectedGameObjs[0].transform);
                         egret3d.Vector3.copy(hit, this._ctrlPos);
                         //this.selectedGameObj.transform.setPosition(hit);
                     } else {
@@ -205,21 +205,23 @@ namespace paper.editor {
                         egret3d.Vector3.scale(worldOffset, cosHit);
                         let position = egret3d.Vector3.add(worldPosition, worldOffset, helpVec3_2);
                         egret3d.Vector3.copy(position, this._ctrlPos);
-                        this.editorModel.setProperty("position", position, this.selectedGameObjs[0].transform);
+                        this.editorModel.setTransformProperty("position", position, this.selectedGameObjs[0].transform);
                     }
                 } else if (this.geoCtrlType == "rotation" && this._dragMode != DRAG_MODE.NONE) {
                     let screenPosition = this.bindMouse.position;
                     let ray = camera.createRayByScreen(screenPosition.x, screenPosition.y);
                     let hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                     egret3d.Vector3.subtract(hit, worldPosition, hit);
-                    let cosHitOffset = egret3d.Vector3.dot(egret3d.Vector3.normalize(hit), egret3d.Vector3.normalize(this._dragOffset));
+
+                    let cosHitOffset = egret3d.Vector3.dot(egret3d.Vector3.normalize(hit) as any, egret3d.Vector3.normalize(this._dragOffset) as any);
+
                     egret3d.Vector3.cross(this._dragOffset, hit, helpVec3_1)
                     let theta = egret3d.Vector3.dot(helpVec3_1, this._dragPlaneNormal) >= 0 ? Math.acos(cosHitOffset) : -Math.acos(cosHitOffset);
                     let cos = Math.cos(theta * 0.5), sin = Math.sin(theta * 0.5);
                     egret3d.Quaternion.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos, helpQuat_1);
                     egret3d.Quaternion.multiply(helpQuat_1, this._initRotation, helpQuat_2);
                     egret3d.Quaternion.copy(helpQuat_2, this._ctrlRot);
-                    this.editorModel.setProperty("rotation", helpQuat_2, this.selectedGameObjs[0].transform);
+                    this.editorModel.setTransformProperty("rotation", helpQuat_2, this.selectedGameObjs[0].transform);
                 } else if (this.geoCtrlType == "scale" && this._dragMode != DRAG_MODE.NONE) {
                     let screenPosition = this.bindMouse.position;
                     let ray = camera.createRayByScreen(screenPosition.x, screenPosition.y);
@@ -248,7 +250,7 @@ namespace paper.editor {
                     let sy = this.yScl.transform.getLocalPosition().y / 2;
                     let sz = this.zScl.transform.getLocalPosition().z / 2;
                     scale = egret3d.Vector3.set(oldScale.x * sx, oldScale.y * sy, oldScale.z * sz, helpVec3_2);
-                    this.editorModel.setProperty("localScale", scale, this.selectedGameObjs[0].transform);
+                    this.editorModel.setTransformProperty("localScale", scale, this.selectedGameObjs[0].transform);
                 }
             }
         }
@@ -356,7 +358,7 @@ namespace paper.editor {
                         let lastPos = obj.transform.getPosition();
                         egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
 
-                        this.editorModel.setProperty("position", this._newPosition, obj.transform);
+                        this.editorModel.setTransformProperty("position", this._newPosition, obj.transform);
                     }
                     egret3d.Vector3.copy(hit, this._dragOffset);
                 } else if (this.geoCtrlType == "rotation" && this._dragMode != DRAG_MODE.NONE) {
@@ -386,8 +388,8 @@ namespace paper.editor {
                         egret3d.Quaternion.transformVector3(helpQuat_1, lastPos, lastPos);
                         egret3d.Vector3.add(lastPos, this._ctrlPos, lastPos);
 
-                        this.editorModel.setProperty("rotation", helpQuat_2, obj.transform);
-                        this.editorModel.setProperty("position", lastPos, obj.transform);
+                        this.editorModel.setTransformProperty("rotation", helpQuat_2, obj.transform);
+                        this.editorModel.setTransformProperty("position", lastPos, obj.transform);
                     }
                     egret3d.Vector3.copy(hit, this._dragOffset);
 
@@ -410,15 +412,16 @@ namespace paper.editor {
                         for (let i = 0; i < len; i++) {
                             let lastSca = this.selectedGameObjs[i].transform.getLocalScale();
                             scale = egret3d.Vector3.set(lastSca.x * s, lastSca.y, lastSca.z, helpVec3_2);
-                            this.editorModel.setProperty("localScale", scale, this.selectedGameObjs[i].transform);
+                            this.editorModel.setTransformProperty("localScale", scale, this.selectedGameObjs[i].transform);
 
                             let pos = this.selectedGameObjs[i].transform.getPosition();
-                            let sub = egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
+                            let sub = helpVec3_2;
+                            egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
                             egret3d.Quaternion.transformVector3(this.controller.transform.getRotation(), right, helpVec3_3);
                             let cos = egret3d.Vector3.dot(sub, helpVec3_3);
                             egret3d.Vector3.scale(helpVec3_3, cos * (s - 1));
                             egret3d.Vector3.add(pos, helpVec3_3, pos);
-                            this.editorModel.setProperty("position", pos, this.selectedGameObjs[i].transform);
+                            this.editorModel.setTransformProperty("position", pos, this.selectedGameObjs[i].transform);
                         }
                     } else if (this._dragMode == DRAG_MODE.ScaY) {
                         worldOffset = egret3d.Quaternion.transformVector3(this._ctrlRot, up, helpVec3_1);
@@ -431,15 +434,16 @@ namespace paper.editor {
                         for (let i = 0; i < len; i++) {
                             let lastSca = this.selectedGameObjs[i].transform.getLocalScale();
                             scale = egret3d.Vector3.set(lastSca.x, lastSca.y * s, lastSca.z, helpVec3_2);
-                            this.editorModel.setProperty("localScale", scale, this.selectedGameObjs[i].transform);
+                            this.editorModel.setTransformProperty("localScale", scale, this.selectedGameObjs[i].transform);
 
                             let pos = this.selectedGameObjs[i].transform.getPosition();
-                            let sub = egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
+                            let sub = helpVec3_2;
+                            egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
                             egret3d.Quaternion.transformVector3(this.controller.transform.getRotation(), up, helpVec3_3);
                             let cos = egret3d.Vector3.dot(sub, helpVec3_3);
                             egret3d.Vector3.scale(helpVec3_3, cos * (s - 1));
                             egret3d.Vector3.add(pos, helpVec3_3, pos);
-                            this.editorModel.setProperty("position", pos, this.selectedGameObjs[i].transform);
+                            this.editorModel.setTransformProperty("position", pos, this.selectedGameObjs[i].transform);
                         }
                     } else if (this._dragMode == DRAG_MODE.ScaZ) {
                         worldOffset = egret3d.Quaternion.transformVector3(this._ctrlRot, forward, helpVec3_1);
@@ -452,15 +456,16 @@ namespace paper.editor {
                         for (let i = 0; i < len; i++) {
                             let lastSca = this.selectedGameObjs[i].transform.getLocalScale();
                             scale = egret3d.Vector3.set(lastSca.x, lastSca.y, lastSca.z * s, helpVec3_2);
-                            this.editorModel.setProperty("localScale", scale, this.selectedGameObjs[i].transform);
+                            this.editorModel.setTransformProperty("localScale", scale, this.selectedGameObjs[i].transform);
 
                             let pos = this.selectedGameObjs[i].transform.getPosition();
-                            let sub = egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
+                            let sub = helpVec3_2;
+                            egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
                             egret3d.Quaternion.transformVector3(this.controller.transform.getRotation(), forward, helpVec3_3);
                             let cos = egret3d.Vector3.dot(sub, helpVec3_3);
                             egret3d.Vector3.scale(helpVec3_3, cos * (s - 1));
                             egret3d.Vector3.add(pos, helpVec3_3, pos);
-                            this.editorModel.setProperty("position", pos, this.selectedGameObjs[i].transform);
+                            this.editorModel.setTransformProperty("position", pos, this.selectedGameObjs[i].transform);
                         }
                     }
 
@@ -494,21 +499,11 @@ namespace paper.editor {
 
             // 复制粘贴
             if (this.bindKeyboard.isPressed('CONTROL') && this.bindKeyboard.wasPressed('C')) {
-                let clipboard = __global.runtimeModule.getClipborad();
-                let content: any[] = [];
-                for (let i = 0, l = this.selectedGameObjs.length; i < l; i++) {
-                    content.push({
-                        type: "gameObject",
-                        uuid: this.selectedGameObjs[i].uuid
-                    })
-                }
-                let str = JSON.stringify(content);
-                clipboard.writeText(str, "paper");
-                console.log("copy");
+                this.editorModel.copy(this.selectedGameObjs);
             }
 
             if (this.bindKeyboard.isPressed('CONTROL') && this.bindKeyboard.wasPressed('V')) {
-                let parent = this.selectedGameObjs.length > 0 ? this.selectedGameObjs[0].transform.parent : null;
+                let parent = this.selectedGameObjs.length > 0 ? this.selectedGameObjs[0].transform.parent.gameObject : null;
                 this.editorModel.pasteGameObject(parent);
             }
 
