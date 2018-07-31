@@ -1,4 +1,5 @@
 //inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.vs
+#include <common>
 #if defined(SPHERHBILLBOARD)||defined(STRETCHEDBILLBOARD)||defined(HORIZONTALBILLBOARD)||defined(VERTICALBILLBOARD)
 	attribute vec2 _glesCorner;
 #endif
@@ -36,9 +37,7 @@ void main()
 	#include <particle_affector>
 	gl_Position=glstate_matrix_vp*vec4(center,1.0);
 	v_color = computeColor(_startColor, t);
-	#ifdef DIFFUSEMAP
-		v_texcoord =computeUV(_glesMultiTexCoord0, t);
-	#endif
+	v_texcoord =computeUV(_glesMultiTexCoord0, t);
 	v_discard=0.0;
 }
 

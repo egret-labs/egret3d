@@ -54,6 +54,8 @@ namespace paper.editor {
             this._addEventListener();
             this.bindMouse = egret3d.InputManager.mouse;
             this.bindKeyboard = egret3d.InputManager.keyboard;
+
+            this._cameraObject = Application.sceneManager.editorScene.find("EditorCamera");
         }
 
         private bindMouse: egret3d.MouseDevice;
@@ -105,16 +107,16 @@ namespace paper.editor {
 
         private _dragPlanePoint: egret3d.Vector3 = new egret3d.Vector3();
         private _dragPlaneNormal: egret3d.Vector3 = new egret3d.Vector3();
-        public cameraScript: paper.editor.EditorCameraScript;
 
         private _initRotation = new egret3d.Quaternion();
         private _oldLocalScale = new egret3d.Vector3();
 
+        private _cameraObject: paper.GameObject;
+
         private updateInLocalMode() {
             let len = this.selectedGameObjs.length;
             if (len <= 0) return;
-            let cameraObject = this.cameraScript.gameObject;
-            let camera = cameraObject.getComponent(egret3d.Camera);
+            let camera = this._cameraObject.getComponent(egret3d.Camera);
             let worldRotation = this.selectedGameObjs[0].transform.getRotation();
             let worldPosition = this.selectedGameObjs[0].transform.getPosition();
             if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
@@ -130,7 +132,7 @@ namespace paper.editor {
 
                             if (picked == this.ball) {
                                 this._dragMode = DRAG_MODE.BALL;
-                                cameraObject.transform.getForward(this._dragPlaneNormal);
+                                this._cameraObject.transform.getForward(this._dragPlaneNormal);
                             } else if (picked == this.xAxis) {
                                 this._dragMode = DRAG_MODE.X;
                                 egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
@@ -257,8 +259,7 @@ namespace paper.editor {
         private updateInWorldMode() {
             let len = this.selectedGameObjs.length;
             if (len <= 0) return;
-            let cameraObject = this.cameraScript.gameObject;
-            let camera = cameraObject.getComponent(egret3d.Camera);
+            let camera = this._cameraObject.getComponent(egret3d.Camera);
 
             if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                 let ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
@@ -281,7 +282,7 @@ namespace paper.editor {
 
                             if (picked == this.ball) {
                                 this._dragMode = DRAG_MODE.BALL;
-                                cameraObject.transform.getForward(this._dragPlaneNormal);
+                                this._cameraObject.transform.getForward(this._dragPlaneNormal);
                             } else if (picked == this.xAxis) {
                                 this._dragMode = DRAG_MODE.X;
                                 egret3d.Vector3.copy(up, this._dragPlaneNormal);
@@ -700,8 +701,7 @@ namespace paper.editor {
             mesh.mesh = egret3d.DefaultMeshes.SPHERE;
             let renderer = ball.addComponent(egret3d.MeshRenderer);
 
-            let mat = new egret3d.Material();
-            mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
+            let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
             mat.setVector4v("_Color", [0.8, 0.8, 0.4, 0.1]);
             renderer.materials = [mat];
 
@@ -807,8 +807,7 @@ namespace paper.editor {
             }
             let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
 
-            let mat = new egret3d.Material();
-            mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
+            let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
             mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
             renderer.materials = [mat];
 

@@ -16,7 +16,7 @@ namespace paper {
         /**
          * @deprecated
          */
-        private static readonly _assets: Asset[] = [];
+        private static readonly _assets: { [key: string]: Asset } = {};
         /**
          * @deprecated
          */

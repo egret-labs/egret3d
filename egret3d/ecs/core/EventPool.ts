@@ -37,7 +37,7 @@ namespace paper {
         /**
          * 添加事件监听
          */
-        export function addEventListener<T extends BaseComponent>(eventType: string, componentClass: { new(): T }, callback: EventListener<T>) {
+        export function addEventListener<T extends BaseComponent>(eventType: string, componentClass: ComponentClass<T>, callback: EventListener<T>) {
             const componentType = egret.getQualifiedClassName(componentClass);
             const componentListeners = componentType in _componentListeners ? _componentListeners[componentType] : _componentListeners[componentType] = {};
             const eventListeners = eventType in componentListeners ? componentListeners[eventType] : componentListeners[eventType] = [];
@@ -47,7 +47,7 @@ namespace paper {
         /**
          * 移除事件监听
          */
-        export function removeEventListener<T extends BaseComponent>(eventType: string, componentClass: { new(): T }, callback: EventListener<T>) {
+        export function removeEventListener<T extends BaseComponent>(eventType: string, componentClass: ComponentClass<T>, callback: EventListener<T>) {
             const componentType = egret.getQualifiedClassName(componentClass);
             if (componentType in _componentListeners) {
                 const componentListeners = _componentListeners[componentType];
@@ -66,7 +66,7 @@ namespace paper {
         /**
          * 移除所有该类型的事件监听
          */
-        export function removeAllEventListener<T extends BaseComponent>(eventType: string, componentClass: { new(): T }) {
+        export function removeAllEventListener<T extends BaseComponent>(eventType: string, componentClass: ComponentClass<T>) {
             const componentType = egret.getQualifiedClassName(componentClass);
             if (componentType in _componentListeners) {
                 const componentListeners = _componentListeners[componentType];

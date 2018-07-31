@@ -7,7 +7,7 @@ namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    @paper.disallowMultipleComponent
+    @paper.disallowMultiple
     export class Egret2DRenderer extends paper.BaseRenderer {
         private renderer: egret.web.Renderer;
 
@@ -16,16 +16,6 @@ namespace egret3d {
          * 是否使用视锥剔除
          */
         frustumTest: boolean = false;
-
-        constructor() {
-            super();
-
-            this.stage = new egret.Stage();
-            this.stage.maxTouches = 98;
-            this.root = new egret.DisplayObjectContainer();
-            this.stage.addChild(this.root);
-        }
-
 
 
         public stage: egret.Stage;
@@ -47,10 +37,13 @@ namespace egret3d {
         public initialize() {
             super.initialize();
 
-            let context = WebGLKit.webgl;
+            this.stage = new egret.Stage();
+            this.stage.maxTouches = 98;
+            this.root = new egret.DisplayObjectContainer();
+            this.stage.addChild(this.root);
 
             if (!this.renderer) {
-                this.renderer = egret.web.Renderer.getInstance(context);
+                this.renderer = egret.web.Renderer.getInstance(WebGLCapabilities.webgl);
             }
 
             let stage = this.stage;
@@ -183,13 +176,13 @@ namespace egret3d {
          * 
          */
         public render(context: RenderContext, camera: egret3d.Camera) {
-            let gl = WebGLKit.webgl;
+            let gl = WebGLCapabilities.webgl;
 
             this.renderer.beforeRender();
 
             this.stage.drawToSurface();
 
-            WebGLKit.resetState(); // 清除3D渲染器中的标脏
+            // WebGLRenderUtils.resetState(); // 清除3D渲染器中的标脏
         }
     }
 }

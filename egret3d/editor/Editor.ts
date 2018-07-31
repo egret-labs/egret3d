@@ -37,78 +37,74 @@ namespace paper.editor {
                     //
                     paper.LateUpdateSystem,
                     //
-                    egret3d.TrailRendererSystem,
                     egret3d.MeshRendererSystem,
                     egret3d.SkinnedMeshRendererSystem,
                     egret3d.particle.ParticleSystem,
                     egret3d.Egret2DRendererSystem,
-                    egret3d.LightSystem,
-                    EditorCameraSystem,
+                    //
+                    egret3d.CameraSystem,
+                    egret3d.WebGLRenderSystem,
                     //
                     paper.DisableSystem,
                     egret3d.EndSystem
                 ]
             });
+
+            // 摄像机激活场景设置为编辑场景。
+            Application.sceneManager.camerasScene = Application.sceneManager.editorScene;
+            // 创建编辑器的相机。
+            this._createEditCamera();
+            //
+            Gizmo.Enabled();
         }
         /**切换场景 */
         public static switchScene(url: string) {
             Application.sceneManager.unloadAllScene();
-            Application.callLater(() => {
+            // Application.callLater(() => {
                 this.loadEditScene(url).then(() => {
                     this.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_SCENE, url));
                 });
-            });
+            // });
         }
 
-        private static geoController: GeoController;
         private static async loadEditScene(url: string) {
-            //由于新引擎场景加载方式存在问题，这里预先载入一下场景资源
             await RES.getResAsync(url);
-            this.loadScene(url, true, true);
-
-            let camera = this.createEditCamera();
-            // 开启几何画板
-            Gizmo.Enabled(camera);
-
-            let script = camera.addComponent(EditorCameraScript);
-            script.editorModel = this.editorModel;
-            script.moveSpeed = 10;
-            script.rotateSpeed = 0.5;
-
-            this.geoController = new GeoController(this.editorModel);
-            this.geoController.cameraScript = script;
-
-            let pickScript = camera.addComponent(PickGameObjectScript);
-            pickScript.editorModel = this.editorModel;
+            this.loadScene(url, true);
         }
         //此方法是对Application.sceneManager.loadScene的一个重写，增加keepUUID参数
-        private static loadScene(resourceName: string, combineStaticObject: boolean = true, keepUUID: boolean = false) {
+        private static loadScene(resourceName: string, keepUUID: boolean = false) {
             const rawScene = RES.getRes(resourceName) as RawScene;
             if (rawScene) {
                 const scene = rawScene.createInstance(keepUUID);
-
-                if (scene) {
-                    if (combineStaticObject && Application.isPlaying) {
-                        egret3d.combine(scene.gameObjects);
-                    }
-
-                    return scene;
-                }
+                return scene;
             }
+
             return null;
         }
-        private static createEditCamera(): GameObject {
-            let cameraObject = new GameObject();
-            cameraObject.name = "EditorCamera";
-            cameraObject.tag = "EditorCamera";
 
-            let camera = cameraObject.addComponent(egret3d.Camera);
-            camera.near = 0.1;
-            camera.far = 100;
-            camera.backgroundColor.set(0.13, 0.28, 0.51, 1);
-            cameraObject.transform.setLocalPosition(0, 10, -10);
-            cameraObject.transform.lookAt(new egret3d.Vector3(0, 0, 0));
-            return cameraObject;
+        private static _createEditCamera() {
+            const cameraObject = GameObject.create("EditorCamera", DefaultTags.EditorOnly, Application.sceneManager.editorScene);
+
+            {
+                const camera = cameraObject.addComponent(egret3d.Camera);
+                camera.near = 0.1;
+                camera.far = 100.0;
+                camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
+                cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
+                cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
+            }
+
+            {
+                const script = cameraObject.addComponent(EditorCameraScript);
+                script.editorModel = this.editorModel;
+                script.moveSpeed = 10;
+                script.rotateSpeed = 0.5;
+            }
+
+            {
+                const script = cameraObject.addComponent(PickGameObjectScript);
+                script.editorModel = this.editorModel;
+            }
         }
 
         public static undo() {
@@ -123,35 +119,6 @@ namespace paper.editor {
         public static serializeHistory(): string {
             const historyData = this.history.serialize();
             return JSON.stringify(historyData);
-        }
-
-
-        /**
-         * 序列化场景
-         */
-        public static serializeActiveScene(): string {
-            let scene = Application.sceneManager.activeScene;
-            let camera = GameObject.findWithTag("EditorCamera");
-            if (camera) {
-                scene._removeGameObject(camera);
-            }
-            let len = this.geoController.controllerPool.length;
-            if (len > 0) {
-                for (let i = 0; i < len; i++) {
-                    scene._removeGameObject(this.geoController.controllerPool[i]);
-                }
-            }
-            let data = serialize(scene);
-            if (len > 0) {
-                for (let i = 0; i < len; i++) {
-                    scene._addGameObject(this.geoController.controllerPool[i]);
-                }
-            }
-            if (camera) {
-                scene._addGameObject(camera);
-            }
-            let jsonData = JSON.stringify(data);
-            return jsonData;
         }
     }
 }

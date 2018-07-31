@@ -115,9 +115,7 @@ uniform int u_simulationSpace;
 
 varying float v_discard;
 varying vec4 v_color;
-#ifdef DIFFUSEMAP
-	varying vec2 v_texcoord;
-#endif
+varying vec2 v_texcoord;
 #ifdef RENDERMESH
 	varying vec4 v_mesh_color;
 #endif

@@ -8,9 +8,8 @@ namespace egret3d {
         ];
 
         public onUpdate(deltaTime: number) {
-            const components = this._groups[0].components as ReadonlyArray<Egret2DRenderer>;
-            for (const component of components) {
-                component.update(deltaTime);
+            for (const gameObject of this._groups[0].gameObjects) {
+                (gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer).update(deltaTime);
             }
         }
     }

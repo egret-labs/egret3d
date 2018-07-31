@@ -82,7 +82,7 @@ namespace egret3d.oimo {
         }
 
         public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
-            const rigidbody = group.getComponent(gameObject, 0) as Rigidbody;
+            const rigidbody = gameObject.getComponent(Rigidbody) as Rigidbody;
 
             for (const shape of gameObject.getComponents(Collider as any, true) as Collider[]) {
                 if (!(shape.oimoShape as any)._rigidBody) {
@@ -107,7 +107,7 @@ namespace egret3d.oimo {
 
             if (component instanceof Collider) {
                 if (!(component.oimoShape as any)._rigidBody) {
-                    const rigidbody = group.getComponent(component.gameObject, 0) as Rigidbody;
+                    const rigidbody = component.gameObject.getComponent(Rigidbody) as Rigidbody;
                     rigidbody.oimoRigidbody.addShape(component.oimoShape);
                     // rigidbody._updateMass(rigidbody.oimoRigidbody);
                 }
@@ -232,7 +232,7 @@ namespace egret3d.oimo {
             }
 
             if (component instanceof Collider) {
-                const rigidbody = group.getComponent(component.gameObject, 0) as Rigidbody;
+                const rigidbody = component.gameObject.getComponent(Rigidbody) as Rigidbody;
                 rigidbody.oimoRigidbody.removeShape(component.oimoShape);
                 // rigidbody._updateMass(rigidbody.oimoRigidbody);
             }
@@ -242,7 +242,7 @@ namespace egret3d.oimo {
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
-            const rigidbody = group.getComponent(gameObject, 0) as Rigidbody;
+            const rigidbody = gameObject.getComponent(Rigidbody) as Rigidbody;
 
             for (const joint of gameObject.getComponents(Joint as any, true) as Joint<any>[]) {
                 this._oimoWorld.removeJoint(joint.oimoJoint);

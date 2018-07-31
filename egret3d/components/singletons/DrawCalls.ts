@@ -16,7 +16,7 @@ namespace egret3d {
 
         boneData?: Float32Array,
 
-        disable: boolean;
+        shadow?: Material,
     };
     /**
      * 
@@ -30,9 +30,46 @@ namespace egret3d {
          * 所有的 draw call 列表。
          */
         public readonly drawCalls: DrawCall[] = [];
-        // public readonly finalDrawCalls: DrawCall[] = [];//TODO,裁切开启后，放到这里，排序会少算一些
+        /**
+         * 非透明列表
+         */
+        public readonly opaqueCalls: DrawCall[] = [];
+        /**
+         * 透明列表
+         */
+        public readonly transparentCalls: DrawCall[] = [];
 
-        private _sort(a: DrawCall, b: DrawCall) {
+        /**
+         * 阴影列表
+         */
+        public readonly shadowCalls: DrawCall[] = [];
+        /**
+         * 所有非透明的, 按照从近到远排序
+         * @param a 
+         * @param b 
+         */
+        private _sortOpaque(a: DrawCall, b: DrawCall) {
+            const aMat = a.material;
+            const bMat = b.material;
+            if (aMat.renderQueue !== bMat.renderQueue) {
+                return aMat.renderQueue - bMat.renderQueue;
+            }
+            else if (aMat._glTFTechnique.program !== bMat._glTFTechnique.program) {
+                return aMat._glTFTechnique.program - bMat._glTFTechnique.program;
+            }
+            else if (aMat.id !== bMat.id) {
+                return aMat.id - bMat.id;
+            }
+            else {
+                return a.zdist - b.zdist;
+            }
+        }
+        /**
+         * 所有透明的，按照从远到近排序
+         * @param a 
+         * @param b 
+         */
+        private _sortTransparent(a: DrawCall, b: DrawCall) {
             if (a.material.renderQueue === b.material.renderQueue) {
                 return b.zdist - a.zdist;
             }
@@ -40,29 +77,42 @@ namespace egret3d {
                 return a.material.renderQueue - b.material.renderQueue;
             }
         }
+        public shadowFrustumCulling(camera: Camera) {
+            this.shadowCalls.length = 0;
+            for (const drawCall of this.drawCalls) {
+                const drawTarget = drawCall.renderer.gameObject;
+                const visible = (camera.cullingMask & drawTarget.layer) !== 0;
+                if (visible && drawCall.renderer.castShadows) {
+                    if (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.transform))) {
+                        this.shadowCalls.push(drawCall);
+                    }
+                }
+            }
+        }
         public sortAfterFrustumCulling(camera: Camera) {
-            // this.finalDrawCalls.length = 0;
+            //每次根据视锥裁切填充TODO，放到StartSystem
+            this.opaqueCalls.length = 0;
+            this.transparentCalls.length = 0;
             const cameraPos = camera.gameObject.transform.getPosition();
             //
             for (const drawCall of this.drawCalls) {
-                drawCall.disable = (drawCall.frustumTest && !camera.testFrustumCulling(drawCall.renderer.gameObject.transform));
-                if (!drawCall.disable) {
-                    if (drawCall.material.renderQueue >= RenderQueue.Transparent) {
-                        //透明物体需要排序
-                        const objPos = drawCall.renderer.gameObject.transform.getPosition();
-                        drawCall.zdist = objPos.getDistance(cameraPos);
+                const drawTarget = drawCall.renderer.gameObject;
+                const visible = ((camera.cullingMask & drawTarget.layer) !== 0 && (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.transform))));
+                //裁切没通过
+                if (visible) {
+                    const objPos = drawTarget.transform.getPosition();
+                    drawCall.zdist = objPos.getDistance(cameraPos);
+                    if (drawCall.material.renderQueue >= RenderQueue.Transparent && drawCall.material.renderQueue < RenderQueue.Overlay) {
+                        this.transparentCalls.push(drawCall);
                     }
-                    // this.finalDrawCalls.push(drawCall);
+                    else {
+                        this.opaqueCalls.push(drawCall);
+                    }
                 }
             }
-            this.drawCalls.sort(this._sort);
-            // this.finalDrawCalls.sort(this._sort);
-        }
-        /**
-         * 
-         */
-        public sort() {
-            this.drawCalls.sort(this._sort);
+            //
+            this.opaqueCalls.sort(this._sortOpaque);
+            this.transparentCalls.sort(this._sortTransparent);
         }
         /**
          * 移除指定渲染器的 draw call 列表。
