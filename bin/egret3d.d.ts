@@ -5443,25 +5443,6 @@ declare namespace egret3d.particle {
         None = 5,
     }
     /**
-     * 粒子着色器用到的属性
-     */
-    const enum ParticleMaterialAttribute {
-        POSITION = "POSITION",
-        COLOR_0 = "COLOR_0",
-        TEXCOORD_0 = "TEXCOORD_0",
-        CORNER = "CORNER",
-        START_POSITION = "START_POSITION",
-        START_VELOCITY = "START_VELOCITY",
-        START_COLOR = "START_COLOR",
-        START_SIZE = "START_SIZE",
-        START_ROTATION = "START_ROTATION",
-        TIME = "TIME",
-        RANDOM0 = "RANDOM0",
-        RANDOM1 = "RANDOM1",
-        WORLD_POSITION = "WORLD_POSITION",
-        WORLD_ROTATION = "WORLD_ROTATION",
-    }
-    /**
      * 粒子着色器用到的变量
      */
     const enum ParticleMaterialUniform {

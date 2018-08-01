@@ -57,17 +57,18 @@ namespace egret3d.particle {
                 return;
             }
 
+            const material = render.batchMaterial;
             switch (type) {
                 case ParticleRendererEventType.RenderMode: {
                     this._onRenderMode(render);
                     break;
                 }
                 case ParticleRendererEventType.LengthScaleChanged: {
-                    render._setFloat(ParticleMaterialUniform.LENGTH_SCALE, render.lengthScale);
+                    material.setFloat(ParticleMaterialUniform.LENGTH_SCALE, render.lengthScale);
                     break;
                 }
                 case ParticleRendererEventType.VelocityScaleChanged: {
-                    render._setFloat(ParticleMaterialUniform.SPEED_SCALE, render.velocityScale);
+                    material.setFloat(ParticleMaterialUniform.SPEED_SCALE, render.velocityScale);
                     break;
                 }
             }
@@ -78,32 +79,33 @@ namespace egret3d.particle {
          * @param render 渲染模式改变
          */
         private _onRenderMode(render: ParticleRenderer) {
-            render._removeShaderDefine(ParticleMaterialDefine.SPHERHBILLBOARD);
-            render._removeShaderDefine(ParticleMaterialDefine.STRETCHEDBILLBOARD);
-            render._removeShaderDefine(ParticleMaterialDefine.HORIZONTALBILLBOARD);
-            render._removeShaderDefine(ParticleMaterialDefine.VERTICALBILLBOARD);
-            render._removeShaderDefine(ParticleMaterialDefine.RENDERMESH);
+            const material = render.batchMaterial;
+            material.removeDefine(ParticleMaterialDefine.SPHERHBILLBOARD);
+            material.removeDefine(ParticleMaterialDefine.STRETCHEDBILLBOARD);
+            material.removeDefine(ParticleMaterialDefine.HORIZONTALBILLBOARD);
+            material.removeDefine(ParticleMaterialDefine.VERTICALBILLBOARD);
+            material.removeDefine(ParticleMaterialDefine.RENDERMESH);
 
             const mode = render.renderMode;
             switch (mode) {
                 case ParticleRenderMode.Billboard: {
-                    render._addShaderDefine(ParticleMaterialDefine.SPHERHBILLBOARD);
+                    material.addDefine(ParticleMaterialDefine.SPHERHBILLBOARD);
                     break;
                 }
                 case ParticleRenderMode.Stretch: {
-                    render._addShaderDefine(ParticleMaterialDefine.STRETCHEDBILLBOARD);
+                    material.addDefine(ParticleMaterialDefine.STRETCHEDBILLBOARD);
                     break;
                 }
                 case ParticleRenderMode.HorizontalBillboard: {
-                    render._addShaderDefine(ParticleMaterialDefine.HORIZONTALBILLBOARD);
+                    material.addDefine(ParticleMaterialDefine.HORIZONTALBILLBOARD);
                     break;
                 }
                 case ParticleRenderMode.VerticalBillboard: {
-                    render._addShaderDefine(ParticleMaterialDefine.VERTICALBILLBOARD);
+                    material.addDefine(ParticleMaterialDefine.VERTICALBILLBOARD);
                     break;
                 }
                 case ParticleRenderMode.Mesh: {
-                    render._addShaderDefine(ParticleMaterialDefine.RENDERMESH);
+                    material.addDefine(ParticleMaterialDefine.RENDERMESH);
                     break;
                 }
                 default: {
@@ -117,18 +119,19 @@ namespace egret3d.particle {
             }
 
             const renderer = component.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
+            const material = renderer.batchMaterial;
             const mainModule = component.main;
             switch (type) {
                 case ParticleCompEventType.StartRotation3DChanged: {
-                    renderer._setBoolean(ParticleMaterialUniform.START_ROTATION3D, mainModule._startRotation3D);
+                    material.setBoolean(ParticleMaterialUniform.START_ROTATION3D, mainModule._startRotation3D);
                     break;
                 }
                 case ParticleCompEventType.SimulationSpaceChanged: {
-                    renderer._setInt(ParticleMaterialUniform.SIMULATION_SPACE, mainModule._simulationSpace);
+                    material.setInt(ParticleMaterialUniform.SIMULATION_SPACE, mainModule._simulationSpace);
                     break;
                 }
                 case ParticleCompEventType.ScaleModeChanged: {
-                    renderer._setInt(ParticleMaterialUniform.SCALING_MODE, mainModule._scaleMode);
+                    material.setInt(ParticleMaterialUniform.SCALING_MODE, mainModule._scaleMode);
                     break;
                 }
             }
@@ -143,9 +146,10 @@ namespace egret3d.particle {
             }
 
             const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
-            renderer._removeShaderDefine(ParticleMaterialDefine.SHAPE);
+            const material = renderer.batchMaterial;
+            material.removeDefine(ParticleMaterialDefine.SHAPE);
             if (comp.shape.enable) {
-                renderer._addShaderDefine(ParticleMaterialDefine.SHAPE);
+                material.addDefine(ParticleMaterialDefine.SHAPE);
             }
         }
         /**
@@ -158,51 +162,52 @@ namespace egret3d.particle {
             }
 
             const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
-            renderer._removeShaderDefine(ParticleMaterialDefine.VELOCITYCONSTANT);
-            renderer._removeShaderDefine(ParticleMaterialDefine.VELOCITYCURVE);
-            renderer._removeShaderDefine(ParticleMaterialDefine.VELOCITYTWOCONSTANT);
-            renderer._removeShaderDefine(ParticleMaterialDefine.VELOCITYTWOCURVE);
+            const material = renderer.batchMaterial;
+            material.removeDefine(ParticleMaterialDefine.VELOCITYCONSTANT);
+            material.removeDefine(ParticleMaterialDefine.VELOCITYCURVE);
+            material.removeDefine(ParticleMaterialDefine.VELOCITYTWOCONSTANT);
+            material.removeDefine(ParticleMaterialDefine.VELOCITYTWOCURVE);
             const velocityModule = comp.velocityOverLifetime;
             if (velocityModule.enable) {
                 const mode = velocityModule._mode;
                 switch (mode) {
                     case CurveMode.Constant: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.VELOCITYCONSTANT);
+                        material.addDefine(ParticleMaterialDefine.VELOCITYCONSTANT);
                         //
                         const vec3 = new Vector3(velocityModule._x.evaluate(), velocityModule._y.evaluate(), velocityModule._z.evaluate());
-                        renderer._setVector3(ParticleMaterialUniform.VELOCITY_CONST, vec3);
+                        material.setVector3(ParticleMaterialUniform.VELOCITY_CONST, vec3);
                         break;
                     }
                     case CurveMode.Curve: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.VELOCITYCURVE);
+                        material.addDefine(ParticleMaterialDefine.VELOCITYCURVE);
                         //
-                        renderer._setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_X, velocityModule._x.curve.floatValues);
-                        renderer._setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_Y, velocityModule._y.curve.floatValues);
-                        renderer._setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_Z, velocityModule._z.curve.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_X, velocityModule._x.curve.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_Y, velocityModule._y.curve.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_Z, velocityModule._z.curve.floatValues);
                         break;
                     }
                     case CurveMode.TwoConstants: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.VELOCITYTWOCONSTANT);
+                        material.addDefine(ParticleMaterialDefine.VELOCITYTWOCONSTANT);
                         //
                         const minVec3 = new Vector3(velocityModule._x.constantMin, velocityModule._y.constantMin, velocityModule._z.constantMin);
                         const maxVec3 = new Vector3(velocityModule._x.constantMax, velocityModule._y.constantMax, velocityModule._z.constantMax);
-                        renderer._setVector3(ParticleMaterialUniform.VELOCITY_CONST, minVec3);
-                        renderer._setVector3(ParticleMaterialUniform.VELOCITY_CONST_MAX, maxVec3);
+                        material.setVector3(ParticleMaterialUniform.VELOCITY_CONST, minVec3);
+                        material.setVector3(ParticleMaterialUniform.VELOCITY_CONST_MAX, maxVec3);
                         break;
                     }
                     case CurveMode.TwoCurves: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.VELOCITYTWOCURVE);
+                        material.addDefine(ParticleMaterialDefine.VELOCITYTWOCURVE);
                         //
-                        renderer._setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_X, velocityModule._x.curveMin.floatValues);
-                        renderer._setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_Y, velocityModule._y.curveMin.floatValues);
-                        renderer._setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_Z, velocityModule._z.curveMin.floatValues);
-                        renderer._setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_MAX_X, velocityModule._x.curveMax.floatValues);
-                        renderer._setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_MAX_Y, velocityModule._y.curveMax.floatValues);
-                        renderer._setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_MAX_Z, velocityModule._z.curveMax.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_X, velocityModule._x.curveMin.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_Y, velocityModule._y.curveMin.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_Z, velocityModule._z.curveMin.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_MAX_X, velocityModule._x.curveMax.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_MAX_Y, velocityModule._y.curveMax.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.VELOCITY_CURVE_MAX_Z, velocityModule._z.curveMax.floatValues);
                         break;
                     }
                 }
-                renderer._setInt(ParticleMaterialUniform.SPACE_TYPE, velocityModule._space);
+                material.setInt(ParticleMaterialUniform.SPACE_TYPE, velocityModule._space);
             }
         }
         /**
@@ -215,27 +220,28 @@ namespace egret3d.particle {
             }
 
             const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
-            renderer._removeShaderDefine(ParticleMaterialDefine.COLOROGRADIENT);
-            renderer._removeShaderDefine(ParticleMaterialDefine.COLORTWOGRADIENTS);
+            const material = renderer.batchMaterial;
+            material.removeDefine(ParticleMaterialDefine.COLOROGRADIENT);
+            material.removeDefine(ParticleMaterialDefine.COLORTWOGRADIENTS);
 
             const colorModule = comp.colorOverLifetime;
             if (colorModule.enable) {
                 const color = colorModule._color;
                 switch (color.mode) {
                     case ColorGradientMode.Gradient: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.COLOROGRADIENT);
+                        material.addDefine(ParticleMaterialDefine.COLOROGRADIENT);
                         //
-                        renderer._setVector2v(ParticleMaterialUniform.ALPHAS_GRADIENT, color.gradient.alphaValues);
-                        renderer._setVector4v(ParticleMaterialUniform.COLOR_GRADIENT, color.gradient.colorValues);
+                        material.setVector2v(ParticleMaterialUniform.ALPHAS_GRADIENT, color.gradient.alphaValues);
+                        material.setVector4v(ParticleMaterialUniform.COLOR_GRADIENT, color.gradient.colorValues);
                         break;
                     }
                     case ColorGradientMode.TwoGradients: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.COLORTWOGRADIENTS);
+                        material.addDefine(ParticleMaterialDefine.COLORTWOGRADIENTS);
                         //
-                        renderer._setVector2v(ParticleMaterialUniform.ALPHAS_GRADIENT, color.gradientMin.alphaValues);
-                        renderer._setVector2v(ParticleMaterialUniform.ALPHA_GRADIENT_MAX, color.gradientMax.alphaValues);
-                        renderer._setVector4v(ParticleMaterialUniform.COLOR_GRADIENT, color.gradientMin.colorValues);
-                        renderer._setVector4v(ParticleMaterialUniform.COLOR_GRADIENT_MAX, color.gradientMax.colorValues);
+                        material.setVector2v(ParticleMaterialUniform.ALPHAS_GRADIENT, color.gradientMin.alphaValues);
+                        material.setVector2v(ParticleMaterialUniform.ALPHA_GRADIENT_MAX, color.gradientMax.alphaValues);
+                        material.setVector4v(ParticleMaterialUniform.COLOR_GRADIENT, color.gradientMin.colorValues);
+                        material.setVector4v(ParticleMaterialUniform.COLOR_GRADIENT_MAX, color.gradientMax.colorValues);
                         break;
                     }
                 }
@@ -252,10 +258,11 @@ namespace egret3d.particle {
             }
 
             const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
-            renderer._removeShaderDefine(ParticleMaterialDefine.SIZECURVE);
-            renderer._removeShaderDefine(ParticleMaterialDefine.SIZECURVESEPERATE);
-            renderer._removeShaderDefine(ParticleMaterialDefine.SIZETWOCURVES);
-            renderer._removeShaderDefine(ParticleMaterialDefine.SIZETWOCURVESSEPERATE);
+            const material = renderer.batchMaterial;
+            material.removeDefine(ParticleMaterialDefine.SIZECURVE);
+            material.removeDefine(ParticleMaterialDefine.SIZECURVESEPERATE);
+            material.removeDefine(ParticleMaterialDefine.SIZETWOCURVES);
+            material.removeDefine(ParticleMaterialDefine.SIZETWOCURVESSEPERATE);
 
             const sizeModule = comp.sizeOverLifetime;
             if (sizeModule.enable) {
@@ -264,33 +271,35 @@ namespace egret3d.particle {
                 switch (mode) {
                     case CurveMode.Curve: {
                         if (separateAxes) {
-                            renderer._addShaderDefine(ParticleMaterialDefine.SIZECURVESEPERATE);
+                            material.addDefine(ParticleMaterialDefine.SIZECURVESEPERATE);
                             //
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE_X, sizeModule._x.curve.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE_Y, sizeModule._y.curve.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE_Z, sizeModule._z.curve.floatValues);
-                        } else {
-                            renderer._addShaderDefine(ParticleMaterialDefine.SIZECURVE);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE_X, sizeModule._x.curve.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE_Y, sizeModule._y.curve.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE_Z, sizeModule._z.curve.floatValues);
+                        }
+                        else {
+                            material.addDefine(ParticleMaterialDefine.SIZECURVE);
                             //
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE, sizeModule._size.curve.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE, sizeModule._size.curve.floatValues);
                         }
                         break;
                     }
                     case CurveMode.TwoCurves: {
                         if (separateAxes) {
-                            renderer._addShaderDefine(ParticleMaterialDefine.SIZETWOCURVESSEPERATE);
+                            material.addDefine(ParticleMaterialDefine.SIZETWOCURVESSEPERATE);
                             //
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE_X, sizeModule._x.curveMin.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE_Y, sizeModule._y.curveMin.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE_Z, sizeModule._z.curveMin.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE_MAX_X, sizeModule._x.curveMax.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE_MAX_Y, sizeModule._y.curveMax.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE_MAX_Z, sizeModule._z.curveMax.floatValues);
-                        } else {
-                            renderer._addShaderDefine(ParticleMaterialDefine.SIZETWOCURVES);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE_X, sizeModule._x.curveMin.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE_Y, sizeModule._y.curveMin.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE_Z, sizeModule._z.curveMin.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE_MAX_X, sizeModule._x.curveMax.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE_MAX_Y, sizeModule._y.curveMax.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE_MAX_Z, sizeModule._z.curveMax.floatValues);
+                        }
+                        else {
+                            material.addDefine(ParticleMaterialDefine.SIZETWOCURVES);
                             //
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE, sizeModule._size.curveMin.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.SIZE_CURVE_MAX, sizeModule._size.curveMax.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE, sizeModule._size.curveMin.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.SIZE_CURVE_MAX, sizeModule._size.curveMax.floatValues);
                         }
                         break;
                     }
@@ -307,71 +316,72 @@ namespace egret3d.particle {
             }
 
             const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
-            renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONOVERLIFETIME);
-            renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONCONSTANT);
-            renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONTWOCONSTANTS);
-            renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONSEPERATE);
-            renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONCURVE);
-            renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONTWOCURVES);
+            const material = renderer.batchMaterial;
+            material.removeDefine(ParticleMaterialDefine.ROTATIONOVERLIFETIME);
+            material.removeDefine(ParticleMaterialDefine.ROTATIONCONSTANT);
+            material.removeDefine(ParticleMaterialDefine.ROTATIONTWOCONSTANTS);
+            material.removeDefine(ParticleMaterialDefine.ROTATIONSEPERATE);
+            material.removeDefine(ParticleMaterialDefine.ROTATIONCURVE);
+            material.removeDefine(ParticleMaterialDefine.ROTATIONTWOCURVES);
 
             const rotationModule = comp.rotationOverLifetime;
             if (rotationModule.enable) {
                 const mode = comp.rotationOverLifetime._x.mode;
                 const separateAxes = rotationModule._separateAxes;
                 if (separateAxes) {
-                    renderer._addShaderDefine(ParticleMaterialDefine.ROTATIONSEPERATE);
+                    material.addDefine(ParticleMaterialDefine.ROTATIONSEPERATE);
                 } else {
 
-                    renderer._addShaderDefine(ParticleMaterialDefine.ROTATIONOVERLIFETIME);
+                    material.addDefine(ParticleMaterialDefine.ROTATIONOVERLIFETIME);
                 }
                 switch (mode) {
                     case CurveMode.Constant: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.ROTATIONCONSTANT);
+                        material.addDefine(ParticleMaterialDefine.ROTATIONCONSTANT);
                         //
                         if (separateAxes) {
-                            renderer._setVector3(ParticleMaterialUniform.ROTATION_CONST_SEPRARATE, new Vector3(rotationModule._x.constant, rotationModule._y.constant, rotationModule._z.constant));
+                            material.setVector3(ParticleMaterialUniform.ROTATION_CONST_SEPRARATE, new Vector3(rotationModule._x.constant, rotationModule._y.constant, rotationModule._z.constant));
                         } else {
-                            renderer._setFloat(ParticleMaterialUniform.ROTATION_CONST, rotationModule._z.constant);
+                            material.setFloat(ParticleMaterialUniform.ROTATION_CONST, rotationModule._z.constant);
                         }
                         break;
                     }
                     case CurveMode.TwoConstants: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.ROTATIONTWOCONSTANTS);
+                        material.addDefine(ParticleMaterialDefine.ROTATIONTWOCONSTANTS);
                         //
                         if (separateAxes) {
-                            renderer._setVector3(ParticleMaterialUniform.ROTATION_CONST_SEPRARATE, new Vector3(rotationModule._x.constantMin, rotationModule._y.constantMin, rotationModule._z.constantMin));
-                            renderer._setVector3(ParticleMaterialUniform.ROTATION_CONST_MAX_SEPRARATE, new Vector3(rotationModule._x.constantMax, rotationModule._y.constantMax, rotationModule._z.constantMax));
+                            material.setVector3(ParticleMaterialUniform.ROTATION_CONST_SEPRARATE, new Vector3(rotationModule._x.constantMin, rotationModule._y.constantMin, rotationModule._z.constantMin));
+                            material.setVector3(ParticleMaterialUniform.ROTATION_CONST_MAX_SEPRARATE, new Vector3(rotationModule._x.constantMax, rotationModule._y.constantMax, rotationModule._z.constantMax));
                         } else {
-                            renderer._setFloat(ParticleMaterialUniform.ROTATION_CONST, rotationModule._z.constantMin);
-                            renderer._setFloat(ParticleMaterialUniform.ROTATION_CONST_MAX, rotationModule._z.constantMax);
+                            material.setFloat(ParticleMaterialUniform.ROTATION_CONST, rotationModule._z.constantMin);
+                            material.setFloat(ParticleMaterialUniform.ROTATION_CONST_MAX, rotationModule._z.constantMax);
                         }
                         break;
                     }
                     case CurveMode.Curve: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.ROTATIONCURVE);
+                        material.addDefine(ParticleMaterialDefine.ROTATIONCURVE);
                         //
                         if (separateAxes) {
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATE_CURVE_X, rotationModule._x.curve.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATE_CURVE_y, rotationModule._y.curve.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATE_CURVE_Z, rotationModule._z.curve.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATE_CURVE_X, rotationModule._x.curve.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATE_CURVE_y, rotationModule._y.curve.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATE_CURVE_Z, rotationModule._z.curve.floatValues);
                         } else {
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATION_CURVE, rotationModule._z.curve.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATION_CURVE, rotationModule._z.curve.floatValues);
                         }
                         break;
                     }
                     case CurveMode.TwoCurves: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.ROTATIONTWOCURVES);
+                        material.addDefine(ParticleMaterialDefine.ROTATIONTWOCURVES);
                         //
                         if (separateAxes) {
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATE_CURVE_X, rotationModule._x.curveMin.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATE_CURVE_y, rotationModule._y.curveMin.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATE_CURVE_Z, rotationModule._z.curveMin.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATION_CURVE_MAX_X, rotationModule._x.curveMax.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATION_CURVE_MAX_Y, rotationModule._y.curveMax.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATION_CURVE_MAX_Z, rotationModule._z.curveMax.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATE_CURVE_X, rotationModule._x.curveMin.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATE_CURVE_y, rotationModule._y.curveMin.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATE_CURVE_Z, rotationModule._z.curveMin.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATION_CURVE_MAX_X, rotationModule._x.curveMax.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATION_CURVE_MAX_Y, rotationModule._y.curveMax.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATION_CURVE_MAX_Z, rotationModule._z.curveMax.floatValues);
                         } else {
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATION_CURVE, rotationModule._z.curveMin.floatValues);
-                            renderer._setVector2v(ParticleMaterialUniform.ROTATION_CURVE_MAX, rotationModule._z.curveMin.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATION_CURVE, rotationModule._z.curveMin.floatValues);
+                            material.setVector2v(ParticleMaterialUniform.ROTATION_CURVE_MAX, rotationModule._z.curveMin.floatValues);
                         }
                         break;
                     }
@@ -385,31 +395,32 @@ namespace egret3d.particle {
             }
 
             const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
-            renderer._removeShaderDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONCURVE);
-            renderer._removeShaderDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONTWOCURVE);
+            const material = renderer.batchMaterial;
+            material.removeDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONCURVE);
+            material.removeDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONTWOCURVE);
 
             const module = comp.textureSheetAnimation;
             if (module.enable) {
                 const type = module._frameOverTime.mode;
                 switch (type) {
                     case CurveMode.Curve: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONCURVE);
+                        material.addDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONCURVE);
                         //
-                        renderer._setVector2v(ParticleMaterialUniform.UV_CURVE, module._frameOverTime.curve.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.UV_CURVE, module._frameOverTime.curve.floatValues);
                         break;
                     }
                     case CurveMode.TwoCurves: {
-                        renderer._addShaderDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONTWOCURVE);
+                        material.addDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONTWOCURVE);
                         //
-                        renderer._setVector2v(ParticleMaterialUniform.UV_CURVE, module._frameOverTime.curveMin.floatValues);
-                        renderer._setVector2v(ParticleMaterialUniform.UV_CURVE_MAX, module._frameOverTime.curveMax.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.UV_CURVE, module._frameOverTime.curveMin.floatValues);
+                        material.setVector2v(ParticleMaterialUniform.UV_CURVE_MAX, module._frameOverTime.curveMax.floatValues);
                         break;
                     }
                 }
 
                 if (type === CurveMode.Curve || type === CurveMode.TwoCurves) {
-                    renderer._setFloat(ParticleMaterialUniform.CYCLES, module._cycleCount);
-                    renderer._setVector4v(ParticleMaterialUniform.SUB_UV, module.floatValues);
+                    material.setFloat(ParticleMaterialUniform.CYCLES, module._cycleCount);
+                    material.setVector4v(ParticleMaterialUniform.SUB_UV, module.floatValues);
                 }
             }
         }
