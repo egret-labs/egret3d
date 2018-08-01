@@ -109,7 +109,7 @@ namespace egret3d {
             for (const key in unifroms) {
                 const uniform = unifroms[key];
                 const value = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value;
-                targetUniforms[key] = { type: uniform.type, semantic: uniform.semantic, value, extensions: { paper: { enable: false, location: -1 } } };
+                targetUniforms[key] = { type: uniform.type, semantic: uniform.semantic, value };
             }
 
             const states = this._glTFTechnique.states;

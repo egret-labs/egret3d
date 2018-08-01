@@ -699,33 +699,6 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
-    interface IVector4 {
-        x: number;
-        y: number;
-        z: number;
-        w: number;
-    }
-    class Vector4 implements IVector4, paper.ISerializable {
-        x: number;
-        y: number;
-        z: number;
-        w: number;
-        constructor(x?: number, y?: number, z?: number, w?: number);
-        serialize(): number[];
-        deserialize(element: [number, number, number, number]): void;
-        copy(value: Readonly<IVector4>): this;
-        clone(): Vector4;
-        set(x: number, y: number, z: number, w: number): this;
-        normalize(): this;
-    }
-    const helpVector4A: Vector4;
-    const helpVector4B: Vector4;
-    const helpVector4C: Vector4;
-    const helpVector4D: Vector4;
-    const helpVector4E: Vector4;
-    const helpVector4F: Vector4;
-}
-declare namespace egret3d {
     class Quaternion implements IVector4, paper.ISerializable {
         private static readonly _instances;
         static create(x?: number, y?: number, z?: number, w?: number): Quaternion;
@@ -2058,7 +2031,7 @@ declare namespace gltf {
             /**
              * An attribute input to a technique and the corresponding semantic.
              */
-            [k: string]: egret3d.GLTFAttribute;
+            [k: string]: gltf.Attribute;
         };
         /**
          * A dictionary object of `Uniform` objects.
@@ -2067,7 +2040,7 @@ declare namespace gltf {
             /**
              * A uniform input to a technique, and an optional semantic and value.
              */
-            [k: string]: egret3d.GLTFUniform;
+            [k: string]: gltf.Uniform;
         };
         name: any;
         states: States;
@@ -2253,6 +2226,82 @@ declare namespace paper.editor {
         dispatchEditorModelEvent(type: string, data?: any): void;
         serialize(): any;
         deserialize(data: any): void;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    interface IUUID {
+        /**
+         *
+         */
+        readonly uuid: string;
+    }
+    /**
+     *
+     */
+    interface IAssetReference {
+        /**
+         *
+         */
+        readonly asset: number;
+    }
+    /**
+     *
+     */
+    interface IClass {
+        /**
+         *
+         */
+        readonly class: string;
+    }
+    /**
+     * 自定义序列化接口。
+     */
+    interface ISerializable {
+        /**
+         *
+         */
+        serialize(): any | ISerializedObject;
+        /**
+         *
+         */
+        deserialize(element: any): void;
+    }
+    /**
+     * 序列化后的数据接口。
+     */
+    interface ISerializedObject extends IUUID, IClass {
+        /**
+         *
+         */
+        [key: string]: any | IUUID | IAssetReference;
+    }
+    /**
+     * 序列化数据接口
+     */
+    interface ISerializedData {
+        /**
+         *
+         */
+        version?: number;
+        /**
+         *
+         */
+        compatibleVersion?: number;
+        /**
+         * 所有资源。
+         */
+        readonly assets?: string[];
+        /**
+         * 所有实体。（至多含一个场景）
+         */
+        readonly objects?: ISerializedObject[];
+        /**
+         * 所有组件。
+         */
+        readonly components?: ISerializedObject[];
     }
 }
 declare namespace paper {
@@ -2610,6 +2659,33 @@ declare namespace paper {
      */
     function createStruct(source: SerializableObject): any;
 }
+declare namespace egret3d {
+    interface IVector4 {
+        x: number;
+        y: number;
+        z: number;
+        w: number;
+    }
+    class Vector4 implements IVector4, paper.ISerializable {
+        x: number;
+        y: number;
+        z: number;
+        w: number;
+        constructor(x?: number, y?: number, z?: number, w?: number);
+        serialize(): number[];
+        deserialize(element: [number, number, number, number]): void;
+        copy(value: Readonly<IVector4>): this;
+        clone(): Vector4;
+        set(x: number, y: number, z: number, w: number): this;
+        normalize(): this;
+    }
+    const helpVector4A: Vector4;
+    const helpVector4B: Vector4;
+    const helpVector4C: Vector4;
+    const helpVector4D: Vector4;
+    const helpVector4E: Vector4;
+    const helpVector4F: Vector4;
+}
 declare namespace paper.editor {
     const icon_frag: string;
     const icon_vert: string;
@@ -2643,64 +2719,6 @@ declare namespace paper {
          * @param component component
          */
         function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any): void;
-    }
-}
-declare type int = number;
-declare type uint = number;
-declare namespace paper {
-    /**
-     *
-     */
-    let Time: Clock;
-    /**
-     *
-     */
-    let Application: ECS;
-    /**
-     *
-     */
-    class ECS {
-        private static _instance;
-        /**
-         *
-         */
-        static getInstance(): ECS;
-        private constructor();
-        /**
-         * 系统管理器。
-         */
-        readonly systemManager: SystemManager;
-        /**
-         * 场景管理器。
-         */
-        readonly sceneManager: SceneManager;
-        private _isEditor;
-        private _isFocused;
-        private _isPlaying;
-        private _isRunning;
-        private _bindUpdate;
-        _option: egret3d.RequiredRuntimeOptions;
-        _canvas: HTMLCanvasElement;
-        _webgl: WebGLRenderingContext;
-        private _update();
-        init({isEditor, isPlaying, systems, option, canvas, webgl}?: {
-            isEditor?: boolean;
-            isPlaying?: boolean;
-            systems?: (new () => BaseSystem)[];
-            option?: {};
-            canvas?: {};
-            webgl?: {};
-        }): void;
-        /**
-         *
-         */
-        pause(): void;
-        resume(): void;
-        callLater(callback: () => void): void;
-        readonly isEditor: boolean;
-        readonly isFocused: boolean;
-        readonly isPlaying: boolean;
-        readonly isRunning: boolean;
     }
 }
 declare namespace egret3d {
@@ -3128,6 +3146,64 @@ declare namespace egret3d {
         getPoints(): Vector3[];
     }
 }
+declare type int = number;
+declare type uint = number;
+declare namespace paper {
+    /**
+     *
+     */
+    let Time: Clock;
+    /**
+     *
+     */
+    let Application: ECS;
+    /**
+     *
+     */
+    class ECS {
+        private static _instance;
+        /**
+         *
+         */
+        static getInstance(): ECS;
+        private constructor();
+        /**
+         * 系统管理器。
+         */
+        readonly systemManager: SystemManager;
+        /**
+         * 场景管理器。
+         */
+        readonly sceneManager: SceneManager;
+        private _isEditor;
+        private _isFocused;
+        private _isPlaying;
+        private _isRunning;
+        private _bindUpdate;
+        _option: egret3d.RequiredRuntimeOptions;
+        _canvas: HTMLCanvasElement;
+        _webgl: WebGLRenderingContext;
+        private _update();
+        init({isEditor, isPlaying, systems, option, canvas, webgl}?: {
+            isEditor?: boolean;
+            isPlaying?: boolean;
+            systems?: (new () => BaseSystem)[];
+            option?: {};
+            canvas?: {};
+            webgl?: {};
+        }): void;
+        /**
+         *
+         */
+        pause(): void;
+        resume(): void;
+        callLater(callback: () => void): void;
+        readonly isEditor: boolean;
+        readonly isFocused: boolean;
+        readonly isPlaying: boolean;
+        readonly isRunning: boolean;
+    }
+}
 declare namespace paper {
     /**
      *
@@ -3211,12 +3287,6 @@ declare namespace paper {
     }
     function layerTest(cullingMask: CullingMask, layer: Layer): boolean;
 }
-declare namespace paper {
-    /**
-     * 克隆
-     */
-    function clone(object: GameObject): GameObject;
-}
 declare namespace egret3d {
     /**
      *
@@ -3233,6 +3303,10 @@ declare namespace egret3d {
     function getPointAlongCurve(curveStart: Vector3, curveStartHandle: Vector3, curveEnd: Vector3, curveEndHandle: Vector3, t: number, out: Vector3, crease?: number): void;
 }
 declare namespace paper {
+    /**
+     * 克隆
+     */
+    function clone(object: GameObject): GameObject;
 }
 declare namespace egret3d {
     /**
@@ -3388,23 +3462,6 @@ declare namespace egret3d {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper: {
                 renderQueue: number;
-            };
-        };
-    }
-    interface GLTFAttribute extends gltf.Attribute {
-        extensions?: {
-            paper: {
-                enable: boolean;
-                location: number;
-            };
-        };
-    }
-    interface GLTFUniform extends gltf.Uniform {
-        extensions?: {
-            paper: {
-                enable: boolean;
-                location: WebGLUniformLocation;
-                textureUnits?: number[];
             };
         };
     }
@@ -4743,14 +4800,6 @@ declare namespace egret3d {
     }
 }
 declare namespace paper {
-    /**
-     *
-     */
-    class MissingComponent extends BaseComponent {
-        missingObject: any | null;
-        serialize(): any;
-        deserialize(element: any): void;
-    }
 }
 declare namespace egret3d {
     /**
@@ -5413,26 +5462,12 @@ declare namespace egret3d.particle {
     }
 }
 declare namespace egret3d.particle {
-    const BillboardPerVertexCount = 37;
-    const MeshPerVertexCount = 42;
     const enum ParticleRendererEventType {
         Mesh = "mesh",
         Materials = "materials",
         RenderMode = "renderMode",
         LengthScaleChanged = "lengthScale",
         VelocityScaleChanged = "velocityScale",
-    }
-    const enum ParticleSortMode {
-        None = 0,
-        Distance = 1,
-        OldestInFront = 2,
-        YoungestInFront = 3,
-    }
-    const enum ParticleRenderSpace {
-        View = 0,
-        World = 1,
-        Local = 2,
-        Facing = 3,
     }
     const enum ParticleRenderMode {
         Billboard = 0,
@@ -5526,20 +5561,6 @@ declare namespace egret3d.particle {
         RENDERMESH = "RENDERMESH",
         SHAPE = "SHAPE",
     }
-    /**
-     * 渲染类型为Mesh的属性格式
-     */
-    const MeshShaderAttributeFormat: {
-        key: string;
-        type: gltf.AccessorType;
-    }[];
-    /**
-     * 渲染类型为Billboard的属性格式
-     */
-    const BillboardShaderAttributeFormat: {
-        key: string;
-        type: gltf.AccessorType;
-    }[];
     class ParticleRenderer extends paper.BaseRenderer {
         private _mesh;
         private readonly _materials;
@@ -6604,22 +6625,10 @@ declare namespace paper {
     /**
      *
      */
-    class Clock extends SingletonComponent {
-        maxFixedSubSteps: number;
-        fixedDeltaTime: number;
-        timeScale: number;
-        private _frameCount;
-        private _beginTime;
-        private _lastTime;
-        private _delayTime;
-        private _unscaledTime;
-        private _unscaledDeltaTime;
-        initialize(): void;
-        readonly frameCount: number;
-        readonly time: number;
-        readonly deltaTime: number;
-        readonly unscaledTime: number;
-        readonly unscaledDeltaTime: number;
+    class MissingComponent extends BaseComponent {
+        missingObject: any | null;
+        serialize(): any;
+        deserialize(element: any): void;
     }
 }
 declare namespace egret3d {
@@ -6652,9 +6661,9 @@ declare namespace egret3d {
         private _cacheState;
         private _updateState(state);
         private _updateContextDefines(context, material);
-        private _updateContextUniforms(context, technique, forceUpdate);
-        private _updateUniforms(context, material, technique, forceUpdate);
-        private _updateAttributes(mesh, subMeshIndex, technique, forceUpdate);
+        private _updateContextUniforms(program, context, technique, forceUpdate);
+        private _updateUniforms(program, material, technique, forceUpdate);
+        private _updateAttributes(program, mesh, subMeshIndex, technique, forceUpdate);
         private _drawCall(mesh, drawCall);
         private _renderCall(context, drawCall);
         onUpdate(): void;
@@ -6731,21 +6740,24 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     interface WebGLActiveAttribute {
+        name: string;
         size: number;
         type: number;
         location: number;
     }
     interface WebGLActiveUniform {
+        name: string;
         size: number;
         type: number;
         location: WebGLUniformLocation;
+        textureUnits?: number[];
     }
     /**
      * WebGLProgram的包装类
      */
     class GlProgram {
         constructor(webglProgram: WebGLProgram);
-        static getProgram(material: Material, technique: gltf.Technique, defines: string): WebGLProgram;
+        static getProgram(material: Material, technique: gltf.Technique, defines: string): GlProgram;
     }
 }
 declare namespace egret3d {
@@ -6882,6 +6894,28 @@ declare namespace paper {
     /**
      *
      */
+    class Clock extends SingletonComponent {
+        maxFixedSubSteps: number;
+        fixedDeltaTime: number;
+        timeScale: number;
+        private _frameCount;
+        private _beginTime;
+        private _lastTime;
+        private _delayTime;
+        private _unscaledTime;
+        private _unscaledDeltaTime;
+        initialize(): void;
+        readonly frameCount: number;
+        readonly time: number;
+        readonly deltaTime: number;
+        readonly unscaledTime: number;
+        readonly unscaledDeltaTime: number;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
     class ContactColliders extends SingletonComponent {
         /**
          *
@@ -6896,16 +6930,6 @@ declare namespace paper {
          */
         readonly end: any[];
     }
-}
-declare namespace paper {
-    /**
-     * 反序列化。
-     */
-    function deserialize<T extends (Scene | GameObject | BaseComponent)>(data: ISerializedData, isKeepUUID?: boolean): T | null;
-    /**
-     *
-     */
-    function getDeserializedAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent;
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
@@ -7149,79 +7173,13 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
-     *
+     * 反序列化。
      */
-    interface IUUID {
-        /**
-         *
-         */
-        readonly uuid: string;
-    }
+    function deserialize<T extends (Scene | GameObject | BaseComponent)>(data: ISerializedData, isKeepUUID?: boolean): T | null;
     /**
      *
      */
-    interface IAssetReference {
-        /**
-         *
-         */
-        readonly asset: number;
-    }
-    /**
-     *
-     */
-    interface IClass {
-        /**
-         *
-         */
-        readonly class: string;
-    }
-    /**
-     * 自定义序列化接口。
-     */
-    interface ISerializable {
-        /**
-         *
-         */
-        serialize(): any | ISerializedObject;
-        /**
-         *
-         */
-        deserialize(element: any): void;
-    }
-    /**
-     * 序列化后的数据接口。
-     */
-    interface ISerializedObject extends IUUID, IClass {
-        /**
-         *
-         */
-        [key: string]: any | IUUID | IAssetReference;
-    }
-    /**
-     * 序列化数据接口
-     */
-    interface ISerializedData {
-        /**
-         *
-         */
-        version?: number;
-        /**
-         *
-         */
-        compatibleVersion?: number;
-        /**
-         * 所有资源。
-         */
-        readonly assets?: string[];
-        /**
-         * 所有实体。（至多含一个场景）
-         */
-        readonly objects?: ISerializedObject[];
-        /**
-         * 所有组件。
-         */
-        readonly components?: ISerializedObject[];
-    }
+    function getDeserializedAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent;
 }
 declare namespace paper.editor {
     /**

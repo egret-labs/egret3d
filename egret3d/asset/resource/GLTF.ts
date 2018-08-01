@@ -120,24 +120,6 @@ namespace egret3d {
             }
         }
     }
-
-    export interface GLTFAttribute extends gltf.Attribute {
-        extensions?: {
-            paper: {
-                enable: boolean;
-                location: number;
-            }
-        }
-    }
-    export interface GLTFUniform extends gltf.Uniform {
-        extensions?: {
-            paper: {
-                enable: boolean;
-                location: WebGLUniformLocation;
-                textureUnits?: number[];
-            }
-        }
-    }
     /**
      * glTF 资源。
      */
@@ -254,12 +236,12 @@ namespace egret3d {
             const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } };
             for (const key in source.attributes) {
                 const attribute = source.attributes[key];
-                target.attributes[key] = { semantic: attribute.semantic, extensions: { paper: { enable: true, location: -1 } } };
+                target.attributes[key] = { semantic: attribute.semantic };
             }
             for (const key in source.uniforms) {
                 const uniform = source.uniforms[key];
                 const value = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value;
-                target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value, extensions: { paper: { enable: false, location: -1 } } };
+                target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value };
             }
 
             const states = source.states;

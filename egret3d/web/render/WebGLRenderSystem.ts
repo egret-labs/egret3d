@@ -26,7 +26,7 @@ namespace egret3d {
         private _cacheContextVersion: number;
         private _cacheMaterialVerision: number;
         private _cacheMeshVersion: number;
-        private _cacheProgram: WebGLProgram;
+        private _cacheProgram: GlProgram;
         private _cacheContext: RenderContext;
         private _cacheMaterial: Material;
         private _cacheMesh: Mesh;
@@ -79,7 +79,7 @@ namespace egret3d {
             this._cacheDefines += material.shaderDefine;
         }
 
-        private _updateContextUniforms(context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
+        private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
             const needUpdate = this._cacheContext !== context || this._cacheContextVersion !== context.version || forceUpdate;
             if (!needUpdate) {
                 return;
@@ -89,13 +89,14 @@ namespace egret3d {
             this._cacheContextVersion = context.version;
             const webgl = this._webgl;
 
-            for (const key in technique.uniforms) {
-                const uniform = technique.uniforms[key];
-                const paperExtension = uniform.extensions.paper;
-                if (!paperExtension.enable || !uniform.semantic) {
+            const uniforms = technique.uniforms;
+            const glUniforms = program.uniforms;
+            for (const glUniform of glUniforms) {
+                const uniform = uniforms[glUniform.name];
+                if (!uniform.semantic) {
                     continue;
                 }
-                const location = paperExtension.location;
+                const location = glUniform.location;
                 switch (uniform.semantic) {
                     case gltf.UniformSemanticType.MODEL:
                         webgl.uniformMatrix4fv(location, false, context.matrix_m.rawData);
@@ -147,8 +148,8 @@ namespace egret3d {
                         break;
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAP:
                         const directShadowLen = context.directShadowMaps.length;
-                        if (directShadowLen > 0 && uniform.extensions.paper.textureUnits) {
-                            const units = uniform.extensions.paper.textureUnits;
+                        if (directShadowLen > 0 && glUniform.textureUnits) {
+                            const units = glUniform.textureUnits;
                             webgl.uniform1iv(location, units);
 
                             for (let i = 0, l = units.length; i < l; i++) {
@@ -161,8 +162,8 @@ namespace egret3d {
                         break;
                     case gltf.UniformSemanticType._POINTSHADOWMAP:
                         const pointShadowLen = context.pointShadowMaps.length;
-                        if (pointShadowLen > 0 && uniform.extensions.paper.textureUnits) {
-                            const units = uniform.extensions.paper.textureUnits;
+                        if (pointShadowLen > 0 && glUniform.textureUnits) {
+                            const units = glUniform.textureUnits;
                             webgl.uniform1iv(location, units);
 
                             for (let i = 0, l = units.length; i < l; i++) {
@@ -175,8 +176,8 @@ namespace egret3d {
                         break;
                     case gltf.UniformSemanticType._SPOTSHADOWMAP:
                         const spotShadowLen = context.spotShadowMaps.length;
-                        if (spotShadowLen > 0 && uniform.extensions.paper.textureUnits) {
-                            const units = uniform.extensions.paper.textureUnits;
+                        if (spotShadowLen > 0 && glUniform.textureUnits) {
+                            const units = glUniform.textureUnits;
                             webgl.uniform1iv(location, units);
 
                             for (let i = 0, l = units.length; i < l; i++) {
@@ -188,8 +189,8 @@ namespace egret3d {
                         }
                         break;
                     case gltf.UniformSemanticType._LIGHTMAPTEX:
-                        if (paperExtension.textureUnits && paperExtension.textureUnits.length === 1 && context.lightmap) {
-                            const unit = paperExtension.textureUnits[0];
+                        if (glUniform.textureUnits && glUniform.textureUnits.length === 1 && context.lightmap) {
+                            const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
                             webgl.activeTexture(webgl.TEXTURE0 + unit);
                             webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap);
@@ -228,7 +229,7 @@ namespace egret3d {
             }
         }
 
-        private _updateUniforms(context: RenderContext, material: Material, technique: gltf.Technique, forceUpdate: boolean) {
+        private _updateUniforms(program: GlProgram, material: Material, technique: gltf.Technique, forceUpdate: boolean) {
             const needUpdate = this._cacheMaterial !== material || this._cacheMaterialVerision !== material.version || forceUpdate;
             if (!needUpdate) {
                 return;
@@ -237,19 +238,20 @@ namespace egret3d {
             this._cacheMaterial = material;
             this._cacheMaterialVerision = material.version;
             const webgl = this._webgl;
-            for (const key in technique.uniforms) {
-                const uniform = technique.uniforms[key];
-                const paperExtension = uniform.extensions.paper;
-                if (!paperExtension.enable || uniform.semantic) {
+            const unifroms = technique.uniforms;
+            const glUniforms = program.uniforms;
+            for (const glUniform of glUniforms) {
+                const uniform = unifroms[glUniform.name];
+                if (uniform.semantic) {
                     continue;
                 }
 
-                const location = uniform.extensions.paper.location;
+                const location = glUniform.location;
                 const value = uniform.value;
                 switch (uniform.type) {
                     case gltf.UniformType.BOOL:
                     case gltf.UniformType.Int:
-                        if (uniform.count && uniform.count > 1) {
+                        if (glUniform.size > 1) {
                             webgl.uniform1iv(location, value);
                         }
                         else {
@@ -269,7 +271,7 @@ namespace egret3d {
                         webgl.uniform4iv(location, value);
                         break;
                     case gltf.UniformType.FLOAT:
-                        if (uniform.count && uniform.count > 1) {
+                        if (glUniform.size > 1) {
                             webgl.uniform1fv(location, value);
                         }
                         else {
@@ -295,8 +297,8 @@ namespace egret3d {
                         webgl.uniformMatrix4fv(location, false, value);
                         break;
                     case gltf.UniformType.SAMPLER_2D:
-                        if (paperExtension.textureUnits && paperExtension.textureUnits.length === 1) {
-                            const unit = paperExtension.textureUnits[0];
+                        if (glUniform.textureUnits && glUniform.textureUnits.length === 1) {
+                            const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
                             webgl.activeTexture(webgl.TEXTURE0 + unit);
                             webgl.bindTexture(webgl.TEXTURE_2D, (value as Texture).glTexture.texture);
@@ -309,7 +311,7 @@ namespace egret3d {
             }
         }
 
-        private _updateAttributes(mesh: Mesh, subMeshIndex: number, technique: gltf.Technique, forceUpdate: boolean) {
+        private _updateAttributes(program: GlProgram, mesh: Mesh, subMeshIndex: number, technique: gltf.Technique, forceUpdate: boolean) {
             const needUpdate = this._cacheMesh !== mesh || this._cacheMeshVersion !== mesh._version || forceUpdate;
             if (!needUpdate) {
                 return;
@@ -329,14 +331,11 @@ namespace egret3d {
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
                 }
 
+                const glAttributes = program.attributes;
                 const attributes = technique.attributes;
-                for (const k in attributes) {
-                    const attribute = attributes[k];
-                    if (!attribute.extensions.paper.enable) {
-                        continue;
-                    }
-
-                    const location = attribute.extensions.paper.location;
+                for (const glAttribute of glAttributes) {
+                    const attribute = attributes[glAttribute.name];
+                    const location = glAttribute.location;
                     const accessorIndex = primitive.attributes[attribute.semantic];
                     if (accessorIndex !== undefined) {
                         const accessor = glTFAsset.getAccessor(accessorIndex);
@@ -410,14 +409,14 @@ namespace egret3d {
             let force = false;
             if (this._cacheProgram !== program) {
                 this._cacheProgram = program;
-                this._webgl.useProgram(program);
+                this._webgl.useProgram(program.program);
                 force = true;
             }
             //Uniform
-            this._updateContextUniforms(context, technique, force);
-            this._updateUniforms(context, material, technique, force);
+            this._updateContextUniforms(program, context, technique, force);
+            this._updateUniforms(program, material, technique, force);
             //Attribute
-            this._updateAttributes(drawCall.mesh, drawCall.subMeshIndex, technique, force);
+            this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
             //Draw
             this._drawCall(drawCall.mesh, drawCall);
         }

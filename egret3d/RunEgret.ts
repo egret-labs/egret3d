@@ -1090,7 +1090,7 @@ declare namespace gltf {
             /**
              * An attribute input to a technique and the corresponding semantic.
              */
-            [k: string]: egret3d.GLTFAttribute;
+            [k: string]: gltf.Attribute;
         };
         /**
          * A dictionary object of `Uniform` objects.
@@ -1099,7 +1099,7 @@ declare namespace gltf {
             /**
              * A uniform input to a technique, and an optional semantic and value.
              */
-            [k: string]: egret3d.GLTFUniform;
+            [k: string]: gltf.Uniform;
         };
         name: any;
         states: States;
