@@ -43,7 +43,7 @@ namespace egret3d {
                 paper.EnableSystem,
                 paper.StartSystem,
                 //
-                oimo.PhysicsSystem,
+                // oimo.PhysicsSystem,
                 //
                 paper.UpdateSystem,
                 //

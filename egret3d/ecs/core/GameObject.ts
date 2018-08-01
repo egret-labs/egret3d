@@ -464,9 +464,23 @@ namespace paper {
 
                 return null;
             }
+            if (componentClass.index < 0) {
+                return null;
+            }
 
-            const componentIndex = componentClass.index;
-            return componentIndex < 0 ? null : this._components[componentIndex] as (T | undefined) || null;
+            const component = this._components[componentClass.index];
+            if (!component) {
+                return null;
+            }
+
+            if (component.constructor === GroupComponent) {
+                const groupComponent = component as GroupComponent;
+                if (groupComponent.components[0] instanceof componentClass) {
+                    return groupComponent.components[0] as T;
+                }
+            }
+
+            return component as T;
         }
         /**
          * 
