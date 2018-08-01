@@ -46,7 +46,7 @@ namespace RES.processor {
 
             const imgResource = RES.host.resourceConfig["getResource"](_name);
             let loader = new egret.ImageLoader();
-            loader.load(imgResource.root + "/" + imgResource.url);
+            loader.load(imgResource.root + imgResource.url);
             let image = await promisify(loader, imgResource);
 
             let texture = new egret3d.Texture(resource.url);
@@ -70,18 +70,17 @@ namespace RES.processor {
     export const TextureProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            let gl = egret3d.WebGLCapabilities.webgl;
-            // let url = getUrl(resource);
-            let loader = new egret.ImageLoader();
-            loader.load(resource.url);
-            let image = await promisify(loader, resource);
-            let _texture = new egret3d.Texture(resource.url);
-            let _textureFormat = egret3d.TextureFormatEnum.RGBA;
-            let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
+            const gl = egret3d.WebGLCapabilities.webgl;
+            const loader = new egret.ImageLoader();
+            loader.load(resource.root + resource.url);
+            const image = await promisify(loader, resource);
+            const texture = new egret3d.Texture(resource.url);
+            const textureFormat = egret3d.TextureFormatEnum.RGBA;
+            const t2d = new egret3d.GlTexture2D(gl, textureFormat);
             t2d.uploadImage(image.source, true, true, true, true);
-            _texture.glTexture = t2d;
-            paper.Asset.register(_texture);
-            return _texture;
+            texture.glTexture = t2d;
+            paper.Asset.register(texture);
+            return texture;
         },
 
         async onRemoveStart(host, resource) {
@@ -119,7 +118,7 @@ namespace RES.processor {
                     const values = mat.extensions.KHR_techniques_webgl.values;
                     for (const key in values) {
                         const value = values[key];
-                        if (typeof value === "string") {                           
+                        if (typeof value === "string") {
                             const r = RES.host.resourceConfig["getResource"](value);
                             if (r) {
                                 // const texture = await RES.getResAsync(r.name);
