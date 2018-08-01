@@ -16064,7 +16064,7 @@ var RES;
                                 }
                                 imgResource = RES.host.resourceConfig["getResource"](_name);
                                 loader = new egret.ImageLoader();
-                                loader.load(imgResource.root + "/" + imgResource.url);
+                                loader.load(imgResource.root + imgResource.url);
                                 return [4 /*yield*/, promisify(loader, imgResource)];
                             case 2:
                                 image = _a.sent();
@@ -16094,23 +16094,23 @@ var RES;
         processor.TextureProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var gl, loader, image, _texture, _textureFormat, t2d;
+                    var gl, loader, image, texture, textureFormat, t2d;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
                                 gl = egret3d.WebGLCapabilities.webgl;
                                 loader = new egret.ImageLoader();
-                                loader.load(resource.url);
+                                loader.load(resource.root + resource.url);
                                 return [4 /*yield*/, promisify(loader, resource)];
                             case 1:
                                 image = _a.sent();
-                                _texture = new egret3d.Texture(resource.url);
-                                _textureFormat = 1 /* RGBA */;
-                                t2d = new egret3d.GlTexture2D(gl, _textureFormat);
+                                texture = new egret3d.Texture(resource.url);
+                                textureFormat = 1 /* RGBA */;
+                                t2d = new egret3d.GlTexture2D(gl, textureFormat);
                                 t2d.uploadImage(image.source, true, true, true, true);
-                                _texture.glTexture = t2d;
-                                paper.Asset.register(_texture);
-                                return [2 /*return*/, _texture];
+                                texture.glTexture = t2d;
+                                paper.Asset.register(texture);
+                                return [2 /*return*/, texture];
                         }
                     });
                 });
