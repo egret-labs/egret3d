@@ -5964,7 +5964,7 @@ declare namespace egret3d {
 declare namespace RES.processor {
     const TextureDescProcessor: RES.processor.Processor;
     const TextureProcessor: RES.processor.Processor;
-    const MaterialProcessor: RES.processor.Processor;
+    const GLTFBinaryProcessor: RES.processor.Processor;
     const GLTFProcessor: RES.processor.Processor;
     const PrefabProcessor: RES.processor.Processor;
     const SceneProcessor: RES.processor.Processor;

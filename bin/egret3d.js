@@ -16041,41 +16041,6 @@ var RES;
 (function (RES) {
     var processor;
     (function (processor) {
-        function getFileName(url, removeEX) {
-            if (removeEX === void 0) { removeEX = false; }
-            var filei = url.lastIndexOf("/");
-            var file = url.substr(filei + 1);
-            if (removeEX) {
-                file = file.substring(0, file.indexOf("."));
-            }
-            return file;
-        }
-        ;
-        function dirname(url) {
-            return url.substring(0, url.lastIndexOf("/"));
-        }
-        function getUrl(resource) {
-            return resource.root + resource.url;
-        }
-        function combinePath(base, relative) {
-            var stack = base.split("/"), parts = relative.split("/");
-            stack.pop(); // remove current file name (or empty string)
-            // (omit if "base" is the current folder without trailing slash)
-            for (var i = 0; i < parts.length; i++) {
-                if (parts[i] == ".")
-                    continue;
-                if (parts[i] == "..")
-                    stack.pop();
-                else
-                    stack.push(parts[i]);
-            }
-            return stack.join("/");
-        }
-        function formatUrlAndSort(assets, path) {
-            return assets.map(function (item) {
-                return item;
-            });
-        }
         function promisify(loader, resource) {
             return __awaiter(this, void 0, void 0, function () {
                 var _this = this;
@@ -16095,48 +16060,10 @@ var RES;
                 });
             });
         }
-        // export const GLVertexShaderProcessor: RES.processor.Processor = {
-        //     async onLoadStart(host, resource) {
-        //         let text = await host.load(resource, "text");
-        //         let url = getUrl(resource);
-        //         let filename = getFileName(url);
-        //         let name = filename.substring(0, filename.indexOf("."));
-        //         return egret3d.Shader.registerVertShader(name, text);
-        //     },
-        //     async onRemoveStart(host, resource) {
-        //     }
-        //     // getData(host, resource, key, subkey) { //可选函数
-        //     // }
-        // };
-        // export const GLFragmentShaderProcessor: RES.processor.Processor = {
-        //     async onLoadStart(host, resource) {
-        //         let text = await host.load(resource, "text");
-        //         let url = getUrl(resource);
-        //         let filename = getFileName(url);
-        //         let name = filename.substring(0, filename.indexOf("."));
-        //         return egret3d.Shader.registerFragShader(name, text);
-        //     },
-        //     async onRemoveStart(host, resource) {
-        //     }
-        // };
-        // export const ShaderProcessor: RES.processor.Processor = {
-        //     async onLoadStart(host, resource) {
-        //         let data = await host.load(resource, "json");
-        //         // const url = getUrl(resource);
-        //         let shader = new egret3d.Shader(resource.url);
-        //         shader.$parse(data);
-        //         paper.Asset.register(shader);
-        //         return shader;
-        //     },
-        //     async onRemoveStart(host, resource) {
-        //         let data = host.get(resource);
-        //         data.dispose();
-        //     }
-        // };
         processor.TextureDescProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, _name, _filterMode, _format, _mipmap, _wrap, _textureFormat, _linear, _repeat, url, filename, textureUrl, loader, image, texture, gl, t2d;
+                    var data, _name, _filterMode, _format, _mipmap, _wrap, _textureFormat, _linear, _repeat, imgResource, loader, image, texture, gl, t2d;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
@@ -16162,12 +16089,10 @@ var RES;
                                 if (_wrap.indexOf("Repeat") >= 0) {
                                     _repeat = true;
                                 }
-                                url = getUrl(resource);
-                                filename = getFileName(resource.url);
-                                textureUrl = url.replace(filename, _name);
+                                imgResource = RES.host.resourceConfig["getResource"](_name);
                                 loader = new egret.ImageLoader();
-                                loader.load(textureUrl);
-                                return [4 /*yield*/, promisify(loader, resource)];
+                                loader.load(imgResource.root + "/" + imgResource.url);
+                                return [4 /*yield*/, promisify(loader, imgResource)];
                             case 2:
                                 image = _a.sent();
                                 texture = new egret3d.Texture(resource.url);
@@ -16228,66 +16153,20 @@ var RES;
                 });
             }
         };
-        processor.MaterialProcessor = {
+        processor.GLTFBinaryProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
+                    var result, glTF;
                     return __generator(this, function (_a) {
-                        // let json = await host.load(resource, "json") as egret3d.MaterialConfig
-                        // let material = new egret3d.Material(resource.url);
-                        // // const shader = paper.Asset.find<egret3d.Shader>(json.shader);
-                        // const shader = paper.Asset.find<egret3d.GLTFAsset>(json.shader);
-                        // material.setShader(shader);
-                        // //现根据shaderName找出对应的Technique，然后再填充
-                        // if (material._gltfTechnique) {
-                        //     const gltfTechnique = material._gltfTechnique;
-                        //     const mapUniform = json.mapUniform;
-                        //     for (let i in mapUniform) {
-                        //         const jsonChild = mapUniform[i];
-                        //         switch (jsonChild.type) {
-                        //             case egret3d.UniformTypeEnum.Texture:
-                        //                 const value = jsonChild.value;
-                        //                 const url = combinePath(dirname(resource.url) + "/", value)
-                        //                 let texture = paper.Asset.find<egret3d.Texture>(url);
-                        //                 if (!texture) {
-                        //                     const r = RES.host.resourceConfig["getResource"](url);
-                        //                     if (r) {
-                        //                         texture = await RES.getResAsync(r.name)
-                        //                     }
-                        //                     else {
-                        //                         texture = egret3d.DefaultTextures.GRID;
-                        //                     }
-                        //                 }
-                        //                 if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.SAMPLER_2D) {
-                        //                     material.setTexture(i, texture);
-                        //                 }
-                        //                 else {
-                        //                     console.warn(`不存在的 Uniform 参数：${material.name},${i}`);
-                        //                 }
-                        //                 break;
-                        //             case egret3d.UniformTypeEnum.Float:
-                        //                 if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.FLOAT) {
-                        //                     material.setFloat(i, jsonChild.value);
-                        //                 }
-                        //                 else {
-                        //                     console.warn(`不存在的 Uniform 参数：${material.name},${i}`);
-                        //                 }
-                        //                 break;
-                        //             case egret3d.UniformTypeEnum.Float4:
-                        //                 if (gltfTechnique.uniforms[i] && gltfTechnique.uniforms[i].type === gltf.UniformType.FLOAT_VEC4) {
-                        //                     material.setVector4v(i, jsonChild.value);
-                        //                 }
-                        //                 else {
-                        //                     console.warn(`不存在的 Uniform 参数：${material.name},${i}`);
-                        //                 }
-                        //                 break;
-                        //             default:
-                        //                 console.warn(`不支持的 Uniform 参数：${material.name},${i}`);
-                        //         }
-                        //     }
-                        // }
-                        // paper.Asset.register(material);
-                        // return material;
-                        return [2 /*return*/, null];
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.BinaryProcessor)];
+                            case 1:
+                                result = _a.sent();
+                                glTF = new egret3d.GLTFAsset(resource.url);
+                                glTF.parseFromBinary(new Uint32Array(result));
+                                paper.Asset.register(glTF);
+                                return [2 /*return*/, glTF];
+                        }
                     });
                 });
             },
@@ -16305,124 +16184,49 @@ var RES;
         processor.GLTFProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var result, glTF, glTFBuffers, buffers, _i, glTFBuffers_1, buffer, url, r, buffer_1, _a, _b, mat, values, _c, _d, _e, key, value, url, texture, r, extensions, techniques, _f, techniques_1, technique, _g, _h, _j, key, uniform, value, url, texture, r;
-                    return __generator(this, function (_k) {
-                        switch (_k.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, resource.type === "GLTF" ? RES.processor.JsonProcessor : RES.processor.BinaryProcessor)];
+                    var result, glTF, buffers, _i, _a, mat, values, _b, _c, _d, key, value, r, texture;
+                    return __generator(this, function (_e) {
+                        switch (_e.label) {
+                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.JsonProcessor)];
                             case 1:
-                                result = _k.sent();
-                                glTF = new egret3d.GLTFAsset(resource.url);
-                                if (!(resource.type === "GLTF")) return [3 /*break*/, 22];
-                                glTFBuffers = result.buffers;
+                                result = _e.sent();
+                                glTF = new egret3d.GLTFAsset(resource.name);
                                 buffers = [];
-                                if (!glTFBuffers) return [3 /*break*/, 5];
-                                _i = 0, glTFBuffers_1 = glTFBuffers;
-                                _k.label = 2;
+                                glTF.parse(result, buffers);
+                                if (!(glTF.config.materials && glTF.config.materials.length > 0)) return [3 /*break*/, 8];
+                                _i = 0, _a = glTF.config.materials;
+                                _e.label = 2;
                             case 2:
-                                if (!(_i < glTFBuffers_1.length)) return [3 /*break*/, 5];
-                                buffer = glTFBuffers_1[_i];
-                                url = combinePath(dirname(resource.url) + "/", buffer.uri);
-                                r = RES.host.resourceConfig["getResource"](url);
-                                if (!r) return [3 /*break*/, 4];
-                                return [4 /*yield*/, host.load(r, RES.processor.BinaryProcessor)];
+                                if (!(_i < _a.length)) return [3 /*break*/, 8];
+                                mat = _a[_i];
+                                values = mat.extensions.KHR_techniques_webgl.values;
+                                _b = [];
+                                for (_c in values)
+                                    _b.push(_c);
+                                _d = 0;
+                                _e.label = 3;
                             case 3:
-                                buffer_1 = _k.sent();
-                                if (buffer_1) {
-                                    buffers.push(new Uint32Array(buffer_1));
-                                }
-                                else {
-                                    console.error("Load glTF resource error.", url);
-                                }
-                                _k.label = 4;
+                                if (!(_d < _b.length)) return [3 /*break*/, 7];
+                                key = _b[_d];
+                                value = values[key];
+                                if (!(typeof value === "string")) return [3 /*break*/, 6];
+                                r = RES.host.resourceConfig["getResource"](value);
+                                if (!r) return [3 /*break*/, 5];
+                                return [4 /*yield*/, host.load(r)];
                             case 4:
+                                texture = _e.sent();
+                                values[key] = texture;
+                                return [3 /*break*/, 6];
+                            case 5:
+                                values[key] = egret3d.DefaultTextures.GRID;
+                                _e.label = 6;
+                            case 6:
+                                _d++;
+                                return [3 /*break*/, 3];
+                            case 7:
                                 _i++;
                                 return [3 /*break*/, 2];
-                            case 5:
-                                glTF.parse(result, buffers);
-                                if (!(glTF.config.materials && glTF.config.materials.length > 0)) return [3 /*break*/, 13];
-                                _a = 0, _b = glTF.config.materials;
-                                _k.label = 6;
-                            case 6:
-                                if (!(_a < _b.length)) return [3 /*break*/, 13];
-                                mat = _b[_a];
-                                values = mat.extensions.KHR_techniques_webgl.values;
-                                _c = [];
-                                for (_d in values)
-                                    _c.push(_d);
-                                _e = 0;
-                                _k.label = 7;
-                            case 7:
-                                if (!(_e < _c.length)) return [3 /*break*/, 12];
-                                key = _c[_e];
-                                value = values[key];
-                                if (!(typeof value === "string")) return [3 /*break*/, 11];
-                                url = combinePath(dirname(resource.url) + "/", value);
-                                texture = paper.Asset.find(url);
-                                if (!!texture) return [3 /*break*/, 10];
-                                r = RES.host.resourceConfig["getResource"](url);
-                                if (!r) return [3 /*break*/, 9];
-                                return [4 /*yield*/, RES.getResAsync(r.name)];
                             case 8:
-                                texture = _k.sent();
-                                return [3 /*break*/, 10];
-                            case 9:
-                                texture = egret3d.DefaultTextures.GRID;
-                                _k.label = 10;
-                            case 10:
-                                values[key] = texture;
-                                _k.label = 11;
-                            case 11:
-                                _e++;
-                                return [3 /*break*/, 7];
-                            case 12:
-                                _a++;
-                                return [3 /*break*/, 6];
-                            case 13:
-                                extensions = glTF.config.extensions;
-                                if (!(extensions && extensions.KHR_techniques_webgl)) return [3 /*break*/, 21];
-                                techniques = extensions.KHR_techniques_webgl.techniques;
-                                _f = 0, techniques_1 = techniques;
-                                _k.label = 14;
-                            case 14:
-                                if (!(_f < techniques_1.length)) return [3 /*break*/, 21];
-                                technique = techniques_1[_f];
-                                _g = [];
-                                for (_h in technique.uniforms)
-                                    _g.push(_h);
-                                _j = 0;
-                                _k.label = 15;
-                            case 15:
-                                if (!(_j < _g.length)) return [3 /*break*/, 20];
-                                key = _g[_j];
-                                uniform = technique.uniforms[key];
-                                if (!(uniform.type === 35678 /* SAMPLER_2D */)) return [3 /*break*/, 19];
-                                value = uniform.value.uri;
-                                url = combinePath(dirname(resource.url) + "/", value);
-                                texture = paper.Asset.find(url);
-                                if (!!texture) return [3 /*break*/, 18];
-                                r = RES.host.resourceConfig["getResource"](url);
-                                if (!r) return [3 /*break*/, 17];
-                                return [4 /*yield*/, RES.getResAsync(r.name)];
-                            case 16:
-                                texture = _k.sent();
-                                return [3 /*break*/, 18];
-                            case 17:
-                                texture = egret3d.DefaultTextures.GRID;
-                                _k.label = 18;
-                            case 18:
-                                uniform.value = texture;
-                                _k.label = 19;
-                            case 19:
-                                _j++;
-                                return [3 /*break*/, 15];
-                            case 20:
-                                _f++;
-                                return [3 /*break*/, 14];
-                            case 21: return [3 /*break*/, 23];
-                            case 22:
-                                glTF.parseFromBinary(new Uint32Array(result));
-                                _k.label = 23;
-                            case 23:
                                 paper.Asset.register(glTF);
                                 return [2 /*return*/, glTF];
                         }
@@ -16537,9 +16341,8 @@ var RES;
         // RES.processor.map("Shader", ShaderProcessor);
         RES.processor.map("Texture", processor.TextureProcessor);
         RES.processor.map("TextureDesc", processor.TextureDescProcessor);
-        // RES.processor.map("Material", MaterialProcessor);
         RES.processor.map("GLTF", processor.GLTFProcessor);
-        RES.processor.map("GLTFBinary", processor.GLTFProcessor);
+        RES.processor.map("GLTFBinary", processor.GLTFBinaryProcessor);
         RES.processor.map("Prefab", processor.PrefabProcessor);
         RES.processor.map("Scene", processor.SceneProcessor);
     })(processor = RES.processor || (RES.processor = {}));
