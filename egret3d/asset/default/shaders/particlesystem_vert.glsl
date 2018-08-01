@@ -37,7 +37,7 @@ void main()
 	#include <particle_affector>
 	gl_Position=glstate_matrix_vp*vec4(center,1.0);
 	v_color = computeColor(_startColor, t);
-	v_texcoord =computeUV(_glesMultiTexCoord0, t);
+	v_texcoord =computeUV(_glesMultiTexCoord0 * _MainTex_ST.xy + _MainTex_ST.zw, t);
 	v_discard=0.0;
 }
 
