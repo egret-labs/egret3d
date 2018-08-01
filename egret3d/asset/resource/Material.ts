@@ -381,6 +381,7 @@ namespace egret3d {
         }
 
         setTexture(id: string, value: egret3d.Texture) {
+            value = value || egret3d.DefaultTextures.GRAY;
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value) {
