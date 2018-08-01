@@ -9808,6 +9808,7 @@ var egret;
                 this.setBlendMode("source-over");
                 // 目前只使用0号材质单元，默认开启
                 gl.activeTexture(gl.TEXTURE0);
+                this.currentProgram = null;
             };
             Renderer.prototype.$drawWebGL = function () {
                 if (this.drawCmdManager.drawDataLen == 0) {
@@ -9932,26 +9933,26 @@ var egret;
                 return offset;
             };
             Renderer.prototype.activeProgram = function (gl, program) {
-                // if (program != this.currentProgram) {
-                gl.useProgram(program.id);
-                // 目前所有attribute buffer的绑定方法都是一致的
-                var attribute = program.attributes;
-                for (var key in attribute) {
-                    if (key === "aVertexPosition") {
-                        gl.vertexAttribPointer(attribute["aVertexPosition"].location, 2, gl.FLOAT, false, 4 * 4, 0);
-                        gl.enableVertexAttribArray(attribute["aVertexPosition"].location);
+                if (program != this.currentProgram) {
+                    gl.useProgram(program.id);
+                    // 目前所有attribute buffer的绑定方法都是一致的
+                    var attribute = program.attributes;
+                    for (var key in attribute) {
+                        if (key === "aVertexPosition") {
+                            gl.vertexAttribPointer(attribute["aVertexPosition"].location, 2, gl.FLOAT, false, 4 * 4, 0);
+                            gl.enableVertexAttribArray(attribute["aVertexPosition"].location);
+                        }
+                        else if (key === "aTextureCoord") {
+                            gl.vertexAttribPointer(attribute["aTextureCoord"].location, 2, gl.UNSIGNED_SHORT, true, 4 * 4, 2 * 4);
+                            gl.enableVertexAttribArray(attribute["aTextureCoord"].location);
+                        }
+                        else if (key === "aColor") {
+                            gl.vertexAttribPointer(attribute["aColor"].location, 1, gl.FLOAT, false, 4 * 4, 3 * 4);
+                            gl.enableVertexAttribArray(attribute["aColor"].location);
+                        }
                     }
-                    else if (key === "aTextureCoord") {
-                        gl.vertexAttribPointer(attribute["aTextureCoord"].location, 2, gl.UNSIGNED_SHORT, true, 4 * 4, 2 * 4);
-                        gl.enableVertexAttribArray(attribute["aTextureCoord"].location);
-                    }
-                    else if (key === "aColor") {
-                        gl.vertexAttribPointer(attribute["aColor"].location, 1, gl.FLOAT, false, 4 * 4, 3 * 4);
-                        gl.enableVertexAttribArray(attribute["aColor"].location);
-                    }
+                    this.currentProgram = program;
                 }
-                this.currentProgram = program;
-                // }
             };
             Renderer.prototype.syncUniforms = function (program, filter, textureWidth, textureHeight) {
                 var uniforms = program.uniforms;

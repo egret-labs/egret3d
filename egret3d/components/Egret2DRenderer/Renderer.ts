@@ -88,6 +88,7 @@ module egret.web {
 
             // 目前只使用0号材质单元，默认开启
             gl.activeTexture(gl.TEXTURE0);
+            this.currentProgram = null;
         }
 
 
@@ -230,27 +231,27 @@ module egret.web {
 
         private currentProgram: EgretWebGLProgram;
         private activeProgram(gl: WebGLRenderingContext, program: EgretWebGLProgram): void {
-            // if (program != this.currentProgram) {
-            gl.useProgram(program.id);
+            if (program != this.currentProgram) {
+                gl.useProgram(program.id);
 
-            // 目前所有attribute buffer的绑定方法都是一致的
-            let attribute = program.attributes;
+                // 目前所有attribute buffer的绑定方法都是一致的
+                let attribute = program.attributes;
 
-            for (let key in attribute) {
-                if (key === "aVertexPosition") {
-                    gl.vertexAttribPointer(attribute["aVertexPosition"].location, 2, gl.FLOAT, false, 4 * 4, 0);
-                    gl.enableVertexAttribArray(attribute["aVertexPosition"].location);
-                } else if (key === "aTextureCoord") {
-                    gl.vertexAttribPointer(attribute["aTextureCoord"].location, 2, gl.UNSIGNED_SHORT, true, 4 * 4, 2 * 4);
-                    gl.enableVertexAttribArray(attribute["aTextureCoord"].location);
-                } else if (key === "aColor") {
-                    gl.vertexAttribPointer(attribute["aColor"].location, 1, gl.FLOAT, false, 4 * 4, 3 * 4);
-                    gl.enableVertexAttribArray(attribute["aColor"].location);
+                for (let key in attribute) {
+                    if (key === "aVertexPosition") {
+                        gl.vertexAttribPointer(attribute["aVertexPosition"].location, 2, gl.FLOAT, false, 4 * 4, 0);
+                        gl.enableVertexAttribArray(attribute["aVertexPosition"].location);
+                    } else if (key === "aTextureCoord") {
+                        gl.vertexAttribPointer(attribute["aTextureCoord"].location, 2, gl.UNSIGNED_SHORT, true, 4 * 4, 2 * 4);
+                        gl.enableVertexAttribArray(attribute["aTextureCoord"].location);
+                    } else if (key === "aColor") {
+                        gl.vertexAttribPointer(attribute["aColor"].location, 1, gl.FLOAT, false, 4 * 4, 3 * 4);
+                        gl.enableVertexAttribArray(attribute["aColor"].location);
+                    }
                 }
-            }
 
-            this.currentProgram = program;
-            // }
+                this.currentProgram = program;
+            }
         }
 
         private syncUniforms(program: EgretWebGLProgram, filter: Filter, textureWidth: number, textureHeight: number): void {
@@ -288,7 +289,7 @@ module egret.web {
         /**
          * 启用RenderBuffer
          */
-        private activateBuffer(buffer: WebGLRenderBuffer, width:number, height:number): void {
+        private activateBuffer(buffer: WebGLRenderBuffer, width: number, height: number): void {
 
             buffer.rootRenderTarget.activate();
 
