@@ -23,6 +23,7 @@ namespace egret3d {
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
         // TODO WebAssembly load
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound'] //TODO:Sound
+        egret.Capabilities["renderMode" + ""] = "webgl";
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas();
         //TODO
