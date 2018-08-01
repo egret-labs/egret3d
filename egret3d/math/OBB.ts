@@ -288,9 +288,11 @@ namespace egret3d {
             }
         }
 
-        public deserialize(element: { center: [number, number, number], size: [number, number, number] }): void {
+        public deserialize(element: { center: [number, number, number], size: [number, number, number] }){
             this.center.deserialize(element.center);
             this.size.deserialize(element.size);
+
+            return this;
         }
     }
 }

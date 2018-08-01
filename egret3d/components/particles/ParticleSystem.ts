@@ -454,6 +454,10 @@ namespace egret3d.particle {
                     zdist: -1,
                 };
 
+                if (!renderer.batchMesh.vbo) {
+                    renderer.batchMesh.createVBOAndIBOs();
+                }
+
                 this._drawCalls.drawCalls.push(drawCall);
             }
         }

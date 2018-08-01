@@ -74,7 +74,8 @@ namespace paper {
          */
         public _activeDirty: boolean = true;
         private readonly _components: ComponentArray = [];
-        private _scene: Scene = null as any;
+        private readonly _cachedComponents: BaseComponent[] = [];
+        private _scene: Scene | null = null;
         /**
          * @deprecated
          */
@@ -111,7 +112,7 @@ namespace paper {
             this.renderer = null;
 
             this._components.length = 0;
-            this._scene._removeGameObject(this);
+            this._scene!._removeGameObject(this);
             this._scene = null as any;
         }
 
@@ -663,25 +664,41 @@ namespace paper {
                     parent = parent.parent;
                 }
 
-                return this._scene.name + "/" + path;
+                return this._scene!.name + "/" + path;
             }
 
             return path;
         }
-
         /**
-         * 组件列表
+         * 
          */
         @serializedField
         @deserializedIgnore
-        public get components(): Readonly<ComponentArray> {
-            return this._components;
+        public get components(): ReadonlyArray<BaseComponent> {
+            this._cachedComponents.length = 0;
+
+            for (const component of this._components) {
+                if (!component) {
+                    continue;
+                }
+
+                if (component.constructor === GroupComponent) {
+                    for (const componentInGroup of (component as GroupComponent).components) {
+                        this._cachedComponents.push(componentInGroup);
+                    }
+                }
+                else {
+                    this._cachedComponents.push(component);
+                }
+            }
+
+            return this._cachedComponents;
         }
         /**
          * 获取物体所在场景实例。
          */
-        public get scene(): Scene {
-            return this._scene;
+        public get scene() {
+            return this._scene!;
         }
 
         /**

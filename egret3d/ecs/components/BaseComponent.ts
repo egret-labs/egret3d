@@ -23,7 +23,7 @@ namespace paper {
     /**
      * 
      */
-    export type SingletonComponentClass<T extends SingletonComponent> = ComponentClass<T> & { instance: T };
+    export type SingletonComponentClass<T extends SingletonComponent> = ComponentClass<T> & { instance: T | null };
     /**
      * 
      */
@@ -61,7 +61,7 @@ namespace paper {
          */
         public static requireComponents: ComponentClass<BaseComponent>[] | null = null;
 
-        private static _createEnabled: GameObject = null as any;
+        private static _createEnabled: GameObject | null = null;
         private static _componentCount: number = 0;
         private static readonly _componentClasses: ComponentClass<BaseComponent>[] = [];
         /**
@@ -115,7 +115,7 @@ namespace paper {
 
             if (BaseComponent._createEnabled) {
                 this.gameObject = BaseComponent._createEnabled;
-                BaseComponent._createEnabled = null as any;
+                BaseComponent._createEnabled = null;
             }
             else {
                 throw new Error("Create an instance of a component is not allowed.");
@@ -172,6 +172,8 @@ namespace paper {
                     this.extras[k] = element.extras[k];
                 }
             }
+
+            return this;
         }
         /**
          * 

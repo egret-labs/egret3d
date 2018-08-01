@@ -13,8 +13,10 @@ namespace paper {
             return rarget;
         }
 
-        public deserialize(element: any): void {
+        public deserialize(element: any) {
             this.missingObject = element.missingObject || null;
+
+            return this;
         }
     }
 }

@@ -100,19 +100,18 @@ namespace egret3d {
             combine.lightmapScaleOffset = meshRenderer.lightmapScaleOffset;
         }
         //适配最大格式
-        const glTFAsset = meshData.glTFAsset;
         const primitives = meshData.glTFMesh.primitives;
         for (let i = 0; i < primitives.length; i++) {
             const primitive = primitives[i];
             for (const attStr in primitives[i].attributes) {
                 const attrType = attStr as gltf.MeshAttributeType;
                 if (!combine.meshAttribute[attrType]) {
-                    combine.vertexBufferSize += GLTFAsset.getAccessorTypeCount(glTFAsset.getAccessor(primitive.attributes[attStr]).type);
+                    combine.vertexBufferSize += meshData.getAccessorTypeCount(meshData.getAccessor(primitive.attributes[attStr]!).type);
                 }
                 combine.meshAttribute[attrType] = attrType;
             }
 
-            combine.indexBufferTotalSize += glTFAsset.getBufferLength(glTFAsset.getAccessor(primitive.indices)) / Uint16Array.BYTES_PER_ELEMENT;
+            combine.indexBufferTotalSize += meshData.getBufferLength(meshData.getAccessor(primitive.indices!)) / Uint16Array.BYTES_PER_ELEMENT;
         }
         //
         combine.vertexCount += meshData.vertexCount;
@@ -127,7 +126,7 @@ namespace egret3d {
         const combineRoot = combineInstance.root;
         //把合成好的放入root中，重新绘制
         if (combineRoot) {
-            const meshFilter = combineRoot.getComponent(MeshFilter);
+            const meshFilter = combineRoot.getComponent(MeshFilter)!;
             meshFilter.mesh = combineMesh;
         }
         // for(const instance of combineInstance.instances){
@@ -159,24 +158,22 @@ namespace egret3d {
         let startIndex = 0;
         let endIndex = 0;
         for (const instance of combineInstance.instances) {
-            const meshFilter = instance.getComponent(egret3d.MeshFilter);
-            const meshRenderer = instance.getComponent(egret3d.MeshRenderer);
+            const meshFilter = instance.getComponent(egret3d.MeshFilter)!;
+            const meshRenderer = instance.getComponent(egret3d.MeshRenderer)!;
             const worldMatrix = instance.transform.getWorldMatrix();
             const orginLightmapScaleOffset = meshRenderer.lightmapScaleOffset;
-            const mesh = meshFilter.mesh;
-            const glTFAsset = mesh.glTFAsset;
+            const mesh = meshFilter.mesh!;
 
             const primitives = mesh.glTFMesh.primitives;
-            const isSharedBuffer = mesh.isSharedBuffer;
             //共享一个的buffer，vbo只处理一个submesh就可以了
             let combineOnce = true;
             for (let i = 0; i < primitives.length; i++) {
                 const primitive = primitives[i];
                 if (combineOnce) {
-                    combineOnce = !isSharedBuffer;
-                    const orginVertexCount = mesh.getVertexCount(i);
+                    combineOnce = false;
+                    const orginVertexCount = mesh.vertexCount;
                     const orginAttributes = primitives[i].attributes;
-                    const positionBuffer = glTFAsset.createTypeArrayFromAccessor(glTFAsset.getAccessor(orginAttributes.POSITION)) as Float32Array;
+                    const positionBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.POSITION!)) as Float32Array;
                     //vertexBuffers
                     for (let j = 0; j < positionBuffer.length; j += 3) {
                         helpVec3_1.x = positionBuffer[j + 0];
@@ -191,7 +188,7 @@ namespace egret3d {
                     //
                     if (meshAttribute[gltf.MeshAttributeType.NORMAL]) {
                         if (orginAttributes.NORMAL) {
-                            const normalBuffer = glTFAsset.createTypeArrayFromAccessor(glTFAsset.getAccessor(orginAttributes.NORMAL)) as Float32Array;
+                            const normalBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.NORMAL)) as Float32Array;
                             const target = tempVertexBuffers[gltf.MeshAttributeType.NORMAL];
                             const count = normalBuffer.length;
                             let startIndex = target.length;
@@ -216,7 +213,7 @@ namespace egret3d {
                     }
                     if (meshAttribute[gltf.MeshAttributeType.TANGENT]) {
                         if (orginAttributes.TANGENT) {
-                            const tangentBuffer = glTFAsset.createTypeArrayFromAccessor(glTFAsset.getAccessor(orginAttributes.TANGENT)) as Float32Array;
+                            const tangentBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TANGENT)) as Float32Array;
                             const target = tempVertexBuffers[gltf.MeshAttributeType.TANGENT];
                             const count = tangentBuffer.length;
                             let startIndex = target.length;
@@ -243,14 +240,14 @@ namespace egret3d {
                     }
                     if (meshAttribute[gltf.MeshAttributeType.COLOR_0]) {
                         if (orginAttributes.COLOR_0) {
-                            _copyAccessorBufferArray(glTFAsset, orginAttributes.COLOR_0, tempVertexBuffers[gltf.MeshAttributeType.COLOR_0]);
+                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_0, tempVertexBuffers[gltf.MeshAttributeType.COLOR_0]);
                         } else {
                             _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.COLOR_0], orginVertexCount, [1, 1, 1, 1]);
                         }
                     }
                     if (meshAttribute[gltf.MeshAttributeType.TEXCOORD_0]) {
                         if (orginAttributes.TEXCOORD_0) {
-                            _copyAccessorBufferArray(glTFAsset, orginAttributes.TEXCOORD_0, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_0]);
+                            _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_0]);
                         } else {
                             _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_0], orginVertexCount, [0, 0]);
                         }
@@ -259,8 +256,8 @@ namespace egret3d {
                         if (combineInstance.lightmapIndex >= 0) {
                             //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
                             const uvBuffer = orginAttributes.TEXCOORD_1 ?
-                                glTFAsset.createTypeArrayFromAccessor(glTFAsset.getAccessor(orginAttributes.TEXCOORD_1)) as Float32Array :
-                                glTFAsset.createTypeArrayFromAccessor(glTFAsset.getAccessor(orginAttributes.TEXCOORD_0)) as Float32Array;
+                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) as Float32Array :
+                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0!)) as Float32Array;
                             //
                             for (let j = 0; j < uvBuffer.length; j += 2) {
                                 let u = uvBuffer[j + 0];
@@ -272,7 +269,7 @@ namespace egret3d {
                             }
                         } else {
                             if (orginAttributes.TEXCOORD_1) {
-                                _copyAccessorBufferArray(glTFAsset, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
                             } else {
                                 _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1], orginVertexCount, [0, 0]);
                             }
@@ -280,28 +277,28 @@ namespace egret3d {
                     }
                     if (meshAttribute[gltf.MeshAttributeType.JOINTS_0]) {
                         if (orginAttributes.JOINTS_0) {
-                            _copyAccessorBufferArray(glTFAsset, orginAttributes.JOINTS_0, tempVertexBuffers[gltf.MeshAttributeType.JOINTS_0]);
+                            _copyAccessorBufferArray(mesh, orginAttributes.JOINTS_0, tempVertexBuffers[gltf.MeshAttributeType.JOINTS_0]);
                         } else {
                             _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.JOINTS_0], orginVertexCount, [0, 0, 0, 0]);
                         }
                     }
                     if (meshAttribute[gltf.MeshAttributeType.WEIGHTS_0]) {
                         if (orginAttributes.WEIGHTS_0) {
-                            _copyAccessorBufferArray(glTFAsset, orginAttributes.WEIGHTS_0, tempVertexBuffers[gltf.MeshAttributeType.WEIGHTS_0]);
+                            _copyAccessorBufferArray(mesh, orginAttributes.WEIGHTS_0, tempVertexBuffers[gltf.MeshAttributeType.WEIGHTS_0]);
                         } else {
                             _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.WEIGHTS_0], orginVertexCount, [1, 0, 0, 0]);
                         }
                     }
                     if (meshAttribute[gltf.MeshAttributeType.COLOR_1]) {
                         if (orginAttributes.COLOR_1) {
-                            _copyAccessorBufferArray(glTFAsset, orginAttributes.COLOR_1, tempVertexBuffers[gltf.MeshAttributeType.COLOR_1]);
+                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_1, tempVertexBuffers[gltf.MeshAttributeType.COLOR_1]);
                         } else {
                             _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.COLOR_1], orginVertexCount, [1, 1, 1, 1]);
                         }
                     }
                 }
 
-                const subIndexBuffer = glTFAsset.createTypeArrayFromAccessor(glTFAsset.getAccessor(primitive.indices)) as Uint16Array;
+                const subIndexBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(primitive.indices!)) as Uint16Array;
                 // //indexBuffers
                 if (!tempIndexBuffers[i]) {
                     tempIndexBuffers[i] = [];
@@ -334,15 +331,14 @@ namespace egret3d {
             }
         }
 
-        const combineMesh = new Mesh(newVertexBuffers, newIndexBuffers, tempIndexBuffers[0].length, newAttribute, MeshDrawMode.Static);
+        const combineMesh = new Mesh(newVertexBuffers.length, newIndexBuffers.length, newAttribute, undefined, gltf.DrawMode.Dynamic);
+
         let indicesCount = 0;
         for (let i = 0; i < tempIndexBuffers.length; i++) {
             const subLen = tempIndexBuffers[i].length;
-            if (i > 0) {
                 //第一个submesh在构造函数中已经添加，需要手动添加后续的
                 combineMesh.addSubMesh(indicesCount, subLen, i);
-                combineMesh.uploadSubIndexBuffer(i);
-            }
+            
             indicesCount += subLen;
         }
 

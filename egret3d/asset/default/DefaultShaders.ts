@@ -43,12 +43,9 @@ namespace egret3d {
             const asset = GLTFAsset.createGLTFExtensionsAsset(url);
 
             const KHRExtensions = asset.config.extensions.KHR_techniques_webgl;
-            KHRExtensions.shaders = [];
 
             KHRExtensions.shaders.push({ type: gltf.ShaderStage.VERTEX_SHADER, name: vertName, uri: vertSource });
             KHRExtensions.shaders.push({ type: gltf.ShaderStage.FRAGMENT_SHADER, name: fragName, uri: fragSource });
-
-            KHRExtensions.techniques = [];
             KHRExtensions.techniques.push({ attributes: {}, uniforms: {}, states: { enable: [], functions: {} } } as any);
 
             asset.config.extensions.paper = { renderQueue };

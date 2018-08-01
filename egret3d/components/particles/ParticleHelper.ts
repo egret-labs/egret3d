@@ -5,28 +5,28 @@ namespace egret3d.particle {
     */
     export function createBatchMesh(renderer: ParticleRenderer, maxParticleCount: number) {
         const meshAttributes: string[] = [];
-        const meshAttributesType: gltf.AccessorType[] = [];
+        const meshAttributesType: { [key: string]: gltf.AccessorType } = {};
         if (renderer._renderMode === ParticleRenderMode.Mesh) {
-            const mesh = renderer.mesh;
-            const orginIndexBuffer = mesh.getIndices();
+            const mesh = renderer.mesh!;
+            const orginIndexBuffer = mesh.getIndices()!;
             const orginIndexBufferCount = orginIndexBuffer.length;
             for (const attribute of MeshShaderAttributeFormat) {
                 meshAttributes.push(attribute.key);
-                meshAttributesType.push(attribute.type);
+                meshAttributesType[attribute.key] = attribute.type;
             }
 
             const totalVertexCount = mesh.vertexCount * maxParticleCount;
             const totalIndexCount = orginIndexBufferCount * maxParticleCount;
-            const batchMesh = new Mesh(totalVertexCount, totalIndexCount, totalIndexCount, meshAttributes, meshAttributesType, MeshDrawMode.Dynamic);
+            const batchMesh = new Mesh(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType, gltf.DrawMode.Dynamic);
             //
             let index = 0;
             //提前填充
-            const orginPostionBuffer = mesh.getAttributes(gltf.MeshAttributeType.POSITION);
+            const orginPostionBuffer = mesh.getAttributes(gltf.MeshAttributeType.POSITION)!;
             const orginUVBuffer = mesh.getAttributes(gltf.MeshAttributeType.TEXCOORD_0);
             const orginColorBuffer = mesh.getAttributes(gltf.MeshAttributeType.COLOR_0);
-            const positionBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.POSITION);
-            const colorBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.COLOR_0);
-            const uvBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.TEXCOORD_0);
+            const positionBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.POSITION)!;
+            const colorBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.COLOR_0)!;
+            const uvBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.TEXCOORD_0)!;
             for (let i = 0; i < totalVertexCount; i++) {
                 const vector2Offset = i * 2;
                 const vector3Offset = i * 3;
@@ -36,7 +36,7 @@ namespace egret3d.particle {
                 positionBuffer[vector3Offset + 1] = orginPostionBuffer[orginVertexIndex * 3 + 1];
                 positionBuffer[vector3Offset + 2] = orginPostionBuffer[orginVertexIndex * 3 + 2];
 
-                if(orginUVBuffer){
+                if (orginUVBuffer) {
                     uvBuffer[vector2Offset] = orginUVBuffer[orginVertexIndex * 2];
                     uvBuffer[vector2Offset + 1] = orginUVBuffer[orginVertexIndex * 2 + 1];
                 }
@@ -54,7 +54,7 @@ namespace egret3d.particle {
                 }
             }
 
-            const indexBuffer = batchMesh.getIndices();
+            const indexBuffer = batchMesh.getIndices()!;
             for (let i = 0; i < maxParticleCount; i++) {
                 const indexOffset = i * mesh.vertexCount;
                 for (let j = 0; j < orginIndexBufferCount; j++) {
@@ -67,17 +67,17 @@ namespace egret3d.particle {
             const orginIndexBufferCount = orginIndexBuffer.length;
             for (const attribute of BillboardShaderAttributeFormat) {
                 meshAttributes.push(attribute.key);
-                meshAttributesType.push(attribute.type);
+                meshAttributesType[attribute.key] = attribute.type;
             }
 
             const vertexStride = 4;
             const totalVertexCount = vertexStride * maxParticleCount;
             const totalIndexCount = orginIndexBufferCount * maxParticleCount;
 
-            const batchMesh = new Mesh(totalVertexCount, totalIndexCount, totalIndexCount, meshAttributes, meshAttributesType, MeshDrawMode.Dynamic);
+            const batchMesh = new Mesh(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType, gltf.DrawMode.Dynamic);
 
-            const cornerBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.CORNER);
-            const uvBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.TEXCOORD_0);
+            const cornerBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.CORNER)!;
+            const uvBuffer = batchMesh.getAttributes(ParticleMaterialAttribute.TEXCOORD_0)!;
             for (let i = 0; i < totalVertexCount; i++) {
                 const orginVertexIndex = i % vertexStride;
                 const vector2Offset = i * 2;
@@ -108,7 +108,7 @@ namespace egret3d.particle {
                         break;
                 }
             }
-            const indexBuffer = batchMesh.getIndices();
+            const indexBuffer = batchMesh.getIndices()!;
             for (let i = 0; i < maxParticleCount; i++) {
                 const indexOffset = i * 6;
                 const firstVertex = i * vertexStride;

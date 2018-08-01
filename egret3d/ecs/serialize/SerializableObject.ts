@@ -6,7 +6,7 @@ namespace paper {
     export let createUUID = () => {
         return (_hashCount++).toString();
     };
-    
+
     export let createAssetID = () => {
         return undefined;
     };
@@ -22,12 +22,16 @@ namespace paper {
 
         public serialize(): any {
             console.warn("Unimplemented serialize method.");
+
+            return null;
         }
         /**
          * 
          */
-        public deserialize(element: any): void {
+        public deserialize(element: any): any {
             console.warn("Unimplemented deserialize method.");
+
+            return null;
         }
     }
 }

@@ -27,13 +27,11 @@ namespace egret3d {
          * @language zh_CN
          */
         public static get main() {
-            const gameObject = paper.Application.sceneManager.activeScene.findWithTag(paper.DefaultTags.MainCamera);
+            const gameObject =
+                paper.Application.sceneManager.activeScene.findWithTag(paper.DefaultTags.MainCamera) ||
+                paper.GameObject.create(paper.DefaultTags.MainCamera, paper.DefaultTags.MainCamera);
 
-            if (gameObject) {
-                return gameObject.getComponent(Camera, true);
-            }
-
-            return null;
+            return gameObject.getOrAddComponent(Camera);
         }
 
         /**

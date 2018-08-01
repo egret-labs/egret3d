@@ -41,11 +41,15 @@ namespace egret3d {
 
                     subMeshIndex: subMeshIndex++,
                     mesh: filter.mesh,
-                    material: renderer.materials[primitive.material || 0] || DefaultMaterials.MissingMaterial,
+                    material: renderer.materials[primitive.material!] || DefaultMaterials.MissingMaterial,
 
                     frustumTest: false,
                     zdist: -1,
                 };
+
+                if (!filter.mesh.vbo) {
+                    filter.mesh.createVBOAndIBOs();
+                }
 
                 this._drawCalls.drawCalls.push(drawCall);
             }

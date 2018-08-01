@@ -56,7 +56,7 @@ namespace paper {
 
             this.lightmaps.length = 0;
             this._gameObjects.length = 0;
-            this.rawScene = null as any;
+            this.rawScene = null;
         }
         /**
          * @internal

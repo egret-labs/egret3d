@@ -276,16 +276,16 @@ namespace egret3d.particle {
             const mesh = createBatchMesh(renderer, comp.main._maxParticles);
             this._vertexStride = renderer._renderMode === ParticleRenderMode.Mesh ? renderer.mesh.vertexCount : 4;
 
-            this._startPositionBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_POSITION);
-            this._startVelocityBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_VELOCITY);
-            this._startColorBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_COLOR);
-            this._startSizeBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_SIZE);
-            this._startRotationBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_ROTATION);
-            this._startTimeBuffer = mesh.getAttributes(ParticleMaterialAttribute.TIME);
-            this._random0Buffer = mesh.getAttributes(ParticleMaterialAttribute.RANDOM0);
-            this._random1Buffer = mesh.getAttributes(ParticleMaterialAttribute.RANDOM1);
-            this._worldPostionBuffer = mesh.getAttributes(ParticleMaterialAttribute.WORLD_POSITION);
-            this._worldRoationBuffer = mesh.getAttributes(ParticleMaterialAttribute.WORLD_ROTATION);
+            this._startPositionBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_POSITION)!;
+            this._startVelocityBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_VELOCITY)!;
+            this._startColorBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_COLOR)!;
+            this._startSizeBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_SIZE)!;
+            this._startRotationBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_ROTATION)!;
+            this._startTimeBuffer = mesh.getAttributes(ParticleMaterialAttribute.TIME)!;
+            this._random0Buffer = mesh.getAttributes(ParticleMaterialAttribute.RANDOM0)!;
+            this._random1Buffer = mesh.getAttributes(ParticleMaterialAttribute.RANDOM1)!;
+            this._worldPostionBuffer = mesh.getAttributes(ParticleMaterialAttribute.WORLD_POSITION)!;
+            this._worldRoationBuffer = mesh.getAttributes(ParticleMaterialAttribute.WORLD_ROTATION)!;
 
             const primitive = mesh.glTFMesh.primitives[0];
             this._vertexAttributes = [];
@@ -392,12 +392,17 @@ namespace egret3d.particle {
                 const bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
                 if (this._firstAliveCursor > this._lastFrameFirstCursor) {
                     const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
-                    renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, bufferCount);
+                    renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
+                        // uploadVertexSubData(this._vertexAttributes, bufferOffset, bufferCount);
                 } else {
                     const addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
                     //先更新尾部的，再更新头部的
-                    renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                    renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+                    renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                    renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+
+
+                    // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                    // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
                 }
                 this._lastFrameFirstCursor = this._firstAliveCursor;
                 this._dirty = false;

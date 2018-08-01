@@ -145,6 +145,8 @@ namespace egret3d {
             this._glTFAsset = paper.getDeserializedAssetOrComponent(element._glTFAsset) as GLTFAsset;
 
             this.initialize();
+
+            return this;
         }
 
         public initialize() {

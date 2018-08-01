@@ -44,6 +44,10 @@ namespace egret3d {
                     boneData: renderer.boneBuffer,
                 };
 
+                if (!renderer.mesh.vbo) {
+                    renderer.mesh.createVBOAndIBOs();
+                }
+
                 material.addDefine("SKINNING");
 
                 this._drawCalls.drawCalls.push(drawCall);

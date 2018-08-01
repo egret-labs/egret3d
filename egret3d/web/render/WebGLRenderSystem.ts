@@ -25,7 +25,6 @@ namespace egret3d {
         private _cacheDefines: string;
         private _cacheContextVersion: number;
         private _cacheMaterialVerision: number;
-        private _cacheMeshVersion: number;
         private _cacheProgram: WebGLProgram;
         private _cacheContext: RenderContext;
         private _cacheMaterial: Material;
@@ -310,24 +309,17 @@ namespace egret3d {
         }
 
         private _updateAttributes(mesh: Mesh, subMeshIndex: number, technique: gltf.Technique, forceUpdate: boolean) {
-            const needUpdate = this._cacheMesh !== mesh || this._cacheMeshVersion !== mesh._version || forceUpdate;
+            const needUpdate = this._cacheMesh !== mesh || forceUpdate;
             if (!needUpdate) {
                 return;
             }
 
             this._cacheMesh = mesh;
-            this._cacheMeshVersion = mesh._version;
             if (0 <= subMeshIndex && subMeshIndex < mesh.glTFMesh.primitives.length) {
-                const glTFAsset = mesh.glTFAsset;
                 const primitive = mesh.glTFMesh.primitives[subMeshIndex];
-                const ibo = mesh.ibos[subMeshIndex];
-
                 const gl = this._webgl;
+                
                 gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
-
-                if (ibo) {
-                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-                }
 
                 const attributes = technique.attributes;
                 for (const k in attributes) {
@@ -339,9 +331,9 @@ namespace egret3d {
                     const location = attribute.extensions.paper.location;
                     const accessorIndex = primitive.attributes[attribute.semantic];
                     if (accessorIndex !== undefined) {
-                        const accessor = glTFAsset.getAccessor(accessorIndex);
-                        const bufferOffset = glTFAsset.getBufferOffset(accessor);
-                        const typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
+                        const accessor = mesh.getAccessor(accessorIndex);
+                        const bufferOffset = mesh.getBufferOffset(accessor);
+                        const typeCount = mesh.getAccessorTypeCount(accessor.type);
                         gl.vertexAttribPointer(location, typeCount, accessor.componentType, accessor.normalized ? true : false, 0, bufferOffset);//TODO normalized应该来源于mesh，应该还没有
                         gl.enableVertexAttribArray(location);
                     }
@@ -349,19 +341,25 @@ namespace egret3d {
                         gl.disableVertexAttribArray(location);
                     }
                 }
+
+                const ibo = mesh.ibos[subMeshIndex];
+                if (ibo) {
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+                }
             }
             else {
                 console.warn("Error arguments.");
             }
         }
-        private _drawCall(mesh: Mesh, drawCall: DrawCall) {
+        private _drawCall(drawCall: DrawCall) {
             const webgl = this._webgl;
+            const mesh = drawCall.mesh;
             const primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
-            const vertexAccessor = mesh.glTFAsset.getAccessor(primitive.attributes.POSITION);
-            const bufferOffset = mesh.glTFAsset.getBufferOffset(vertexAccessor);
+            const vertexAccessor = mesh.getAccessor(primitive.attributes.POSITION!);
+            const bufferOffset = mesh.getBufferOffset(vertexAccessor);
 
             if (primitive.indices !== undefined) {
-                const indexAccessor = mesh.glTFAsset.getAccessor(primitive.indices);
+                const indexAccessor = mesh.getAccessor(primitive.indices);
                 switch (primitive.mode) { // TODO
                     case gltf.MeshPrimitiveMode.Lines:
                         webgl.drawElements(webgl.LINES, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
@@ -390,6 +388,7 @@ namespace egret3d {
                 }
             }
         }
+
         private _renderCall(context: RenderContext, drawCall: DrawCall) {
             const renderer = drawCall.renderer;
             context.drawCall = drawCall;
@@ -419,7 +418,7 @@ namespace egret3d {
             //Attribute
             this._updateAttributes(drawCall.mesh, drawCall.subMeshIndex, technique, force);
             //Draw
-            this._drawCall(drawCall.mesh, drawCall);
+            this._drawCall(drawCall);
         }
         /**
          * @internal
@@ -489,10 +488,10 @@ namespace egret3d {
         }
 
         public onUpdate() {
-            // Performance.startCounter("render");
+            Performance.startCounter("render");
             const cameras = this._camerasAndLights.cameras;
             const lights = this._camerasAndLights.lights;
-            const filteredLights = this._filteredLights;;
+            const filteredLights = this._filteredLights;
             const camerasScene = paper.Application.sceneManager.camerasScene || paper.Application.sceneManager.activeScene;
             const lightsScene = paper.Application.sceneManager.lightsScene || paper.Application.sceneManager.activeScene;
             // Lights.
@@ -538,7 +537,7 @@ namespace egret3d {
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
 
-            // Performance.endCounter("render");
+            Performance.endCounter("render");
         }
     }
 }

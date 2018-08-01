@@ -37,7 +37,7 @@ namespace paper {
         /**
          * 
          */
-        deserialize(element: any): void;
+        deserialize(element: any): any;
     }
 
     /**

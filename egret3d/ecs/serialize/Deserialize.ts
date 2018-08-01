@@ -7,7 +7,7 @@ namespace paper {
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
 
     let _isKeepUUID: boolean = false;
-    let _deserializedData: { assets: string[], objects: { [key: string]: Scene | GameObject }, components: { [key: string]: BaseComponent } } = null as any;
+    let _deserializedData: { assets: string[], objects: { [key: string]: Scene | GameObject }, components: { [key: string]: BaseComponent } } | null = null;
     /**
      * 反序列化。
      */
@@ -121,7 +121,7 @@ namespace paper {
             }
         }
 
-        _deserializedData = null as any;
+        _deserializedData = null;
 
         return root;
     }
@@ -130,15 +130,15 @@ namespace paper {
      */
     export function getDeserializedAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent {
         if (KEY_ASSET in source) {
-            return Asset.find(_deserializedData.assets[(source as IAssetReference)[KEY_ASSET]]);
+            return Asset.find(_deserializedData!.assets[(source as IAssetReference)[KEY_ASSET]]);
         }
 
         const uuid = (source as IUUID)[KEY_UUID];
 
-        return _deserializedData.components[uuid] || _deserializedData.objects[uuid] as GameObject;
+        return _deserializedData!.components[uuid] || _deserializedData!.objects[uuid] as GameObject;
     }
 
-    function _deserializeObject(source: any, target: ISerializable) {
+    function _deserializeObject<T extends ISerializable>(source: any, target: T) {
         if (target.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE)) {
             let uuid = source[KEY_UUID];
 
@@ -146,7 +146,7 @@ namespace paper {
                 delete source[KEY_UUID];
             }
 
-            target.deserialize(source);
+            target = target.deserialize(source);
 
             if (_isKeepUUID && uuid) {
                 source[KEY_UUID] = uuid;
@@ -172,6 +172,8 @@ namespace paper {
                 (target as any)[k] = _deserializeChild(source[k], (target as any)[k]);
             }
         }
+
+        return target;
     }
 
     function _deserializeChild(source: any, target?: any) {
@@ -203,9 +205,7 @@ namespace paper {
                         target.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE) &&
                         !(target instanceof BaseComponent)
                     ) {
-                        _deserializeObject(source, target);
-
-                        return target;
+                        return _deserializeObject(source, target);
                     }
                     else {
                         // console.info("Deserialize can be optimized.");
@@ -227,11 +227,11 @@ namespace paper {
                 if (KEY_UUID in source) { // Reference.
                     const uuid = source[KEY_UUID] as string;
 
-                    if (uuid in _deserializedData.objects) {
-                        return _deserializedData.objects[uuid];
+                    if (uuid in _deserializedData!.objects) {
+                        return _deserializedData!.objects[uuid];
                     }
-                    else if (uuid in _deserializedData.components) {
-                        return _deserializedData.components[uuid];
+                    else if (uuid in _deserializedData!.components) {
+                        return _deserializedData!.components[uuid];
                     }
                     else if (classCodeOrName) { // Link expands object.
                         if ((serializeClassMap[classCodeOrName] || classCodeOrName) === egret.getQualifiedClassName(GameObject)) { // GameObject.
@@ -255,7 +255,7 @@ namespace paper {
                 else if (KEY_ASSET in source) { // Asset.
                     const index = source[KEY_ASSET] as number;
                     if (index >= 0) {
-                        return Asset.find(_deserializedData.assets[index]);
+                        return Asset.find(_deserializedData!.assets[index]);
                     }
 
                     return null;
@@ -265,9 +265,8 @@ namespace paper {
 
                     if (clazz) {
                         target = new clazz();
-                        _deserializeObject(source, target);
 
-                        return target;
+                        return _deserializeObject(source, target);
                     }
                 }
                 else { // Other.

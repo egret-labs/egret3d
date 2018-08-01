@@ -1,6 +1,12 @@
 namespace paper {
-    const VERSION: number = 2;
-    const VERSIONS = [VERSION];
+    /**
+     * 
+     */
+    export const DATA_VERSION: number = 3;
+    /**
+     * 
+     */
+    export const DATA_VERSIONS = [DATA_VERSION];
 
     const KEY_GAMEOBJECTS: keyof Scene = "gameObjects";
     const KEY_COMPONENTS: keyof GameObject = "components";
@@ -8,7 +14,7 @@ namespace paper {
     const KEY_SERIALIZE: keyof ISerializable = "serialize";
 
     const _serializeds: string[] = [];
-    let _serializeData: ISerializedData = null as any;
+    let _serializeData: ISerializedData | null = null;
     /**
      * 序列化场景，实体或组件。
      */
@@ -17,12 +23,12 @@ namespace paper {
             console.debug("The deserialization is not complete.");
         }
 
-        _serializeData = { version: VERSION, assets: [], objects: [], components: [] };
+        _serializeData = { version: DATA_VERSION, assets: [], objects: [], components: [] };
         _serializeObject(source);
         _serializeds.length = 0;
 
         const serializeData = _serializeData;
-        _serializeData = null as any;
+        _serializeData = null;
 
         return serializeData;
     }
@@ -34,12 +40,12 @@ namespace paper {
             return { asset: -1 };
         }
 
-        if (_serializeData.assets) {
-            let index = _serializeData.assets.indexOf(source.name);
+        if (_serializeData!.assets) {
+            let index = _serializeData!.assets!.indexOf(source.name);
 
             if (index < 0) {
-                index = _serializeData.assets.length;
-                _serializeData.assets.push(source.name);
+                index = _serializeData!.assets!.length;
+                _serializeData!.assets!.push(source.name);
             }
 
             return { asset: index };
@@ -107,13 +113,13 @@ namespace paper {
             _serializeds.push(source.uuid);
 
             if (source instanceof BaseComponent) {
-                if (_serializeData.components) {
-                    _serializeData.components.push(target);
+                if (_serializeData!.components) {
+                    _serializeData!.components!.push(target);
                 }
             }
             else {
-                if (_serializeData.objects) {
-                    _serializeData.objects.push(target);
+                if (_serializeData!.objects) {
+                    _serializeData!.objects!.push(target);
                 }
             }
         }
