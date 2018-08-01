@@ -16068,7 +16068,7 @@ var RES;
                                 return [4 /*yield*/, promisify(loader, imgResource)];
                             case 2:
                                 image = _a.sent();
-                                texture = new egret3d.Texture(resource.url);
+                                texture = new egret3d.Texture(imgResource.name);
                                 texture.realName = _name;
                                 gl = egret3d.WebGLCapabilities.webgl;
                                 t2d = new egret3d.GlTexture2D(gl, _textureFormat);
@@ -16104,7 +16104,7 @@ var RES;
                                 return [4 /*yield*/, promisify(loader, resource)];
                             case 1:
                                 image = _a.sent();
-                                texture = new egret3d.Texture(resource.url);
+                                texture = new egret3d.Texture(resource.name);
                                 textureFormat = 1 /* RGBA */;
                                 t2d = new egret3d.GlTexture2D(gl, textureFormat);
                                 t2d.uploadImage(image.source, true, true, true, true);
@@ -16135,7 +16135,7 @@ var RES;
                             case 0: return [4 /*yield*/, host.load(resource, RES.processor.BinaryProcessor)];
                             case 1:
                                 result = _a.sent();
-                                glTF = new egret3d.GLTFAsset(resource.url);
+                                glTF = new egret3d.GLTFAsset(resource.name);
                                 glTF.parseFromBinary(new Uint32Array(result));
                                 paper.Asset.register(glTF);
                                 return [2 /*return*/, glTF];
@@ -16163,7 +16163,7 @@ var RES;
                             case 0: return [4 /*yield*/, host.load(resource, RES.processor.JsonProcessor)];
                             case 1:
                                 result = _e.sent();
-                                glTF = new egret3d.GLTFAsset(resource.url);
+                                glTF = new egret3d.GLTFAsset(resource.name);
                                 buffers = [];
                                 glTF.parse(result, buffers);
                                 if (!(glTF.config.materials && glTF.config.materials.length > 0)) return [3 /*break*/, 8];
@@ -16226,7 +16226,7 @@ var RES;
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
-                                prefab = new paper.Prefab(resource.url);
+                                prefab = new paper.Prefab(resource.name);
                                 return [4 /*yield*/, loadSubAssets(data, resource)];
                             case 2:
                                 _a.sent();
@@ -16257,7 +16257,7 @@ var RES;
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
-                                rawScene = new paper.RawScene(resource.url);
+                                rawScene = new paper.RawScene(resource.name);
                                 return [4 /*yield*/, loadSubAssets(data, resource)];
                             case 2:
                                 _a.sent();
@@ -16284,9 +16284,7 @@ var RES;
                 var _this = this;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0: 
-                        // const list = formatUrlAndSort(data.assets, dirname(resource.url));
-                        return [4 /*yield*/, Promise.all(data.assets.map((function (item) { return __awaiter(_this, void 0, void 0, function () {
+                        case 0: return [4 /*yield*/, Promise.all(data.assets.map((function (item) { return __awaiter(_this, void 0, void 0, function () {
                                 var r;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
@@ -16296,13 +16294,15 @@ var RES;
                                             return [4 /*yield*/, RES.host.load(r)];
                                         case 1:
                                             _a.sent();
-                                            _a.label = 2;
-                                        case 2: return [2 /*return*/];
+                                            return [3 /*break*/, 3];
+                                        case 2:
+                                            console.error("");
+                                            _a.label = 3;
+                                        case 3: return [2 /*return*/];
                                     }
                                 });
                             }); })))];
                         case 1:
-                            // const list = formatUrlAndSort(data.assets, dirname(resource.url));
                             _a.sent();
                             return [2 /*return*/];
                     }

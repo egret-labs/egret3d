@@ -49,7 +49,7 @@ namespace RES.processor {
             loader.load(imgResource.root + imgResource.url);
             let image = await promisify(loader, imgResource);
 
-            let texture = new egret3d.Texture(resource.url);
+            let texture = new egret3d.Texture(imgResource.name);
             texture.realName = _name;
             const gl = egret3d.WebGLCapabilities.webgl;
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
@@ -74,7 +74,7 @@ namespace RES.processor {
             const loader = new egret.ImageLoader();
             loader.load(resource.root + resource.url);
             const image = await promisify(loader, resource);
-            const texture = new egret3d.Texture(resource.url);
+            const texture = new egret3d.Texture(resource.name);
             const textureFormat = egret3d.TextureFormatEnum.RGBA;
             const t2d = new egret3d.GlTexture2D(gl, textureFormat);
             t2d.uploadImage(image.source, true, true, true, true);
@@ -93,7 +93,7 @@ namespace RES.processor {
     export const GLTFBinaryProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, RES.processor.BinaryProcessor);
-            const glTF = new egret3d.GLTFAsset(resource.url);
+            const glTF = new egret3d.GLTFAsset(resource.name);
             glTF.parseFromBinary(new Uint32Array(result));
 
             paper.Asset.register(glTF);
@@ -109,7 +109,7 @@ namespace RES.processor {
     export const GLTFProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, RES.processor.JsonProcessor);
-            const glTF = new egret3d.GLTFAsset(resource.url);
+            const glTF = new egret3d.GLTFAsset(resource.name);
 
             const buffers = [];
             glTF.parse(result, buffers);
@@ -150,7 +150,7 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             const data: paper.ISerializedData = await host.load(resource, "json");
             // const url = getUrl(resource);
-            const prefab = new paper.Prefab(resource.url);
+            const prefab = new paper.Prefab(resource.name);
 
             await loadSubAssets(data, resource)
             prefab.$parse(data);
@@ -170,7 +170,7 @@ namespace RES.processor {
         async onLoadStart(host, resource) {
             const data: paper.ISerializedData = await host.load(resource, "json");
             // const url = getUrl(resource);
-            const rawScene = new paper.RawScene(resource.url);
+            const rawScene = new paper.RawScene(resource.name);
 
             await loadSubAssets(data, resource)
             rawScene.$parse(data);
@@ -186,12 +186,13 @@ namespace RES.processor {
     };
 
     async function loadSubAssets(data: paper.ISerializedData, resource: RES.ResourceInfo) {
-        // const list = formatUrlAndSort(data.assets, dirname(resource.url));
-
         await Promise.all(data.assets.map((async (item) => {
             const r = RES.host.resourceConfig["getResource"](item);
             if (r) {
                 await host.load(r);
+            }
+            else {
+                console.error("")
             }
         })));
     }
