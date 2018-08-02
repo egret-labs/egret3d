@@ -2,7 +2,7 @@ namespace paper {
     /**
      * 场景类
      */
-    export class Scene extends SerializableObject {
+    export class Scene extends BaseObject {
         /**
          * 场景名称。
          */

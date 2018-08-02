@@ -12,7 +12,7 @@ namespace paper {
      * @platform Web
      * @language zh_CN
      */
-    export abstract class Asset extends SerializableObject {
+    export abstract class Asset extends BaseObject {
         /**
          * @deprecated
          */
@@ -43,13 +43,30 @@ namespace paper {
          * @internal
          */
         public _isBuiltin: boolean = false;
-        /**
-         * 
-         */
+
         public constructor(name: string = "") {
             super();
 
             this.name = name;
+        }
+
+        public serialize(): IAssetReference {
+            if (!this.name) {
+                return { asset: -1 };
+            }
+
+            if (_serializeData && _serializeData!.assets) {
+                let index = _serializeData!.assets!.indexOf(this.name);
+
+                if (index < 0) {
+                    index = _serializeData!.assets!.length;
+                    _serializeData!.assets!.push(this.name);
+                }
+
+                return { asset: index };
+            }
+
+            return { asset: -1 };
         }
         /**
          * asset byte length

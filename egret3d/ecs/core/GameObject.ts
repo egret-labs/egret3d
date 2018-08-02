@@ -2,7 +2,7 @@ namespace paper {
     /**
      * 可以挂载Component的实体类。
      */
-    export class GameObject extends SerializableObject {
+    export class GameObject extends BaseObject {
         /**
          * 创建 GameObject，并添加到当前场景中。
          */
@@ -42,7 +42,7 @@ namespace paper {
         @serializedField
         public tag: string = "";
 
-        @paper.serializedField
+        @serializedField
         public assetID?: string = createAssetID();
         /**
          * 预制体
@@ -60,7 +60,7 @@ namespace paper {
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
-        @paper.serializedField
+        @serializedField
         public extras: { isPrefabRoot?: boolean, prefabRootId?: string } = {};
 
         @serializedField

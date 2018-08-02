@@ -312,7 +312,7 @@ namespace egret3d {
             let pickinfo = null;
             // let data = this.mesh.data;
             let subMeshIndex = 0;
-            for (const primitive of mesh.glTFMesh.primitives) {
+            for (const _primitive of mesh.glTFMesh.primitives) {
                 const mat0 = helpMat4_1;
                 const mat1 = helpMat4_2;
                 const mat2 = helpMat4_3;

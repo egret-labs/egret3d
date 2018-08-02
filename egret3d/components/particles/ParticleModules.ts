@@ -157,7 +157,7 @@ namespace egret3d.particle {
         }
     }
 
-    export class GradientColorKey extends paper.SerializableObject {
+    export class GradientColorKey extends paper.BaseObject {
         @paper.serializedField
         public color: Color = new Color();
         @paper.serializedField
@@ -171,7 +171,7 @@ namespace egret3d.particle {
         }
     }
 
-    export class GradientAlphaKey extends paper.SerializableObject {
+    export class GradientAlphaKey extends paper.BaseObject {
         @paper.serializedField
         public alpha: number;
         @paper.serializedField
@@ -185,7 +185,7 @@ namespace egret3d.particle {
         }
     }
 
-    export class Gradient extends paper.SerializableObject {
+    export class Gradient extends paper.BaseObject {
         @paper.serializedField
         public mode: GradientMode = GradientMode.Blend;
         @paper.serializedField
@@ -267,7 +267,7 @@ namespace egret3d.particle {
         }
     }
 
-    export class MinMaxCurve extends paper.SerializableObject {
+    export class MinMaxCurve extends paper.BaseObject {
         @paper.serializedField
         public mode: CurveMode = CurveMode.Constant;
         @paper.serializedField
@@ -320,7 +320,7 @@ namespace egret3d.particle {
         }
     }
 
-    export class MinMaxGradient extends paper.SerializableObject {
+    export class MinMaxGradient extends paper.BaseObject {
         @paper.serializedField
         public mode: ColorGradientMode = ColorGradientMode.Gradient;
         @paper.serializedField
@@ -414,7 +414,7 @@ namespace egret3d.particle {
         }
     }
 
-    export abstract class ParticleSystemModule extends paper.SerializableObject {
+    export abstract class ParticleSystemModule extends paper.BaseObject {
         @paper.serializedField
         public enable: boolean = false;
 

@@ -15,7 +15,7 @@ namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    export class OBB extends paper.SerializableObject {
+    export class OBB extends paper.BaseObject {
 
         /**
          * center

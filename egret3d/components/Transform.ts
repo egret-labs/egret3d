@@ -1,7 +1,6 @@
 namespace egret3d {
 
     let helpVec3 = new Vector3();
-    let helpVec3_2 = new Vector3();
     let helpMat4 = new Matrix();
     let helpQuat4 = new Quaternion();
     let helpQuat4_2 = new Quaternion();

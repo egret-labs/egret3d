@@ -138,39 +138,24 @@ namespace paper {
         return _deserializedData!.components[uuid] || _deserializedData!.objects[uuid] as GameObject;
     }
 
-    function _deserializeObject<T extends ISerializable>(source: any, target: T) {
-        if (target.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE)) {
-            let uuid = source[KEY_UUID];
-
-            if (_isKeepUUID && uuid) {
-                delete source[KEY_UUID];
+    function _deserializeObject(source: ISerializedObject, target: BaseObject) {
+        for (const k in source) {
+            if (k === KEY_CLASS) {
+                continue;
             }
 
-            target = target.deserialize(source);
-
-            if (_isKeepUUID && uuid) {
-                source[KEY_UUID] = uuid;
+            if (!_isKeepUUID && k === KEY_UUID) {
+                continue;
             }
-        }
-        else {
-            for (const k in source) {
-                if (k === KEY_CLASS) {
-                    continue;
-                }
 
-                if (!_isKeepUUID && k === KEY_UUID) {
-                    continue;
-                }
-
-                if (
-                    SerializeKey.DeserializedIgnore in target &&
-                    ((target as any)[SerializeKey.DeserializedIgnore] as string).indexOf(k) >= 0
-                ) {
-                    continue;
-                }
-
-                (target as any)[k] = _deserializeChild(source[k], (target as any)[k]);
+            if (
+                SerializeKey.DeserializedIgnore in target &&
+                ((target as any)[SerializeKey.DeserializedIgnore] as string).indexOf(k) >= 0
+            ) {
+                continue;
             }
+
+            (target as any)[k] = _deserializeChild(source[k], (target as any)[k]);
         }
 
         return target;
@@ -201,11 +186,8 @@ namespace paper {
 
                         return target;
                     }
-                    else if (
-                        target.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE) &&
-                        !(target instanceof BaseComponent)
-                    ) {
-                        return _deserializeObject(source, target);
+                    else if (target.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE)) {
+                        return (target as ISerializable).deserialize(source);
                     }
                     else {
                         // console.info("Deserialize can be optimized.");
@@ -224,16 +206,24 @@ namespace paper {
 
                 const classCodeOrName = source[KEY_CLASS] as string | undefined;
 
-                if (KEY_UUID in source) { // Reference.
+                if (KEY_ASSET in source) { // Asset.
+                    const index = source[KEY_ASSET] as number;
+                    if (index >= 0) {
+                        return Asset.find(_deserializedData!.assets[index]);
+                    }
+
+                    return null;
+                }
+                else if (KEY_UUID in source) { // Reference.
                     const uuid = source[KEY_UUID] as string;
 
-                    if (uuid in _deserializedData!.objects) {
+                    if (uuid in _deserializedData!.objects) { // GameObject.
                         return _deserializedData!.objects[uuid];
                     }
-                    else if (uuid in _deserializedData!.components) {
+                    else if (uuid in _deserializedData!.components) { // Component.
                         return _deserializedData!.components[uuid];
                     }
-                    else if (classCodeOrName) { // Link expands object.
+                    else if (classCodeOrName) { // Link expand objects and components.
                         if ((serializeClassMap[classCodeOrName] || classCodeOrName) === egret.getQualifiedClassName(GameObject)) { // GameObject.
                             for (const gameObject of Application.sceneManager.activeScene.gameObjects) {
                                 if (gameObject.uuid === uuid) {
@@ -252,24 +242,16 @@ namespace paper {
                         }
                     }
                 }
-                else if (KEY_ASSET in source) { // Asset.
-                    const index = source[KEY_ASSET] as number;
-                    if (index >= 0) {
-                        return Asset.find(_deserializedData!.assets[index]);
-                    }
-
-                    return null;
-                }
                 else if (classCodeOrName) { // Struct
                     const clazz = egret.getDefinitionByName(serializeClassMap[classCodeOrName] || classCodeOrName);
 
                     if (clazz) {
                         target = new clazz();
 
-                        return _deserializeObject(source, target);
+                        return (target as ISerializable).deserialize(source);
                     }
                 }
-                else { // Other.
+                else { // Map.
                     target = {};
 
                     for (let k in source) {
@@ -280,11 +262,25 @@ namespace paper {
                 }
 
                 console.warn("Deserialize error.", source);
-                return null;
+                return undefined;
             }
 
             default:
                 return source;
         }
     }
+
+
+    // /**
+    //  * @internal
+    //  */
+    // export class Compatible extends BaseObject {
+
+    //     public deserialize(element: IClass) {
+    //         switch (element.class) {
+    //             case "13":
+    //                 return paper.getDeserializedAssetOrComponent((element as any)._gltfAsset as IAssetReference);
+    //         }
+    //     }
+    // }
 }

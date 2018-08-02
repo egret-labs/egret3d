@@ -27,29 +27,17 @@ namespace paper {
         readonly class: string;
     }
     /**
-     * 自定义序列化接口。
-     */
-    export interface ISerializable {
-        /**
-         * 
-         */
-        serialize(): any | ISerializedObject;
-        /**
-         * 
-         */
-        deserialize(element: any): any;
-    }
-
-    /**
      * 序列化后的数据接口。
      */
     export interface ISerializedObject extends IUUID, IClass {
-        /**
-         * 
-         */
         [key: string]: any | IUUID | IAssetReference;
     }
-
+    /**
+     * 
+     */
+    export interface ISerializedStruct extends IClass {
+        [key: string]: any | IUUID | IAssetReference;
+    }
     /**
      * 序列化数据接口
      */
@@ -74,5 +62,18 @@ namespace paper {
          * 所有组件。
          */
         readonly components?: ISerializedObject[];
+    }
+    /**
+     * 自定义序列化接口。
+     */
+    export interface ISerializable {
+        /**
+         * 
+         */
+        serialize(): any;
+        /**
+         * 
+         */
+        deserialize(element: any): any;
     }
 }

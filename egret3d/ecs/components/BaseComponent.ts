@@ -35,7 +35,7 @@ namespace paper {
     /**
      * 组件基类
      */
-    export abstract class BaseComponent extends SerializableObject {
+    export abstract class BaseComponent extends BaseObject {
         /**
          * 是否在编辑模式拥有生命周期。
          */
@@ -133,47 +133,6 @@ namespace paper {
          * - 重载此方法时，必须调用 `super.uninitialize()`。
          */
         public uninitialize() {
-        }
-
-        public serialize(): any {
-            const target = createReference(this, false);
-            target._enabled = this._enabled;
-
-            if (this.assetID) {
-                target.assetID = this.assetID;
-            }
-
-            if (this.extras) {
-                target.extras = {};
-
-                for (const k in this.extras) {
-                    target.extras[k] = this.extras[k];
-                }
-            }
-
-            return target;
-        }
-
-        public deserialize(element: any) {
-            this._enabled = element._enabled === false ? false : true;
-
-            if (element.uuid) {
-                this.uuid = element.uuid;
-            }
-
-            if (element.assetID) {
-                this.assetID = element.assetID;
-            }
-
-            if (element.extras) {
-                this.extras = {};
-
-                for (const k in element.extras) {
-                    this.extras[k] = element.extras[k];
-                }
-            }
-
-            return this;
         }
         /**
          * 

@@ -52,13 +52,13 @@ namespace paper {
     /**
      * @internal
      */
-    export class Compatible extends SerializableObject {
-
-        public deserialize(element: IClass) {
-            switch (element.class) {
-                case "13":
-                    return paper.getDeserializedAssetOrComponent((element as any)._gltfAsset as IAssetReference);
+    export function findClassCode(name: string) {
+        for (let key in serializeClassMap) {
+            if (serializeClassMap[key] === name) {
+                return key;
             }
         }
+
+        return "";
     }
 }
