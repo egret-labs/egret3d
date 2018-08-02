@@ -1,28 +1,9 @@
 namespace egret3d {
-    export interface GLTFAttribute extends gltf.Attribute {
-        extensions: {
-            paper: {
-                enable: boolean;
-                location: number;
-            }
-        }
-    }
-
-    export interface GLTFUniform extends gltf.Uniform {
-        extensions: {
-            paper: {
-                enable: boolean;
-                location: WebGLUniformLocation;
-                textureUnits?: number[];
-            }
-        }
-    }
-
     export interface GLTFMaterial extends gltf.Material {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
-            paper: {
-                renderQueue: number;
+            paper?: {
+                renderQueue?: number;
             }
         }
     }
@@ -31,6 +12,9 @@ namespace egret3d {
         version: string;
         extensions: {
             KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
+            paper?: {
+                renderQueue?: number;
+            };
         };
         extensionsUsed: string[];
         extensionsRequired: string[];
@@ -146,7 +130,7 @@ namespace egret3d {
          */
         private static _createConfig() {
             const config = {
-                version: "2",
+                version: "3",
                 asset: {
                     version: "2.0"
                 },
@@ -175,38 +159,39 @@ namespace egret3d {
         /**
          * 
          */
-        public static createGLTFExtensionsAsset(name: string = "") {
-            const glftAsset = new GLTFAsset(name);
-
-            glftAsset.config = {
-                asset: {
-                    version: "2.0"
+        public static createGLTFExtensionsConfig() {
+            const config = this._createConfig();
+            config.materials = [];
+            config.extensions = {
+                KHR_techniques_webgl: {
+                    shaders: [],
+                    techniques: [],
+                    programs: [],
                 },
-                extensions: {
-                    KHR_techniques_webgl: {
-                        shaders: [],
-                        techniques: [],
-                        programs: [],
-                    } as any
-                },
-                extensionsRequired: ["egret"],
-                extensionsUsed: ["egret"],
-            } as GLTFEgret;
+                paper: {},
+            };
 
-            return glftAsset;
+            return config;
+        }
+
+        public static createShaderAsset(name: string) {
+            const gltf = new GLTFAsset(name);
+            gltf.config = this.createGLTFExtensionsConfig();
+
+            return gltf;
         }
 
         public static createTechnique(source: gltf.Technique) {
             const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } };
             for (const key in source.attributes) {
                 const attribute = source.attributes[key];
-                target.attributes[key] = { semantic: attribute.semantic, extensions: { paper: { enable: true, location: -1 } } };
+                target.attributes[key] = { semantic: attribute.semantic };
             }
 
             for (const key in source.uniforms) {
                 const uniform = source.uniforms[key];
                 const value = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value;
-                target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value, extensions: { paper: { enable: false, location: -1 } } };
+                target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value };
             }
 
             const states = source.states;
@@ -215,13 +200,18 @@ namespace egret3d {
                 targetStates.enable = states.enable.concat();
             }
 
-            const functions = states.functions as gltf.Functions;
-            for (const k in functions) {
-                if (Array.isArray(functions[k])) {
-                    (targetStates.functions as gltf.Functions)[k] = functions[k].concat();
+            if (states.functions) {
+                if (!targetStates.functions) {
+                    targetStates.functions = {};
                 }
-                else {
-                    (targetStates.functions as gltf.Functions)[k] = functions[k];
+
+                for (const fun in states.functions) {
+                    if (Array.isArray(states.functions[fun])) {
+                        targetStates.functions[fun] = states.functions[fun].concat();
+                    }
+                    else {
+                        targetStates.functions[fun] = states.functions[fun];
+                    }
                 }
             }
 
@@ -234,15 +224,17 @@ namespace egret3d {
         /**
          * 配置。
          */
-        public config: GLTFEgret = null as any;
+        public config: GLTFEgret = null!;
         /**
          * @internal
          */
-        public parse(config: GLTFEgret, buffers: Uint32Array[]) {
+        public parse(config: GLTFEgret, buffers?: Uint32Array[]) {
             this.config = config;
 
-            for (const buffer of buffers) {
-                this.buffers.push(buffer);
+            if (buffers) {
+                for (const buffer of buffers) {
+                    this.buffers.push(buffer);
+                }
             }
 
             this.initialize();
@@ -308,7 +300,7 @@ namespace egret3d {
             }
 
             this.buffers.length = 0; // TODO clear buffer.
-            this.config = null as any;
+            this.config = null!;
         }
 
         public caclByteLength() {
@@ -1513,18 +1505,16 @@ declare namespace gltf {
     export interface Technique {
         /**
          * The index of the program.
-         * - Hack.
          */
-        program?: egret3d.GlProgram;
+        program?: GLTFIndex;
         /**
          * A dictionary object of `Attribute` objects.
          */
         attributes: {
             /**
              * An attribute input to a technique and the corresponding semantic.
-             * - Hack.
              */
-            [k: string]: egret3d.GLTFAttribute;
+            [k: string]: gltf.Attribute;
         };
         /**
          * A dictionary object of `Uniform` objects.
@@ -1532,9 +1522,8 @@ declare namespace gltf {
         uniforms: {
             /**
              * A uniform input to a technique, and an optional semantic and value.
-             * - Hack.
              */
-            [k: string]: egret3d.GLTFUniform;
+            [k: string]: gltf.Uniform;
         };
         name: any;
         states: States;
@@ -1603,8 +1592,8 @@ declare namespace gltf {
     }
 
     /**
- * Arguments for fixed-function rendering state functions other than `enable()`/`disable()`.
- */
+     * Arguments for fixed-function rendering state functions other than `enable()`/`disable()`.
+     */
     export interface Functions {
         /**
          * Floating-point values passed to `blendColor()`. [red, green, blue, alpha]

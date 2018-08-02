@@ -4,8 +4,9 @@ namespace egret3d {
      */
     export class BeginSystem extends paper.BaseSystem {
         public onAwake() {
-
+            this._globalGameObject.getOrAddComponent(DefaultTextures);
             this._globalGameObject.getOrAddComponent(DefaultMeshes);
+            this._globalGameObject.getOrAddComponent(DefaultShaders);
             this._globalGameObject.getOrAddComponent(DefaultMaterials);
             this._globalGameObject.getOrAddComponent(WebGLCapabilities);
 

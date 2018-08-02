@@ -6,6 +6,7 @@ attribute vec4 _glesMultiTexCoord0;
 
 uniform mat4 glstate_matrix_mvp;      
 uniform mat4 glstate_matrix_model;
+uniform vec4 _MainTex_ST;  
 
 #include <shadowMap_pars_vert>
 
@@ -31,7 +32,7 @@ void main() {
     vec3 worldpos = (glstate_matrix_model * tmpVertex).xyz;
     xlv_POS = worldpos; 
 
-    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy;
+    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;
 
     #include <shadowMap_vert>
      

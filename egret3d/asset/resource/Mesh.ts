@@ -8,6 +8,13 @@ namespace egret3d {
     const helpVec3_7: Vector3 = new Vector3();
     // const helpVec3_8: Vector3 = new Vector3();
 
+    const _attributes: gltf.MeshAttributeType[] = [
+        gltf.MeshAttributeType.POSITION,
+        gltf.MeshAttributeType.NORMAL,
+        gltf.MeshAttributeType.TANGENT,
+        gltf.MeshAttributeType.COLOR_0,
+        gltf.MeshAttributeType.TEXCOORD_0,
+    ];
     /**
      * Mesh.
      * @version egret3D 1.0
@@ -39,12 +46,12 @@ namespace egret3d {
 
         public constructor(
             vertexCount: number, indexCount: number,
-            attributeNames: gltf.MeshAttribute[], attributeTypes: { [key: string]: gltf.AccessorType } | null = null,
+            attributeNames: gltf.MeshAttribute[] = _attributes, attributeTypes: { [key: string]: gltf.AccessorType } | null = null,
             drawMode: gltf.DrawMode = gltf.DrawMode.Static
         ) {
             super();
 
-            if (vertexCount > 0) { // Custom mesh.
+            if (vertexCount > 0) { // Custom.
                 this.config = GLTFAsset.createMeshConfig();
                 //
                 const buffer = this.config.buffers![0];

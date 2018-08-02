@@ -23,6 +23,7 @@ namespace egret3d {
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
         // TODO WebAssembly load
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound'] //TODO:Sound
+        egret.Capabilities["renderMode" + ""] = "webgl";
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas();
         //TODO
@@ -31,8 +32,6 @@ namespace egret3d {
         options.webgl = <WebGLRenderingContext>canvas.getContext('webgl', options) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
         WebGLCapabilities.webgl = options.webgl;
         InputManager.init(canvas);
-        DefaultTextures.init();
-        DefaultShaders.init();
         // DefaultTechnique.init();
         stage.init(canvas, requiredOptions);
 
@@ -42,7 +41,7 @@ namespace egret3d {
                 paper.EnableSystem,
                 paper.StartSystem,
                 //
-                oimo.PhysicsSystem,
+                // oimo.PhysicsSystem,
                 //
                 paper.UpdateSystem,
                 //

@@ -49,14 +49,16 @@ namespace egret3d {
          * @param b 
          */
         private _sortOpaque(a: DrawCall, b: DrawCall) {
-            if (a.material.renderQueue !== b.material.renderQueue) {
-                return a.material.renderQueue - b.material.renderQueue;
+            const aMat = a.material;
+            const bMat = b.material;
+            if (aMat.renderQueue !== bMat.renderQueue) {
+                return aMat.renderQueue - bMat.renderQueue;
             }
-            else if (a.material._glTFTechnique.program && b.material._glTFTechnique.program && a.material._glTFTechnique.program.id !== b.material._glTFTechnique.program.id) {
-                return a.material._glTFTechnique.program.id - b.material._glTFTechnique.program.id;
+            else if (aMat._glTFTechnique.program !== bMat._glTFTechnique.program) {
+                return aMat._glTFTechnique.program! - bMat._glTFTechnique.program!;
             }
-            else if (a.material.id !== b.material.id) {
-                return a.material.id - b.material.id;
+            else if (aMat.id !== bMat.id) {
+                return aMat.id - bMat.id;
             }
             else {
                 return a.zdist - b.zdist;

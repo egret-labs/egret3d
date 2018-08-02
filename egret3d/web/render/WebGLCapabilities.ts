@@ -6,15 +6,15 @@ namespace egret3d {
      */
     function getMaxPrecision(gl: WebGLRenderingContext, precision: string = "highp") {
         if (precision === 'highp') {
-            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).precision > 0 &&
-                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).precision > 0) {
+            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT)!.precision > 0 &&
+                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT)!.precision > 0) {
                 return 'highp';
             }
             precision = 'mediump';
         }
         if (precision === 'mediump') {
-            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT).precision > 0 &&
-                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT).precision > 0) {
+            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT)!.precision > 0 &&
+                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT)!.precision > 0) {
                 return 'mediump';
             }
         }
@@ -86,11 +86,10 @@ namespace egret3d {
         public initialize() {
             super.initialize();
 
-            this.webgl = paper.Application._webgl;
-            WebGLCapabilities.webgl = this.webgl;
+            this.webgl = WebGLCapabilities.webgl;
             
             const gl = this.webgl;
-            this.version = parseFloat(/^WebGL\ ([0-9])/.exec(gl.getParameter(gl.VERSION))[1]);
+            this.version = parseFloat(/^WebGL\ ([0-9])/.exec(gl.getParameter(gl.VERSION))![1]);
 
             this.maxPrecision = getMaxPrecision(gl, this.precision);
 
