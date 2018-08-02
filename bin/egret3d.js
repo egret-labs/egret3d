@@ -3247,6 +3247,7 @@ var egret3d;
         if (options === void 0) { options = { antialias: false }; }
         // TODO WebAssembly load
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
+        egret.Capabilities["renderMode" + ""] = "webgl";
         var requiredOptions = getOptions(options);
         var canvas = getMainCanvas();
         //TODO
@@ -9772,6 +9773,7 @@ var egret;
                 this.setBlendMode("source-over");
                 // 目前只使用0号材质单元，默认开启
                 gl.activeTexture(gl.TEXTURE0);
+                this.currentProgram = null;
             };
             Renderer.prototype.$drawWebGL = function () {
                 if (this.drawCmdManager.drawDataLen == 0) {
@@ -9842,19 +9844,19 @@ var egret;
                             program = web.EgretWebGLProgram.getProgram(gl, web.EgretShaderLib.default_vert, web.EgretShaderLib.texture_frag, "texture");
                         }
                         this.activeProgram(gl, program);
-                        this.syncUniforms(program, filter, data.textureWidth, data.textureHeight);
+                        this.syncUniforms(program, filter, data);
                         offset += this.drawTextureElements(data, offset);
                         break;
                     case 1 /* PUSH_MASK */:
                         program = web.EgretWebGLProgram.getProgram(gl, web.EgretShaderLib.default_vert, web.EgretShaderLib.primitive_frag, "primitive");
                         this.activeProgram(gl, program);
-                        this.syncUniforms(program, filter, data.textureWidth, data.textureHeight);
+                        this.syncUniforms(program, filter, data);
                         offset += this.drawPushMaskElements(data, offset);
                         break;
                     case 2 /* POP_MASK */:
                         program = web.EgretWebGLProgram.getProgram(gl, web.EgretShaderLib.default_vert, web.EgretShaderLib.primitive_frag, "primitive");
                         this.activeProgram(gl, program);
-                        this.syncUniforms(program, filter, data.textureWidth, data.textureHeight);
+                        this.syncUniforms(program, filter, data);
                         offset += this.drawPopMaskElements(data, offset);
                         break;
                     case 3 /* BLEND */:
@@ -9896,37 +9898,88 @@ var egret;
                 return offset;
             };
             Renderer.prototype.activeProgram = function (gl, program) {
-                // if (program != this.currentProgram) {
-                gl.useProgram(program.id);
-                // 目前所有attribute buffer的绑定方法都是一致的
-                var attribute = program.attributes;
-                for (var key in attribute) {
-                    if (key === "aVertexPosition") {
-                        gl.vertexAttribPointer(attribute["aVertexPosition"].location, 2, gl.FLOAT, false, 4 * 4, 0);
-                        gl.enableVertexAttribArray(attribute["aVertexPosition"].location);
+                if (program != this.currentProgram) {
+                    gl.useProgram(program.id);
+                    // 目前所有attribute buffer的绑定方法都是一致的
+                    var attribute = program.attributes;
+                    for (var key in attribute) {
+                        if (key === "aVertexPosition") {
+                            gl.vertexAttribPointer(attribute["aVertexPosition"].location, 2, gl.FLOAT, false, 4 * 4, 0);
+                            gl.enableVertexAttribArray(attribute["aVertexPosition"].location);
+                        }
+                        else if (key === "aTextureCoord") {
+                            gl.vertexAttribPointer(attribute["aTextureCoord"].location, 2, gl.UNSIGNED_SHORT, true, 4 * 4, 2 * 4);
+                            gl.enableVertexAttribArray(attribute["aTextureCoord"].location);
+                        }
+                        else if (key === "aColor") {
+                            gl.vertexAttribPointer(attribute["aColor"].location, 1, gl.FLOAT, false, 4 * 4, 3 * 4);
+                            gl.enableVertexAttribArray(attribute["aColor"].location);
+                        }
+                        else if (key === "aParticlePosition") {
+                            gl.vertexAttribPointer(attribute["aParticlePosition"].location, 2, gl.FLOAT, false, 22 * 4, 0);
+                            gl.enableVertexAttribArray(attribute["aParticlePosition"].location);
+                        }
+                        else if (key === "aParticleTextureCoord") {
+                            gl.vertexAttribPointer(attribute["aParticleTextureCoord"].location, 2, gl.FLOAT, false, 22 * 4, 2 * 4);
+                            gl.enableVertexAttribArray(attribute["aParticleTextureCoord"].location);
+                        }
+                        else if (key === "aParticleScale") {
+                            gl.vertexAttribPointer(attribute["aParticleScale"].location, 2, gl.FLOAT, false, 22 * 4, 4 * 4);
+                            gl.enableVertexAttribArray(attribute["aParticleScale"].location);
+                        }
+                        else if (key === "aParticleRotation") {
+                            gl.vertexAttribPointer(attribute["aParticleRotation"].location, 2, gl.FLOAT, false, 22 * 4, 6 * 4);
+                            gl.enableVertexAttribArray(attribute["aParticleRotation"].location);
+                        }
+                        else if (key === "aParticleRed") {
+                            gl.vertexAttribPointer(attribute["aParticleRed"].location, 2, gl.FLOAT, false, 22 * 4, 8 * 4);
+                            gl.enableVertexAttribArray(attribute["aParticleRed"].location);
+                        }
+                        else if (key === "aParticleGreen") {
+                            gl.vertexAttribPointer(attribute["aParticleGreen"].location, 2, gl.FLOAT, false, 22 * 4, 10 * 4);
+                            gl.enableVertexAttribArray(attribute["aParticleGreen"].location);
+                        }
+                        else if (key === "aParticleBlue") {
+                            gl.vertexAttribPointer(attribute["aParticleBlue"].location, 2, gl.FLOAT, false, 22 * 4, 12 * 4);
+                            gl.enableVertexAttribArray(attribute["aParticleBlue"].location);
+                        }
+                        else if (key === "aParticleAlpha") {
+                            gl.vertexAttribPointer(attribute["aParticleAlpha"].location, 2, gl.FLOAT, false, 22 * 4, 14 * 4);
+                            gl.enableVertexAttribArray(attribute["aParticleAlpha"].location);
+                        }
+                        else if (key === "aParticleEmitRotation") {
+                            gl.vertexAttribPointer(attribute["aParticleEmitRotation"].location, 2, gl.FLOAT, false, 22 * 4, 16 * 4);
+                            gl.enableVertexAttribArray(attribute["aParticleEmitRotation"].location);
+                        }
+                        else if (key === "aParticleEmitRadius") {
+                            gl.vertexAttribPointer(attribute["aParticleEmitRadius"].location, 2, gl.FLOAT, false, 22 * 4, 18 * 4);
+                            gl.enableVertexAttribArray(attribute["aParticleEmitRadius"].location);
+                        }
+                        else if (key === "aParticleTime") {
+                            gl.vertexAttribPointer(attribute["aParticleTime"].location, 2, gl.FLOAT, false, 22 * 4, 20 * 4);
+                            gl.enableVertexAttribArray(attribute["aParticleTime"].location);
+                        }
+                        //===== particle end =====
                     }
-                    else if (key === "aTextureCoord") {
-                        gl.vertexAttribPointer(attribute["aTextureCoord"].location, 2, gl.UNSIGNED_SHORT, true, 4 * 4, 2 * 4);
-                        gl.enableVertexAttribArray(attribute["aTextureCoord"].location);
-                    }
-                    else if (key === "aColor") {
-                        gl.vertexAttribPointer(attribute["aColor"].location, 1, gl.FLOAT, false, 4 * 4, 3 * 4);
-                        gl.enableVertexAttribArray(attribute["aColor"].location);
-                    }
+                    this.currentProgram = program;
                 }
-                this.currentProgram = program;
-                // }
             };
-            Renderer.prototype.syncUniforms = function (program, filter, textureWidth, textureHeight) {
+            Renderer.prototype.syncUniforms = function (program, filter, data) {
                 var uniforms = program.uniforms;
                 for (var key in uniforms) {
                     if (key === "projectionVector") {
                         uniforms[key].setValue({ x: this.projectionX, y: this.projectionY });
                     }
                     else if (key === "uTextureSize") {
-                        uniforms[key].setValue({ x: textureWidth, y: textureHeight });
+                        uniforms[key].setValue({ x: data.textureWidth, y: data.textureHeight });
                     }
                     else if (key === "uSampler") {
+                    }
+                    else if (key === "uGlobalMatrix") {
+                        uniforms[key].setValue([data.a, data.c, data.tx, data.b, data.d, data.ty, 0, 0, 1]);
+                    }
+                    else if (key === "uGlobalAlpha") {
+                        uniforms[key].setValue(data.alpha);
                     }
                     else {
                         var value = filter.$uniforms[key];
@@ -15954,7 +16007,7 @@ var RES;
                                 return [4 /*yield*/, promisify(loader, imgResource)];
                             case 2:
                                 image = _a.sent();
-                                texture = new egret3d.Texture(resource.url);
+                                texture = new egret3d.Texture(imgResource.name);
                                 texture.realName = _name;
                                 gl = egret3d.WebGLCapabilities.webgl;
                                 t2d = new egret3d.GlTexture2D(gl, _textureFormat);
@@ -15990,7 +16043,7 @@ var RES;
                                 return [4 /*yield*/, promisify(loader, resource)];
                             case 1:
                                 image = _a.sent();
-                                texture = new egret3d.Texture(resource.url);
+                                texture = new egret3d.Texture(resource.name);
                                 textureFormat = 1 /* RGBA */;
                                 t2d = new egret3d.GlTexture2D(gl, textureFormat);
                                 t2d.uploadImage(image.source, true, true, true, true);
@@ -16021,7 +16074,7 @@ var RES;
                             case 0: return [4 /*yield*/, host.load(resource, RES.processor.BinaryProcessor)];
                             case 1:
                                 result = _a.sent();
-                                glTF = new egret3d.GLTFAsset(resource.url);
+                                glTF = new egret3d.GLTFAsset(resource.name);
                                 glTF.parseFromBinary(new Uint32Array(result));
                                 paper.Asset.register(glTF);
                                 return [2 /*return*/, glTF];
@@ -16049,7 +16102,7 @@ var RES;
                             case 0: return [4 /*yield*/, host.load(resource, RES.processor.JsonProcessor)];
                             case 1:
                                 result = _e.sent();
-                                glTF = new egret3d.GLTFAsset(resource.url);
+                                glTF = new egret3d.GLTFAsset(resource.name);
                                 buffers = [];
                                 glTF.parse(result, buffers);
                                 if (!(glTF.config.materials && glTF.config.materials.length > 0)) return [3 /*break*/, 8];
@@ -16112,7 +16165,7 @@ var RES;
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
-                                prefab = new paper.Prefab(resource.url);
+                                prefab = new paper.Prefab(resource.name);
                                 return [4 /*yield*/, loadSubAssets(data, resource)];
                             case 2:
                                 _a.sent();
@@ -16143,7 +16196,7 @@ var RES;
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
                             case 1:
                                 data = _a.sent();
-                                rawScene = new paper.RawScene(resource.url);
+                                rawScene = new paper.RawScene(resource.name);
                                 return [4 /*yield*/, loadSubAssets(data, resource)];
                             case 2:
                                 _a.sent();
@@ -16170,9 +16223,7 @@ var RES;
                 var _this = this;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0: 
-                        // const list = formatUrlAndSort(data.assets, dirname(resource.url));
-                        return [4 /*yield*/, Promise.all(data.assets.map((function (item) { return __awaiter(_this, void 0, void 0, function () {
+                        case 0: return [4 /*yield*/, Promise.all(data.assets.map((function (item) { return __awaiter(_this, void 0, void 0, function () {
                                 var r;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
@@ -16182,13 +16233,15 @@ var RES;
                                             return [4 /*yield*/, RES.host.load(r)];
                                         case 1:
                                             _a.sent();
-                                            _a.label = 2;
-                                        case 2: return [2 /*return*/];
+                                            return [3 /*break*/, 3];
+                                        case 2:
+                                            console.error("");
+                                            _a.label = 3;
+                                        case 3: return [2 /*return*/];
                                     }
                                 });
                             }); })))];
                         case 1:
-                            // const list = formatUrlAndSort(data.assets, dirname(resource.url));
                             _a.sent();
                             return [2 /*return*/];
                     }
