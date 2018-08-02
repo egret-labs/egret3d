@@ -6,7 +6,7 @@ namespace paper {
         /**
          * 创建 GameObject，并添加到当前场景中。
          */
-        public static create(name: string = "NoName", tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
+        public static create(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
             const gameObect = new GameObject(name, tag, scene);
             // gameObect.addComponent(egret3d.Transform);
             // gameObect._addToScene(Application.sceneManager.activeScene);
@@ -79,7 +79,7 @@ namespace paper {
         /**
          * @deprecated
          */
-        public constructor(name: string = "NoName", tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
+        public constructor(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
             super();
 
             this.name = name;

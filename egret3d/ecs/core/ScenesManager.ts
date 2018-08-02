@@ -74,6 +74,18 @@ namespace paper {
             return null;
         }
         /**
+         * 加载场景
+         * @param resourceName 资源名称
+         */
+        public loadPrefab(resourceName: string) {
+            const prefab = RES.getRes(resourceName) as Prefab;
+            if (prefab) {
+                return prefab.createInstance();
+            }
+
+            return null;
+        }
+        /**
          * 卸载指定场景。
          */
         public unloadScene(scene: Scene) {
@@ -129,7 +141,7 @@ namespace paper {
          */
         public get globalScene() {
             if (!this._globalScene) {
-                this._globalScene = this.createScene(DefaultTags.Global, false);
+                this._globalScene = this.createScene(DefaultNames.Global, false);
                 this._scenes.pop(); // Remove global scene from scenes.
             }
 
@@ -140,7 +152,7 @@ namespace paper {
          */
         public get activeScene() {
             if (this._scenes.length === 0) {
-                this.createScene("default");
+                this.createScene(DefaultNames.Default);
             }
 
             return this._scenes[0];
@@ -169,7 +181,7 @@ namespace paper {
          */
         public get editorScene() {
             if (!this._editorScene) {
-                this._editorScene = this.createScene(DefaultTags.EditorOnly, false);
+                this._editorScene = this.createScene(DefaultNames.Editor, false);
                 this._scenes.pop(); // Remove editor scene from scenes.
             }
 
@@ -180,7 +192,7 @@ namespace paper {
          */
         public get globalGameObject() {
             if (!this._globalGameObject) {
-                this._globalGameObject = GameObject.create(DefaultTags.Global, DefaultTags.Global, this.globalScene);
+                this._globalGameObject = GameObject.create(DefaultNames.Global, DefaultTags.Global, this.globalScene);
                 this._globalGameObject.dontDestroy = true;
             }
 

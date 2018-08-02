@@ -3,6 +3,7 @@ namespace paper {
     const KEY_ASSET: keyof IAssetReference = "asset";
     const KEY_CLASS: keyof IClass = "class";
     const KEY_DESERIALIZE: keyof ISerializable = "deserialize";
+    const KEY_PREFAB: keyof GameObject = "prefab";
     const KEY_COMPONENTS: keyof GameObject = "components";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
 
@@ -38,7 +39,19 @@ namespace paper {
                     target = Application.sceneManager.createScene("");
                 }
                 else {
-                    target = GameObject.create();
+                    if (KEY_PREFAB in source) {
+                        const assetName = _deserializedData!.assets[(source as any)[KEY_PREFAB][KEY_ASSET]];
+                        const prefabTarget = Application.sceneManager.loadPrefab(assetName);
+                        if (!prefabTarget) {
+                            console.error("Deserialize");
+                            continue;
+                        }
+
+                        target = prefabTarget;
+                    }
+                    else {
+                        target = GameObject.create();
+                    }
 
                     if (KEY_COMPONENTS in source) { // Mapping transfrom components.
                         for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {

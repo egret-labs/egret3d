@@ -49,25 +49,6 @@ namespace paper {
 
             this.name = name;
         }
-
-        public serialize(): IAssetReference {
-            if (!this.name) {
-                return { asset: -1 };
-            }
-
-            if (_serializeData && _serializeData!.assets) {
-                let index = _serializeData!.assets!.indexOf(this.name);
-
-                if (index < 0) {
-                    index = _serializeData!.assets!.length;
-                    _serializeData!.assets!.push(this.name);
-                }
-
-                return { asset: index };
-            }
-
-            return { asset: -1 };
-        }
         /**
          * asset byte length
          * @version paper 1.0

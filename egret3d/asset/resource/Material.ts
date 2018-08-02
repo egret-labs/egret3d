@@ -16,7 +16,7 @@ namespace egret3d {
     /**
     * 材质资源
     */
-    export class Material extends paper.BaseObject {
+    export class Material extends paper.BaseObject implements paper.ISerializable {
         @paper.serializedField
         private _glTFMaterialIndex: number = 0;
         @paper.serializedField
@@ -135,7 +135,7 @@ namespace egret3d {
 
             const target = paper.serializeStruct(this);
             target._gltfMaterialIndex = this._glTFMaterialIndex;
-            target._glTFAsset = paper.createAssetReference(this._glTFAsset);
+            target._glTFAsset = paper.serializeAsset(this._glTFAsset);
 
             return target;
         }

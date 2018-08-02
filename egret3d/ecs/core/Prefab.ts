@@ -28,7 +28,6 @@ namespace paper {
      * 预制体资源。
      */
     export class Prefab extends BaseObjectAsset {
-
         /**
          * 从当前预制体生成一个实例。
          */

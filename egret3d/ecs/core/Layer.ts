@@ -19,6 +19,15 @@ namespace paper {
     /**
      * 
      */
+    export const enum DefaultNames {
+        NoName = "NoName",
+        Default = "default",
+        Global = "global",
+        Editor = "editor",
+    }
+    /**
+     * 
+     */
     export const enum DefaultTags {
         Untagged = "",
         Respawn = "Respawn",
