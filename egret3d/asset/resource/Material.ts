@@ -31,7 +31,7 @@ namespace egret3d {
         /**
         * @internal
         */
-        public _glTFMaterialPaperExt: { renderQueue: number } = null;
+        public _glTFMaterialPaperExt: { renderQueue: number } = null!;
         /**
         * @internal
         */
@@ -79,11 +79,11 @@ namespace egret3d {
         public dispose() {
 
             this._glTFMaterialIndex = 0;
-            this._glTFAsset = null;
-            this._glTFMaterial = null;
-            this._glTFMaterialPaperExt = null;
-            this._glTFTechnique = null;
-            this._glTFShader = null;
+            this._glTFAsset = null!;
+            this._glTFMaterial = null!;
+            this._glTFMaterialPaperExt = null!;
+            this._glTFTechnique = null!;
+            this._glTFShader = null!;
 
             this._cacheDefines = "";
             this._defines.length = 0;
@@ -103,27 +103,32 @@ namespace egret3d {
         public clone(): Material {
             const mat: Material = new Material(this._glTFShader);
 
-            mat._glTFMaterial.extensions.paper.renderQueue = this._glTFMaterial.extensions.paper.renderQueue;
-            const unifroms = this._glTFTechnique.uniforms;
+            mat._glTFMaterial.extensions!.paper.renderQueue = this._glTFMaterial.extensions!.paper.renderQueue;
+            const sourceUnifroms = this._glTFTechnique.uniforms;
             const targetUniforms = mat._glTFTechnique.uniforms;
-            for (const key in unifroms) {
-                const uniform = unifroms[key];
+            for (const key in sourceUnifroms) {
+                const uniform = sourceUnifroms[key];
                 const value = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value;
                 targetUniforms[key] = { type: uniform.type, semantic: uniform.semantic, value };
             }
 
-            const states = this._glTFTechnique.states;
+            const sourceStates = this._glTFTechnique.states;
             const targetStates = mat._glTFTechnique.states;
-            if (states.enable) {
-                targetStates.enable = states.enable.concat();
+            if (sourceStates.enable) {
+                targetStates.enable = sourceStates.enable.concat();
             }
 
-            for (const fun in states.functions) {
-                if (Array.isArray(states.functions[fun])) {
-                    targetStates.functions[fun] = states.functions[fun].concat();
+            if (sourceStates.functions) {
+                if (!targetStates.functions) {
+                    targetStates.functions = {};
                 }
-                else {
-                    targetStates.functions[fun] = states.functions[fun];
+                for (const fun in sourceStates.functions) {
+                    if (Array.isArray(sourceStates.functions[fun])) {
+                        targetStates.functions[fun] = sourceStates.functions[fun].concat();
+                    }
+                    else {
+                        targetStates.functions[fun] = sourceStates.functions[fun];
+                    }
                 }
             }
 
@@ -161,25 +166,33 @@ namespace egret3d {
             //
             this._glTFMaterial = config.materials[this._glTFMaterialIndex];
             if (!this._glTFMaterial ||
+                !this._glTFMaterial.extensions ||
+                !this._glTFMaterial.extensions.paper ||
                 !this._glTFMaterial.extensions.KHR_techniques_webgl ||
+                !this._glTFMaterial.extensions.KHR_techniques_webgl.values ||
                 !this._glTFMaterial.extensions.KHR_techniques_webgl.technique) {
                 console.error("Error glTF asset.");
+                return;
             }
             if (!this._glTFShader) {
                 //不存在，那就从材质中获取
                 this._glTFShader = paper.Asset.find<GLTFAsset>(this._glTFMaterial.extensions.KHR_techniques_webgl.technique);
                 if (!this._glTFShader) {
                     console.error("材质中获取着色器错误");
+                    return;
                 }
             }
             if (!this._glTFShader.config ||
                 !this._glTFShader.config.extensions ||
+                !this._glTFShader.config.extensions.paper ||
+                !this._glTFShader.config.extensions.paper.renderQueue ||
                 !this._glTFShader.config.extensions.KHR_techniques_webgl ||
                 this._glTFShader.config.extensions.KHR_techniques_webgl.techniques.length <= 0) {
-                console.error("找不到着色器扩展KHR_techniques_webgl");
+                console.error("错误的着色器扩展数据");
+                return;
             }
             this._glTFMaterialPaperExt = this._glTFMaterial.extensions.paper;
-            if(this._glTFMaterialPaperExt.renderQueue === -1){
+            if (!this._glTFMaterialPaperExt.renderQueue || this._glTFMaterialPaperExt.renderQueue === -1) {
                 this._glTFMaterialPaperExt.renderQueue = this._glTFShader.config.extensions.paper.renderQueue;
             }
             //

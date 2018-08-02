@@ -224,7 +224,7 @@ namespace egret3d {
                 asset: {
                     version: "2.0"
                 },
-                extensions: { KHR_techniques_webgl: {} },
+                extensions: { KHR_techniques_webgl: {}, paper: {} },
                 extensionsRequired: ["egret"],
                 extensionsUsed: ["egret"],
             } as GLTFEgret;
@@ -250,12 +250,17 @@ namespace egret3d {
                 targetStates.enable = states.enable.concat();
             }
 
-            for (const fun in states.functions) {
-                if (Array.isArray(states.functions[fun])) {
-                    targetStates.functions[fun] = states.functions[fun].concat();
+            if (states.functions) {
+                if (!targetStates.functions) {
+                    targetStates.functions = {};
                 }
-                else {
-                    targetStates.functions[fun] = states.functions[fun];
+                for (const fun in states.functions) {
+                    if (Array.isArray(states.functions[fun])) {
+                        targetStates.functions[fun] = states.functions[fun].concat();
+                    }
+                    else {
+                        targetStates.functions[fun] = states.functions[fun];
+                    }
                 }
             }
             return target;

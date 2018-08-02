@@ -240,24 +240,24 @@ namespace egret3d.particle {
             this._lastFrameFirstCursor = 0;
             this._lastAliveCursor = 0;
             this._vertexStride = 0;
-            this._vertexAttributes = null;
+            this._vertexAttributes = null!;
             this._burstIndex = 0;
-            this._startPositionBuffer = null;
-            this._startVelocityBuffer = null;
-            this._startColorBuffer = null;
-            this._startSizeBuffer = null;
-            this._startRotationBuffer = null;
-            this._startTimeBuffer = null;
-            this._random0Buffer = null;
-            this._random1Buffer = null;
-            this._worldPostionBuffer = null;
-            this._worldRoationBuffer = null;
+            this._startPositionBuffer = null!;
+            this._startVelocityBuffer = null!;
+            this._startColorBuffer = null!;
+            this._startSizeBuffer = null!;
+            this._startRotationBuffer = null!;
+            this._startTimeBuffer = null!;
+            this._random0Buffer = null!;
+            this._random1Buffer = null!;
+            this._worldPostionBuffer = null!;
+            this._worldRoationBuffer = null!;
 
-            this._worldPostionCache = null;
-            this._worldRotationCache = null;
+            this._worldPostionCache = null!;
+            this._worldRotationCache = null!;
 
-            this._comp = null;
-            this._renderer = null;
+            this._comp = null!;
+            this._renderer = null!;
         }
 
         public resetTime() {
@@ -270,18 +270,18 @@ namespace egret3d.particle {
             this._renderer = renderer;
 
             const mesh = createBatchMesh(renderer, comp.main._maxParticles);
-            this._vertexStride = renderer._renderMode === ParticleRenderMode.Mesh ? renderer.mesh.vertexCount : 4;
+            this._vertexStride = renderer._renderMode === ParticleRenderMode.Mesh ? renderer.mesh!.vertexCount : 4;
 
-            this._startPositionBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_POSITION);
-            this._startVelocityBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_VELOCITY);
-            this._startColorBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_COLOR);
-            this._startSizeBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_SIZE);
-            this._startRotationBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_ROTATION);
-            this._startTimeBuffer = mesh.getAttributes(gltf.AttributeSemanticType._TIME);
-            this._random0Buffer = mesh.getAttributes(gltf.AttributeSemanticType._RANDOM0);
-            this._random1Buffer = mesh.getAttributes(gltf.AttributeSemanticType._RANDOM1);
-            this._worldPostionBuffer = mesh.getAttributes(gltf.AttributeSemanticType._WORLD_POSITION);
-            this._worldRoationBuffer = mesh.getAttributes(gltf.AttributeSemanticType._WORLD_ROTATION);
+            this._startPositionBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_POSITION)!;
+            this._startVelocityBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_VELOCITY)!;
+            this._startColorBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_COLOR)!;
+            this._startSizeBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_SIZE)!;
+            this._startRotationBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_ROTATION)!;
+            this._startTimeBuffer = mesh.getAttributes(gltf.AttributeSemanticType._TIME)!;
+            this._random0Buffer = mesh.getAttributes(gltf.AttributeSemanticType._RANDOM0)!;
+            this._random1Buffer = mesh.getAttributes(gltf.AttributeSemanticType._RANDOM1)!;
+            this._worldPostionBuffer = mesh.getAttributes(gltf.AttributeSemanticType._WORLD_POSITION)!;
+            this._worldRoationBuffer = mesh.getAttributes(gltf.AttributeSemanticType._WORLD_ROTATION)!;
 
             const primitive = mesh.glTFMesh.primitives[0];
             this._vertexAttributes = [];

@@ -42,7 +42,7 @@ namespace egret3d {
         public static createBuildinShader(url: string, vertName: string, vertSource: string, fragName: string, fragSource: string, renderQueue: number) {
             const asset = GLTFAsset.createGLTFExtensionsAsset(url);
 
-            const KHRExtensions = asset.config.extensions.KHR_techniques_webgl;
+            const KHRExtensions = asset.config.extensions!.KHR_techniques_webgl!;
             KHRExtensions.shaders = [];
 
             KHRExtensions.shaders.push({ type: gltf.ShaderStage.VERTEX_SHADER, name: vertName, uri: vertSource });
@@ -51,14 +51,14 @@ namespace egret3d {
             KHRExtensions.techniques = [];
             KHRExtensions.techniques.push({ attributes: {}, uniforms: {}, states: { enable: [], functions: {} } } as any);
 
-            asset.config.extensions.paper = { renderQueue };
+            asset.config.extensions!.paper = { renderQueue };
 
             return asset;
         }
 
         private static _setBlend(technique: gltf.Technique, blend: BlendModeEnum) {
-            const funs = technique.states.functions;
-            const enables = technique.states.enable;
+            const funs = technique.states.functions!;
+            const enables = technique.states.enable!;
             switch (blend) {
                 case BlendModeEnum.Add:
                     funs.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
@@ -95,8 +95,8 @@ namespace egret3d {
         }
 
         private static _setCullFace(technique: gltf.Technique, cull: boolean, frontFace?: gltf.FrontFace, cullFace?: gltf.CullFace) {
-            const funs = technique.states.functions;
-            const enables = technique.states.enable;
+            const funs = technique.states.functions!;
+            const enables = technique.states.enable!;
             const index = enables.indexOf(gltf.EnableState.CULL_FACE);
             if (cull && frontFace && cullFace) {
                 funs.frontFace = [frontFace];
@@ -116,8 +116,8 @@ namespace egret3d {
         }
 
         private static _setDepth(technique: gltf.Technique, zTest: boolean, zWrite: boolean) {
-            const funs = technique.states.functions;
-            const enables = technique.states.enable;
+            const funs = technique.states.functions!;
+            const enables = technique.states.enable!;
             const index = enables.indexOf(gltf.EnableState.DEPTH_TEST);
             if (zTest) {
                 if (index < 0) {
@@ -138,10 +138,10 @@ namespace egret3d {
             }
         }
 
-        private static _createColorShaderTemplate(url: string) {
-            const shader = this.createBuildinShader(url, "color_vs", ShaderLib.materialcolor_vert, "color_fs", ShaderLib.line_frag, RenderQueue.Geometry);
+        private static _createColorShaderTemplate(url: string, renderQueue: RenderQueue) {
+            const shader = this.createBuildinShader(url, "color_vs", ShaderLib.materialcolor_vert, "color_fs", ShaderLib.line_frag, renderQueue);
 
-            const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+            const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
             technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
             technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
@@ -150,9 +150,9 @@ namespace egret3d {
             return shader;
         }
 
-        private static _createDiffuseShaderTemplate(url: string) {
-            const shader = this.createBuildinShader(url, "diffuse_vs", ShaderLib.diffuse_vert, "diffuse_fs", ShaderLib.diffuse_frag, RenderQueue.Geometry);
-            const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+        private static _createDiffuseShaderTemplate(url: string, renderQueue: RenderQueue) {
+            const shader = this.createBuildinShader(url, "diffuse_vs", ShaderLib.diffuse_vert, "diffuse_fs", ShaderLib.diffuse_frag, renderQueue);
+            const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
             technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
             technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
@@ -173,10 +173,10 @@ namespace egret3d {
             return shader;
         }
 
-        private static _createLambertShaderTemplate() {
-            const shader = this.createBuildinShader("buildin/lambert.shader.gltf", "lambert_vs", ShaderLib.lambert_vert, "lambert_fs", ShaderLib.lambert_frag, RenderQueue.Geometry);
+        private static _createLambertShaderTemplate(url: string, renderQueue: RenderQueue) {
+            const shader = this.createBuildinShader(url, "lambert_vs", ShaderLib.lambert_vert, "lambert_fs", ShaderLib.lambert_frag, renderQueue);
 
-            const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+            const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
             technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
             technique.attributes["_glesNormal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
             technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
@@ -202,10 +202,10 @@ namespace egret3d {
             return shader;
         }
 
-        private static _createParticleShaderTemplate(url: string) {
-            const shader = this.createBuildinShader(url, "particle_vs", ShaderLib.particlesystem_vert, "particle_fs", ShaderLib.particlesystem_frag, RenderQueue.Transparent);
+        private static _createParticleShaderTemplate(url: string, renderQueue: RenderQueue) {
+            const shader = this.createBuildinShader(url, "particle_vs", ShaderLib.particlesystem_vert, "particle_fs", ShaderLib.particlesystem_frag, renderQueue);
 
-            const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+            const technique = shader.config!.extensions!.KHR_techniques_webgl!.techniques[0];
             technique.attributes["_glesCorner"] = { semantic: gltf.AttributeSemanticType._CORNER };
             technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
             technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
@@ -292,7 +292,7 @@ namespace egret3d {
 
             {
                 const shader = this.createBuildinShader("buildin/depth.shader.gltf", "depth_vs", ShaderLib.depthpackage_vert, "depth_fs", ShaderLib.depthpackage_frag, RenderQueue.Geometry);
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
                 technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
@@ -301,7 +301,6 @@ namespace egret3d {
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.SHADOW_DEPTH = shader;
                 paper.Asset.register(shader);
@@ -309,7 +308,7 @@ namespace egret3d {
 
             {
                 const shader = this.createBuildinShader("buildin/distance.shader.gltf", "distance_vs", ShaderLib.distancepackage_vert, "distance_fs", ShaderLib.distancepackage_frag, RenderQueue.Geometry);
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
                 technique.uniforms["glstate_matrix_model"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };
@@ -322,7 +321,6 @@ namespace egret3d {
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.SHADOW_DISTANCE = shader;
                 paper.Asset.register(shader);
@@ -330,7 +328,7 @@ namespace egret3d {
 
             {
                 const shader = this.createBuildinShader("buildin/line.shader.gltf", "line_vs", ShaderLib.line_vert, "line_fs", ShaderLib.line_frag, RenderQueue.Geometry);
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
 
@@ -339,152 +337,139 @@ namespace egret3d {
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.LINE = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/diffuse.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createDiffuseShaderTemplate("buildin/diffuse.shader.gltf", RenderQueue.Geometry);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.DIFFUSE = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/diffuse_tintcolor.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createDiffuseShaderTemplate("buildin/diffuse_tintcolor.shader.gltf", RenderQueue.Geometry);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
                 this.DIFFUSE_TINT_COLOR = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/diffuse_bothside.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createDiffuseShaderTemplate("buildin/diffuse_bothside.shader.gltf", RenderQueue.Geometry);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Close);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
                 this.DIFFUSE_BOTH_SIDE = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createDiffuseShaderTemplate("buildin/transparent.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Blend);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent_tintColor.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createDiffuseShaderTemplate("buildin/transparent_tintColor.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Add);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT_TINTCOLOR = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent_alphaCut.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createDiffuseShaderTemplate("buildin/transparent_alphaCut.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT_ALPHACUT = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent_additive.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createDiffuseShaderTemplate("buildin/transparent_additive.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Add);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT_ADDITIVE = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent_additive_bothside.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createDiffuseShaderTemplate("buildin/transparent_additive_bothside.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Add);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT_ADDITIVE_BOTH_SIDE = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent_bothside.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createDiffuseShaderTemplate("buildin/transparent_bothside.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Blend);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.TRANSPARENT_ADDITIVE_BOTH_SIDE = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createLambertShaderTemplate();
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createLambertShaderTemplate("buildin/lambert.shader.gltf", RenderQueue.Geometry);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.LAMBERT = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createColorShaderTemplate("buildin/gizmos.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createColorShaderTemplate("buildin/gizmos.shader.gltf", RenderQueue.Overlay);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
                 this._setDepth(technique, false, false);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Blend);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Overlay;
 
                 this.GIZMOS_COLOR = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createColorShaderTemplate("buildin/materialcolor.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createColorShaderTemplate("buildin/materialcolor.shader.gltf", RenderQueue.Geometry);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Close);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.MATERIAL_COLOR = shader;
                 paper.Asset.register(shader);
@@ -493,7 +478,7 @@ namespace egret3d {
             {
                 const shader = this.createBuildinShader("buildin/vertcolor.shader.gltf", "vertcolor_vs", ShaderLib.vertcolor_vert, "vertcolor_fs", ShaderLib.vertcolor_frag, RenderQueue.Geometry);
 
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesNormal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
                 technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
@@ -507,15 +492,14 @@ namespace egret3d {
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
 
                 this.VERT_COLOR = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createParticleShaderTemplate("buildin/particle.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 //
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, false);
@@ -526,65 +510,60 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle_additive.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createParticleShaderTemplate("buildin/particle_additive.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 //
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Add);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.PARTICLE_ADDITIVE = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle_additive_premultiply.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createParticleShaderTemplate("buildin/particle_additive_premultiply.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 //
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Add_PreMultiply);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.PARTICLE_ADDITIVE_PREMYLTIPLY = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle_blend1.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createParticleShaderTemplate("buildin/particle_blend1.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 //
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Blend);
-                technique.states.functions.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
-                shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
+                technique.states.functions!.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
 
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle_blend.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createParticleShaderTemplate("buildin/particle_blend.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 //
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Blend);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.PARTICLE_BLEND = shader;
                 paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle_blend_premultiply.shader.gltf");
-                const technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
+                const shader = this._createParticleShaderTemplate("buildin/particle_blend_premultiply.shader.gltf", RenderQueue.Transparent);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 //
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Blend_PreMultiply);
-                shader.config.extensions.paper.renderQueue = RenderQueue.Transparent;
 
                 this.PARTICLE_BLEND_PREMYLTIPLY = shader;
                 paper.Asset.register(shader);

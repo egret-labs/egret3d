@@ -1216,7 +1216,8 @@ declare namespace gltf {
          */
         polygonOffset?: number[];
         extensions?: any;
-        extras?: any;
+        extras?: any;        
+        [k: string]: any;
     }
     /**
      * Fixed-function rendering states.

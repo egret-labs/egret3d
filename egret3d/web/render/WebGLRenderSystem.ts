@@ -21,16 +21,16 @@ namespace egret3d {
         private readonly _stateEnables: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST];
         //
         private readonly _filteredLights: BaseLight[] = [];
-        private readonly _cacheStateEnable: { [key: string]: boolean } = {};
+        private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
         private _cacheDefines: string;
-        private _cacheContextVersion: number;
-        private _cacheMaterialVerision: number;
-        private _cacheMeshVersion: number;
-        private _cacheProgram: GlProgram;
-        private _cacheContext: RenderContext;
-        private _cacheMaterial: Material;
-        private _cacheMesh: Mesh;
-        private _cacheState: gltf.States;
+        private _cacheContextVersion: number = -1;
+        private _cacheMaterialVerision: number = -1;
+        private _cacheMeshVersion: number = -1;
+        private _cacheProgram: GlProgram | undefined;
+        private _cacheContext: RenderContext | undefined;
+        private _cacheMaterial: Material | undefined;
+        private _cacheMesh: Mesh | undefined;
+        private _cacheState: gltf.States | undefined;
         //
         private _updateState(state: gltf.States) {
             if (this._cacheState === state) {
@@ -40,20 +40,24 @@ namespace egret3d {
             const webgl = this._webgl;
             const stateEnables = this._stateEnables;
             const cacheStateEnable = this._cacheStateEnable;
-            const functions = state.functions;
             //TODO WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
             for (const e of stateEnables) {
-                const b = state.enable.indexOf(e) >= 0;
+                const b = state.enable && state.enable.indexOf(e) >= 0;
                 if (cacheStateEnable[e] !== b) {
-                    cacheStateEnable[e] = b;
+                    cacheStateEnable[e] = b!;
                     b ? webgl.enable(e) : webgl.disable(e);
                 }
             }
+
             //functions
-            for (const fun in functions) {
-                //
-                (webgl[fun] as Function).apply(webgl, functions[fun]);
+            const functions = state.functions;
+            if (functions) {
+                for (const fun in functions) {
+                    //
+                    (webgl[fun] as Function).apply(webgl, functions[fun]);
+                }
             }
+
         }
 
         private _updateContextDefines(context: RenderContext, material: Material) {
@@ -214,7 +218,7 @@ namespace egret3d {
                         webgl.uniform1f(location, context.lightmapUV);
                         break;
                     case gltf.UniformSemanticType._BONESVEC4:
-                        webgl.uniform4fv(location, context.boneData);
+                        webgl.uniform4fv(location, context.boneData!);
                         break;
                     case gltf.UniformSemanticType._REFERENCEPOSITION:
                         webgl.uniform4fv(location, context.lightPosition);

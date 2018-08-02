@@ -3,10 +3,10 @@ namespace egret3d {
     let vsShaderMap: { [key: string]: WebGLShader } = {};
     let fsShaderMap: { [key: string]: WebGLShader } = {};
 
-    function parseIncludes(string) {
+    function parseIncludes(string: string): string {
         const pattern = /#include +<([\w\d.]+)>/g;
         //
-        function replace(match, include) {
+        function replace(_match: string, include: string) {
             const replace = egret3d.ShaderChunk[include];
             if (replace === undefined) {
                 throw new Error('Can not resolve #include <' + include + '>');
@@ -21,7 +21,7 @@ namespace egret3d {
     function getWebGLShader(type: number, gl: WebGLRenderingContext, info: gltf.Shader, defines: string): WebGLShader {
         let shader = gl.createShader(type);
         //
-        gl.shaderSource(shader, WebGLCapabilities.commonDefines + defines + parseIncludes(info.uri));
+        gl.shaderSource(shader, WebGLCapabilities.commonDefines + defines + parseIncludes(info.uri!));
         gl.compileShader(shader);
         let parameter = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
         if (!parameter) {
@@ -29,10 +29,10 @@ namespace egret3d {
                 gl.deleteShader(shader);
                 alert(info.uri);
             }
-            return null;
+            return null!;
         }
 
-        return shader;
+        return shader!;
     }
     /**
      * extract attributes
@@ -43,7 +43,7 @@ namespace egret3d {
         //
         const attributes: WebGLActiveAttribute[] = [];
         for (let i = 0; i < totalAttributes; i++) {
-            const attribData = gl.getActiveAttrib(webglProgram, i);
+            const attribData = gl.getActiveAttrib(webglProgram, i)!;
             const location = gl.getAttribLocation(webglProgram, attribData.name);
             attributes.push({ name: attribData.name, type: attribData.type, size: attribData.size, location });
         }
@@ -58,8 +58,8 @@ namespace egret3d {
         //
         const uniforms: WebGLActiveUniform[] = [];
         for (let i = 0; i < totalUniforms; i++) {
-            const uniformData = gl.getActiveUniform(webglProgram, i);
-            const location = gl.getUniformLocation(webglProgram, uniformData.name);
+            const uniformData = gl.getActiveUniform(webglProgram, i)!;
+            const location = gl.getUniformLocation(webglProgram, uniformData!.name)!;
 
             uniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location });
         }
@@ -127,10 +127,10 @@ namespace egret3d {
         if (!parameter) {
             alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + gl.getProgramInfoLog(program));
             gl.deleteProgram(program);
-            return null;
+            return null as any;
         }
 
-        return program;
+        return program!;
     }
 
 
@@ -177,9 +177,9 @@ namespace egret3d {
 
         public static getProgram(material: Material, technique: gltf.Technique, defines: string) {
             const shader = material._glTFShader;
-            const extensions = shader.config.extensions.KHR_techniques_webgl;
-            const vertexShader = extensions.shaders[0];
-            const fragShader = extensions.shaders[1];
+            const extensions = shader.config.extensions!.KHR_techniques_webgl;
+            const vertexShader = extensions!.shaders[0];
+            const fragShader = extensions!.shaders[1];
             const name = vertexShader.name + "_" + fragShader.name + "_" + defines;//TODO材质标脏可以优化
             let program = programMap[name];
             const webgl = WebGLCapabilities.webgl;

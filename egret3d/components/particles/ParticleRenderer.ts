@@ -189,7 +189,6 @@ namespace egret3d.particle {
                 return;
             }
 
-            const old = this._renderMode;
             this._renderMode = value;
             paper.EventPool.dispatchEvent(ParticleRendererEventType.RenderMode, this);
         }
