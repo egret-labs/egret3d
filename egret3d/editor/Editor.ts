@@ -68,13 +68,16 @@ namespace paper.editor {
             let camera = this.createEditCamera();
             // 开启几何画板
             Gizmo.Enabled(camera);
-            
+
+
+
             let script = camera.addComponent(EditorCameraScript);
             script.editorModel = this.editorModel;
             script.moveSpeed = 10;
             script.rotateSpeed = 0.5;
 
-            this.geoController = new GeoController(this.editorModel);
+            this.geoController = camera.addComponent(GeoController);
+            this.geoController.setEditorMode(this.editorModel)
             this.geoController.cameraScript = script;
 
             let pickScript = camera.addComponent(PickGameObjectScript);
@@ -87,9 +90,10 @@ namespace paper.editor {
 
             let camera = cameraObject.addComponent(egret3d.Camera);
             camera.near = 0.1;
-            camera.far = 100;
+            camera.far = 1000;
             camera.backgroundColor.set(0.13, 0.28, 0.51, 1);
             cameraObject.transform.setLocalPosition(0, 10, -10);
+            console.log(cameraObject.transform.parent)
             cameraObject.transform.lookAt(new egret3d.Vector3(0, 0, 0));
             return cameraObject;
         }

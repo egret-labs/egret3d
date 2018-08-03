@@ -112,11 +112,11 @@ namespace paper.editor {
         }
 
         public static DrawCoord() {
+
             if (!this._enabled) return;
             egret3d.WebGLKit.zTest(true);
             let gl = this.webgl;
             let prg = this.glProgram_line;
-
             prg.use();
             let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
             gl.bindBuffer(gl.ARRAY_BUFFER, this.coordVertexBuffer);
@@ -124,7 +124,7 @@ namespace paper.editor {
             gl.enableVertexAttribArray(prgVertexPosition);
             this.setMVPMatrix();
             prg.setMatrix("mvpMat", this.mvpMatrix);
-            prg.setColor("lineColor", [0.7, 0.7, 0.7, 0.8]);
+            prg.setColor("lineColor", [0.7, 0.7, 0.7, 1]);
             gl.drawArrays(gl.LINES, 0, (2 * this.nrLine + 1) * 4 + 2);
         }
         private static verticesCoord: number[];

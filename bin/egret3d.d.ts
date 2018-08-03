@@ -6934,11 +6934,26 @@ declare namespace paper.editor {
      * 场景编辑器
      **/
     class Editor {
-        static readonly editorModel: EditorModel;
         private static _editorModel;
+        /**编辑模型 */
+        static readonly editorModel: EditorModel;
+        private static history;
         /**初始化 */
         static init(): Promise<void>;
         private static runEgret();
+        /**切换场景 */
+        static switchScene(url: string): void;
+        private static geoController;
+        private static loadEditScene(url);
+        private static createEditCamera();
+        static undo(): void;
+        static redo(): void;
+        static deserializeHistory(data: string): void;
+        static serializeHistory(): string;
+        /**
+         * 序列化场景
+         */
+        static serializeActiveScene(): string;
     }
 }
 declare namespace paper {
@@ -6977,6 +6992,12 @@ declare namespace paper.editor {
     class EditorModel extends EventDispatcher {
         backRunTime: any;
         setBackRuntime(back: any): void;
+        private history;
+        /**
+         * 初始化
+         * @param history
+         */
+        init(history: History): void;
         addState(state: BaseState): void;
         getEditType(propName: string, target: any): editor.EditType | null;
         setProperty(propName: string, propValue: any, target: BaseComponent | GameObject): boolean;
@@ -6990,7 +7011,7 @@ declare namespace paper.editor {
         createPrefabState(prefab: any, selectIds: string[]): void;
         serializeProperty(value: any, editType: editor.EditType): any;
         deserializeProperty(serializeData: any, editType: editor.EditType): Promise<any>;
-        createGameObject(parentUUids: string[]): void;
+        createGameObject(parentList: GameObject[], createType: string): void;
         addComponent(gameObjectUUid: string, compClzName: string): void;
         /**
         *  TODO:因gameobject未提供通过组件实例添加组件的方法，暂时这样处理
@@ -7038,14 +7059,14 @@ declare namespace paper.editor {
         generateGameobjectUUids(instance: paper.GameObject): void;
         private findOptionSetName(propName, target);
         setTargetProperty(propName: string, target: any, value: any): void;
-        /**选择游戏对象 */
+        /**当前选中的对象 */
+        currentSelected: GameObject[];
+        /**
+         * 选择游戏对象
+         *  */
         selectGameObject(objs: GameObject[]): void;
-        switchScene(url: string): void;
-        resetHistory(data: string): void;
-        private _editCamera;
-        geoController: GeoController;
-        private loadEditScene(url);
-        private createEditCamera();
+        /**当前编辑模式 */
+        currentEditMode: string;
         /**
          * 切换编辑模式
          */
@@ -7054,15 +7075,8 @@ declare namespace paper.editor {
          * 切换编辑类型
          */
         changeEditType(type: string): void;
-        /**
-         * 序列化场景
-         */
-        serializeActiveScene(): string;
         isPrefabRoot(gameObj: GameObject): boolean;
         isPrefabChild(gameObj: GameObject): boolean;
-        serializeHistory(): string;
-        undo: () => void;
-        redo: () => void;
         /**
         * 从一个预置体文件创建实例
         * @param prefabPath 预置体资源路径
@@ -7080,7 +7094,7 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
-    class GeoController {
+    class GeoController extends paper.Behaviour {
         selectedGameObjs: GameObject[];
         private _isEditing;
         private _geoCtrlMode;
@@ -7088,10 +7102,12 @@ declare namespace paper.editor {
         geoCtrlMode: string;
         private _geoCtrlType;
         geoCtrlType: string;
-        private editorModel;
-        constructor(editorModel: EditorModel);
+        editorModel: EditorModel;
+        setEditorMode(editorModel: EditorModel): void;
+        constructor();
         private bindMouse;
         private bindKeyboard;
+        onUpdate(): void;
         update(): void;
         /**
          * 几何操作逻辑
@@ -7161,8 +7177,6 @@ declare namespace paper.editor {
         HistoryFree: string;
     };
     class History {
-        private static _instance;
-        static readonly instance: History;
         dispatcher: EventDispatcher | null;
         private _locked;
         private _index;
@@ -7234,11 +7248,19 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
-    class AddGameObjectState extends BaseState {
+    class CreateGameObjectState extends BaseState {
         static toString(): string;
-        static create(data?: any): AddGameObjectState | null;
+        static create(parentList: GameObject[], createType: string): CreateGameObjectState | null;
+        infos: {
+            parentUUID: string;
+            serializeData: any;
+        }[];
+        createType: string;
+        addList: string[];
+        private isFirst;
         undo(): boolean;
         redo(): boolean;
+        private createGameObjectByType(createType);
     }
 }
 declare namespace paper.editor {
@@ -7259,6 +7281,7 @@ declare namespace paper.editor {
         private duplicateInfo;
         private addList;
         undo(): boolean;
+        private firstDo;
         redo(): boolean;
         private clearPrefabInfo(obj);
         serialize(): any;
@@ -7270,6 +7293,7 @@ declare namespace paper.editor {
         static toString(): string;
         static create(serializeData: any[], parent: GameObject): PasteGameObjectsState;
         private pasteInfo;
+        private cacheSerializeData;
         private addList;
         undo(): boolean;
         redo(): boolean;
@@ -7442,6 +7466,7 @@ declare namespace paper.editor {
         private _lastMouseY;
         private _mouseDown_r;
         private _mouseDown_l;
+        private _mouseDown_m;
         onStart(): any;
         onUpdate(delta: number): any;
         OnEnable(): void;

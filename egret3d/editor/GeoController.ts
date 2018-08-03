@@ -22,7 +22,7 @@ namespace paper.editor {
         ScaZ
     }
 
-    export class GeoController {
+    export class GeoController extends paper.Behaviour {
 
         public selectedGameObjs: GameObject[] = [];
         private _isEditing: boolean = false;
@@ -47,18 +47,25 @@ namespace paper.editor {
         public set geoCtrlType(value: string) {
             this._geoCtrlType = value;
         }
-        private editorModel: EditorModel;
-        constructor(editorModel: EditorModel) {
-            this.editorModel = editorModel;
+        editorModel: EditorModel;
+        public setEditorMode(editorModel: EditorModel) {
+            this.editorModel = editorModel
+            this._addEventListener()
+        }
+        constructor() {
+            super();
+            // this.editorModel = editorModel;
             this._addGizmoController();
-            this._addEventListener();
+            // this._addEventListener();
             this.bindMouse = egret3d.InputManager.mouse;
             this.bindKeyboard = egret3d.InputManager.keyboard;
         }
 
         private bindMouse: egret3d.MouseDevice;
         private bindKeyboard: egret3d.KeyboardDevice;
-
+        public onUpdate() {
+            this.update();
+        }
         public update() {
             // console.log(this.pCtrl);
             let len = this.selectedGameObjs.length;
@@ -66,6 +73,7 @@ namespace paper.editor {
                 Gizmo.DrawArrowXYZ(this.controller.transform);
                 if (this.bindKeyboard.wasPressed('DELETE')) {
                     this.editorModel.deleteGameObject(this.selectedGameObjs);
+                    this.selectedGameObjs = [];
                     // EditorMessage.instance.DeleteGameObject(this._bindedGameObject);
                 }
                 if (this.selectedGameObjs.length == 1 && this.selectedGameObjs[0].getComponent(egret3d.Camera)) {
@@ -488,12 +496,15 @@ namespace paper.editor {
                 }
             }
             if (keyboard.wasPressed("W")) {
+                this._changeEditType("position")
                 this.editorModel.changeEditType("position");
             }
             if (keyboard.wasPressed("E")) {
+                this._changeEditType("rotation")
                 this.editorModel.changeEditType("rotation");
             }
             if (keyboard.wasPressed("R")) {
+                this._changeEditType("scale")
                 this.editorModel.changeEditType("scale");
             }
 
@@ -702,10 +713,10 @@ namespace paper.editor {
 
             let mat = new egret3d.Material();
             mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
-            mat.setVector4v("_Color", [0.8, 0.8, 0.4, 0.1]);
+            mat.setVector4v("_Color", [0.8, 0.8, 0.4, 0.5]);
             renderer.materials = [mat];
 
-            let xAxis = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.2), 0);
+            let xAxis = this._createAxis(new egret3d.Vector4(1, 0.0, 0.0, 1), 0);
             xAxis.name = "GizmoController_X";
             xAxis.tag = "Editor";
             xAxis.transform.setParent(pcontroller.transform);
@@ -713,7 +724,7 @@ namespace paper.editor {
             xAxis.transform.setLocalEulerAngles(0, 0, 90);
             xAxis.transform.setLocalPosition(1, 0, 0);
 
-            let yAxis = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.2), 0);
+            let yAxis = this._createAxis(new egret3d.Vector4(0.0, 1, 0.0, 1), 0);
             yAxis.name = "GizmoController_Y";
             yAxis.tag = "Editor";
             yAxis.transform.setParent(pcontroller.transform);
@@ -721,7 +732,7 @@ namespace paper.editor {
             yAxis.transform.setLocalEulerAngles(0, 0, 0);
             yAxis.transform.setLocalPosition(0, 1, 0);
 
-            let zAxis = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.2), 0);
+            let zAxis = this._createAxis(new egret3d.Vector4(0.0, 0.0, 1, 1), 0);
             zAxis.name = "GizmoController_Z";
             zAxis.tag = "Editor";
             zAxis.transform.setParent(pcontroller.transform);
@@ -729,42 +740,42 @@ namespace paper.editor {
             zAxis.transform.setLocalEulerAngles(90, 0, 0);
             zAxis.transform.setLocalPosition(0, 0, 1);
 
-            let xRotate = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.2), 1);
+            let xRotate = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.5), 1);
             xRotate.name = "GizmoController_Rotate_X";
             xRotate.tag = "Editor";
             xRotate.transform.setParent(rcontroller.transform);
             xRotate.transform.setLocalScale(3, 0.05, 3);
             xRotate.transform.setLocalEulerAngles(0, 0, -90);
 
-            let yRotate = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.2), 1);
+            let yRotate = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.5), 1);
             yRotate.name = "GizmoController_Rotate_Y";
             yRotate.tag = "Editor";
             yRotate.transform.setParent(rcontroller.transform);
             yRotate.transform.setLocalScale(3, 0.05, 3);
             yRotate.transform.setLocalEulerAngles(0, 0, 0);
 
-            let zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.2), 1);
+            let zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.5), 1);
             zRotate.name = "GizmoController_Rotate_Z";
             zRotate.tag = "Editor";
             zRotate.transform.setParent(rcontroller.transform);
             zRotate.transform.setLocalEulerAngles(90, 0, 0);
             zRotate.transform.setLocalScale(3, 0.05, 3);
 
-            let xScale = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.2), 2);
+            let xScale = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 1), 2);
             xScale.name = "GizmoController_Scale_X";
             xScale.tag = "Editor";
             xScale.transform.setParent(scontroller.transform);
             xScale.transform.setLocalScale(0.2, 0.2, 0.2);
             xScale.transform.setLocalPosition(2, 0, 0);
 
-            let yScale = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.2), 2);
+            let yScale = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 1), 2);
             yScale.name = "GizmoController_Scale_Y";
             yScale.tag = "Editor";
             yScale.transform.setParent(scontroller.transform);
             yScale.transform.setLocalScale(0.2, 0.2, 0.2);
             yScale.transform.setLocalPosition(0, 2, 0);
 
-            let zScale = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.2), 2);
+            let zScale = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 1), 2);
             zScale.name = "GizmoController_Scale_Z";
             zScale.tag = "Editor";
             zScale.transform.setParent(scontroller.transform);

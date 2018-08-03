@@ -21641,6 +21641,7 @@ var paper;
             function Editor() {
             }
             Object.defineProperty(Editor, "editorModel", {
+                /**编辑模型 */
                 get: function () {
                     return this._editorModel;
                 },
@@ -21661,8 +21662,10 @@ var paper;
                                 return [4 /*yield*/, RES.loadConfig("resource/default.res.json", "resource/")];
                             case 1:
                                 _a.sent();
+                                this.history = new editor.History();
                                 //初始化编辑模型
                                 this._editorModel = new editor.EditorModel();
+                                this._editorModel.init(this.history);
                                 return [2 /*return*/];
                         }
                     });
@@ -21670,7 +21673,7 @@ var paper;
             };
             Editor.runEgret = function () {
                 egret3d.runEgret({
-                    antialias: true, isEditor: true, isPlaying: false,
+                    antialias: false,
                     systems: [
                         egret3d.BeginSystem,
                         paper.EnableSystem,
@@ -21694,6 +21697,98 @@ var paper;
                         egret3d.EndSystem
                     ]
                 });
+            };
+            /**切换场景 */
+            Editor.switchScene = function (url) {
+                var _this = this;
+                paper.Application.sceneManager.unloadAllScene();
+                paper.Application.callLater(function () {
+                    _this.loadEditScene(url).then(function () {
+                        _this.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_SCENE, url));
+                    });
+                });
+            };
+            Editor.loadEditScene = function (url) {
+                return __awaiter(this, void 0, void 0, function () {
+                    var camera, script, pickScript;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: 
+                            //由于新引擎场景加载方式存在问题，这里预先载入一下场景资源
+                            return [4 /*yield*/, RES.getResAsync(url)];
+                            case 1:
+                                //由于新引擎场景加载方式存在问题，这里预先载入一下场景资源
+                                _a.sent();
+                                paper.Application.sceneManager.loadScene(url);
+                                camera = this.createEditCamera();
+                                // 开启几何画板
+                                editor.Gizmo.Enabled(camera);
+                                script = camera.addComponent(editor.EditorCameraScript);
+                                script.editorModel = this.editorModel;
+                                script.moveSpeed = 10;
+                                script.rotateSpeed = 0.5;
+                                this.geoController = camera.addComponent(editor.GeoController);
+                                this.geoController.setEditorMode(this.editorModel);
+                                this.geoController.cameraScript = script;
+                                pickScript = camera.addComponent(editor.PickGameObjectScript);
+                                pickScript.editorModel = this.editorModel;
+                                return [2 /*return*/];
+                        }
+                    });
+                });
+            };
+            Editor.createEditCamera = function () {
+                var cameraObject = new paper.GameObject();
+                cameraObject.name = "EditorCamera";
+                cameraObject.tag = "EditorCamera";
+                var camera = cameraObject.addComponent(egret3d.Camera);
+                camera.near = 0.1;
+                camera.far = 1000;
+                camera.backgroundColor.set(0.13, 0.28, 0.51, 1);
+                cameraObject.transform.setLocalPosition(0, 10, -10);
+                console.log(cameraObject.transform.parent);
+                cameraObject.transform.lookAt(new egret3d.Vector3(0, 0, 0));
+                return cameraObject;
+            };
+            Editor.undo = function () {
+                this.history.back();
+            };
+            Editor.redo = function () {
+                this.history.forward();
+            };
+            Editor.deserializeHistory = function (data) {
+                var history = this.history.deserialize(JSON.parse(data));
+            };
+            Editor.serializeHistory = function () {
+                var historyData = this.history.serialize();
+                return JSON.stringify(historyData);
+            };
+            /**
+             * 序列化场景
+             */
+            Editor.serializeActiveScene = function () {
+                var scene = paper.Application.sceneManager.activeScene;
+                var camera = paper.GameObject.findWithTag("EditorCamera");
+                if (camera) {
+                    scene._removeGameObject(camera);
+                }
+                var len = this.geoController.controllerPool.length;
+                if (len > 0) {
+                    for (var i = 0; i < len; i++) {
+                        scene._removeGameObject(this.geoController.controllerPool[i]);
+                    }
+                }
+                var data = paper.serialize(scene);
+                if (len > 0) {
+                    for (var i = 0; i < len; i++) {
+                        scene._addGameObject(this.geoController.controllerPool[i]);
+                    }
+                }
+                if (camera) {
+                    scene._addGameObject(camera);
+                }
+                var jsonData = JSON.stringify(data);
+                return jsonData;
             };
             return Editor;
         }());
@@ -21810,20 +21905,20 @@ var paper;
         var EditorModel = (function (_super) {
             __extends(EditorModel, _super);
             function EditorModel() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.undo = function () {
-                    editor.History.instance.back();
-                };
-                _this.redo = function () {
-                    editor.History.instance.forward();
-                };
-                return _this;
+                return _super !== null && _super.apply(this, arguments) || this;
             }
             EditorModel.prototype.setBackRuntime = function (back) {
                 this.backRunTime = back;
             };
+            /**
+             * 初始化
+             * @param history
+             */
+            EditorModel.prototype.init = function (history) {
+                this.history = history;
+            };
             EditorModel.prototype.addState = function (state) {
-                state && editor.History.instance.add(state);
+                state && this.history.add(state);
             };
             EditorModel.prototype.getEditType = function (propName, target) {
                 var editInfoList = editor.getEditInfo(target);
@@ -22051,16 +22146,8 @@ var paper;
                     });
                 });
             };
-            EditorModel.prototype.createGameObject = function (parentUUids) {
-                var datas = [];
-                for (var index = 0; index < parentUUids.length; index++) {
-                    var parentUUid = parentUUids[index];
-                    datas.push({ parentUUid: parentUUid });
-                }
-                var data = {
-                    datas: datas,
-                };
-                var state = editor.AddGameObjectState.create(data);
+            EditorModel.prototype.createGameObject = function (parentList, createType) {
+                var state = editor.CreateGameObjectState.create(parentList, createType);
                 this.addState(state);
             };
             EditorModel.prototype.addComponent = function (gameObjectUUid, compClzName) {
@@ -22242,9 +22329,24 @@ var paper;
                         }
                         for (var i = 0; i < objects.length; i++) {
                             var obj = objects[i];
-                            obj.transform.parent = targetObject.transform.parent;
-                            var transform = targetObject.transform.parent.children.pop();
-                            targetObject.transform.parent.children.splice(index, 0, transform);
+                            if (obj.transform.parent === targetObject.transform.parent) {
+                                var oldIndex = targetObject.transform.parent.children.indexOf(obj.transform);
+                                targetObject.transform.parent.children.splice(oldIndex, 1);
+                                switch (dir) {
+                                    case 'top':
+                                        index = targetObject.transform.parent.children.indexOf(targetObject.transform);
+                                        break;
+                                    case 'bottom':
+                                        index = targetObject.transform.parent.children.indexOf(targetObject.transform) + 1;
+                                        break;
+                                }
+                                targetObject.transform.parent.children.splice(index, 0, obj.transform);
+                            }
+                            else {
+                                obj.transform.parent = targetObject.transform.parent;
+                                var transform = targetObject.transform.parent.children.pop();
+                                targetObject.transform.parent.children.splice(index, 0, transform);
+                            }
                         }
                     }
                     else {
@@ -22297,15 +22399,7 @@ var paper;
                 }
             };
             EditorModel.prototype.getGameObjectByUUid = function (uuid) {
-                var paper = this.backRunTime.paper;
                 var objects = paper.Application.sceneManager.activeScene.gameObjects;
-                for (var i = 0; i < objects.length; i++) {
-                    if (objects[i].uuid === uuid) {
-                        return objects[i];
-                    }
-                }
-                paper = __global['paper'];
-                objects = paper.Application.sceneManager.activeScene.gameObjects;
                 for (var i = 0; i < objects.length; i++) {
                     if (objects[i].uuid === uuid) {
                         return objects[i];
@@ -22402,73 +22496,18 @@ var paper;
                     target[propName] = value;
                 }
             };
-            /**选择游戏对象 */
+            /**
+             * 选择游戏对象
+             *  */
             EditorModel.prototype.selectGameObject = function (objs) {
+                this.currentSelected = objs;
                 this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, objs));
-            };
-            // 切换场景，参数是场景编号
-            EditorModel.prototype.switchScene = function (url) {
-                var _this = this;
-                paper_1.Application.sceneManager.unloadAllScene();
-                paper_1.Application.callLater(function () {
-                    _this.loadEditScene(url).then(function () {
-                        _this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_SCENE, url));
-                    });
-                });
-            };
-            EditorModel.prototype.resetHistory = function (data) {
-                var history = editor.History.instance.deserialize(JSON.parse(data));
-            };
-            EditorModel.prototype.loadEditScene = function (url) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var camera, script, pickScript;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: 
-                            //由于新引擎场景加载方式存在问题，这里预先载入一下场景资源
-                            return [4 /*yield*/, RES.getResAsync(url)];
-                            case 1:
-                                //由于新引擎场景加载方式存在问题，这里预先载入一下场景资源
-                                _a.sent();
-                                paper_1.Application.sceneManager.loadScene(url);
-                                camera = paper_1.GameObject.findWithTag("EditorCamera");
-                                if (camera) {
-                                    this._editCamera = camera;
-                                }
-                                else {
-                                    this._editCamera = this.createEditCamera();
-                                }
-                                this.geoController = new editor.GeoController(this);
-                                // 开启几何画板
-                                editor.Gizmo.Enabled(this._editCamera);
-                                script = this._editCamera.addComponent(editor.EditorCameraScript);
-                                script.editorModel = this;
-                                script.moveSpeed = 10;
-                                script.rotateSpeed = 0.5;
-                                pickScript = this._editCamera.addComponent(editor.PickGameObjectScript);
-                                pickScript.editorModel = this;
-                                this.geoController.cameraScript = script;
-                                return [2 /*return*/];
-                        }
-                    });
-                });
-            };
-            EditorModel.prototype.createEditCamera = function () {
-                var cameraObject = new paper_1.GameObject();
-                cameraObject.name = "EditorCamera";
-                cameraObject.tag = "EditorCamera";
-                var camera = cameraObject.addComponent(egret3d.Camera);
-                camera.near = 0.1;
-                camera.far = 100;
-                camera.backgroundColor.set(0.13, 0.28, 0.51, 1);
-                cameraObject.transform.setLocalPosition(0, 10, -10);
-                cameraObject.transform.lookAt(new egret3d.Vector3(0, 0, 0));
-                return cameraObject;
             };
             /**
              * 切换编辑模式
              */
             EditorModel.prototype.changeEditMode = function (mode) {
+                this.currentEditMode = mode;
                 this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_EDIT_MODE, mode));
             };
             /**
@@ -22476,32 +22515,6 @@ var paper;
              */
             EditorModel.prototype.changeEditType = function (type) {
                 this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_EDIT_TYPE, type));
-            };
-            /**
-             * 序列化场景
-             */
-            EditorModel.prototype.serializeActiveScene = function () {
-                var scene = paper_1.Application.sceneManager.activeScene;
-                if (this._editCamera) {
-                    scene._removeGameObject(this._editCamera);
-                }
-                var len = this.geoController.controllerPool.length;
-                if (len > 0) {
-                    for (var i = 0; i < len; i++) {
-                        scene._removeGameObject(this.geoController.controllerPool[i]);
-                    }
-                }
-                var data = paper_1.serialize(scene);
-                if (len > 0) {
-                    for (var i = 0; i < len; i++) {
-                        scene._addGameObject(this.geoController.controllerPool[i]);
-                    }
-                }
-                if (this._editCamera) {
-                    scene._addGameObject(this._editCamera);
-                }
-                var jsonData = JSON.stringify(data);
-                return jsonData;
             };
             EditorModel.prototype.isPrefabRoot = function (gameObj) {
                 var prefabInfo = gameObj.prefabEditInfo;
@@ -22516,10 +22529,6 @@ var paper;
                     return true;
                 }
                 return false;
-            };
-            EditorModel.prototype.serializeHistory = function () {
-                var historyData = editor.History.instance.serialize();
-                return JSON.stringify(historyData);
             };
             /**
             * 从一个预置体文件创建实例
@@ -22656,36 +22665,39 @@ var paper;
             DRAG_MODE[DRAG_MODE["ScaY"] = 9] = "ScaY";
             DRAG_MODE[DRAG_MODE["ScaZ"] = 10] = "ScaZ";
         })(DRAG_MODE || (DRAG_MODE = {}));
-        var GeoController = (function () {
-            function GeoController(editorModel) {
-                this.selectedGameObjs = [];
-                this._isEditing = false;
-                this._geoCtrlMode = "local";
-                this._modeCanChange = true;
-                this._geoCtrlType = "position";
+        var GeoController = (function (_super) {
+            __extends(GeoController, _super);
+            function GeoController() {
+                var _this = _super.call(this) || this;
+                _this.selectedGameObjs = [];
+                _this._isEditing = false;
+                _this._geoCtrlMode = "local";
+                _this._modeCanChange = true;
+                _this._geoCtrlType = "position";
                 /**
                  * 几何操作逻辑
                  */
-                this._dragMode = DRAG_MODE.NONE;
-                this._dragOffset = new egret3d.Vector3();
-                this._delta = new egret3d.Vector3();
-                this._newPosition = new egret3d.Vector3();
-                this._ctrlPos = new egret3d.Vector3();
-                this._ctrlRot = new egret3d.Quaternion();
-                this._dragPlanePoint = new egret3d.Vector3();
-                this._dragPlaneNormal = new egret3d.Vector3();
-                this._initRotation = new egret3d.Quaternion();
-                this._oldLocalScale = new egret3d.Vector3();
-                this.selectGameObjects = this._selectGameObjects.bind(this);
-                this.changeProperty = this._changeProperty.bind(this);
-                this.changeEditMode = this._changeEditMode.bind(this);
-                this.changeEditType = this._changeEditType.bind(this);
-                this.controllerPool = [];
-                this.editorModel = editorModel;
-                this._addGizmoController();
-                this._addEventListener();
-                this.bindMouse = egret3d.InputManager.mouse;
-                this.bindKeyboard = egret3d.InputManager.keyboard;
+                _this._dragMode = DRAG_MODE.NONE;
+                _this._dragOffset = new egret3d.Vector3();
+                _this._delta = new egret3d.Vector3();
+                _this._newPosition = new egret3d.Vector3();
+                _this._ctrlPos = new egret3d.Vector3();
+                _this._ctrlRot = new egret3d.Quaternion();
+                _this._dragPlanePoint = new egret3d.Vector3();
+                _this._dragPlaneNormal = new egret3d.Vector3();
+                _this._initRotation = new egret3d.Quaternion();
+                _this._oldLocalScale = new egret3d.Vector3();
+                _this.selectGameObjects = _this._selectGameObjects.bind(_this);
+                _this.changeProperty = _this._changeProperty.bind(_this);
+                _this.changeEditMode = _this._changeEditMode.bind(_this);
+                _this.changeEditType = _this._changeEditType.bind(_this);
+                _this.controllerPool = [];
+                // this.editorModel = editorModel;
+                _this._addGizmoController();
+                // this._addEventListener();
+                _this.bindMouse = egret3d.InputManager.mouse;
+                _this.bindKeyboard = egret3d.InputManager.keyboard;
+                return _this;
             }
             Object.defineProperty(GeoController.prototype, "geoCtrlMode", {
                 get: function () {
@@ -22707,6 +22719,13 @@ var paper;
                 enumerable: true,
                 configurable: true
             });
+            GeoController.prototype.setEditorMode = function (editorModel) {
+                this.editorModel = editorModel;
+                this._addEventListener();
+            };
+            GeoController.prototype.onUpdate = function () {
+                this.update();
+            };
             GeoController.prototype.update = function () {
                 // console.log(this.pCtrl);
                 var len = this.selectedGameObjs.length;
@@ -22714,6 +22733,7 @@ var paper;
                     editor.Gizmo.DrawArrowXYZ(this.controller.transform);
                     if (this.bindKeyboard.wasPressed('DELETE')) {
                         this.editorModel.deleteGameObject(this.selectedGameObjs);
+                        this.selectedGameObjs = [];
                         // EditorMessage.instance.DeleteGameObject(this._bindedGameObject);
                     }
                     if (this.selectedGameObjs.length == 1 && this.selectedGameObjs[0].getComponent(egret3d.Camera)) {
@@ -23114,12 +23134,15 @@ var paper;
                     }
                 }
                 if (keyboard.wasPressed("W")) {
+                    this._changeEditType("position");
                     this.editorModel.changeEditType("position");
                 }
                 if (keyboard.wasPressed("E")) {
+                    this._changeEditType("rotation");
                     this.editorModel.changeEditType("rotation");
                 }
                 if (keyboard.wasPressed("R")) {
+                    this._changeEditType("scale");
                     this.editorModel.changeEditType("scale");
                 }
                 // 复制粘贴
@@ -23304,60 +23327,60 @@ var paper;
                 var renderer = ball.addComponent(egret3d.MeshRenderer);
                 var mat = new egret3d.Material();
                 mat.setShader(egret3d.DefaultShaders.GIZMOS_COLOR);
-                mat.setVector4v("_Color", [0.8, 0.8, 0.4, 0.1]);
+                mat.setVector4v("_Color", [0.8, 0.8, 0.4, 0.5]);
                 renderer.materials = [mat];
-                var xAxis = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.2), 0);
+                var xAxis = this._createAxis(new egret3d.Vector4(1, 0.0, 0.0, 1), 0);
                 xAxis.name = "GizmoController_X";
                 xAxis.tag = "Editor";
                 xAxis.transform.setParent(pcontroller.transform);
                 xAxis.transform.setLocalScale(0.1, 2, 0.1);
                 xAxis.transform.setLocalEulerAngles(0, 0, 90);
                 xAxis.transform.setLocalPosition(1, 0, 0);
-                var yAxis = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.2), 0);
+                var yAxis = this._createAxis(new egret3d.Vector4(0.0, 1, 0.0, 1), 0);
                 yAxis.name = "GizmoController_Y";
                 yAxis.tag = "Editor";
                 yAxis.transform.setParent(pcontroller.transform);
                 yAxis.transform.setLocalScale(0.1, 2, 0.1);
                 yAxis.transform.setLocalEulerAngles(0, 0, 0);
                 yAxis.transform.setLocalPosition(0, 1, 0);
-                var zAxis = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.2), 0);
+                var zAxis = this._createAxis(new egret3d.Vector4(0.0, 0.0, 1, 1), 0);
                 zAxis.name = "GizmoController_Z";
                 zAxis.tag = "Editor";
                 zAxis.transform.setParent(pcontroller.transform);
                 zAxis.transform.setLocalScale(0.1, 2, 0.1);
                 zAxis.transform.setLocalEulerAngles(90, 0, 0);
                 zAxis.transform.setLocalPosition(0, 0, 1);
-                var xRotate = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.2), 1);
+                var xRotate = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.5), 1);
                 xRotate.name = "GizmoController_Rotate_X";
                 xRotate.tag = "Editor";
                 xRotate.transform.setParent(rcontroller.transform);
                 xRotate.transform.setLocalScale(3, 0.05, 3);
                 xRotate.transform.setLocalEulerAngles(0, 0, -90);
-                var yRotate = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.2), 1);
+                var yRotate = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.5), 1);
                 yRotate.name = "GizmoController_Rotate_Y";
                 yRotate.tag = "Editor";
                 yRotate.transform.setParent(rcontroller.transform);
                 yRotate.transform.setLocalScale(3, 0.05, 3);
                 yRotate.transform.setLocalEulerAngles(0, 0, 0);
-                var zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.2), 1);
+                var zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.5), 1);
                 zRotate.name = "GizmoController_Rotate_Z";
                 zRotate.tag = "Editor";
                 zRotate.transform.setParent(rcontroller.transform);
                 zRotate.transform.setLocalEulerAngles(90, 0, 0);
                 zRotate.transform.setLocalScale(3, 0.05, 3);
-                var xScale = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.2), 2);
+                var xScale = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 1), 2);
                 xScale.name = "GizmoController_Scale_X";
                 xScale.tag = "Editor";
                 xScale.transform.setParent(scontroller.transform);
                 xScale.transform.setLocalScale(0.2, 0.2, 0.2);
                 xScale.transform.setLocalPosition(2, 0, 0);
-                var yScale = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.2), 2);
+                var yScale = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 1), 2);
                 yScale.name = "GizmoController_Scale_Y";
                 yScale.tag = "Editor";
                 yScale.transform.setParent(scontroller.transform);
                 yScale.transform.setLocalScale(0.2, 0.2, 0.2);
                 yScale.transform.setLocalPosition(0, 2, 0);
-                var zScale = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.2), 2);
+                var zScale = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 1), 2);
                 zScale.name = "GizmoController_Scale_Z";
                 zScale.tag = "Editor";
                 zScale.transform.setParent(scontroller.transform);
@@ -23408,7 +23431,7 @@ var paper;
                 this.controller = null;
             };
             return GeoController;
-        }());
+        }(paper.Behaviour));
         editor.GeoController = GeoController;
         __reflect(GeoController.prototype, "paper.editor.GeoController");
     })(editor = paper.editor || (paper.editor = {}));
@@ -23432,16 +23455,6 @@ var paper;
                 this._batchStates = [];
                 this._events = [];
             }
-            Object.defineProperty(History, "instance", {
-                get: function () {
-                    if (!this._instance) {
-                        this._instance = new History();
-                    }
-                    return this._instance;
-                },
-                enumerable: true,
-                configurable: true
-            });
             History.prototype._free = function () {
                 if (this._states.length > this._index + 1) {
                     this._states.length = this._index + 1; // TODO release.
@@ -23899,71 +23912,86 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
-        //添加游戏对象
-        var AddGameObjectState = (function (_super) {
-            __extends(AddGameObjectState, _super);
-            function AddGameObjectState() {
-                return _super !== null && _super.apply(this, arguments) || this;
+        //创建游戏对象
+        var CreateGameObjectState = (function (_super) {
+            __extends(CreateGameObjectState, _super);
+            function CreateGameObjectState() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.isFirst = true;
+                return _this;
             }
-            AddGameObjectState.toString = function () {
+            CreateGameObjectState.toString = function () {
                 return "[class common.AddGameObjectState]";
             };
-            AddGameObjectState.create = function (data) {
-                if (data === void 0) { data = null; }
-                var state = new AddGameObjectState();
-                state.data = data;
+            CreateGameObjectState.create = function (parentList, createType) {
+                var infos = parentList.map(function (obj) { return { parentUUID: obj.uuid, serializeData: null }; });
+                var state = new CreateGameObjectState();
+                state.infos = infos;
+                state.createType = createType;
                 return state;
             };
-            AddGameObjectState.prototype.undo = function () {
+            CreateGameObjectState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
-                    var datas = this.data.datas;
-                    var gameObjs = editor.Editor.editorModel.getGameObjectsByUUids(this.data.cacheGameObjectUUid);
-                    editor.Editor.editorModel._deleteGameObject(gameObjs);
-                    var selectUUids = datas.filter(function (data) {
-                        if (data.parentUUid) {
-                            return data.parentUUid;
-                        }
-                    });
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, selectUUids);
+                    var objs = editor.Editor.editorModel.getGameObjectsByUUids(this.addList);
+                    editor.Editor.editorModel._deleteGameObject(objs);
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
                     return true;
                 }
                 return false;
             };
-            AddGameObjectState.prototype.redo = function () {
+            CreateGameObjectState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
-                    var datas = this.data.datas;
-                    var selectUUids = [];
-                    for (var index = 0; index < datas.length; index++) {
-                        var element = datas[index];
-                        var parentUUid = element.parentUUid;
-                        var gameObj = void 0;
-                        if (element.serializeData) {
-                            gameObj = paper.deserialize(element.serializeData, true);
+                    this.addList = [];
+                    //一条信息都没有则添加到场景根
+                    if (this.infos.length === 0) {
+                        this.infos.push({ parentUUID: null, serializeData: null });
+                    }
+                    for (var i = 0; i < this.infos.length; i++) {
+                        var obj = void 0;
+                        if (this.isFirst) {
+                            obj = this.createGameObjectByType(this.createType);
+                            this.infos[i].serializeData = paper.serialize(obj);
                         }
                         else {
-                            gameObj = new paper.GameObject();
-                            gameObj.name = "NewGameObject";
-                            element.serializeData = paper.serialize(gameObj);
+                            obj = paper.deserialize(this.infos[i].serializeData, true);
                         }
-                        if (parentUUid) {
-                            var parentGameObj = editor.Editor.editorModel.getGameObjectByUUid(parentUUid);
-                            if (parentGameObj) {
-                                gameObj.transform.setParent(parentGameObj.transform);
-                            }
-                        }
-                        selectUUids.push(gameObj.uuid);
+                        var parent_2 = editor.Editor.editorModel.getGameObjectByUUid(this.infos[i].parentUUID);
+                        if (parent_2)
+                            obj.transform.parent = parent_2.transform;
+                        this.addList.push(obj.uuid);
                     }
-                    this.data.cacheGameObjectUUid = selectUUids.concat();
-                    //select new objects
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, selectUUids);
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, this.addList);
+                    this.isFirst = false;
                     return true;
                 }
                 return false;
             };
-            return AddGameObjectState;
+            CreateGameObjectState.prototype.createGameObjectByType = function (createType) {
+                var obj;
+                switch (createType) {
+                    case 'empty':
+                        obj = new paper.GameObject();
+                        obj.name = "NewGameObject";
+                        break;
+                    case 'cube':
+                        obj = new paper.GameObject();
+                        obj.name = "cube";
+                        var mat = new egret3d.Material();
+                        var shader = egret3d.DefaultShaders.MATERIAL_COLOR;
+                        mat.setShader(shader);
+                        mat.setVector4v("_Color", [1, 0, 0, 1]);
+                        var mesh = obj.addComponent(egret3d.MeshFilter);
+                        mesh.mesh = egret3d.DefaultMeshes.CUBE;
+                        var renderer = obj.addComponent(egret3d.MeshRenderer);
+                        renderer.materials = [mat];
+                        break;
+                }
+                return obj;
+            };
+            return CreateGameObjectState;
         }(editor.BaseState));
-        editor.AddGameObjectState = AddGameObjectState;
-        __reflect(AddGameObjectState.prototype, "paper.editor.AddGameObjectState");
+        editor.CreateGameObjectState = CreateGameObjectState;
+        __reflect(CreateGameObjectState.prototype, "paper.editor.CreateGameObjectState");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -24010,9 +24038,9 @@ var paper;
                     for (var i = 0; i < this.deleteInfo.length; i++) {
                         var info = this.deleteInfo[i];
                         var obj = paper.deserialize(info.serializeData, true);
-                        var oldParentObj = editor.Editor.editorModel.getGameObjectByUUid(info[i].oldParentUUID);
+                        var oldParentObj = editor.Editor.editorModel.getGameObjectByUUid(info.oldParentUUID);
                         if (oldParentObj) {
-                            var oldTargetTransform = oldParentObj.transform.children[info[i].oldIndex];
+                            var oldTargetTransform = oldParentObj.transform.children[info.oldIndex];
                             if (oldTargetTransform) {
                                 editor.Editor.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, 'top');
                             }
@@ -24025,7 +24053,7 @@ var paper;
                             var all = paper.Application.sceneManager.activeScene.gameObjects;
                             var currentIndex = all.indexOf(obj);
                             all.splice(currentIndex, 1);
-                            all.splice(info[i].oldIndex, 0, obj);
+                            all.splice(info.oldIndex, 0, obj);
                         }
                     }
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, this.deleteInfo.map(function (info) { return info.UUID; }));
@@ -24063,7 +24091,9 @@ var paper;
         var DuplicateGameObjectsState = (function (_super) {
             __extends(DuplicateGameObjectsState, _super);
             function DuplicateGameObjectsState() {
-                return _super !== null && _super.apply(this, arguments) || this;
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.firstDo = true;
+                return _this;
             }
             DuplicateGameObjectsState.toString = function () {
                 return "[class common.DuplicateGameObjectsState]";
@@ -24082,14 +24112,13 @@ var paper;
                     duplicateInfo.push({ UUID: UUID, parentUUID: parentUUID, serializeData: serializeData });
                 }
                 var state = new DuplicateGameObjectsState();
-                state.data = duplicateInfo;
+                state.duplicateInfo = duplicateInfo;
                 return state;
             };
             DuplicateGameObjectsState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
                     var objs = editor.Editor.editorModel.getGameObjectsByUUids(this.addList);
                     editor.Editor.editorModel._deleteGameObject(objs);
-                    var selectIds = this.data.selectIds;
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, objs);
                     return true;
                 }
@@ -24100,16 +24129,20 @@ var paper;
                     this.addList = [];
                     for (var i = 0; i < this.duplicateInfo.length; i++) {
                         var info = this.duplicateInfo[i];
-                        var obj = paper.deserialize(info.serializeData);
-                        var parent_2 = editor.Editor.editorModel.getGameObjectByUUid(info.parentUUID);
-                        if (parent_2) {
-                            obj.transform.parent = parent_2.transform;
+                        var obj = paper.deserialize(info.serializeData, !this.firstDo);
+                        var parent_3 = editor.Editor.editorModel.getGameObjectByUUid(info.parentUUID);
+                        if (parent_3) {
+                            obj.transform.parent = parent_3.transform;
                         }
                         //清理预置体信息
                         this.clearPrefabInfo(obj);
                         this.addList.push(obj.uuid);
+                        if (this.firstDo) {
+                            info.serializeData = paper.serialize(obj);
+                        }
                     }
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, this.addList);
+                    this.firstDo = false;
                     return true;
                 }
                 return false;
@@ -24166,16 +24199,24 @@ var paper;
             };
             PasteGameObjectsState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
-                    var parent_3 = editor.Editor.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
-                    for (var i = 0; i < this.pasteInfo.serializeData.length; i++) {
-                        var info = this.pasteInfo.serializeData[i];
-                        var obj = paper.deserialize(info);
-                        if (parent_3) {
-                            obj.transform.parent = parent_3.transform;
+                    this.addList = [];
+                    var parent_4 = editor.Editor.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
+                    var serializeDataList = this.cacheSerializeData ? this.cacheSerializeData : this.pasteInfo.serializeData;
+                    var keepUID = this.cacheSerializeData ? true : false;
+                    for (var i = 0; i < serializeDataList.length; i++) {
+                        var info = serializeDataList[i];
+                        var obj = paper.deserialize(info, keepUID);
+                        if (parent_4) {
+                            obj.transform.parent = parent_4.transform;
                         }
                         //清理预置体信息
                         this.clearPrefabInfo(obj);
                         this.addList.push(obj.uuid);
+                        if (serializeDataList === this.pasteInfo.serializeData) {
+                            if (!this.cacheSerializeData)
+                                this.cacheSerializeData = [];
+                            this.cacheSerializeData.push(paper.serialize(obj));
+                        }
                     }
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, this.addList);
                     return true;
@@ -24381,12 +24422,25 @@ var paper;
                         var obj = editor.Editor.editorModel.getGameObjectByUUid(this.gameObjects[index].UUID);
                         var oldParentObj = editor.Editor.editorModel.getGameObjectByUUid(this.gameObjects[index].oldParentUUID);
                         if (oldParentObj) {
+                            var dir = 'top';
+                            //同级移动
+                            if (obj.transform.parent && obj.transform.parent.gameObject === oldParentObj) {
+                                var oldIndex = this.gameObjects[index].oldIndex;
+                                var currentIndex = obj.transform.parent.children.indexOf(obj.transform);
+                                if (currentIndex > oldIndex) {
+                                    dir = 'top';
+                                }
+                                else if (currentIndex < oldIndex) {
+                                    dir = 'bottom';
+                                }
+                            }
                             var oldTargetTransform = oldParentObj.transform.children[this.gameObjects[index].oldIndex];
                             if (oldTargetTransform) {
-                                editor.Editor.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, 'top');
+                                editor.Editor.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, dir);
                             }
                             else {
-                                editor.Editor.editorModel.setGameObjectsHierarchy([obj], oldParentObj, 'inner');
+                                dir = 'inner';
+                                editor.Editor.editorModel.setGameObjectsHierarchy([obj], oldParentObj, dir);
                             }
                         }
                         else {
@@ -25201,6 +25255,7 @@ var paper;
                 _this._lastMouseY = 0;
                 _this._mouseDown_r = false;
                 _this._mouseDown_l = false;
+                _this._mouseDown_m = false;
                 _this._lookAtPiont = new egret3d.Vector3();
                 _this._dragPlanePoint = new egret3d.Vector3(0, 0, 0);
                 _this._dragPlaneNormal = new egret3d.Vector3(0, 1, 0);
@@ -25271,6 +25326,27 @@ var paper;
                     egret3d.Vector3.subtract(result, up, result);
                     this.gameObject.transform.setLocalPosition(result);
                 }
+                if (mouse.isPressed(1)) {
+                    if (!this._mouseDown_m) {
+                        this._mouseDown_m = true;
+                        this._lastMouseX = mouse.position.x;
+                        this._lastMouseY = mouse.position.y;
+                    }
+                    else {
+                        var move = new egret3d.Vector3;
+                        move.z = 0;
+                        move.x = (mouse.position.x - this._lastMouseX) / 10;
+                        move.y = -(mouse.position.y - this._lastMouseY) / 10;
+                        egret3d.Quaternion.transformVector3(rotation, move, move);
+                        egret3d.Vector3.subtract(result, move, result);
+                        this.gameObject.transform.setLocalPosition(result);
+                        this._lastMouseX = mouse.position.x;
+                        this._lastMouseY = mouse.position.y;
+                    }
+                }
+                else if (mouse.wasReleased(1)) {
+                    this._mouseDown_m = false;
+                }
                 //放大缩小
                 if (mouse.wheel !== 0) {
                     forward.z = mouse.wheel * this.wheelSpeed;
@@ -25286,7 +25362,8 @@ var paper;
                     }
                     else {
                         var moveX = mouse.position.x - this._lastMouseX;
-                        forward.z = moveX * 0.1;
+                        var moveY = mouse.position.y - this._lastMouseY;
+                        forward.z = moveX * 0.1 + moveY * 0.1;
                         egret3d.Quaternion.transformVector3(rotation, forward, forward);
                         egret3d.Vector3.add(result, forward, result);
                         this.gameObject.transform.setLocalPosition(result);
@@ -25303,12 +25380,23 @@ var paper;
                         this._mouseDown_r = true;
                         this._lastMouseX = mouse.position.x;
                         this._lastMouseY = mouse.position.y;
+                        console.log(this.gameObject.transform.getLocalEulerAngles());
                     }
                     else {
                         var moveX = mouse.position.x - this._lastMouseX;
                         var moveY = mouse.position.y - this._lastMouseY;
-                        var euler = this.gameObject.transform.getLocalEulerAngles();
-                        this.gameObject.transform.setLocalEulerAngles(Math.max(Math.min((euler.x + moveY * this.rotateSpeed), 89.9), -89.9), euler.y + moveX * this.rotateSpeed, euler.z);
+                        var theta_x = moveY * this.rotateSpeed, theta_y = moveX * this.rotateSpeed;
+                        var sinX = Math.sin(theta_x / 180 * Math.PI / 2), cosX = Math.cos(theta_x / 180 * Math.PI / 2);
+                        var sinY = Math.sin(theta_y / 180 * Math.PI / 2), cosY = Math.cos(theta_y / 180 * Math.PI / 2);
+                        var rot = this.gameObject.transform.getRotation();
+                        this.gameObject.transform.getRight(this._helpVec3);
+                        egret3d.Vector3.normalize(this._helpVec3);
+                        egret3d.Quaternion.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX, this._helpQuat);
+                        egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
+                        egret3d.Vector3.set(0, 1, 0, this._helpVec3);
+                        egret3d.Quaternion.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY, this._helpQuat);
+                        egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
+                        this.gameObject.transform.setRotation(rot);
                         this._lastMouseX = mouse.position.x;
                         this._lastMouseY = mouse.position.y;
                     }
@@ -25582,7 +25670,7 @@ var paper;
                 gl.enableVertexAttribArray(prgVertexPosition);
                 this.setMVPMatrix();
                 prg.setMatrix("mvpMat", this.mvpMatrix);
-                prg.setColor("lineColor", [0.7, 0.7, 0.7, 0.8]);
+                prg.setColor("lineColor", [0.7, 0.7, 0.7, 1]);
                 gl.drawArrays(gl.LINES, 0, (2 * this.nrLine + 1) * 4 + 2);
             };
             Gizmo.setVertices = function () {
@@ -26541,8 +26629,8 @@ var paper;
              */
             get: function () {
                 if (this._activeDirty) {
-                    var parent_4 = this.transform.parent;
-                    if (!parent_4 || parent_4.gameObject.activeInHierarchy) {
+                    var parent_5 = this.transform.parent;
+                    if (!parent_5 || parent_5.gameObject.activeInHierarchy) {
                         this._activeInHierarchy = this._activeSelf;
                     }
                     else {
@@ -26559,10 +26647,10 @@ var paper;
             get: function () {
                 var path = this.name;
                 if (this.transform) {
-                    var parent_5 = this.transform.parent;
-                    while (parent_5) {
-                        path = parent_5.gameObject.name + "/" + path;
-                        parent_5 = parent_5.parent;
+                    var parent_6 = this.transform.parent;
+                    while (parent_6) {
+                        path = parent_6.gameObject.name + "/" + path;
+                        parent_6 = parent_6.parent;
                     }
                     return this._scene.name + "/" + path;
                 }

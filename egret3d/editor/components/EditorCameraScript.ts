@@ -17,6 +17,7 @@ namespace paper.editor {
         private _lastMouseY: number = 0;
         private _mouseDown_r: boolean = false;
         private _mouseDown_l: boolean = false;
+        private _mouseDown_m: boolean = false;
 
         public onStart(): any {
             this.bindKeyboard = egret3d.InputManager.keyboard;
@@ -90,6 +91,29 @@ namespace paper.editor {
                 egret3d.Vector3.subtract(result, up, result);
                 this.gameObject.transform.setLocalPosition(result);
             }
+            if (mouse.isPressed(1)) {
+                if (!this._mouseDown_m) {
+                    this._mouseDown_m = true
+                    this._lastMouseX = mouse.position.x;
+                    this._lastMouseY = mouse.position.y;
+                } else {
+                    let move = new egret3d.Vector3
+                    move.z = 0
+                    move.x = (mouse.position.x - this._lastMouseX) / 10;
+                    move.y = -(mouse.position.y - this._lastMouseY) / 10;
+                    egret3d.Quaternion.transformVector3(rotation, move, move);
+
+                    egret3d.Vector3.subtract(result, move, result);
+                    this.gameObject.transform.setLocalPosition(result)
+
+                    this._lastMouseX = mouse.position.x;
+                    this._lastMouseY = mouse.position.y;
+                }
+
+            } else if (mouse.wasReleased(1)) {
+                this._mouseDown_m = false
+            }
+
             //放大缩小
             if (mouse.wheel !== 0) {
                 forward.z = mouse.wheel * this.wheelSpeed;
@@ -105,8 +129,9 @@ namespace paper.editor {
                     this._lastMouseY = mouse.position.y;
                 } else {
                     let moveX = mouse.position.x - this._lastMouseX;
+                    let moveY = mouse.position.y - this._lastMouseY;
 
-                    forward.z = moveX * 0.1;
+                    forward.z = moveX * 0.1 + moveY * 0.1;
                     egret3d.Quaternion.transformVector3(rotation, forward, forward);
                     egret3d.Vector3.add(result, forward, result);
                     this.gameObject.transform.setLocalPosition(result);
@@ -124,12 +149,26 @@ namespace paper.editor {
                     this._mouseDown_r = true;
                     this._lastMouseX = mouse.position.x;
                     this._lastMouseY = mouse.position.y;
+                    console.log(this.gameObject.transform.getLocalEulerAngles())
                 } else {
                     let moveX = mouse.position.x - this._lastMouseX;
                     let moveY = mouse.position.y - this._lastMouseY;
 
-                    let euler = this.gameObject.transform.getLocalEulerAngles();
-                    this.gameObject.transform.setLocalEulerAngles(Math.max(Math.min((euler.x + moveY * this.rotateSpeed), 89.9), -89.9), euler.y + moveX * this.rotateSpeed, euler.z);
+                    let theta_x = moveY * this.rotateSpeed, theta_y = moveX * this.rotateSpeed;
+                    let sinX = Math.sin(theta_x / 180 * Math.PI / 2), cosX = Math.cos(theta_x / 180 * Math.PI / 2);
+                    let sinY = Math.sin(theta_y / 180 * Math.PI / 2), cosY = Math.cos(theta_y / 180 * Math.PI / 2);
+                    let rot = this.gameObject.transform.getRotation();
+
+                    this.gameObject.transform.getRight(this._helpVec3);
+                    egret3d.Vector3.normalize(this._helpVec3);
+                    egret3d.Quaternion.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX, this._helpQuat);
+                    egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
+
+                    egret3d.Vector3.set(0, 1, 0, this._helpVec3);
+                    egret3d.Quaternion.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY, this._helpQuat);
+                    egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
+
+                    this.gameObject.transform.setRotation(rot);
 
                     this._lastMouseX = mouse.position.x;
                     this._lastMouseY = mouse.position.y;
