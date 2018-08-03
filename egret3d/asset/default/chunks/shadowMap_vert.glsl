@@ -1,6 +1,6 @@
 #ifdef USE_SHADOW
 
-    vec4 worldPosition = glstate_matrix_model * tmpvar_1;
+    vec4 worldPosition = glstate_matrix_model * tmpVertex;
 
     #ifdef USE_DIRECT_LIGHT
 

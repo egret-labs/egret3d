@@ -1,3 +1,4 @@
+#include <common>
 uniform sampler2D _MainTex;
 uniform lowp float _AlphaCut;
 uniform lowp vec4 _TintColor;

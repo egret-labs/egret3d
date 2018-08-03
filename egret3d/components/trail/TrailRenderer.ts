@@ -152,8 +152,7 @@ namespace egret3d {
         constructor() {
             super();
 
-            this._material = new Material();
-            this._material.setShader(DefaultShaders.DIFFUSE);
+            this._material = new Material(DefaultShaders.DIFFUSE);
         }
 
         /**

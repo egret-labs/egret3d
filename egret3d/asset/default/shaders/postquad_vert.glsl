@@ -1,3 +1,4 @@
+#include <common>
 attribute vec4 _glesVertex;
 attribute vec4 _glesMultiTexCoord0; 
 uniform highp vec4 _MainTex_ST; 

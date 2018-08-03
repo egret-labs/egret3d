@@ -1,3 +1,4 @@
+#include <common>
 precision highp float;
 attribute vec4 _glesVertex;    
 

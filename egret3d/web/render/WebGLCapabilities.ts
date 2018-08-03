@@ -1,11 +1,10 @@
 namespace egret3d {
-
     /**
      * get max precision
      * @param gl
      * @param precision {string} the expect precision, can be: "highp"|"mediump"|"lowp"
      */
-    function getMaxPrecision(gl:WebGLRenderingContext, precision:string = "highp") {
+    function getMaxPrecision(gl: WebGLRenderingContext, precision: string = "highp") {
         if (precision === 'highp') {
             if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).precision > 0 &&
                 gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).precision > 0) {
@@ -22,7 +21,7 @@ namespace egret3d {
         return 'lowp';
     }
 
-    function getExtension(gl:WebGLRenderingContext, name:string) {
+    function getExtension(gl: WebGLRenderingContext, name: string) {
         let browserPrefixes = [
             "",
             "MOZ_",
@@ -39,29 +38,41 @@ namespace egret3d {
         return null;
     }
 
-    export class WebGLCapabilities {
+    function getConstDefines(maxPrecision: string): string {
+        let defines = "precision " + maxPrecision + " float; \n";
+        defines += "precision " + maxPrecision + " int; \n";
+        // defines += '#extension GL_OES_standard_derivatives : enable \n';
 
-        public version:number;
+        return defines;
+    }
 
-        public precision:string = "highp";
+    export class WebGLCapabilities extends paper.SingletonComponent {
+        public static webgl: WebGLRenderingContext;        
+        public static commonDefines: string;
 
-        public maxPrecision:string;
+        public webgl: WebGLRenderingContext;
 
-        public maxTextures:number;
+        public version: number;
 
-        public maxVertexTextures:number;
+        public precision: string = "highp";
+
+        public maxPrecision: string;
+
+        public maxTextures: number;
+
+        public maxVertexTextures: number;
 
         public maxTextureSize: number;
 
         public maxCubemapSize: number;
 
-        public maxVertexUniformVectors:number;
+        public maxVertexUniformVectors: number;
 
-        public floatTextures:boolean;
+        public floatTextures: boolean;
 
-        public anisotropyExt:EXT_texture_filter_anisotropic;
+        public anisotropyExt: EXT_texture_filter_anisotropic;
 
-        public shaderTextureLOD:any;
+        public shaderTextureLOD: any;
 
         public maxAnisotropy: number;
 
@@ -71,7 +82,13 @@ namespace egret3d {
         public textureFloat: boolean;
         public textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
 
-        public initialize(gl:WebGLRenderingContext) {
+
+        public initialize() {
+            super.initialize();
+
+            this.webgl = WebGLCapabilities.webgl;
+            
+            const gl = this.webgl;
             this.version = parseFloat(/^WebGL\ ([0-9])/.exec(gl.getParameter(gl.VERSION))[1]);
 
             this.maxPrecision = getMaxPrecision(gl, this.precision);
@@ -97,6 +114,9 @@ namespace egret3d {
             getExtension(gl, "OES_standard_derivatives");
             // GL_OES_standard_derivatives
             getExtension(gl, "GL_OES_standard_derivatives");
+
+            //TODO
+            WebGLCapabilities.commonDefines = getConstDefines(this.maxPrecision);
         }
     }
 }

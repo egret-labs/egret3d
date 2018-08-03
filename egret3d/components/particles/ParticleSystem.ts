@@ -33,7 +33,7 @@ namespace egret3d.particle {
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */
         private _onUpdateBatchMesh(comp: ParticleComponent) {
-            const renderer = this._groups[0].getComponent(comp.gameObject, 1) as ParticleRenderer;
+            const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             comp.initBatcher();
             //
             this._onRenderUpdate(renderer, ParticleRendererEventType.RenderMode);
@@ -116,7 +116,7 @@ namespace egret3d.particle {
                 return;
             }
 
-            const renderer = this._groups[0].getComponent(component.gameObject, 1) as ParticleRenderer;
+            const renderer = component.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             const mainModule = component.main;
             switch (type) {
                 case ParticleCompEventType.StartRotation3DChanged: {
@@ -142,7 +142,7 @@ namespace egret3d.particle {
                 return;
             }
 
-            const renderer = this._groups[0].getComponent(comp.gameObject, 1) as ParticleRenderer;
+            const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.SHAPE);
             if (comp.shape.enable) {
                 renderer._addShaderDefine(ParticleMaterialDefine.SHAPE);
@@ -157,7 +157,7 @@ namespace egret3d.particle {
                 return;
             }
 
-            const renderer = this._groups[0].getComponent(comp.gameObject, 1) as ParticleRenderer;
+            const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.VELOCITYCONSTANT);
             renderer._removeShaderDefine(ParticleMaterialDefine.VELOCITYCURVE);
             renderer._removeShaderDefine(ParticleMaterialDefine.VELOCITYTWOCONSTANT);
@@ -214,7 +214,7 @@ namespace egret3d.particle {
                 return;
             }
 
-            const renderer = this._groups[0].getComponent(comp.gameObject, 1) as ParticleRenderer;
+            const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.COLOROGRADIENT);
             renderer._removeShaderDefine(ParticleMaterialDefine.COLORTWOGRADIENTS);
 
@@ -251,7 +251,7 @@ namespace egret3d.particle {
                 return;
             }
 
-            const renderer = this._groups[0].getComponent(comp.gameObject, 1) as ParticleRenderer;
+            const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.SIZECURVE);
             renderer._removeShaderDefine(ParticleMaterialDefine.SIZECURVESEPERATE);
             renderer._removeShaderDefine(ParticleMaterialDefine.SIZETWOCURVES);
@@ -306,7 +306,7 @@ namespace egret3d.particle {
                 return;
             }
 
-            const renderer = this._groups[0].getComponent(comp.gameObject, 1) as ParticleRenderer;
+            const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONOVERLIFETIME);
             renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONCONSTANT);
             renderer._removeShaderDefine(ParticleMaterialDefine.ROTATIONTWOCONSTANTS);
@@ -384,7 +384,7 @@ namespace egret3d.particle {
                 return;
             }
 
-            const renderer = this._groups[0].getComponent(comp.gameObject, 1) as ParticleRenderer;
+            const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             renderer._removeShaderDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONCURVE);
             renderer._removeShaderDefine(ParticleMaterialDefine.TEXTURESHEETANIMATIONTWOCURVE);
 
@@ -419,8 +419,8 @@ namespace egret3d.particle {
                 return;
             }
 
-            const component = this._groups[0].getComponent(gameObject, 0) as ParticleComponent;
-            const renderer = this._groups[0].getComponent(gameObject, 1) as ParticleRenderer;
+            const component = gameObject.getComponent(ParticleComponent) as ParticleComponent;
+            const renderer = gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             //
             this._onUpdateBatchMesh(component);
             if (!renderer.batchMesh || !renderer.batchMaterial) {
@@ -452,8 +452,6 @@ namespace egret3d.particle {
 
                     frustumTest: false,
                     zdist: -1,
-
-                    disable: false,
                 };
 
                 this._drawCalls.drawCalls.push(drawCall);
@@ -461,39 +459,34 @@ namespace egret3d.particle {
         }
 
         public onEnable() {
-            const components = this._groups[0].components as ReadonlyArray<ParticleComponent | ParticleRenderer>;
-            for (let i = 0, l = components.length; i < l; i += 2) {
-                this._updateDrawCalls(components[i].gameObject);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._updateDrawCalls(gameObject);
             }
         }
 
         public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
             this._updateDrawCalls(gameObject);
 
-            const component = group.getComponent(gameObject, 0) as ParticleComponent;
+            const component = gameObject.getComponent(ParticleComponent) as ParticleComponent;
             if (component.main.playOnAwake) {
                 component.play();
             }
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCalls.removeDrawCalls(gameObject.renderer);
+            this._drawCalls.removeDrawCalls(gameObject.renderer as ParticleRenderer);
             // component.stop();
         }
 
         public onUpdate(deltaTime: number) {
-            const components = this._groups[0].components as ReadonlyArray<ParticleComponent | ParticleRenderer>;
-            for (let i = 0, l = components.length; i < l; i += 2) {
-                const particleComp = components[i] as ParticleComponent;
-                particleComp.update(deltaTime);
+            for (const gameObject of this._groups[0].gameObjects) {
+                (gameObject.getComponent(ParticleComponent) as ParticleComponent).update(deltaTime);
             }
         }
 
         public onDisable() {
-            const components = this._groups[0].components as ReadonlyArray<ParticleComponent | ParticleRenderer>;
-            for (let i = 0, l = components.length; i < l; i += 2) {
-                const renderer = components[i + 1] as ParticleRenderer;
-                this._drawCalls.removeDrawCalls(renderer);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._drawCalls.removeDrawCalls(gameObject.renderer as ParticleRenderer);
             }
         }
     }

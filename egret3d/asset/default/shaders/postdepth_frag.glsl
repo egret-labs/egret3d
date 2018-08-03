@@ -1,4 +1,4 @@
-precision highp float;
+#include <common>
 //varying highp vec3 xlv_Normal;   
 
 const float PackUpscale = 256. / 255.; 

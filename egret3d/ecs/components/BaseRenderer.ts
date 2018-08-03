@@ -25,6 +25,8 @@ namespace paper {
         @serializedField
         protected readonly _lightmapScaleOffset: Float32Array = new Float32Array([1.0, 1.0, 0.0, 0.0]);
 
+        // TODO materials
+
         @editor.property(editor.EditType.CHECKBOX)
         public get receiveShadows() {
             return this._receiveShadows;

@@ -1,3 +1,4 @@
+#include <common>
 attribute vec4 _glesVertex;
 uniform vec4 _Color;
 uniform highp mat4 glstate_matrix_mvp;

@@ -1,3 +1,4 @@
+#include <common>
 #include <packing>
 
 varying vec3 xlv_POS;

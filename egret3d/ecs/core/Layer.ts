@@ -21,13 +21,13 @@ namespace paper {
      */
     export const enum DefaultTags {
         Untagged = "",
-        Global = "Global",
         Respawn = "Respawn",
         Finish = "Finish",
         EditorOnly = "EditorOnly",
         MainCamera = "MainCamera",
         Player = "Player",
         GameController = "GameController",
+        Global = "global",
     }
     /**
      * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
@@ -78,5 +78,9 @@ namespace paper {
         UserLayer9 = 0x000400,
         UserLayer10 = 0x000800,
         UserLayer11 = 0x000f00
+    }
+
+    export function layerTest(cullingMask: CullingMask, layer: Layer) {
+        return (cullingMask & layer) !== 0;
     }
 }

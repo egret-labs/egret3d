@@ -32,9 +32,9 @@ namespace paper {
         /**
          * 
          */
-        protected readonly _clock: Clock = this._globalGameObject.getComponent(Clock) || this._globalGameObject.addComponent(Clock);
+        protected readonly _clock: Clock = this._globalGameObject.getOrAddComponent(Clock);
         /**
-         * 禁止实例化系统实例。
+         * 禁止实例化系统。
          * @protected
          */
         public constructor() {
@@ -141,19 +141,17 @@ namespace paper {
 
             for (const group of this._groups) {
                 if (this.onAddGameObject) {
-                    let l = group._addedComponents.length;
-                    if (l > 0) {
-                        for (let i = 0; i < l; i += group.interestCount) {
-                            this.onAddGameObject(group._addedComponents[i].gameObject, group);
+                    for (const gameObject of group._addedGameObjects) {
+                        if (gameObject) {
+                            this.onAddGameObject(gameObject, group);
                         }
                     }
                 }
 
                 if (this.onAddComponent) {
-                    let l = group._addedUnessentialComponents.length;
-                    if (l > 0) {
-                        for (let i = 0; i < l; ++i) {
-                            this.onAddComponent(group._addedUnessentialComponents[i], group);
+                    for (const component of group._addedComponents) {
+                        if (component) {
+                            this.onAddComponent(component, group);
                         }
                     }
                 }

@@ -3,22 +3,27 @@ namespace paper {
      * 单例组件基类。
      */
     export class SingletonComponent extends BaseComponent {
+        /**
+         * 
+         */
+        public static instance: SingletonComponent = null as any;
+
         public initialize() {
             super.initialize();
 
-            if (this.constructor.prototype["instance"]) {
-                console.error("Cannot add singleton component again.", egret.getQualifiedClassName(this), this.uuid);
+            if (!(this.constructor as SingletonComponentClass<SingletonComponent>).instance) {
+                (this.constructor as SingletonComponentClass<SingletonComponent>).instance = this;
             }
             else {
-                this.constructor.prototype["instance"] = this;
+                console.error("Cannot add singleton component again.", egret.getQualifiedClassName(this));
             }
         }
 
         public uninitialize() {
             super.uninitialize();
 
-            if (this.constructor.prototype["instance"] === this) {
-                delete this.constructor.prototype["instance"];
+            if ((this.constructor as SingletonComponentClass<SingletonComponent>).instance === this) {
+                (this.constructor as SingletonComponentClass<SingletonComponent>).instance = null as any;
             }
         }
     }

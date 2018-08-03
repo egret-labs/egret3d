@@ -14,7 +14,7 @@ namespace paper {
      */
     export function serialize(source: Scene | GameObject | BaseComponent): ISerializedData {
         if (_serializeData) {
-            throw new Error("The serialization is not complete.");
+            console.debug("The deserialization is not complete.");
         }
 
         _serializeData = { version: VERSION, assets: [], objects: [], components: [] };
@@ -34,14 +34,18 @@ namespace paper {
             return { asset: -1 };
         }
 
-        let index = _serializeData.assets.indexOf(source.name);
+        if (_serializeData.assets) {
+            let index = _serializeData.assets.indexOf(source.name);
 
-        if (index < 0) {
-            index = _serializeData.assets.length;
-            _serializeData.assets.push(source.name);
+            if (index < 0) {
+                index = _serializeData.assets.length;
+                _serializeData.assets.push(source.name);
+            }
+
+            return { asset: index };
         }
 
-        return { asset: index };
+        return { asset: -1 };
     }
     /**
      * 创建指定对象的引用。
@@ -61,10 +65,8 @@ namespace paper {
         const className = egret.getQualifiedClassName(source);
         return { class: _findClassCode(className) || className };
     }
-    /**
-     * @internal
-     */
-    export function getTypesFromPrototype(classPrototype: any, typeKey: string, types: string[] | null = null) {
+
+    function _getTypesFromPrototype(classPrototype: any, typeKey: string, types: string[] | null = null) {
         if (typeKey in classPrototype) {
             types = types || [];
 
@@ -74,7 +76,7 @@ namespace paper {
         }
 
         if (classPrototype.__proto__) {
-            getTypesFromPrototype(classPrototype.__proto__, typeKey, types);
+            _getTypesFromPrototype(classPrototype.__proto__, typeKey, types);
         }
 
         return types;
@@ -105,18 +107,22 @@ namespace paper {
             _serializeds.push(source.uuid);
 
             if (source instanceof BaseComponent) {
-                _serializeData.components.push(target);
+                if (_serializeData.components) {
+                    _serializeData.components.push(target);
+                }
             }
             else {
-                _serializeData.objects.push(target);
+                if (_serializeData.objects) {
+                    _serializeData.objects.push(target);
+                }
             }
         }
 
         if (!hasCustomSerialize) {
-            const serializedKeys = getTypesFromPrototype(classPrototype, SerializeKey.Serialized);
+            const serializedKeys = _getTypesFromPrototype(classPrototype, SerializeKey.Serialized);
             if (serializedKeys && serializedKeys.length > 0) {
                 for (const key of serializedKeys) {
-                    target[key] = _serializeChild(source[key], source, key);
+                    target[key] = _serializeChild((source as any)[key], source, key);
                 }
             }
         }
@@ -124,7 +130,7 @@ namespace paper {
         return target;
     }
 
-    function _serializeChild(source: any, parent: any, key: string | null) {
+    function _serializeChild(source: any, parent: any, key: string | null): any {
         if (source === null || source === undefined) {
             return source;
         }
@@ -158,25 +164,25 @@ namespace paper {
                     return createAssetReference(source);
                 }
 
-                if (source instanceof Scene || source instanceof GameObject || source instanceof BaseComponent) {
+                if (source.constructor === Scene || source.constructor === GameObject || source instanceof BaseComponent) {
                     if (parent) {
-                        if (source instanceof Scene) { // Cannot serialize scene reference.
+                        if (source.constructor === Scene) { // Cannot serialize scene reference.
                             return null;
                         }
 
-                        if (parent instanceof Scene) {
+                        if (parent.constructor === Scene) {
                             if (key === KEY_GAMEOBJECTS) {
                                 _serializeObject(source);
                                 return createReference(source, true);
                             }
                         }
-                        else if (parent instanceof GameObject) {
+                        else if (parent.constructor === GameObject) {
                             if (key === KEY_COMPONENTS) {
                                 _serializeObject(source);
                                 return createReference(source, true);
                             }
                         }
-                        else if (parent instanceof egret3d.Transform) {
+                        else if (parent.constructor === egret3d.Transform) {
                             if (key === KEY_CHILDREN) {
                                 _serializeObject((source as egret3d.Transform).gameObject);
                                 return createReference(source, true);
