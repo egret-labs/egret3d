@@ -4,10 +4,38 @@ namespace paper {
      */
     export class Scene extends BaseObject {
         /**
+         * 
+         */
+        public static create(name: string = DefaultNames.NoName, isActive: boolean = true) {
+            const scene = new Scene(name);
+            Application.sceneManager._addScene(scene, isActive);
+
+            return scene;
+        }
+        /**
+         * 
+         */
+        public static load(name: string, combineStaticObjects: boolean = true) {
+            const rawScene = RES.getRes(name) as RawScene;
+            if (rawScene) {
+                const scene = rawScene.createInstance();
+
+                if (scene) {
+                    if (combineStaticObjects && Application.isPlaying) {
+                        egret3d.combine(scene.gameObjects);
+                    }
+
+                    return scene;
+                }
+            }
+
+            return null;
+        }
+        /**
          * 场景名称。
          */
         @serializedField
-        public name: string = "";
+        public readonly name: string = "";
         /**
          * 场景的light map列表。
          */
@@ -32,31 +60,11 @@ namespace paper {
          * @internal
          */
         public readonly _gameObjects: GameObject[] = [];
-        /**
-         * @internal
-         */
-        public constructor(isActive: boolean = true) {
+
+        private constructor(name: string) {
             super();
 
-            Application.sceneManager._addScene(this, isActive);
-        }
-        /**
-         * @internal
-         */
-        public _destroy() {
-            let i = this._gameObjects.length;
-            while (i--) {
-                const gameObject = this._gameObjects[i];
-                if (!gameObject || gameObject.transform.parent) {
-                    continue;
-                }
-
-                gameObject.destroy();
-            }
-
-            this.lightmaps.length = 0;
-            this._gameObjects.length = 0;
-            this.rawScene = null;
+            this.name = name;
         }
         /**
          * @internal
@@ -80,6 +88,28 @@ namespace paper {
             else {
                 console.debug("Remove game object error.", gameObject.path);
             }
+        }
+        /**
+         * 
+         */
+        public destroy() {
+            if (!Application.sceneManager._removeScene(this)) {
+                return;
+            }
+
+            let i = this._gameObjects.length;
+            while (i--) {
+                const gameObject = this._gameObjects[i];
+                if (!gameObject || gameObject.transform.parent) {
+                    continue;
+                }
+
+                gameObject.destroy();
+            }
+
+            this.lightmaps.length = 0;
+            this._gameObjects.length = 0;
+            this.rawScene = null;
         }
         /**
          * 返回当前激活场景中查找对应名称的GameObject

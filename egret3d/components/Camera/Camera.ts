@@ -29,7 +29,7 @@ namespace egret3d {
         public static get main() {
             const gameObject =
                 paper.Application.sceneManager.activeScene.findWithTag(paper.DefaultTags.MainCamera) ||
-                paper.GameObject.create(paper.DefaultTags.MainCamera, paper.DefaultTags.MainCamera);
+                paper.GameObject.create(paper.DefaultNames.MainCamera, paper.DefaultTags.MainCamera);
 
             return gameObject.getOrAddComponent(Camera);
         }

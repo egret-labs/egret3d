@@ -6,19 +6,11 @@ namespace paper {
     const KEY_PREFAB: keyof GameObject = "prefab";
     const KEY_COMPONENTS: keyof GameObject = "components";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
-
-    let _isKeepUUID: boolean = false;
-    let _deserializedData: { assets: string[], objects: { [key: string]: Scene | GameObject }, components: { [key: string]: BaseComponent } } | null = null;
     /**
      * 反序列化。
      */
     export function deserialize<T extends (Scene | GameObject | BaseComponent)>(data: ISerializedData, isKeepUUID: boolean = false): T | null {
-        if (_deserializedData) {
-            console.debug("The deserialization is not complete.");
-        }
-
-        _isKeepUUID = isKeepUUID;
-        _deserializedData = { assets: data.assets || [], objects: {}, components: {} };
+        const deserializedData = { isKeepUUID: isKeepUUID, assets: data.assets || [], objects: {}, components: {} } as IDeserializedData;
 
         const sceneClassName = egret.getQualifiedClassName(Scene);
         const components: { [key: string]: ISerializedObject } = {};
@@ -36,18 +28,19 @@ namespace paper {
                 let target: Scene | GameObject;
 
                 if (className === sceneClassName) {
-                    target = Application.sceneManager.createScene("");
+                    target = Scene.create();
                 }
                 else {
                     if (KEY_PREFAB in source) {
                         const assetName = _deserializedData!.assets[(source as any)[KEY_PREFAB][KEY_ASSET]];
-                        const prefabTarget = Application.sceneManager.loadPrefab(assetName);
-                        if (!prefabTarget) {
-                            console.error("Deserialize");
-                            continue;
+                        const prefabTarget = Prefab.load(assetName);
+                        if (prefabTarget) {
+                            target = prefabTarget;
                         }
-
-                        target = prefabTarget;
+                        else {
+                            console.error("Deserialize prefab error.");
+                            target = GameObject.create();
+                        }
                     }
                     else {
                         target = GameObject.create();
@@ -151,6 +144,23 @@ namespace paper {
         return _deserializedData!.components[uuid] || _deserializedData!.objects[uuid] as GameObject;
     }
 
+    function _getDeserializedIgnoreKeys(serializedClass: SerializedClass, keys: string[] | null = null) {
+
+        if (serializedClass.__serializeInfo) {
+            keys = keys || [];
+
+            for (const key of serializedClass.__serializeInfo.ignore!) {
+                keys.push(key);
+            }
+        }
+
+        if (serializedClass.prototype) {
+            _getDeserializedIgnoreKeys(serializedClass.prototype.__proto__, keys);
+        }
+
+        return keys;
+    }
+
     function _deserializeObject(source: ISerializedObject, target: BaseObject) {
         for (const k in source) {
             if (k === KEY_CLASS) {
@@ -161,9 +171,10 @@ namespace paper {
                 continue;
             }
 
+            const deserializedIgnoreKeys = _getDeserializedIgnoreKeys(<any>source.constructor as SerializedClass);
             if (
-                SerializeKey.DeserializedIgnore in target &&
-                ((target as any)[SerializeKey.DeserializedIgnore] as string).indexOf(k) >= 0
+                deserializedIgnoreKeys &&
+                deserializedIgnoreKeys.indexOf(k) >= 0
             ) {
                 continue;
             }
@@ -199,7 +210,7 @@ namespace paper {
 
                         return target;
                     }
-                    else if (target.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE)) {
+                    else if (target[KEY_DESERIALIZE]) {
                         return (target as ISerializable).deserialize(source);
                     }
                     else {

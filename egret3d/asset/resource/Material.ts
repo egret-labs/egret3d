@@ -24,9 +24,11 @@ namespace egret3d {
         /**
           * @internal
           */
-        public id: number = _hashCode++;
-
-        public version: number = 0;
+        public _id: number = _hashCode++;
+        /**
+          * @internal
+          */
+        public _version: number = 0;
 
         private _cacheDefines: string = '';
         private _textureRef: Texture[] = [];//TODO
@@ -80,7 +82,7 @@ namespace egret3d {
 
             this._textureRef.length = 0;
 
-            this.version++;
+            this._version++;
 
             super.dispose();
         }
@@ -152,16 +154,6 @@ namespace egret3d {
 
             this._glTFMaterial = this.config.materials![0] as GLTFMaterial;
 
-            // if (!this._glTFMaterial ||
-            //     !this._glTFMaterial.extensions ||
-            //     !this._glTFMaterial.extensions.paper ||
-            //     !this._glTFMaterial.extensions.KHR_techniques_webgl ||
-            //     !this._glTFMaterial.extensions.KHR_techniques_webgl.values ||
-            //     !this._glTFMaterial.extensions.KHR_techniques_webgl.technique) {
-            //     console.error("Error glTF asset.");
-            //     return;
-            // }
-
             if (!this._glTFShader) {
                 //不存在，那就从材质中获取
                 this._glTFShader = paper.Asset.find<GLTFAsset>(this._glTFMaterial.extensions.KHR_techniques_webgl.technique);
@@ -171,29 +163,16 @@ namespace egret3d {
                 }
             }
 
-            if (!this._glTFShader.config ||
-                !this._glTFShader.config.extensions ||
-                !this._glTFShader.config.extensions.paper ||
-                !this._glTFShader.config.extensions.paper.renderQueue ||
-                !this._glTFShader.config.extensions.KHR_techniques_webgl ||
-                this._glTFShader.config.extensions.KHR_techniques_webgl.techniques.length <= 0) {
-                console.error("错误的着色器扩展数据");
-                return;
-            }
-
             if (this._glTFMaterial.extensions.paper) {
                 this.renderQueue = this._glTFMaterial.extensions.paper.renderQueue!;
             }
             else {
                 this.renderQueue = this._glTFShader.config.extensions.paper!.renderQueue!;
             }
-
             //
-            const template = this._glTFShader.config.extensions.KHR_techniques_webgl.techniques[0];
+            const template = this._glTFShader.config.extensions.KHR_techniques_webgl!.techniques[0];
             this._glTFTechnique = GLTFAsset.createTechnique(template);
-            if (!this._glTFTechnique) {
-                console.error("Error glTF asset.");
-            }
+
             const gltfUnifromMap = this._glTFMaterial.extensions.KHR_techniques_webgl.values!;
             const uniformMap = this._glTFTechnique.uniforms;
             //使用Shader替换Material中没有默认值的Uniform
@@ -213,7 +192,7 @@ namespace egret3d {
         addDefine(key: string) {
             if (this._defines.indexOf(key) < 0) {
                 this._defines.push(key);
-                this.version++;
+                this._version++;
             }
         }
 
@@ -221,7 +200,7 @@ namespace egret3d {
             const delIndex = this._defines.indexOf(key);
             if (delIndex >= 0) {
                 this._defines.splice(delIndex, 1);
-                this.version++;
+                this._version++;
             }
         }
         setBoolean(id: string, value: boolean) {
@@ -229,7 +208,7 @@ namespace egret3d {
             if (uniform !== undefined) {
                 if (uniform.value !== value) {
                     uniform.value = value;
-                    this.version++;
+                    this._version++;
                 }
             }
             else {
@@ -243,7 +222,7 @@ namespace egret3d {
             if (uniform !== undefined) {
                 if (uniform.value !== value) {
                     uniform.value = value;
-                    this.version++;
+                    this._version++;
                 }
             }
             else {
@@ -255,7 +234,7 @@ namespace egret3d {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
-                this.version++;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -267,7 +246,7 @@ namespace egret3d {
             if (uniform !== undefined) {
                 if (uniform.value !== value) {
                     uniform.value = value;
-                    this.version++;
+                    this._version++;
                 }
             }
             else {
@@ -279,7 +258,7 @@ namespace egret3d {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
-                this.version++;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -292,7 +271,7 @@ namespace egret3d {
                 if (uniform.value[0] !== value.x || uniform.value[1] !== value.y) {
                     uniform.value[0] = value.x;
                     uniform.value[1] = value.y;
-                    this.version++;
+                    this._version++;
                 }
             }
             else {
@@ -304,7 +283,7 @@ namespace egret3d {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
-                this.version++;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -318,7 +297,7 @@ namespace egret3d {
                     uniform.value[0] = value.x;
                     uniform.value[1] = value.y;
                     uniform.value[2] = value.z;
-                    this.version++;
+                    this._version++;
                 }
             }
             else {
@@ -330,7 +309,7 @@ namespace egret3d {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
-                this.version++;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -345,7 +324,7 @@ namespace egret3d {
                     uniform.value[1] = value.y;
                     uniform.value[2] = value.z;
                     uniform.value[3] = value.w;
-                    this.version++;
+                    this._version++;
                 }
             }
             else {
@@ -357,7 +336,7 @@ namespace egret3d {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
-                this.version++;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -368,7 +347,7 @@ namespace egret3d {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value.rawData;
-                this.version++;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -379,7 +358,7 @@ namespace egret3d {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
-                this.version++;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -398,7 +377,7 @@ namespace egret3d {
                 }
                 if (uniform.value !== value) {
                     uniform.value = value;
-                    this.version++;
+                    this._version++;
                 }
             }
             else {

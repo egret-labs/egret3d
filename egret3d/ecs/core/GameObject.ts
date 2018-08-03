@@ -465,20 +465,19 @@ namespace paper {
 
                 return null;
             }
-            if (componentClass.index < 0) {
+
+            const componentClassIndex = componentClass.index;
+            if (componentClassIndex < 0) {
                 return null;
             }
 
-            const component = this._components[componentClass.index];
+            const component = this._components[componentClassIndex];
             if (!component) {
                 return null;
             }
 
             if (component.constructor === GroupComponent) {
-                const groupComponent = component as GroupComponent;
-                if (groupComponent.components[0] instanceof componentClass) {
-                    return groupComponent.components[0] as T;
-                }
+                return (component as GroupComponent).components[0] as T;
             }
 
             return component as T;
@@ -707,6 +706,15 @@ namespace paper {
             }
 
             return this._cachedComponents;
+        }
+        /**
+         * 
+         */
+        public get parent() {
+            return this.transform.parent ? this.transform.parent.gameObject : null;
+        }
+        public set parent(gameObject: GameObject | null) {
+            this.transform.parent = gameObject ? gameObject.transform : null;
         }
         /**
          * 获取物体所在场景实例。

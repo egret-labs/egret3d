@@ -45,63 +45,25 @@ namespace paper {
             }
         }
         /**
-         * 创建一个空场景并激活 
+         * @internal
          */
-        public createScene(name: string, isActive: boolean = true) {
-            const scene = new Scene(isActive);
-            scene.name = name;
-
-            return scene;
-        }
-        /**
-         * 加载场景
-         * @param resourceName 资源名称
-         */
-        public loadScene(resourceName: string, combineStaticObjects: boolean = true) {
-            const rawScene = RES.getRes(resourceName) as RawScene;
-            if (rawScene) {
-                const scene = rawScene.createInstance();
-
-                if (scene) {
-                    if (combineStaticObjects && Application.isPlaying) {
-                        egret3d.combine(scene.gameObjects);
-                    }
-
-                    return scene;
-                }
-            }
-
-            return null;
-        }
-        /**
-         * 加载场景
-         * @param resourceName 资源名称
-         */
-        public loadPrefab(resourceName: string) {
-            const prefab = RES.getRes(resourceName) as Prefab;
-            if (prefab) {
-                return prefab.createInstance();
-            }
-
-            return null;
-        }
-        /**
-         * 卸载指定场景。
-         */
-        public unloadScene(scene: Scene) {
+        public _removeScene(scene: Scene) {
             if (
                 scene === this._globalScene ||
                 scene === this._editorScene
             ) {
                 console.warn("Cannot unload global scene.");
-                return;
+                return false;
             }
 
             const index = this._scenes.indexOf(scene);
             if (index >= 0) {
-                scene._destroy();
                 this._scenes.splice(index, 1);
+
+                return true;
             }
+
+            return false;
         }
         /**
          * 卸载所有场景。
@@ -115,7 +77,7 @@ namespace paper {
                     continue;
                 }
 
-                this.unloadScene(scene);
+                scene.destroy();
             }
         }
         /**
@@ -141,7 +103,7 @@ namespace paper {
          */
         public get globalScene() {
             if (!this._globalScene) {
-                this._globalScene = this.createScene(DefaultNames.Global, false);
+                this._globalScene = Scene.create(DefaultNames.Global, false);
                 this._scenes.pop(); // Remove global scene from scenes.
             }
 
@@ -152,7 +114,7 @@ namespace paper {
          */
         public get activeScene() {
             if (this._scenes.length === 0) {
-                this.createScene(DefaultNames.Default);
+                Scene.create();
             }
 
             return this._scenes[0];
@@ -181,7 +143,7 @@ namespace paper {
          */
         public get editorScene() {
             if (!this._editorScene) {
-                this._editorScene = this.createScene(DefaultNames.Editor, false);
+                this._editorScene = Scene.create(DefaultNames.Editor, false);
                 this._scenes.pop(); // Remove editor scene from scenes.
             }
 
@@ -199,6 +161,24 @@ namespace paper {
             return this._globalGameObject;
         }
 
+        /**
+         * @deprecated
+         */
+        public createScene(name: string, isActive: boolean = true) {
+            return Scene.create(name, isActive);
+        }
+        /**
+         * @deprecated
+         */
+        public loadScene(resourceName: string, combineStaticObjects: boolean = true) {
+            return Scene.load(resourceName, combineStaticObjects);
+        }
+        /**
+         * @deprecated
+         */
+        public unloadScene(scene: Scene) {
+            scene.destroy();
+        }
         /**
          * @deprecated
          */

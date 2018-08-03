@@ -190,7 +190,6 @@ namespace egret3d {
                 child._getAllChildren(children);
             }
         }
-
         /**
          * @internal
          */

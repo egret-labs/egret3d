@@ -49,16 +49,4 @@ namespace paper {
         //
         "egret3d.Light": "egret3d.DirectLight",
     };
-    /**
-     * @internal
-     */
-    export function findClassCode(name: string) {
-        for (let key in serializeClassMap) {
-            if (serializeClassMap[key] === name) {
-                return key;
-            }
-        }
-
-        return "";
-    }
 }

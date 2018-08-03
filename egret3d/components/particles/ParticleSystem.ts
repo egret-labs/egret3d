@@ -459,7 +459,7 @@ namespace egret3d.particle {
 
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.batchMesh,
-                    material: renderer.batchMaterial || DefaultMaterials.MissingMaterial,
+                    material: renderer.batchMaterial || DefaultMaterials.Missing,
 
                     frustumTest: false,
                     zdist: -1,

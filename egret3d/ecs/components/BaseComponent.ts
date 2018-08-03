@@ -9,14 +9,6 @@ namespace paper {
         /**
          * @internal
          */
-        level: number;
-        /**
-         * @internal
-         */
-        componentIndex: number;
-        /**
-         * @internal
-         */
         index: number;
         requireComponents: ComponentClass<BaseComponent>[] | null;
     };
@@ -72,12 +64,7 @@ namespace paper {
                 return;
             }
 
-            if (target.level < 0) {
-                target.level = (target.prototype.__proto__.constructor as ComponentClass<BaseComponent>).level + 1;
-                target.componentIndex = this._componentCount++;
-            }
-
-            if (target.index < 0) {
+            if (this._componentClasses.indexOf(target) < 0) {
                 target.index = this._componentClasses.length;
                 this._componentClasses.push(target);
             }

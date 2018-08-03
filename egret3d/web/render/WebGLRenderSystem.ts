@@ -232,13 +232,13 @@ namespace egret3d {
         }
 
         private _updateUniforms(program: GlProgram, material: Material, technique: gltf.Technique, forceUpdate: boolean) {
-            const needUpdate = this._cacheMaterial !== material || this._cacheMaterialVerision !== material.version || forceUpdate;
+            const needUpdate = this._cacheMaterial !== material || this._cacheMaterialVerision !== material._version || forceUpdate;
             if (!needUpdate) {
                 return;
             }
 
             this._cacheMaterial = material;
-            this._cacheMaterialVerision = material.version;
+            this._cacheMaterialVerision = material._version;
             const webgl = this._webgl;
             const unifroms = technique.uniforms;
             const glUniforms = program.uniforms;

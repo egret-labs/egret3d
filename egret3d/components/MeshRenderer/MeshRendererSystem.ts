@@ -41,7 +41,7 @@ namespace egret3d {
 
                     subMeshIndex: subMeshIndex++,
                     mesh: filter.mesh,
-                    material: renderer.materials[primitive.material!] || DefaultMaterials.MissingMaterial,
+                    material: renderer.materials[primitive.material!] || DefaultMaterials.Missing,
 
                     frustumTest: false,
                     zdist: -1,

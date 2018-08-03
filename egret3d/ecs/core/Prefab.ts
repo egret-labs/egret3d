@@ -29,7 +29,19 @@ namespace paper {
      */
     export class Prefab extends BaseObjectAsset {
         /**
-         * 从当前预制体生成一个实例。
+         * 
+         */
+        public static load(name: string) {
+            const prefab = RES.getRes(name) as Prefab;
+            if (prefab) {
+                return prefab.createInstance();
+            }
+
+            return null;
+        }
+        
+        /**
+         * @deprecated
          */
         public createInstance() {
             if (!this._raw) {

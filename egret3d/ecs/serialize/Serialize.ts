@@ -10,14 +10,16 @@ namespace paper {
 
     const KEY_GAMEOBJECTS: keyof Scene = "gameObjects";
     const KEY_COMPONENTS: keyof GameObject = "components";
+    const KEY_PREFAB: keyof GameObject = "prefab";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
-    const KEY_SERIALIZE: keyof ISerializable = "serialize";
 
     const _serializeds: string[] = [];
+    const _serializedPrefabs: { [key: string]: GameObject } = {};
     let _serializeData: ISerializedData | null = null;
     let _defaultGameObject: GameObject | null = null;
     /**
      * 序列化场景，实体或组件。
+     * @internal
      */
     export function serialize(source: Scene | GameObject | BaseComponent): ISerializedData {
         if (_serializeData) {
@@ -26,7 +28,7 @@ namespace paper {
 
         if (!_defaultGameObject) {
             _defaultGameObject = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, Application.sceneManager.globalScene);
-            _defaultGameObject.transform.parent = Application.sceneManager.globalGameObject.transform;
+            _defaultGameObject.parent = Application.sceneManager.globalGameObject;
         }
 
         _serializeData = { version: DATA_VERSION, assets: [], objects: [], components: [] };
@@ -147,28 +149,38 @@ namespace paper {
      */
     export function serializeStruct(source: BaseObject): ISerializedStruct {
         const className = egret.getQualifiedClassName(source);
-        return { class: findClassCode(className) || className };
+        return { class: _findClassCode(className) || className };
     }
 
-    function _getTypesFromPrototype(classPrototype: any, typeKey: string, types: string[] | null = null) {
-        if (typeKey in classPrototype) {
-            types = types || [];
-
-            for (const type of classPrototype[typeKey] as string[]) {
-                types.push(type);
+    function _findClassCode(name: string) {
+        for (let key in serializeClassMap) {
+            if (serializeClassMap[key] === name) {
+                return key;
             }
         }
 
-        if (classPrototype.__proto__) {
-            _getTypesFromPrototype(classPrototype.__proto__, typeKey, types);
+        return "";
+    }
+
+    function _getSerializedKeys(serializedClass: SerializedClass, keys: string[] | null = null) {
+        if (serializedClass.__serializeInfo) {
+            keys = keys || [];
+
+            for (const key of serializedClass.__serializeInfo.keys!) {
+                keys.push(key);
+            }
         }
 
-        return types;
+        if (serializedClass.prototype) {
+            _getSerializedKeys(serializedClass.prototype.__proto__, keys);
+        }
+
+        return keys;
     }
 
     function _serializeReference(source: BaseObject): ISerializedObject {
         const className = egret.getQualifiedClassName(source);
-        return { uuid: source.uuid, class: findClassCode(className) || className };
+        return { uuid: source.uuid, class: _findClassCode(className) || className };
     }
 
     function _serializeObject(source: BaseObject) {
@@ -176,49 +188,81 @@ namespace paper {
             return true;
         }
 
-        _serializeds.push(source.uuid);
-
         const target = _serializeReference(source);
         let temp: GameObject | BaseComponent | null = null;
 
         if (source instanceof BaseComponent) {
-            _serializeData!.components!.push(target as ISerializedObject);
-            temp = _defaultGameObject!.getOrAddComponent(source.constructor as ComponentClass<BaseComponent>);
-
-            if (source.extras && source.extras.prefabRootId) {
+            if (source.isDestroyed) {
+                console.warn("Missing component.");
                 return false;
             }
-        }
-        else {
-            if (source.constructor === GameObject) {
-                temp = _defaultGameObject;
 
-                if ((source as GameObject).prefab) {
-
+            if (source.assetID) { // Prefab component.
+                const prefabObjectUUID = source.gameObject.prefab ? source.gameObject.uuid : source.gameObject.extras!.prefabRootId!;
+                if (!(prefabObjectUUID in _serializedPrefabs)) {
+                    _serializedPrefabs[prefabObjectUUID] = Prefab.load((source.gameObject.prefab || (source.gameObject.scene.find(prefabObjectUUID)!.prefab))!.name)!;
                 }
-                else if ((source as GameObject).extras && (source as GameObject).extras.prefabRootId) {
-                    return false;
-                }
-            }
 
-            _serializeData!.objects!.push(target as ISerializedObject);
-        }
-
-        const classPrototype = source.constructor.prototype;
-        if (!classPrototype.hasOwnProperty(KEY_SERIALIZE)) {
-            const serializedKeys = _getTypesFromPrototype(classPrototype, SerializeKey.Serialized);
-            if (serializedKeys && serializedKeys.length > 0) {
-                for (const k of serializedKeys) {
-                    if (temp && equal((source as any)[k], (temp as any)[k])) {
-                        continue;
+                const prefabObject = _serializedPrefabs[prefabObjectUUID];
+                for (const child of prefabObject.transform.getAllChildren()) {
+                    for (const childComponent of child.gameObject.components) {
+                        if (childComponent.assetID === source.assetID) {
+                            temp = childComponent;
+                        }
                     }
-
-                    (target as ISerializedObject)[k] = _serializeChild((source as any)[k], source, k);
                 }
             }
+            else {
+                temp = _defaultGameObject!.getOrAddComponent(source.constructor as ComponentClass<BaseComponent>);
+            }
+
+            _serializeData!.components!.push(target as ISerializedObject);
         }
+        else if (source instanceof GameObject) {
+            if (source.isDestroyed) {
+                console.warn("Missing game object.");
+                return false;
+            }
+
+            if (source.assetID) { // Prefab leaf.
+                const prefabObjectUUID = source.prefab ? source.uuid : source.extras!.prefabRootId!;
+                if (!(prefabObjectUUID in _serializedPrefabs)) {
+                    _serializedPrefabs[prefabObjectUUID] = Prefab.load((source.prefab || (source.scene.find(prefabObjectUUID)!.prefab))!.name)!;
+                }
+
+                const prefabObject = _serializedPrefabs[prefabObjectUUID];
+                for (const child of prefabObject.transform.getAllChildren()) {
+                    if (child.gameObject.assetID === source.assetID) {
+                        temp = child;
+                    }
+                }
+            }
+            else {
+                temp = _defaultGameObject;
+            }
+
+            _serializeData!.objects!.push(target);
+        }
+
+        _serializeds.push(source.uuid);
+        _serializeChildren(source, target, temp);
 
         return true;
+    }
+
+    function _serializeChildren(source: BaseObject, target: ISerializedObject, temp: GameObject | BaseComponent | null) {
+        const serializedKeys = _getSerializedKeys(<any>source.constructor as SerializedClass);
+        if (!serializedKeys) {
+            return;
+        }
+
+        for (const k of serializedKeys) {
+            if (temp && equal((source as any)[k], (temp as any)[k])) {
+                continue;
+            }
+
+            target[k] = _serializeChild((source as any)[k], source, k);
+        }
     }
 
     function _serializeChild(source: any, parent: any, key: string | null): any {
