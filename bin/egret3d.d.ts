@@ -483,6 +483,8 @@ declare namespace paper {
 }
 declare namespace egret3d {
     class Color implements paper.ISerializable {
+        static readonly WHITE: Readonly<Color>;
+        static readonly BLACK: Readonly<Color>;
         r: number;
         g: number;
         b: number;
@@ -4077,7 +4079,6 @@ declare namespace egret3d {
         frustumTest: boolean;
         zdist: number;
         boneData?: Float32Array;
-        shadow?: Material;
     };
     /**
      *
@@ -4114,7 +4115,7 @@ declare namespace egret3d {
          * @param a
          * @param b
          */
-        private _sortTransparent(a, b);
+        private _sortFromFarToNear(a, b);
         shadowFrustumCulling(camera: Camera): void;
         sortAfterFrustumCulling(camera: Camera): void;
         /**
@@ -4322,13 +4323,6 @@ declare namespace egret3d {
          * 计算相机视锥区域
          */
         private calcCameraFrame();
-        /**
-         * 设置render target与viewport
-         * @param target render target
-         * @param withoutClear 强制不清除缓存
-         *
-         */
-        _targetAndViewport(target: IRenderTarget | null, withoutClear: boolean): void;
         /**
          * @inheritDoc
          */
@@ -6637,7 +6631,6 @@ declare namespace egret3d {
         }[] | {
             componentClass: typeof DirectLight[];
         }[])[];
-        private readonly _webgl;
         private readonly _camerasAndLights;
         private readonly _drawCalls;
         private readonly _lightCamera;
@@ -6659,7 +6652,18 @@ declare namespace egret3d {
         private _updateUniforms(program, material, technique, forceUpdate);
         private _updateAttributes(program, mesh, subMeshIndex, technique, forceUpdate);
         private _drawCall(mesh, drawCall);
-        private _renderCall(context, drawCall);
+        private _renderCall(context, drawCall, material);
+        /**
+         * 设置render target与viewport
+         * @param target render target
+         *
+         */
+        _targetAndViewport(viewport: Rectangle, target: IRenderTarget | null): void;
+        /**
+         * 清除缓存
+         * @param camera
+         */
+        _cleanBuffer(clearOptColor: boolean, clearOptDepath: any, clearColor: Color): void;
         onUpdate(): void;
     }
 }
@@ -6777,11 +6781,11 @@ declare namespace egret3d {
         width: number;
         height: number;
         isFrameBuffer(): boolean;
-        dispose(webgl: WebGLRenderingContext): any;
+        dispose(): any;
         caclByteLength(): number;
     }
     interface IRenderTarget extends ITexture {
-        use(webgl: WebGLRenderingContext): any;
+        use(): any;
     }
     class GlRenderTarget implements IRenderTarget {
         width: number;
@@ -6790,9 +6794,9 @@ declare namespace egret3d {
         fbo: WebGLFramebuffer;
         renderbuffer: WebGLRenderbuffer;
         texture: WebGLTexture;
-        use(webgl: WebGLRenderingContext): void;
-        static useNull(webgl: WebGLRenderingContext): void;
-        dispose(webgl: WebGLRenderingContext): void;
+        use(): void;
+        static useNull(): void;
+        dispose(): void;
         caclByteLength(): number;
         isFrameBuffer(): boolean;
     }
@@ -6804,9 +6808,9 @@ declare namespace egret3d {
         fbo: WebGLFramebuffer;
         renderbuffer: WebGLRenderbuffer;
         texture: WebGLTexture;
-        use(webgl: WebGLRenderingContext): void;
+        use(): void;
         static useNull(webgl: WebGLRenderingContext): void;
-        dispose(webgl: WebGLRenderingContext): void;
+        dispose(): void;
         caclByteLength(): number;
         isFrameBuffer(): boolean;
     }
@@ -6826,10 +6830,10 @@ declare namespace egret3d {
         caclByteLength(): number;
         reader: TextureReader;
         getReader(redOnly?: boolean): TextureReader;
-        dispose(webgl: WebGLRenderingContext): void;
+        dispose(): void;
         isFrameBuffer(): boolean;
-        static createColorTexture(webgl: WebGLRenderingContext, r: number, g: number, b: number): GlTexture2D;
-        static createGridTexture(webgl: WebGLRenderingContext): GlTexture2D;
+        static createColorTexture(r: number, g: number, b: number): GlTexture2D;
+        static createGridTexture(): GlTexture2D;
     }
     class WriteableTexture2D implements ITexture {
         constructor(webgl: WebGLRenderingContext, format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
@@ -6839,7 +6843,7 @@ declare namespace egret3d {
         format: TextureFormatEnum;
         width: number;
         height: number;
-        dispose(webgl: WebGLRenderingContext): void;
+        dispose(): void;
         caclByteLength(): number;
     }
 }

@@ -14,7 +14,6 @@ namespace egret3d {
                 { componentClass: [DirectLight, SpotLight, PointLight] }
             ]
         ];
-        private readonly _webgl: WebGLRenderingContext = WebGLCapabilities.webgl;
         private readonly _camerasAndLights: CamerasAndLights = this._globalGameObject.getOrAddComponent(CamerasAndLights);
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getOrAddComponent(DrawCalls);
         private readonly _lightCamera: Camera = this._globalGameObject.getOrAddComponent(Camera);
@@ -37,14 +36,14 @@ namespace egret3d {
                 return;
             }
             this._cacheState = state;
-            const webgl = this._webgl;
+            const webgl = WebGLCapabilities.webgl;
             const stateEnables = this._stateEnables;
             const cacheStateEnable = this._cacheStateEnable;
             //TODO WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
             for (const e of stateEnables) {
                 const b = state.enable && state.enable.indexOf(e) >= 0;
                 if (cacheStateEnable[e] !== b) {
-                    cacheStateEnable[e] = b!;
+                    cacheStateEnable[e] = b;
                     b ? webgl.enable(e) : webgl.disable(e);
                 }
             }
@@ -91,7 +90,7 @@ namespace egret3d {
 
             this._cacheContext = context;
             this._cacheContextVersion = context.version;
-            const webgl = this._webgl;
+            const webgl = WebGLCapabilities.webgl;
 
             const uniforms = technique.uniforms;
             const glUniforms = program.uniforms;
@@ -241,7 +240,7 @@ namespace egret3d {
 
             this._cacheMaterial = material;
             this._cacheMaterialVerision = material.version;
-            const webgl = this._webgl;
+            const webgl = WebGLCapabilities.webgl;
             const unifroms = technique.uniforms;
             const glUniforms = program.uniforms;
             for (const glUniform of glUniforms) {
@@ -328,7 +327,7 @@ namespace egret3d {
                 const primitive = mesh.glTFMesh.primitives[subMeshIndex];
                 const ibo = mesh.ibos[subMeshIndex];
 
-                const gl = this._webgl;
+                const gl = WebGLCapabilities.webgl;
                 gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
 
                 if (ibo) {
@@ -358,7 +357,7 @@ namespace egret3d {
             }
         }
         private _drawCall(mesh: Mesh, drawCall: DrawCall) {
-            const webgl = this._webgl;
+            const webgl = WebGLCapabilities.webgl;
             const primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
             const vertexAccessor = mesh.glTFAsset.getAccessor(primitive.attributes.POSITION);
             const bufferOffset = mesh.glTFAsset.getBufferOffset(vertexAccessor);
@@ -393,7 +392,7 @@ namespace egret3d {
                 }
             }
         }
-        private _renderCall(context: RenderContext, drawCall: DrawCall) {
+        private _renderCall(context: RenderContext, drawCall: DrawCall, material: Material) {
             const renderer = drawCall.renderer;
             context.drawCall = drawCall;
             context.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
@@ -401,7 +400,6 @@ namespace egret3d {
                 context.updateBones(drawCall.boneData);
             }
             //
-            const material = drawCall.shadow || drawCall.material;
             const technique = material._glTFTechnique;
             //Defines
             this._updateContextDefines(context, material);
@@ -413,7 +411,7 @@ namespace egret3d {
             let force = false;
             if (this._cacheProgram !== program) {
                 this._cacheProgram = program;
-                this._webgl.useProgram(program.program);
+                WebGLCapabilities.webgl.useProgram(program.program);
                 force = true;
             }
             //Uniform
@@ -425,11 +423,56 @@ namespace egret3d {
             this._drawCall(drawCall.mesh, drawCall);
         }
         /**
+         * 设置render target与viewport
+         * @param target render target
+         * 
+         */
+        public _targetAndViewport(viewport: Rectangle, target: IRenderTarget | null) {
+            const webgl = WebGLCapabilities.webgl;
+
+            let w: number;
+            let h: number;
+            if (!target) {
+                w = stage.screenViewport.w;
+                h = stage.screenViewport.h;
+                GlRenderTarget.useNull();
+            }
+            else {
+                w = target.width;
+                h = target.height;
+                target.use();
+            }
+
+            webgl.viewport(w * viewport.x, h * viewport.y, w * viewport.w, h * viewport.h);
+            webgl.depthRange(0, 1);
+        }
+        /**
+         * 清除缓存
+         * @param camera 
+         */
+        public _cleanBuffer(clearOptColor: boolean, clearOptDepath, clearColor: Color) {
+            const webgl = WebGLCapabilities.webgl;
+            if (clearOptColor && clearOptDepath) {
+                webgl.depthMask(true);
+                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                webgl.clearDepth(1.0);
+                webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
+            }
+            else if (clearOptDepath) {
+                webgl.depthMask(true);
+                webgl.clearDepth(1.0);
+                webgl.clear(webgl.DEPTH_BUFFER_BIT);
+            }
+            else if (clearOptColor) {
+                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                webgl.clear(webgl.COLOR_BUFFER_BIT);
+            }
+        }
+        /**
          * @internal
          * @param camera 
          */
         public _renderCamera(camera: Camera) {
-            camera._targetAndViewport(camera.renderTarget, false);
             //在这里先剔除，然后排序，最后绘制
             const drawCalls = this._drawCalls;
             drawCalls.sortAfterFrustumCulling(camera);
@@ -438,11 +481,11 @@ namespace egret3d {
             const transparentCalls = drawCalls.transparentCalls;
             //Step1 draw opaque
             for (const drawCall of opaqueCalls) {
-                this._renderCall(camera.context, drawCall);
+                this._renderCall(camera.context, drawCall, drawCall.material);
             }
             //Step2 draw transparent
             for (const drawCall of transparentCalls) {
-                this._renderCall(camera.context, drawCall);
+                this._renderCall(camera.context, drawCall, drawCall.material);
             }
             // Egret2D渲染不加入DrawCallList的排序
             for (const gameObject of this._groups[1].gameObjects) {
@@ -471,24 +514,23 @@ namespace egret3d {
             for (let i = 0; i < faceCount; ++i) {
                 (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
                 light.update(camera, i);
-                camera._targetAndViewport(light.renderTarget, false);
                 const context = camera.context;
                 context.updateCamera(camera, light.matrix);
                 context.updateLightDepth(light);
 
+                this._targetAndViewport(camera.viewport, light.renderTarget);
+                this._cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                 drawCalls.shadowFrustumCulling(camera);
                 //
                 const shadowCalls = drawCalls.shadowCalls;
                 const shadowMaterial = light.type === LightType.Point ? egret3d.DefaultMaterials.ShadowDistance : egret3d.DefaultMaterials.ShadowDepth;
                 for (const drawCall of shadowCalls) {
-                    //TODO, 现在不支持蒙皮动画阴影                    
-                    drawCall.shadow = shadowMaterial;
-                    this._renderCall(context, drawCall);
-                    drawCall.shadow = undefined;
+                    //TODO, 现在不支持蒙皮动画阴影     
+                    this._renderCall(context, drawCall, shadowMaterial);
                 }
             }
 
-            GlRenderTarget.useNull(WebGLCapabilities.webgl);
+            GlRenderTarget.useNull();
         }
 
         public onUpdate() {
@@ -525,6 +567,8 @@ namespace egret3d {
                     }
 
                     if (camera.postQueues.length === 0) {
+                        this._targetAndViewport(camera.viewport, camera.renderTarget);
+                        this._cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                         this._renderCamera(camera);
                     }
                     else {
@@ -535,7 +579,7 @@ namespace egret3d {
                 }
             }
             else {
-                const webgl = this._webgl;
+                const webgl = WebGLCapabilities.webgl;
                 webgl.clearColor(0, 0, 0, 1);
                 webgl.clearDepth(1.0);
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);

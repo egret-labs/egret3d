@@ -11,15 +11,15 @@ namespace egret3d {
             const gl = WebGLCapabilities.webgl;
 
             const t1 = new Texture("buildin/white.image.json");
-            t1.glTexture = GlTexture2D.createColorTexture(gl, 255, 255, 255);
+            t1.glTexture = GlTexture2D.createColorTexture(255, 255, 255);
             this.WHITE = t1;
 
             const t2 = new Texture("buildin/gray.image.json");
-            t2.glTexture = GlTexture2D.createColorTexture(gl, 128, 128, 128);
+            t2.glTexture = GlTexture2D.createColorTexture(128, 128, 128);
             this.GRAY = t2;
 
             const t3 = new Texture("buildin/grid.image.json");
-            t3.glTexture = egret3d.GlTexture2D.createGridTexture(gl);
+            t3.glTexture = egret3d.GlTexture2D.createGridTexture();
             this.GRID = t3;
 
             paper.Asset.register(t1);

@@ -64,12 +64,12 @@ namespace egret3d {
         width: number;
         height: number;
         isFrameBuffer(): boolean;
-        dispose(webgl: WebGLRenderingContext);
+        dispose();
         caclByteLength(): number;
     }
 
     export interface IRenderTarget extends ITexture {
-        use(webgl: WebGLRenderingContext);
+        use();
     }
 
     export class GlRenderTarget implements IRenderTarget {
@@ -114,22 +114,25 @@ namespace egret3d {
         renderbuffer: WebGLRenderbuffer;
         texture: WebGLTexture;
 
-        use(webgl: WebGLRenderingContext) {
+        use() {
+            const webgl = WebGLCapabilities.webgl;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.fbo);
             // webgl.bindRenderbuffer(webgl.RENDERBUFFER, this.renderbuffer);
             // webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
             //webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, this.texture, 0);
         }
 
-        static useNull(webgl: WebGLRenderingContext) {
+        static useNull() {
+            const webgl = WebGLCapabilities.webgl;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
 
         }
 
-        dispose(webgl: WebGLRenderingContext) {
+        dispose() {
             //if (this.texture == null && this.img != null)
             //    this.disposeit = true;
             if (this.texture != null) {
+                const webgl = WebGLCapabilities.webgl;
                 webgl.deleteFramebuffer(this.renderbuffer);
                 this.renderbuffer = null;
                 webgl.deleteTexture(this.texture);
@@ -192,7 +195,8 @@ namespace egret3d {
         renderbuffer: WebGLRenderbuffer;
         texture: WebGLTexture;
 
-        use(webgl: WebGLRenderingContext) {
+        use() {
+            const webgl = WebGLCapabilities.webgl;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.fbo);
             // webgl.bindRenderbuffer(webgl.RENDERBUFFER, this.renderbuffer);
             // webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
@@ -203,9 +207,10 @@ namespace egret3d {
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
 
-        dispose(webgl: WebGLRenderingContext) {
+        dispose() {
             //if (this.texture == null && this.img != null)
             //    this.disposeit = true;
+            const webgl = WebGLCapabilities.webgl;
             if (this.texture != null) {
                 webgl.deleteFramebuffer(this.renderbuffer);
                 this.renderbuffer = null;
@@ -374,10 +379,11 @@ namespace egret3d {
 
         //disposeit: boolean = false;
 
-        dispose(webgl: WebGLRenderingContext) {
+        dispose() {
             //if (this.texture == null && this.img != null) this.disposeit = true;
 
             if (this.texture != null) {
+                const webgl = WebGLCapabilities.webgl;
                 webgl.deleteTexture(this.texture);
                 this.texture = null;
             }
@@ -387,7 +393,8 @@ namespace egret3d {
             return false;
         }
 
-        static createColorTexture(webgl: WebGLRenderingContext, r: number, g: number, b: number) {
+        static createColorTexture(r: number, g: number, b: number) {
+            const webgl = WebGLCapabilities.webgl;
             const mipmap = false;
             const linear = true;
             const width = 1;
@@ -398,7 +405,8 @@ namespace egret3d {
             return texture;
         }
 
-        static createGridTexture(webgl: WebGLRenderingContext) {
+        static createGridTexture() {
+            const webgl = WebGLCapabilities.webgl;
             const mipmap = false;
             const linear = true;
             const t = new GlTexture2D(webgl, TextureFormatEnum.RGBA, mipmap, linear);
@@ -478,8 +486,9 @@ namespace egret3d {
         width: number = 0;
         height: number = 0;
 
-        dispose(webgl: WebGLRenderingContext) {
+        dispose() {
             if (this.texture != null) {
+                const webgl = WebGLCapabilities.webgl;
                 webgl.deleteTexture(this.texture);
                 this.texture = null;
             }

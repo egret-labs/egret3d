@@ -22,7 +22,7 @@ namespace egret3d {
             if (this._isBuiltin) {
                 return;
             }
-            this.glTexture.dispose(WebGLCapabilities.webgl);
+            this.glTexture.dispose();
         }
 
         /**
