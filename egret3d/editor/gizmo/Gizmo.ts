@@ -13,7 +13,7 @@ namespace paper.editor {
 
         public static Enabled() {
             this.webgl = egret3d.WebGLCapabilities.webgl;
-            this.camera = Application.sceneManager.editorScene.find("EditorCamera").getComponent(egret3d.Camera);
+            this.camera = Application.sceneManager.activeScene.find("EditorCamera").getComponent(egret3d.Camera);
             this.initPrg();
             this.lineVertexBuffer = this.webgl.createBuffer();
             this.setVertices();

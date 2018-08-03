@@ -88,7 +88,7 @@ namespace paper.editor {
             {
                 const camera = cameraObject.addComponent(egret3d.Camera);
                 camera.near = 0.1;
-                camera.far = 100.0;
+                camera.far = 1000.0;
                 camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
                 cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
                 cameraObject.transform.lookAt(egret3d.Vector3.ZERO);

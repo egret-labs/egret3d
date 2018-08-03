@@ -489,6 +489,11 @@ namespace egret3d {
         }
 
         public onUpdate() {
+            for (const key in this._cacheStateEnable) {
+                delete this._cacheStateEnable[key];
+            }
+            this._cacheProgram = undefined;
+            this._cacheState = undefined;//???
             Performance.startCounter("render");
             const cameras = this._camerasAndLights.cameras;
             const lights = this._camerasAndLights.lights;
