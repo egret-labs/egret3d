@@ -356,52 +356,7 @@ namespace egret3d {
             //Draw
             this._drawCall(drawCall.mesh, drawCall);
         }
-        /**
-         * 设置render target与viewport
-         * @param target render target
-         * 
-         */
-        public _targetAndViewport(viewport: Rectangle, target: IRenderTarget | null) {
-            const webgl = WebGLCapabilities.webgl;
-
-            let w: number;
-            let h: number;
-            if (!target) {
-                w = stage.screenViewport.w;
-                h = stage.screenViewport.h;
-                GlRenderTarget.useNull();
-            }
-            else {
-                w = target.width;
-                h = target.height;
-                target.use();
-            }
-
-            webgl.viewport(w * viewport.x, h * viewport.y, w * viewport.w, h * viewport.h);
-            webgl.depthRange(0, 1);
-        }
-        /**
-         * 清除缓存
-         * @param camera 
-         */
-        public _cleanBuffer(clearOptColor: boolean, clearOptDepath, clearColor: Color) {
-            const webgl = WebGLCapabilities.webgl;
-            if (clearOptColor && clearOptDepath) {
-                webgl.depthMask(true);
-                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-                webgl.clearDepth(1.0);
-                webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
-            }
-            else if (clearOptDepath) {
-                webgl.depthMask(true);
-                webgl.clearDepth(1.0);
-                webgl.clear(webgl.DEPTH_BUFFER_BIT);
-            }
-            else if (clearOptColor) {
-                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-                webgl.clear(webgl.COLOR_BUFFER_BIT);
-            }
-        }
+        
         /**
          * @internal
          * @param camera 
@@ -439,6 +394,7 @@ namespace egret3d {
             const camera = this._lightCamera;
             const drawCalls = this._drawCalls;
             const faceCount = light.type === LightType.Point ? 6 : 1;
+            const renderState = this._renderState;
 
             for (let i = 0; i < faceCount; ++i) {
                 (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
@@ -447,8 +403,8 @@ namespace egret3d {
                 context.updateCamera(camera, light.matrix);
                 context.updateLightDepth(light);
 
-                this._targetAndViewport(camera.viewport, light.renderTarget);
-                this._cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                renderState.targetAndViewport(camera.viewport, light.renderTarget);
+                renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                 drawCalls.shadowFrustumCulling(camera);
                 //
                 const shadowCalls = drawCalls.shadowCalls;
@@ -467,6 +423,7 @@ namespace egret3d {
                 this._renderState.clearState();//编辑器走自己的渲染流程，状态需要清除一下
             }
             Performance.startCounter("render");
+            const renderState = this._renderState;
             const cameras = this._camerasAndLights.cameras;
             const lights = this._camerasAndLights.lights;
             const filteredLights = this._filteredLights;;
@@ -499,8 +456,8 @@ namespace egret3d {
                     }
 
                     if (camera.postQueues.length === 0) {
-                        this._targetAndViewport(camera.viewport, camera.renderTarget);
-                        this._cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                        renderState.targetAndViewport(camera.viewport, camera.renderTarget);
+                        renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                         this._renderCamera(camera);
                     }
                     else {

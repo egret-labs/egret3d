@@ -328,5 +328,52 @@ namespace egret3d {
             }
             return program;
         }
+
+        /**
+         * 设置render target与viewport
+         * @param target render target
+         * 
+         */
+        public targetAndViewport(viewport: Rectangle, target: IRenderTarget | null) {
+            const webgl = WebGLCapabilities.webgl;
+
+            let w: number;
+            let h: number;
+            if (!target) {
+                w = stage.screenViewport.w;
+                h = stage.screenViewport.h;
+                GlRenderTarget.useNull();
+            }
+            else {
+                w = target.width;
+                h = target.height;
+                target.use();
+            }
+
+            webgl.viewport(w * viewport.x, h * viewport.y, w * viewport.w, h * viewport.h);
+            webgl.depthRange(0, 1);
+        }
+        /**
+         * 清除缓存
+         * @param camera 
+         */
+        public cleanBuffer(clearOptColor: boolean, clearOptDepath, clearColor: Color) {
+            const webgl = WebGLCapabilities.webgl;
+            if (clearOptColor && clearOptDepath) {
+                webgl.depthMask(true);
+                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                webgl.clearDepth(1.0);
+                webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
+            }
+            else if (clearOptDepath) {
+                webgl.depthMask(true);
+                webgl.clearDepth(1.0);
+                webgl.clear(webgl.DEPTH_BUFFER_BIT);
+            }
+            else if (clearOptColor) {
+                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                webgl.clear(webgl.COLOR_BUFFER_BIT);
+            }
+        }
     }
 }
