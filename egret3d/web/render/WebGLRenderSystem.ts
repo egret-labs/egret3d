@@ -17,52 +17,15 @@ namespace egret3d {
         private readonly _camerasAndLights: CamerasAndLights = this._globalGameObject.getOrAddComponent(CamerasAndLights);
         private readonly _drawCalls: DrawCalls = this._globalGameObject.getOrAddComponent(DrawCalls);
         private readonly _lightCamera: Camera = this._globalGameObject.getOrAddComponent(Camera);
-        private readonly _stateEnables: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST];
+        private readonly _renderState:WebGLRenderState = this._globalGameObject.getOrAddComponent(WebGLRenderState);
         //
         private readonly _filteredLights: BaseLight[] = [];
-        private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
         private _cacheContextVersion: number = -1;
         private _cacheMaterialVerision: number = -1;
         private _cacheMeshVersion: number = -1;
-        private _cacheProgram: GlProgram | undefined;
         private _cacheContext: RenderContext | undefined;
         private _cacheMaterial: Material | undefined;
-        private _cacheMesh: Mesh | undefined;
-        private _cacheState: gltf.States | undefined;
-        //
-        private _clearState() {
-            //clear State
-            for (const key in this._cacheStateEnable) {
-                delete this._cacheStateEnable[key];
-            }
-            this._cacheProgram = undefined;
-            this._cacheState = undefined;
-        }
-        private _updateState(state: gltf.States) {
-            if (this._cacheState === state) {
-                return;
-            }
-            this._cacheState = state;
-            const webgl = WebGLCapabilities.webgl;
-            const stateEnables = this._stateEnables;
-            const cacheStateEnable = this._cacheStateEnable;
-            //TODO WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
-            for (const e of stateEnables) {
-                const b = state.enable && state.enable.indexOf(e) >= 0;
-                if (cacheStateEnable[e] !== b) {
-                    cacheStateEnable[e] = b;
-                    b ? webgl.enable(e) : webgl.disable(e);
-                }
-            }
-
-            //functions
-            const functions = state.functions;
-            if (functions) {
-                for (const fun in functions) {
-                    (webgl[fun] as Function).apply(webgl, functions[fun]);
-                }
-            }
-        }
+        private _cacheMesh: Mesh | undefined;        
 
         private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
             const needUpdate = this._cacheContext !== context || this._cacheContextVersion !== context.version || forceUpdate;
@@ -378,17 +341,13 @@ namespace egret3d {
             context.update(drawCall);
             //
             const technique = material._glTFTechnique;
+            const renderState = this._renderState;
             //Program
-            const program = GlProgram.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
+            const program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
             //State
-            this._updateState(technique.states);
+            renderState.updateState(technique.states);
             //Use Program
-            let force = false;
-            if (this._cacheProgram !== program) {
-                this._cacheProgram = program;
-                WebGLCapabilities.webgl.useProgram(program.program);
-                force = true;
-            }
+            const force = renderState.useProgram(program);
             //Uniform
             this._updateContextUniforms(program, context, technique, force);
             this._updateUniforms(program, material, technique, force);
@@ -468,7 +427,7 @@ namespace egret3d {
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                     egret2DRenderer.render(camera.context, camera);
                     //
-                    this._clearState();
+                    this._renderState.clearState();
                 }
             }
         }
@@ -505,7 +464,7 @@ namespace egret3d {
 
         public onUpdate() {
             if (this._isEditorUpdate()) {
-                this._clearState();//编辑器走自己的渲染流程，状态需要清除一下
+                this._renderState.clearState();//编辑器走自己的渲染流程，状态需要清除一下
             }
             Performance.startCounter("render");
             const cameras = this._camerasAndLights.cameras;

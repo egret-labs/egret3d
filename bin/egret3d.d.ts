@@ -6632,19 +6632,14 @@ declare namespace egret3d {
         private readonly _camerasAndLights;
         private readonly _drawCalls;
         private readonly _lightCamera;
-        private readonly _stateEnables;
+        private readonly _renderState;
         private readonly _filteredLights;
-        private readonly _cacheStateEnable;
         private _cacheContextVersion;
         private _cacheMaterialVerision;
         private _cacheMeshVersion;
-        private _cacheProgram;
         private _cacheContext;
         private _cacheMaterial;
         private _cacheMesh;
-        private _cacheState;
-        private _clearState();
-        private _updateState(state);
         private _updateContextUniforms(program, context, technique, forceUpdate);
         private _updateUniforms(program, material, technique, forceUpdate);
         private _updateAttributes(program, mesh, subMeshIndex, technique, forceUpdate);
@@ -6734,26 +6729,6 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    interface WebGLActiveAttribute {
-        name: string;
-        size: number;
-        type: number;
-        location: number;
-    }
-    interface WebGLActiveUniform {
-        name: string;
-        size: number;
-        type: number;
-        location: WebGLUniformLocation;
-        textureUnits?: number[];
-    }
-    /**
-     * WebGLProgram的包装类
-     */
-    class GlProgram {
-        constructor(webglProgram: WebGLProgram);
-        static getProgram(material: Material, technique: gltf.Technique, defines: string): GlProgram;
-    }
 }
 declare namespace egret3d {
     const enum TextureFormatEnum {
@@ -6770,7 +6745,7 @@ declare namespace egret3d {
         readonly width: number;
         readonly height: number;
         readonly data: Uint8Array;
-        constructor(webgl: WebGLRenderingContext, texRGBA: WebGLTexture, width: number, height: number, gray?: boolean);
+        constructor(texRGBA: WebGLTexture, width: number, height: number, gray?: boolean);
         getPixel(u: number, v: number): any;
     }
     interface ITexture {
@@ -6815,10 +6790,9 @@ declare namespace egret3d {
      *
      */
     class GlTexture2D implements ITexture {
-        constructor(webgl: WebGLRenderingContext, format?: TextureFormatEnum, mipmap?: boolean, linear?: boolean);
+        constructor(format?: TextureFormatEnum, mipmap?: boolean, linear?: boolean);
         uploadImage(img: HTMLImageElement, mipmap: boolean, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
         uploadByteArray(mipmap: boolean, linear: boolean, width: number, height: number, data: Uint8Array, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
-        webgl: WebGLRenderingContext;
         texture: WebGLTexture;
         format: TextureFormatEnum;
         width: number;
@@ -6835,7 +6809,6 @@ declare namespace egret3d {
     class WriteableTexture2D implements ITexture {
         constructor(webgl: WebGLRenderingContext, format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
         isFrameBuffer(): boolean;
-        webgl: WebGLRenderingContext;
         texture: WebGLTexture;
         format: TextureFormatEnum;
         width: number;

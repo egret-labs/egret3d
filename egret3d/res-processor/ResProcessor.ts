@@ -51,8 +51,7 @@ namespace RES.processor {
 
             let texture = new egret3d.Texture(resource.name);
             texture.realName = _name;
-            const gl = egret3d.WebGLCapabilities.webgl;
-            let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
+            let t2d = new egret3d.GlTexture2D(_textureFormat);
             t2d.uploadImage(image.source, _mipmap, _linear, true, _repeat);
             texture.glTexture = t2d;
             paper.Asset.register(texture);
@@ -70,13 +69,12 @@ namespace RES.processor {
     export const TextureProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            const gl = egret3d.WebGLCapabilities.webgl;
             const loader = new egret.ImageLoader();
             loader.load(resource.root + resource.url);
             const image = await promisify(loader, resource);
             const texture = new egret3d.Texture(resource.name);
             const textureFormat = egret3d.TextureFormatEnum.RGBA;
-            const t2d = new egret3d.GlTexture2D(gl, textureFormat);
+            const t2d = new egret3d.GlTexture2D(textureFormat);
             t2d.uploadImage(image.source, true, true, true, true);
             texture.glTexture = t2d;
             paper.Asset.register(texture);

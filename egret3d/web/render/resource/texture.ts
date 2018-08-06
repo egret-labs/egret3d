@@ -17,11 +17,12 @@ namespace egret3d {
         public readonly height: number;
         public readonly data: Uint8Array;
 
-        constructor(webgl: WebGLRenderingContext, texRGBA: WebGLTexture, width: number, height: number, gray: boolean = true) {
+        constructor(texRGBA: WebGLTexture, width: number, height: number, gray: boolean = true) {
             this.gray = gray;
             this.width = width;
             this.height = height;
 
+            const webgl = WebGLCapabilities.webgl;
             let fbo = webgl.createFramebuffer();
             let fbold = webgl.getParameter(webgl.FRAMEBUFFER_BINDING);
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, fbo);
@@ -234,18 +235,17 @@ namespace egret3d {
      */
     export class GlTexture2D implements ITexture {
 
-        constructor(webgl: WebGLRenderingContext, format: TextureFormatEnum = TextureFormatEnum.RGBA, mipmap: boolean = false, linear: boolean = true) {
-            this.webgl = webgl;
+        constructor(format: TextureFormatEnum = TextureFormatEnum.RGBA, mipmap: boolean = false, linear: boolean = true) {
             this.format = format;
 
-            this.texture = webgl.createTexture();
+            this.texture = WebGLCapabilities.webgl.createTexture();
         }
 
         uploadImage(img: HTMLImageElement, mipmap: boolean, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false): void {
             this.width = img.width;
             this.height = img.height;
             this.mipmap = mipmap;
-            const webgl = this.webgl;
+            const webgl = WebGLCapabilities.webgl;
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
 
@@ -292,7 +292,7 @@ namespace egret3d {
             this.width = width;
             this.height = height;
             this.mipmap = mipmap;
-            const webgl = this.webgl;
+            const webgl = WebGLCapabilities.webgl;
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
 
@@ -338,7 +338,6 @@ namespace egret3d {
             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrap_t_param);
         }
 
-        webgl: WebGLRenderingContext;
         texture: WebGLTexture;
         format: TextureFormatEnum;
         width: number = 0;
@@ -372,7 +371,7 @@ namespace egret3d {
                 throw new Error("only rgba texture can read");
             if (this.texture == null) return null;
             if (this.reader == null)
-                this.reader = new TextureReader(this.webgl, this.texture, this.width, this.height, redOnly);
+                this.reader = new TextureReader(this.texture, this.width, this.height, redOnly);
 
             return this.reader;
         }
@@ -394,22 +393,20 @@ namespace egret3d {
         }
 
         static createColorTexture(r: number, g: number, b: number) {
-            const webgl = WebGLCapabilities.webgl;
             const mipmap = false;
             const linear = true;
             const width = 1;
             const height = 1;
-            const texture = new GlTexture2D(webgl, TextureFormatEnum.RGBA, mipmap, linear);
+            const texture = new GlTexture2D(TextureFormatEnum.RGBA, mipmap, linear);
             const data = new Uint8Array([r, g, b, 255]);
             texture.uploadByteArray(mipmap, linear, width, height, data);
             return texture;
         }
 
         static createGridTexture() {
-            const webgl = WebGLCapabilities.webgl;
             const mipmap = false;
             const linear = true;
-            const t = new GlTexture2D(webgl, TextureFormatEnum.RGBA, mipmap, linear);
+            const t = new GlTexture2D(TextureFormatEnum.RGBA, mipmap, linear);
             const width = 256;
             const height = 256;
             const data = new Uint8Array(width * width * 4);
@@ -480,7 +477,6 @@ namespace egret3d {
             return false;
         }
 
-        webgl: WebGLRenderingContext;
         texture: WebGLTexture;
         format: TextureFormatEnum;
         width: number = 0;
