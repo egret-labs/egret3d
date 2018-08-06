@@ -9200,6 +9200,7 @@ var egret3d;
             this.directLightCount = 0;
             this.pointLightCount = 0;
             this.spotLightCount = 0;
+            this.shaderContextDefine = "";
             /**
              *
              */
@@ -9235,6 +9236,7 @@ var egret3d;
             this.lightShadowCameraNear = 0;
             this.lightShadowCameraFar = 0;
         }
+        //matrixNormal: paper.matrix = new paper.matrix();
         RenderContext.prototype.updateLightmap = function (texture, uv, offset, intensity) {
             if (this.lightmap !== texture) {
                 this.lightmap = texture;
@@ -9448,6 +9450,39 @@ var egret3d;
                 this.lightShadowCameraNear = light.shadowCameraNear;
                 this.lightShadowCameraFar = light.shadowCameraFar;
                 this.version++;
+            }
+        };
+        RenderContext.prototype.update = function (drawCall) {
+            this.shaderContextDefine = "";
+            var renderer = drawCall.renderer;
+            this.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
+            if (drawCall.boneData) {
+                this.updateBones(drawCall.boneData);
+                //this.shaderContextDefine += "#define SKINNING \n";
+            }
+            //
+            if (renderer.lightmapIndex >= 0) {
+                var activeScene = paper.Application.sceneManager.activeScene;
+                if (activeScene.lightmaps.length > renderer.lightmapIndex) {
+                    this.updateLightmap(activeScene.lightmaps[renderer.lightmapIndex], drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0, renderer.lightmapScaleOffset, activeScene.lightmapIntensity);
+                    this.shaderContextDefine += "#define LIGHTMAP \n";
+                }
+            }
+            if (this.lightCount > 0) {
+                this.shaderContextDefine += "#define USE_LIGHT " + this.lightCount + "\n";
+                if (this.directLightCount > 0) {
+                    this.shaderContextDefine += "#define USE_DIRECT_LIGHT " + this.directLightCount + "\n";
+                }
+                if (this.pointLightCount > 0) {
+                    this.shaderContextDefine += "#define USE_POINT_LIGHT " + this.pointLightCount + "\n";
+                }
+                if (this.spotLightCount > 0) {
+                    this.shaderContextDefine += "#define USE_SPOT_LIGHT " + this.spotLightCount + "\n";
+                }
+                if (renderer.receiveShadows) {
+                    this.shaderContextDefine += "#define USE_SHADOW \n";
+                    this.shaderContextDefine += "#define USE_PCF_SOFT_SHADOW \n";
+                }
             }
         };
         return RenderContext;
@@ -15825,7 +15860,7 @@ var egret3d;
         ShaderLib.diffuselightmap_frag = "#include <common>\nuniform sampler2D _MainTex;\nuniform sampler2D _LightmapTex;\nuniform lowp float _LightmapIntensity;\nuniform lowp float _AlphaCut;\nvarying highp vec2 xlv_TEXCOORD0;\nvarying highp vec2 xlv_TEXCOORD1;\nlowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n{\n    highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n    return data.rgb * power * intensity;\n}\nvoid main() \n{\n    lowp vec4 outColor = texture2D(_MainTex, xlv_TEXCOORD0);\n    if(outColor.a < _AlphaCut)\n        discard;\n    lowp vec4 lightmap = texture2D(_LightmapTex, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, _LightmapIntensity);\n    gl_FragData[0] = outColor;\n}";
         ShaderLib.diffuselightmap_vert = "#include <common>\nattribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nattribute vec4 _glesMultiTexCoord1;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 glstate_lightmapOffset;\nuniform lowp float glstate_lightmapUV;\nuniform highp vec4 _MainTex_ST; \nvarying highp vec2 xlv_TEXCOORD0;\nvarying highp vec2 xlv_TEXCOORD1;\nvoid main()\n{\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  \n\n    highp vec2 beforelightUV = _glesMultiTexCoord1.xy;\n    if(glstate_lightmapUV == 0.0)\n    {\n        beforelightUV = _glesMultiTexCoord0.xy;\n    }\n    highp float u = beforelightUV.x * glstate_lightmapOffset.x + glstate_lightmapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * glstate_lightmapOffset.y + glstate_lightmapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
         ShaderLib.diffuse_frag = "#include <common>\n#include <lightmap_pars_frag>\nuniform sampler2D _MainTex;\nuniform lowp float _AlphaCut;\nvarying highp vec2 xlv_TEXCOORD0;\nvoid main() {\n    lowp vec4 outColor = texture2D(_MainTex, xlv_TEXCOORD0);\n    if(outColor.a < _AlphaCut)\n        discard;\n    #include <lightmap_frag>    \n}";
-        ShaderLib.diffuse_vert = "#include <common>\n#include <skinning_pars_vert>\n#include <lightmap_pars_vert> \nattribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 _MainTex_ST;  \nvarying highp vec2 xlv_TEXCOORD0;\n\nvoid main() {\n    // highp vec4 tmpVertex;\n    #include <skinning_base_vert>\n    // tmpVertex.w = 1.0;\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;\n    #include <lightmap_vert>\n    gl_Position = (glstate_matrix_mvp * tmpVertex);\n}";
+        ShaderLib.diffuse_vert = "#include <common>\n#include <skinning_pars_vert>\n#include <lightmap_pars_vert> \nattribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 _MainTex_ST;  \nvarying highp vec2 xlv_TEXCOORD0;\n\nvoid main() {\n    #include <skinning_base_vert>\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;\n    #include <lightmap_vert>\n    gl_Position = (glstate_matrix_mvp * tmpVertex);\n}";
         ShaderLib.distancepackage_frag = "#include <common>\n#include <packing>\n\nvarying vec3 xlv_POS;\nuniform vec4 glstate_referencePosition;\nuniform float glstate_nearDistance;\nuniform float glstate_farDistance;\n\nvoid main() {\n    float dist = length( xlv_POS - glstate_referencePosition.xyz );\n dist = ( dist - glstate_nearDistance ) / ( glstate_farDistance - glstate_nearDistance );\n dist = saturate( dist ); // clamp to [ 0, 1 ]\n\n gl_FragColor = packDepthToRGBA( dist );\n}";
         ShaderLib.distancepackage_vert = "#include <common>\nattribute vec3 _glesVertex;\n\nuniform mat4 glstate_matrix_mvp;\nuniform mat4 glstate_matrix_model;\n\nvarying vec3 xlv_POS;\n\nvoid main() {   \n    xlv_POS = (glstate_matrix_model * vec4(_glesVertex, 1.0)).xyz;\n    gl_Position = glstate_matrix_mvp * vec4(_glesVertex, 1.0);\n}";
         ShaderLib.lambert_frag = "// #extension GL_OES_standard_derivatives : enable\n#include <common>\nuniform sampler2D _MainTex;\nuniform vec4 _Color;         \n\n#include <bsdfs>\n#include <light_pars_frag>\n#include <shadowMap_pars_frag>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#ifdef USE_NORMAL_MAP\n    #include <tbn>\n    #include <tsn>\n    uniform sampler2D _NormalTex;\n#endif\n\n#include <bumpMap_pars_frag>\n\nvoid main() {\n    vec4 outColor = vec4(0., 0., 0., 1.);\n\n    vec4 diffuseColor = _Color * texture2D(_MainTex, xlv_TEXCOORD0);\n\n    #include <normal_frag>\n    #include <light_frag>\n    \n    outColor.a = diffuseColor.a;\n\n    gl_FragColor = outColor;\n}";
@@ -15856,7 +15891,7 @@ var egret3d;
         ShaderChunk.inverse = "mat4 inverse(mat4 m) {\n    float\n    a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],\n    a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],\n    a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3],\n    a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3],\n    b00 = a00 * a11 - a01 * a10,\n    b01 = a00 * a12 - a02 * a10,\n    b02 = a00 * a13 - a03 * a10,\n    b03 = a01 * a12 - a02 * a11,\n    b04 = a01 * a13 - a03 * a11,\n    b05 = a02 * a13 - a03 * a12,\n    b06 = a20 * a31 - a21 * a30,\n    b07 = a20 * a32 - a22 * a30,\n    b08 = a20 * a33 - a23 * a30,\n    b09 = a21 * a32 - a22 * a31,\n    b10 = a21 * a33 - a23 * a31,\n    b11 = a22 * a33 - a23 * a32,\n    det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n    return mat4(\n        a11 * b11 - a12 * b10 + a13 * b09,\n        a02 * b10 - a01 * b11 - a03 * b09,\n        a31 * b05 - a32 * b04 + a33 * b03,\n        a22 * b04 - a21 * b05 - a23 * b03,\n        a12 * b08 - a10 * b11 - a13 * b07,\n        a00 * b11 - a02 * b08 + a03 * b07,\n        a32 * b02 - a30 * b05 - a33 * b01,\n        a20 * b05 - a22 * b02 + a23 * b01,\n        a10 * b10 - a11 * b08 + a13 * b06,\n        a01 * b08 - a00 * b10 - a03 * b06,\n        a30 * b04 - a31 * b02 + a33 * b00,\n        a21 * b02 - a20 * b04 - a23 * b00,\n        a11 * b07 - a10 * b09 - a12 * b06,\n        a00 * b09 - a01 * b07 + a02 * b06,\n        a31 * b01 - a30 * b03 - a32 * b00,\n        a20 * b03 - a21 * b01 + a22 * b00) / det;\n}";
         ShaderChunk.lightmap_frag = "#ifdef LIGHTMAP\n    lowp vec4 lightmap = texture2D(_LightmapTex, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, _LightmapIntensity);\n    gl_FragData[0] = outColor;\n#else\n    gl_FragData[0] = outColor;\n#endif";
         ShaderChunk.lightmap_pars_frag = "#ifdef LIGHTMAP\n    uniform sampler2D _LightmapTex;\n    uniform lowp float _LightmapIntensity;\n    varying highp vec2 xlv_TEXCOORD1;\n\n    lowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n    {\n        highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n        return data.rgb * power * intensity;\n    }\n#endif";
-        ShaderChunk.lightmap_pars_vert = "#ifdef LIGHTMAP\n    uniform highp vec4 glstate_lightmapOffset;\n    uniform lowp float glstate_lightmapUV;\n#endif";
+        ShaderChunk.lightmap_pars_vert = "#ifdef LIGHTMAP\n    attribute vec4 _glesMultiTexCoord1;\n    uniform highp vec4 glstate_lightmapOffset;\n    uniform lowp float glstate_lightmapUV;\n    varying highp vec2 xlv_TEXCOORD1;\n#endif";
         ShaderChunk.lightmap_vert = "#ifdef LIGHTMAP\n    highp vec2 beforelightUV = _glesMultiTexCoord1.xy;\n    if(glstate_lightmapUV == 0.0)\n    {\n        beforelightUV = _glesMultiTexCoord0.xy;\n    }\n    highp float u = beforelightUV.x * glstate_lightmapOffset.x + glstate_lightmapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * glstate_lightmapOffset.y + glstate_lightmapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n#endif";
         ShaderChunk.light_frag = "#ifdef USE_LIGHT    \n    vec3 L;\n    vec3 light;\n    vec3 totalReflect = vec3(0., 0., 0.);\n\n    #ifdef USE_DIRECT_LIGHT\n        for(int i = 0; i < USE_DIRECT_LIGHT; i++) {\n            light = vec3(glstate_directLights[i * 15 + 6], glstate_directLights[i * 15 + 7], glstate_directLights[i * 15 + 8]) * glstate_directLights[i * 15 + 9];\n\n            L.x = glstate_directLights[i * 15 + 3];\n            L.y = glstate_directLights[i * 15 + 4];\n            L.z = glstate_directLights[i * 15 + 5];\n            L = normalize(-L);\n\n            float dotNL = saturate( dot(N, L) );\n            vec3 irradiance = light * dotNL;\n\n            #ifdef USE_PBR\n                irradiance *= PI;\n            #endif\n\n            #ifdef USE_SHADOW\n                irradiance *= bool( glstate_directLights[i * 15 + 10] ) ? getShadow( glstate_directionalShadowMap[ i ], vDirectionalShadowCoord[ i ], glstate_directLights[i * 15 + 11], glstate_directLights[i * 15 + 12], vec2(glstate_directLights[i * 15 + 13], glstate_directLights[i * 15 + 14]) ) : 1.0;\n            #endif\n\n            vec3 reflectLight = irradiance * BRDF_Diffuse_Lambert(diffuseColor.xyz);\n\n            totalReflect += reflectLight;\n        }\n    #endif\n\n    #ifdef USE_POINT_LIGHT\n        for(int i = 0; i < USE_POINT_LIGHT; i++) {\n            L = vec3(glstate_pointLights[i * 19 + 0], glstate_pointLights[i * 19 + 1], glstate_pointLights[i * 19 + 2]) - xlv_POS;\n            float dist = pow(clamp(1. - length(L) / glstate_pointLights[i * 19 + 10], 0.0, 1.0), glstate_pointLights[i * 19 + 11]);\n            light = vec3(glstate_pointLights[i * 19 + 6], glstate_pointLights[i * 19 + 7], glstate_pointLights[i * 19 + 8]) * glstate_pointLights[i * 19 + 9] * dist;\n            L = normalize(L);\n\n            float dotNL = saturate( dot(N, L) );\n            vec3 irradiance = light * dotNL;\n\n            #ifdef USE_PBR\n                irradiance *= PI;\n            #endif\n\n            #ifdef USE_SHADOW\n                vec3 worldV = xlv_POS - vec3(glstate_pointLights[i * 19 + 0], glstate_pointLights[i * 19 + 1], glstate_pointLights[i * 19 + 2]);\n                irradiance *= bool( glstate_pointLights[i * 19 + 12] ) ? getPointShadow( glstate_pointShadowMap[ i ], worldV, glstate_pointLights[i * 19 + 13], glstate_pointLights[i * 19 + 14], vec2(glstate_pointLights[i * 19 + 17], glstate_pointLights[i * 19 + 18]), glstate_pointLights[i * 19 + 15], glstate_pointLights[i * 19 + 16]) : 1.0;\n            #endif\n\n            vec3 reflectLight = irradiance * BRDF_Diffuse_Lambert(diffuseColor.xyz);\n\n            totalReflect += reflectLight;\n        }\n    #endif\n\n    #ifdef USE_SPOT_LIGHT\n        for(int i = 0; i < USE_SPOT_LIGHT; i++) {\n            L = vec3(glstate_spotLights[i * 19 + 0], glstate_spotLights[i * 19 + 1], glstate_spotLights[i * 19 + 2]) - xlv_POS;\n            float lightDistance = length(L);\n            L = normalize(L);\n            float angleCos = dot( L, -normalize(vec3(glstate_spotLights[i * 19 + 3], glstate_spotLights[i * 19 + 4], glstate_spotLights[i * 19 + 5])) );\n\n            if( all( bvec2(angleCos > glstate_spotLights[i * 19 + 12], lightDistance < glstate_spotLights[i * 19 + 10]) ) ) {\n\n                float spotEffect = smoothstep( glstate_spotLights[i * 19 + 12], glstate_spotLights[i * 19 + 13], angleCos );\n                float dist = pow(clamp(1. - lightDistance / glstate_spotLights[i * 19 + 10], 0.0, 1.0), glstate_spotLights[i * 19 + 11]);\n                light = vec3(glstate_spotLights[i * 19 + 6], glstate_spotLights[i * 19 + 7], glstate_spotLights[i * 19 + 8]) * glstate_spotLights[i * 19 + 9] * dist * spotEffect;\n\n                float dotNL = saturate( dot(N, L) );\n                vec3 irradiance = light * dotNL;\n\n                #ifdef USE_PBR\n                    irradiance *= PI;\n                #endif\n\n                #ifdef USE_SHADOW\n                    irradiance *= bool( glstate_spotLights[i * 17 + 14] ) ? getShadow( glstate_spotShadowMap[ i ], vSpotShadowCoord[ i ], glstate_spotLights[i * 17 + 15], glstate_spotLights[i * 17 + 16], vec2(glstate_spotLights[i * 17 + 17], glstate_spotLights[i * 17 + 18])) : 1.0;\n                #endif\n\n                vec3 reflectLight = irradiance * BRDF_Diffuse_Lambert(diffuseColor.xyz);\n\n                totalReflect += reflectLight;\n            }\n\n        }\n    #endif\n\n    outColor.xyz = totalReflect;\n#endif";
         ShaderChunk.light_pars_frag = "#ifdef USE_DIRECT_LIGHT\n    uniform float glstate_directLights[USE_DIRECT_LIGHT * 15];\n#endif\n\n#ifdef USE_POINT_LIGHT\n    uniform float glstate_pointLights[USE_POINT_LIGHT * 19];\n#endif\n\n#ifdef USE_SPOT_LIGHT\n    uniform float glstate_spotLights[USE_SPOT_LIGHT * 19];\n#endif";
@@ -15958,7 +15993,7 @@ var RES;
                                 return [4 /*yield*/, promisify(loader, imgResource)];
                             case 2:
                                 image = _a.sent();
-                                texture = new egret3d.Texture(imgResource.name);
+                                texture = new egret3d.Texture(resource.name);
                                 texture.realName = _name;
                                 gl = egret3d.WebGLCapabilities.webgl;
                                 t2d = new egret3d.GlTexture2D(gl, _textureFormat);
@@ -16325,6 +16360,7 @@ var egret3d;
             var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
             technique.attributes["_glesVertex"] = { semantic: "POSITION" /* POSITION */ };
             technique.attributes["_glesMultiTexCoord0"] = { semantic: "TEXCOORD_0" /* TEXCOORD_0 */ };
+            technique.attributes["_glesMultiTexCoord1"] = { semantic: "TEXCOORD_1" /* TEXCOORD_1 */ };
             technique.attributes["_glesBlendIndex4"] = { semantic: "JOINTS_0" /* JOINTS_0 */ };
             technique.attributes["_glesBlendWeight4"] = { semantic: "WEIGHTS_0" /* WEIGHTS_0 */ };
             technique.uniforms["glstate_lightmapOffset"] = { type: 35666 /* FLOAT_VEC4 */, semantic: "_LIGHTMAPOFFSET" /* _LIGHTMAPOFFSET */, value: [] };
@@ -18775,6 +18811,14 @@ var egret3d;
             return _this;
         }
         //
+        WebGLRenderSystem.prototype._clearState = function () {
+            //clear State
+            for (var key in this._cacheStateEnable) {
+                delete this._cacheStateEnable[key];
+            }
+            this._cacheProgram = undefined;
+            this._cacheState = undefined;
+        };
         WebGLRenderSystem.prototype._updateState = function (state) {
             if (this._cacheState === state) {
                 return;
@@ -18796,31 +18840,9 @@ var egret3d;
             var functions = state.functions;
             if (functions) {
                 for (var fun in functions) {
-                    //
                     webgl[fun].apply(webgl, functions[fun]);
                 }
             }
-        };
-        WebGLRenderSystem.prototype._updateContextDefines = function (context, material) {
-            this._cacheDefines = "";
-            if (context.lightCount > 0) {
-                this._cacheDefines += "#define USE_LIGHT " + context.lightCount + "\n";
-                if (context.directLightCount > 0) {
-                    this._cacheDefines += "#define USE_DIRECT_LIGHT " + context.directLightCount + "\n";
-                }
-                if (context.pointLightCount > 0) {
-                    this._cacheDefines += "#define USE_POINT_LIGHT " + context.pointLightCount + "\n";
-                }
-                if (context.spotLightCount > 0) {
-                    this._cacheDefines += "#define USE_SPOT_LIGHT " + context.spotLightCount + "\n";
-                }
-                if (context.drawCall.renderer.receiveShadows) {
-                    this._cacheDefines += "#define USE_SHADOW \n";
-                    this._cacheDefines += "#define USE_PCF_SOFT_SHADOW \n";
-                }
-            }
-            //自定义的宏定义TODO
-            this._cacheDefines += material.shaderDefine;
         };
         WebGLRenderSystem.prototype._updateContextUniforms = function (program, context, technique, forceUpdate) {
             var needUpdate = this._cacheContext !== context || this._cacheContextVersion !== context.version || forceUpdate;
@@ -18932,7 +18954,7 @@ var egret3d;
                             var unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location_1, unit);
                             webgl.activeTexture(webgl.TEXTURE0 + unit);
-                            webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap);
+                            webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap.glTexture.texture);
                         }
                         else {
                             console.error("Error texture unit");
@@ -19122,18 +19144,11 @@ var egret3d;
             }
         };
         WebGLRenderSystem.prototype._renderCall = function (context, drawCall, material) {
-            var renderer = drawCall.renderer;
-            context.drawCall = drawCall;
-            context.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
-            if (drawCall.boneData) {
-                context.updateBones(drawCall.boneData);
-            }
+            context.update(drawCall);
             //
             var technique = material._glTFTechnique;
-            //Defines
-            this._updateContextDefines(context, material);
             //Program
-            var program = egret3d.GlProgram.getProgram(material, technique, this._cacheDefines);
+            var program = egret3d.GlProgram.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
             //State
             this._updateState(technique.states);
             //Use Program
@@ -19222,12 +19237,8 @@ var egret3d;
                 var egret2DRenderer = gameObject.getComponent(egret3d.Egret2DRenderer);
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                     egret2DRenderer.render(camera.context, camera);
-                    //clear State
-                    for (var key in this._cacheStateEnable) {
-                        delete this._cacheStateEnable[key];
-                    }
-                    this._cacheProgram = undefined;
-                    this._cacheState = undefined;
+                    //
+                    this._clearState();
                 }
             }
         };
@@ -19260,6 +19271,9 @@ var egret3d;
             egret3d.GlRenderTarget.useNull();
         };
         WebGLRenderSystem.prototype.onUpdate = function () {
+            if (this._isEditorUpdate()) {
+                this._clearState(); //编辑器走自己的渲染流程，状态需要清除一下
+            }
             egret3d.Performance.startCounter("render");
             var cameras = this._camerasAndLights.cameras;
             var lights = this._camerasAndLights.lights;

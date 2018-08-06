@@ -156,6 +156,7 @@ namespace egret3d {
 
             technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
             technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["_glesMultiTexCoord1"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_1 };
             technique.attributes["_glesBlendIndex4"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
             technique.attributes["_glesBlendWeight4"] = { semantic: gltf.AttributeSemanticType.WEIGHTS_0 };
 

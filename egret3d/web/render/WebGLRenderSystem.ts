@@ -21,7 +21,6 @@ namespace egret3d {
         //
         private readonly _filteredLights: BaseLight[] = [];
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
-        private _cacheDefines: string;
         private _cacheContextVersion: number = -1;
         private _cacheMaterialVerision: number = -1;
         private _cacheMeshVersion: number = -1;
@@ -31,6 +30,14 @@ namespace egret3d {
         private _cacheMesh: Mesh | undefined;
         private _cacheState: gltf.States | undefined;
         //
+        private _clearState() {
+            //clear State
+            for (const key in this._cacheStateEnable) {
+                delete this._cacheStateEnable[key];
+            }
+            this._cacheProgram = undefined;
+            this._cacheState = undefined;
+        }
         private _updateState(state: gltf.States) {
             if (this._cacheState === state) {
                 return;
@@ -52,34 +59,9 @@ namespace egret3d {
             const functions = state.functions;
             if (functions) {
                 for (const fun in functions) {
-                    //
                     (webgl[fun] as Function).apply(webgl, functions[fun]);
                 }
             }
-
-        }
-
-        private _updateContextDefines(context: RenderContext, material: Material) {
-            this._cacheDefines = "";
-            if (context.lightCount > 0) {
-                this._cacheDefines += "#define USE_LIGHT " + context.lightCount + "\n";
-
-                if (context.directLightCount > 0) {
-                    this._cacheDefines += "#define USE_DIRECT_LIGHT " + context.directLightCount + "\n";
-                }
-                if (context.pointLightCount > 0) {
-                    this._cacheDefines += "#define USE_POINT_LIGHT " + context.pointLightCount + "\n";
-                }
-                if (context.spotLightCount > 0) {
-                    this._cacheDefines += "#define USE_SPOT_LIGHT " + context.spotLightCount + "\n";
-                }
-                if (context.drawCall.renderer.receiveShadows) {
-                    this._cacheDefines += "#define USE_SHADOW \n";
-                    this._cacheDefines += "#define USE_PCF_SOFT_SHADOW \n";
-                }
-            }
-            //自定义的宏定义TODO
-            this._cacheDefines += material.shaderDefine;
         }
 
         private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
@@ -196,7 +178,7 @@ namespace egret3d {
                             const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
                             webgl.activeTexture(webgl.TEXTURE0 + unit);
-                            webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap);
+                            webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap.glTexture.texture);
                         }
                         else {
                             console.error("Error texture unit");
@@ -393,18 +375,11 @@ namespace egret3d {
             }
         }
         private _renderCall(context: RenderContext, drawCall: DrawCall, material: Material) {
-            const renderer = drawCall.renderer;
-            context.drawCall = drawCall;
-            context.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
-            if (drawCall.boneData) {
-                context.updateBones(drawCall.boneData);
-            }
+            context.update(drawCall);
             //
             const technique = material._glTFTechnique;
-            //Defines
-            this._updateContextDefines(context, material);
             //Program
-            const program = GlProgram.getProgram(material, technique, this._cacheDefines);
+            const program = GlProgram.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
             //State
             this._updateState(technique.states);
             //Use Program
@@ -492,13 +467,8 @@ namespace egret3d {
                 const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                     egret2DRenderer.render(camera.context, camera);
-
-                    //clear State
-                    for (const key in this._cacheStateEnable) {
-                        delete this._cacheStateEnable[key];
-                    }
-                    this._cacheProgram = undefined;
-                    this._cacheState = undefined;
+                    //
+                    this._clearState();
                 }
             }
         }
@@ -534,6 +504,9 @@ namespace egret3d {
         }
 
         public onUpdate() {
+            if (this._isEditorUpdate()) {
+                this._clearState();//编辑器走自己的渲染流程，状态需要清除一下
+            }
             Performance.startCounter("render");
             const cameras = this._camerasAndLights.cameras;
             const lights = this._camerasAndLights.lights;

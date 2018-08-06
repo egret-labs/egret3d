@@ -239,7 +239,7 @@ declare namespace gltf {
         POSITION = "POSITION",
         NORMAL = "NORMAL",
         TEXCOORD_0 = "TEXCOORD_0",
-        TEXCOORD_1 = "TEXCOORD_",
+        TEXCOORD_1 = "TEXCOORD_1",
         COLOR_0 = "COLOR_0",
         COLOR_1 = "COLOR_1",
         JOINTS_0 = "JOINTS_0",
