@@ -366,6 +366,22 @@ namespace paper.editor {
             }
         }
         /**
+         * 解除预置体联系
+         * @param gameObjects 
+         */
+        public breakPrefab(gameObjects:GameObject[]):void{
+            let breakList: GameObject[] = [];
+            gameObjects.forEach(obj => {
+                if (Editor.editorModel.isPrefabChild(obj)||Editor.editorModel.isPrefabRoot(obj)) {
+                    breakList.push(obj);
+                }
+            });
+            if (breakList.length > 0) {
+                let breakState = BreakPrefabStructState.create(breakList);
+                this.addState(breakState);
+            }
+        }
+        /**
          * 更改层级
          * */
         public updateGameObjectsHierarchy(gameObjects: GameObject[], targetGameobjcet: GameObject, dir: 'top' | 'inner' | 'bottom'): void {
