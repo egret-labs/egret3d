@@ -49,7 +49,7 @@ namespace RES.processor {
             loader.load(imgResource.root + imgResource.url);
             let image = await promisify(loader, imgResource);
 
-            let texture = new egret3d.Texture(imgResource.name);
+            let texture = new egret3d.Texture(resource.name);
             texture.realName = _name;
             const gl = egret3d.WebGLCapabilities.webgl;
             let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
