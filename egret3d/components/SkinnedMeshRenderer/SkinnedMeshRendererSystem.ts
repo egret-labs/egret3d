@@ -30,29 +30,29 @@ namespace egret3d {
             //
             let subMeshIndex = 0;
             for (const primitive of renderer.mesh.glTFMesh.primitives) {
+                const material = renderer.materials[primitive.material || 0];
                 const drawCall: DrawCall = {
                     renderer: renderer,
 
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
                     material: renderer.materials[primitive.material || 0] || DefaultMaterials.MissingMaterial,
-
+					
                     frustumTest: false,
                     zdist: -1,
 
                     boneData: renderer.boneBuffer,
-
-                    disable: false,
                 };
+
+                material.addDefine("SKINNING");
 
                 this._drawCalls.drawCalls.push(drawCall);
             }
         }
 
         public onEnable() {
-            const components = this._groups[0].components as ReadonlyArray<SkinnedMeshRenderer>;
-            for (const renderer of components) {
-                this._updateDrawCalls(renderer.gameObject);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._updateDrawCalls(gameObject);
             }
         }
 
@@ -69,9 +69,8 @@ namespace egret3d {
         }
 
         public onDisable() {
-            const components = this._groups[0].components as ReadonlyArray<SkinnedMeshRenderer>;
-            for (const renderer of components) {
-                this._drawCalls.removeDrawCalls(renderer);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._drawCalls.removeDrawCalls(gameObject.renderer as SkinnedMeshRenderer);
             }
         }
     }

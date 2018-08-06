@@ -5,10 +5,11 @@ namespace paper {
      */
     export let createUUID = () => {
         return (_hashCount++).toString();
-    }   
+    };
+    
     export let createAssetID = () => {
-        return null;
-    }
+        return undefined;
+    };
     /**
      * 可序列化对象。
      */

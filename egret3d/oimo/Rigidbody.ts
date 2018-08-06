@@ -18,7 +18,7 @@ namespace egret3d.oimo {
     /**
      * 
      */
-    @paper.disallowMultipleComponent
+    @paper.disallowMultiple
     export class Rigidbody extends paper.BaseComponent {
         private static readonly _config: OIMO.RigidBodyConfig = new OIMO.RigidBodyConfig();
         private static readonly _massData: OIMO.MassData = new OIMO.MassData();

@@ -1,4 +1,4 @@
-
+#include <common>
 uniform sampler2D _MainTex;
 uniform lowp float _AlphaCut;
 varying highp vec2 xlv_TEXCOORD0;

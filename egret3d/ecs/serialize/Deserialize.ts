@@ -3,126 +3,137 @@ namespace paper {
     const KEY_ASSET: keyof IAssetReference = "asset";
     const KEY_CLASS: keyof IClass = "class";
     const KEY_DESERIALIZE: keyof ISerializable = "deserialize";
-    const KEY_COMPONENTS: keyof paper.GameObject = "components";
+    const KEY_COMPONENTS: keyof GameObject = "components";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
 
     let _isKeepUUID: boolean = false;
-    let _deserializedData: { assets: string[], objects: { [key: string]: Scene | GameObject }, components: { [key: string]: BaseComponent } } | null = null;
+    let _deserializedData: { assets: string[], objects: { [key: string]: Scene | GameObject }, components: { [key: string]: BaseComponent } } = null as any;
     /**
      * 反序列化。
      */
-    export function deserialize<T extends ISerializable>(data: ISerializedData, isKeepUUID: boolean = false): T | null {
+    export function deserialize<T extends (Scene | GameObject | BaseComponent)>(data: ISerializedData, isKeepUUID: boolean = false): T | null {
         if (_deserializedData) {
             console.debug("The deserialization is not complete.");
         }
 
         _isKeepUUID = isKeepUUID;
-        _deserializedData = { assets: data.assets, objects: {}, components: {} };
+        _deserializedData = { assets: data.assets || [], objects: {}, components: {} };
 
-        const sceneClassName = egret.getQualifiedClassName(paper.Scene);
+        const sceneClassName = egret.getQualifiedClassName(Scene);
         const components: { [key: string]: ISerializedObject } = {};
-        let root: Scene | GameObject | null = null;
+        let root: T | null = null;
 
-        for (const componentSource of data.components) { // Mapping components.
-            components[componentSource.uuid] = componentSource;
+        if (data.components) {
+            for (const componentSource of data.components) { // Mapping components.
+                components[componentSource.uuid] = componentSource;
+            }
         }
 
-        for (const source of data.objects) { // 场景和实体实例化。
-            const className = serializeClassMap[source.class] || source.class;
-            let target: Scene | GameObject;
+        if (data.objects) {
+            for (const source of data.objects) { // 场景和实体实例化。
+                const className = serializeClassMap[source.class] || source.class;
+                let target: Scene | GameObject;
 
-            if (className === sceneClassName) {
-                target = new paper.Scene();
+                if (className === sceneClassName) {
+                    target = Application.sceneManager.createScene("");
+                }
+                else {
+                    target = GameObject.create();
+
+                    if (KEY_COMPONENTS in source) { // Mapping transfrom components.
+                        for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
+                            const uuid = componentUUID.uuid;
+                            const componentSource = components[uuid];
+                            const className = serializeClassMap[componentSource.class] || componentSource.class;
+
+                            if (className === egret.getQualifiedClassName(egret3d.Transform)) {
+                                _deserializedData.components[uuid] = target.transform;
+                            }
+                        }
+                    }
+                }
+
+                _deserializedData.objects[source.uuid] = target;
+                root = root || target as T;
             }
-            else {
-                target = new paper.GameObject();
 
-                if (KEY_COMPONENTS in source) { // Mapping transfrom components.
+            let i = data.objects.length;
+            while (i--) { // 组件实例化。
+                const source = data.objects[i];
+                const target = _deserializedData.objects[source.uuid];
+                _deserializeObject(source, target);
+
+                if (target.constructor === GameObject && KEY_COMPONENTS in source) {
                     for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
                         const uuid = componentUUID.uuid;
                         const componentSource = components[uuid];
                         const className = serializeClassMap[componentSource.class] || componentSource.class;
+                        const clazz = egret.getDefinitionByName(className);
 
-                        if (className === egret.getQualifiedClassName(egret3d.Transform)) {
-                            _deserializedData.components[uuid] = target.transform;
-                        }
-                    }
-                }
-            }
+                        if (clazz) {
+                            if (clazz === egret3d.Transform) {
+                                const transform = _deserializedData.components[uuid] as egret3d.Transform;
 
-            _deserializedData.objects[source.uuid] = target;
-            root = root || target;
-        }
-
-        let i = data.objects.length;
-        while (i--) { // 组件实例化。
-            const source = data.objects[i];
-            const target = _deserializedData.objects[source.uuid];
-            _deserializeObject(source, target);
-
-            if (target instanceof GameObject && KEY_COMPONENTS in source) {
-                for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
-                    const uuid = componentUUID.uuid;
-                    const componentSource = components[uuid];
-                    const className = serializeClassMap[componentSource.class] || componentSource.class;
-                    const clazz = egret.getDefinitionByName(className);
-
-                    if (clazz) {
-                        if (clazz === egret3d.Transform) {
-                            const transform = _deserializedData.components[uuid] as egret3d.Transform;
-
-                            if (KEY_CHILDREN in componentSource) {
-                                for (const childUUID of componentSource[KEY_CHILDREN] as IUUID[]) {
-                                    const child = _deserializedData.components[childUUID.uuid] as egret3d.Transform;
-                                    child._parent = transform;
-                                    transform._children.push(child);
+                                if (KEY_CHILDREN in componentSource) {
+                                    for (const childUUID of componentSource[KEY_CHILDREN] as IUUID[]) {
+                                        const child = _deserializedData.components[childUUID.uuid] as egret3d.Transform;
+                                        child._parent = transform;
+                                        transform._children.push(child);
+                                    }
                                 }
+
+                                root = root || transform as any;
+                            }
+                            else {
+                                const component = (target as GameObject).addComponent(clazz);
+                                _deserializedData.components[uuid] = component;
+
+                                if (clazz === Behaviour) {
+                                    (component as Behaviour)._isReseted = true;
+                                }
+
+                                root = root || component as any;
                             }
                         }
                         else {
-                            const component = target.addComponent(clazz);
+                            const component = (target as GameObject).addComponent(MissingComponent);
+                            component.missingObject = componentSource;
                             _deserializedData.components[uuid] = component;
+                            root = root || component as any;
 
-                            if (clazz === Behaviour) {
-                                (component as Behaviour)._isReseted = true;
-                            }
+                            console.warn(`Class ${className} is not defined.`);
                         }
-                    }
-                    else {
-                        const component = target.addComponent(MissingComponent);
-                        component.missingObject = componentSource;
-                        _deserializedData.components[uuid] = component;
-
-                        console.warn(`Class ${className} is not defined.`);
                     }
                 }
             }
         }
 
-        for (const componentSource of data.components) { // 组件属性反序列化。
-            const uuid = componentSource.uuid;
-            const component = _deserializedData.components[uuid];
+        if (data.components) {
+            for (const componentSource of data.components) { // 组件属性反序列化。
+                const uuid = componentSource.uuid;
+                const component = _deserializedData.components[uuid];
 
-            if (component instanceof MissingComponent) {
-                continue;
+                if (component.constructor === MissingComponent) {
+                    continue;
+                }
+
+                _deserializeObject(componentSource, component);
             }
-
-            _deserializeObject(componentSource, component);
         }
 
-        _deserializedData = null;
+        _deserializedData = null as any;
 
-        return root as any;
+        return root;
     }
     /**
      * 
      */
     export function getDeserializedAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent {
         if (KEY_ASSET in source) {
-            return paper.Asset.find(_deserializedData.assets[source[KEY_ASSET]]);
+            return Asset.find(_deserializedData.assets[(source as IAssetReference)[KEY_ASSET]]);
         }
 
-        const uuid = source[KEY_UUID];
+        const uuid = (source as IUUID)[KEY_UUID];
 
         return _deserializedData.components[uuid] || _deserializedData.objects[uuid] as GameObject;
     }
@@ -153,12 +164,12 @@ namespace paper {
 
                 if (
                     SerializeKey.DeserializedIgnore in target &&
-                    (target[SerializeKey.DeserializedIgnore] as string).indexOf(k) >= 0
+                    ((target as any)[SerializeKey.DeserializedIgnore] as string).indexOf(k) >= 0
                 ) {
                     continue;
                 }
 
-                target[k] = _deserializeChild(source[k], target[k]);
+                (target as any)[k] = _deserializeChild(source[k], (target as any)[k]);
             }
         }
     }
@@ -176,7 +187,7 @@ namespace paper {
                 if (target) {
                     if (ArrayBuffer.isView(target)) {
                         for (let i = 0, l = Math.min(source.length, (target as Uint8Array).length); i < l; ++i) {
-                            target[i] = source[i];
+                            (target as Uint8Array)[i] = source[i];
                         }
 
                         return target;
@@ -233,7 +244,7 @@ namespace paper {
                         else { // Component.
                             for (const gameObject of Application.sceneManager.activeScene.gameObjects) {
                                 for (const component of gameObject.components) {
-                                    if (component.uuid === uuid) {
+                                    if (component && component.uuid === uuid) {
                                         return component;
                                     }
                                 }

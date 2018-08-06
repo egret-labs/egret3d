@@ -2,8 +2,9 @@ namespace paper {
     /**
      * 克隆
      */
-    export function clone(object: GameObject): GameObject {
+    export function clone(object: GameObject) {
         const data = serialize(object);
-        return deserialize(data);
+
+        return deserialize(data) as GameObject;
     }
 }

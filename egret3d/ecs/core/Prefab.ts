@@ -3,7 +3,7 @@ namespace paper {
      * 
      */
     export class BaseObjectAsset extends Asset {
-        protected _raw: ISerializedData = null;
+        protected _raw: ISerializedData = null as any;
         /**
          * @internal
          */
@@ -16,7 +16,7 @@ namespace paper {
                 return;
             }
 
-            this._raw = null;
+            this._raw = null as any;
         }
 
         public caclByteLength() {
@@ -37,7 +37,7 @@ namespace paper {
                 return null;
             }
 
-            const gameObject = paper.deserialize<GameObject>(this._raw);
+            const gameObject = paper.deserialize(this._raw) as GameObject | null;
             if (gameObject) {
                 gameObject.prefab = this;
             }
