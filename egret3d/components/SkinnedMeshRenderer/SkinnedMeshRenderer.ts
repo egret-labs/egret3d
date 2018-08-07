@@ -228,6 +228,32 @@ namespace egret3d {
             return out;
         }
 
+        protected _updateAABB() {
+            if (!this._aabbDirty) {
+                return;
+            }
+
+            this._aabbDirty = false;
+
+            const minimum = helpVector3A;
+            const maximum = helpVector3B;
+
+            if (this._mesh) {
+                const vertices = this._mesh.getVertices();
+                const position = helpVector3C;
+                minimum.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+                maximum.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+
+                for (let i = 0, l = vertices.length; i < l; i += 3) {
+                    position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
+                    maximum.max(position, maximum);
+                    minimum.min(position, minimum);
+                }
+            }
+
+            this.aabb.
+        }
+
         public initialize() {
             super.initialize();
 

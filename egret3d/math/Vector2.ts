@@ -74,24 +74,6 @@ namespace egret3d {
             return this.x * this.x + this.y * this.y;
         }
 
-        public static set(x: number, y: number, out: Vector2): Vector2 {
-            out.x = x;
-            out.y = y;
-            return out;
-        }
-
-        public static normalize(v: Vector2): Vector2 {
-            let num: number = this.getLength(v);
-            if (num > Number.MIN_VALUE) {
-                v.x = v.x / num;
-                v.y = v.y / num;
-            } else {
-                v.x = 1.0;
-                v.y = 0.0;
-            }
-            return v;
-        }
-
         public static add(v1: Vector2, v2: Vector2, out: Vector2): Vector2 {
             out.x = v1.x + v2.x;
             out.y = v1.y + v2.y;
@@ -130,12 +112,6 @@ namespace egret3d {
             return this.getLength(_helpVector2A);
         }
 
-        public static copy(v: Vector2, out: Vector2): Vector2 {
-            out.x = v.x;
-            out.y = v.y;
-            return out;
-        }
-
         public static equal(v1: Vector2, v2: Vector2, threshold: number = 0.00001): boolean {
             if (Math.abs(v1.x - v2.x) > threshold) {
                 return false;
@@ -157,5 +133,4 @@ namespace egret3d {
     }
 
     const _helpVector2A = new Vector2();
-
 }

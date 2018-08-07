@@ -1,30 +1,5 @@
 namespace paper {
     /**
-     * 
-     */
-    export class BaseObjectAsset extends Asset {
-        protected _raw: ISerializedData = null as any;
-        /**
-         * @internal
-         */
-        $parse(json: ISerializedData) {
-            this._raw = json;
-        }
-
-        public dispose() {
-            if (this._isBuiltin) {
-                return;
-            }
-
-            this._raw = null as any;
-        }
-
-        public caclByteLength() {
-            return 0;
-        }
-    }
-
-    /**
      * 预制体资源。
      */
     export class Prefab extends BaseObjectAsset {

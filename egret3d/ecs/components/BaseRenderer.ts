@@ -16,6 +16,14 @@ namespace paper {
      * @language zh_CN
      */
     export abstract class BaseRenderer extends BaseComponent {
+        /**
+         * 
+         */
+        public readonly aabb: egret3d.AABB = new egret3d.AABB();
+        /**
+         * @internal
+         */
+        public _aabbDirty: boolean = true;
         @serializedField
         protected _receiveShadows: boolean = false;
         @serializedField
@@ -25,7 +33,7 @@ namespace paper {
         @serializedField
         protected readonly _lightmapScaleOffset: Float32Array = new Float32Array([1.0, 1.0, 0.0, 0.0]);
 
-        // TODO materials
+        protected abstract _updateAABB(): void;
 
         @editor.property(editor.EditType.CHECKBOX)
         public get receiveShadows() {
@@ -63,16 +71,8 @@ namespace paper {
             this._lightmapIndex = value;
         }
 
-        // @editor.property(editor.EditType.VECTOR4) TODO
         public get lightmapScaleOffset() {
             return this._lightmapScaleOffset;
-        }
-
-        public setLightmapScaleOffset(scaleX: number, scaleY: number, offsetX: number, offsetY: number) {
-            this._lightmapScaleOffset[0] = scaleX;
-            this._lightmapScaleOffset[1] = scaleY;
-            this._lightmapScaleOffset[2] = offsetX;
-            this._lightmapScaleOffset[3] = offsetY;
         }
     }
 }

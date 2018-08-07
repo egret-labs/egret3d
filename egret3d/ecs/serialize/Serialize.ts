@@ -39,10 +39,10 @@ namespace paper {
         _serializeds.length = 0;
 
         for (const k in _deserializers) {
-            const deserializer = _deserializers[k];
-            (deserializer.root as GameObject).destroy();
             delete _deserializers[k];
         }
+
+        _defaultGameObject.destroyChildren();
 
         const serializeData = _serializeData;
         _serializeData = null;
@@ -220,7 +220,7 @@ namespace paper {
                 const prefabObjectUUID = source.gameObject.extras!.prefab ? source.gameObject.uuid : source.gameObject.extras!.prefabRootId!;
                 if (!(prefabObjectUUID in _deserializers)) {
                     const prefabGameObject = Prefab.create(
-                        (source.gameObject.extras!.prefab || (source.gameObject.scene.find(prefabObjectUUID)!.extras!.prefab))!.name,
+                        (source.gameObject.extras!.prefab || (source.gameObject.scene.findWithUUID(prefabObjectUUID)!.extras!.prefab))!.name,
                         _defaultGameObject!.scene
                     )!;
                     prefabGameObject.parent = _defaultGameObject;

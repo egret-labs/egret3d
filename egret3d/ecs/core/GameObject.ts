@@ -105,7 +105,6 @@ namespace paper {
             }
 
             this.transform = null as any;
-            this.renderer = null;
 
             this._components.length = 0;
             this._scene!._removeGameObject(this);
@@ -258,6 +257,20 @@ namespace paper {
             }
 
             this._destroy();
+        }
+        /**
+         * 
+         */
+        public destroyChildren() {
+            if (this === Application.sceneManager.globalGameObject) {
+                console.warn("Cannot destroy global game object.");
+                return;
+            }
+
+            let i = this.transform.children.length;
+            while (i--) {
+                this.transform.children[i].gameObject.destroy();
+            }
         }
         /**
          * 添加组件。
