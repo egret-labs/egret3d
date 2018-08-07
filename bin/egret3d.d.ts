@@ -481,22 +481,55 @@ declare namespace paper {
         createInstance(): GameObject;
     }
 }
-declare namespace egret3d {
-    class Color implements paper.ISerializable {
-        static readonly WHITE: Readonly<Color>;
-        static readonly BLACK: Readonly<Color>;
-        r: number;
-        g: number;
-        b: number;
-        a: number;
-        constructor(r?: number, g?: number, b?: number, a?: number);
-        serialize(): number[];
-        deserialize(element: Readonly<[number, number, number, number]>): void;
-        set(r?: number, g?: number, b?: number, a?: number): this;
-        static multiply(c1: Color, c2: Color, out: Color): Color;
-        static scale(c: Color, scaler: number): Color;
-        static copy(c: Color, out: Color): Color;
-        static lerp(c1: Color, c2: Color, value: number, out: Color): Color;
+declare namespace paper {
+    /**
+     * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
+     */
+    class SystemManager {
+        private static _instance;
+        static getInstance(): SystemManager;
+        private constructor();
+        private readonly _systems;
+        private _currentSystem;
+        private _preRegister(systemClass);
+        /**
+         * 注册一个系统到管理器中。
+         */
+        register(systemClass: {
+            new (): BaseSystem;
+        }, after?: {
+            new (): BaseSystem;
+        } | null): void;
+        /**
+         * 注册一个系统到管理器中。
+         */
+        registerBefore(systemClass: {
+            new (): BaseSystem;
+        }, before?: {
+            new (): BaseSystem;
+        } | null): void;
+        /**
+         *
+         */
+        enableSystem(systemClass: {
+            new (): BaseSystem;
+        }): void;
+        /**
+         *
+         */
+        disableSystem(systemClass: {
+            new (): BaseSystem;
+        }): void;
+        /**
+         * 获取一个管理器中指定的系统实例。
+         */
+        getSystem<T extends BaseSystem>(systemClass: {
+            new (): T;
+        }): T;
+        /**
+         *
+         */
+        readonly systems: ReadonlyArray<BaseSystem>;
     }
 }
 declare namespace paper {
@@ -781,6 +814,24 @@ declare namespace egret3d {
         deserialize(element: number[]): void;
     }
 }
+declare namespace egret3d {
+    class Color implements paper.ISerializable {
+        static readonly WHITE: Readonly<Color>;
+        static readonly BLACK: Readonly<Color>;
+        r: number;
+        g: number;
+        b: number;
+        a: number;
+        constructor(r?: number, g?: number, b?: number, a?: number);
+        serialize(): number[];
+        deserialize(element: Readonly<[number, number, number, number]>): void;
+        set(r?: number, g?: number, b?: number, a?: number): this;
+        static multiply(c1: Color, c2: Color, out: Color): Color;
+        static scale(c: Color, scaler: number): Color;
+        static copy(c: Color, out: Color): Color;
+        static lerp(c1: Color, c2: Color, value: number, out: Color): Color;
+    }
+}
 declare namespace paper {
     /**
      * 脚本组件。
@@ -876,57 +927,6 @@ declare namespace paper {
         onCollide(collider: any): void;
     }
 }
-declare namespace paper {
-    /**
-     * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
-     */
-    class SystemManager {
-        private static _instance;
-        static getInstance(): SystemManager;
-        private constructor();
-        private readonly _systems;
-        private _currentSystem;
-        private _preRegister(systemClass);
-        /**
-         * 注册一个系统到管理器中。
-         */
-        register(systemClass: {
-            new (): BaseSystem;
-        }, after?: {
-            new (): BaseSystem;
-        } | null): void;
-        /**
-         * 注册一个系统到管理器中。
-         */
-        registerBefore(systemClass: {
-            new (): BaseSystem;
-        }, before?: {
-            new (): BaseSystem;
-        } | null): void;
-        /**
-         *
-         */
-        enableSystem(systemClass: {
-            new (): BaseSystem;
-        }): void;
-        /**
-         *
-         */
-        disableSystem(systemClass: {
-            new (): BaseSystem;
-        }): void;
-        /**
-         * 获取一个管理器中指定的系统实例。
-         */
-        getSystem<T extends BaseSystem>(systemClass: {
-            new (): T;
-        }): T;
-        /**
-         *
-         */
-        readonly systems: ReadonlyArray<BaseSystem>;
-    }
-}
 declare namespace egret3d {
     class EventDispatcher {
         private _eventMap;
@@ -934,6 +934,41 @@ declare namespace egret3d {
         removeEventListener(type: string, listener: Function, thisObject: any): void;
         dispatchEvent(event: any): void;
         private notifyListener(event);
+    }
+}
+declare namespace egret3d {
+    /**
+     * textrue asset
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 纹理资源。
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    class Texture extends paper.Asset {
+        dispose(): void;
+        /**
+         * @inheritDoc
+         */
+        caclByteLength(): number;
+        private _realName;
+        /**
+         * real image name
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 如果是imgdesc加载来的图片，通过这个可以获取到真实的图片名字。
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        realName: string;
     }
 }
 declare namespace egret3d {
@@ -2235,82 +2270,6 @@ declare namespace paper {
     /**
      *
      */
-    interface IUUID {
-        /**
-         *
-         */
-        readonly uuid: string;
-    }
-    /**
-     *
-     */
-    interface IAssetReference {
-        /**
-         *
-         */
-        readonly asset: number;
-    }
-    /**
-     *
-     */
-    interface IClass {
-        /**
-         *
-         */
-        readonly class: string;
-    }
-    /**
-     * 自定义序列化接口。
-     */
-    interface ISerializable {
-        /**
-         *
-         */
-        serialize(): any | ISerializedObject;
-        /**
-         *
-         */
-        deserialize(element: any): void;
-    }
-    /**
-     * 序列化后的数据接口。
-     */
-    interface ISerializedObject extends IUUID, IClass {
-        /**
-         *
-         */
-        [key: string]: any | IUUID | IAssetReference;
-    }
-    /**
-     * 序列化数据接口
-     */
-    interface ISerializedData {
-        /**
-         *
-         */
-        version?: number;
-        /**
-         *
-         */
-        compatibleVersion?: number;
-        /**
-         * 所有资源。
-         */
-        readonly assets?: string[];
-        /**
-         * 所有实体。（至多含一个场景）
-         */
-        readonly objects?: ISerializedObject[];
-        /**
-         * 所有组件。
-         */
-        readonly components?: ISerializedObject[];
-    }
-}
-declare namespace paper {
-    /**
-     *
-     */
     const enum InterestType {
         /**
          *
@@ -3311,44 +3270,7 @@ declare namespace paper {
      */
     function clone(object: GameObject): GameObject;
 }
-declare namespace egret3d {
-    /**
-     * textrue asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 纹理资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Texture extends paper.Asset {
-        /**
-         * gl texture 实例
-         */
-        glTexture: egret3d.ITexture;
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
-        caclByteLength(): number;
-        private _realName;
-        /**
-         * real image name
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 如果是imgdesc加载来的图片，通过这个可以获取到真实的图片名字。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        realName: string;
-    }
+declare namespace paper {
 }
 declare namespace egret3d {
     interface GLTFEgret extends gltf.GLTF {
@@ -4793,6 +4715,14 @@ declare namespace egret3d {
     }
 }
 declare namespace paper {
+    /**
+     *
+     */
+    class MissingComponent extends BaseComponent {
+        missingObject: any | null;
+        serialize(): any;
+        deserialize(element: any): void;
+    }
 }
 declare namespace egret3d {
     /**
@@ -6611,10 +6541,22 @@ declare namespace paper {
     /**
      *
      */
-    class MissingComponent extends BaseComponent {
-        missingObject: any | null;
-        serialize(): any;
-        deserialize(element: any): void;
+    class Clock extends SingletonComponent {
+        maxFixedSubSteps: number;
+        fixedDeltaTime: number;
+        timeScale: number;
+        private _frameCount;
+        private _beginTime;
+        private _lastTime;
+        private _delayTime;
+        private _unscaledTime;
+        private _unscaledDeltaTime;
+        initialize(): void;
+        readonly frameCount: number;
+        readonly time: number;
+        readonly deltaTime: number;
+        readonly unscaledTime: number;
+        readonly unscaledDeltaTime: number;
     }
 }
 declare namespace egret3d {
@@ -6729,6 +6671,64 @@ declare namespace egret3d {
         PVRTC2_RGB = 4,
         PVRTC2_RGBA = 4,
     }
+    interface ITexture {
+        texture: WebGLTexture;
+        width: number;
+        height: number;
+        dispose(): any;
+        caclByteLength(): number;
+    }
+    interface IRenderTarget extends ITexture {
+        use(): any;
+    }
+    abstract class GLTexture extends egret3d.Texture implements ITexture {
+        protected _width: number;
+        protected _height: number;
+        constructor(name?: string, width?: number, height?: number);
+        dispose(): void;
+        caclByteLength(): number;
+        readonly texture: WebGLTexture;
+        readonly width: number;
+        readonly height: number;
+    }
+    /**
+     *
+     */
+    class GLTexture2D extends GLTexture {
+        static createColorTexture(name: string, r: number, g: number, b: number): GLTexture2D;
+        static createGridTexture(name: string): GLTexture2D;
+        protected _mipmap: boolean;
+        protected _format: TextureFormatEnum;
+        protected _reader: TextureReader;
+        constructor(name?: string, width?: number, height?: number, format?: TextureFormatEnum);
+        uploadImage(img: HTMLImageElement | Uint8Array, mipmap: boolean, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
+        caclByteLength(): number;
+        dispose(): void;
+        getReader(redOnly?: boolean): TextureReader;
+    }
+    abstract class RenderTarget implements IRenderTarget {
+        static useNull(): void;
+        protected _width: number;
+        protected _height: number;
+        protected _fbo: WebGLFramebuffer;
+        protected _renderbuffer: WebGLRenderbuffer;
+        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
+        use(): void;
+        dispose(): void;
+        caclByteLength(): number;
+        readonly texture: WebGLTexture;
+        readonly width: number;
+        readonly height: number;
+    }
+    class GlRenderTarget extends RenderTarget {
+        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
+        use(): void;
+    }
+    class GlRenderTargetCube extends RenderTarget {
+        activeCubeFace: number;
+        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
+        use(): void;
+    }
     class TextureReader {
         readonly gray: boolean;
         readonly width: number;
@@ -6737,71 +6737,12 @@ declare namespace egret3d {
         constructor(texRGBA: WebGLTexture, width: number, height: number, gray?: boolean);
         getPixel(u: number, v: number): any;
     }
-    interface ITexture {
-        texture: WebGLTexture;
-        width: number;
-        height: number;
-        isFrameBuffer(): boolean;
-        dispose(): any;
-        caclByteLength(): number;
-    }
-    interface IRenderTarget extends ITexture {
-        use(): any;
-    }
-    class GlRenderTarget implements IRenderTarget {
-        width: number;
-        height: number;
-        texture: WebGLTexture;
-        private fbo;
-        private renderbuffer;
-        static useNull(): void;
-        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
-        use(): void;
-        dispose(): void;
-        caclByteLength(): number;
-        isFrameBuffer(): boolean;
-    }
-    class GlRenderTargetCube implements IRenderTarget {
-        width: number;
-        height: number;
-        activeCubeFace: number;
-        texture: WebGLTexture;
-        private fbo;
-        private renderbuffer;
-        static useNull(): void;
-        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
-        use(): void;
-        dispose(): void;
-        caclByteLength(): number;
-        isFrameBuffer(): boolean;
-    }
-    /**
-     *
-     */
-    class GlTexture2D implements ITexture {
-        static createColorTexture(r: number, g: number, b: number): GlTexture2D;
-        static createGridTexture(): GlTexture2D;
-        width: number;
-        height: number;
-        mipmap: boolean;
-        texture: WebGLTexture;
-        format: TextureFormatEnum;
-        constructor(format?: TextureFormatEnum);
-        uploadImage(img: HTMLImageElement, mipmap: boolean, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
-        uploadByteArray(mipmap: boolean, linear: boolean, width: number, height: number, data: Uint8Array, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
-        caclByteLength(): number;
-        reader: TextureReader;
-        getReader(redOnly?: boolean): TextureReader;
-        dispose(): void;
-        isFrameBuffer(): boolean;
-    }
     class WriteableTexture2D implements ITexture {
         width: number;
         height: number;
         format: TextureFormatEnum;
         texture: WebGLTexture;
         constructor(format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
-        isFrameBuffer(): boolean;
         dispose(): void;
         caclByteLength(): number;
     }
@@ -6851,28 +6792,6 @@ declare namespace paper {
     /**
      *
      */
-    class Clock extends SingletonComponent {
-        maxFixedSubSteps: number;
-        fixedDeltaTime: number;
-        timeScale: number;
-        private _frameCount;
-        private _beginTime;
-        private _lastTime;
-        private _delayTime;
-        private _unscaledTime;
-        private _unscaledDeltaTime;
-        initialize(): void;
-        readonly frameCount: number;
-        readonly time: number;
-        readonly deltaTime: number;
-        readonly unscaledTime: number;
-        readonly unscaledDeltaTime: number;
-    }
-}
-declare namespace paper {
-    /**
-     *
-     */
     class ContactColliders extends SingletonComponent {
         /**
          *
@@ -6887,6 +6806,16 @@ declare namespace paper {
          */
         readonly end: any[];
     }
+}
+declare namespace paper {
+    /**
+     * 反序列化。
+     */
+    function deserialize<T extends (Scene | GameObject | BaseComponent)>(data: ISerializedData, isKeepUUID?: boolean): T | null;
+    /**
+     *
+     */
+    function getDeserializedAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent;
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
@@ -7130,13 +7059,79 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
-     * 反序列化。
+     *
      */
-    function deserialize<T extends (Scene | GameObject | BaseComponent)>(data: ISerializedData, isKeepUUID?: boolean): T | null;
+    interface IUUID {
+        /**
+         *
+         */
+        readonly uuid: string;
+    }
     /**
      *
      */
-    function getDeserializedAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent;
+    interface IAssetReference {
+        /**
+         *
+         */
+        readonly asset: number;
+    }
+    /**
+     *
+     */
+    interface IClass {
+        /**
+         *
+         */
+        readonly class: string;
+    }
+    /**
+     * 自定义序列化接口。
+     */
+    interface ISerializable {
+        /**
+         *
+         */
+        serialize(): any | ISerializedObject;
+        /**
+         *
+         */
+        deserialize(element: any): void;
+    }
+    /**
+     * 序列化后的数据接口。
+     */
+    interface ISerializedObject extends IUUID, IClass {
+        /**
+         *
+         */
+        [key: string]: any | IUUID | IAssetReference;
+    }
+    /**
+     * 序列化数据接口
+     */
+    interface ISerializedData {
+        /**
+         *
+         */
+        version?: number;
+        /**
+         *
+         */
+        compatibleVersion?: number;
+        /**
+         * 所有资源。
+         */
+        readonly assets?: string[];
+        /**
+         * 所有实体。（至多含一个场景）
+         */
+        readonly objects?: ISerializedObject[];
+        /**
+         * 所有组件。
+         */
+        readonly components?: ISerializedObject[];
+    }
 }
 declare namespace paper.editor {
     /**

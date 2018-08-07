@@ -12,27 +12,16 @@ namespace egret3d {
      * @language zh_CN
      */
     export class Texture extends paper.Asset {
-
-        /**
-         * gl texture 实例
-         */
-        glTexture: egret3d.ITexture;
-
         public dispose() {
             if (this._isBuiltin) {
                 return;
             }
-            this.glTexture.dispose();
         }
 
         /**
          * @inheritDoc
          */
         public caclByteLength(): number {
-            if (this.glTexture) {
-                return this.glTexture.caclByteLength();
-            }
-
             return 0;
         }
 

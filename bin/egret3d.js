@@ -1742,74 +1742,158 @@ var paper;
     paper.Prefab = Prefab;
     __reflect(Prefab.prototype, "paper.Prefab");
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    var Color = (function () {
-        function Color(r, g, b, a) {
-            if (r === void 0) { r = 1.0; }
-            if (g === void 0) { g = 1.0; }
-            if (b === void 0) { b = 1.0; }
-            if (a === void 0) { a = 1.0; }
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;
+var paper;
+(function (paper) {
+    /**
+     * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
+     */
+    var SystemManager = (function () {
+        function SystemManager() {
+            this._systems = [];
+            this._currentSystem = null;
         }
-        Color.prototype.serialize = function () {
-            return [this.r, this.g, this.b, this.a];
+        SystemManager.getInstance = function () {
+            if (!this._instance) {
+                this._instance = new SystemManager();
+            }
+            return this._instance;
         };
-        Color.prototype.deserialize = function (element) {
-            this.r = element[0];
-            this.g = element[1];
-            this.b = element[2];
-            this.a = element[3];
+        SystemManager.prototype._preRegister = function (systemClass) {
+            if (this.getSystem(systemClass)) {
+                console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
+                return true;
+            }
+            return false;
         };
-        Color.prototype.set = function (r, g, b, a) {
-            if (r === void 0) { r = 1; }
-            if (g === void 0) { g = 1; }
-            if (b === void 0) { b = 1; }
-            if (a === void 0) { a = 1; }
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;
-            return this;
+        /**
+         * 注册一个系统到管理器中。
+         */
+        SystemManager.prototype.register = function (systemClass, after) {
+            if (after === void 0) { after = null; }
+            if (this._preRegister(systemClass)) {
+                return;
+            }
+            var index = -1;
+            var system = paper.BaseSystem.create(systemClass);
+            if (after) {
+                for (var i = 0, l = this._systems.length; i < l; ++i) {
+                    var eachSystem = this._systems[i];
+                    if (eachSystem && eachSystem.constructor === after) {
+                        index = i + 1;
+                        this._systems.splice(index, 0, system);
+                        break;
+                    }
+                }
+            }
+            if (index < 0) {
+                this._systems.push(system);
+            }
+            system.initialize();
         };
-        Color.multiply = function (c1, c2, out) {
-            out.r = c1.r * c2.r;
-            out.g = c1.g * c2.g;
-            out.b = c1.b * c2.b;
-            out.a = c1.a * c2.a;
-            return out;
+        /**
+         * 注册一个系统到管理器中。
+         */
+        SystemManager.prototype.registerBefore = function (systemClass, before) {
+            if (before === void 0) { before = null; }
+            if (this._preRegister(systemClass)) {
+                return;
+            }
+            var index = -1;
+            var system = paper.BaseSystem.create(systemClass);
+            if (before) {
+                for (var i = 0, l = this._systems.length; i < l; ++i) {
+                    var eachSystem = this._systems[i];
+                    if (eachSystem && eachSystem.constructor === before) {
+                        index = i;
+                        this._systems.splice(index, 0, system);
+                        break;
+                    }
+                }
+            }
+            if (index < 0) {
+                this._systems.unshift(system);
+            }
+            system.initialize();
         };
-        Color.scale = function (c, scaler) {
-            c.r = c.r * scaler;
-            c.g = c.g * scaler;
-            c.b = c.b * scaler;
-            c.a = c.a * scaler;
-            return c;
+        /**
+         *
+         */
+        SystemManager.prototype.enableSystem = function (systemClass) {
+            var system = this.getSystem(systemClass);
+            if (system) {
+                system.enabled = true;
+            }
+            else {
+                console.warn("Enable system error.", egret.getQualifiedClassName(systemClass));
+            }
         };
-        Color.copy = function (c, out) {
-            out.r = c.r;
-            out.g = c.g;
-            out.b = c.b;
-            out.a = c.a;
-            return out;
+        /**
+         *
+         */
+        SystemManager.prototype.disableSystem = function (systemClass) {
+            var system = this.getSystem(systemClass);
+            if (system) {
+                system.enabled = false;
+            }
+            else {
+                console.warn("Disable system error.", egret.getQualifiedClassName(systemClass));
+            }
         };
-        Color.lerp = function (c1, c2, value, out) {
-            out.a = value * (c2.a - c1.a) + c1.a;
-            out.r = value * (c2.r - c1.r) + c1.r;
-            out.g = value * (c2.g - c1.g) + c1.g;
-            out.b = value * (c2.b - c1.b) + c1.b;
-            return out;
+        /**
+         * 获取一个管理器中指定的系统实例。
+         */
+        SystemManager.prototype.getSystem = function (systemClass) {
+            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
+                var system = _a[_i];
+                if (system && system.constructor === systemClass) {
+                    return system;
+                }
+            }
+            return null;
         };
-        Color.WHITE = new Color(1.0, 1.0, 1.0, 1.0);
-        Color.BLACK = new Color(0.0, 0.0, 0.0, 1.0);
-        return Color;
+        /**
+         * @internal
+         */
+        SystemManager.prototype.update = function () {
+            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
+                var system = _a[_i];
+                if (system && system.enabled && !system._started) {
+                    this._currentSystem = system;
+                    system._started = true;
+                    system.onStart && system.onStart();
+                }
+            }
+            for (var _b = 0, _c = this._systems; _b < _c.length; _b++) {
+                var system = _c[_b];
+                if (system) {
+                    this._currentSystem = system;
+                    system.update();
+                }
+            }
+            for (var _d = 0, _e = this._systems; _d < _e.length; _d++) {
+                var system = _e[_d];
+                if (system) {
+                    this._currentSystem = system;
+                    system.lateUpdate();
+                }
+            }
+        };
+        Object.defineProperty(SystemManager.prototype, "systems", {
+            /**
+             *
+             */
+            get: function () {
+                return this._systems;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        SystemManager._instance = null;
+        return SystemManager;
     }());
-    egret3d.Color = Color;
-    __reflect(Color.prototype, "egret3d.Color", ["paper.ISerializable"]);
-})(egret3d || (egret3d = {}));
+    paper.SystemManager = SystemManager;
+    __reflect(SystemManager.prototype, "paper.SystemManager");
+})(paper || (paper = {}));
 var paper;
 (function (paper) {
     /**
@@ -2835,6 +2919,74 @@ var egret3d;
     egret3d.Rectangle = Rectangle;
     __reflect(Rectangle.prototype, "egret3d.Rectangle", ["egret3d.IRectangle", "paper.ISerializable"]);
 })(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var Color = (function () {
+        function Color(r, g, b, a) {
+            if (r === void 0) { r = 1.0; }
+            if (g === void 0) { g = 1.0; }
+            if (b === void 0) { b = 1.0; }
+            if (a === void 0) { a = 1.0; }
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
+        }
+        Color.prototype.serialize = function () {
+            return [this.r, this.g, this.b, this.a];
+        };
+        Color.prototype.deserialize = function (element) {
+            this.r = element[0];
+            this.g = element[1];
+            this.b = element[2];
+            this.a = element[3];
+        };
+        Color.prototype.set = function (r, g, b, a) {
+            if (r === void 0) { r = 1; }
+            if (g === void 0) { g = 1; }
+            if (b === void 0) { b = 1; }
+            if (a === void 0) { a = 1; }
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
+            return this;
+        };
+        Color.multiply = function (c1, c2, out) {
+            out.r = c1.r * c2.r;
+            out.g = c1.g * c2.g;
+            out.b = c1.b * c2.b;
+            out.a = c1.a * c2.a;
+            return out;
+        };
+        Color.scale = function (c, scaler) {
+            c.r = c.r * scaler;
+            c.g = c.g * scaler;
+            c.b = c.b * scaler;
+            c.a = c.a * scaler;
+            return c;
+        };
+        Color.copy = function (c, out) {
+            out.r = c.r;
+            out.g = c.g;
+            out.b = c.b;
+            out.a = c.a;
+            return out;
+        };
+        Color.lerp = function (c1, c2, value, out) {
+            out.a = value * (c2.a - c1.a) + c1.a;
+            out.r = value * (c2.r - c1.r) + c1.r;
+            out.g = value * (c2.g - c1.g) + c1.g;
+            out.b = value * (c2.b - c1.b) + c1.b;
+            return out;
+        };
+        Color.WHITE = new Color(1.0, 1.0, 1.0, 1.0);
+        Color.BLACK = new Color(0.0, 0.0, 0.0, 1.0);
+        return Color;
+    }());
+    egret3d.Color = Color;
+    __reflect(Color.prototype, "egret3d.Color", ["paper.ISerializable"]);
+})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     /**
@@ -2885,158 +3037,6 @@ var paper;
     paper.Behaviour = Behaviour;
     __reflect(Behaviour.prototype, "paper.Behaviour");
 })(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
-     */
-    var SystemManager = (function () {
-        function SystemManager() {
-            this._systems = [];
-            this._currentSystem = null;
-        }
-        SystemManager.getInstance = function () {
-            if (!this._instance) {
-                this._instance = new SystemManager();
-            }
-            return this._instance;
-        };
-        SystemManager.prototype._preRegister = function (systemClass) {
-            if (this.getSystem(systemClass)) {
-                console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
-                return true;
-            }
-            return false;
-        };
-        /**
-         * 注册一个系统到管理器中。
-         */
-        SystemManager.prototype.register = function (systemClass, after) {
-            if (after === void 0) { after = null; }
-            if (this._preRegister(systemClass)) {
-                return;
-            }
-            var index = -1;
-            var system = paper.BaseSystem.create(systemClass);
-            if (after) {
-                for (var i = 0, l = this._systems.length; i < l; ++i) {
-                    var eachSystem = this._systems[i];
-                    if (eachSystem && eachSystem.constructor === after) {
-                        index = i + 1;
-                        this._systems.splice(index, 0, system);
-                        break;
-                    }
-                }
-            }
-            if (index < 0) {
-                this._systems.push(system);
-            }
-            system.initialize();
-        };
-        /**
-         * 注册一个系统到管理器中。
-         */
-        SystemManager.prototype.registerBefore = function (systemClass, before) {
-            if (before === void 0) { before = null; }
-            if (this._preRegister(systemClass)) {
-                return;
-            }
-            var index = -1;
-            var system = paper.BaseSystem.create(systemClass);
-            if (before) {
-                for (var i = 0, l = this._systems.length; i < l; ++i) {
-                    var eachSystem = this._systems[i];
-                    if (eachSystem && eachSystem.constructor === before) {
-                        index = i;
-                        this._systems.splice(index, 0, system);
-                        break;
-                    }
-                }
-            }
-            if (index < 0) {
-                this._systems.unshift(system);
-            }
-            system.initialize();
-        };
-        /**
-         *
-         */
-        SystemManager.prototype.enableSystem = function (systemClass) {
-            var system = this.getSystem(systemClass);
-            if (system) {
-                system.enabled = true;
-            }
-            else {
-                console.warn("Enable system error.", egret.getQualifiedClassName(systemClass));
-            }
-        };
-        /**
-         *
-         */
-        SystemManager.prototype.disableSystem = function (systemClass) {
-            var system = this.getSystem(systemClass);
-            if (system) {
-                system.enabled = false;
-            }
-            else {
-                console.warn("Disable system error.", egret.getQualifiedClassName(systemClass));
-            }
-        };
-        /**
-         * 获取一个管理器中指定的系统实例。
-         */
-        SystemManager.prototype.getSystem = function (systemClass) {
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system && system.constructor === systemClass) {
-                    return system;
-                }
-            }
-            return null;
-        };
-        /**
-         * @internal
-         */
-        SystemManager.prototype.update = function () {
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system && system.enabled && !system._started) {
-                    this._currentSystem = system;
-                    system._started = true;
-                    system.onStart && system.onStart();
-                }
-            }
-            for (var _b = 0, _c = this._systems; _b < _c.length; _b++) {
-                var system = _c[_b];
-                if (system) {
-                    this._currentSystem = system;
-                    system.update();
-                }
-            }
-            for (var _d = 0, _e = this._systems; _d < _e.length; _d++) {
-                var system = _e[_d];
-                if (system) {
-                    this._currentSystem = system;
-                    system.lateUpdate();
-                }
-            }
-        };
-        Object.defineProperty(SystemManager.prototype, "systems", {
-            /**
-             *
-             */
-            get: function () {
-                return this._systems;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        SystemManager._instance = null;
-        return SystemManager;
-    }());
-    paper.SystemManager = SystemManager;
-    __reflect(SystemManager.prototype, "paper.SystemManager");
-})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     var EventDispatcher = (function () {
@@ -3081,6 +3081,65 @@ var egret3d;
     }());
     egret3d.EventDispatcher = EventDispatcher;
     __reflect(EventDispatcher.prototype, "egret3d.EventDispatcher");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * textrue asset
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 纹理资源。
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    var Texture = (function (_super) {
+        __extends(Texture, _super);
+        function Texture() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._realName = "";
+            return _this;
+        }
+        Texture.prototype.dispose = function () {
+            if (this._isBuiltin) {
+                return;
+            }
+        };
+        /**
+         * @inheritDoc
+         */
+        Texture.prototype.caclByteLength = function () {
+            return 0;
+        };
+        Object.defineProperty(Texture.prototype, "realName", {
+            /**
+             * real image name
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
+             */
+            /**
+             * 如果是imgdesc加载来的图片，通过这个可以获取到真实的图片名字。
+             * @version paper 1.0
+             * @platform Web
+             * @language zh_CN
+             */
+            get: function () {
+                return this._realName;
+            },
+            set: function (name) {
+                this._realName = name;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Texture;
+    }(paper.Asset));
+    egret3d.Texture = Texture;
+    __reflect(Texture.prototype, "egret3d.Texture");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -6359,69 +6418,47 @@ var paper;
     }
     paper.clone = clone;
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
+var paper;
+(function (paper) {
     /**
-     * textrue asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * @internal
      */
-    /**
-     * 纹理资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var Texture = (function (_super) {
-        __extends(Texture, _super);
-        function Texture() {
+    var GroupComponent = (function (_super) {
+        __extends(GroupComponent, _super);
+        function GroupComponent() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._realName = "";
+            _this.componentIndex = -1;
+            _this.componentClass = null;
+            _this._components = [];
             return _this;
         }
-        Texture.prototype.dispose = function () {
-            if (this._isBuiltin) {
-                return;
-            }
-            this.glTexture.dispose();
+        /**
+         * @internal
+         */
+        GroupComponent.prototype._addComponent = function (component) {
+            this._components.push(component);
         };
         /**
-         * @inheritDoc
+         * @internal
          */
-        Texture.prototype.caclByteLength = function () {
-            if (this.glTexture) {
-                return this.glTexture.caclByteLength();
+        GroupComponent.prototype._removeComponent = function (component) {
+            var index = this._components.indexOf(component);
+            if (index >= 0) {
+                this._components.splice(1, 0);
             }
-            return 0;
         };
-        Object.defineProperty(Texture.prototype, "realName", {
-            /**
-             * real image name
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 如果是imgdesc加载来的图片，通过这个可以获取到真实的图片名字。
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
+        Object.defineProperty(GroupComponent.prototype, "components", {
             get: function () {
-                return this._realName;
-            },
-            set: function (name) {
-                this._realName = name;
+                return this._components;
             },
             enumerable: true,
             configurable: true
         });
-        return Texture;
-    }(paper.Asset));
-    egret3d.Texture = Texture;
-    __reflect(Texture.prototype, "egret3d.Texture");
-})(egret3d || (egret3d = {}));
+        return GroupComponent;
+    }(paper.BaseComponent));
+    paper.GroupComponent = GroupComponent;
+    __reflect(GroupComponent.prototype, "paper.GroupComponent");
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -10324,43 +10361,27 @@ var egret3d;
 var paper;
 (function (paper) {
     /**
-     * @internal
+     *
      */
-    var GroupComponent = (function (_super) {
-        __extends(GroupComponent, _super);
-        function GroupComponent() {
+    var MissingComponent = (function (_super) {
+        __extends(MissingComponent, _super);
+        function MissingComponent() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.componentIndex = -1;
-            _this.componentClass = null;
-            _this._components = [];
+            _this.missingObject = null;
             return _this;
         }
-        /**
-         * @internal
-         */
-        GroupComponent.prototype._addComponent = function (component) {
-            this._components.push(component);
+        MissingComponent.prototype.serialize = function () {
+            var rarget = _super.prototype.serialize.call(this);
+            rarget.missingObject = this.missingObject;
+            return rarget;
         };
-        /**
-         * @internal
-         */
-        GroupComponent.prototype._removeComponent = function (component) {
-            var index = this._components.indexOf(component);
-            if (index >= 0) {
-                this._components.splice(1, 0);
-            }
+        MissingComponent.prototype.deserialize = function (element) {
+            this.missingObject = element.missingObject || null;
         };
-        Object.defineProperty(GroupComponent.prototype, "components", {
-            get: function () {
-                return this._components;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return GroupComponent;
+        return MissingComponent;
     }(paper.BaseComponent));
-    paper.GroupComponent = GroupComponent;
-    __reflect(GroupComponent.prototype, "paper.GroupComponent");
+    paper.MissingComponent = MissingComponent;
+    __reflect(MissingComponent.prototype, "paper.MissingComponent");
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -16159,14 +16180,17 @@ var egret3d;
         function DefaultTextures() {
         }
         DefaultTextures.init = function () {
-            var t1 = new egret3d.Texture("buildin/white.image.json");
-            t1.glTexture = egret3d.GlTexture2D.createColorTexture(255, 255, 255);
+            // const t1 = new Texture("buildin/white.image.json");
+            // t1.glTexture = GlTexture2D.createColorTexture("buildin/white.image.json", 255, 255, 255);
+            var t1 = egret3d.GLTexture2D.createColorTexture("buildin/white.image.json", 255, 255, 255);
             this.WHITE = t1;
-            var t2 = new egret3d.Texture("buildin/gray.image.json");
-            t2.glTexture = egret3d.GlTexture2D.createColorTexture(128, 128, 128);
+            // const t2 = new Texture("buildin/gray.image.json");
+            // t2.glTexture = GlTexture2D.createColorTexture("buildin/gray.image.json",128, 128, 128);
+            var t2 = egret3d.GLTexture2D.createColorTexture("buildin/gray.image.json", 128, 128, 128);
             this.GRAY = t2;
-            var t3 = new egret3d.Texture("buildin/grid.image.json");
-            t3.glTexture = egret3d.GlTexture2D.createGridTexture();
+            // const t3 = new Texture("buildin/grid.image.json");
+            // t3.glTexture = egret3d.GlTexture2D.createGridTexture("buildin/grid.image.json");
+            var t3 = egret3d.GLTexture2D.createGridTexture("buildin/grid.image.json");
             this.GRID = t3;
             paper.Asset.register(t1);
             paper.Asset.register(t2);
@@ -16203,7 +16227,7 @@ var RES;
         processor.TextureDescProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var data, _name, _filterMode, _format, _mipmap, _wrap, _textureFormat, _linear, _repeat, imgResource, loader, image, texture, t2d;
+                    var data, _name, _filterMode, _format, _mipmap, _wrap, _textureFormat, _linear, _repeat, imgResource, loader, image, texture;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, host.load(resource, "json")];
@@ -16235,11 +16259,9 @@ var RES;
                                 return [4 /*yield*/, promisify(loader, imgResource)];
                             case 2:
                                 image = _a.sent();
-                                texture = new egret3d.Texture(resource.name);
+                                texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
                                 texture.realName = _name;
-                                t2d = new egret3d.GlTexture2D(_textureFormat);
-                                t2d.uploadImage(image.source, _mipmap, _linear, true, _repeat);
-                                texture.glTexture = t2d;
+                                texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
                                 paper.Asset.register(texture);
                                 return [2 /*return*/, texture];
                         }
@@ -16260,7 +16282,7 @@ var RES;
         processor.TextureProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var loader, image, texture, textureFormat, t2d;
+                    var loader, image, texture;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
@@ -16269,11 +16291,8 @@ var RES;
                                 return [4 /*yield*/, promisify(loader, resource)];
                             case 1:
                                 image = _a.sent();
-                                texture = new egret3d.Texture(resource.name);
-                                textureFormat = 1 /* RGBA */;
-                                t2d = new egret3d.GlTexture2D(textureFormat);
-                                t2d.uploadImage(image.source, true, true, true, true);
-                                texture.glTexture = t2d;
+                                texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, 1 /* RGBA */);
+                                texture.uploadImage(image.source, true, true, true, true);
                                 paper.Asset.register(texture);
                                 return [2 /*return*/, texture];
                         }
@@ -18998,25 +19017,89 @@ var paper;
     /**
      *
      */
-    var MissingComponent = (function (_super) {
-        __extends(MissingComponent, _super);
-        function MissingComponent() {
+    var Clock = (function (_super) {
+        __extends(Clock, _super);
+        function Clock() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.missingObject = null;
+            _this.maxFixedSubSteps = 3;
+            _this.fixedDeltaTime = 1.0 / 50.0; // TODO same as fps.
+            _this.timeScale = 1.0;
+            _this._frameCount = 0;
+            _this._beginTime = 0.0;
+            _this._lastTime = 0.0;
+            _this._delayTime = 0.0;
+            _this._unscaledTime = 0.0;
+            _this._unscaledDeltaTime = 0.0;
+            /**
+             * @internal
+             */
+            _this._fixedTime = 0.0;
             return _this;
         }
-        MissingComponent.prototype.serialize = function () {
-            var rarget = _super.prototype.serialize.call(this);
-            rarget.missingObject = this.missingObject;
-            return rarget;
+        Clock.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
+            this._lastTime = this._beginTime = Date.now() * 0.001;
         };
-        MissingComponent.prototype.deserialize = function (element) {
-            this.missingObject = element.missingObject || null;
+        /**
+         * @internal
+         */
+        Clock.prototype.update = function (time) {
+            if (this._unscaledTime !== 0.0) {
+                this._lastTime = this._unscaledTime;
+                if (this._fixedTime < this.fixedDeltaTime) {
+                }
+                else if (this._fixedTime < this.fixedDeltaTime * this.maxFixedSubSteps) {
+                    this._fixedTime %= this.fixedDeltaTime;
+                }
+                else {
+                    this._fixedTime -= this.fixedDeltaTime * this.maxFixedSubSteps;
+                }
+            }
+            var now = time || Date.now() * 0.001;
+            this._frameCount += 1;
+            this._unscaledTime = now - this._beginTime;
+            this._unscaledDeltaTime = this._unscaledTime - this._lastTime;
+            this._fixedTime += this._unscaledDeltaTime;
         };
-        return MissingComponent;
-    }(paper.BaseComponent));
-    paper.MissingComponent = MissingComponent;
-    __reflect(MissingComponent.prototype, "paper.MissingComponent");
+        Object.defineProperty(Clock.prototype, "frameCount", {
+            get: function () {
+                return this._frameCount;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Clock.prototype, "time", {
+            get: function () {
+                return this._unscaledTime * this.timeScale;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Clock.prototype, "deltaTime", {
+            get: function () {
+                return this._unscaledDeltaTime * this.timeScale;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Clock.prototype, "unscaledTime", {
+            get: function () {
+                return this._unscaledTime;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Clock.prototype, "unscaledDeltaTime", {
+            get: function () {
+                return this._unscaledDeltaTime;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Clock;
+    }(paper.SingletonComponent));
+    paper.Clock = Clock;
+    __reflect(Clock.prototype, "paper.Clock");
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -19159,7 +19242,7 @@ var egret3d;
                             var unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location_3, unit);
                             webgl.activeTexture(webgl.TEXTURE0 + unit);
-                            webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap.glTexture.texture);
+                            webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap._texture);
                         }
                         else {
                             console.error("Error texture unit");
@@ -19265,7 +19348,7 @@ var egret3d;
                             var unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location_4, unit);
                             webgl.activeTexture(webgl.TEXTURE0 + unit);
-                            webgl.bindTexture(webgl.TEXTURE_2D, value.glTexture.texture);
+                            webgl.bindTexture(webgl.TEXTURE_2D, value._texture);
                         }
                         else {
                             console.error("Error texture unit");
@@ -20083,6 +20166,310 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    var GLTexture = (function (_super) {
+        __extends(GLTexture, _super);
+        function GLTexture(name, width, height) {
+            if (name === void 0) { name = ""; }
+            if (width === void 0) { width = 0; }
+            if (height === void 0) { height = 0; }
+            var _this = _super.call(this, name) || this;
+            _this._width = width;
+            _this._height = height;
+            _this._texture = egret3d.WebGLCapabilities.webgl.createTexture();
+            return _this;
+        }
+        GLTexture.prototype.dispose = function () { };
+        GLTexture.prototype.caclByteLength = function () { return 0; };
+        ;
+        Object.defineProperty(GLTexture.prototype, "texture", {
+            get: function () {
+                return this._texture;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLTexture.prototype, "width", {
+            get: function () {
+                return this._width;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GLTexture.prototype, "height", {
+            get: function () {
+                return this._height;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return GLTexture;
+    }(egret3d.Texture));
+    egret3d.GLTexture = GLTexture;
+    __reflect(GLTexture.prototype, "egret3d.GLTexture", ["egret3d.ITexture"]);
+    /**
+     *
+     */
+    var GLTexture2D = (function (_super) {
+        __extends(GLTexture2D, _super);
+        function GLTexture2D(name, width, height, format) {
+            if (name === void 0) { name = ""; }
+            if (width === void 0) { width = 0; }
+            if (height === void 0) { height = 0; }
+            if (format === void 0) { format = 1 /* RGBA */; }
+            var _this = _super.call(this, name, width, height) || this;
+            //
+            _this._mipmap = false;
+            //
+            _this._format = format;
+            return _this;
+        }
+        GLTexture2D.createColorTexture = function (name, r, g, b) {
+            var mipmap = false;
+            var linear = true;
+            var width = 1;
+            var height = 1;
+            var data = new Uint8Array([r, g, b, 255]);
+            var texture = new GLTexture2D(name, width, height, 1 /* RGBA */);
+            texture.uploadImage(data, mipmap, linear, true, false);
+            return texture;
+        };
+        GLTexture2D.createGridTexture = function (name) {
+            var mipmap = false;
+            var linear = true;
+            var width = 256;
+            var height = 256;
+            var data = new Uint8Array(width * width * 4);
+            for (var y = 0; y < height; y++) {
+                for (var x = 0; x < width; x++) {
+                    var seek = (y * width + x) * 4;
+                    var bool = ((x - width * 0.5) * (y - height * 0.5)) > 0;
+                    data[seek] = data[seek + 1] = data[seek + 2] = bool ? 0 : 255;
+                    data[seek + 3] = 255;
+                }
+            }
+            var texture = new GLTexture2D(name, width, height, 1 /* RGBA */);
+            texture.uploadImage(data, mipmap, linear, true, false);
+            return texture;
+        };
+        GLTexture2D.prototype.uploadImage = function (img, mipmap, linear, premultiply, repeat, mirroredU, mirroredV) {
+            if (premultiply === void 0) { premultiply = true; }
+            if (repeat === void 0) { repeat = false; }
+            if (mirroredU === void 0) { mirroredU = false; }
+            if (mirroredV === void 0) { mirroredV = false; }
+            this._mipmap = mipmap;
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
+            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
+            webgl.bindTexture(webgl.TEXTURE_2D, this._texture);
+            var formatGL = webgl.RGBA;
+            if (this._format == 2 /* RGB */) {
+                formatGL = webgl.RGB;
+            }
+            else if (this._format == 3 /* Gray */) {
+                formatGL = webgl.LUMINANCE;
+            }
+            //
+            if (img instanceof HTMLImageElement) {
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, formatGL, webgl.UNSIGNED_BYTE, img);
+            }
+            else {
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this._width, this._height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
+            }
+            if (mipmap) {
+                webgl.generateMipmap(webgl.TEXTURE_2D);
+                if (linear) {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR_MIPMAP_LINEAR);
+                }
+                else {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST_MIPMAP_NEAREST);
+                }
+            }
+            else {
+                if (linear) {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+                }
+                else {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
+                }
+            }
+            var wrap_s_param = webgl.CLAMP_TO_EDGE;
+            var wrap_t_param = webgl.CLAMP_TO_EDGE;
+            if (repeat) {
+                wrap_s_param = mirroredU ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
+                wrap_t_param = mirroredV ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
+            }
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, wrap_s_param);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrap_t_param);
+        };
+        GLTexture2D.prototype.caclByteLength = function () {
+            var pixellen = 1;
+            if (this._format == 1 /* RGBA */) {
+                pixellen = 4;
+            }
+            else if (this._format == 2 /* RGB */) {
+                pixellen = 3;
+            }
+            var len = this.width * this.height * pixellen;
+            if (this._mipmap) {
+                len = len * (1 - Math.pow(0.25, 10)) / 0.75;
+            }
+            return len;
+        };
+        GLTexture2D.prototype.dispose = function () {
+            if (this._isBuiltin) {
+                return;
+            }
+            if (this._texture != null) {
+                egret3d.WebGLCapabilities.webgl.deleteTexture(this._texture);
+                this._texture = null;
+            }
+        };
+        GLTexture2D.prototype.getReader = function (redOnly) {
+            if (redOnly === void 0) { redOnly = false; }
+            if (this._reader != null) {
+                if (this._reader.gray != redOnly) {
+                    throw new Error("get param diff with this.reader");
+                }
+                return this._reader;
+            }
+            if (this._format != 1 /* RGBA */) {
+                throw new Error("only rgba texture can read");
+            }
+            if (this._texture == null) {
+                return null;
+            }
+            if (this._reader == null)
+                this._reader = new TextureReader(this._texture, this._width, this._height, redOnly);
+            return this._reader;
+        };
+        return GLTexture2D;
+    }(GLTexture));
+    egret3d.GLTexture2D = GLTexture2D;
+    __reflect(GLTexture2D.prototype, "egret3d.GLTexture2D");
+    var RenderTarget = (function () {
+        function RenderTarget(width, height, depth, stencil) {
+            if (depth === void 0) { depth = false; }
+            if (stencil === void 0) { stencil = false; }
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            this._width = width;
+            this._height = height;
+            this._texture = webgl.createTexture();
+            this._fbo["width"] = width;
+            this._fbo["height"] = height;
+            this._fbo = webgl.createFramebuffer();
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
+            if (depth || stencil) {
+                this._renderbuffer = webgl.createRenderbuffer();
+                webgl.bindRenderbuffer(webgl.RENDERBUFFER, this._renderbuffer);
+                if (depth && stencil) {
+                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_STENCIL, width, height);
+                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
+                }
+                else if (depth) {
+                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
+                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
+                }
+                else {
+                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.STENCIL_INDEX8, width, height);
+                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
+                }
+                webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
+            }
+        }
+        RenderTarget.useNull = function () {
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+        };
+        RenderTarget.prototype.use = function () { };
+        RenderTarget.prototype.dispose = function () {
+            if (this._texture != null) {
+                var webgl = egret3d.WebGLCapabilities.webgl;
+                webgl.deleteFramebuffer(this._renderbuffer);
+                webgl.deleteTexture(this._texture);
+                this._renderbuffer = null;
+                this._texture = null;
+            }
+        };
+        RenderTarget.prototype.caclByteLength = function () {
+            return this.width * this.height * 4;
+        };
+        Object.defineProperty(RenderTarget.prototype, "texture", {
+            get: function () {
+                return this._texture;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderTarget.prototype, "width", {
+            get: function () {
+                return this._width;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderTarget.prototype, "height", {
+            get: function () {
+                return this._height;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return RenderTarget;
+    }());
+    egret3d.RenderTarget = RenderTarget;
+    __reflect(RenderTarget.prototype, "egret3d.RenderTarget", ["egret3d.IRenderTarget", "egret3d.ITexture"]);
+    var GlRenderTarget = (function (_super) {
+        __extends(GlRenderTarget, _super);
+        function GlRenderTarget(width, height, depth, stencil) {
+            if (depth === void 0) { depth = false; }
+            if (stencil === void 0) { stencil = false; }
+            var _this = _super.call(this, width, height, depth, stencil) || this;
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindTexture(webgl.TEXTURE_2D, _this.texture);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
+            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, _this.texture, 0);
+            return _this;
+        }
+        GlRenderTarget.prototype.use = function () {
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
+        };
+        return GlRenderTarget;
+    }(RenderTarget));
+    egret3d.GlRenderTarget = GlRenderTarget;
+    __reflect(GlRenderTarget.prototype, "egret3d.GlRenderTarget");
+    var GlRenderTargetCube = (function (_super) {
+        __extends(GlRenderTargetCube, _super);
+        function GlRenderTargetCube(width, height, depth, stencil) {
+            if (depth === void 0) { depth = false; }
+            if (stencil === void 0) { stencil = false; }
+            var _this = _super.call(this, width, height, depth, stencil) || this;
+            _this.activeCubeFace = 0; // PX 0, NX 1, PY 2, NY 3, PZ 4, NZ 5
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindTexture(webgl.TEXTURE_CUBE_MAP, _this.texture);
+            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+            for (var i = 0; i < 6; i++) {
+                webgl.texImage2D(webgl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
+            }
+            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + _this.activeCubeFace, _this.texture, 0);
+            return _this;
+        }
+        GlRenderTargetCube.prototype.use = function () {
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
+            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
+        };
+        return GlRenderTargetCube;
+    }(RenderTarget));
+    egret3d.GlRenderTargetCube = GlRenderTargetCube;
+    __reflect(GlRenderTargetCube.prototype, "egret3d.GlRenderTargetCube");
     var TextureReader = (function () {
         function TextureReader(texRGBA, width, height, gray) {
             if (gray === void 0) { gray = true; }
@@ -20127,321 +20514,6 @@ var egret3d;
     }());
     egret3d.TextureReader = TextureReader;
     __reflect(TextureReader.prototype, "egret3d.TextureReader");
-    var GlRenderTarget = (function () {
-        function GlRenderTarget(width, height, depth, stencil) {
-            if (depth === void 0) { depth = false; }
-            if (stencil === void 0) { stencil = false; }
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            this.width = width;
-            this.height = height;
-            this.fbo = webgl.createFramebuffer();
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.fbo);
-            if (depth || stencil) {
-                this.renderbuffer = webgl.createRenderbuffer();
-                webgl.bindRenderbuffer(webgl.RENDERBUFFER, this.renderbuffer);
-                if (depth && stencil) {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_STENCIL, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this.renderbuffer);
-                }
-                else if (depth) {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, this.renderbuffer);
-                }
-                else {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.STENCIL_INDEX8, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this.renderbuffer);
-                }
-                webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
-            }
-            this.texture = webgl.createTexture();
-            this.fbo["width"] = width;
-            this.fbo["height"] = height;
-            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
-            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
-            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, this.texture, 0);
-        }
-        GlRenderTarget.useNull = function () {
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-        };
-        GlRenderTarget.prototype.use = function () {
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.fbo);
-        };
-        GlRenderTarget.prototype.dispose = function () {
-            if (this.texture != null) {
-                var webgl = egret3d.WebGLCapabilities.webgl;
-                webgl.deleteFramebuffer(this.renderbuffer);
-                this.renderbuffer = null;
-                webgl.deleteTexture(this.texture);
-                this.texture = null;
-            }
-        };
-        GlRenderTarget.prototype.caclByteLength = function () {
-            //RGBA & no mipmap
-            return this.width * this.height * 4;
-        };
-        GlRenderTarget.prototype.isFrameBuffer = function () {
-            return true;
-        };
-        return GlRenderTarget;
-    }());
-    egret3d.GlRenderTarget = GlRenderTarget;
-    __reflect(GlRenderTarget.prototype, "egret3d.GlRenderTarget", ["egret3d.IRenderTarget", "egret3d.ITexture"]);
-    var GlRenderTargetCube = (function () {
-        function GlRenderTargetCube(width, height, depth, stencil) {
-            if (depth === void 0) { depth = false; }
-            if (stencil === void 0) { stencil = false; }
-            this.activeCubeFace = 0; // PX 0, NX 1, PY 2, NY 3, PZ 4, NZ 5
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            this.width = width;
-            this.height = height;
-            this.fbo = webgl.createFramebuffer();
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.fbo);
-            if (depth || stencil) {
-                this.renderbuffer = webgl.createRenderbuffer();
-                webgl.bindRenderbuffer(webgl.RENDERBUFFER, this.renderbuffer);
-                if (depth && stencil) {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_STENCIL, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this.renderbuffer);
-                }
-                else if (depth) {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, this.renderbuffer);
-                }
-                else {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.STENCIL_INDEX8, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this.renderbuffer);
-                }
-                webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
-            }
-            this.texture = webgl.createTexture();
-            this.fbo["width"] = width;
-            this.fbo["height"] = height;
-            webgl.bindTexture(webgl.TEXTURE_CUBE_MAP, this.texture);
-            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
-            for (var i = 0; i < 6; i++) {
-                webgl.texImage2D(webgl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
-            }
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
-        }
-        GlRenderTargetCube.useNull = function () {
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-        };
-        GlRenderTargetCube.prototype.use = function () {
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.fbo);
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
-        };
-        GlRenderTargetCube.prototype.dispose = function () {
-            if (this.texture != null) {
-                var webgl = egret3d.WebGLCapabilities.webgl;
-                webgl.deleteFramebuffer(this.renderbuffer);
-                this.renderbuffer = null;
-                webgl.deleteTexture(this.texture);
-                this.texture = null;
-            }
-        };
-        GlRenderTargetCube.prototype.caclByteLength = function () {
-            //RGBA & no mipmap
-            return this.width * this.height * 4;
-        };
-        GlRenderTargetCube.prototype.isFrameBuffer = function () {
-            return true;
-        };
-        return GlRenderTargetCube;
-    }());
-    egret3d.GlRenderTargetCube = GlRenderTargetCube;
-    __reflect(GlRenderTargetCube.prototype, "egret3d.GlRenderTargetCube", ["egret3d.IRenderTarget", "egret3d.ITexture"]);
-    /**
-     *
-     */
-    var GlTexture2D = (function () {
-        function GlTexture2D(format) {
-            if (format === void 0) { format = 1 /* RGBA */; }
-            this.width = 0;
-            this.height = 0;
-            this.mipmap = false;
-            this.format = format;
-            this.texture = egret3d.WebGLCapabilities.webgl.createTexture();
-        }
-        GlTexture2D.createColorTexture = function (r, g, b) {
-            var mipmap = false;
-            var linear = true;
-            var width = 1;
-            var height = 1;
-            var data = new Uint8Array([r, g, b, 255]);
-            var texture = new GlTexture2D(1 /* RGBA */);
-            texture.uploadByteArray(mipmap, linear, width, height, data);
-            return texture;
-        };
-        GlTexture2D.createGridTexture = function () {
-            var mipmap = false;
-            var linear = true;
-            var width = 256;
-            var height = 256;
-            var data = new Uint8Array(width * width * 4);
-            var t = new GlTexture2D(1 /* RGBA */);
-            for (var y = 0; y < height; y++) {
-                for (var x = 0; x < width; x++) {
-                    var seek = (y * width + x) * 4;
-                    var bool = ((x - width * 0.5) * (y - height * 0.5)) > 0;
-                    data[seek] = data[seek + 1] = data[seek + 2] = bool ? 0 : 255;
-                    data[seek + 3] = 255;
-                }
-            }
-            t.uploadByteArray(mipmap, linear, width, height, data);
-            return t;
-        };
-        GlTexture2D.prototype.uploadImage = function (img, mipmap, linear, premultiply, repeat, mirroredU, mirroredV) {
-            if (premultiply === void 0) { premultiply = true; }
-            if (repeat === void 0) { repeat = false; }
-            if (mirroredU === void 0) { mirroredU = false; }
-            if (mirroredV === void 0) { mirroredV = false; }
-            this.width = img.width;
-            this.height = img.height;
-            this.mipmap = mipmap;
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
-            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
-            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
-            var formatGL = webgl.RGBA;
-            if (this.format == 2 /* RGB */) {
-                formatGL = webgl.RGB;
-            }
-            else if (this.format == 3 /* Gray */) {
-                formatGL = webgl.LUMINANCE;
-            }
-            webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, formatGL, webgl.UNSIGNED_BYTE, img);
-            if (mipmap) {
-                webgl.generateMipmap(webgl.TEXTURE_2D);
-                if (linear) {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR_MIPMAP_LINEAR);
-                }
-                else {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST_MIPMAP_NEAREST);
-                }
-            }
-            else {
-                if (linear) {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
-                }
-                else {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
-                }
-            }
-            var wrap_s_param = webgl.CLAMP_TO_EDGE;
-            var wrap_t_param = webgl.CLAMP_TO_EDGE;
-            if (repeat) {
-                wrap_s_param = mirroredU ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
-                wrap_t_param = mirroredV ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
-            }
-            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, wrap_s_param);
-            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrap_t_param);
-        };
-        GlTexture2D.prototype.uploadByteArray = function (mipmap, linear, width, height, data, repeat, mirroredU, mirroredV) {
-            if (repeat === void 0) { repeat = false; }
-            if (mirroredU === void 0) { mirroredU = false; }
-            if (mirroredV === void 0) { mirroredV = false; }
-            this.width = width;
-            this.height = height;
-            this.mipmap = mipmap;
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
-            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
-            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
-            var formatGL = webgl.RGBA;
-            if (this.format == 2 /* RGB */) {
-                formatGL = webgl.RGB;
-            }
-            else if (this.format == 3 /* Gray */) {
-                formatGL = webgl.LUMINANCE;
-            }
-            webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, width, height, 0, formatGL, webgl.UNSIGNED_BYTE, data);
-            if (mipmap) {
-                webgl.generateMipmap(webgl.TEXTURE_2D);
-                if (linear) {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR_MIPMAP_LINEAR);
-                }
-                else {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST_MIPMAP_NEAREST);
-                }
-            }
-            else {
-                if (linear) {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
-                }
-                else {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
-                }
-            }
-            var wrap_s_param = webgl.CLAMP_TO_EDGE;
-            var wrap_t_param = webgl.CLAMP_TO_EDGE;
-            if (repeat) {
-                wrap_s_param = mirroredU ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
-                wrap_t_param = mirroredV ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
-            }
-            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, wrap_s_param);
-            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrap_t_param);
-        };
-        GlTexture2D.prototype.caclByteLength = function () {
-            var pixellen = 1;
-            if (this.format == 1 /* RGBA */) {
-                pixellen = 4;
-            }
-            else if (this.format == 2 /* RGB */) {
-                pixellen = 3;
-            }
-            var len = this.width * this.height * pixellen;
-            if (this.mipmap) {
-                len = len * (1 - Math.pow(0.25, 10)) / 0.75;
-            }
-            return len;
-        };
-        GlTexture2D.prototype.getReader = function (redOnly) {
-            if (redOnly === void 0) { redOnly = false; }
-            if (this.reader != null) {
-                if (this.reader.gray != redOnly) {
-                    throw new Error("get param diff with this.reader");
-                }
-                return this.reader;
-            }
-            if (this.format != 1 /* RGBA */) {
-                throw new Error("only rgba texture can read");
-            }
-            if (this.texture == null) {
-                return null;
-            }
-            if (this.reader == null)
-                this.reader = new TextureReader(this.texture, this.width, this.height, redOnly);
-            return this.reader;
-        };
-        GlTexture2D.prototype.dispose = function () {
-            if (this.texture != null) {
-                var webgl = egret3d.WebGLCapabilities.webgl;
-                webgl.deleteTexture(this.texture);
-                this.texture = null;
-            }
-        };
-        GlTexture2D.prototype.isFrameBuffer = function () {
-            return false;
-        };
-        return GlTexture2D;
-    }());
-    egret3d.GlTexture2D = GlTexture2D;
-    __reflect(GlTexture2D.prototype, "egret3d.GlTexture2D", ["egret3d.ITexture"]);
     var WriteableTexture2D = (function () {
         function WriteableTexture2D(format, width, height, linear, premultiply, repeat, mirroredU, mirroredV) {
             if (format === void 0) { format = 1 /* RGBA */; }
@@ -20493,13 +20565,9 @@ var egret3d;
                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
             }
         }
-        WriteableTexture2D.prototype.isFrameBuffer = function () {
-            return false;
-        };
         WriteableTexture2D.prototype.dispose = function () {
             if (this.texture != null) {
-                var webgl = egret3d.WebGLCapabilities.webgl;
-                webgl.deleteTexture(this.texture);
+                egret3d.WebGLCapabilities.webgl.deleteTexture(this.texture);
                 this.texture = null;
             }
         };
@@ -20682,95 +20750,6 @@ var paper;
     /**
      *
      */
-    var Clock = (function (_super) {
-        __extends(Clock, _super);
-        function Clock() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.maxFixedSubSteps = 3;
-            _this.fixedDeltaTime = 1.0 / 50.0; // TODO same as fps.
-            _this.timeScale = 1.0;
-            _this._frameCount = 0;
-            _this._beginTime = 0.0;
-            _this._lastTime = 0.0;
-            _this._delayTime = 0.0;
-            _this._unscaledTime = 0.0;
-            _this._unscaledDeltaTime = 0.0;
-            /**
-             * @internal
-             */
-            _this._fixedTime = 0.0;
-            return _this;
-        }
-        Clock.prototype.initialize = function () {
-            _super.prototype.initialize.call(this);
-            this._lastTime = this._beginTime = Date.now() * 0.001;
-        };
-        /**
-         * @internal
-         */
-        Clock.prototype.update = function (time) {
-            if (this._unscaledTime !== 0.0) {
-                this._lastTime = this._unscaledTime;
-                if (this._fixedTime < this.fixedDeltaTime) {
-                }
-                else if (this._fixedTime < this.fixedDeltaTime * this.maxFixedSubSteps) {
-                    this._fixedTime %= this.fixedDeltaTime;
-                }
-                else {
-                    this._fixedTime -= this.fixedDeltaTime * this.maxFixedSubSteps;
-                }
-            }
-            var now = time || Date.now() * 0.001;
-            this._frameCount += 1;
-            this._unscaledTime = now - this._beginTime;
-            this._unscaledDeltaTime = this._unscaledTime - this._lastTime;
-            this._fixedTime += this._unscaledDeltaTime;
-        };
-        Object.defineProperty(Clock.prototype, "frameCount", {
-            get: function () {
-                return this._frameCount;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Clock.prototype, "time", {
-            get: function () {
-                return this._unscaledTime * this.timeScale;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Clock.prototype, "deltaTime", {
-            get: function () {
-                return this._unscaledDeltaTime * this.timeScale;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Clock.prototype, "unscaledTime", {
-            get: function () {
-                return this._unscaledTime;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Clock.prototype, "unscaledDeltaTime", {
-            get: function () {
-                return this._unscaledDeltaTime;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return Clock;
-    }(paper.SingletonComponent));
-    paper.Clock = Clock;
-    __reflect(Clock.prototype, "paper.Clock");
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     *
-     */
     var ContactColliders = (function (_super) {
         __extends(ContactColliders, _super);
         function ContactColliders() {
@@ -20793,6 +20772,256 @@ var paper;
     }(paper.SingletonComponent));
     paper.ContactColliders = ContactColliders;
     __reflect(ContactColliders.prototype, "paper.ContactColliders");
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var KEY_UUID = "uuid";
+    var KEY_ASSET = "asset";
+    var KEY_CLASS = "class";
+    var KEY_DESERIALIZE = "deserialize";
+    var KEY_COMPONENTS = "components";
+    var KEY_CHILDREN = "children";
+    var _isKeepUUID = false;
+    var _deserializedData = null;
+    /**
+     * 反序列化。
+     */
+    function deserialize(data, isKeepUUID) {
+        if (isKeepUUID === void 0) { isKeepUUID = false; }
+        if (_deserializedData) {
+            console.debug("The deserialization is not complete.");
+        }
+        _isKeepUUID = isKeepUUID;
+        _deserializedData = { assets: data.assets || [], objects: {}, components: {} };
+        var sceneClassName = egret.getQualifiedClassName(paper.Scene);
+        var components = {};
+        var root = null;
+        if (data.components) {
+            for (var _i = 0, _a = data.components; _i < _a.length; _i++) {
+                var componentSource = _a[_i];
+                components[componentSource.uuid] = componentSource;
+            }
+        }
+        if (data.objects) {
+            for (var _b = 0, _c = data.objects; _b < _c.length; _b++) {
+                var source = _c[_b];
+                var className = paper.serializeClassMap[source.class] || source.class;
+                var target = void 0;
+                if (className === sceneClassName) {
+                    target = paper.Application.sceneManager.createScene("");
+                }
+                else {
+                    target = paper.GameObject.create();
+                    if (KEY_COMPONENTS in source) {
+                        for (var _d = 0, _e = source[KEY_COMPONENTS]; _d < _e.length; _d++) {
+                            var componentUUID = _e[_d];
+                            var uuid = componentUUID.uuid;
+                            var componentSource = components[uuid];
+                            var className_1 = paper.serializeClassMap[componentSource.class] || componentSource.class;
+                            if (className_1 === egret.getQualifiedClassName(egret3d.Transform)) {
+                                _deserializedData.components[uuid] = target.transform;
+                            }
+                        }
+                    }
+                }
+                _deserializedData.objects[source.uuid] = target;
+                root = root || target;
+            }
+            var i = data.objects.length;
+            while (i--) {
+                var source = data.objects[i];
+                var target = _deserializedData.objects[source.uuid];
+                _deserializeObject(source, target);
+                if (target.constructor === paper.GameObject && KEY_COMPONENTS in source) {
+                    for (var _f = 0, _g = source[KEY_COMPONENTS]; _f < _g.length; _f++) {
+                        var componentUUID = _g[_f];
+                        var uuid = componentUUID.uuid;
+                        var componentSource = components[uuid];
+                        var className = paper.serializeClassMap[componentSource.class] || componentSource.class;
+                        var clazz = egret.getDefinitionByName(className);
+                        if (clazz) {
+                            if (clazz === egret3d.Transform) {
+                                var transform = _deserializedData.components[uuid];
+                                if (KEY_CHILDREN in componentSource) {
+                                    for (var _h = 0, _j = componentSource[KEY_CHILDREN]; _h < _j.length; _h++) {
+                                        var childUUID = _j[_h];
+                                        var child = _deserializedData.components[childUUID.uuid];
+                                        child._parent = transform;
+                                        transform._children.push(child);
+                                    }
+                                }
+                                root = root || transform;
+                            }
+                            else {
+                                var component = target.addComponent(clazz);
+                                _deserializedData.components[uuid] = component;
+                                if (clazz === paper.Behaviour) {
+                                    component._isReseted = true;
+                                }
+                                root = root || component;
+                            }
+                        }
+                        else {
+                            var component = target.addComponent(paper.MissingComponent);
+                            component.missingObject = componentSource;
+                            _deserializedData.components[uuid] = component;
+                            root = root || component;
+                            console.warn("Class " + className + " is not defined.");
+                        }
+                    }
+                }
+            }
+        }
+        if (data.components) {
+            for (var _k = 0, _l = data.components; _k < _l.length; _k++) {
+                var componentSource = _l[_k];
+                var uuid = componentSource.uuid;
+                var component = _deserializedData.components[uuid];
+                if (component.constructor === paper.MissingComponent) {
+                    continue;
+                }
+                _deserializeObject(componentSource, component);
+            }
+        }
+        _deserializedData = null;
+        return root;
+    }
+    paper.deserialize = deserialize;
+    /**
+     *
+     */
+    function getDeserializedAssetOrComponent(source) {
+        if (KEY_ASSET in source) {
+            return paper.Asset.find(_deserializedData.assets[source[KEY_ASSET]]);
+        }
+        var uuid = source[KEY_UUID];
+        return _deserializedData.components[uuid] || _deserializedData.objects[uuid];
+    }
+    paper.getDeserializedAssetOrComponent = getDeserializedAssetOrComponent;
+    function _deserializeObject(source, target) {
+        if (target.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE)) {
+            var uuid = source[KEY_UUID];
+            if (_isKeepUUID && uuid) {
+                delete source[KEY_UUID];
+            }
+            target.deserialize(source);
+            if (_isKeepUUID && uuid) {
+                source[KEY_UUID] = uuid;
+            }
+        }
+        else {
+            for (var k in source) {
+                if (k === KEY_CLASS) {
+                    continue;
+                }
+                if (!_isKeepUUID && k === KEY_UUID) {
+                    continue;
+                }
+                if ("__deserializedIgnore" /* DeserializedIgnore */ in target &&
+                    target["__deserializedIgnore" /* DeserializedIgnore */].indexOf(k) >= 0) {
+                    continue;
+                }
+                target[k] = _deserializeChild(source[k], target[k]);
+            }
+        }
+    }
+    function _deserializeChild(source, target) {
+        if (source === null || source === undefined) {
+            return source;
+        }
+        switch (typeof source) {
+            case "function":
+                return undefined;
+            case "object": {
+                if (target) {
+                    if (ArrayBuffer.isView(target)) {
+                        for (var i = 0, l = Math.min(source.length, target.length); i < l; ++i) {
+                            target[i] = source[i];
+                        }
+                        return target;
+                    }
+                    else if (Array.isArray(target) && target.length === 0) {
+                        for (var i = 0, l = source.length; i < l; ++i) {
+                            target[i] = _deserializeChild(source[i]);
+                        }
+                        return target;
+                    }
+                    else if (target.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE) &&
+                        !(target instanceof paper.BaseComponent)) {
+                        _deserializeObject(source, target);
+                        return target;
+                    }
+                    else {
+                        // console.info("Deserialize can be optimized.");
+                    }
+                }
+                if (Array.isArray(source)) {
+                    target = [];
+                    for (var i = 0, l = source.length; i < l; ++i) {
+                        target[i] = _deserializeChild(source[i]);
+                    }
+                    return target;
+                }
+                var classCodeOrName = source[KEY_CLASS];
+                if (KEY_UUID in source) {
+                    var uuid = source[KEY_UUID];
+                    if (uuid in _deserializedData.objects) {
+                        return _deserializedData.objects[uuid];
+                    }
+                    else if (uuid in _deserializedData.components) {
+                        return _deserializedData.components[uuid];
+                    }
+                    else if (classCodeOrName) {
+                        if ((paper.serializeClassMap[classCodeOrName] || classCodeOrName) === egret.getQualifiedClassName(paper.GameObject)) {
+                            for (var _i = 0, _a = paper.Application.sceneManager.activeScene.gameObjects; _i < _a.length; _i++) {
+                                var gameObject = _a[_i];
+                                if (gameObject.uuid === uuid) {
+                                    return gameObject;
+                                }
+                            }
+                        }
+                        else {
+                            for (var _b = 0, _c = paper.Application.sceneManager.activeScene.gameObjects; _b < _c.length; _b++) {
+                                var gameObject = _c[_b];
+                                for (var _d = 0, _e = gameObject.components; _d < _e.length; _d++) {
+                                    var component = _e[_d];
+                                    if (component && component.uuid === uuid) {
+                                        return component;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (KEY_ASSET in source) {
+                    var index = source[KEY_ASSET];
+                    if (index >= 0) {
+                        return paper.Asset.find(_deserializedData.assets[index]);
+                    }
+                    return null;
+                }
+                else if (classCodeOrName) {
+                    var clazz = egret.getDefinitionByName(paper.serializeClassMap[classCodeOrName] || classCodeOrName);
+                    if (clazz) {
+                        target = new clazz();
+                        _deserializeObject(source, target);
+                        return target;
+                    }
+                }
+                else {
+                    target = {};
+                    for (var k in source) {
+                        target[k] = _deserializeChild(source[k]);
+                    }
+                    return target;
+                }
+                console.warn("Deserialize error.", source);
+                return null;
+            }
+            default:
+                return source;
+        }
+    }
 })(paper || (paper = {}));
 /// <reference path="./EventDispatcher.ts" />
 var paper;
@@ -22594,256 +22823,6 @@ var paper;
         editor.History = History;
         __reflect(History.prototype, "paper.editor.History");
     })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var KEY_UUID = "uuid";
-    var KEY_ASSET = "asset";
-    var KEY_CLASS = "class";
-    var KEY_DESERIALIZE = "deserialize";
-    var KEY_COMPONENTS = "components";
-    var KEY_CHILDREN = "children";
-    var _isKeepUUID = false;
-    var _deserializedData = null;
-    /**
-     * 反序列化。
-     */
-    function deserialize(data, isKeepUUID) {
-        if (isKeepUUID === void 0) { isKeepUUID = false; }
-        if (_deserializedData) {
-            console.debug("The deserialization is not complete.");
-        }
-        _isKeepUUID = isKeepUUID;
-        _deserializedData = { assets: data.assets || [], objects: {}, components: {} };
-        var sceneClassName = egret.getQualifiedClassName(paper.Scene);
-        var components = {};
-        var root = null;
-        if (data.components) {
-            for (var _i = 0, _a = data.components; _i < _a.length; _i++) {
-                var componentSource = _a[_i];
-                components[componentSource.uuid] = componentSource;
-            }
-        }
-        if (data.objects) {
-            for (var _b = 0, _c = data.objects; _b < _c.length; _b++) {
-                var source = _c[_b];
-                var className = paper.serializeClassMap[source.class] || source.class;
-                var target = void 0;
-                if (className === sceneClassName) {
-                    target = paper.Application.sceneManager.createScene("");
-                }
-                else {
-                    target = paper.GameObject.create();
-                    if (KEY_COMPONENTS in source) {
-                        for (var _d = 0, _e = source[KEY_COMPONENTS]; _d < _e.length; _d++) {
-                            var componentUUID = _e[_d];
-                            var uuid = componentUUID.uuid;
-                            var componentSource = components[uuid];
-                            var className_1 = paper.serializeClassMap[componentSource.class] || componentSource.class;
-                            if (className_1 === egret.getQualifiedClassName(egret3d.Transform)) {
-                                _deserializedData.components[uuid] = target.transform;
-                            }
-                        }
-                    }
-                }
-                _deserializedData.objects[source.uuid] = target;
-                root = root || target;
-            }
-            var i = data.objects.length;
-            while (i--) {
-                var source = data.objects[i];
-                var target = _deserializedData.objects[source.uuid];
-                _deserializeObject(source, target);
-                if (target.constructor === paper.GameObject && KEY_COMPONENTS in source) {
-                    for (var _f = 0, _g = source[KEY_COMPONENTS]; _f < _g.length; _f++) {
-                        var componentUUID = _g[_f];
-                        var uuid = componentUUID.uuid;
-                        var componentSource = components[uuid];
-                        var className = paper.serializeClassMap[componentSource.class] || componentSource.class;
-                        var clazz = egret.getDefinitionByName(className);
-                        if (clazz) {
-                            if (clazz === egret3d.Transform) {
-                                var transform = _deserializedData.components[uuid];
-                                if (KEY_CHILDREN in componentSource) {
-                                    for (var _h = 0, _j = componentSource[KEY_CHILDREN]; _h < _j.length; _h++) {
-                                        var childUUID = _j[_h];
-                                        var child = _deserializedData.components[childUUID.uuid];
-                                        child._parent = transform;
-                                        transform._children.push(child);
-                                    }
-                                }
-                                root = root || transform;
-                            }
-                            else {
-                                var component = target.addComponent(clazz);
-                                _deserializedData.components[uuid] = component;
-                                if (clazz === paper.Behaviour) {
-                                    component._isReseted = true;
-                                }
-                                root = root || component;
-                            }
-                        }
-                        else {
-                            var component = target.addComponent(paper.MissingComponent);
-                            component.missingObject = componentSource;
-                            _deserializedData.components[uuid] = component;
-                            root = root || component;
-                            console.warn("Class " + className + " is not defined.");
-                        }
-                    }
-                }
-            }
-        }
-        if (data.components) {
-            for (var _k = 0, _l = data.components; _k < _l.length; _k++) {
-                var componentSource = _l[_k];
-                var uuid = componentSource.uuid;
-                var component = _deserializedData.components[uuid];
-                if (component.constructor === paper.MissingComponent) {
-                    continue;
-                }
-                _deserializeObject(componentSource, component);
-            }
-        }
-        _deserializedData = null;
-        return root;
-    }
-    paper.deserialize = deserialize;
-    /**
-     *
-     */
-    function getDeserializedAssetOrComponent(source) {
-        if (KEY_ASSET in source) {
-            return paper.Asset.find(_deserializedData.assets[source[KEY_ASSET]]);
-        }
-        var uuid = source[KEY_UUID];
-        return _deserializedData.components[uuid] || _deserializedData.objects[uuid];
-    }
-    paper.getDeserializedAssetOrComponent = getDeserializedAssetOrComponent;
-    function _deserializeObject(source, target) {
-        if (target.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE)) {
-            var uuid = source[KEY_UUID];
-            if (_isKeepUUID && uuid) {
-                delete source[KEY_UUID];
-            }
-            target.deserialize(source);
-            if (_isKeepUUID && uuid) {
-                source[KEY_UUID] = uuid;
-            }
-        }
-        else {
-            for (var k in source) {
-                if (k === KEY_CLASS) {
-                    continue;
-                }
-                if (!_isKeepUUID && k === KEY_UUID) {
-                    continue;
-                }
-                if ("__deserializedIgnore" /* DeserializedIgnore */ in target &&
-                    target["__deserializedIgnore" /* DeserializedIgnore */].indexOf(k) >= 0) {
-                    continue;
-                }
-                target[k] = _deserializeChild(source[k], target[k]);
-            }
-        }
-    }
-    function _deserializeChild(source, target) {
-        if (source === null || source === undefined) {
-            return source;
-        }
-        switch (typeof source) {
-            case "function":
-                return undefined;
-            case "object": {
-                if (target) {
-                    if (ArrayBuffer.isView(target)) {
-                        for (var i = 0, l = Math.min(source.length, target.length); i < l; ++i) {
-                            target[i] = source[i];
-                        }
-                        return target;
-                    }
-                    else if (Array.isArray(target) && target.length === 0) {
-                        for (var i = 0, l = source.length; i < l; ++i) {
-                            target[i] = _deserializeChild(source[i]);
-                        }
-                        return target;
-                    }
-                    else if (target.constructor.prototype.hasOwnProperty(KEY_DESERIALIZE) &&
-                        !(target instanceof paper.BaseComponent)) {
-                        _deserializeObject(source, target);
-                        return target;
-                    }
-                    else {
-                        // console.info("Deserialize can be optimized.");
-                    }
-                }
-                if (Array.isArray(source)) {
-                    target = [];
-                    for (var i = 0, l = source.length; i < l; ++i) {
-                        target[i] = _deserializeChild(source[i]);
-                    }
-                    return target;
-                }
-                var classCodeOrName = source[KEY_CLASS];
-                if (KEY_UUID in source) {
-                    var uuid = source[KEY_UUID];
-                    if (uuid in _deserializedData.objects) {
-                        return _deserializedData.objects[uuid];
-                    }
-                    else if (uuid in _deserializedData.components) {
-                        return _deserializedData.components[uuid];
-                    }
-                    else if (classCodeOrName) {
-                        if ((paper.serializeClassMap[classCodeOrName] || classCodeOrName) === egret.getQualifiedClassName(paper.GameObject)) {
-                            for (var _i = 0, _a = paper.Application.sceneManager.activeScene.gameObjects; _i < _a.length; _i++) {
-                                var gameObject = _a[_i];
-                                if (gameObject.uuid === uuid) {
-                                    return gameObject;
-                                }
-                            }
-                        }
-                        else {
-                            for (var _b = 0, _c = paper.Application.sceneManager.activeScene.gameObjects; _b < _c.length; _b++) {
-                                var gameObject = _c[_b];
-                                for (var _d = 0, _e = gameObject.components; _d < _e.length; _d++) {
-                                    var component = _e[_d];
-                                    if (component && component.uuid === uuid) {
-                                        return component;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                else if (KEY_ASSET in source) {
-                    var index = source[KEY_ASSET];
-                    if (index >= 0) {
-                        return paper.Asset.find(_deserializedData.assets[index]);
-                    }
-                    return null;
-                }
-                else if (classCodeOrName) {
-                    var clazz = egret.getDefinitionByName(paper.serializeClassMap[classCodeOrName] || classCodeOrName);
-                    if (clazz) {
-                        target = new clazz();
-                        _deserializeObject(source, target);
-                        return target;
-                    }
-                }
-                else {
-                    target = {};
-                    for (var k in source) {
-                        target[k] = _deserializeChild(source[k]);
-                    }
-                    return target;
-                }
-                console.warn("Deserialize error.", source);
-                return null;
-            }
-            default:
-                return source;
-        }
-    }
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
