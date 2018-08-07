@@ -10372,7 +10372,7 @@ var egret3d;
         function DirectLight() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.type = 1 /* Direction */;
-            _this.renderTarget = new egret3d.GlRenderTarget(egret3d.WebGLCapabilities.webgl, 1024, 1024, true); // TODO
+            _this.renderTarget = new egret3d.GlRenderTarget(1024, 1024, true); // TODO
             return _this;
         }
         DirectLight.prototype.update = function (camera, faceIndex) {
@@ -10406,7 +10406,7 @@ var egret3d;
         function PointLight() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.type = 2 /* Point */;
-            _this.renderTarget = new egret3d.GlRenderTarget(egret3d.WebGLCapabilities.webgl, 1024, 1024, true); // TODO
+            _this.renderTarget = new egret3d.GlRenderTarget(1024, 1024, true); // TODO
             return _this;
         }
         PointLight.prototype.update = function (camera, faceIndex) {
@@ -15283,6 +15283,50 @@ var egret3d;
             }
             return program;
         };
+        /**
+         * 设置render target与viewport
+         * @param target render target
+         *
+         */
+        WebGLRenderState.prototype.targetAndViewport = function (viewport, target) {
+            var webgl = WebGLCapabilities.webgl;
+            var w;
+            var h;
+            if (!target) {
+                w = egret3d.stage.screenViewport.w;
+                h = egret3d.stage.screenViewport.h;
+                egret3d.GlRenderTarget.useNull();
+            }
+            else {
+                w = target.width;
+                h = target.height;
+                target.use();
+            }
+            webgl.viewport(w * viewport.x, h * viewport.y, w * viewport.w, h * viewport.h);
+            webgl.depthRange(0, 1);
+        };
+        /**
+         * 清除缓存
+         * @param camera
+         */
+        WebGLRenderState.prototype.cleanBuffer = function (clearOptColor, clearOptDepath, clearColor) {
+            var webgl = WebGLCapabilities.webgl;
+            if (clearOptColor && clearOptDepath) {
+                webgl.depthMask(true);
+                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                webgl.clearDepth(1.0);
+                webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
+            }
+            else if (clearOptDepath) {
+                webgl.depthMask(true);
+                webgl.clearDepth(1.0);
+                webgl.clear(webgl.DEPTH_BUFFER_BIT);
+            }
+            else if (clearOptColor) {
+                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                webgl.clear(webgl.COLOR_BUFFER_BIT);
+            }
+        };
         return WebGLRenderState;
     }(paper.SingletonComponent));
     egret3d.WebGLRenderState = WebGLRenderState;
@@ -16115,7 +16159,6 @@ var egret3d;
         function DefaultTextures() {
         }
         DefaultTextures.init = function () {
-            var gl = egret3d.WebGLCapabilities.webgl;
             var t1 = new egret3d.Texture("buildin/white.image.json");
             t1.glTexture = egret3d.GlTexture2D.createColorTexture(255, 255, 255);
             this.WHITE = t1;
@@ -19325,50 +19368,6 @@ var egret3d;
             this._drawCall(drawCall.mesh, drawCall);
         };
         /**
-         * 设置render target与viewport
-         * @param target render target
-         *
-         */
-        WebGLRenderSystem.prototype._targetAndViewport = function (viewport, target) {
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            var w;
-            var h;
-            if (!target) {
-                w = egret3d.stage.screenViewport.w;
-                h = egret3d.stage.screenViewport.h;
-                egret3d.GlRenderTarget.useNull();
-            }
-            else {
-                w = target.width;
-                h = target.height;
-                target.use();
-            }
-            webgl.viewport(w * viewport.x, h * viewport.y, w * viewport.w, h * viewport.h);
-            webgl.depthRange(0, 1);
-        };
-        /**
-         * 清除缓存
-         * @param camera
-         */
-        WebGLRenderSystem.prototype._cleanBuffer = function (clearOptColor, clearOptDepath, clearColor) {
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            if (clearOptColor && clearOptDepath) {
-                webgl.depthMask(true);
-                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-                webgl.clearDepth(1.0);
-                webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
-            }
-            else if (clearOptDepath) {
-                webgl.depthMask(true);
-                webgl.clearDepth(1.0);
-                webgl.clear(webgl.DEPTH_BUFFER_BIT);
-            }
-            else if (clearOptColor) {
-                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-                webgl.clear(webgl.COLOR_BUFFER_BIT);
-            }
-        };
-        /**
          * @internal
          * @param camera
          */
@@ -19408,14 +19407,15 @@ var egret3d;
             var camera = this._lightCamera;
             var drawCalls = this._drawCalls;
             var faceCount = light.type === 2 /* Point */ ? 6 : 1;
+            var renderState = this._renderState;
             for (var i = 0; i < faceCount; ++i) {
                 light.renderTarget.activeCubeFace = i; // TODO 创建接口。
                 light.update(camera, i);
                 var context = camera.context;
                 context.updateCamera(camera, light.matrix);
                 context.updateLightDepth(light);
-                this._targetAndViewport(camera.viewport, light.renderTarget);
-                this._cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                renderState.targetAndViewport(camera.viewport, light.renderTarget);
+                renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                 drawCalls.shadowFrustumCulling(camera);
                 //
                 var shadowCalls = drawCalls.shadowCalls;
@@ -19433,6 +19433,7 @@ var egret3d;
                 this._renderState.clearState(); //编辑器走自己的渲染流程，状态需要清除一下
             }
             egret3d.Performance.startCounter("render");
+            var renderState = this._renderState;
             var cameras = this._camerasAndLights.cameras;
             var lights = this._camerasAndLights.lights;
             var filteredLights = this._filteredLights;
@@ -19464,8 +19465,8 @@ var egret3d;
                         camera.context.updateLights(filteredLights); // TODO 性能优化
                     }
                     if (camera.postQueues.length === 0) {
-                        this._targetAndViewport(camera.viewport, camera.renderTarget);
-                        this._cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                        renderState.targetAndViewport(camera.viewport, camera.renderTarget);
+                        renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                         this._renderCamera(camera);
                     }
                     else {
@@ -20111,8 +20112,9 @@ var egret3d;
         TextureReader.prototype.getPixel = function (u, v) {
             var x = (u * this.width) | 0;
             var y = (v * this.height) | 0;
-            if (x < 0 || x >= this.width || y < 0 || y >= this.height)
+            if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
                 return 0;
+            }
             if (this.gray) {
                 return this.data[y * this.width + x];
             }
@@ -20126,9 +20128,10 @@ var egret3d;
     egret3d.TextureReader = TextureReader;
     __reflect(TextureReader.prototype, "egret3d.TextureReader");
     var GlRenderTarget = (function () {
-        function GlRenderTarget(webgl, width, height, depth, stencil) {
+        function GlRenderTarget(width, height, depth, stencil) {
             if (depth === void 0) { depth = false; }
             if (stencil === void 0) { stencil = false; }
+            var webgl = egret3d.WebGLCapabilities.webgl;
             this.width = width;
             this.height = height;
             this.fbo = webgl.createFramebuffer();
@@ -20159,20 +20162,15 @@ var egret3d;
             webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
             webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, this.texture, 0);
         }
-        GlRenderTarget.prototype.use = function () {
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.fbo);
-            // webgl.bindRenderbuffer(webgl.RENDERBUFFER, this.renderbuffer);
-            // webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
-            //webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, this.texture, 0);
-        };
         GlRenderTarget.useNull = function () {
             var webgl = egret3d.WebGLCapabilities.webgl;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         };
+        GlRenderTarget.prototype.use = function () {
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.fbo);
+        };
         GlRenderTarget.prototype.dispose = function () {
-            //if (this.texture == null && this.img != null)
-            //    this.disposeit = true;
             if (this.texture != null) {
                 var webgl = egret3d.WebGLCapabilities.webgl;
                 webgl.deleteFramebuffer(this.renderbuffer);
@@ -20193,10 +20191,11 @@ var egret3d;
     egret3d.GlRenderTarget = GlRenderTarget;
     __reflect(GlRenderTarget.prototype, "egret3d.GlRenderTarget", ["egret3d.IRenderTarget", "egret3d.ITexture"]);
     var GlRenderTargetCube = (function () {
-        function GlRenderTargetCube(webgl, width, height, depth, stencil) {
+        function GlRenderTargetCube(width, height, depth, stencil) {
             if (depth === void 0) { depth = false; }
             if (stencil === void 0) { stencil = false; }
             this.activeCubeFace = 0; // PX 0, NX 1, PY 2, NY 3, PZ 4, NZ 5
+            var webgl = egret3d.WebGLCapabilities.webgl;
             this.width = width;
             this.height = height;
             this.fbo = webgl.createFramebuffer();
@@ -20229,21 +20228,18 @@ var egret3d;
             }
             webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
         }
+        GlRenderTargetCube.useNull = function () {
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+        };
         GlRenderTargetCube.prototype.use = function () {
             var webgl = egret3d.WebGLCapabilities.webgl;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.fbo);
-            // webgl.bindRenderbuffer(webgl.RENDERBUFFER, this.renderbuffer);
-            // webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
             webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
         };
-        GlRenderTargetCube.useNull = function (webgl) {
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-        };
         GlRenderTargetCube.prototype.dispose = function () {
-            //if (this.texture == null && this.img != null)
-            //    this.disposeit = true;
-            var webgl = egret3d.WebGLCapabilities.webgl;
             if (this.texture != null) {
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 webgl.deleteFramebuffer(this.renderbuffer);
                 this.renderbuffer = null;
                 webgl.deleteTexture(this.texture);
@@ -20265,16 +20261,42 @@ var egret3d;
      *
      */
     var GlTexture2D = (function () {
-        function GlTexture2D(format, mipmap, linear) {
+        function GlTexture2D(format) {
             if (format === void 0) { format = 1 /* RGBA */; }
-            if (mipmap === void 0) { mipmap = false; }
-            if (linear === void 0) { linear = true; }
             this.width = 0;
             this.height = 0;
             this.mipmap = false;
             this.format = format;
             this.texture = egret3d.WebGLCapabilities.webgl.createTexture();
         }
+        GlTexture2D.createColorTexture = function (r, g, b) {
+            var mipmap = false;
+            var linear = true;
+            var width = 1;
+            var height = 1;
+            var data = new Uint8Array([r, g, b, 255]);
+            var texture = new GlTexture2D(1 /* RGBA */);
+            texture.uploadByteArray(mipmap, linear, width, height, data);
+            return texture;
+        };
+        GlTexture2D.createGridTexture = function () {
+            var mipmap = false;
+            var linear = true;
+            var width = 256;
+            var height = 256;
+            var data = new Uint8Array(width * width * 4);
+            var t = new GlTexture2D(1 /* RGBA */);
+            for (var y = 0; y < height; y++) {
+                for (var x = 0; x < width; x++) {
+                    var seek = (y * width + x) * 4;
+                    var bool = ((x - width * 0.5) * (y - height * 0.5)) > 0;
+                    data[seek] = data[seek + 1] = data[seek + 2] = bool ? 0 : 255;
+                    data[seek + 3] = 255;
+                }
+            }
+            t.uploadByteArray(mipmap, linear, width, height, data);
+            return t;
+        };
         GlTexture2D.prototype.uploadImage = function (img, mipmap, linear, premultiply, repeat, mirroredU, mirroredV) {
             if (premultiply === void 0) { premultiply = true; }
             if (repeat === void 0) { repeat = false; }
@@ -20391,21 +20413,22 @@ var egret3d;
         GlTexture2D.prototype.getReader = function (redOnly) {
             if (redOnly === void 0) { redOnly = false; }
             if (this.reader != null) {
-                if (this.reader.gray != redOnly)
+                if (this.reader.gray != redOnly) {
                     throw new Error("get param diff with this.reader");
+                }
                 return this.reader;
             }
-            if (this.format != 1 /* RGBA */)
+            if (this.format != 1 /* RGBA */) {
                 throw new Error("only rgba texture can read");
-            if (this.texture == null)
+            }
+            if (this.texture == null) {
                 return null;
+            }
             if (this.reader == null)
                 this.reader = new TextureReader(this.texture, this.width, this.height, redOnly);
             return this.reader;
         };
-        //disposeit: boolean = false;
         GlTexture2D.prototype.dispose = function () {
-            //if (this.texture == null && this.img != null) this.disposeit = true;
             if (this.texture != null) {
                 var webgl = egret3d.WebGLCapabilities.webgl;
                 webgl.deleteTexture(this.texture);
@@ -20415,40 +20438,12 @@ var egret3d;
         GlTexture2D.prototype.isFrameBuffer = function () {
             return false;
         };
-        GlTexture2D.createColorTexture = function (r, g, b) {
-            var mipmap = false;
-            var linear = true;
-            var width = 1;
-            var height = 1;
-            var texture = new GlTexture2D(1 /* RGBA */, mipmap, linear);
-            var data = new Uint8Array([r, g, b, 255]);
-            texture.uploadByteArray(mipmap, linear, width, height, data);
-            return texture;
-        };
-        GlTexture2D.createGridTexture = function () {
-            var mipmap = false;
-            var linear = true;
-            var t = new GlTexture2D(1 /* RGBA */, mipmap, linear);
-            var width = 256;
-            var height = 256;
-            var data = new Uint8Array(width * width * 4);
-            for (var y = 0; y < height; y++) {
-                for (var x = 0; x < width; x++) {
-                    var seek = (y * width + x) * 4;
-                    var bool = ((x - width * 0.5) * (y - height * 0.5)) > 0;
-                    data[seek] = data[seek + 1] = data[seek + 2] = bool ? 0 : 255;
-                    data[seek + 3] = 255;
-                }
-            }
-            t.uploadByteArray(mipmap, linear, width, height, data);
-            return t;
-        };
         return GlTexture2D;
     }());
     egret3d.GlTexture2D = GlTexture2D;
     __reflect(GlTexture2D.prototype, "egret3d.GlTexture2D", ["egret3d.ITexture"]);
     var WriteableTexture2D = (function () {
-        function WriteableTexture2D(webgl, format, width, height, linear, premultiply, repeat, mirroredU, mirroredV) {
+        function WriteableTexture2D(format, width, height, linear, premultiply, repeat, mirroredU, mirroredV) {
             if (format === void 0) { format = 1 /* RGBA */; }
             if (premultiply === void 0) { premultiply = true; }
             if (repeat === void 0) { repeat = false; }
@@ -20456,7 +20451,7 @@ var egret3d;
             if (mirroredV === void 0) { mirroredV = false; }
             this.width = 0;
             this.height = 0;
-            webgl = webgl;
+            var webgl = egret3d.WebGLCapabilities.webgl;
             this.texture = webgl.createTexture();
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
@@ -20480,20 +20475,16 @@ var egret3d;
                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
             }
             if (repeat) {
-                if (mirroredU && mirroredV) {
+                if (mirroredU) {
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.MIRRORED_REPEAT);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.MIRRORED_REPEAT);
-                }
-                else if (mirroredU) {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.MIRRORED_REPEAT);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.REPEAT);
-                }
-                else if (mirroredV) {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.REPEAT);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.MIRRORED_REPEAT);
                 }
                 else {
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.REPEAT);
+                }
+                if (mirroredV) {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.MIRRORED_REPEAT);
+                }
+                else {
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.REPEAT);
                 }
             }

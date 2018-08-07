@@ -6645,17 +6645,6 @@ declare namespace egret3d {
         private _updateAttributes(program, mesh, subMeshIndex, technique, forceUpdate);
         private _drawCall(mesh, drawCall);
         private _renderCall(context, drawCall, material);
-        /**
-         * 设置render target与viewport
-         * @param target render target
-         *
-         */
-        _targetAndViewport(viewport: Rectangle, target: IRenderTarget | null): void;
-        /**
-         * 清除缓存
-         * @param camera
-         */
-        _cleanBuffer(clearOptColor: boolean, clearOptDepath: any, clearColor: Color): void;
         onUpdate(): void;
     }
 }
@@ -6762,12 +6751,12 @@ declare namespace egret3d {
     class GlRenderTarget implements IRenderTarget {
         width: number;
         height: number;
-        constructor(webgl: WebGLRenderingContext, width: number, height: number, depth?: boolean, stencil?: boolean);
-        fbo: WebGLFramebuffer;
-        renderbuffer: WebGLRenderbuffer;
         texture: WebGLTexture;
-        use(): void;
+        private fbo;
+        private renderbuffer;
         static useNull(): void;
+        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
+        use(): void;
         dispose(): void;
         caclByteLength(): number;
         isFrameBuffer(): boolean;
@@ -6776,12 +6765,12 @@ declare namespace egret3d {
         width: number;
         height: number;
         activeCubeFace: number;
-        constructor(webgl: WebGLRenderingContext, width: number, height: number, depth?: boolean, stencil?: boolean);
-        fbo: WebGLFramebuffer;
-        renderbuffer: WebGLRenderbuffer;
         texture: WebGLTexture;
+        private fbo;
+        private renderbuffer;
+        static useNull(): void;
+        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
         use(): void;
-        static useNull(webgl: WebGLRenderingContext): void;
         dispose(): void;
         caclByteLength(): number;
         isFrameBuffer(): boolean;
@@ -6790,29 +6779,29 @@ declare namespace egret3d {
      *
      */
     class GlTexture2D implements ITexture {
-        constructor(format?: TextureFormatEnum, mipmap?: boolean, linear?: boolean);
-        uploadImage(img: HTMLImageElement, mipmap: boolean, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
-        uploadByteArray(mipmap: boolean, linear: boolean, width: number, height: number, data: Uint8Array, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
-        texture: WebGLTexture;
-        format: TextureFormatEnum;
+        static createColorTexture(r: number, g: number, b: number): GlTexture2D;
+        static createGridTexture(): GlTexture2D;
         width: number;
         height: number;
         mipmap: boolean;
+        texture: WebGLTexture;
+        format: TextureFormatEnum;
+        constructor(format?: TextureFormatEnum);
+        uploadImage(img: HTMLImageElement, mipmap: boolean, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
+        uploadByteArray(mipmap: boolean, linear: boolean, width: number, height: number, data: Uint8Array, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
         caclByteLength(): number;
         reader: TextureReader;
         getReader(redOnly?: boolean): TextureReader;
         dispose(): void;
         isFrameBuffer(): boolean;
-        static createColorTexture(r: number, g: number, b: number): GlTexture2D;
-        static createGridTexture(): GlTexture2D;
     }
     class WriteableTexture2D implements ITexture {
-        constructor(webgl: WebGLRenderingContext, format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
-        isFrameBuffer(): boolean;
-        texture: WebGLTexture;
-        format: TextureFormatEnum;
         width: number;
         height: number;
+        format: TextureFormatEnum;
+        texture: WebGLTexture;
+        constructor(format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
+        isFrameBuffer(): boolean;
         dispose(): void;
         caclByteLength(): number;
     }

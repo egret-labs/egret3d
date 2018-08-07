@@ -223,9 +223,9 @@ namespace egret3d {
      * @internal
      */
     export class WebGLRenderState extends paper.SingletonComponent {
-        public readonly programMap: { [key: string]: GlProgram } = {};
-        public readonly vsShaderMap: { [key: string]: WebGLShader } = {};
-        public readonly fsShaderMap: { [key: string]: WebGLShader } = {};
+        private readonly programMap: { [key: string]: GlProgram } = {};
+        private readonly vsShaderMap: { [key: string]: WebGLShader } = {};
+        private readonly fsShaderMap: { [key: string]: WebGLShader } = {};
 
         private readonly _stateEnables: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST];
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};

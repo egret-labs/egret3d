@@ -134,7 +134,7 @@
         "egret3d/Performance.ts",
         "egret3d/Profile.ts",
         "egret3d/web/render/resource/GLProgram.ts",
-        "egret3d/web/render/resource/texture.ts",
+        "egret3d/web/render/resource/GLTexture.ts",
         "egret3d/Deprecated.ts",
         "egret3d/editor/Editor.ts",
         "egret3d/editor/EditorDecorator.ts",
