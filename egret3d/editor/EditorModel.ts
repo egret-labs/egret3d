@@ -31,10 +31,6 @@ namespace paper.editor {
      * 编辑模型
      */
     export class EditorModel extends EventDispatcher {
-        public backRunTime: any;
-        public setBackRuntime(back: any): void {
-            this.backRunTime = back;
-        }
         private history: History;
         /**
          * 初始化
@@ -366,6 +362,22 @@ namespace paper.editor {
             }
         }
         /**
+         * 解除预置体联系
+         * @param gameObjects 
+         */
+        public breakPrefab(gameObjects:GameObject[]):void{
+            let breakList: GameObject[] = [];
+            gameObjects.forEach(obj => {
+                if (Editor.editorModel.isPrefabChild(obj)||Editor.editorModel.isPrefabRoot(obj)) {
+                    breakList.push(obj);
+                }
+            });
+            if (breakList.length > 0) {
+                let breakState = BreakPrefabStructState.create(breakList);
+                this.addState(breakState);
+            }
+        }
+        /**
          * 更改层级
          * */
         public updateGameObjectsHierarchy(gameObjects: GameObject[], targetGameobjcet: GameObject, dir: 'top' | 'inner' | 'bottom'): void {
@@ -464,16 +476,7 @@ namespace paper.editor {
         }
 
         public getGameObjectByUUid(uuid: string): GameObject | null {
-            let paper = this.backRunTime.paper;
             let objects = paper.Application.sceneManager.activeScene.gameObjects;
-            for (let i: number = 0; i < objects.length; i++) {
-                if (objects[i].uuid === uuid) {
-                    return objects[i];
-                }
-            }
-
-            paper = __global['paper'];
-            objects = paper.Application.sceneManager.activeScene.gameObjects;
             for (let i: number = 0; i < objects.length; i++) {
                 if (objects[i].uuid === uuid) {
                     return objects[i];
@@ -483,7 +486,6 @@ namespace paper.editor {
         }
 
         public async getAssetByAssetUrl(url: string): Promise<any> {
-            const RES = this.backRunTime.RES;
             let asset = await RES.getResAsync(url);
             if (asset) {
                 return asset;
