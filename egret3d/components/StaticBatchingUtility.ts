@@ -125,14 +125,8 @@ namespace egret3d {
         const combineMesh = _combineMesh(combineInstance);
         const combineRoot = combineInstance.root;
         //把合成好的放入root中，重新绘制
-        if (combineRoot) {
-            const meshFilter = combineRoot.getComponent(MeshFilter)!;
-            meshFilter.mesh = combineMesh;
-        }
-        // for(const instance of combineInstance.instances){
-        //     const meshFilter = instance.getComponent(MeshFilter);
-        //     meshFilter.mesh = combineMesh;
-        // }
+        const meshFilter = combineRoot.getComponent(MeshFilter)!;
+        meshFilter.mesh = combineMesh;
     }
 
     /**

@@ -258,58 +258,6 @@ namespace egret3d {
             Matrix.transformVector3(farRT, matrix, farRT);
             Matrix.transformVector3(nearRT, matrix, nearRT);
         }
-
-        /**
-         * 设置render target与viewport
-         * @param target render target
-         * @param withoutClear 强制不清除缓存
-         * 
-         */
-        public _targetAndViewport(target: IRenderTarget | null, withoutClear: boolean) {
-            let w: number;
-            let h: number;
-            const webgl = WebGLCapabilities.webgl;
-
-            if (!target) {
-                w = stage.screenViewport.w;
-                h = stage.screenViewport.h;
-                GlRenderTarget.useNull(webgl);
-            }
-            else {
-                w = target.width;
-                h = target.height;
-                target.use(webgl);
-            }
-
-            webgl.viewport(w * this.viewport.x, h * this.viewport.y, w * this.viewport.w, h * this.viewport.h);
-            webgl.depthRange(0, 1);
-
-            if (withoutClear) {
-                return;
-            }
-
-            // clear buffer
-            if (this.clearOption_Color && this.clearOption_Depth) {
-                webgl.depthMask(true);
-                // webgl.depthMask(true);
-                webgl.clearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b, this.backgroundColor.a);
-                webgl.clearDepth(1.0);
-                webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
-            }
-            else if (this.clearOption_Depth) {
-                webgl.depthMask(true);
-                // webgl.depthMask(true);
-                webgl.clearDepth(1.0);
-                webgl.clear(webgl.DEPTH_BUFFER_BIT);
-            }
-            else if (this.clearOption_Color) {
-                webgl.clearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b, this.backgroundColor.a);
-                webgl.clear(webgl.COLOR_BUFFER_BIT);
-            }
-            else {
-
-            }
-        }
         /**
          * @inheritDoc
          */
