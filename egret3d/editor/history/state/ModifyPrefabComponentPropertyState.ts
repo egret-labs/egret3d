@@ -1,4 +1,6 @@
 namespace paper.editor{
+    type ModifyPrefabComponentPropertyStateData = {gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]};
+
     //修改预制体组件属性
     export class ModifyPrefabComponentPropertyState extends BaseState {
         public static toString(): string {
@@ -7,7 +9,7 @@ namespace paper.editor{
 
         public static create(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyPrefabComponentPropertyState | null {
             const state = new ModifyPrefabComponentPropertyState();
-            let data = {
+            let data:ModifyPrefabComponentPropertyStateData = {
                 gameObjUUid,
                 componentUUid,
                 newValueList,
@@ -15,6 +17,11 @@ namespace paper.editor{
             }
             state.data = data;
             return state;
+        }
+
+        public get stateData():ModifyPrefabComponentPropertyStateData
+        {
+            return this.data as ModifyPrefabComponentPropertyStateData;
         }
 
         protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any) {
@@ -56,7 +63,7 @@ namespace paper.editor{
 
         public undo(): boolean {
             if (super.undo()) {
-                const { gameObjUUid, componentUUid, preValueCopylist } = this.data;
+                const { gameObjUUid, componentUUid, preValueCopylist } = this.stateData;
                 this.modifyPrefabComponentPropertyValues(gameObjUUid, componentUUid, preValueCopylist);
                 return true;
             }
@@ -66,7 +73,7 @@ namespace paper.editor{
 
         public redo(): boolean {
             if (super.redo()) {
-                const { gameObjUUid, componentUUid, newValueList } = this.data;
+                const { gameObjUUid, componentUUid, newValueList } = this.stateData;
                 this.modifyPrefabComponentPropertyValues(gameObjUUid, componentUUid, newValueList);
                 return true;
             }

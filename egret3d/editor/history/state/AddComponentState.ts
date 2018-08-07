@@ -1,32 +1,37 @@
 namespace paper.editor{
+    type AddComponentStateData = {gameObjectUUid:string,compClzName:string,serializeData?:any,cacheComponentId?:string};
+
     //添加组件
     export class AddComponentState extends BaseState {
         public static toString(): string {
             return "[class common.AddComponentState]";
         }
 
-        public static create(data: any = null): AddComponentState | null {
+        public static create(gameObjectUUid:string,compClzName:string): AddComponentState | null {
             const state = new AddComponentState();
+            let data:AddComponentStateData = {gameObjectUUid,compClzName};
             state.data = data;
             return state;
         }
 
+        public get stateData():AddComponentStateData
+        {
+            return this.data as AddComponentStateData;
+        }
+
         public undo(): boolean {
             if (super.undo()) {
-                let gameObjectUUid = this.data.gameObjectUUid;
-                let componentId = this.data.cacheUUid;
-                let gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
-                if (gameObject) {
-                    for (let i: number = 0; i < gameObject.components.length; i++) {
-                        let comp = gameObject.components[i];
-                        if (comp.uuid === componentId) {
-                            gameObject.removeComponent(comp.constructor as any);
-                            break;
-                        }
+                const {gameObjectUUid,cacheComponentId} = this.stateData;
+                const gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                if (gameObject && cacheComponentId) {
+                    const comp = Editor.editorModel.getComponentById(gameObject,cacheComponentId);
+                    if (comp) {
+                        gameObject.removeComponent(comp.constructor as any);
+                        this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
+                        return true;
                     }
                 }
-                this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
-                return true;
+
             }
 
             return false;
@@ -34,21 +39,19 @@ namespace paper.editor{
 
         public redo(): boolean {
             if (super.redo()) {
-                let gameObjectUUid = this.data.gameObjectUUid;
-                let compClzName = this.data.compClzName;
+                const {gameObjectUUid,compClzName} = this.stateData;
                 let gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (gameObject) {
                     let addComponent;
-                    if (this.data.serializeData) {
-                        addComponent = deserialize(this.data.serializeData, true);
+                    if (this.stateData.serializeData) {
+                        addComponent = deserialize(this.stateData.serializeData, true);
                         Editor.editorModel.addComponentToGameObject(gameObject, addComponent);
                     } else {
                         let compClz = egret.getDefinitionByName(compClzName);
                         addComponent = gameObject.addComponent(compClz);
-                        this.data.serializeData = serialize(addComponent);
+                        this.stateData.serializeData = serialize(addComponent);
                     }
-
-                    this.data.cacheUUid = addComponent.uuid;
+                    addComponent && (this.stateData.cacheComponentId = addComponent.uuid);
                 }
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                 return true;

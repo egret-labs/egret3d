@@ -1,4 +1,6 @@
 namespace paper.editor{
+    type ModifyPrefabGameObjectPropertyStateData = {gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]};
+
     export class ModifyPrefabGameObjectPropertyState extends BaseState {
         public static toString(): string {
             return "[class common.ModifyPrefabGameObjectPropertyState]";
@@ -6,13 +8,18 @@ namespace paper.editor{
 
         public static create(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyPrefabGameObjectPropertyState | null {
             const state = new ModifyPrefabGameObjectPropertyState();
-            let data = {
+            let data:ModifyPrefabGameObjectPropertyStateData = {
                 gameObjectUUid,
                 newValueList,
                 preValueCopylist,
             }
             state.data = data;
             return state;
+        }
+
+        public get stateData():ModifyPrefabGameObjectPropertyStateData
+        {
+            return this.data as ModifyPrefabGameObjectPropertyStateData;
         }
 
         protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any) {
@@ -47,7 +54,7 @@ namespace paper.editor{
 
         public undo(): boolean {
             if (super.undo()) {
-                const { gameObjectUUid, preValueCopylist } = this.data;
+                const { gameObjectUUid, preValueCopylist } = this.stateData;
                 this.modifyPrefabGameObjectPropertyValues(gameObjectUUid, preValueCopylist);
                 return true;
             }
@@ -57,7 +64,7 @@ namespace paper.editor{
 
         public redo(): boolean {
             if (super.redo()) {
-                const { gameObjectUUid, newValueList } = this.data;
+                const { gameObjectUUid, newValueList } = this.stateData;
                 this.modifyPrefabGameObjectPropertyValues(gameObjectUUid, newValueList);
                 return true;
             }

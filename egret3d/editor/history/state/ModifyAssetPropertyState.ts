@@ -1,5 +1,5 @@
 namespace paper.editor{
-
+    type ModifyAssetPropertyStateData = {assetUrl: string, newValueList: any[], preValueCopylist: any[]};
 
     //修改asset
     export class ModifyAssetPropertyState extends BaseState {
@@ -7,8 +7,13 @@ namespace paper.editor{
             return "[class common.ModifyAssetPropertyState]";
         }
 
-        public static create(data: any = null): ModifyAssetPropertyState | null {
+        public static create(assetUrl: string, newValueList: any[], preValueCopylist: any[]): ModifyAssetPropertyState | null {
             const state = new ModifyAssetPropertyState();
+            let data:ModifyAssetPropertyStateData = {
+                assetUrl,
+                newValueList,
+                preValueCopylist
+            }
             state.data = data;
             return state;
         }

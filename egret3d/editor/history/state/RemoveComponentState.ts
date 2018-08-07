@@ -1,4 +1,5 @@
 namespace paper.editor{
+    type RemoveComponentStateData = {gameObjectUUid:string,componentUUid:string,cacheSerializeData:any};
 
     //移除组件
     export class RemoveComponentState extends BaseState {
@@ -6,22 +7,31 @@ namespace paper.editor{
             return "[class common.RemoveComponentState]";
         }
 
-        public static create(data: any = null): RemoveComponentState | null {
+        public static create(gameObjectUUid:string,componentUUid:string,cacheSerializeData:any): RemoveComponentState | null {
             const state = new RemoveComponentState();
+            let data:RemoveComponentStateData = {
+                gameObjectUUid,
+                componentUUid,
+                cacheSerializeData
+            }
             state.data = data;
             return state;
         }
 
+        public get stateData():RemoveComponentStateData
+        {
+            return this.data as RemoveComponentStateData;
+        }
+
         public undo(): boolean {
             if (super.undo()) {
-                let serializeData = this.data.serializeData;
+                let serializeData = this.stateData.cacheSerializeData;
                 let component: BaseComponent = deserialize(serializeData,true);
-                let gameObjectUUid = this.data.gameObjectUUid;
+                let gameObjectUUid = this.stateData.gameObjectUUid;
                 if (component) {
                     let gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObject) {
                         (component as any).gameObject = gameObject;
-
                         Editor.editorModel.addComponentToGameObject(gameObject, component);
                         this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                     }
@@ -34,8 +44,8 @@ namespace paper.editor{
 
         public redo(): boolean {
             if (super.redo()) {
-                let gameObjectUUid = this.data.gameObjectUUid;
-                let componentUUid = this.data.componentUUid;
+                let gameObjectUUid = this.stateData.gameObjectUUid;
+                let componentUUid = this.stateData.componentUUid;
                 let obj = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (obj) {
                     for (let i: number = 0; i < obj.components.length; i++) {
