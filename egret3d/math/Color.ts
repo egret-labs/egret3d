@@ -26,6 +26,8 @@ namespace egret3d {
             this.g = element[1];
             this.b = element[2];
             this.a = element[3];
+
+            return this;
         }
 
         public set(r: number = 1, g: number = 1, b: number = 1, a: number = 1) {

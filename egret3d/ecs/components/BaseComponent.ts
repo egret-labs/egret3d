@@ -9,21 +9,13 @@ namespace paper {
         /**
          * @internal
          */
-        level: number;
-        /**
-         * @internal
-         */
-        componentIndex: number;
-        /**
-         * @internal
-         */
         index: number;
         requireComponents: ComponentClass<BaseComponent>[] | null;
     };
     /**
      * 
      */
-    export type SingletonComponentClass<T extends SingletonComponent> = ComponentClass<T> & { instance: T };
+    export type SingletonComponentClass<T extends SingletonComponent> = ComponentClass<T> & { instance: T | null };
     /**
      * 
      */
@@ -33,9 +25,14 @@ namespace paper {
      */
     export type ComponentArray = (BaseComponent | undefined)[];
     /**
+     * 
+     */
+    export type ComponentExtras = { linkedID?: string };
+
+    /**
      * 组件基类
      */
-    export abstract class BaseComponent extends SerializableObject {
+    export abstract class BaseComponent extends BaseObject {
         /**
          * 是否在编辑模式拥有生命周期。
          */
@@ -61,7 +58,7 @@ namespace paper {
          */
         public static requireComponents: ComponentClass<BaseComponent>[] | null = null;
 
-        private static _createEnabled: GameObject = null as any;
+        private static _createEnabled: GameObject | null = null;
         private static _componentCount: number = 0;
         private static readonly _componentClasses: ComponentClass<BaseComponent>[] = [];
         /**
@@ -72,12 +69,7 @@ namespace paper {
                 return;
             }
 
-            if (target.level < 0) {
-                target.level = (target.prototype.__proto__.constructor as ComponentClass<BaseComponent>).level + 1;
-                target.componentIndex = this._componentCount++;
-            }
-
-            if (target.index < 0) {
+            if (this._componentClasses.indexOf(target) < 0) {
                 target.index = this._componentClasses.length;
                 this._componentClasses.push(target);
             }
@@ -91,9 +83,6 @@ namespace paper {
 
             return new componentClass();
         }
-
-        @paper.serializedField
-        public assetID?: string = createAssetID();
         /**
          * 组件挂载的 GameObject
          */
@@ -102,7 +91,7 @@ namespace paper {
          * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
          */
         @paper.serializedField
-        public extras?: any;
+        public extras?: ComponentExtras = Application.isEditor && !Application.isPlaying ? {} : undefined;
 
         @serializedField
         protected _enabled: boolean = true;
@@ -115,7 +104,7 @@ namespace paper {
 
             if (BaseComponent._createEnabled) {
                 this.gameObject = BaseComponent._createEnabled;
-                BaseComponent._createEnabled = null as any;
+                BaseComponent._createEnabled = null;
             }
             else {
                 throw new Error("Create an instance of a component is not allowed.");
@@ -133,45 +122,6 @@ namespace paper {
          * - 重载此方法时，必须调用 `super.uninitialize()`。
          */
         public uninitialize() {
-        }
-
-        public serialize(): any {
-            const target = createReference(this, false);
-            target._enabled = this._enabled;
-
-            if (this.assetID) {
-                target.assetID = this.assetID;
-            }
-
-            if (this.extras) {
-                target.extras = {};
-
-                for (const k in this.extras) {
-                    target.extras[k] = this.extras[k];
-                }
-            }
-
-            return target;
-        }
-
-        public deserialize(element: any) {
-            this._enabled = element._enabled === false ? false : true;
-
-            if (element.uuid) {
-                this.uuid = element.uuid;
-            }
-
-            if (element.assetID) {
-                this.assetID = element.assetID;
-            }
-
-            if (element.extras) {
-                this.extras = {};
-
-                for (const k in element.extras) {
-                    this.extras[k] = element.extras[k];
-                }
-            }
         }
         /**
          * 

@@ -16,7 +16,6 @@ namespace paper {
         10: "egret3d.SphereCollider",
         11: "egret3d.Transform",
         12: "egret3d.Shader",
-        13: "egret3d.Mesh",
         14: "egret3d.Material",
         15: "egret3d.AnimationClip",
         16: "egret3d.TPoseInfo",
@@ -45,6 +44,8 @@ namespace paper {
         39: "egret3d.colorKey",
         40: "egret3d.Animation",
         41: "egret3d.GLTFAsset",
+        //
+        13: "paper.Compatible",
         //
         "egret3d.Light": "egret3d.DirectLight",
     };

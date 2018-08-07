@@ -10,13 +10,13 @@
         "declaration": true,
         "stripInternal": true,
         "alwaysStrict": true,
-        "noImplicitAny": false,
-        "noImplicitThis": false,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
         "noUnusedLocals": false,
-        "noUnusedParameters": false,
-        "strictNullChecks": false,
+        "noUnusedParameters": true,
+        "strictNullChecks": true,
         "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": false,
+        "allowSyntheticDefaultImports": true,
         "outFile": "bin/egret3d.js"
     },
     "files": [
@@ -24,15 +24,8 @@
         "libs/resourcemanager.d.ts",
 
         "egret3d/ecs/core/Decorators.ts",
-
-        "egret3d/ecs/serialize/SerializeClassMap.ts",
-        "egret3d/ecs/serialize/Clone.ts",
-        "egret3d/ecs/serialize/Deserialize.ts",
-        "egret3d/ecs/serialize/ISerializable.ts",
-        "egret3d/ecs/serialize/Serialize.ts",
-        "egret3d/ecs/serialize/SerializableObject.ts",
-
         "egret3d/ecs/core/Layer.ts",
+        "egret3d/ecs/core/BaseObject.ts",
         "egret3d/ecs/core/Asset.ts",
         "egret3d/ecs/core/Prefab.ts",
         "egret3d/ecs/core/RawScene.ts",
@@ -60,6 +53,11 @@
         "egret3d/ecs/systems/LateUpdateSystem.ts",
         "egret3d/ecs/systems/DisableSystem.ts",
 
+        "egret3d/ecs/serialize/SerializeClassMap.ts",
+        "egret3d/ecs/serialize/ISerializable.ts",
+        "egret3d/ecs/serialize/Deserialize.ts",
+        "egret3d/ecs/serialize/Serialize.ts",
+
         "egret3d/math/Vector2.ts",
         "egret3d/math/Vector3.ts",
         "egret3d/math/Vector4.ts",
@@ -72,15 +70,15 @@
         "egret3d/math/Matrix.ts",
         "egret3d/math/Math.ts",
         "egret3d/EventDispatcher.ts",
-        "egret3d/asset/resource/texture.ts",
-        "egret3d/asset/resource/GLTF.ts",
-        "egret3d/asset/resource/Mesh.ts",
         
         "egret3d/systems/BeginSystem.ts",
         "egret3d/systems/EndSystem.ts",
 
         "egret3d/components/Pool.ts",
         "egret3d/components/Transform.ts",
+        "egret3d/components/singletons/DefaultMeshes.ts",
+        "egret3d/components/singletons/DefaultTextures.ts",
+        "egret3d/components/singletons/DefaultShaders.ts",
         "egret3d/components/singletons/DefaultMaterials.ts",
         "egret3d/components/singletons/Cameras.ts",
         "egret3d/components/singletons/DrawCalls.ts",
@@ -112,14 +110,18 @@
         "egret3d/components/audio/Audio.ts",
         "egret3d/web/render/Stage3D.ts",
         "egret3d/web/render/WebGLCapabilities.ts",
-        "egret3d/asset/resource/Material.ts",
         "egret3d/math/Ray.ts",
+
+        "egret3d/asset/resource/GLTF.ts",
+        "egret3d/asset/resource/Mesh.ts",
+        "egret3d/asset/resource/texture.ts",
+        "egret3d/asset/resource/Material.ts",
+
         "egret3d/asset/default/ShaderLib.ts",
         "egret3d/asset/default/ShaderChunk.ts",
-        "egret3d/asset/default/DefaultTextures.ts",
+
         "egret3d/res-processor/ResProcessor.ts",
-        "egret3d/asset/default/DefaultShaders.ts",
-        "egret3d/asset/default/DefaultMeshes.ts",
+
         "egret3d/util/regexputil.ts",
         "egret3d/util/stream.ts",
         "egret3d/util/utils.ts",
@@ -166,24 +168,6 @@
         "egret3d/editor/components/PickGameObjectScript.ts",
         "egret3d/editor/gizmo/Gizmo.ts",
         "egret3d/editor/gizmo/GizmoShader.ts",
-        "egret3d/editor/gizmo/GizmoShaderLibs.ts",
-        
-        "libs/oimo/oimo.d.ts",
-        "egret3d/oimo/RaycastInfo.ts",
-        "egret3d/oimo/Rigidbody.ts",
-        "egret3d/oimo/collider/Collider.ts",
-        "egret3d/oimo/collider/BoxCollider.ts",
-        "egret3d/oimo/collider/SphereCollider.ts",
-        "egret3d/oimo/collider/CylinderCollider.ts",
-        "egret3d/oimo/collider/ConeCollider.ts",
-        "egret3d/oimo/collider/CapsuleCollider.ts",
-        "egret3d/oimo/joint/Joint.ts",
-        "egret3d/oimo/joint/SphericalJoint.ts",
-        "egret3d/oimo/joint/CylindricalJoint.ts",
-        "egret3d/oimo/joint/HingeJoint.ts",
-        "egret3d/oimo/joint/ConeTwistJoint.ts",
-        "egret3d/oimo/joint/UniversalJoint.ts",
-        "egret3d/oimo/PhysicsSystem.ts",
-        "egret3d/oimo/RayTester.ts"
+        "egret3d/editor/gizmo/GizmoShaderLibs.ts"
     ]
 }

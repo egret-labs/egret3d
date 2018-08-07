@@ -34,9 +34,9 @@ namespace paper {
             this._bufferedComponents.length = 0;
             this._bufferedGameObjects.length = 0;
             //
-            const begin = this._contactColliders.begin as OIMO.Contact[];
-            const stay = this._contactColliders.stay as OIMO.Contact[];
-            const end = this._contactColliders.end as OIMO.Contact[];
+            const begin = this._contactColliders.begin;
+            const stay = this._contactColliders.stay;
+            const end = this._contactColliders.end;
 
             if (begin.length > 0) {
                 for (const contact of begin) {

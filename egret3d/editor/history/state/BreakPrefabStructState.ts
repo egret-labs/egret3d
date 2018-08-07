@@ -9,6 +9,10 @@ namespace paper.editor {
             let instance: BreakPrefabStructState = new BreakPrefabStructState();
             instance.prefabInfos = [];
             prefabInstanceList.forEach(obj => {
+                for(let info of instance.prefabInfos){
+                    if(info.uuid===obj.uuid)
+                        return;
+                }
                 instance.prefabInfos = instance.prefabInfos.concat(this.makePrefabInfo(obj));
             })
             return instance;
@@ -46,6 +50,7 @@ namespace paper.editor {
             objs.forEach(obj => { 
                 obj.prefab = null; 
                 obj.extras = {};
+                this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: null });
             });
             return true;
         }
@@ -58,6 +63,7 @@ namespace paper.editor {
                     if (obj.uuid === info.uuid) {
                         obj.extras = info.editInfo;
                         obj.prefab = paper.Asset.find(info.prefab);
+                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.prefab });
                         break b;
                     }
                 }

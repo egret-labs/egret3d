@@ -55,10 +55,10 @@ namespace egret3d {
                 return aMat.renderQueue - bMat.renderQueue;
             }
             else if (aMat._glTFTechnique.program !== bMat._glTFTechnique.program) {
-                return aMat._glTFTechnique.program - bMat._glTFTechnique.program;
+                return aMat._glTFTechnique.program! - bMat._glTFTechnique.program!;
             }
-            else if (aMat.id !== bMat.id) {
-                return aMat.id - bMat.id;
+            else if (aMat._id !== bMat._id) {
+                return aMat._id - bMat._id;
             }
             else {
                 return a.zdist - b.zdist;

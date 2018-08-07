@@ -5,10 +5,6 @@ namespace egret3d.particle {
     const startSizeHelper: Vector3 = new Vector3();
     const startColorHelper: Color = new Color();
     const startRotationHelper: Vector3 = new Vector3();
-    const uvHelper: Vector4 = new Vector4(1.0, 1.0, 0.0, 0.0);
-    const helpVec2: Vector2 = new Vector2();
-    const helpVec3: Vector3 = new Vector3();
-    const helpVec4: Vector4 = new Vector4();
 
     const GRAVITY: Readonly<Vector3> = new Vector3(0, -9.81, 0);//TODO没有物理系统，暂时先放到这里
     /**
@@ -244,24 +240,24 @@ namespace egret3d.particle {
             this._lastFrameFirstCursor = 0;
             this._lastAliveCursor = 0;
             this._vertexStride = 0;
-            this._vertexAttributes = null;
+            this._vertexAttributes = null!;
             this._burstIndex = 0;
-            this._startPositionBuffer = null;
-            this._startVelocityBuffer = null;
-            this._startColorBuffer = null;
-            this._startSizeBuffer = null;
-            this._startRotationBuffer = null;
-            this._startTimeBuffer = null;
-            this._random0Buffer = null;
-            this._random1Buffer = null;
-            this._worldPostionBuffer = null;
-            this._worldRoationBuffer = null;
+            this._startPositionBuffer = null!;
+            this._startVelocityBuffer = null!;
+            this._startColorBuffer = null!;
+            this._startSizeBuffer = null!;
+            this._startRotationBuffer = null!;
+            this._startTimeBuffer = null!;
+            this._random0Buffer = null!;
+            this._random1Buffer = null!;
+            this._worldPostionBuffer = null!;
+            this._worldRoationBuffer = null!;
 
-            this._worldPostionCache = null;
-            this._worldRotationCache = null;
+            this._worldPostionCache = null!;
+            this._worldRotationCache = null!;
 
-            this._comp = null;
-            this._renderer = null;
+            this._comp = null!;
+            this._renderer = null!;
         }
 
         public resetTime() {
@@ -274,18 +270,18 @@ namespace egret3d.particle {
             this._renderer = renderer;
 
             const mesh = createBatchMesh(renderer, comp.main._maxParticles);
-            this._vertexStride = renderer._renderMode === ParticleRenderMode.Mesh ? renderer.mesh.vertexCount : 4;
+            this._vertexStride = renderer._renderMode === ParticleRenderMode.Mesh ? renderer.mesh!.vertexCount : 4;
 
-            this._startPositionBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_POSITION);
-            this._startVelocityBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_VELOCITY);
-            this._startColorBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_COLOR);
-            this._startSizeBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_SIZE);
-            this._startRotationBuffer = mesh.getAttributes(ParticleMaterialAttribute.START_ROTATION);
-            this._startTimeBuffer = mesh.getAttributes(ParticleMaterialAttribute.TIME);
-            this._random0Buffer = mesh.getAttributes(ParticleMaterialAttribute.RANDOM0);
-            this._random1Buffer = mesh.getAttributes(ParticleMaterialAttribute.RANDOM1);
-            this._worldPostionBuffer = mesh.getAttributes(ParticleMaterialAttribute.WORLD_POSITION);
-            this._worldRoationBuffer = mesh.getAttributes(ParticleMaterialAttribute.WORLD_ROTATION);
+            this._startPositionBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_POSITION)!;
+            this._startVelocityBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_VELOCITY)!;
+            this._startColorBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_COLOR)!;
+            this._startSizeBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_SIZE)!;
+            this._startRotationBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_ROTATION)!;
+            this._startTimeBuffer = mesh.getAttributes(gltf.AttributeSemanticType._TIME)!;
+            this._random0Buffer = mesh.getAttributes(gltf.AttributeSemanticType._RANDOM0)!;
+            this._random1Buffer = mesh.getAttributes(gltf.AttributeSemanticType._RANDOM1)!;
+            this._worldPostionBuffer = mesh.getAttributes(gltf.AttributeSemanticType._WORLD_POSITION)!;
+            this._worldRoationBuffer = mesh.getAttributes(gltf.AttributeSemanticType._WORLD_ROTATION)!;
 
             const primitive = mesh.glTFMesh.primitives[0];
             this._vertexAttributes = [];
@@ -392,49 +388,55 @@ namespace egret3d.particle {
                 const bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
                 if (this._firstAliveCursor > this._lastFrameFirstCursor) {
                     const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
-                    renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, bufferCount);
+                    renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
+                        // uploadVertexSubData(this._vertexAttributes, bufferOffset, bufferCount);
                 } else {
                     const addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
                     //先更新尾部的，再更新头部的
-                    renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                    renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+                    renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                    renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+
+
+                    // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                    // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
                 }
                 this._lastFrameFirstCursor = this._firstAliveCursor;
                 this._dirty = false;
             }
 
             const transform = comp.gameObject.transform;
+            const material = renderer.batchMaterial;
             if (mainModule._simulationSpace === SimulationSpace.Local) {
-                renderer._setVector3(ParticleMaterialUniform.WORLD_POSITION, this._worldPostionCache);
-                renderer._setVector4(ParticleMaterialUniform.WORLD_ROTATION, this._worldRotationCache);
+                material.setVector3(ParticleMaterialUniform.WORLD_POSITION, this._worldPostionCache);
+                material.setVector4(ParticleMaterialUniform.WORLD_ROTATION, this._worldRotationCache);
             }
             //
             switch (mainModule._scaleMode) {
                 case ScalingMode.Local:
                     {
                         const scale = transform.getLocalScale();
-                        renderer._setVector3(ParticleMaterialUniform.POSITION_SCALE, scale);
-                        renderer._setVector3(ParticleMaterialUniform.SIZE_SCALE, scale);
+                        material.setVector3(ParticleMaterialUniform.POSITION_SCALE, scale);
+                        material.setVector3(ParticleMaterialUniform.SIZE_SCALE, scale);
                     }
                     break;
                 case ScalingMode.Shape:
                     {
                         const scale = transform.getScale();
-                        renderer._setVector3(ParticleMaterialUniform.POSITION_SCALE, scale);
-                        renderer._setVector3(ParticleMaterialUniform.SIZE_SCALE, Vector3.ONE);
+                        material.setVector3(ParticleMaterialUniform.POSITION_SCALE, scale);
+                        material.setVector3(ParticleMaterialUniform.SIZE_SCALE, Vector3.ONE);
                     }
                     break;
                 case ScalingMode.Hierarchy:
                     {
                         const scale = transform.getScale();
-                        renderer._setVector3(ParticleMaterialUniform.POSITION_SCALE, scale);
-                        renderer._setVector3(ParticleMaterialUniform.SIZE_SCALE, scale);
+                        material.setVector3(ParticleMaterialUniform.POSITION_SCALE, scale);
+                        material.setVector3(ParticleMaterialUniform.SIZE_SCALE, scale);
                     }
                     break;
             }
 
-            renderer._setFloat(ParticleMaterialUniform.CURRENTTIME, this._time);
-            renderer._setVector3(ParticleMaterialUniform.GRAVIT, this._finalGravity);
+            material.setFloat(ParticleMaterialUniform.CURRENTTIME, this._time);
+            material.setVector3(ParticleMaterialUniform.GRAVIT, this._finalGravity);
         }
 
         public get aliveParticleCount(): number {

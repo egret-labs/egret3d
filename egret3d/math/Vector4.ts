@@ -33,6 +33,8 @@ namespace egret3d {
             this.y = element[1];
             this.z = element[2];
             this.w = element[3];
+
+            return this;
         }
 
         public copy(value: Readonly<IVector4>) {

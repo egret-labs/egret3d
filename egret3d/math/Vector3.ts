@@ -20,7 +20,7 @@ namespace egret3d {
 
         public static create(x?: number, y?: number, z?: number) {
             if (this._instances.length > 0) {
-                return this._instances.pop().set(x, y, z);
+                return this._instances.pop()!.set(x, y, z);
             }
 
             return new Vector3(x, y, z);
@@ -74,6 +74,8 @@ namespace egret3d {
             this.x = element[0];
             this.y = element[1];
             this.z = element[2];
+
+            return this;
         }
 
         public copy(value: Readonly<IVector3>) {

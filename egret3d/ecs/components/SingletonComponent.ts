@@ -6,7 +6,7 @@ namespace paper {
         /**
          * 
          */
-        public static instance: SingletonComponent = null as any;
+        public static instance: SingletonComponent | null = null;
 
         public initialize() {
             super.initialize();
@@ -23,7 +23,7 @@ namespace paper {
             super.uninitialize();
 
             if ((this.constructor as SingletonComponentClass<SingletonComponent>).instance === this) {
-                (this.constructor as SingletonComponentClass<SingletonComponent>).instance = null as any;
+                (this.constructor as SingletonComponentClass<SingletonComponent>).instance = null;
             }
         }
     }

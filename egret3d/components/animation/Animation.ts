@@ -253,7 +253,7 @@ namespace egret3d {
 
         private _onUpdateFrame() {
             const delta = this._delta;
-            const result = this._animationComponent._skinnedMeshRenderer._skeletonMatrixData;
+            const result = this._animationComponent._skinnedMeshRenderer!._skeletonMatrixData;
             const boneBlendLayers = this._animationComponent._boneBlendLayers;
             const frameBuffer = this._frameBuffer;
 
@@ -516,7 +516,7 @@ namespace egret3d {
 
                 for (const glTFChannel of this.animation.channels) {
                     const node = this.animationAsset.getNode(glTFChannel.target.node || 0);
-                    const gameObject = gameObjects[node.name];
+                    const gameObject = gameObjects[node.name!];
                     if (!gameObject) {
                         continue;
                     }
@@ -547,9 +547,9 @@ namespace egret3d {
                             break;
 
                         case "custom":
-                            switch (channel.glTFChannel.extensions.paper.type) {
+                            switch (channel.glTFChannel.extensions!.paper.type) {
                                 case "paper.GameObject":
-                                    switch (channel.glTFChannel.extensions.paper.property) {
+                                    switch (channel.glTFChannel.extensions!.paper.property) {
                                         case "activeSelf":
                                             channel.update = this._onUpdateActive.bind(this);
                                             break;

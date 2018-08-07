@@ -27,6 +27,8 @@ namespace egret3d {
         public deserialize(element: [number, number]) {
             this.x = element[0];
             this.y = element[1];
+
+            return this;
         }
 
         public copy(value: Readonly<IVector2>) {

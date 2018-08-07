@@ -15,15 +15,17 @@ namespace paper {
         /**
          * @internal
          */
-        public createInstance(isKeepUUID: boolean = false) {
+        public createInstance(keepUUID: boolean = false) {
             if (!this._raw) {
                 return null;
             }
 
-            const scene = deserialize(this._raw, isKeepUUID) as Scene | null;
+            const isEditor = Application.isEditor && !Application.isPlaying;
+            const deserializer = new paper.Deserializer();
+            const scene = deserializer.deserialize(this._raw, keepUUID) as Scene | null;
 
-            if (scene) {
-                scene.rawScene = this;
+            if (scene && isEditor) {
+                scene.extras!.rawScene = this;
             }
 
             return scene;
