@@ -18,7 +18,7 @@ namespace paper.editor{
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
                     const { gameObjUUid, componentUUid, serializeData } = element;
-                    const addComponent: BaseComponent = deserialize(serializeData,true);
+                    const addComponent: BaseComponent = new Deserializer().deserialize(serializeData,true);
                     if (addComponent) {
                         const gameObj = this.editorModel.getGameObjectByUUid(gameObjUUid);
                         if (gameObj) {

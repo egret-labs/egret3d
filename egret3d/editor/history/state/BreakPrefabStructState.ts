@@ -1,4 +1,6 @@
 namespace paper.editor {
+
+    type Info = { uuid: string, linkid?: string, rootid?: string, prefab?: string };
     /**
      * 预置体结构状态
      * @author 杨宁
@@ -17,7 +19,7 @@ namespace paper.editor {
             })
             return instance;
         }
-        private static makePrefabInfo(gameOjbect: GameObject): { uuid: string, extras: GameObjectExtras }[] {
+        private static makePrefabInfo(gameOjbect: GameObject): Info[] {
             let isPrefabRoot = (gameObj: GameObject): boolean => {
                 if (gameObj.extras.prefab) {
                     return true;
@@ -31,8 +33,8 @@ namespace paper.editor {
                 return false;
             }
 
-            let makeInfo = (target: GameObject, result: { uuid: string, extras: GameObjectExtras }[] = []) => {
-                result.push({ uuid: target.uuid, extras: target.extras });
+            let makeInfo = (target: GameObject, result: Info[] = []) => {
+                result.push({ uuid: target.uuid, linkid: target.extras.linkedID, rootid: target.extras.prefabRootId, prefab: target.extras.prefab.name });
                 target.transform.children.forEach(transform => {
                     let obj = transform.gameObject;
                     if (isPrefabChild(obj) && !isPrefabRoot(obj)) {
@@ -41,7 +43,7 @@ namespace paper.editor {
                 });
             }
             let target: GameObject = gameOjbect;
-            let infos: { uuid: string, extras: GameObjectExtras }[] = [];
+            let infos: Info[] = [];
             while (target) {
                 if (isPrefabRoot(target)) {
                     makeInfo(target, infos);
@@ -55,7 +57,7 @@ namespace paper.editor {
             return infos;
         }
 
-        private prefabInfos: { uuid: string, extras: GameObjectExtras }[] = [];
+        private prefabInfos: Info[] = [];
 
         public redo(): boolean {
             let ids = this.prefabInfos.map(prefabInfos => { return prefabInfos.uuid });
@@ -75,10 +77,10 @@ namespace paper.editor {
                 b: for (let k: number = 0; k < this.prefabInfos.length; k++) {
                     let info = this.prefabInfos[k];
                     if (obj.uuid === info.uuid) {
-                        obj.extras.linkedID = info.extras.linkedID;
-                        obj.extras.prefab = info.extras.prefab;
-                        obj.extras.prefabRootId = info.extras.prefabRootId;
-                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.prefab });
+                        obj.extras.linkedID = info.linkid;
+                        obj.extras.prefab = paper.Asset.find(info.prefab)
+                        obj.extras.prefabRootId = info.rootid;
+                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.extras.prefab });
                         break b;
                     }
                 }

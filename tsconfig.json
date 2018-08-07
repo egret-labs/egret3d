@@ -141,6 +141,7 @@
         "egret3d/editor/Editor.ts",
         "egret3d/editor/EditorDecorator.ts",
         "egret3d/editor/EditorModel.ts",
+        "egret3d/editor/EditorSceneModel.ts",
         "egret3d/editor/EventDispatcher.ts",
         "egret3d/editor/GeoController.ts",
         "egret3d/editor/history/History.ts",

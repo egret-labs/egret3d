@@ -29,7 +29,7 @@ namespace paper.editor{
                 if (prefab) {
                     let instance:GameObject;
                     if (this.data.serializeData) {
-                        instance = deserialize(this.data.serializeData,true);
+                        instance = new Deserializer().deserialize(this.data.serializeData,true);
                     } else {
                         instance = prefab.createInstance();
                         this.data.serializeData = serialize(instance);

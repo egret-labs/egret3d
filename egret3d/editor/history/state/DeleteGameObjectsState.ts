@@ -39,7 +39,7 @@ namespace paper.editor {
             if (super.undo()) {
                 for (let i: number = 0; i < this.deleteInfo.length; i++) {
                     let info = this.deleteInfo[i];
-                    let obj: GameObject = deserialize(info.serializeData,true);
+                    let obj: GameObject = new Deserializer().deserialize(info.serializeData,true);
                     let oldParentObj = this.editorModel.getGameObjectByUUid(info.oldParentUUID);
                     if (oldParentObj) {
                         let oldTargetTransform = oldParentObj.transform.children[info.oldIndex];

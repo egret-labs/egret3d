@@ -15,7 +15,7 @@ namespace paper.editor{
         public undo(): boolean {
             if (super.undo()) {
                 let serializeData = this.data.serializeData;
-                let component: BaseComponent = deserialize(serializeData,true);
+                let component: BaseComponent = new Deserializer().deserialize(serializeData,true);
                 let gameObjectUUid = this.data.gameObjectUUid;
                 if (component) {
                     let gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);

@@ -44,7 +44,7 @@ namespace paper.editor {
                         this.infos[i].serializeData = serialize(obj);
                     }
                     else {
-                        obj = deserialize(this.infos[i].serializeData, true);
+                        obj = new Deserializer().deserialize(this.infos[i].serializeData, true);
                     }
                     let parent = this.editorModel.getGameObjectByUUid(this.infos[i].parentUUID);
                     if (parent)
