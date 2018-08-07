@@ -1,31 +1,17 @@
 namespace egret3d {
-    /**
-     * 相机处理通道接口
-     * TODO 完善后public给开发者
-     */
+
     export interface ICameraPostQueue {
-        /**
-         * 
-         */
+
         renderTarget: GlRenderTarget;
-        /**
-         * 
-         */
+
         render(camera: Camera, renderSystem: WebGLRenderSystem): void;
     }
 
-    /**
-     * 深度绘制通道
-     * TODO 完善后public给开发者
-     */
+
     export class CameraPostQueueDepth implements ICameraPostQueue {
-        /**
-         * @inheritDoc
-         */
+
         public renderTarget: GlRenderTarget = null as any;
-        /**
-         * @inheritDoc
-         */
+
         public render(camera: Camera, renderSystem: WebGLRenderSystem) {
             // camera.context.drawtype = "_depth";
             // renderSystem._targetAndViewport(camera.viewport, this.renderTarget);
@@ -37,7 +23,7 @@ namespace egret3d {
 
     // /**
     //  * framebuffer绘制通道
-    //  * TODO 完善后public给开发者
+    //  * 
     //  */
     // export class CameraPostQueueQuad implements ICameraPostQueue {
     //     /**
@@ -68,7 +54,7 @@ namespace egret3d {
 
     /**
      * 颜色绘制通道
-     * TODO 完善后public给开发者
+     * 
      */
     export class CameraPostQueueColor implements ICameraPostQueue {
         /**
