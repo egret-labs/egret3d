@@ -5,12 +5,12 @@ namespace paper.editor {
             return "[class common.deleteGameObjectsState]";
         }
 
-        public static create(gameObjects: GameObject[]): DeleteGameObjectsState {
+        public static create(gameObjects: GameObject[],editorModel:EditorModel): DeleteGameObjectsState {
             gameObjects = gameObjects.concat();
             //筛选
-            Editor.editorModel.filtTopHierarchyGameObjects(gameObjects);
+            editorModel.filtTopHierarchyGameObjects(gameObjects);
             //排序
-            gameObjects = Editor.editorModel.sortGameObjectsForHierarchy(gameObjects);
+            gameObjects = editorModel.sortGameObjectsForHierarchy(gameObjects);
             let infos: { UUID: string, oldParentUUID: string, oldIndex: number, serializeData: any }[] = [];
             for (let i: number = 0; i < gameObjects.length; i++) {
                 let obj = gameObjects[i];
@@ -40,14 +40,14 @@ namespace paper.editor {
                 for (let i: number = 0; i < this.deleteInfo.length; i++) {
                     let info = this.deleteInfo[i];
                     let obj: GameObject = deserialize(info.serializeData,true);
-                    let oldParentObj = Editor.editorModel.getGameObjectByUUid(info.oldParentUUID);
+                    let oldParentObj = this.editorModel.getGameObjectByUUid(info.oldParentUUID);
                     if (oldParentObj) {
                         let oldTargetTransform = oldParentObj.transform.children[info.oldIndex];
                         if (oldTargetTransform) {
-                            Editor.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, 'top');
+                            this.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, 'top');
                         }
                         else {
-                            Editor.editorModel.setGameObjectsHierarchy([obj], oldParentObj, 'inner');
+                            this.editorModel.setGameObjectsHierarchy([obj], oldParentObj, 'inner');
                         }
                     }
                     else {
@@ -69,8 +69,11 @@ namespace paper.editor {
         public redo(): boolean {
             if (super.redo()) {
                 let ids = this.deleteInfo.map(info => { return info.UUID });
-                let objs = Editor.editorModel.getGameObjectsByUUids(ids);
-                Editor.editorModel._deleteGameObject(objs);
+                let objs = this.editorModel.getGameObjectsByUUids(ids);
+                for (let index = 0; index < objs.length; index++) {
+                    const element = objs[index];
+                    element.destroy();
+                }
                 this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, ids);
                 return true;
             }

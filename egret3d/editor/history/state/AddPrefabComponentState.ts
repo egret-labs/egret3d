@@ -36,9 +36,9 @@ namespace paper.editor{
         private removeComponent(data:any):void
         {
             const { gameObjectUUid, cacheUUid } = data;
-            const gameObj = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+            const gameObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
             if (gameObj && cacheUUid) {
-                const removeComponent = Editor.editorModel.getComponentById(gameObj, cacheUUid);
+                const removeComponent = this.editorModel.getComponentById(gameObj, cacheUUid);
                 if (removeComponent) {
                     gameObj.removeComponent(removeComponent as any);
                     this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
@@ -50,15 +50,16 @@ namespace paper.editor{
             if (super.redo()) {
                 const { instanceDatas,sourceData } = this.data;
 
+                const deserializer=new Deserializer();
                 //add component to prefab
                 const { gameObjectUUid, compClz } = sourceData;
-                const gameObj = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                const gameObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (gameObj) {
                     let addComponent;
     
                     if (sourceData.serializeData) {
-                        addComponent = deserialize(sourceData.serializeData, true);
-                        Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
+                        addComponent = deserializer.deserialize(sourceData.serializeData, true);
+                        this.editorModel.addComponentToGameObject(gameObj, addComponent);
                     } else {
                         addComponent = gameObj.addComponent(compClz);
                         sourceData.serializeData = serialize(addComponent);
@@ -67,21 +68,20 @@ namespace paper.editor{
     
                     this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                 }
-
                 //add component to instances
                 for (let index = 0; index < instanceDatas.length; index++) {
                     const instanceData = instanceDatas[index];
                     const { gameObjectUUid, compClz } = instanceData;
-                    const gameObj = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                    const gameObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     let addComponent;
     
                     if (instanceData.serializeData) {
-                        addComponent = deserialize(instanceData.serializeData, true);
-                        Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
+                        addComponent = deserializer.deserialize(instanceData.serializeData, true);
+                        this.editorModel.addComponentToGameObject(gameObj, addComponent);
                     } else {
-                        addComponent = deserialize(sourceData.serializeData, false);
+                        addComponent = deserializer.deserialize(sourceData.serializeData, false);
                         instanceData.serializeData = serialize(addComponent);
-                        Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
+                        this.editorModel.addComponentToGameObject(gameObj, addComponent);
                         instanceData.cacheUUid = addComponent.uuid;
                     }
     

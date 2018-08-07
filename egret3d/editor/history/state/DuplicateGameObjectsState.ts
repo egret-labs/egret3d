@@ -6,11 +6,11 @@ namespace paper.editor {
             return "[class common.DuplicateGameObjectsState]";
         }
 
-        public static create(objs: GameObject[]): DuplicateGameObjectsState {
+        public static create(objs: GameObject[],editorModel:EditorModel): DuplicateGameObjectsState {
             //过滤
-            Editor.editorModel.filtTopHierarchyGameObjects(objs);
+            editorModel.filtTopHierarchyGameObjects(objs);
             //排序
-            objs=Editor.editorModel.sortGameObjectsForHierarchy(objs);
+            objs=editorModel.sortGameObjectsForHierarchy(objs);
             let duplicateInfo: { UUID: string, parentUUID: string, serializeData: any }[] = [];
             for (let i: number = 0; i < objs.length; i++) {
                 let obj = objs[i];
@@ -30,8 +30,11 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                let objs = Editor.editorModel.getGameObjectsByUUids(this.addList);
-                Editor.editorModel._deleteGameObject(objs);
+                let objs = this.editorModel.getGameObjectsByUUids(this.addList);
+                for (let index = 0; index < objs.length; index++) {
+                    const element = objs[index];
+                    element.destroy();
+                }
                 this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, objs);
                 return true;
             }
@@ -45,7 +48,7 @@ namespace paper.editor {
                 for (let i: number = 0; i < this.duplicateInfo.length; i++) {
                     let info = this.duplicateInfo[i];
                     let obj: GameObject = deserialize(info.serializeData,!this.firstDo);
-                    let parent = Editor.editorModel.getGameObjectByUUid(info.parentUUID);
+                    let parent = this.editorModel.getGameObjectByUUid(info.parentUUID);
                     if (parent) {
                         obj.transform.parent = parent.transform;
                     }
@@ -64,7 +67,7 @@ namespace paper.editor {
             return false;
         }
         private clearPrefabInfo(obj: GameObject): void {
-            if (Editor.editorModel.isPrefabChild(obj)) {
+            if (this.editorModel.isPrefabChild(obj)) {
                 obj.prefab = null;
                 obj.extras = {};
                 for (let i: number = 0; i < obj.transform.children.length; i++) {
