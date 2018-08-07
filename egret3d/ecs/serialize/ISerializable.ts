@@ -26,19 +26,6 @@ namespace paper {
          */
         readonly class: string;
     }
-    // /**
-    //  * @internal
-    //  */
-    // export interface IPP extends IUUID {
-    //     puuid: string;
-    // }
-    // /**
-    //  * @internal
-    //  */
-    // export interface IPrefabExtras extends IAssetReference {
-    //     objects?: IPP[];
-    //     components?: IPP[];
-    // }
     /**
      * 
      */
@@ -75,27 +62,6 @@ namespace paper {
          * 所有组件。
          */
         readonly components?: ISerializedObject[];
-    }
-    /**
-     * 
-     */
-    export interface IDeserializedData {
-        /**
-         * @internal
-         */
-        isKeepUUID: boolean;
-        /**
-         * 
-         */
-        assets: string[];
-        /**
-         * 
-         */
-        objects: { [key: string]: GameObject };
-        /**
-         * 
-         */
-        components: { [key: string]: BaseComponent };
     }
     /**
      * 自定义序列化接口。

@@ -6,7 +6,13 @@ namespace paper {
         /**
          * 
          */
-        public static create(name: string = DefaultNames.NoName, isActive: boolean = true) {
+        public static createEmpty(name: string = DefaultNames.NoName, isActive: boolean = true) {
+            const exScene = Application.sceneManager.getSceneByName(name);
+            if (exScene) {
+                console.warn("The scene with the same name already exists.");
+                return exScene;
+            }
+
             const scene = new Scene(name);
             Application.sceneManager._addScene(scene, isActive);
 
@@ -15,8 +21,14 @@ namespace paper {
         /**
          * 
          */
-        public static load(name: string, combineStaticObjects: boolean = true) {
-            const rawScene = RES.getRes(name) as RawScene;
+        public static create(name: string, combineStaticObjects: boolean = true) {
+            const exScene = Application.sceneManager.getSceneByName(name);
+            if (exScene) {
+                console.warn("The scene with the same name already exists.");
+                return exScene;
+            }
+
+            const rawScene = paper.Asset.find<RawScene>(name);
             if (rawScene) {
                 const scene = rawScene.createInstance();
 
@@ -47,15 +59,10 @@ namespace paper {
         @serializedField
         public lightmapIntensity: number = 1.0;
         /**
-         * 存储着关联的数据
-         * 场景保存时，将场景快照数据保存至对应的资源中
-         */
-        public rawScene: RawScene | null = null;
-        /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @paper.serializedField
-        public extras?: any;
+        public extras?: { rawScene?: RawScene } = Application.isEditor && !Application.isPlaying ? {} : undefined;
         /**
          * @internal
          */
@@ -109,7 +116,6 @@ namespace paper {
 
             this.lightmaps.length = 0;
             this._gameObjects.length = 0;
-            this.rawScene = null;
         }
         /**
          * 返回当前激活场景中查找对应名称的GameObject

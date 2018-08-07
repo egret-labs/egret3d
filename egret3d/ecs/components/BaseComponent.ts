@@ -25,6 +25,11 @@ namespace paper {
      */
     export type ComponentArray = (BaseComponent | undefined)[];
     /**
+     * 
+     */
+    export type ComponentExtras = { linkedID?: string };
+
+    /**
      * 组件基类
      */
     export abstract class BaseComponent extends BaseObject {
@@ -78,9 +83,6 @@ namespace paper {
 
             return new componentClass();
         }
-
-        @paper.serializedField
-        public assetID?: string = createAssetID();
         /**
          * 组件挂载的 GameObject
          */
@@ -89,7 +91,7 @@ namespace paper {
          * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
          */
         @paper.serializedField
-        public extras?: any;
+        public extras?: ComponentExtras = Application.isEditor && !Application.isPlaying ? {} : undefined;
 
         @serializedField
         protected _enabled: boolean = true;

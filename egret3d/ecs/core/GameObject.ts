@@ -1,5 +1,9 @@
 namespace paper {
     /**
+     * 
+     */
+    export type GameObjectExtras = { linkedID?: string, prefabRootId?: string, prefab?: Prefab };
+    /**
      * 可以挂载Component的实体类。
      */
     export class GameObject extends BaseObject {
@@ -41,14 +45,6 @@ namespace paper {
          */
         @serializedField
         public tag: string = "";
-
-        @serializedField
-        public assetID?: string = createAssetID();
-        /**
-         * 预制体
-         */
-        @serializedField
-        public prefab: Prefab | null = null;
         /**
          * 变换组件
          */
@@ -61,7 +57,7 @@ namespace paper {
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @serializedField
-        public extras: { isPrefabRoot?: boolean, prefabRootId?: string } = {};
+        public extras?: GameObjectExtras = Application.isEditor && !Application.isPlaying ? {} : undefined;
 
         @serializedField
         private _activeSelf: boolean = true;
@@ -610,8 +606,8 @@ namespace paper {
                 return;
             }
 
-            for (const child of this.transform.children) {
-                child.gameObject.dontDestroy = value;
+            if (this.transform.parent && this.transform.parent.gameObject.dontDestroy !== value) {
+                this.transform.parent = null;
             }
 
             if (value) {
@@ -624,6 +620,10 @@ namespace paper {
                 }
 
                 this._addToScene(Application.sceneManager.activeScene);
+            }
+
+            for (const child of this.transform.children) {
+                child.gameObject.dontDestroy = value;
             }
         }
 

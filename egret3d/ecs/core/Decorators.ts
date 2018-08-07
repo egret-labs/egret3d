@@ -9,7 +9,7 @@ namespace paper {
             ignore?: string[];
         };
         prototype?: {
-            __proto__: SerializedClass;
+            __proto__: { constructor: SerializedClass };
         };
     }
     /**

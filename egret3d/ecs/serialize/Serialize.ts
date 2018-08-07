@@ -10,18 +10,20 @@ namespace paper {
 
     const KEY_GAMEOBJECTS: keyof Scene = "gameObjects";
     const KEY_COMPONENTS: keyof GameObject = "components";
-    const KEY_PREFAB: keyof GameObject = "prefab";
+    const KEY_EXTRAS: keyof GameObject = "extras";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
 
+    let _inline: boolean = false;
     const _serializeds: string[] = [];
-    const _serializedPrefabs: { [key: string]: GameObject } = {};
+    const _deserializers: { [key: string]: Deserializer } = {};
+    const _ignoreKeys: string[] = ["extras"];
+    const _rootIgnoreKeys: string[] = ["name", "localPosition", "localRotation", "extras"];
     let _serializeData: ISerializedData | null = null;
     let _defaultGameObject: GameObject | null = null;
     /**
-     * 序列化场景，实体或组件。
-     * @internal
+     * 
      */
-    export function serialize(source: Scene | GameObject | BaseComponent): ISerializedData {
+    export function serialize(source: Scene | GameObject | BaseComponent, inline: boolean = false): ISerializedData {
         if (_serializeData) {
             console.debug("The deserialization is not complete.");
         }
@@ -31,14 +33,30 @@ namespace paper {
             _defaultGameObject.parent = Application.sceneManager.globalGameObject;
         }
 
+        _inline = inline;
         _serializeData = { version: DATA_VERSION, assets: [], objects: [], components: [] };
         _serializeObject(source);
         _serializeds.length = 0;
+
+        for (const k in _deserializers) {
+            const deserializer = _deserializers[k];
+            (deserializer.root as GameObject).destroy();
+            delete _deserializers[k];
+        }
 
         const serializeData = _serializeData;
         _serializeData = null;
 
         return serializeData;
+    }
+    /**
+     * 
+     */
+    export function clone(object: GameObject) {
+        const data = serialize(object, true);
+        const deserializer = new Deserializer();
+
+        return deserializer.deserialize(data);
     }
     /**
      * 
@@ -171,8 +189,8 @@ namespace paper {
             }
         }
 
-        if (serializedClass.prototype) {
-            _getSerializedKeys(serializedClass.prototype.__proto__, keys);
+        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object as any) {
+            _getSerializedKeys(serializedClass.prototype.__proto__.constructor, keys);
         }
 
         return keys;
@@ -190,6 +208,7 @@ namespace paper {
 
         const target = _serializeReference(source);
         let temp: GameObject | BaseComponent | null = null;
+        let ignoreKeys: string[] = _ignoreKeys;
 
         if (source instanceof BaseComponent) {
             if (source.isDestroyed) {
@@ -197,19 +216,22 @@ namespace paper {
                 return false;
             }
 
-            if (source.assetID) { // Prefab component.
-                const prefabObjectUUID = source.gameObject.prefab ? source.gameObject.uuid : source.gameObject.extras!.prefabRootId!;
-                if (!(prefabObjectUUID in _serializedPrefabs)) {
-                    _serializedPrefabs[prefabObjectUUID] = Prefab.load((source.gameObject.prefab || (source.gameObject.scene.find(prefabObjectUUID)!.prefab))!.name)!;
+            if (source.extras && source.extras.linkedID) { // Prefab component.
+                const prefabObjectUUID = source.gameObject.extras!.prefab ? source.gameObject.uuid : source.gameObject.extras!.prefabRootId!;
+                if (!(prefabObjectUUID in _deserializers)) {
+                    const prefabGameObject = Prefab.create(
+                        (source.gameObject.extras!.prefab || (source.gameObject.scene.find(prefabObjectUUID)!.extras!.prefab))!.name,
+                        _defaultGameObject!.scene
+                    )!;
+                    prefabGameObject.parent = _defaultGameObject;
+                    _deserializers[prefabObjectUUID] = Deserializer._lastDeserializer;
                 }
 
-                const prefabObject = _serializedPrefabs[prefabObjectUUID];
-                for (const child of prefabObject.transform.getAllChildren()) {
-                    for (const childComponent of child.gameObject.components) {
-                        if (childComponent.assetID === source.assetID) {
-                            temp = childComponent;
-                        }
-                    }
+                const deserializer = _deserializers[prefabObjectUUID];
+                temp = deserializer.components[source.extras.linkedID];
+
+                if (source.gameObject.extras!.prefab) {
+                    ignoreKeys = _rootIgnoreKeys;
                 }
             }
             else {
@@ -224,17 +246,22 @@ namespace paper {
                 return false;
             }
 
-            if (source.assetID) { // Prefab leaf.
-                const prefabObjectUUID = source.prefab ? source.uuid : source.extras!.prefabRootId!;
-                if (!(prefabObjectUUID in _serializedPrefabs)) {
-                    _serializedPrefabs[prefabObjectUUID] = Prefab.load((source.prefab || (source.scene.find(prefabObjectUUID)!.prefab))!.name)!;
+            if (source.extras && source.extras.linkedID) {
+                const prefabObjectUUID = source.extras.prefab ? source.uuid : source.extras.prefabRootId!;
+                if (!(prefabObjectUUID in _deserializers)) {
+                    const prefabGameObject = Prefab.create(
+                        (source.extras.prefab || (source.scene.findWithUUID(prefabObjectUUID)!.extras!.prefab))!.name,
+                        _defaultGameObject!.scene
+                    )!;
+                    prefabGameObject.parent = _defaultGameObject;
+                    _deserializers[prefabObjectUUID] = Deserializer._lastDeserializer;
                 }
 
-                const prefabObject = _serializedPrefabs[prefabObjectUUID];
-                for (const child of prefabObject.transform.getAllChildren()) {
-                    if (child.gameObject.assetID === source.assetID) {
-                        temp = child;
-                    }
+                const deserializer = _deserializers[prefabObjectUUID];
+                temp = deserializer.objects[source.extras.linkedID] as GameObject;
+
+                if (source.extras.prefab) {
+                    ignoreKeys = _rootIgnoreKeys;
                 }
             }
             else {
@@ -243,21 +270,24 @@ namespace paper {
 
             _serializeData!.objects!.push(target);
         }
+        else {
+            _serializeData!.objects!.push(target);
+        }
 
         _serializeds.push(source.uuid);
-        _serializeChildren(source, target, temp);
+        _serializeChildren(source, target, temp, ignoreKeys);
 
         return true;
     }
 
-    function _serializeChildren(source: BaseObject, target: ISerializedObject, temp: GameObject | BaseComponent | null) {
+    function _serializeChildren(source: BaseObject, target: ISerializedObject, temp: GameObject | BaseComponent | null, ignoreKeys: string[] | null) {
         const serializedKeys = _getSerializedKeys(<any>source.constructor as SerializedClass);
         if (!serializedKeys) {
             return;
         }
 
         for (const k of serializedKeys) {
-            if (temp && equal((source as any)[k], (temp as any)[k])) {
+            if (temp && (!ignoreKeys || ignoreKeys.indexOf(k) < 0) && equal((source as any)[k], (temp as any)[k])) {
                 continue;
             }
 

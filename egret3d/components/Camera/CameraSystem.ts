@@ -34,7 +34,7 @@ namespace egret3d {
         public onUpdate(deltaTime: number) {
             const cameras = this._camerasAndLights.cameras;
             if (cameras.length > 0) {
-                const camerasScene = paper.Application.sceneManager.activeScene;
+                const camerasScene = paper.Application.sceneManager.camerasScene || paper.Application.sceneManager.activeScene;
                 this._camerasAndLights.sort();
 
                 for (const component of cameras) {

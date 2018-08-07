@@ -292,7 +292,7 @@ namespace paper.editor {
         public getComponentByAssetId(gameObject: GameObject, assetId: string): BaseComponent | null {
             for (let i: number = 0; i < gameObject.components.length; i++) {
                 let comp = gameObject.components[i];
-                if (comp.assetID === assetId) {
+                if (comp.linkedID === assetId) {
                     return comp;
                 }
             }

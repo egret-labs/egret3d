@@ -103,7 +103,7 @@ namespace paper {
          */
         public get globalScene() {
             if (!this._globalScene) {
-                this._globalScene = Scene.create(DefaultNames.Global, false);
+                this._globalScene = Scene.createEmpty(DefaultNames.Global, false);
                 this._scenes.pop(); // Remove global scene from scenes.
             }
 
@@ -114,7 +114,7 @@ namespace paper {
          */
         public get activeScene() {
             if (this._scenes.length === 0) {
-                Scene.create();
+                Scene.createEmpty();
             }
 
             return this._scenes[0];
@@ -143,7 +143,7 @@ namespace paper {
          */
         public get editorScene() {
             if (!this._editorScene) {
-                this._editorScene = Scene.create(DefaultNames.Editor, false);
+                this._editorScene = Scene.createEmpty(DefaultNames.Editor, false);
                 this._scenes.pop(); // Remove editor scene from scenes.
             }
 
@@ -165,13 +165,13 @@ namespace paper {
          * @deprecated
          */
         public createScene(name: string, isActive: boolean = true) {
-            return Scene.create(name, isActive);
+            return Scene.createEmpty(name, isActive);
         }
         /**
          * @deprecated
          */
         public loadScene(resourceName: string, combineStaticObjects: boolean = true) {
-            return Scene.load(resourceName, combineStaticObjects);
+            return Scene.create(resourceName, combineStaticObjects);
         }
         /**
          * @deprecated
