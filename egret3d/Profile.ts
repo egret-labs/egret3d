@@ -112,20 +112,20 @@ namespace egret3d {
 
             var old = this._getNow();
 
-            for (let i of list0) {
+            for (let _i of list0) {
                 console.log("list:");
             }
 
             console.log("list of用时:" + (this._getNow() - old));
             old = this._getNow();
 
-            for (let i in list0) {
+            for (let _i in list0) {
                 console.log("list:");
             }
             console.log("list in用时:" + (this._getNow() - old));
             old = this._getNow();
 
-            for (let key in map) {
+            for (let _i in map) {
                 console.log("map:");
             }
             console.log("map用时:" + (this._getNow() - old));

@@ -24,9 +24,9 @@ namespace egret3d.oimo {
             this._meshFilter = this.gameObject.getComponent(MeshFilter) || this.gameObject.addComponent(MeshFilter);
             this._meshRender = this.gameObject.getComponent(MeshRenderer) || this.gameObject.addComponent(MeshRenderer);
 
-            const mesh = new Mesh(4, null, _attributes);
+            const mesh = new Mesh(4, 0, _attributes);
             const vertices = mesh.getVertices();
-            const colors = mesh.getColors();
+            const colors = mesh.getColors()!;
 
             vertices[0] = 0.0;
             vertices[1] = 0.0;
@@ -70,7 +70,7 @@ namespace egret3d.oimo {
                 if (mesh) {
                     const v = helpMatrixA.copy(matrix).inverse().transformNormal(raycastInfo.normal).scale(1.0);
                     const vertices = mesh.getVertices();
-                    const colors = mesh.getColors();
+                    const colors = mesh.getColors()!;
 
                     vertices[3] = raycastInfo.distance;
                     vertices[4] = 0.0;
@@ -98,7 +98,7 @@ namespace egret3d.oimo {
                 const mesh = this._meshFilter.mesh;
                 if (mesh) {
                     const vertices = mesh.getVertices();
-                    const colors = mesh.getColors();
+                    const colors = mesh.getColors()!;
 
                     vertices[3] = this.distance;
                     vertices[4] = 0.0;

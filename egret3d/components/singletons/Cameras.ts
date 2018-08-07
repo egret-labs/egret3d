@@ -14,7 +14,7 @@ namespace egret3d {
             this.cameras.length = 0;
 
             for (const gameObject of gameObjects) {
-                this.cameras.push(gameObject.getComponent(Camera) as Camera);
+                this.cameras.push(gameObject.getComponent(Camera)!);
             }
         }
 

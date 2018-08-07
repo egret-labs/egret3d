@@ -44,7 +44,7 @@ namespace egret3d.oimo {
         protected _createJoint() {
             if (!this._connectedBody) {
                 // TODO
-                return null;
+                throw new Error();
             }
 
             this._rigidbody = this.gameObject.getComponent(Rigidbody) as Rigidbody;

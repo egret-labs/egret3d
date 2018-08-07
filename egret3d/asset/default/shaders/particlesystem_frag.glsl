@@ -1,4 +1,3 @@
-
 //inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.ps
 #include <common>
 uniform sampler2D _MainTex;

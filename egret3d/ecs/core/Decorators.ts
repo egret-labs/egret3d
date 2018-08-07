@@ -2,28 +2,52 @@ namespace paper {
     /**
      * @internal
      */
-    export const enum SerializeKey {
-        Serialized = "__serialized",
-        DeserializedIgnore = "__deserializedIgnore",
+    export interface SerializedClass {
+        __serializeInfo: {
+            owner: SerializedClass;
+            keys?: string[];
+            ignore?: string[];
+        };
+        prototype?: {
+            __proto__: { constructor: SerializedClass };
+        };
     }
     /**
      * 标记序列化属性
      * 通过装饰器标记需要序列化的属性
      */
-    export function serializedField(classPrototype: any, type: string) {
-        const types = (classPrototype[SerializeKey.Serialized] = classPrototype[SerializeKey.Serialized] || [type]) as string[];
-        if (types.indexOf(type) < 0) {
-            types.push(type);
+    export function serializedField(classPrototype: any, key: string) {
+        const serializedClass = classPrototype.constructor as SerializedClass;
+        if (!serializedClass.__serializeInfo || serializedClass.__serializeInfo.owner !== serializedClass) {
+            serializedClass.__serializeInfo = { owner: serializedClass };
+        }
+
+        if (!serializedClass.__serializeInfo.keys) {
+            serializedClass.__serializeInfo.keys = [];
+        }
+
+        const keys = serializedClass.__serializeInfo.keys!;
+        if (keys.indexOf(key) < 0) {
+            keys.push(key);
         }
     }
     /**
      * 标记反序列化时需要忽略的属性
      * 通过装饰器标记反序列化时需要被忽略的属性（但属性中引用的对象依然会被实例化）
      */
-    export function deserializedIgnore(classPrototype: any, type: string) {
-        const types = (classPrototype[SerializeKey.DeserializedIgnore] = classPrototype[SerializeKey.DeserializedIgnore] || [type]) as string[];
-        if (types.indexOf(type) < 0) {
-            types.push(type);
+    export function deserializedIgnore(classPrototype: any, key: string) {
+        const serializedClass = classPrototype.constructor as SerializedClass;
+        if (!serializedClass.__serializeInfo || serializedClass.__serializeInfo.owner !== serializedClass) {
+            serializedClass.__serializeInfo = { owner: serializedClass };
+        }
+
+        if (!serializedClass.__serializeInfo.ignore) {
+            serializedClass.__serializeInfo.ignore = [];
+        }
+
+        const keys = serializedClass.__serializeInfo.ignore!;
+        if (keys.indexOf(key) < 0) {
+            keys.push(key);
         }
     }
     /**

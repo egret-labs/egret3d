@@ -44,7 +44,7 @@ namespace RES.processor {
                 _repeat = true;
             }
 
-            const imgResource = RES.host.resourceConfig["getResource"](_name);
+            const imgResource = (RES.host.resourceConfig as any)["getResource"](_name);
             let loader = new egret.ImageLoader();
             loader.load(imgResource.root + imgResource.url);
             let image = await promisify(loader, imgResource);
@@ -90,14 +90,22 @@ namespace RES.processor {
 
     };
 
-    export const GLTFBinaryProcessor: RES.processor.Processor = {
+    export const GLBProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, RES.processor.BinaryProcessor);
-            const glTF = new egret3d.GLTFAsset(resource.name);
-            glTF.parseFromBinary(new Uint32Array(result));
+            let glb: egret3d.GLTFAsset;
 
-            paper.Asset.register(glTF);
-            return glTF;
+            if (resource.name.indexOf(".mesh.glb") >= 0) {
+                glb = new egret3d.Mesh(0, 0);
+            }
+            else {
+                glb = new egret3d.GLTFAsset();
+            }
+
+            glb.name = resource.name;
+            glb.parseFromBinary(new Uint32Array(result));
+
+            return glb;
         },
 
         async onRemoveStart(host, resource) {
@@ -109,17 +117,17 @@ namespace RES.processor {
     export const GLTFProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, RES.processor.JsonProcessor);
-            const glTF = new egret3d.GLTFAsset(resource.name);
+            const glTF = new egret3d.Material(null!);
+            glTF.name = resource.name;
+            glTF.parse(result);
 
-            const buffers = [];
-            glTF.parse(result, buffers);
             if (glTF.config.materials && glTF.config.materials.length > 0) {
                 for (const mat of glTF.config.materials) {
                     const values = mat.extensions.KHR_techniques_webgl.values;
                     for (const key in values) {
                         const value = values[key];
                         if (typeof value === "string") {
-                            const r = RES.host.resourceConfig["getResource"](value);
+                            const r = (RES.host.resourceConfig as any)["getResource"](value);
                             if (r) {
                                 // const texture = await RES.getResAsync(r.name);
                                 const texture = await host.load(r);
@@ -132,8 +140,6 @@ namespace RES.processor {
                     }
                 }
             }
-
-            paper.Asset.register(glTF);
 
             return glTF;
         },
@@ -186,21 +192,23 @@ namespace RES.processor {
     };
 
     async function loadSubAssets(data: paper.ISerializedData, resource: RES.ResourceInfo) {
-        await Promise.all(data.assets.map((async (item) => {
-            const r = RES.host.resourceConfig["getResource"](item);
-            if (r) {
-                await host.load(r);
-            }
-            else {
-                console.error("")
-            }
-        })));
+        if (data.assets) {
+            await Promise.all(data.assets.map((async (item) => {
+                const r = (RES.host.resourceConfig as any)["getResource"](item);
+                if (r) {
+                    await host.load(r);
+                }
+                else {
+                    console.error("")
+                }
+            })));
+        }
     }
 
     RES.processor.map("Texture", TextureProcessor);
     RES.processor.map("TextureDesc", TextureDescProcessor);
     RES.processor.map("GLTF", GLTFProcessor);
-    RES.processor.map("GLTFBinary", GLTFBinaryProcessor);
+    RES.processor.map("GLTFBinary", GLBProcessor);
     RES.processor.map("Prefab", PrefabProcessor);
     RES.processor.map("Scene", SceneProcessor);
 }

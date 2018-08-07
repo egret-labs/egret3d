@@ -37,7 +37,7 @@ namespace egret3d.particle {
         public readonly colorOverLifetime: ColorOverLifetimeModule = new ColorOverLifetimeModule(this);
         //序列帧变化模块
         @paper.serializedField
-        public readonly textureSheetAnimation: TextureSheetAnimationModule = new TextureSheetAnimationModule(this);        
+        public readonly textureSheetAnimation: TextureSheetAnimationModule = new TextureSheetAnimationModule(this);
         /**
          * @internal
          */
@@ -56,30 +56,6 @@ namespace egret3d.particle {
             this._isPlaying = false;
             this._isPaused = false;
         }
-
-        public deserialize(element: any) {
-            super.deserialize(element);
-            this.main.deserialize(element.main);
-            this.emission.deserialize(element.emission);
-            if (element.shape) {
-                this.shape.deserialize(element.shape);
-            }
-            if (element.velocityOverLifetime) {
-                this.velocityOverLifetime.deserialize(element.velocityOverLifetime);
-            }
-            if (element.rotationOverLifetime) {
-                this.rotationOverLifetime.deserialize(element.rotationOverLifetime);
-            }
-            if (element.sizeOverLifetime) {
-                this.sizeOverLifetime.deserialize(element.sizeOverLifetime);
-            }
-            if (element.colorOverLifetime) {
-                this.colorOverLifetime.deserialize(element.colorOverLifetime);
-            }
-            if (element.textureSheetAnimation) {
-                this.textureSheetAnimation.deserialize(element.textureSheetAnimation);
-            }
-        }
         /**
          * @internal 
          */
@@ -97,9 +73,9 @@ namespace egret3d.particle {
         /**
          * @internal 
          */
-        public initBatcher(){            
+        public initBatcher() {
             this._clean();
-            this._batcher.init(this, this.gameObject.getComponent(ParticleRenderer));
+            this._batcher.init(this, this.gameObject.getComponent(ParticleRenderer)!);
         }
         /**
          * @internal 
@@ -178,7 +154,7 @@ namespace egret3d.particle {
         public get isPaused(): boolean {
             return this._isPaused;
         }
-        public get isAlive() : boolean{
+        public get isAlive(): boolean {
             return this._batcher.aliveParticleCount > 0 || this._isPlaying;
         }
     }

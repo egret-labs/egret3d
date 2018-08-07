@@ -211,7 +211,7 @@ namespace paper.editor {
                     return materials;
                 case editor.EditType.MESH:
                     let meshAsset = await RES.getResAsync(serializeData);
-                    let mesh: egret3d.Mesh = new egret3d.Mesh(meshAsset, 0)
+                    let mesh: egret3d.Mesh = new egret3d.Mesh(meshAsset, 0); // TODO
                     return mesh;
                 case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
@@ -288,7 +288,7 @@ namespace paper.editor {
         public getComponentByAssetId(gameObject: GameObject, assetId: string): BaseComponent | null {
             for (let i: number = 0; i < gameObject.components.length; i++) {
                 let comp = gameObject.components[i];
-                if (comp.assetID === assetId) {
+                if (comp.linkedID === assetId) {
                     return comp;
                 }
             }

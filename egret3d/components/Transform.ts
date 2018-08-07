@@ -1,7 +1,6 @@
 namespace egret3d {
 
     let helpVec3 = new Vector3();
-    let helpVec3_2 = new Vector3();
     let helpMat4 = new Matrix();
     let helpQuat4 = new Quaternion();
     let helpQuat4_2 = new Quaternion();
@@ -191,7 +190,6 @@ namespace egret3d {
                 child._getAllChildren(children);
             }
         }
-
         /**
          * @internal
          */
@@ -206,15 +204,21 @@ namespace egret3d {
          */
         public setParent(newParent: Transform | null, worldPositionStays: boolean = false) {
             const oldParent = this._parent;
-
             if (oldParent === newParent) {
+                return;
+            }
+
+            if (
+                newParent &&
+                this.gameObject.scene !== newParent.gameObject.scene
+            ) {
+                console.warn("Cannot change the parent to a different scene.");
                 return;
             }
 
             if (worldPositionStays) {
                 Vector3.copy(this.getPosition(), helpVector3A);
             }
-
             if (oldParent) {
                 oldParent._removeFromChildren(this);
             }

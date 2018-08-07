@@ -19,6 +19,16 @@ namespace paper {
     /**
      * 
      */
+    export const enum DefaultNames {
+        NoName = "NoName",
+        Global = "Global",
+        MainCamera = "MainCamera",
+        EditorCamera = "EditorCamera",
+        Editor = "Editor",
+    }
+    /**
+     * 
+     */
     export const enum DefaultTags {
         Untagged = "",
         Respawn = "Respawn",
@@ -27,7 +37,7 @@ namespace paper {
         MainCamera = "MainCamera",
         Player = "Player",
         GameController = "GameController",
-        Global = "global",
+        Global = "Global",
     }
     /**
      * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。

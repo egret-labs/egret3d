@@ -51,6 +51,8 @@ namespace egret3d {
             this.y = element[1];
             this.w = element[2];
             this.h = element[3];
+
+            return this;
         }
     }
 }

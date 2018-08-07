@@ -12,7 +12,7 @@ namespace egret3d {
 
         public static create(x?: number, y?: number, z?: number, w?: number) {
             if (this._instances.length > 0) {
-                return this._instances.pop().set(x, y, z, w);
+                return this._instances.pop()!.set(x, y, z, w);
             }
 
             return new Quaternion(x, y, z, w);
@@ -45,11 +45,13 @@ namespace egret3d {
             return [this.x, this.y, this.z, this.w];
         }
 
-        public deserialize(element: Readonly<[number, number, number, number]>): void {
+        public deserialize(element: Readonly<[number, number, number, number]>) {
             this.x = element[0];
             this.y = element[1];
             this.z = element[2];
             this.w = element[3];
+
+            return this;
         }
 
         public copy(value: Readonly<IVector4>) {

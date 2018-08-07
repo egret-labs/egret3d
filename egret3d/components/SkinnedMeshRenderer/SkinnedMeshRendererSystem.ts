@@ -36,13 +36,17 @@ namespace egret3d {
 
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
-                    material: renderer.materials[primitive.material || 0] || DefaultMaterials.MissingMaterial,
+                    material: renderer.materials[primitive.material || 0] || DefaultMaterials.Missing,
 					
                     frustumTest: false,
                     zdist: -1,
 
                     boneData: renderer.boneBuffer,
                 };
+
+                if (!renderer.mesh.vbo) {
+                    renderer.mesh.createVBOAndIBOs();
+                }
 
                 material.addDefine("SKINNING");
 

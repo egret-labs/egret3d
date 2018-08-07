@@ -113,6 +113,9 @@ namespace egret3d {
         private _efficient: boolean = true; // 是否高效模式
         private cacheData: Float32Array;
 
+        private _joints: Float32Array | null = null;
+        private _weights: Float32Array | null = null;
+
         private _getMatByIndex(index: number, out: Matrix) {
             const mesh = this._mesh;
             if (!mesh) {
@@ -120,14 +123,22 @@ namespace egret3d {
             }
 
             const blendIndices = helpVector4E;
-            mesh.getAttribute(index, gltf.MeshAttributeType.JOINTS_0, 0, blendIndices);
+            if (!this._joints) {
+                this._joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)!;
+            }
+
+            blendIndices.set(this._joints[index * 4], this._joints[index * 4 + 1], this._joints[index * 4 + 2], this._joints[index * 4 + 3]);
 
             if (blendIndices.x >= this._maxBoneCount || blendIndices.y >= this._maxBoneCount || blendIndices.z >= this._maxBoneCount || blendIndices.w >= this._maxBoneCount) {
                 return null;
             }
 
+            if (!this._weights) {
+                this._weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)!;
+            }
+
             const blendWeights = helpVector4F;
-            mesh.getAttribute(index, gltf.MeshAttributeType.WEIGHTS_0, 0, blendWeights);
+            blendWeights.set(this._weights[index * 4], this._weights[index * 4 + 1], this._weights[index * 4 + 2], this._weights[index * 4 + 3]);
 
             if (this._efficient) {
                 const vec40r = helpVector4A;
@@ -277,70 +288,6 @@ namespace egret3d {
             this._bones.length = 0;
             this._mesh = null;
         }
-
-        public serialize() {
-            const target = super.serialize();
-            target.center = [this.center.x, this.center.y, this.center.z];
-            target.size = [this.size.x, this.size.y, this.size.z];
-            target.rootBone = null;
-            target._bones = [] as paper.IUUID[];
-            target._mesh = this._mesh ? this._mesh.serialize() : null;
-            target._materials = [] as paper.IUUID[];
-
-            if (this.rootBone) {
-                target.rootBone = { uuid: this.rootBone.uuid };
-            }
-
-            const materials = this._materials;
-            target._materials.length = materials.length;
-            for (let i = 0, l = materials.length; i < l; i++) {
-                const material = materials[i];
-                target._materials[i] = material.serialize();
-                // target._materials[i] = paper.createAssetReference(material);
-            }
-
-            const bones = this._bones;
-            target._bones.length = bones.length;
-            for (let i = 0, l = bones.length; i < l; i++) {
-                const bone = bones[i];
-                target._bones[i] = { uuid: bone.uuid };
-            }
-
-            return target;
-        }
-
-        public deserialize(element: any) {
-            super.deserialize(element);
-
-            this.center.deserialize(element.center);
-            this.size.deserialize(element.size);
-
-            if (element._mesh) {
-                this._mesh = new (Mesh as any)(); //
-                (this._mesh as Mesh).deserialize(element._mesh);
-            }
-
-            if (element.rootBone) {
-                this.rootBone = paper.getDeserializedAssetOrComponent(element.rootBone) as egret3d.Transform;
-            }
-
-            this._materials.length = 0;
-            if (element._materials) {
-                for (let i = 0, l = element._materials.length; i < l; i++) {
-                    var material = new Material();
-                    material.deserialize(element._materials[i]);
-                    this._materials.push(material);
-                    // this._materials.push(paper.getDeserializedAssetOrComponent(element._materials[i]) as Material);
-                }
-            }
-
-            this._bones.length = 0;
-            if (element._bones) {
-                for (let i = 0, l = element._bones.length; i < l; i++) {
-                    this._bones.push(paper.getDeserializedAssetOrComponent(element._bones[i]) as egret3d.Transform);
-                }
-            }
-        }
         /**
          * ray intersects
          * @param ray ray
@@ -365,7 +312,7 @@ namespace egret3d {
             let pickinfo = null;
             // let data = this.mesh.data;
             let subMeshIndex = 0;
-            for (const primitive of mesh.glTFMesh.primitives) {
+            for (const _primitive of mesh.glTFMesh.primitives) {
                 const mat0 = helpMat4_1;
                 const mat1 = helpMat4_2;
                 const mat2 = helpMat4_3;

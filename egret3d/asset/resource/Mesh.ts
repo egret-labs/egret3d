@@ -1,10 +1,4 @@
 namespace egret3d {
-    export const enum MeshDrawMode {
-        Static = 1,
-        Dynamic = 2,
-        Stream = 3,
-    }
-
     const helpVec3_1: Vector3 = new Vector3();
     const helpVec3_2: Vector3 = new Vector3();
     const helpVec3_3: Vector3 = new Vector3();
@@ -14,6 +8,13 @@ namespace egret3d {
     const helpVec3_7: Vector3 = new Vector3();
     // const helpVec3_8: Vector3 = new Vector3();
 
+    const _attributes: gltf.MeshAttributeType[] = [
+        gltf.MeshAttributeType.POSITION,
+        gltf.MeshAttributeType.NORMAL,
+        gltf.MeshAttributeType.TANGENT,
+        gltf.MeshAttributeType.COLOR_0,
+        gltf.MeshAttributeType.TEXCOORD_0,
+    ];
     /**
      * Mesh.
      * @version egret3D 1.0
@@ -22,441 +23,219 @@ namespace egret3d {
      */
     /**
      * 网格模型。
+     * - 所有子网格的 attributes 必须生成在连续的 buffer 上，并且保持一致。
      * @version egret3D 1.0
      * @platform Web
      * @language zh_CN
      */
-    export class Mesh extends paper.SerializableObject {
+    export class Mesh extends GLTFAsset {
         /**
          * @internal
          */
-        public vertexCount: number = 0;
-        /**
-         * true :所有subMesh公用一个buffer; false :每个subMesh使用单独的buffer
-         * @internal
-         */
-        public isSharedBuffer: boolean = true;
-        @paper.serializedField
-        protected _drawMode: MeshDrawMode = MeshDrawMode.Static; // TODO
+        public readonly ibos: WebGLBuffer[] = [];
         /**
          * @internal
          */
-        public _version: number = 0;
-        @paper.serializedField
-        protected _glTFMeshIndex: number = 0;
-        @paper.serializedField
-        protected _glTFAsset: GLTFAsset = null as any;
-        protected _glTFMesh: gltf.Mesh = null as any;
-        protected _vertexBuffer: Float32Array = null as any;
+        public vbo: WebGLBuffer | null = null;
 
-        /**
-         * 暂时实现在这里，应实现到 gltf material。
-         */
-        protected _attributeType: { [key: string]: gltf.AccessorType } = {};
+        protected _drawMode: gltf.DrawMode = gltf.DrawMode.Static;
+        protected _vertexCount: number = 0;
+        protected readonly _attributeNames: string[] = [];
+        protected readonly _customAttributeTypes: { [key: string]: gltf.AccessorType } = {};
+        protected _glTFMesh: gltf.Mesh | null = null;
 
-        /**
-         * 暂时实现在这里，应该下放到 web，并将此方法抽象。
-         */
-        public readonly ibos: (WebGLBuffer | null)[] = [];
-        public vbo: WebGLBuffer = null as any;
-        protected _getDrawMode(mode: MeshDrawMode) {
-            const webgl = WebGLCapabilities.webgl;
-
-            switch (mode) {
-                case MeshDrawMode.Static:
-                    return webgl.STATIC_DRAW;
-
-                case MeshDrawMode.Dynamic:
-                    return webgl.DYNAMIC_DRAW;
-
-                case MeshDrawMode.Stream:
-                    return webgl.STREAM_DRAW;
-            }
-
-            throw new Error();
-        }
-
-        protected _cacheVertexCount(): void {
-            const primitives = this._glTFMesh.primitives;
-
-            let isSameAccessor = true;
-            let firstPosAccessor = primitives[0].attributes.POSITION;
-            for (let i = 1; i < primitives.length; i++) {
-                const posAccessor = primitives[i].attributes.POSITION;
-                if (posAccessor !== firstPosAccessor) {
-                    isSameAccessor = false;
-                    break;
-                }
-            }
-
-            this.vertexCount = 0;
-            //
-            if (isSameAccessor) {
-                this.vertexCount = this.getVertexCount();
-            } else {
-                for (let i = 0; i < primitives.length; i++) {
-                    this.vertexCount += this.getVertexCount(i);
-                }
-            }
-        }
-
-        protected _cacheMeshAttributeType(attributeNames: gltf.MeshAttribute[], attributeTypes: gltf.AccessorType[]) {
-            //
-            if (attributeNames.length !== attributeTypes.length) {
-                throw "_cacheMeshAttributeType: attributeNames.length is not equal attributeType.length";
-            }
-            for (let i = 0, l = attributeNames.length; i < l; i++) {
-                this._attributeType[attributeNames[i]] = attributeTypes[i];
-            }
-        }
-
-        protected _getMeshAttributeType(attributeName: string): gltf.AccessorType {
-            if (attributeName in this._attributeType) {
-                return this._attributeType[attributeName];
-            }
-
-            return GLTFAsset.getMeshAttributeType(attributeName);
-        }
-
-        public constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, firstIndexCount: number, attributeNames: gltf.MeshAttribute[], attributeType: gltf.AccessorType[], drawMode?: MeshDrawMode);
-        public constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, firstIndexCount: number, attributeNames: gltf.MeshAttribute[], drawMode?: MeshDrawMode);
-        public constructor(vertexCountOrVertices: number | Float32Array, indexCountOrIndices: number | Uint16Array | null, attributeNames: gltf.MeshAttribute[], drawMode?: MeshDrawMode);
-        public constructor(gltfAsset: GLTFAsset, gltfMeshIndex: number, drawMode?: MeshDrawMode);
-        public constructor(...args: any[]) {
+        public constructor(
+            vertexCount: number, indexCount: number,
+            attributeNames: gltf.MeshAttribute[] = _attributes, attributeTypes: { [key: string]: gltf.AccessorType } | null = null,
+            drawMode: gltf.DrawMode = gltf.DrawMode.Static
+        ) {
             super();
 
-            if (args.length === 0) {
-                return;
-            }
-
-            if ((args[0] instanceof GLTFAsset)) { // Shared mesh.
-                this._drawMode = args[2] || MeshDrawMode.Static;
-                this._glTFMeshIndex = args[1];
-                this._glTFAsset = args[0];
-            }
-            else { // Custom mesh.
-                const isSubIndexCountParameter = typeof args[2] === "number";
-                const isAttributeTypeParameter = Array.isArray(args[4]);
-                if (isAttributeTypeParameter) {
-                    this._drawMode = args[5] || MeshDrawMode.Static;
-                    this._cacheMeshAttributeType(args[3], args[4]);
-                } else {
-                    this._drawMode = (isSubIndexCountParameter ? args[4] : args[3]) || MeshDrawMode.Static;
-                }
-
-                // Create gltf asset.
-                this._glTFAsset = GLTFAsset.createGLTFAsset();
-                this._glTFAsset.config.buffers = [{ byteLength: 0 }];
-                this._glTFAsset.config.bufferViews = [{ buffer: 0, byteOffset: 0, byteLength: 0, target: gltf.BufferViewTarget.ArrayBuffer }];
-                this._glTFAsset.config.accessors = [];
-                this._glTFMesh = { primitives: [{ attributes: { POSITION: 0 } }] };
-                this._glTFAsset.config.meshes = [this._glTFMesh];
+            if (vertexCount > 0) { // Custom.
+                this.config = GLTFAsset.createMeshConfig();
                 //
-                const attributeNames = (isSubIndexCountParameter ? args[3] : args[2]) as gltf.MeshAttribute[];
-                const buffer = this._glTFAsset.config.buffers[0];
-                const vertexBufferView = this._glTFAsset.config.bufferViews[0];
-                const accessors = this._glTFAsset.config.accessors as gltf.Accessor[];
-                const primitive = this._glTFMesh.primitives[0];
-                const { attributes } = primitive;
+                const buffer = this.config.buffers![0];
+                const vertexBufferView = this.config.bufferViews![0];
+                const { accessors } = this.config;
+                const { attributes } = this.config.meshes![0].primitives[0];
+                //
+                let hasCustomAttributeType = false;
 
-                { // Vertices.
-                    const isVertexCountParameter = typeof args[0] === "number";
-                    const vertexBuffer = isVertexCountParameter ? null : args[0] as Float32Array;
-                    const count = isVertexCountParameter ? args[0] as number : this._getVertexCountFromBuffer(vertexBuffer as Float32Array, attributeNames);
-
-                    for (const attributeName of attributeNames) { // Create
-                        // const type = GLTFAsset.getMeshAttributeType(attributeName);
-                        const type = this._getMeshAttributeType(attributeName);
-                        const byteOffset = vertexBufferView.byteLength;
-                        vertexBufferView.byteLength += count * GLTFAsset.getAccessorTypeCount(type) * Float32Array.BYTES_PER_ELEMENT;
-                        attributes[attributeName] = accessors.length;
-                        accessors.push({
-                            bufferView: 0,
-                            byteOffset,
-                            count,
-                            componentType: gltf.ComponentType.Float,
-                            type,
-                        });
-                    }
-
-                    buffer.byteLength = vertexBufferView.byteLength;
-
-                    if (isVertexCountParameter) {
-                        this._glTFAsset.buffers[0] = new Float32Array(vertexBufferView.byteLength);
-                    }
-                    else {
-                        this._glTFAsset.buffers[0] = vertexBuffer as Float32Array;
+                if (attributeTypes) {
+                    for (const k in attributeTypes) {
+                        hasCustomAttributeType = true;
+                        this._customAttributeTypes[k] = attributeTypes[k];
                     }
                 }
 
-                if (args[1]) {
-                    const isIndexCountParameter = typeof args[1] === "number";
-                    const indexBuffer = isIndexCountParameter ? null : args[1] as Uint16Array;
-                    const totalCount = isIndexCountParameter ? args[1] as number : (indexBuffer as Uint16Array).length;
-                    const count = isSubIndexCountParameter ? args[2] as number : totalCount;
-                    const indexBufferView = this._glTFAsset.config.bufferViews[1] = {
-                        buffer: 1,
-                        byteOffset: 0,
-                        byteLength: totalCount * GLTFAsset.getAccessorTypeCount(gltf.AccessorType.SCALAR) * Uint16Array.BYTES_PER_ELEMENT,
-                        target: gltf.BufferViewTarget.ElementArrayBuffer,
-                    };
-                    primitive.indices = accessors.length;
-                    accessors.push({
-                        bufferView: 1, byteOffset: 0, count: count,
-                        componentType: gltf.ComponentType.UnsignedShort, type: gltf.AccessorType.SCALAR,
+                for (const attributeName of attributeNames) { // Create
+                    const attributeType = hasCustomAttributeType ? this._customAttributeTypes[attributeName] || this.getMeshAttributeType(attributeName) : this.getMeshAttributeType(attributeName);
+                    const byteOffset = vertexBufferView.byteLength;
+                    vertexBufferView.byteLength += vertexCount * this.getAccessorTypeCount(attributeType) * Float32Array.BYTES_PER_ELEMENT;
+                    attributes[attributeName] = accessors!.length;
+                    accessors!.push({
+                        bufferView: 0,
+                        byteOffset: byteOffset,
+                        count: vertexCount,
+                        normalized: attributeName === gltf.MeshAttributeType.NORMAL || attributeName === gltf.MeshAttributeType.TANGENT,
+                        componentType: gltf.ComponentType.Float,
+                        type: attributeType,
                     });
-
-                    this._glTFAsset.config.buffers[1] = { byteLength: indexBufferView.byteLength };
-
-                    if (isIndexCountParameter) {
-                        this._glTFAsset.buffers[1] = new Uint16Array(indexBufferView.byteLength / Uint16Array.BYTES_PER_ELEMENT);
-                    }
-                    else {
-                        this._glTFAsset.buffers[1] = indexBuffer as Uint16Array;
-                    }
                 }
+
+                buffer.byteLength = vertexBufferView.byteLength;
+                this.buffers[0] = new Float32Array(vertexBufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
+
+                if (indexCount >= 0) { // Indices.
+                    this.addSubMesh(indexCount, 0);
+                }
+
+                this._drawMode = drawMode;
+
+                this.initialize();
             }
-
-            this.initialize();
-        }
-
-        private _getVertexCountFromBuffer(vertexBuffer: Float32Array, attributeNames: gltf.MeshAttribute[]) {
-            let vertexPerCount = 0;
-
-            for (const attributeName of attributeNames) {
-                // vertexPerCount += GLTFAsset.getAccessorTypeCount(GLTFAsset.getMeshAttributeType(attributeName));
-                vertexPerCount += GLTFAsset.getAccessorTypeCount(this._getMeshAttributeType(attributeName));
-            }
-
-            return vertexBuffer.length / vertexPerCount;
-        }
-
-        public serialize() {
-            if (!this._glTFAsset.name) {
-                return null;
-            }
-
-            const target = paper.createStruct(this);
-            target._glTFMeshIndex = this._glTFMeshIndex;
-            target._glTFAsset = paper.createAssetReference(this._glTFAsset);
-
-            return target;
-        }
-
-        public deserialize(element: any) {
-            this._glTFMeshIndex = element._glTFMeshIndex;
-            this._glTFAsset = paper.getDeserializedAssetOrComponent(element._glTFAsset) as GLTFAsset;
-
-            this.initialize();
         }
 
         public dispose() {
-            const webgl = WebGLCapabilities.webgl;
-
-            if (this.vbo) {
-                webgl.deleteBuffer(this.vbo);
+            if (this._isBuiltin) {
+                return;
             }
+
+            const webgl = WebGLCapabilities.webgl;
 
             for (const ibo of this.ibos) {
                 webgl.deleteBuffer(ibo);
             }
 
+            if (this.vbo) {
+                webgl.deleteBuffer(this.vbo);
+            }
+
+            super.dispose();
+
             this.ibos.length = 0;
-            this.vbo = null as any;
-
-            this._glTFAsset = null as any;
-            this._glTFMesh = null as any;
-            this._vertexBuffer = null as any;
-        }
-
-        public caclByteLength() {
-            return 0;
+            this.vbo = null;
         }
         /**
          * 
          */
         public clone() {
-            return new Mesh(this._glTFAsset, this._glTFMeshIndex, this._drawMode);
+            const value = new Mesh(this.vertexCount, 0, this._attributeNames, this._customAttributeTypes, this.drawMode);
+
+            for (const primitive of this._glTFMesh!.primitives) {
+                if (primitive.indices !== undefined) {
+                    const accessor = this.getAccessor(primitive.indices);
+                    value.addSubMesh(accessor.count, primitive.material, primitive.mode);
+                }
+            }
+
+            let index = 0;
+            for (const bufferViewA of this.config.bufferViews!) {
+                const bufferViewB = value.config.bufferViews![index++];
+                const a = this.createTypeArrayFromBufferView(bufferViewA, gltf.ComponentType.UnsignedInt);
+                const b = this.createTypeArrayFromBufferView(bufferViewB, gltf.ComponentType.UnsignedInt);
+
+                for (let i = 0, l = a.length; i < l; ++i) {
+                    b[i] = a[i];
+                }
+            }
+
+            return value;
+        }
+
+        public initialize() {
+            if (this._glTFMesh) {
+                return;
+            }
+
+            this._glTFMesh = this.config.meshes![0];
+
+            const accessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION!);
+            this._vertexCount = accessor.count;
+
+            for (const k in this._glTFMesh.primitives[0].attributes) {
+                this._attributeNames.push(k);
+            }
         }
         /**
          * 
          */
-        public initialize(drawMode?: MeshDrawMode) {
-            if (this._vertexBuffer) {
-                // console.warn("The mesh instance bas been initialized.");
-                // return;
+        public addSubMesh(indexCount: number, materialIndex: number = 0, randerMode?: gltf.MeshPrimitiveMode) {
+            const { accessors } = this.config;
+            const primitives = this.config.meshes![0].primitives;
+            const subMeshIndex = this.buffers.length === primitives.length + 1 ? primitives.length : 0;
+            const indexBufferView = this.config.bufferViews![subMeshIndex + 1] = {
+                buffer: subMeshIndex + 1,
+                byteOffset: 0,
+                byteLength: indexCount * this.getAccessorTypeCount(gltf.AccessorType.SCALAR) * Uint16Array.BYTES_PER_ELEMENT,
+                target: gltf.BufferViewTarget.ElementArrayBuffer,
+            };
+            const primitive = primitives[subMeshIndex] = primitives[subMeshIndex] || {
+                attributes: primitives[0].attributes,
+            };
+
+            primitive.indices = accessors!.length;
+            primitive.material = materialIndex;
+            primitive.mode = randerMode;
+            accessors!.push({
+                bufferView: 1, byteOffset: 0,
+                count: indexCount,
+                componentType: gltf.ComponentType.UnsignedShort, type: gltf.AccessorType.SCALAR,
+            });
+            this.buffers[subMeshIndex + 1] = new Uint16Array(indexBufferView.byteLength / Uint16Array.BYTES_PER_ELEMENT);
+            this.config.buffers![subMeshIndex + 1] = { byteLength: indexBufferView.byteLength };
+
+            return primitives.length - 1;
+        }
+
+        public getVertices(offset: number = 0, count: number = 0) {
+            return this.getAttributes(gltf.MeshAttributeType.POSITION, offset, count) as Float32Array;
+        }
+
+        public getUVs(offset: number = 0, count: number = 0) {
+            return this.getAttributes(gltf.MeshAttributeType.TEXCOORD_0, offset, count) as Float32Array;
+        }
+
+        public getColors(offset: number = 0, count: number = 0) {
+            return this.getAttributes(gltf.MeshAttributeType.COLOR_0, offset, count) as Float32Array | null;
+        }
+
+        public getNormals(offset: number = 0, count: number = 0) {
+            return this.getAttributes(gltf.MeshAttributeType.NORMAL, offset, count) as Float32Array | null;
+        }
+
+        public getTangents(offset: number = 0, count: number = 0) {
+            return this.getAttributes(gltf.MeshAttributeType.TANGENT, offset, count) as Float32Array | null;
+        }
+
+        public getAttributes(attributeType: gltf.MeshAttribute, offset: number = 0, count: number = 0) {
+            const accessorIndex = this._glTFMesh!.primitives[0].attributes[attributeType];
+            if (accessorIndex === undefined) {
+                return null;
             }
 
-            const config = this._glTFAsset.config;
-            if (
-                !config.buffers ||
-                !config.bufferViews ||
-                !config.accessors ||
-                !config.meshes ||
-                config.meshes.length <= this._glTFMeshIndex
-            ) {
-                console.error("Error glTF asset.");
-                return;
-            }
+            return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex), offset, count);
+        }
 
-            this._glTFMesh = config.meshes[this._glTFMeshIndex];
-            if (drawMode) {
-                this._drawMode = drawMode;
-            }
-            //
-            const vertexBufferViewAccessor = this._glTFAsset.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION);
-            this._vertexBuffer = this._glTFAsset.createTypeArrayFromBufferView(this._glTFAsset.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float) as any;
-            this._cacheVertexCount();
-
-            // 暂时实现在这里，应该下放到 web，并将此类抽象。
-            const webgl = WebGLCapabilities.webgl;
-            const vbo = webgl.createBuffer();
-
-            if (vbo) {
-                this.vbo = vbo;
-                webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
-                webgl.bufferData(webgl.ARRAY_BUFFER, this._vertexBuffer.byteLength, this._getDrawMode(this._drawMode));
-
-                let subMeshIndex = 0;
-                for (const primitive of this._glTFMesh.primitives) {
-                    const attributeNames: gltf.MeshAttribute[] = [];
-                    for (const k in primitive.attributes) {
-                        attributeNames.push(k as gltf.MeshAttribute);
-                    }
-
-                    this.uploadSubVertexBuffer(attributeNames, subMeshIndex);
-
-                    if (primitive.indices !== undefined) {
-                        const accessor = this._glTFAsset.getAccessor(primitive.indices);
-                        const ibo = webgl.createBuffer();
-
-                        if (ibo) {
-                            this.ibos.push(ibo);
-                            webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
-                            webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this._glTFAsset.getBufferLength(accessor), this._getDrawMode(this._drawMode));
-                            this.uploadSubIndexBuffer(subMeshIndex);
-                        }
-                        else {
-                            this.ibos.push(null);
-                            console.log("Create webgl element buffer error.");
-                        }
-                    }
-                    else {
-                        this.ibos.push(null);
-                    }
-
-                    subMeshIndex++;
+        public setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset: number = 0, count: number = 0) {
+            const target = this.getAttributes(attributeType, offset, count);
+            if (target) {
+                for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {
+                    target[i] = value[i];
                 }
             }
-            else {
-                console.log("Create webgl buffer error.");
-            }
-        }
-        /**
-         * @internal
-         */
-        public addSubMesh(indexOffset: number, indexCount: number, materialIndex: number = 0, sourceSubMeshIndex: number = 0) {
-            if (0 <= sourceSubMeshIndex && sourceSubMeshIndex < this._glTFMesh.primitives.length) {
-                this._glTFAsset.config.accessors = this._glTFAsset.config.accessors || [];
-                //
-                const sourcePrimitive = this._glTFMesh.primitives[sourceSubMeshIndex];
-                const sourceIndiceAccessor = this._glTFAsset.getAccessor(sourcePrimitive.indices || 0);
-                const primitive = {
-                    attributes: sourcePrimitive.attributes,
-                    indices: this._glTFAsset.config.accessors.length,
-                    material: materialIndex,
-                };
-                this._glTFMesh.primitives.push(primitive);
-                this._glTFAsset.config.accessors.push(
-                    {
-                        bufferView: sourceIndiceAccessor.bufferView,
-                        byteOffset: indexOffset * GLTFAsset.getComponentTypeCount(gltf.ComponentType.UnsignedShort) * GLTFAsset.getAccessorTypeCount(gltf.AccessorType.SCALAR),
-                        count: indexCount,
-                        componentType: gltf.ComponentType.UnsignedShort,
-                        type: gltf.AccessorType.SCALAR,
-                    }
-                );
 
-                const accessor = this._glTFAsset.getAccessor(primitive.indices);
-                const webgl = WebGLCapabilities.webgl;
-                const ibo = webgl.createBuffer();
-
-                if (ibo) {
-                    this.ibos.push(ibo);
-                    webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
-                    webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this._glTFAsset.getBufferLength(accessor), this._getDrawMode(this._drawMode));
-                }
-                else {
-                    this.ibos.push(null);
-                    console.log("Create webgl element buffer error.");
-                }
-
-                return this._glTFMesh.primitives.length - 1;
-            }
-
-            console.warn("Error arguments.");
-
-            return -1;
-        }
-
-        public getVertexCount(subMeshIndex: number = 0) {
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const accessor = this._glTFAsset.getAccessor(this._glTFMesh.primitives[subMeshIndex].attributes.POSITION);
-                return accessor.count;
-            }
-
-            console.warn("Error arguments.");
-
-            return 0;
-        }
-
-        public getVertices(subMeshIndex: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.POSITION, subMeshIndex) as Float32Array;
-        }
-
-        public getUVs(subMeshIndex: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.TEXCOORD_0, subMeshIndex) as Float32Array | null;
-        }
-
-        public getColors(subMeshIndex: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.COLOR_0, subMeshIndex) as Float32Array | null;
-        }
-
-        public getNormals(subMeshIndex: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.NORMAL, subMeshIndex) as Float32Array | null;
-        }
-
-        public getTangents(subMeshIndex: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.TANGENT, subMeshIndex) as Float32Array | null;
-        }
-
-        public getAttributes(attributeType: gltf.MeshAttribute, subMeshIndex: number = 0) {
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const accessorIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType];
-                if (accessorIndex === undefined) {
-                    return null;
-                }
-
-                const accessor = this._glTFAsset.getAccessor(accessorIndex);
-
-                return this._glTFAsset.createTypeArrayFromAccessor(accessor);
-            }
-
-            console.warn("Error arguments.");
-
-            return null;
+            return target;
         }
 
         public getIndices(subMeshIndex: number = 0) {
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const accessorIndex = this._glTFMesh.primitives[subMeshIndex].indices;
+            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh!.primitives.length) {
+                const accessorIndex = this._glTFMesh!.primitives[subMeshIndex].indices;
                 if (accessorIndex === undefined) {
                     return null;
                 }
 
-                const accessor = this._glTFAsset.getAccessor(accessorIndex);
-
-                return this._glTFAsset.createTypeArrayFromAccessor(accessor) as Uint16Array;
+                return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex)) as Uint16Array;
             }
 
             console.warn("Error arguments.");
@@ -464,102 +243,74 @@ namespace egret3d {
             return null;
         }
 
-        public uploadVertexSubData(uploadAttributes: gltf.MeshAttribute[], startVertexIndex: number, vertexCount: number, subMeshIndex: number = 0) {
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const webgl = WebGLCapabilities.webgl;
-                const primitive = this._glTFMesh.primitives[subMeshIndex];
+        public setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex: number = 0) {
+            const target = this.getIndices(subMeshIndex);
+            if (target) {
+                for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {
+                    target[i] = value[i];
+                }
+            }
 
-                webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
-                const attributes = primitive.attributes;
+            return target;
+        }
+        /**
+         * 
+         */
+        public uploadSubVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset: number = 0, count: number = 0) {
+            if (!this.vbo) {
+                return;
+            }
+
+            const webgl = WebGLCapabilities.webgl;
+            const { attributes } = this._glTFMesh!.primitives[0];
+
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
+
+            if (Array.isArray(uploadAttributes)) {
                 for (const attributeName of uploadAttributes) {
                     const accessorIndex = attributes[attributeName];
                     if (accessorIndex !== undefined) {
-                        const accessor = this._glTFAsset.getAccessor(accessorIndex);
-                        const compType = GLTFAsset.getComponentTypeCount(accessor.componentType);
-                        const typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
-                        const startOffset = this._glTFAsset.getBufferOffset(accessor);
-                        const bufferOffset = startOffset + startVertexIndex * typeCount * compType;
-                        const subVertexBuffer = this._glTFAsset.createTypeArrayFromAccessor(accessor);
-                        let letray = new Float32Array(subVertexBuffer.buffer, bufferOffset, typeCount * vertexCount);
-                        webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, letray);
-                    }
-                    else {
-                        console.warn("Error arguments.");
-                    }
-                }
-
-                this._version++;
-            }
-            else {
-                console.warn("Error arguments.");
-            }
-        }
-        /**
-         * 暂时实现在这里，应该下放到 web，并将此方法抽象。
-         */
-        public uploadSubVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]), subMeshIndex: number = 0) {
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const webgl = WebGLCapabilities.webgl;
-                const primitive = this._glTFMesh.primitives[subMeshIndex];
-                const attributes = primitive.attributes;
-                webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
-
-                if (typeof uploadAttributes === "string") {
-                    const accessorIndex = attributes[uploadAttributes];
-                    if (accessorIndex !== undefined) {
-                        const accessor = this._glTFAsset.getAccessor(accessorIndex);
-                        const bufferOffset = this._glTFAsset.getBufferOffset(accessor);
-                        const subVertexBuffer = this._glTFAsset.createTypeArrayFromAccessor(accessor);
+                        const accessor = this.getAccessor(accessorIndex);
+                        const bufferOffset = this.getBufferOffset(accessor);
+                        const subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
                         webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
                     }
                     else {
                         console.warn("Error arguments.");
                     }
                 }
-                else {
-                    for (const attributeName of uploadAttributes) {
-                        const accessorIndex = attributes[attributeName];
-                        if (accessorIndex !== undefined) {
-                            const accessor = this._glTFAsset.getAccessor(accessorIndex);
-                            const bufferOffset = this._glTFAsset.getBufferOffset(accessor);
-                            const subVertexBuffer = this._glTFAsset.createTypeArrayFromAccessor(accessor);
-                            webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
-                        }
-                        else {
-                            console.warn("Error arguments.");
-                        }
-                    }
-                }
-
-                this._version++;
             }
             else {
-                console.warn("Error arguments.");
+                const accessorIndex = attributes[uploadAttributes];
+                if (accessorIndex !== undefined) {
+                    const accessor = this.getAccessor(accessorIndex);
+                    const bufferOffset = this.getBufferOffset(accessor);
+                    const subVertexBuffer = this.createTypeArrayFromAccessor(accessor);
+                    webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
+                }
+                else {
+                    console.warn("Error arguments.");
+                }
             }
         }
         /**
-         * 暂时实现在这里，应该下放到 web，并将此方法抽象。
+         * 
          */
         public uploadSubIndexBuffer(subMeshIndex: number = 0) {
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
+            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh!.primitives.length) {
+                if (!this.vbo) {
+                    return;
+                }
+
                 const webgl = WebGLCapabilities.webgl;
-                const primitive = this._glTFMesh.primitives[subMeshIndex];
+                const primitive = this._glTFMesh!.primitives[subMeshIndex];
 
                 if (primitive.indices !== undefined) {
-                    const accessor = this._glTFAsset.getAccessor(primitive.indices);
-                    // const bufferOffset = this._glTFAsset.getBufferOffset(accessor);
-                    const subIndexBuffer = this._glTFAsset.createTypeArrayFromAccessor(accessor);
+                    const accessor = this.getAccessor(primitive.indices);
+                    const subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
                     const ibo = this.ibos[subMeshIndex];
-
-                    if (ibo) {
-                        webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
-                        //ibo每个单独上传，偏移一直是0
-                        webgl.bufferSubData(webgl.ELEMENT_ARRAY_BUFFER, 0, subIndexBuffer);
-                        this._version++;
-                    }
-                    else {
-                        console.error("Error webgl element buffer.");
-                    }
+                    webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
+                    webgl.bufferSubData(webgl.ELEMENT_ARRAY_BUFFER, 0, subIndexBuffer);
                 }
                 else {
                     console.warn("Error arguments.");
@@ -567,6 +318,57 @@ namespace egret3d {
             }
             else {
                 console.warn("Error arguments.");
+            }
+        }
+        /**
+         * @internal
+         */
+        public createVBOAndIBOs() {
+            const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh!.primitives[0].attributes.POSITION!);
+            const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
+            const webgl = WebGLCapabilities.webgl;
+            const vbo = webgl.createBuffer();
+
+            if (vbo) {
+                this.vbo = vbo;
+
+                const attributeNames: gltf.MeshAttribute[] = [];
+                for (const k in this._glTFMesh!.primitives[0].attributes) {
+                    attributeNames.push(k);
+                }
+
+                let subMeshIndex = 0;
+                for (const primitive of this._glTFMesh!.primitives) {
+                    if (primitive.indices !== undefined) {
+                        if (this.ibos.length === subMeshIndex) {
+                            const ibo = webgl.createBuffer();
+                            if (ibo) {
+                                this.ibos.push(ibo);
+                                webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
+                                webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this.drawMode);
+                                this.uploadSubIndexBuffer(subMeshIndex);
+                            }
+                            else {
+                                console.error("Create webgl element buffer error.");
+                            }
+                        }
+                        else {
+                            console.error("Error arguments.");
+                        }
+                    }
+                    else if (this.ibos.length > 0) {
+                        console.error("Error arguments.");
+                    }
+
+                    subMeshIndex++;
+                }
+
+                webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
+                webgl.bufferData(webgl.ARRAY_BUFFER, vertexBuffer.byteLength, this.drawMode);
+                this.uploadSubVertexBuffer(attributeNames);
+            }
+            else {
+                console.error("Create webgl buffer error.");
             }
         }
         /**
@@ -579,7 +381,7 @@ namespace egret3d {
             let pickInfo: PickInfo | null = null; // TODO
             let subMeshIndex = 0;
 
-            for (const primitive of this._glTFMesh.primitives) {
+            for (const primitive of this._glTFMesh!.primitives) {
                 if (
                     primitive.mode === gltf.MeshPrimitiveMode.Lines ||
                     primitive.mode === gltf.MeshPrimitiveMode.LineLoop ||
@@ -640,124 +442,42 @@ namespace egret3d {
             return pickInfo;
         }
         /**
+         * 
+         */
+        public get drawMode() {
+            return this._drawMode;
+        }
+        public set drawMode(value: gltf.DrawMode) {
+            if (this.vbo) {
+                console.warn("Cannot change draw mode after the mesh has been rendered.");
+                return;
+            }
+
+            this._drawMode = value;
+        }
+        /**
          * 获取子网格数量。
          */
         public get subMeshCount() {
-            return this._glTFMesh.primitives.length;
+            return this._glTFMesh!.primitives.length;
         }
         /**
-         * 获取 mesh 数据所属的 glTF 资源。
+         * 
          */
-        public get glTFAsset() {
-            return this._glTFAsset;
+        public get vertexCount() {
+            return this._vertexCount;
+        }
+        /**
+         * 
+         */
+        public get attributeNames(): ReadonlyArray<string> {
+            return this._attributeNames;
         }
         /**
          * 获取 glTFMesh 数据。
          */
         public get glTFMesh() {
-            return this._glTFMesh;
-        }
-
-        /**
-         * @deprecated
-         */
-        public getAttribute<T extends (Vector4 | Vector3 | Vector2)>(vertexIndex: number, attributeType: gltf.MeshAttribute, subMeshIndex: number = 0, result?: T) {
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const attributeIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType];
-                if (attributeIndex !== undefined) {
-                    const accessor = this._glTFAsset.getAccessor(attributeIndex);
-                    if (0 <= vertexIndex && vertexIndex < accessor.count) {
-                        // const bufferOffset = this._glTFAsset.getBufferOffset(accessor);
-                        // const typeCount= GLTFAsset.getComponentTypeCount(accessor.componentType);
-                        // const offset = bufferOffset / typeCount + vertexIndex * typeCount;
-                        const typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
-                        const offset = vertexIndex * typeCount;
-                        const buffers = this._glTFAsset.createTypeArrayFromAccessor(accessor);
-                        switch (accessor.type) {
-                            case gltf.AccessorType.VEC2: {
-                                if (!result) {
-                                    result = new Vector2() as any;
-                                }
-
-                                (result as Vector2).x = buffers[offset];
-                                (result as Vector2).y = buffers[offset + 1];
-                                break;
-                            }
-
-                            case gltf.AccessorType.VEC3: {
-                                if (!result) {
-                                    result = new Vector3() as any;
-                                }
-
-                                (result as Vector3).x = buffers[offset];
-                                (result as Vector3).y = buffers[offset + 1];
-                                (result as Vector3).z = buffers[offset + 2];
-                                break;
-                            }
-
-                            case gltf.AccessorType.VEC4: {
-                                if (!result) {
-                                    result = new Vector4() as any;
-                                }
-
-                                (result as Vector4).x = buffers[offset];
-                                (result as Vector4).y = buffers[offset + 1];
-                                (result as Vector4).z = buffers[offset + 2];
-                                (result as Vector4).w = buffers[offset + 3];
-                                break;
-                            }
-                        }
-
-                        return result;
-                    }
-                }
-            }
-
-            console.warn("Error arguments.");
-
-            return result;
-        }
-        /**
-         * @deprecated
-         */
-        public setAttribute(vertexIndex: number, attributeType: gltf.MeshAttribute, subMeshIndex: number, ...args: number[]) {
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                const attributeIndex = this._glTFMesh.primitives[subMeshIndex].attributes[attributeType];
-                if (attributeIndex !== undefined) {
-                    const accessor = this._glTFAsset.getAccessor(attributeIndex);
-                    if (0 <= vertexIndex && vertexIndex < accessor.count) {
-                        const offset = this._glTFAsset.getBufferOffset(accessor) / GLTFAsset.getComponentTypeCount(accessor.componentType) + vertexIndex * GLTFAsset.getAccessorTypeCount(accessor.type);
-
-                        switch (accessor.type) {
-                            case gltf.AccessorType.SCALAR: {
-                                this._vertexBuffer[offset] = args[0];
-                                break;
-                            }
-                            case gltf.AccessorType.VEC2: {
-                                this._vertexBuffer[offset] = args[0];
-                                this._vertexBuffer[offset + 1] = args[1];
-                                break;
-                            }
-                            case gltf.AccessorType.VEC3: {
-                                this._vertexBuffer[offset] = args[0];
-                                this._vertexBuffer[offset + 1] = args[1];
-                                this._vertexBuffer[offset + 2] = args[2];
-                                break;
-                            }
-                            case gltf.AccessorType.VEC4: {
-                                this._vertexBuffer[offset] = args[0];
-                                this._vertexBuffer[offset + 1] = args[1];
-                                this._vertexBuffer[offset + 2] = args[2];
-                                this._vertexBuffer[offset + 3] = args[3];
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            else {
-                console.warn("Error arguments.");
-            }
+            return this._glTFMesh!;
         }
     }
 }
