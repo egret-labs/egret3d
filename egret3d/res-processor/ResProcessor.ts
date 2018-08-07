@@ -108,7 +108,7 @@ namespace RES.processor {
 
     export const GLTFProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
-            const result = await host.load(resource, RES.processor.JsonProcessor);
+            const result = await host.load(resource, 'json');
             const glTF = new egret3d.Material(null!);
             glTF.name = resource.name;
             glTF.parse(result);
