@@ -70,7 +70,10 @@ namespace paper.editor {
             if (super.redo()) {
                 let ids = this.deleteInfo.map(info => { return info.UUID });
                 let objs = Editor.editorModel.getGameObjectsByUUids(ids);
-                Editor.editorModel._deleteGameObject(objs);
+                for (let index = 0; index < objs.length; index++) {
+                    const element = objs[index];
+                    element.destroy();
+                }
                 this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, ids);
                 return true;
             }

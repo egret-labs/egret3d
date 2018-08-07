@@ -60,11 +60,11 @@ namespace paper.editor {
         /**切换场景 */
         public static switchScene(url: string) {
             Application.sceneManager.unloadAllScene();
-            // Application.callLater(() => {
+            Application.callLater(() => {
                 this.loadEditScene(url).then(() => {
                     this.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_SCENE, url));
                 });
-            // });
+            });
         }
 
         private static async loadEditScene(url: string) {

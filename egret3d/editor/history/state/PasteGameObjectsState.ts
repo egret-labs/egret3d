@@ -17,7 +17,10 @@ namespace paper.editor {
         public undo(): boolean {
             if (super.undo()) {
                 let objs = Editor.editorModel.getGameObjectsByUUids(this.addList);
-                Editor.editorModel._deleteGameObject(objs);
+                for (let index = 0; index < objs.length; index++) {
+                    const element = objs[index];
+                    element.destroy();
+                }
                 this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
                 return true;
             }
@@ -26,7 +29,7 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                this.addList=[];
+                this.addList = [];
                 let parent = Editor.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
                 let serializeDataList = this.cacheSerializeData ? this.cacheSerializeData : this.pasteInfo.serializeData;
                 let keepUID = this.cacheSerializeData ? true : false;

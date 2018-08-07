@@ -295,7 +295,11 @@ namespace paper.editor {
             return null;;
         }
 
-        public copy(objs: GameObject[]): void {
+        /**
+         * 复制游戏对象
+         * @param objs 
+         */
+        public copyGameObject(objs: GameObject[]): void {
             let clipboard = __global.runtimeModule.getClipborad();
             let content: any[] = [];
             //过滤
@@ -311,7 +315,10 @@ namespace paper.editor {
             }
             clipboard.writeText(JSON.stringify(content), "paper");
         }
-
+        /**
+         * 粘贴游戏对象
+         * @param parent 
+         */
         public pasteGameObject(parent: GameObject): void {
             let clipboard = __global.runtimeModule.getClipborad()
             let msg = clipboard.readText("paper");
@@ -352,13 +359,6 @@ namespace paper.editor {
             }
             else {
                 this.addState(deleteState);
-            }
-        }
-
-        public _deleteGameObject(gameObjects: GameObject[]) {
-            for (let index = 0; index < gameObjects.length; index++) {
-                const element = gameObjects[index];
-                element.destroy();
             }
         }
         /**

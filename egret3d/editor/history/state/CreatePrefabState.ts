@@ -15,7 +15,7 @@ namespace paper.editor{
             if (super.undo()) {
                 let deleteUUid: string = this.data.cachePrefabUUid;
                 let gameObj = Editor.editorModel.getGameObjectByUUid(deleteUUid);
-                Editor.editorModel._deleteGameObject([gameObj]);
+                gameObj.destroy();
                 this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, []);
                 return true;
 
