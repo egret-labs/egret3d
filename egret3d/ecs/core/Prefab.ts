@@ -43,14 +43,14 @@ namespace paper {
         /**
          * @deprecated
          */
-        public createInstance(scene: Scene | null = null) {
+        public createInstance(scene: Scene | null = null, keepUUID: boolean = false) {
             if (!this._raw) {
                 return null;
             }
 
             const isEditor = Application.isEditor && !Application.isPlaying;
             const deserializer = new paper.Deserializer();
-            const gameObject = deserializer.deserialize(this._raw, false, isEditor, scene) as GameObject | null;
+            const gameObject = deserializer.deserialize(this._raw, keepUUID, isEditor, scene) as GameObject | null;
 
             if (gameObject && isEditor) {
                 gameObject.extras!.prefab = this;

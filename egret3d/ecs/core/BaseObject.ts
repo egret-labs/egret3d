@@ -8,12 +8,6 @@ namespace paper {
         return (_hashCount++).toString();
     };
     /**
-     * @internal
-     */
-    export let createAssetID = () => {
-        return undefined;
-    };
-    /**
      * 基础对象。
      */
     export abstract class BaseObject implements IUUID {

@@ -16,7 +16,7 @@ namespace paper.editor {
         private addList: string[];
         public undo(): boolean {
             if (super.undo()) {
-                let objs = Editor.editorModel.getGameObjectsByUUids(this.addList);
+                let objs = this.editorModel.getGameObjectsByUUids(this.addList);
                 for (let index = 0; index < objs.length; index++) {
                     const element = objs[index];
                     element.destroy();
@@ -30,7 +30,7 @@ namespace paper.editor {
         public redo(): boolean {
             if (super.redo()) {
                 this.addList = [];
-                let parent = Editor.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
+                let parent = this.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
                 let serializeDataList = this.cacheSerializeData ? this.cacheSerializeData : this.pasteInfo.serializeData;
                 let keepUID = this.cacheSerializeData ? true : false;
                 for (let i: number = 0; i < serializeDataList.length; i++) {
@@ -54,7 +54,7 @@ namespace paper.editor {
             return false;
         }
         private clearPrefabInfo(obj: GameObject): void {
-            if (Editor.editorModel.isPrefabChild(obj)) {
+            if (this.editorModel.isPrefabChild(obj)) {
                 obj.prefab = null;
                 obj.extras = {};
                 for (let i: number = 0; i < obj.transform.children.length; i++) {
