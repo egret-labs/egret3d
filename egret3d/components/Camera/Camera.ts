@@ -1,30 +1,14 @@
 namespace egret3d {
     const helpRectA = new Rectangle();
 
-    /**
-     * camera component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
+
     /**
      * 相机组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
      */
     export class Camera extends paper.BaseComponent {
-        /**
-         * current main camera
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 当前主相机。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         public static get main() {
             const gameObject =
@@ -34,138 +18,63 @@ namespace egret3d {
             return gameObject.getOrAddComponent(Camera);
         }
 
-        /**
-         * clear color option
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 是否清除颜色缓冲区
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         @paper.serializedField
         public clearOption_Color: boolean = true;
 
         /**
-         * clear depth option
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 是否清除深度缓冲区
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         @paper.serializedField
         public clearOption_Depth: boolean = true;
 
         /**
-         * culling mask
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 相机的渲染剔除，对应GameObject的层级
-         * @default CullingMask.Everything
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         @paper.serializedField
         public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
 
-        /**
-         * camera render order
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 相机渲染排序
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         @paper.serializedField
         public order: number = 0;
 
-        /**
-         * fov
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 透视投影的fov
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         @paper.serializedField
         public fov: number = Math.PI * 0.25;
 
-        /**
-         * size
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 正交投影的竖向size
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         @paper.serializedField
         public size: number = 2.0;
 
-        /**
-         * op value
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 0=正交， 1=透视 中间值可以在两种相机间过度
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         @paper.serializedField
         public opvalue: number = 1.0;
 
-        /**
-         * back ground color
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 背景色
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         @paper.serializedField
         public readonly backgroundColor: Color = new Color(0.13, 0.28, 0.51, 1);
 
-        /**
-         * camera viewport
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 相机视窗
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         @paper.serializedField
         public readonly viewport: Rectangle = new Rectangle(0, 0, 1, 1);
@@ -180,19 +89,9 @@ namespace egret3d {
          */
         public context: RenderContext = null as any;
 
-        /**
-         * render target
-         * @defualt null
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 渲染目标，如果为null，则为画布
-         * @defualt null
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public renderTarget: IRenderTarget | null = null;
 
@@ -311,19 +210,9 @@ namespace egret3d {
             return matrix;
         }
 
-        /**
-         * calcViewPortPixel
-         * @param viewPortPixel output rect
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 计算相机视口像素rect
-         * @param viewPortPixel 输出的rect
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public calcViewPortPixel(viewPortPixel: IRectangle) {
             let w: number;
@@ -347,23 +236,9 @@ namespace egret3d {
             //asp = this.viewPortPixel.w / this.viewPortPixel.h;
         }
 
-        /**
-         * createRayByScreen
-         * @param screenpos screen coords
-         * @param app application
-         * @return Ray ray
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 由屏幕坐标发射射线
-         * @param screenpos 屏幕坐标
-         * @param app 主程序实例
-         * @return Ray 射线
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public createRayByScreen(screenPosX: number, screenPosY: number): Ray {
             const src1 = helpVector3C;
@@ -389,23 +264,9 @@ namespace egret3d {
             return ray;
         }
 
-        /**
-         * calcWorldPosFromScreenPos
-         * @param app application
-         * @param screenpos screen coords
-         * @param outWorldPos world coords
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 由屏幕坐标得到世界坐标
-         * @param app 主程序
-         * @param screenpos 屏幕坐标
-         * @param outWorldPos 世界坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public calcWorldPosFromScreenPos(screenPos: Vector3, outWorldPos: Vector3) {
             const vpp = helpRectA;
@@ -429,23 +290,9 @@ namespace egret3d {
             Matrix.transformVector3(vppos, matinv, outWorldPos);
         }
 
-        /**
-         * calcScreenPosFromWorldPos
-         * @param app application
-         * @param worldPos world coords
-         * @param outScreenPos screen coords
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
+
         /**
          * 由世界坐标得到屏幕坐标
-         * @param app 主程序
-         * @param worldPos 世界坐标
-         * @param outScreenPos 屏幕坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public calcScreenPosFromWorldPos(worldPos: Vector3, outScreenPos: Vector2) {
             const vpp = helpRectA;
@@ -466,9 +313,6 @@ namespace egret3d {
             outScreenPos.y = (1.0 - ndcPos.y) * vpp.h * 0.5;
         }
 
-        /**
-         * 
-         */
         public getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: number, out: Vector2) {
             const vpp = helpRectA;
             this.calcViewPortPixel(vpp);
@@ -501,16 +345,7 @@ namespace egret3d {
         }
 
         /**
-         * distance between camera and near plane
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 相机到近裁剪面距离
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public get near(): number {
             return this._near;
@@ -528,16 +363,7 @@ namespace egret3d {
         }
 
         /**
-         * distance between camera and far plane
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 相机到远裁剪面距离
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         public get far(): number {
             return this._far;

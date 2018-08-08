@@ -15,14 +15,14 @@ namespace paper.editor{
         public undo(): boolean {
             if (super.undo()) {
                 let serializeData = this.data.serializeData;
-                let component: BaseComponent = deserialize(serializeData,true);
+                let component: BaseComponent = new Deserializer().deserialize(serializeData,true);
                 let gameObjectUUid = this.data.gameObjectUUid;
                 if (component) {
-                    let gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                    let gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObject) {
                         (component as any).gameObject = gameObject;
 
-                        Editor.editorModel.addComponentToGameObject(gameObject, component);
+                        this.editorModel.addComponentToGameObject(gameObject, component);
                         this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                     }
                 }
@@ -36,7 +36,7 @@ namespace paper.editor{
             if (super.redo()) {
                 let gameObjectUUid = this.data.gameObjectUUid;
                 let componentUUid = this.data.componentUUid;
-                let obj = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                let obj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (obj) {
                     for (let i: number = 0; i < obj.components.length; i++) {
                         let comp = obj.components[i];

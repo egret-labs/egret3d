@@ -19,8 +19,11 @@ namespace paper.editor {
         private isFirst: boolean = true;
         public undo(): boolean {
             if (super.undo()) {
-                let objs = Editor.editorModel.getGameObjectsByUUids(this.addList);
-                Editor.editorModel._deleteGameObject(objs);
+                let objs = this.editorModel.getGameObjectsByUUids(this.addList);
+                for (let index = 0; index < objs.length; index++) {
+                    const element = objs[index];
+                    element.destroy();
+                }
                 this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
                 return true;
             }
@@ -41,9 +44,9 @@ namespace paper.editor {
                         this.infos[i].serializeData = serialize(obj);
                     }
                     else {
-                        obj = deserialize(this.infos[i].serializeData, true);
+                        obj = new Deserializer().deserialize(this.infos[i].serializeData, true);
                     }
-                    let parent = Editor.editorModel.getGameObjectByUUid(this.infos[i].parentUUID);
+                    let parent = this.editorModel.getGameObjectByUUid(this.infos[i].parentUUID);
                     if (parent)
                         obj.transform.parent = parent.transform;
                     this.addList.push(obj.uuid);

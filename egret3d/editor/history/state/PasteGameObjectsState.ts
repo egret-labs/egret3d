@@ -16,8 +16,11 @@ namespace paper.editor {
         private addList: string[];
         public undo(): boolean {
             if (super.undo()) {
-                let objs = Editor.editorModel.getGameObjectsByUUids(this.addList);
-                Editor.editorModel._deleteGameObject(objs);
+                let objs = this.editorModel.getGameObjectsByUUids(this.addList);
+                for (let index = 0; index < objs.length; index++) {
+                    const element = objs[index];
+                    element.destroy();
+                }
                 this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
                 return true;
             }
@@ -26,13 +29,13 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                this.addList=[];
-                let parent = Editor.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
+                this.addList = [];
+                let parent = this.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
                 let serializeDataList = this.cacheSerializeData ? this.cacheSerializeData : this.pasteInfo.serializeData;
                 let keepUID = this.cacheSerializeData ? true : false;
                 for (let i: number = 0; i < serializeDataList.length; i++) {
                     let info = serializeDataList[i];
-                    let obj: GameObject = deserialize(info, keepUID);
+                    let obj: GameObject = new Deserializer().deserialize(info, keepUID);
                     if (parent) {
                         obj.transform.parent = parent.transform;
                     }
@@ -51,9 +54,10 @@ namespace paper.editor {
             return false;
         }
         private clearPrefabInfo(obj: GameObject): void {
-            if (Editor.editorModel.isPrefabChild(obj)) {
-                obj.prefab = null;
-                obj.extras = {};
+            if (this.editorModel.isPrefabChild(obj)) {
+                obj.extras.linkedID=undefined;
+                obj.extras.prefab=undefined;
+                obj.extras.prefabRootId=undefined;
                 for (let i: number = 0; i < obj.transform.children.length; i++) {
                     this.clearPrefabInfo(obj.transform.children[i].gameObject);
                 }
