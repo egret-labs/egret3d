@@ -150,7 +150,7 @@ namespace egret3d {
 
             this._glTFMesh = this.config.meshes![0];
 
-            const accessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION!);
+            const accessor = this.getAccessor(0);
             this._vertexCount = accessor.count;
 
             for (const k in this._glTFMesh.primitives[0].attributes) {
@@ -324,7 +324,7 @@ namespace egret3d {
          * @internal
          */
         public createVBOAndIBOs() {
-            const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh!.primitives[0].attributes.POSITION!);
+            const vertexBufferViewAccessor = this.getAccessor(0);
             const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
             const webgl = WebGLCapabilities.webgl;
             const vbo = webgl.createBuffer();

@@ -7,7 +7,7 @@
             "es2015.promise"
         ],
         "sourceMap": false,
-        "declaration": false,
+        "declaration": true,
         "stripInternal": false,
         "alwaysStrict": false,
         "noImplicitAny": false,

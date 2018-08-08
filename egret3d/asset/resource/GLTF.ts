@@ -121,6 +121,7 @@ namespace egret3d {
          */
         stringVariable: string;
     }
+    export type ParseGLTFResult = { config: GLTFEgret, buffers: (Float32Array | Uint32Array | Uint16Array)[] };
     /**
      * glTF 资源。
      */
@@ -241,10 +242,11 @@ namespace egret3d {
         }
         /**
          * @internal
+         *  TODO
          */
-        public parseFromBinary(array: Uint32Array) {
+        public static parseFromBinary(array: Uint32Array): ParseGLTFResult {
             let index = 0;
-
+            let result: ParseGLTFResult = { config: {}, buffers: [] } as any;
             if (
                 array[index++] !== 0x46546C67 ||
                 array[index++] !== 2
@@ -271,11 +273,11 @@ namespace egret3d {
                 if (chunkType === 0x4E4F534A) {
                     const jsonArray = new Uint8Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint8Array.BYTES_PER_ELEMENT);
                     const jsonString = io.BinReader.utf8ArrayToString(jsonArray);
-                    this.config = JSON.parse(jsonString);
+                    result.config = JSON.parse(jsonString);
                 }
                 else if (chunkType === 0x004E4942) {
                     const buffer = new Uint32Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint32Array.BYTES_PER_ELEMENT);
-                    this.buffers.push(buffer);
+                    result.buffers.push(buffer);
                 }
                 else {
                     console.assert(false, "Nonsupport glTF data.");
@@ -285,7 +287,8 @@ namespace egret3d {
                 index += chunkLength / 4;
             }
 
-            this.initialize();
+            return result;
+            // this.initialize();
         }
         /**
          * @internal
@@ -662,7 +665,7 @@ declare namespace gltf {
         POSITION = "POSITION",
         NORMAL = "NORMAL",
         TEXCOORD_0 = "TEXCOORD_0",
-        TEXCOORD_1 = "TEXCOORD_",
+        TEXCOORD_1 = "TEXCOORD_1",
         COLOR_0 = "COLOR_0",
         COLOR_1 = "COLOR_1",
         JOINTS_0 = "JOINTS_0",

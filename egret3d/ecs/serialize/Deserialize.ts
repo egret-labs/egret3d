@@ -103,7 +103,7 @@ namespace paper {
                             return target;
                         }
                         else if (target[KEY_DESERIALIZE]) {
-                            return (target as ISerializable).deserialize(source);
+                            return (target as ISerializable).deserialize(source, this);
                         }
                         else {
                             // console.info("Deserialize can be optimized.");
@@ -164,7 +164,7 @@ namespace paper {
                         if (clazz) {
                             target = new clazz();
 
-                            return (target as ISerializable).deserialize(source);
+                            return (target as ISerializable).deserialize(source, this);
                         }
                     }
                     else { // Map.

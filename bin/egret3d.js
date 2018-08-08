@@ -139,12 +139,6 @@ var paper;
         return (_hashCount++).toString();
     };
     /**
-     * @internal
-     */
-    paper.createAssetID = function () {
-        return undefined;
-    };
-    /**
      * 基础对象。
      */
     var BaseObject = (function () {
@@ -578,14 +572,15 @@ var paper;
         /**
          * @deprecated
          */
-        Prefab.prototype.createInstance = function (scene) {
+        Prefab.prototype.createInstance = function (scene, keepUUID) {
             if (scene === void 0) { scene = null; }
+            if (keepUUID === void 0) { keepUUID = false; }
             if (!this._raw) {
                 return null;
             }
             var isEditor = paper.Application.isEditor && !paper.Application.isPlaying;
             var deserializer = new paper.Deserializer();
-            var gameObject = deserializer.deserialize(this._raw, false, isEditor, scene);
+            var gameObject = deserializer.deserialize(this._raw, keepUUID, isEditor, scene);
             if (gameObject && isEditor) {
                 gameObject.extras.prefab = this;
             }
@@ -3247,9 +3242,11 @@ var egret3d;
         };
         /**
          * @internal
+         *  TODO
          */
-        GLTFAsset.prototype.parseFromBinary = function (array) {
+        GLTFAsset.parseFromBinary = function (array) {
             var index = 0;
+            var result = { config: {}, buffers: [] };
             if (array[index++] !== 0x46546C67 ||
                 array[index++] !== 2) {
                 console.assert(false, "Nonsupport glTF data.");
@@ -3270,11 +3267,11 @@ var egret3d;
                 if (chunkType === 0x4E4F534A) {
                     var jsonArray = new Uint8Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint8Array.BYTES_PER_ELEMENT);
                     var jsonString = egret3d.io.BinReader.utf8ArrayToString(jsonArray);
-                    this.config = JSON.parse(jsonString);
+                    result.config = JSON.parse(jsonString);
                 }
                 else if (chunkType === 0x004E4942) {
                     var buffer = new Uint32Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint32Array.BYTES_PER_ELEMENT);
-                    this.buffers.push(buffer);
+                    result.buffers.push(buffer);
                 }
                 else {
                     console.assert(false, "Nonsupport glTF data.");
@@ -3282,7 +3279,8 @@ var egret3d;
                 }
                 index += chunkLength / 4;
             }
-            this.initialize();
+            return result;
+            // this.initialize();
         };
         /**
          * @internal
@@ -3494,23 +3492,12 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * textrue asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 纹理资源。
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
      */
     var Texture = (function (_super) {
         __extends(Texture, _super);
         function Texture() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._realName = "";
-            return _this;
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         Texture.prototype.dispose = function () {
             if (this._isBuiltin) {
@@ -3523,81 +3510,11 @@ var egret3d;
         Texture.prototype.caclByteLength = function () {
             return 0;
         };
-        Object.defineProperty(Texture.prototype, "realName", {
-            /**
-             * real image name
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 如果是imgdesc加载来的图片，通过这个可以获取到真实的图片名字。
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            get: function () {
-                return this._realName;
-            },
-            set: function (name) {
-                this._realName = name;
-            },
-            enumerable: true,
-            configurable: true
-        });
         return Texture;
     }(paper.Asset));
     egret3d.Texture = Texture;
     __reflect(Texture.prototype, "egret3d.Texture");
 })(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var BaseState = (function () {
-            function BaseState() {
-                this.autoClear = false;
-                this.batchIndex = 0;
-                this._isDone = false;
-            }
-            BaseState.prototype.undo = function () {
-                if (this._isDone) {
-                    this._isDone = false;
-                    return true;
-                }
-                return false;
-            };
-            BaseState.prototype.redo = function () {
-                if (this._isDone) {
-                    return false;
-                }
-                this._isDone = true;
-                return true;
-            };
-            Object.defineProperty(BaseState.prototype, "isDone", {
-                get: function () {
-                    return this._isDone;
-                },
-                set: function (value) {
-                    this._isDone = value;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            BaseState.prototype.dispatchEditorModelEvent = function (type, data) {
-                editor.Editor.editorModel.dispatchEvent(new editor.EditorModelEvent(type, data));
-            };
-            BaseState.prototype.serialize = function () {
-                return null;
-            };
-            BaseState.prototype.deserialize = function (data) {
-            };
-            return BaseState;
-        }());
-        editor.BaseState = BaseState;
-        __reflect(BaseState.prototype, "paper.editor.BaseState");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
 var paper;
 (function (paper) {
     var editor;
@@ -3682,6 +3599,54 @@ var paper;
         }());
         editor.BaseEvent = BaseEvent;
         __reflect(BaseEvent.prototype, "paper.editor.BaseEvent");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var BaseState = (function () {
+            function BaseState() {
+                this.autoClear = false;
+                this.batchIndex = 0;
+                this._isDone = false;
+            }
+            BaseState.prototype.undo = function () {
+                if (this._isDone) {
+                    this._isDone = false;
+                    return true;
+                }
+                return false;
+            };
+            BaseState.prototype.redo = function () {
+                if (this._isDone) {
+                    return false;
+                }
+                this._isDone = true;
+                return true;
+            };
+            Object.defineProperty(BaseState.prototype, "isDone", {
+                get: function () {
+                    return this._isDone;
+                },
+                set: function (value) {
+                    this._isDone = value;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            BaseState.prototype.dispatchEditorModelEvent = function (type, data) {
+                this.editorModel.dispatchEvent(new editor.EditorModelEvent(type, data));
+            };
+            BaseState.prototype.serialize = function () {
+                return null;
+            };
+            BaseState.prototype.deserialize = function (data) {
+            };
+            return BaseState;
+        }());
+        editor.BaseState = BaseState;
+        __reflect(BaseState.prototype, "paper.editor.BaseState");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var egret3d;
@@ -3974,7 +3939,6 @@ var paper;
         10: "egret3d.SphereCollider",
         11: "egret3d.Transform",
         12: "egret3d.Shader",
-        14: "egret3d.Material",
         15: "egret3d.AnimationClip",
         16: "egret3d.TPoseInfo",
         17: "egret3d.PoseBoneMatrix",
@@ -4003,10 +3967,30 @@ var paper;
         40: "egret3d.Animation",
         41: "egret3d.GLTFAsset",
         //
-        13: "paper.Compatible",
-        //
         "egret3d.Light": "egret3d.DirectLight",
+        //
+        13: "paper.Compatible",
+        14: "paper.Compatible",
     };
+    /**
+     * @internal
+     */
+    var Compatible = (function () {
+        function Compatible() {
+        }
+        Compatible.prototype.serialize = function () {
+            throw new Error("Never");
+        };
+        Compatible.prototype.deserialize = function (element, data) {
+            if (!data) {
+                throw new Error("Never");
+            }
+            return data.getAssetOrComponent(element._glTFAsset);
+        };
+        return Compatible;
+    }());
+    paper.Compatible = Compatible;
+    __reflect(Compatible.prototype, "paper.Compatible", ["paper.ISerializable"]);
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -4095,7 +4079,7 @@ var paper;
                             return target;
                         }
                         else if (target[KEY_DESERIALIZE]) {
-                            return target.deserialize(source);
+                            return target.deserialize(source, this);
                         }
                         else {
                             // console.info("Deserialize can be optimized.");
@@ -4150,7 +4134,7 @@ var paper;
                         var clazz = egret.getDefinitionByName(paper.serializeClassMap[classCodeOrName] || classCodeOrName);
                         if (clazz) {
                             target = new clazz();
-                            return target.deserialize(source);
+                            return target.deserialize(source, this);
                         }
                     }
                     else {
@@ -8173,7 +8157,7 @@ var egret3d;
             var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
             technique.attributes["_glesVertex"] = { semantic: "POSITION" /* POSITION */ };
             technique.attributes["_glesMultiTexCoord0"] = { semantic: "TEXCOORD_0" /* TEXCOORD_0 */ };
-            technique.attributes["_glesMultiTexCoord1"] = { semantic: "TEXCOORD_" /* TEXCOORD_1 */ };
+            technique.attributes["_glesMultiTexCoord1"] = { semantic: "TEXCOORD_1" /* TEXCOORD_1 */ };
             technique.attributes["_glesBlendIndex4"] = { semantic: "JOINTS_0" /* JOINTS_0 */ };
             technique.attributes["_glesBlendWeight4"] = { semantic: "WEIGHTS_0" /* WEIGHTS_0 */ };
             technique.uniforms["glstate_lightmapOffset"] = { type: 35666 /* FLOAT_VEC4 */, semantic: "_LIGHTMAPOFFSET" /* _LIGHTMAPOFFSET */, value: [] };
@@ -8784,137 +8768,46 @@ var egret3d;
 (function (egret3d) {
     var helpRectA = new egret3d.Rectangle();
     /**
-     * camera component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
      * 相机组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
      */
     var Camera = (function (_super) {
         __extends(Camera, _super);
         function Camera() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
-             * clear color option
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 是否清除颜色缓冲区
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             _this.clearOption_Color = true;
             /**
-             * clear depth option
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 是否清除深度缓冲区
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             _this.clearOption_Depth = true;
             /**
-             * culling mask
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 相机的渲染剔除，对应GameObject的层级
-             * @default CullingMask.Everything
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             _this.cullingMask = 16777215 /* Everything */;
             /**
-             * camera render order
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 相机渲染排序
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             _this.order = 0;
             /**
-             * fov
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 透视投影的fov
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             _this.fov = Math.PI * 0.25;
             /**
-             * size
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 正交投影的竖向size
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             _this.size = 2.0;
             /**
-             * op value
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 0=正交， 1=透视 中间值可以在两种相机间过度
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             _this.opvalue = 1.0;
             /**
-             * back ground color
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 背景色
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             _this.backgroundColor = new egret3d.Color(0.13, 0.28, 0.51, 1);
             /**
-             * camera viewport
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 相机视窗
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             _this.viewport = new egret3d.Rectangle(0, 0, 1, 1);
             /**
@@ -8926,18 +8819,7 @@ var egret3d;
              */
             _this.context = null;
             /**
-             * render target
-             * @defualt null
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 渲染目标，如果为null，则为画布
-             * @defualt null
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             _this.renderTarget = null;
             _this._near = 0.01;
@@ -8958,16 +8840,7 @@ var egret3d;
         }
         Object.defineProperty(Camera, "main", {
             /**
-             * current main camera
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 当前主相机。
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
              */
             get: function () {
                 var gameObject = paper.Application.sceneManager.activeScene.findWithTag("MainCamera" /* MainCamera */) ||
@@ -9059,18 +8932,7 @@ var egret3d;
             return matrix;
         };
         /**
-         * calcViewPortPixel
-         * @param viewPortPixel output rect
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 计算相机视口像素rect
-         * @param viewPortPixel 输出的rect
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         Camera.prototype.calcViewPortPixel = function (viewPortPixel) {
             var w;
@@ -9092,22 +8954,7 @@ var egret3d;
             //asp = this.viewPortPixel.w / this.viewPortPixel.h;
         };
         /**
-         * createRayByScreen
-         * @param screenpos screen coords
-         * @param app application
-         * @return Ray ray
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 由屏幕坐标发射射线
-         * @param screenpos 屏幕坐标
-         * @param app 主程序实例
-         * @return Ray 射线
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         Camera.prototype.createRayByScreen = function (screenPosX, screenPosY) {
             var src1 = egret3d.helpVector3C;
@@ -9129,22 +8976,7 @@ var egret3d;
             return ray;
         };
         /**
-         * calcWorldPosFromScreenPos
-         * @param app application
-         * @param screenpos screen coords
-         * @param outWorldPos world coords
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 由屏幕坐标得到世界坐标
-         * @param app 主程序
-         * @param screenpos 屏幕坐标
-         * @param outWorldPos 世界坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         Camera.prototype.calcWorldPosFromScreenPos = function (screenPos, outWorldPos) {
             var vpp = helpRectA;
@@ -9165,22 +8997,7 @@ var egret3d;
             egret3d.Matrix.transformVector3(vppos, matinv, outWorldPos);
         };
         /**
-         * calcScreenPosFromWorldPos
-         * @param app application
-         * @param worldPos world coords
-         * @param outScreenPos screen coords
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 由世界坐标得到屏幕坐标
-         * @param app 主程序
-         * @param worldPos 世界坐标
-         * @param outScreenPos 屏幕坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language
          */
         Camera.prototype.calcScreenPosFromWorldPos = function (worldPos, outScreenPos) {
             var vpp = helpRectA;
@@ -9197,9 +9014,6 @@ var egret3d;
             outScreenPos.x = (ndcPos.x + 1.0) * vpp.w * 0.5;
             outScreenPos.y = (1.0 - ndcPos.y) * vpp.h * 0.5;
         };
-        /**
-         *
-         */
         Camera.prototype.getPosAtXPanelInViewCoordinateByScreenPos = function (screenPos, z, out) {
             var vpp = helpRectA;
             this.calcViewPortPixel(vpp);
@@ -9233,16 +9047,7 @@ var egret3d;
         };
         Object.defineProperty(Camera.prototype, "near", {
             /**
-             * distance between camera and near plane
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 相机到近裁剪面距离
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             get: function () {
                 return this._near;
@@ -9261,16 +9066,7 @@ var egret3d;
         });
         Object.defineProperty(Camera.prototype, "far", {
             /**
-             * distance between camera and far plane
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
              * 相机到远裁剪面距离
-             * @version paper 1.0
-             * @platform Web
-             * @language
              */
             get: function () {
                 return this._far;
@@ -9327,20 +9123,10 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     * 深度绘制通道
-     * TODO 完善后public给开发者
-     */
     var CameraPostQueueDepth = (function () {
         function CameraPostQueueDepth() {
-            /**
-             * @inheritDoc
-             */
             this.renderTarget = null;
         }
-        /**
-         * @inheritDoc
-         */
         CameraPostQueueDepth.prototype.render = function (camera, renderSystem) {
             // camera.context.drawtype = "_depth";
             // renderSystem._targetAndViewport(camera.viewport, this.renderTarget);
@@ -9354,7 +9140,7 @@ var egret3d;
     __reflect(CameraPostQueueDepth.prototype, "egret3d.CameraPostQueueDepth", ["egret3d.ICameraPostQueue"]);
     // /**
     //  * framebuffer绘制通道
-    //  * TODO 完善后public给开发者
+    //  * 
     //  */
     // export class CameraPostQueueQuad implements ICameraPostQueue {
     //     /**
@@ -9383,7 +9169,7 @@ var egret3d;
     // }
     /**
      * 颜色绘制通道
-     * TODO 完善后public给开发者
+     *
      */
     var CameraPostQueueColor = (function () {
         function CameraPostQueueColor() {
@@ -9464,26 +9250,11 @@ var egret3d;
         }
         //matrixNormal: paper.matrix = new paper.matrix();
         RenderContext.prototype.updateLightmap = function (texture, uv, offset, intensity) {
-            if (this.lightmap !== texture) {
-                this.lightmap = texture;
-                this.version++;
-            }
-            if (this.lightmapUV !== uv) {
-                this.lightmapUV = uv;
-                this.version++;
-            }
-            if (this.lightmapOffset !== offset ||
-                this.lightmapOffset[0] !== offset[0] ||
-                this.lightmapOffset[1] !== offset[1] ||
-                this.lightmapOffset[2] !== offset[2] ||
-                this.lightmapOffset[3] !== offset[3]) {
-                this.lightmapOffset = offset;
-                this.version++;
-            }
-            if (this.lightmapIntensity !== intensity) {
-                this.lightmapIntensity = intensity;
-                this.version++;
-            }
+            this.lightmap = texture;
+            this.lightmapUV = uv;
+            this.lightmapOffset = offset;
+            this.lightmapIntensity = intensity;
+            this.version++;
         };
         RenderContext.prototype.updateCamera = function (camera, matrix) {
             camera.calcViewPortPixel(this.viewPortPixel); // update viewport
@@ -10743,7 +10514,7 @@ var egret3d;
         MeshFilter.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
             if (this._mesh) {
-                this._mesh.dispose();
+                // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
             }
             this._mesh = null;
         };
@@ -10759,7 +10530,7 @@ var egret3d;
                     return;
                 }
                 if (this._mesh) {
-                    this._mesh.dispose();
+                    // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
                 }
                 this._mesh = mesh;
                 paper.EventPool.dispatchEvent("mesh" /* Mesh */, this);
@@ -16301,7 +16072,7 @@ var egret3d;
                 return;
             }
             this._glTFMesh = this.config.meshes[0];
-            var accessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION);
+            var accessor = this.getAccessor(0);
             this._vertexCount = accessor.count;
             for (var k in this._glTFMesh.primitives[0].attributes) {
                 this._attributeNames.push(k);
@@ -16473,7 +16244,7 @@ var egret3d;
          * @internal
          */
         Mesh.prototype.createVBOAndIBOs = function () {
-            var vertexBufferViewAccessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION);
+            var vertexBufferViewAccessor = this.getAccessor(0);
             var vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), 5126 /* Float */);
             var webgl = egret3d.WebGLCapabilities.webgl;
             var vbo = webgl.createBuffer();
@@ -16885,7 +16656,7 @@ var egret3d;
                     return;
                 }
             }
-            if (this._glTFMaterial.extensions.paper) {
+            if (this._glTFMaterial.extensions.paper && this._glTFMaterial.extensions.paper.renderQueue !== -1) {
                 this.renderQueue = this._glTFMaterial.extensions.paper.renderQueue;
             }
             else {
@@ -17237,7 +17008,6 @@ var RES;
                             case 2:
                                 image = _a.sent();
                                 texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
-                                texture.realName = _name;
                                 texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
                                 paper.Asset.register(texture);
                                 return [2 /*return*/, texture];
@@ -17290,20 +17060,28 @@ var RES;
         processor.GLBProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var result, glb;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
+                    var result, parseResult, glb, _i, _a, b;
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
                             case 0: return [4 /*yield*/, host.load(resource, RES.processor.BinaryProcessor)];
                             case 1:
-                                result = _a.sent();
-                                if (resource.name.indexOf(".mesh.glb") >= 0) {
+                                result = _b.sent();
+                                parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
+                                if (parseResult.config.meshes) {
                                     glb = new egret3d.Mesh(0, 0);
                                 }
                                 else {
                                     glb = new egret3d.GLTFAsset();
                                 }
                                 glb.name = resource.name;
-                                glb.parseFromBinary(new Uint32Array(result));
+                                glb.config = parseResult.config;
+                                for (_i = 0, _a = parseResult.buffers; _i < _a.length; _i++) {
+                                    b = _a[_i];
+                                    glb.buffers.push(b);
+                                }
+                                glb.initialize();
+                                // glb.parseFromBinary(new Uint32Array(result));
+                                paper.Asset.register(glb);
                                 return [2 /*return*/, glb];
                         }
                     });
@@ -17326,14 +17104,13 @@ var RES;
                     var result, glTF, _i, _a, mat, values, _b, _c, _d, key, value, r, texture;
                     return __generator(this, function (_e) {
                         switch (_e.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.JsonProcessor)];
+                            case 0: return [4 /*yield*/, host.load(resource, 'json')];
                             case 1:
                                 result = _e.sent();
                                 glTF = new egret3d.Material(null);
                                 glTF.name = resource.name;
-                                glTF.parse(result);
-                                if (!(glTF.config.materials && glTF.config.materials.length > 0)) return [3 /*break*/, 8];
-                                _i = 0, _a = glTF.config.materials;
+                                if (!(result.materials && result.materials.length > 0)) return [3 /*break*/, 8];
+                                _i = 0, _a = result.materials;
                                 _e.label = 2;
                             case 2:
                                 if (!(_i < _a.length)) return [3 /*break*/, 8];
@@ -17365,7 +17142,10 @@ var RES;
                             case 7:
                                 _i++;
                                 return [3 /*break*/, 2];
-                            case 8: return [2 /*return*/, glTF];
+                            case 8:
+                                glTF.parse(result);
+                                paper.Asset.register(glTF);
+                                return [2 /*return*/, glTF];
                         }
                     });
                 });
@@ -19016,7 +18796,7 @@ var egret3d;
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
         egret.Capabilities["renderMode" + ""] = "webgl";
         var requiredOptions = getOptions(options);
-        var canvas = getMainCanvas();
+        var canvas = getMainCanvas(options);
         //TODO
         options.canvas = canvas;
         options.option = requiredOptions;
@@ -19054,9 +18834,12 @@ var egret3d;
         paper.Application.init(options);
     }
     egret3d.runEgret = runEgret;
-    function getMainCanvas() {
+    function getMainCanvas(options) {
         if (window.canvas) {
             return window.canvas;
+        }
+        else if (options.canvas) {
+            return options.canvas;
         }
         else {
             var div = document.getElementsByClassName("egret-player")[0];
@@ -19385,7 +19168,7 @@ var egret3d;
             var webgl = egret3d.WebGLCapabilities.webgl;
             var mesh = drawCall.mesh;
             var primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
-            var vertexAccessor = mesh.getAccessor(primitive.attributes.POSITION);
+            var vertexAccessor = mesh.getAccessor(0);
             var bufferOffset = mesh.getBufferOffset(vertexAccessor);
             if (primitive.indices !== undefined) {
                 var indexAccessor = mesh.getAccessor(primitive.indices);
@@ -19861,8 +19644,9 @@ var egret3d;
             startIndex = endIndex + 1;
             meshFilter.mesh = null;
         }
-        var newVertexBuffers = new Float32Array(combineInstance.vertexBufferSize * combineInstance.vertexCount);
-        var newIndexBuffers = new Uint16Array(combineInstance.indexBufferTotalSize);
+        var combineMesh = new egret3d.Mesh(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute, undefined, 35048 /* Dynamic */);
+        var newVertexBuffers = combineMesh.buffers[0];
+        var newIndexBuffers = combineMesh.buffers[1];
         var iv = 0;
         for (var key in tempVertexBuffers) {
             var arr = tempVertexBuffers[key];
@@ -19879,7 +19663,6 @@ var egret3d;
                 newIndexBuffers[ii++] = v;
             }
         }
-        var combineMesh = new egret3d.Mesh(newVertexBuffers.length, newIndexBuffers.length, newAttribute, undefined, 35048 /* Dynamic */);
         var indicesCount = 0;
         for (var i = 0; i < tempIndexBuffers.length; i++) {
             var subLen = tempIndexBuffers[i].length;
@@ -20579,153 +20362,6 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
-    var editor;
-    (function (editor) {
-        /**
-         * 场景编辑器
-         **/
-        var Editor = (function () {
-            function Editor() {
-            }
-            Object.defineProperty(Editor, "editorModel", {
-                /**编辑模型 */
-                get: function () {
-                    return this._editorModel;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            /**初始化 */
-            Editor.init = function () {
-                return __awaiter(this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                // 覆盖生成 uuid 的方式。
-                                paper.createUUID = editor.generateUuid;
-                                paper.createAssetID = editor.generateUuid;
-                                //启动egret3编辑环境
-                                this.runEgret();
-                                return [4 /*yield*/, RES.loadConfig("resource/default.res.json", "resource/")];
-                            case 1:
-                                _a.sent();
-                                this.history = new editor.History();
-                                //初始化编辑模型
-                                this._editorModel = new editor.EditorModel();
-                                this._editorModel.init(this.history);
-                                return [2 /*return*/];
-                        }
-                    });
-                });
-            };
-            Editor.runEgret = function () {
-                egret3d.runEgret({
-                    antialias: false,
-                    systems: [
-                        egret3d.BeginSystem,
-                        paper.EnableSystem,
-                        paper.StartSystem,
-                        //
-                        paper.UpdateSystem,
-                        //
-                        egret3d.AnimationSystem,
-                        //
-                        paper.LateUpdateSystem,
-                        //
-                        egret3d.MeshRendererSystem,
-                        egret3d.SkinnedMeshRendererSystem,
-                        egret3d.particle.ParticleSystem,
-                        egret3d.Egret2DRendererSystem,
-                        //
-                        egret3d.CameraSystem,
-                        egret3d.WebGLRenderSystem,
-                        //
-                        paper.DisableSystem,
-                        egret3d.EndSystem
-                    ]
-                });
-                // 摄像机激活场景设置为编辑场景。
-                paper.Application.sceneManager.camerasScene = paper.Application.sceneManager.editorScene;
-                // 创建编辑器的相机。
-                this._createEditCamera();
-                //
-                editor.Gizmo.Enabled();
-            };
-            /**切换场景 */
-            Editor.switchScene = function (url) {
-                var _this = this;
-                paper.Application.sceneManager.unloadAllScene();
-                // Application.callLater(() => {
-                this.loadEditScene(url).then(function () {
-                    _this.editorModel.dispatchEvent(new editor.EditorModelEvent(editor.EditorModelEvent.CHANGE_SCENE, url));
-                });
-                // });
-            };
-            Editor.loadEditScene = function (url) {
-                return __awaiter(this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, RES.getResAsync(url)];
-                            case 1:
-                                _a.sent();
-                                this.loadScene(url, true);
-                                return [2 /*return*/];
-                        }
-                    });
-                });
-            };
-            //此方法是对Application.sceneManager.loadScene的一个重写，增加keepUUID参数
-            Editor.loadScene = function (resourceName, keepUUID) {
-                if (keepUUID === void 0) { keepUUID = false; }
-                var rawScene = RES.getRes(resourceName);
-                if (rawScene) {
-                    var scene = rawScene.createInstance(keepUUID);
-                    return scene;
-                }
-                return null;
-            };
-            Editor._createEditCamera = function () {
-                var cameraObject = paper.GameObject.create("EditorCamera", "EditorOnly" /* EditorOnly */, paper.Application.sceneManager.editorScene);
-                {
-                    var camera = cameraObject.addComponent(egret3d.Camera);
-                    camera.near = 0.1;
-                    camera.far = 100.0;
-                    camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
-                    cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
-                    cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
-                }
-                {
-                    var script = cameraObject.addComponent(editor.EditorCameraScript);
-                    script.editorModel = this.editorModel;
-                    script.moveSpeed = 10;
-                    script.rotateSpeed = 0.5;
-                }
-                {
-                    var script = cameraObject.addComponent(editor.PickGameObjectScript);
-                    script.editorModel = this.editorModel;
-                }
-            };
-            Editor.undo = function () {
-                this.history.back();
-            };
-            Editor.redo = function () {
-                this.history.forward();
-            };
-            Editor.deserializeHistory = function (data) {
-                this.history.deserialize(data);
-            };
-            Editor.serializeHistory = function () {
-                var historyData = this.history.serialize();
-                return JSON.stringify(historyData);
-            };
-            return Editor;
-        }());
-        editor.Editor = Editor;
-        __reflect(Editor.prototype, "paper.editor.Editor");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
     /**
      * @internal
      */
@@ -20757,6 +20393,178 @@ var paper;
     }(paper.BaseSystem));
     paper.EnableSystem = EnableSystem;
     __reflect(EnableSystem.prototype, "paper.EnableSystem");
+})(paper || (paper = {}));
+/// <reference path="./EventDispatcher.ts" />
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * 编辑器事件
+         */
+        var EditorEvent = (function (_super) {
+            __extends(EditorEvent, _super);
+            function EditorEvent(type, data) {
+                return _super.call(this, type, data) || this;
+            }
+            EditorEvent.CHANGE_SCENE = "changeScene";
+            return EditorEvent;
+        }(editor.BaseEvent));
+        editor.EditorEvent = EditorEvent;
+        __reflect(EditorEvent.prototype, "paper.editor.EditorEvent");
+        /**
+         * 编辑器
+         **/
+        var Editor = (function () {
+            function Editor() {
+            }
+            /**初始化 */
+            Editor.init = function () {
+                return __awaiter(this, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                this.eventDispatcher = new editor.EventDispatcher();
+                                //覆盖生成 uuid 的方式。
+                                paper.createUUID = editor.generateUuid;
+                                //启动egret3编辑环境
+                                this.runEgret();
+                                //初始化资源
+                                return [4 /*yield*/, RES.loadConfig("resource/default.res.json", "resource/")];
+                            case 1:
+                                //初始化资源
+                                _a.sent();
+                                //初始化编辑场景
+                                this.editorSceneModel = new editor.EditorSceneModel();
+                                this.editorSceneModel.init();
+                                paper.Application.sceneManager.camerasScene = this.editorSceneModel.editorScene;
+                                return [2 /*return*/];
+                        }
+                    });
+                });
+            };
+            Object.defineProperty(Editor, "activeEditorModel", {
+                get: function () {
+                    return this._activeEditorModel;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Editor.runEgret = function () {
+                egret3d.runEgret({
+                    antialias: false,
+                    isEditor: true,
+                    isPlaying: false,
+                    systems: [
+                        egret3d.BeginSystem,
+                        paper.EnableSystem,
+                        paper.StartSystem,
+                        //
+                        paper.UpdateSystem,
+                        //
+                        egret3d.AnimationSystem,
+                        //
+                        paper.LateUpdateSystem,
+                        //
+                        egret3d.MeshRendererSystem,
+                        egret3d.SkinnedMeshRendererSystem,
+                        egret3d.particle.ParticleSystem,
+                        egret3d.Egret2DRendererSystem,
+                        //
+                        egret3d.CameraSystem,
+                        egret3d.WebGLRenderSystem,
+                        //
+                        paper.DisableSystem,
+                        egret3d.EndSystem
+                    ]
+                });
+            };
+            Editor.editScene = function (sceneUrl) {
+                return __awaiter(this, void 0, void 0, function () {
+                    var rawScene, scene;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, RES.getResAsync(sceneUrl)];
+                            case 1:
+                                _a.sent();
+                                rawScene = RES.getRes(sceneUrl);
+                                if (rawScene) {
+                                    scene = rawScene.createInstance(true);
+                                    this.editorModel = new editor.EditorModel();
+                                    this.editorModel.init(scene);
+                                    paper.Application.sceneManager.activeScene = this.editorModel.scene;
+                                    this.editorSceneModel.editorModel = this._activeEditorModel = this.editorModel;
+                                    this.dispatchEvent(new EditorEvent(EditorEvent.CHANGE_SCENE));
+                                }
+                                return [2 /*return*/];
+                        }
+                    });
+                });
+            };
+            Editor.attachPrefabEditScene = function (prefabUrl) {
+                return __awaiter(this, void 0, void 0, function () {
+                    var prefab, scene;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, RES.getResAsync(prefabUrl)];
+                            case 1:
+                                _a.sent();
+                                prefab = RES.getRes(prefabUrl);
+                                if (prefab) {
+                                    if (this.prefabEditorModel) {
+                                        this.prefabEditorModel.scene.destroy();
+                                    }
+                                    scene = paper.Scene.createEmpty('prefabEditScene', false);
+                                    prefab.createInstance(scene, true);
+                                    this.prefabEditorModel = new editor.EditorModel();
+                                    this.prefabEditorModel.init(scene);
+                                    paper.Application.sceneManager.activeScene = this.prefabEditorModel.scene;
+                                    this.editorSceneModel.editorModel = this._activeEditorModel = this.prefabEditorModel;
+                                    this.dispatchEvent(new EditorEvent(EditorEvent.CHANGE_SCENE));
+                                }
+                                return [2 /*return*/];
+                        }
+                    });
+                });
+            };
+            Editor.detachCurrentPrefabEditScene = function () {
+                if (this.prefabEditorModel) {
+                    this.prefabEditorModel.scene.destroy();
+                    paper.Application.sceneManager.activeScene = this.editorModel.scene;
+                    this.editorSceneModel.editorModel = this._activeEditorModel = this.editorModel;
+                    this.dispatchEvent(new EditorEvent(EditorEvent.CHANGE_SCENE));
+                }
+            };
+            Editor.undo = function () {
+                if (this.activeEditorModel)
+                    this.activeEditorModel.history.back();
+            };
+            Editor.redo = function () {
+                if (this.activeEditorModel)
+                    this.activeEditorModel.history.forward();
+            };
+            Editor.deserializeHistory = function (data) {
+                this.editorModel.history.deserialize(data);
+            };
+            Editor.serializeHistory = function () {
+                var historyData = this.editorModel.history.serialize();
+                return JSON.stringify(historyData);
+            };
+            Editor.addEventListener = function (type, fun, thisObj, level) {
+                if (level === void 0) { level = 0; }
+                this.eventDispatcher.addEventListener(type, fun, thisObj, level);
+            };
+            Editor.removeEventListener = function (type, fun, thisObj) {
+                this.eventDispatcher.removeEventListener(type, fun, thisObj);
+            };
+            Editor.dispatchEvent = function (event) {
+                this.eventDispatcher.dispatchEvent(event);
+            };
+            return Editor;
+        }());
+        editor.Editor = Editor;
+        __reflect(Editor.prototype, "paper.editor.Editor");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -20790,7 +20598,7 @@ var paper;
 })(paper || (paper = {}));
 /// <reference path="./EventDispatcher.ts" />
 var paper;
-(function (paper_1) {
+(function (paper) {
     var editor;
     (function (editor) {
         editor.context = new editor.EventDispatcher();
@@ -20813,7 +20621,6 @@ var paper;
             EditorModelEvent.CHANGE_PROPERTY = "changeProperty";
             EditorModelEvent.CHANGE_EDIT_MODE = "changeEditMode";
             EditorModelEvent.CHANGE_EDIT_TYPE = "changeEditType";
-            EditorModelEvent.CHANGE_SCENE = "changeScene";
             EditorModelEvent.ADD_COMPONENT = "addComponent";
             EditorModelEvent.REMOVE_COMPONENT = "removeComponent";
             EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY = "updateGameObjectsHierarchy";
@@ -20832,28 +20639,35 @@ var paper;
         var EditorModel = (function (_super) {
             __extends(EditorModel, _super);
             function EditorModel() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.getRootGameObjectsByPrefab = function (prefab) {
-                    var objects = paper_1.Application.sceneManager.activeScene.gameObjects;
-                    var result = [];
-                    objects.forEach(function (obj) {
-                        if (obj.prefab && obj.prefab.name === prefab.name && editor.Editor.editorModel.isPrefabRoot(obj)) {
-                            result.push(obj);
-                        }
-                    });
-                    return result;
-                };
-                return _this;
+                return _super !== null && _super.apply(this, arguments) || this;
             }
+            Object.defineProperty(EditorModel.prototype, "history", {
+                get: function () {
+                    return this._history;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(EditorModel.prototype, "scene", {
+                get: function () {
+                    return this._scene;
+                },
+                enumerable: true,
+                configurable: true
+            });
             /**
              * 初始化
              * @param history
              */
-            EditorModel.prototype.init = function (history) {
-                this.history = history;
+            EditorModel.prototype.init = function (scene) {
+                this._scene = scene;
+                this._history = new editor.History();
             };
             EditorModel.prototype.addState = function (state) {
-                state && this.history.add(state);
+                if (state) {
+                    state.editorModel = this;
+                    this.history.add(state);
+                }
             };
             EditorModel.prototype.getEditType = function (propName, target) {
                 var editInfoList = editor.getEditInfo(target);
@@ -20939,7 +20753,7 @@ var paper;
                     case editor.EditType.COLOR:
                     case editor.EditType.RECT:
                         var className = egret.getQualifiedClassName(value);
-                        var serializeData = paper_1.serialize(value);
+                        var serializeData = paper.serialize(value);
                         return { className: className, serializeData: serializeData };
                     case editor.EditType.SHADER:
                         return value.url;
@@ -21076,7 +20890,7 @@ var paper;
                 if (!removeComponent) {
                     return;
                 }
-                var serializeData = paper_1.serialize(removeComponent);
+                var serializeData = paper.serialize(removeComponent);
                 var data = {
                     gameObjectUUid: gameObjectUUid,
                     componentUUid: componentUUid,
@@ -21097,14 +20911,18 @@ var paper;
             EditorModel.prototype.getComponentByAssetId = function (gameObject, assetId) {
                 for (var i = 0; i < gameObject.components.length; i++) {
                     var comp = gameObject.components[i];
-                    if (comp.linkedID === assetId) {
+                    if (comp.extras.linkedID === assetId) {
                         return comp;
                     }
                 }
                 return null;
                 ;
             };
-            EditorModel.prototype.copy = function (objs) {
+            /**
+             * 复制游戏对象
+             * @param objs
+             */
+            EditorModel.prototype.copyGameObject = function (objs) {
                 var clipboard = __global.runtimeModule.getClipborad();
                 var content = [];
                 //过滤
@@ -21115,11 +20933,15 @@ var paper;
                     var obj = objs[i];
                     content.push({
                         type: "gameObject",
-                        serializeData: paper_1.serialize(obj)
+                        serializeData: paper.serialize(obj)
                     });
                 }
                 clipboard.writeText(JSON.stringify(content), "paper");
             };
+            /**
+             * 粘贴游戏对象
+             * @param parent
+             */
             EditorModel.prototype.pasteGameObject = function (parent) {
                 var clipboard = __global.runtimeModule.getClipborad();
                 var msg = clipboard.readText("paper");
@@ -21138,7 +20960,7 @@ var paper;
              * @param gameObjects
              */
             EditorModel.prototype.duplicateGameObjects = function (gameObjects) {
-                var state = editor.DuplicateGameObjectsState.create(gameObjects);
+                var state = editor.DuplicateGameObjectsState.create(gameObjects, this);
                 this.addState(state);
             };
             /**
@@ -21146,10 +20968,11 @@ var paper;
              * @param gameObjects
              */
             EditorModel.prototype.deleteGameObject = function (gameObjects) {
-                var deleteState = editor.DeleteGameObjectsState.create(gameObjects);
+                var _this = this;
+                var deleteState = editor.DeleteGameObjectsState.create(gameObjects, this);
                 var breakList = [];
                 gameObjects.forEach(function (obj) {
-                    if (editor.Editor.editorModel.isPrefabChild(obj) && !editor.Editor.editorModel.isPrefabRoot(obj)) {
+                    if (_this.isPrefabChild(obj) && !_this.isPrefabRoot(obj)) {
                         breakList.push(obj);
                     }
                 });
@@ -21162,20 +20985,15 @@ var paper;
                     this.addState(deleteState);
                 }
             };
-            EditorModel.prototype._deleteGameObject = function (gameObjects) {
-                for (var index = 0; index < gameObjects.length; index++) {
-                    var element = gameObjects[index];
-                    element.destroy();
-                }
-            };
             /**
              * 解除预置体联系
              * @param gameObjects
              */
             EditorModel.prototype.breakPrefab = function (gameObjects) {
+                var _this = this;
                 var breakList = [];
                 gameObjects.forEach(function (obj) {
-                    if (editor.Editor.editorModel.isPrefabChild(obj) || editor.Editor.editorModel.isPrefabRoot(obj)) {
+                    if (_this.isPrefabChild(obj) || _this.isPrefabRoot(obj)) {
                         breakList.push(obj);
                     }
                 });
@@ -21188,11 +21006,12 @@ var paper;
              * 更改层级
              * */
             EditorModel.prototype.updateGameObjectsHierarchy = function (gameObjects, targetGameobjcet, dir) {
-                var gameObjectHierarchyState = editor.GameObjectHierarchyState.create(gameObjects, targetGameobjcet, dir);
+                var _this = this;
+                var gameObjectHierarchyState = editor.GameObjectHierarchyState.create(gameObjects, targetGameobjcet, dir, this);
                 var breakList = [];
                 gameObjects.forEach(function (obj) {
-                    if (editor.Editor.editorModel.isPrefabChild(obj) &&
-                        !editor.Editor.editorModel.isPrefabRoot(obj) &&
+                    if (_this.isPrefabChild(obj) &&
+                        !_this.isPrefabRoot(obj) &&
                         (obj.transform.parent !== targetGameobjcet.transform.parent || dir === 'inner')) {
                         breakList.push(obj);
                     }
@@ -21315,7 +21134,7 @@ var paper;
                 });
             };
             EditorModel.prototype.getGameObjectsByUUids = function (uuids) {
-                var objects = paper_1.Application.sceneManager.activeScene.gameObjects;
+                var objects = paper.Application.sceneManager.activeScene.gameObjects;
                 var obj;
                 var result = [];
                 var idIndex;
@@ -21380,59 +21199,16 @@ var paper;
                 this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_EDIT_TYPE, type));
             };
             EditorModel.prototype.isPrefabRoot = function (gameObj) {
-                if (gameObj.extras.isPrefabRoot === true) {
+                if (gameObj.extras.prefab) {
                     return true;
                 }
                 return false;
             };
             EditorModel.prototype.isPrefabChild = function (gameObj) {
-                if (gameObj.extras.isPrefabRoot === false) {
+                if (gameObj.extras.prefabRootId) {
                     return true;
                 }
                 return false;
-            };
-            /**
-            * 从一个预置体文件创建实例
-            * @param prefabPath 预置体资源路径
-            */
-            EditorModel.prototype.createGameObjectFromPrefab = function (prefabPath, paper, RES) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var prefab, instance;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, RES.getResAsync(prefabPath)];
-                            case 1:
-                                prefab = _a.sent();
-                                if (prefab) {
-                                    instance = prefab.createInstance();
-                                    instance.extras.isPrefabRoot = true;
-                                    this.setGameObjectPrefab(instance, prefab, instance);
-                                    return [2 /*return*/, instance];
-                                }
-                                return [2 /*return*/, null];
-                        }
-                    });
-                });
-            };
-            /**
-             * 设置children prefab属性
-             * @param gameObj
-             * @param prefab
-             */
-            EditorModel.prototype.setGameObjectPrefab = function (gameObj, prefab, rootObj) {
-                if (!gameObj) {
-                    return;
-                }
-                gameObj.prefab = prefab;
-                if (gameObj != rootObj) {
-                    gameObj.extras.isPrefabRoot = false;
-                    gameObj.extras.prefabRootId = rootObj.uuid;
-                }
-                for (var index = 0; index < gameObj.transform.children.length; index++) {
-                    var element = gameObj.transform.children[index];
-                    var obj = element.gameObject;
-                    this.setGameObjectPrefab(obj, prefab, rootObj);
-                }
             };
             /**将对象按照层级进行排序
              */
@@ -21571,7 +21347,49 @@ var paper;
         }(editor.EventDispatcher));
         editor.EditorModel = EditorModel;
         __reflect(EditorModel.prototype, "paper.editor.EditorModel");
-    })(editor = paper_1.editor || (paper_1.editor = {}));
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var EditorSceneModel = (function () {
+            function EditorSceneModel() {
+            }
+            Object.defineProperty(EditorSceneModel.prototype, "editorScene", {
+                get: function () {
+                    return paper.Application.sceneManager.editorScene;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(EditorSceneModel.prototype, "editorModel", {
+                set: function (v) {
+                    this.editorCameraScript.editorModel = v;
+                    this.pickGameScript.editorModel = v;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            EditorSceneModel.prototype.init = function () {
+                var cameraObject = paper.GameObject.create("EditorCamera", "EditorOnly" /* EditorOnly */, paper.Application.sceneManager.editorScene);
+                var camera = cameraObject.addComponent(egret3d.Camera);
+                camera.near = 0.1;
+                camera.far = 100.0;
+                camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
+                cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
+                cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
+                this.editorCameraScript = cameraObject.addComponent(editor.EditorCameraScript);
+                this.editorCameraScript.moveSpeed = 10;
+                this.editorCameraScript.rotateSpeed = 0.5;
+                this.pickGameScript = cameraObject.addComponent(editor.PickGameObjectScript);
+                editor.Gizmo.Enabled();
+            };
+            return EditorSceneModel;
+        }());
+        editor.EditorSceneModel = EditorSceneModel;
+        __reflect(EditorSceneModel.prototype, "paper.editor.EditorSceneModel");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -22066,7 +21884,7 @@ var paper;
                 }
                 // 复制粘贴
                 if (this.bindKeyboard.isPressed('CONTROL') && this.bindKeyboard.wasPressed('C')) {
-                    this.editorModel.copy(this.selectedGameObjs);
+                    this.editorModel.copyGameObject(this.selectedGameObjs);
                 }
                 if (this.bindKeyboard.isPressed('CONTROL') && this.bindKeyboard.wasPressed('V')) {
                     var parent_3 = this.selectedGameObjs.length > 0 ? this.selectedGameObjs[0].transform.parent.gameObject : null;
@@ -22739,7 +22557,7 @@ var paper;
                     var uuid, modifyObj;
                     return __generator(this, function (_a) {
                         uuid = this.stateData.gameObjectUUid;
-                        modifyObj = editor.Editor.editorModel.getGameObjectByUUid(uuid);
+                        modifyObj = this.editorModel.getGameObjectByUUid(uuid);
                         if (modifyObj !== null) {
                             valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
                                 var propName, copyValue, valueEditType, newValue;
@@ -22747,10 +22565,10 @@ var paper;
                                     switch (_a.label) {
                                         case 0:
                                             propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                            return [4 /*yield*/, editor.Editor.editorModel.deserializeProperty(copyValue, valueEditType)];
+                                            return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
                                         case 1:
                                             newValue = _a.sent();
-                                            editor.Editor.editorModel.setTargetProperty(propName, modifyObj, newValue);
+                                            this.editorModel.setTargetProperty(propName, modifyObj, newValue);
                                             this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
                                             return [2 /*return*/];
                                     }
@@ -22819,9 +22637,9 @@ var paper;
                     return __generator(this, function (_a) {
                         gameObjectUUid = this.stateData.gameObjUUid;
                         componentUUid = this.stateData.componentUUid;
-                        gameObj = editor.Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                        gameObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                         if (gameObj) {
-                            modifyObj = editor.Editor.editorModel.getComponentById(gameObj, componentUUid);
+                            modifyObj = this.editorModel.getComponentById(gameObj, componentUUid);
                             if (modifyObj) {
                                 valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
                                     var propName, copyValue, valueEditType, newValue;
@@ -22829,10 +22647,10 @@ var paper;
                                         switch (_a.label) {
                                             case 0:
                                                 propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                                return [4 /*yield*/, editor.Editor.editorModel.deserializeProperty(copyValue, valueEditType)];
+                                                return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
                                             case 1:
                                                 newValue = _a.sent();
-                                                editor.Editor.editorModel.setTargetProperty(propName, modifyObj, newValue);
+                                                this.editorModel.setTargetProperty(propName, modifyObj, newValue);
                                                 this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: gameObj, propName: propName, propValue: newValue });
                                                 return [2 /*return*/];
                                         }
@@ -22881,8 +22699,11 @@ var paper;
             };
             CreateGameObjectState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
-                    var objs = editor.Editor.editorModel.getGameObjectsByUUids(this.addList);
-                    editor.Editor.editorModel._deleteGameObject(objs);
+                    var objs = this.editorModel.getGameObjectsByUUids(this.addList);
+                    for (var index = 0; index < objs.length; index++) {
+                        var element = objs[index];
+                        element.destroy();
+                    }
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
                     return true;
                 }
@@ -22902,9 +22723,9 @@ var paper;
                             this.infos[i].serializeData = paper.serialize(obj);
                         }
                         else {
-                            obj = deserialize(this.infos[i].serializeData, true);
+                            obj = new paper.Deserializer().deserialize(this.infos[i].serializeData, true);
                         }
-                        var parent_4 = editor.Editor.editorModel.getGameObjectByUUid(this.infos[i].parentUUID);
+                        var parent_4 = this.editorModel.getGameObjectByUUid(this.infos[i].parentUUID);
                         if (parent_4)
                             obj.transform.parent = parent_4.transform;
                         this.addList.push(obj.uuid);
@@ -22954,12 +22775,12 @@ var paper;
             DeleteGameObjectsState.toString = function () {
                 return "[class common.deleteGameObjectsState]";
             };
-            DeleteGameObjectsState.create = function (gameObjects) {
+            DeleteGameObjectsState.create = function (gameObjects, editorModel) {
                 gameObjects = gameObjects.concat();
                 //筛选
-                editor.Editor.editorModel.filtTopHierarchyGameObjects(gameObjects);
+                editorModel.filtTopHierarchyGameObjects(gameObjects);
                 //排序
-                gameObjects = editor.Editor.editorModel.sortGameObjectsForHierarchy(gameObjects);
+                gameObjects = editorModel.sortGameObjectsForHierarchy(gameObjects);
                 var infos = [];
                 for (var i = 0; i < gameObjects.length; i++) {
                     var obj = gameObjects[i];
@@ -22984,15 +22805,15 @@ var paper;
                 if (_super.prototype.undo.call(this)) {
                     for (var i = 0; i < this.deleteInfo.length; i++) {
                         var info = this.deleteInfo[i];
-                        var obj = deserialize(info.serializeData, true);
-                        var oldParentObj = editor.Editor.editorModel.getGameObjectByUUid(info.oldParentUUID);
+                        var obj = new paper.Deserializer().deserialize(info.serializeData, true);
+                        var oldParentObj = this.editorModel.getGameObjectByUUid(info.oldParentUUID);
                         if (oldParentObj) {
                             var oldTargetTransform = oldParentObj.transform.children[info.oldIndex];
                             if (oldTargetTransform) {
-                                editor.Editor.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, 'top');
+                                this.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, 'top');
                             }
                             else {
-                                editor.Editor.editorModel.setGameObjectsHierarchy([obj], oldParentObj, 'inner');
+                                this.editorModel.setGameObjectsHierarchy([obj], oldParentObj, 'inner');
                             }
                         }
                         else {
@@ -23011,8 +22832,11 @@ var paper;
             DeleteGameObjectsState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
                     var ids = this.deleteInfo.map(function (info) { return info.UUID; });
-                    var objs = editor.Editor.editorModel.getGameObjectsByUUids(ids);
-                    editor.Editor.editorModel._deleteGameObject(objs);
+                    var objs = this.editorModel.getGameObjectsByUUids(ids);
+                    for (var index = 0; index < objs.length; index++) {
+                        var element = objs[index];
+                        element.destroy();
+                    }
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, ids);
                     return true;
                 }
@@ -23045,11 +22869,11 @@ var paper;
             DuplicateGameObjectsState.toString = function () {
                 return "[class common.DuplicateGameObjectsState]";
             };
-            DuplicateGameObjectsState.create = function (objs) {
+            DuplicateGameObjectsState.create = function (objs, editorModel) {
                 //过滤
-                editor.Editor.editorModel.filtTopHierarchyGameObjects(objs);
+                editorModel.filtTopHierarchyGameObjects(objs);
                 //排序
-                objs = editor.Editor.editorModel.sortGameObjectsForHierarchy(objs);
+                objs = editorModel.sortGameObjectsForHierarchy(objs);
                 var duplicateInfo = [];
                 for (var i = 0; i < objs.length; i++) {
                     var obj = objs[i];
@@ -23064,8 +22888,11 @@ var paper;
             };
             DuplicateGameObjectsState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
-                    var objs = editor.Editor.editorModel.getGameObjectsByUUids(this.addList);
-                    editor.Editor.editorModel._deleteGameObject(objs);
+                    var objs = this.editorModel.getGameObjectsByUUids(this.addList);
+                    for (var index = 0; index < objs.length; index++) {
+                        var element = objs[index];
+                        element.destroy();
+                    }
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, objs);
                     return true;
                 }
@@ -23076,8 +22903,8 @@ var paper;
                     this.addList = [];
                     for (var i = 0; i < this.duplicateInfo.length; i++) {
                         var info = this.duplicateInfo[i];
-                        var obj = deserialize(info.serializeData, !this.firstDo);
-                        var parent_5 = editor.Editor.editorModel.getGameObjectByUUid(info.parentUUID);
+                        var obj = new paper.Deserializer().deserialize(info.serializeData, !this.firstDo);
+                        var parent_5 = this.editorModel.getGameObjectByUUid(info.parentUUID);
                         if (parent_5) {
                             obj.transform.parent = parent_5.transform;
                         }
@@ -23095,9 +22922,10 @@ var paper;
                 return false;
             };
             DuplicateGameObjectsState.prototype.clearPrefabInfo = function (obj) {
-                if (editor.Editor.editorModel.isPrefabChild(obj)) {
-                    obj.prefab = null;
-                    obj.extras = {};
+                if (this.editorModel.isPrefabChild(obj)) {
+                    obj.extras.linkedID = undefined;
+                    obj.extras.prefab = undefined;
+                    obj.extras.prefabRootId = undefined;
                     for (var i = 0; i < obj.transform.children.length; i++) {
                         this.clearPrefabInfo(obj.transform.children[i].gameObject);
                     }
@@ -23137,8 +22965,11 @@ var paper;
             };
             PasteGameObjectsState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
-                    var objs = editor.Editor.editorModel.getGameObjectsByUUids(this.addList);
-                    editor.Editor.editorModel._deleteGameObject(objs);
+                    var objs = this.editorModel.getGameObjectsByUUids(this.addList);
+                    for (var index = 0; index < objs.length; index++) {
+                        var element = objs[index];
+                        element.destroy();
+                    }
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
                     return true;
                 }
@@ -23147,12 +22978,12 @@ var paper;
             PasteGameObjectsState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
                     this.addList = [];
-                    var parent_6 = editor.Editor.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
+                    var parent_6 = this.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
                     var serializeDataList = this.cacheSerializeData ? this.cacheSerializeData : this.pasteInfo.serializeData;
                     var keepUID = this.cacheSerializeData ? true : false;
                     for (var i = 0; i < serializeDataList.length; i++) {
                         var info = serializeDataList[i];
-                        var obj = deserialize(info, keepUID);
+                        var obj = new paper.Deserializer().deserialize(info, keepUID);
                         if (parent_6) {
                             obj.transform.parent = parent_6.transform;
                         }
@@ -23171,9 +23002,10 @@ var paper;
                 return false;
             };
             PasteGameObjectsState.prototype.clearPrefabInfo = function (obj) {
-                if (editor.Editor.editorModel.isPrefabChild(obj)) {
-                    obj.prefab = null;
-                    obj.extras = {};
+                if (this.editorModel.isPrefabChild(obj)) {
+                    obj.extras.linkedID = undefined;
+                    obj.extras.prefab = undefined;
+                    obj.extras.prefabRootId = undefined;
                     for (var i = 0; i < obj.transform.children.length; i++) {
                         this.clearPrefabInfo(obj.transform.children[i].gameObject);
                     }
@@ -23215,7 +23047,7 @@ var paper;
                 if (_super.prototype.undo.call(this)) {
                     var gameObjectUUid = this.data.gameObjectUUid;
                     var componentId = this.data.cacheUUid;
-                    var gameObject = editor.Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                    var gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObject) {
                         for (var i = 0; i < gameObject.components.length; i++) {
                             var comp = gameObject.components[i];
@@ -23234,12 +23066,13 @@ var paper;
                 if (_super.prototype.redo.call(this)) {
                     var gameObjectUUid = this.data.gameObjectUUid;
                     var compClzName = this.data.compClzName;
-                    var gameObject = editor.Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                    var gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObject) {
                         var addComponent = void 0;
                         if (this.data.serializeData) {
-                            addComponent = deserialize(this.data.serializeData, true);
-                            editor.Editor.editorModel.addComponentToGameObject(gameObject, addComponent);
+                            var deserializer = new paper.Deserializer();
+                            addComponent = deserializer.deserialize(this.data.serializeData, true);
+                            this.editorModel.addComponentToGameObject(gameObject, addComponent);
                         }
                         else {
                             var compClz = egret.getDefinitionByName(compClzName);
@@ -23281,13 +23114,13 @@ var paper;
             RemoveComponentState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
                     var serializeData = this.data.serializeData;
-                    var component = deserialize(serializeData, true);
+                    var component = new paper.Deserializer().deserialize(serializeData, true);
                     var gameObjectUUid = this.data.gameObjectUUid;
                     if (component) {
-                        var gameObject = editor.Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                        var gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                         if (gameObject) {
                             component.gameObject = gameObject;
-                            editor.Editor.editorModel.addComponentToGameObject(gameObject, component);
+                            this.editorModel.addComponentToGameObject(gameObject, component);
                             this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                         }
                     }
@@ -23299,7 +23132,7 @@ var paper;
                 if (_super.prototype.redo.call(this)) {
                     var gameObjectUUid = this.data.gameObjectUUid;
                     var componentUUid = this.data.componentUUid;
-                    var obj = editor.Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                    var obj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (obj) {
                         for (var i = 0; i < obj.components.length; i++) {
                             var comp = obj.components[i];
@@ -23335,12 +23168,12 @@ var paper;
                 _this.gameObjectsInfo = [];
                 return _this;
             }
-            GameObjectHierarchyState.create = function (gameObjects, targetGameObj, dir) {
+            GameObjectHierarchyState.create = function (gameObjects, targetGameObj, dir, editorModel) {
                 //筛选
                 gameObjects = gameObjects.concat();
-                editor.Editor.editorModel.filtTopHierarchyGameObjects(gameObjects);
+                editorModel.filtTopHierarchyGameObjects(gameObjects);
                 //必须进行层级排序
-                var objs = editor.Editor.editorModel.sortGameObjectsForHierarchy(gameObjects);
+                var objs = editorModel.sortGameObjectsForHierarchy(gameObjects);
                 //整理对象信息
                 var objInfos = [];
                 for (var i = 0; i < objs.length; i++) {
@@ -23384,8 +23217,8 @@ var paper;
                     tmpList.reverse();
                     for (var index = 0; index < tmpList.length; index++) {
                         var info = tmpList[index];
-                        var obj = editor.Editor.editorModel.getGameObjectByUUid(info.UUID);
-                        var oldTarget = editor.Editor.editorModel.getGameObjectByUUid(info.oldTargetUUID);
+                        var obj = this.editorModel.getGameObjectByUUid(info.UUID);
+                        var oldTarget = this.editorModel.getGameObjectByUUid(info.oldTargetUUID);
                         ;
                         var oldDir = info.oldDir;
                         if (info.oldTargetUUID === 'scene') {
@@ -23393,7 +23226,7 @@ var paper;
                             oldTarget = all[all.length - 1];
                             oldDir = 'bottom';
                         }
-                        editor.Editor.editorModel.setGameObjectsHierarchy([obj], oldTarget, oldDir);
+                        this.editorModel.setGameObjectsHierarchy([obj], oldTarget, oldDir);
                     }
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
                     return true;
@@ -23403,10 +23236,10 @@ var paper;
             GameObjectHierarchyState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
                     var gameObjectUUids = this.gameObjectsInfo.map(function (v) { return v.UUID; });
-                    var gameObjs = editor.Editor.editorModel.getGameObjectsByUUids(gameObjectUUids);
-                    var targetGameObj = editor.Editor.editorModel.getGameObjectByUUid(this.targetObject);
-                    gameObjs = editor.Editor.editorModel.sortGameObjectsForHierarchy(gameObjs);
-                    editor.Editor.editorModel.setGameObjectsHierarchy(gameObjs, targetGameObj, this.targetDir);
+                    var gameObjs = this.editorModel.getGameObjectsByUUids(gameObjectUUids);
+                    var targetGameObj = this.editorModel.getGameObjectByUUid(this.targetObject);
+                    gameObjs = this.editorModel.sortGameObjectsForHierarchy(gameObjs);
+                    this.editorModel.setGameObjectsHierarchy(gameObjs, targetGameObj, this.targetDir);
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
                     return true;
                 }
@@ -23453,11 +23286,11 @@ var paper;
                     var _this = this;
                     var prefabObj, objects;
                     return __generator(this, function (_a) {
-                        prefabObj = editor.Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                        prefabObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                         if (!prefabObj) {
                             return [2 /*return*/];
                         }
-                        objects = editor.Editor.editorModel.getRootGameObjectsByPrefab(prefabObj.prefab);
+                        objects = this.editorModel.getRootGameObjectsByPrefab(prefabObj.prefab);
                         valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
                             var _this = this;
                             var propName, copyValue, valueEditType, newValue;
@@ -23465,16 +23298,16 @@ var paper;
                                 switch (_a.label) {
                                     case 0:
                                         propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                        return [4 /*yield*/, editor.Editor.editorModel.deserializeProperty(copyValue, valueEditType)];
+                                        return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
                                     case 1:
                                         newValue = _a.sent();
                                         objects.forEach(function (object) {
-                                            if (editor.Editor.editorModel.compareValue(object[propName], prefabObj[propName])) {
-                                                editor.Editor.editorModel.setTargetProperty(propName, object, newValue);
+                                            if (_this.editorModel.compareValue(object[propName], prefabObj[propName])) {
+                                                _this.editorModel.setTargetProperty(propName, object, newValue);
                                                 _this.dispathPropertyEvent(object, propName, newValue);
                                             }
                                         });
-                                        editor.Editor.editorModel.setTargetProperty(propName, prefabObj, newValue);
+                                        this.editorModel.setTargetProperty(propName, prefabObj, newValue);
                                         this.dispathPropertyEvent(prefabObj, propName, newValue);
                                         return [2 /*return*/];
                                 }
@@ -23587,13 +23420,13 @@ var paper;
                     for (var index = 0; index < datas.length; index++) {
                         var element = datas[index];
                         var gameObjUUid = element.gameObjUUid, componentUUid = element.componentUUid, serializeData = element.serializeData;
-                        var addComponent = deserialize(serializeData, true);
+                        var addComponent = new paper.Deserializer().deserialize(serializeData, true);
                         if (addComponent) {
-                            var gameObj = editor.Editor.editorModel.getGameObjectByUUid(gameObjUUid);
+                            var gameObj = this.editorModel.getGameObjectByUUid(gameObjUUid);
                             if (gameObj) {
                                 // addComponent.uuid = componentUUid;
                                 addComponent.gameObject = gameObj;
-                                editor.Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
+                                this.editorModel.addComponentToGameObject(gameObj, addComponent);
                                 this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                             }
                         }
@@ -23608,9 +23441,9 @@ var paper;
                     for (var index = 0; index < datas.length; index++) {
                         var element = datas[index];
                         var gameObjUUid = element.gameObjUUid, componentUUid = element.componentUUid;
-                        var gameObj = editor.Editor.editorModel.getGameObjectByUUid(gameObjUUid);
+                        var gameObj = this.editorModel.getGameObjectByUUid(gameObjUUid);
                         if (gameObj) {
-                            var componentObj = editor.Editor.editorModel.getComponentById(gameObj, componentUUid);
+                            var componentObj = this.editorModel.getComponentById(gameObj, componentUUid);
                             if (componentObj) {
                                 gameObj.removeComponent(componentObj.constructor);
                                 this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
@@ -23665,9 +23498,9 @@ var paper;
             };
             AddPrefabComponentState.prototype.removeComponent = function (data) {
                 var gameObjectUUid = data.gameObjectUUid, cacheUUid = data.cacheUUid;
-                var gameObj = editor.Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                var gameObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (gameObj && cacheUUid) {
-                    var removeComponent = editor.Editor.editorModel.getComponentById(gameObj, cacheUUid);
+                    var removeComponent = this.editorModel.getComponentById(gameObj, cacheUUid);
                     if (removeComponent) {
                         gameObj.removeComponent(removeComponent);
                         this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
@@ -23677,14 +23510,15 @@ var paper;
             AddPrefabComponentState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
                     var _a = this.data, instanceDatas = _a.instanceDatas, sourceData = _a.sourceData;
+                    var deserializer = new paper.Deserializer();
                     //add component to prefab
                     var gameObjectUUid = sourceData.gameObjectUUid, compClz = sourceData.compClz;
-                    var gameObj = editor.Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                    var gameObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObj) {
                         var addComponent = void 0;
                         if (sourceData.serializeData) {
-                            addComponent = deserialize(sourceData.serializeData, true);
-                            editor.Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
+                            addComponent = deserializer.deserialize(sourceData.serializeData, true);
+                            this.editorModel.addComponentToGameObject(gameObj, addComponent);
                         }
                         else {
                             addComponent = gameObj.addComponent(compClz);
@@ -23697,16 +23531,16 @@ var paper;
                     for (var index = 0; index < instanceDatas.length; index++) {
                         var instanceData = instanceDatas[index];
                         var gameObjectUUid_1 = instanceData.gameObjectUUid, compClz_1 = instanceData.compClz;
-                        var gameObj_1 = editor.Editor.editorModel.getGameObjectByUUid(gameObjectUUid_1);
+                        var gameObj_1 = this.editorModel.getGameObjectByUUid(gameObjectUUid_1);
                         var addComponent = void 0;
                         if (instanceData.serializeData) {
-                            addComponent = deserialize(instanceData.serializeData, true);
-                            editor.Editor.editorModel.addComponentToGameObject(gameObj_1, addComponent);
+                            addComponent = deserializer.deserialize(instanceData.serializeData, true);
+                            this.editorModel.addComponentToGameObject(gameObj_1, addComponent);
                         }
                         else {
-                            addComponent = deserialize(sourceData.serializeData, false);
+                            addComponent = deserializer.deserialize(sourceData.serializeData, false);
                             instanceData.serializeData = paper.serialize(addComponent);
-                            editor.Editor.editorModel.addComponentToGameObject(gameObj_1, addComponent);
+                            this.editorModel.addComponentToGameObject(gameObj_1, addComponent);
                             instanceData.cacheUUid = addComponent.uuid;
                         }
                         this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
@@ -23746,7 +23580,7 @@ var paper;
                     var target, editInfoList;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, editor.Editor.editorModel.getAssetByAssetUrl(assetUrl)];
+                            case 0: return [4 /*yield*/, this.editorModel.getAssetByAssetUrl(assetUrl)];
                             case 1:
                                 target = _a.sent();
                                 editInfoList = editor.getEditInfo(target);
@@ -23756,10 +23590,10 @@ var paper;
                                         switch (_a.label) {
                                             case 0:
                                                 propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                                return [4 /*yield*/, editor.Editor.editorModel.deserializeProperty(copyValue, valueEditType)];
+                                                return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
                                             case 1:
                                                 newValue = _a.sent();
-                                                editor.Editor.editorModel.setTargetProperty(propName, target, newValue);
+                                                this.editorModel.setTargetProperty(propName, target, newValue);
                                                 this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: newValue });
                                                 return [2 /*return*/];
                                         }
@@ -23813,8 +23647,8 @@ var paper;
             CreatePrefabState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
                     var deleteUUid = this.data.cachePrefabUUid;
-                    var gameObj = editor.Editor.editorModel.getGameObjectByUUid(deleteUUid);
-                    editor.Editor.editorModel._deleteGameObject([gameObj]);
+                    var gameObj = this.editorModel.getGameObjectByUUid(deleteUUid);
+                    gameObj.destroy();
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, []);
                     return true;
                 }
@@ -23826,13 +23660,10 @@ var paper;
                     if (prefab) {
                         var instance = void 0;
                         if (this.data.serializeData) {
-                            instance = deserialize(this.data.serializeData, true);
-                            editor.Editor.editorModel.setGameObjectPrefab(instance, prefab, instance);
+                            instance = new paper.Deserializer().deserialize(this.data.serializeData, true);
                         }
                         else {
                             instance = prefab.createInstance();
-                            instance.extras.isPrefabRoot = true;
-                            editor.Editor.editorModel.setGameObjectPrefab(instance, prefab, instance);
                             this.data.serializeData = paper.serialize(instance);
                         }
                         this.data.cachePrefabUUid = instance.uuid;
@@ -23879,12 +23710,24 @@ var paper;
                 return instance;
             };
             BreakPrefabStructState.makePrefabInfo = function (gameOjbect) {
+                var isPrefabRoot = function (gameObj) {
+                    if (gameObj.extras.prefab) {
+                        return true;
+                    }
+                    return false;
+                };
+                var isPrefabChild = function (gameObj) {
+                    if (gameObj.extras.prefabRootId) {
+                        return true;
+                    }
+                    return false;
+                };
                 var makeInfo = function (target, result) {
                     if (result === void 0) { result = []; }
-                    result.push({ uuid: target.uuid, editInfo: __assign({}, target.extras), prefab: target.prefab.name });
+                    result.push({ uuid: target.uuid, linkid: target.extras.linkedID, rootid: target.extras.prefabRootId, prefab: target.extras.prefab.name });
                     target.transform.children.forEach(function (transform) {
                         var obj = transform.gameObject;
-                        if (editor.Editor.editorModel.isPrefabChild(obj) && !editor.Editor.editorModel.isPrefabRoot(obj)) {
+                        if (isPrefabChild(obj) && !isPrefabRoot(obj)) {
                             makeInfo(obj, result);
                         }
                     });
@@ -23892,7 +23735,7 @@ var paper;
                 var target = gameOjbect;
                 var infos = [];
                 while (target) {
-                    if (editor.Editor.editorModel.isPrefabRoot(target)) {
+                    if (isPrefabRoot(target)) {
                         makeInfo(target, infos);
                         break;
                     }
@@ -23906,10 +23749,11 @@ var paper;
             BreakPrefabStructState.prototype.redo = function () {
                 var _this = this;
                 var ids = this.prefabInfos.map(function (prefabInfos) { return prefabInfos.uuid; });
-                var objs = editor.Editor.editorModel.getGameObjectsByUUids(ids);
+                var objs = this.editorModel.getGameObjectsByUUids(ids);
                 objs.forEach(function (obj) {
-                    obj.prefab = null;
-                    obj.extras = {};
+                    obj.extras.linkedID = undefined;
+                    obj.extras.prefab = undefined;
+                    obj.extras.prefabRootId = undefined;
                     _this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: null });
                 });
                 return true;
@@ -23921,9 +23765,10 @@ var paper;
                     b: for (var k = 0; k < this.prefabInfos.length; k++) {
                         var info = this.prefabInfos[k];
                         if (obj.uuid === info.uuid) {
-                            obj.extras = info.editInfo;
-                            obj.prefab = paper.Asset.find(info.prefab);
-                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.prefab });
+                            obj.extras.linkedID = info.linkid;
+                            obj.extras.prefab = paper.Asset.find(info.prefab);
+                            obj.extras.prefabRootId = info.rootid;
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.extras.prefab });
                             break b;
                         }
                     }
