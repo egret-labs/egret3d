@@ -163,7 +163,7 @@ namespace egret3d {
                 }
             }
 
-            if (this._glTFMaterial.extensions.paper) {
+            if (this._glTFMaterial.extensions.paper && this._glTFMaterial.extensions.paper.renderQueue !== -1) {
                 this.renderQueue = this._glTFMaterial.extensions.paper.renderQueue!;
             }
             else {

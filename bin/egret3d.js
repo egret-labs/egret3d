@@ -3242,9 +3242,11 @@ var egret3d;
         };
         /**
          * @internal
+         *  TODO
          */
-        GLTFAsset.prototype.parseFromBinary = function (array) {
+        GLTFAsset.parseFromBinary = function (array) {
             var index = 0;
+            var result = { config: {}, buffers: [] };
             if (array[index++] !== 0x46546C67 ||
                 array[index++] !== 2) {
                 console.assert(false, "Nonsupport glTF data.");
@@ -3265,11 +3267,11 @@ var egret3d;
                 if (chunkType === 0x4E4F534A) {
                     var jsonArray = new Uint8Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint8Array.BYTES_PER_ELEMENT);
                     var jsonString = egret3d.io.BinReader.utf8ArrayToString(jsonArray);
-                    this.config = JSON.parse(jsonString);
+                    result.config = JSON.parse(jsonString);
                 }
                 else if (chunkType === 0x004E4942) {
                     var buffer = new Uint32Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint32Array.BYTES_PER_ELEMENT);
-                    this.buffers.push(buffer);
+                    result.buffers.push(buffer);
                 }
                 else {
                     console.assert(false, "Nonsupport glTF data.");
@@ -3277,7 +3279,8 @@ var egret3d;
                 }
                 index += chunkLength / 4;
             }
-            this.initialize();
+            return result;
+            // this.initialize();
         };
         /**
          * @internal
@@ -8135,7 +8138,7 @@ var egret3d;
             var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
             technique.attributes["_glesVertex"] = { semantic: "POSITION" /* POSITION */ };
             technique.attributes["_glesMultiTexCoord0"] = { semantic: "TEXCOORD_0" /* TEXCOORD_0 */ };
-            technique.attributes["_glesMultiTexCoord1"] = { semantic: "TEXCOORD_" /* TEXCOORD_1 */ };
+            technique.attributes["_glesMultiTexCoord1"] = { semantic: "TEXCOORD_1" /* TEXCOORD_1 */ };
             technique.attributes["_glesBlendIndex4"] = { semantic: "JOINTS_0" /* JOINTS_0 */ };
             technique.attributes["_glesBlendWeight4"] = { semantic: "WEIGHTS_0" /* WEIGHTS_0 */ };
             technique.uniforms["glstate_lightmapOffset"] = { type: 35666 /* FLOAT_VEC4 */, semantic: "_LIGHTMAPOFFSET" /* _LIGHTMAPOFFSET */, value: [] };
@@ -9228,26 +9231,11 @@ var egret3d;
         }
         //matrixNormal: paper.matrix = new paper.matrix();
         RenderContext.prototype.updateLightmap = function (texture, uv, offset, intensity) {
-            if (this.lightmap !== texture) {
-                this.lightmap = texture;
-                this.version++;
-            }
-            if (this.lightmapUV !== uv) {
-                this.lightmapUV = uv;
-                this.version++;
-            }
-            if (this.lightmapOffset !== offset ||
-                this.lightmapOffset[0] !== offset[0] ||
-                this.lightmapOffset[1] !== offset[1] ||
-                this.lightmapOffset[2] !== offset[2] ||
-                this.lightmapOffset[3] !== offset[3]) {
-                this.lightmapOffset = offset;
-                this.version++;
-            }
-            if (this.lightmapIntensity !== intensity) {
-                this.lightmapIntensity = intensity;
-                this.version++;
-            }
+            this.lightmap = texture;
+            this.lightmapUV = uv;
+            this.lightmapOffset = offset;
+            this.lightmapIntensity = intensity;
+            this.version++;
         };
         RenderContext.prototype.updateCamera = function (camera, matrix) {
             camera.calcViewPortPixel(this.viewPortPixel); // update viewport
@@ -10507,7 +10495,7 @@ var egret3d;
         MeshFilter.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
             if (this._mesh) {
-                this._mesh.dispose();
+                // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
             }
             this._mesh = null;
         };
@@ -10523,7 +10511,7 @@ var egret3d;
                     return;
                 }
                 if (this._mesh) {
-                    this._mesh.dispose();
+                    // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
                 }
                 this._mesh = mesh;
                 paper.EventPool.dispatchEvent("mesh" /* Mesh */, this);
@@ -16065,7 +16053,7 @@ var egret3d;
                 return;
             }
             this._glTFMesh = this.config.meshes[0];
-            var accessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION);
+            var accessor = this.getAccessor(0);
             this._vertexCount = accessor.count;
             for (var k in this._glTFMesh.primitives[0].attributes) {
                 this._attributeNames.push(k);
@@ -16237,7 +16225,7 @@ var egret3d;
          * @internal
          */
         Mesh.prototype.createVBOAndIBOs = function () {
-            var vertexBufferViewAccessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION);
+            var vertexBufferViewAccessor = this.getAccessor(0);
             var vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), 5126 /* Float */);
             var webgl = egret3d.WebGLCapabilities.webgl;
             var vbo = webgl.createBuffer();
@@ -16649,7 +16637,7 @@ var egret3d;
                     return;
                 }
             }
-            if (this._glTFMaterial.extensions.paper) {
+            if (this._glTFMaterial.extensions.paper && this._glTFMaterial.extensions.paper.renderQueue !== -1) {
                 this.renderQueue = this._glTFMaterial.extensions.paper.renderQueue;
             }
             else {
@@ -17053,20 +17041,28 @@ var RES;
         processor.GLBProcessor = {
             onLoadStart: function (host, resource) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var result, glb;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
+                    var result, parseResult, glb, _i, _a, b;
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
                             case 0: return [4 /*yield*/, host.load(resource, RES.processor.BinaryProcessor)];
                             case 1:
-                                result = _a.sent();
-                                if (resource.name.indexOf(".mesh.glb") >= 0) {
+                                result = _b.sent();
+                                parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
+                                if (parseResult.config.meshes) {
                                     glb = new egret3d.Mesh(0, 0);
                                 }
                                 else {
                                     glb = new egret3d.GLTFAsset();
                                 }
                                 glb.name = resource.name;
-                                glb.parseFromBinary(new Uint32Array(result));
+                                glb.config = parseResult.config;
+                                for (_i = 0, _a = parseResult.buffers; _i < _a.length; _i++) {
+                                    b = _a[_i];
+                                    glb.buffers.push(b);
+                                }
+                                glb.initialize();
+                                // glb.parseFromBinary(new Uint32Array(result));
+                                paper.Asset.register(glb);
                                 return [2 /*return*/, glb];
                         }
                     });
@@ -17094,9 +17090,8 @@ var RES;
                                 result = _e.sent();
                                 glTF = new egret3d.Material(null);
                                 glTF.name = resource.name;
-                                glTF.parse(result);
-                                if (!(glTF.config.materials && glTF.config.materials.length > 0)) return [3 /*break*/, 8];
-                                _i = 0, _a = glTF.config.materials;
+                                if (!(result.materials && result.materials.length > 0)) return [3 /*break*/, 8];
+                                _i = 0, _a = result.materials;
                                 _e.label = 2;
                             case 2:
                                 if (!(_i < _a.length)) return [3 /*break*/, 8];
@@ -17128,7 +17123,10 @@ var RES;
                             case 7:
                                 _i++;
                                 return [3 /*break*/, 2];
-                            case 8: return [2 /*return*/, glTF];
+                            case 8:
+                                glTF.parse(result);
+                                paper.Asset.register(glTF);
+                                return [2 /*return*/, glTF];
                         }
                     });
                 });
@@ -19151,7 +19149,7 @@ var egret3d;
             var webgl = egret3d.WebGLCapabilities.webgl;
             var mesh = drawCall.mesh;
             var primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
-            var vertexAccessor = mesh.getAccessor(primitive.attributes.POSITION);
+            var vertexAccessor = mesh.getAccessor(0);
             var bufferOffset = mesh.getBufferOffset(vertexAccessor);
             if (primitive.indices !== undefined) {
                 var indexAccessor = mesh.getAccessor(primitive.indices);
@@ -19627,8 +19625,9 @@ var egret3d;
             startIndex = endIndex + 1;
             meshFilter.mesh = null;
         }
-        var newVertexBuffers = new Float32Array(combineInstance.vertexBufferSize * combineInstance.vertexCount);
-        var newIndexBuffers = new Uint16Array(combineInstance.indexBufferTotalSize);
+        var combineMesh = new egret3d.Mesh(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute, undefined, 35048 /* Dynamic */);
+        var newVertexBuffers = combineMesh.buffers[0];
+        var newIndexBuffers = combineMesh.buffers[1];
         var iv = 0;
         for (var key in tempVertexBuffers) {
             var arr = tempVertexBuffers[key];
@@ -19645,7 +19644,6 @@ var egret3d;
                 newIndexBuffers[ii++] = v;
             }
         }
-        var combineMesh = new egret3d.Mesh(newVertexBuffers.length, newIndexBuffers.length, newAttribute, undefined, 35048 /* Dynamic */);
         var indicesCount = 0;
         for (var i = 0; i < tempIndexBuffers.length; i++) {
             var subLen = tempIndexBuffers[i].length;

@@ -303,7 +303,7 @@ namespace egret3d {
             const webgl = WebGLCapabilities.webgl;
             const mesh = drawCall.mesh;
             const primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
-            const vertexAccessor = mesh.getAccessor(primitive.attributes.POSITION!);
+            const vertexAccessor = mesh.getAccessor(0);
             const bufferOffset = mesh.getBufferOffset(vertexAccessor);
 
             if (primitive.indices !== undefined) {

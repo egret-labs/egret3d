@@ -60,29 +60,11 @@ namespace egret3d {
         //matrixNormal: paper.matrix = new paper.matrix();
 
         public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
-            if (this.lightmap !== texture) {
-                this.lightmap = texture;
-                this.version++;
-            }
-
-            if (this.lightmapUV !== uv) {
-                this.lightmapUV = uv;
-                this.version++;
-            }
-
-            if (this.lightmapOffset !== offset ||
-                this.lightmapOffset[0] !== offset[0] ||
-                this.lightmapOffset[1] !== offset[1] ||
-                this.lightmapOffset[2] !== offset[2] ||
-                this.lightmapOffset[3] !== offset[3]) {
-                this.lightmapOffset = offset;
-                this.version++;
-            }
-
-            if (this.lightmapIntensity !== intensity) {
-                this.lightmapIntensity = intensity;
-                this.version++;
-            }
+            this.lightmap = texture;
+            this.lightmapUV = uv;
+            this.lightmapOffset = offset;
+            this.lightmapIntensity = intensity;
+            this.version++;
         }
 
         public updateCamera(camera: Camera, matrix: Matrix) {

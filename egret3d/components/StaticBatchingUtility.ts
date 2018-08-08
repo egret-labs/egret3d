@@ -308,8 +308,10 @@ namespace egret3d {
             meshFilter.mesh = null;
         }
 
-        const newVertexBuffers = new Float32Array(combineInstance.vertexBufferSize * combineInstance.vertexCount);
-        const newIndexBuffers = new Uint16Array(combineInstance.indexBufferTotalSize);
+        const combineMesh = new Mesh(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute, undefined, gltf.DrawMode.Dynamic);
+
+        const newVertexBuffers = combineMesh.buffers[0] as Float32Array;
+        const newIndexBuffers = combineMesh.buffers[1] as Uint16Array;
         let iv = 0;
         for (const key in tempVertexBuffers) {
             const arr = tempVertexBuffers[key] as number[];
@@ -324,8 +326,6 @@ namespace egret3d {
                 newIndexBuffers[ii++] = v;
             }
         }
-
-        const combineMesh = new Mesh(newVertexBuffers.length, newIndexBuffers.length, newAttribute, undefined, gltf.DrawMode.Dynamic);
 
         let indicesCount = 0;
         for (let i = 0; i < tempIndexBuffers.length; i++) {
