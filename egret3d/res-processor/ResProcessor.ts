@@ -85,9 +85,11 @@ namespace RES.processor {
     export const GLBProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, RES.processor.BinaryProcessor);
+
+            const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
             let glb: egret3d.GLTFAsset;
 
-            if (resource.name.indexOf(".mesh.glb") >= 0) {
+            if (parseResult.config.meshes) {
                 glb = new egret3d.Mesh(0, 0);
             }
             else {
@@ -95,7 +97,12 @@ namespace RES.processor {
             }
 
             glb.name = resource.name;
-            glb.parseFromBinary(new Uint32Array(result));
+            glb.config = parseResult.config; 
+            for(const b of parseResult.buffers){
+                glb.buffers.push(b);
+            }
+            glb.initialize();
+            // glb.parseFromBinary(new Uint32Array(result));
 
             paper.Asset.register(glb);
 
@@ -110,13 +117,12 @@ namespace RES.processor {
 
     export const GLTFProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
-            const result = await host.load(resource, 'json');
+            const result = await host.load(resource, 'json') as egret3d.GLTFEgret;
             const glTF = new egret3d.Material(null!);
             glTF.name = resource.name;
-            glTF.parse(result);
 
-            if (glTF.config.materials && glTF.config.materials.length > 0) {
-                for (const mat of glTF.config.materials) {
+            if (result.materials && result.materials.length > 0) {
+                for (const mat of result.materials) {
                     const values = mat.extensions.KHR_techniques_webgl.values;
                     for (const key in values) {
                         const value = values[key];
@@ -134,6 +140,8 @@ namespace RES.processor {
                     }
                 }
             }
+
+            glTF.parse(result);
             paper.Asset.register(glTF);
 
             return glTF;
