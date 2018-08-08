@@ -3939,7 +3939,6 @@ var paper;
         10: "egret3d.SphereCollider",
         11: "egret3d.Transform",
         12: "egret3d.Shader",
-        14: "egret3d.Material",
         15: "egret3d.AnimationClip",
         16: "egret3d.TPoseInfo",
         17: "egret3d.PoseBoneMatrix",
@@ -3968,10 +3967,30 @@ var paper;
         40: "egret3d.Animation",
         41: "egret3d.GLTFAsset",
         //
-        13: "paper.Compatible",
-        //
         "egret3d.Light": "egret3d.DirectLight",
+        //
+        13: "paper.Compatible",
+        14: "paper.Compatible",
     };
+    /**
+     * @internal
+     */
+    var Compatible = (function () {
+        function Compatible() {
+        }
+        Compatible.prototype.serialize = function () {
+            throw new Error("Never");
+        };
+        Compatible.prototype.deserialize = function (element, data) {
+            if (!data) {
+                throw new Error("Never");
+            }
+            return data.getAssetOrComponent(element._glTFAsset);
+        };
+        return Compatible;
+    }());
+    paper.Compatible = Compatible;
+    __reflect(Compatible.prototype, "paper.Compatible", ["paper.ISerializable"]);
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -4060,7 +4079,7 @@ var paper;
                             return target;
                         }
                         else if (target[KEY_DESERIALIZE]) {
-                            return target.deserialize(source);
+                            return target.deserialize(source, this);
                         }
                         else {
                             // console.info("Deserialize can be optimized.");
@@ -4115,7 +4134,7 @@ var paper;
                         var clazz = egret.getDefinitionByName(paper.serializeClassMap[classCodeOrName] || classCodeOrName);
                         if (clazz) {
                             target = new clazz();
-                            return target.deserialize(source);
+                            return target.deserialize(source, this);
                         }
                     }
                     else {
@@ -23167,36 +23186,7 @@ var paper;
              */
             ModifyPrefabGameObjectPropertyState.prototype.modifyPrefabGameObjectPropertyValues = function (gameObjectUUid, valueList) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var _this = this;
-                    var prefabObj, objects;
                     return __generator(this, function (_a) {
-                        prefabObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
-                        if (!prefabObj) {
-                            return [2 /*return*/];
-                        }
-                        objects = this.editorModel.getRootGameObjectsByPrefab(prefabObj.prefab);
-                        valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                            var _this = this;
-                            var propName, copyValue, valueEditType, newValue;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                        return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
-                                    case 1:
-                                        newValue = _a.sent();
-                                        objects.forEach(function (object) {
-                                            if (_this.editorModel.compareValue(object[propName], prefabObj[propName])) {
-                                                _this.editorModel.setTargetProperty(propName, object, newValue);
-                                                _this.dispathPropertyEvent(object, propName, newValue);
-                                            }
-                                        });
-                                        this.editorModel.setTargetProperty(propName, prefabObj, newValue);
-                                        this.dispathPropertyEvent(prefabObj, propName, newValue);
-                                        return [2 /*return*/];
-                                }
-                            });
-                        }); });
                         return [2 /*return*/];
                     });
                 });
