@@ -3939,7 +3939,6 @@ var paper;
         10: "egret3d.SphereCollider",
         11: "egret3d.Transform",
         12: "egret3d.Shader",
-        14: "egret3d.Material",
         15: "egret3d.AnimationClip",
         16: "egret3d.TPoseInfo",
         17: "egret3d.PoseBoneMatrix",
@@ -3968,10 +3967,30 @@ var paper;
         40: "egret3d.Animation",
         41: "egret3d.GLTFAsset",
         //
-        13: "paper.Compatible",
-        //
         "egret3d.Light": "egret3d.DirectLight",
+        //
+        13: "paper.Compatible",
+        14: "paper.Compatible",
     };
+    /**
+     * @internal
+     */
+    var Compatible = (function () {
+        function Compatible() {
+        }
+        Compatible.prototype.serialize = function () {
+            throw new Error("Never");
+        };
+        Compatible.prototype.deserialize = function (element, data) {
+            if (!data) {
+                throw new Error("Never");
+            }
+            return data.getAssetOrComponent(element._glTFAsset);
+        };
+        return Compatible;
+    }());
+    paper.Compatible = Compatible;
+    __reflect(Compatible.prototype, "paper.Compatible", ["paper.ISerializable"]);
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -4060,7 +4079,7 @@ var paper;
                             return target;
                         }
                         else if (target[KEY_DESERIALIZE]) {
-                            return target.deserialize(source);
+                            return target.deserialize(source, this);
                         }
                         else {
                             // console.info("Deserialize can be optimized.");
@@ -4115,7 +4134,7 @@ var paper;
                         var clazz = egret.getDefinitionByName(paper.serializeClassMap[classCodeOrName] || classCodeOrName);
                         if (clazz) {
                             target = new clazz();
-                            return target.deserialize(source);
+                            return target.deserialize(source, this);
                         }
                     }
                     else {

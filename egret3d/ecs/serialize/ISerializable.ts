@@ -74,6 +74,6 @@ namespace paper {
         /**
          * 
          */
-        deserialize(element: any): any;
+        deserialize(element: any, data?: Deserializer): any;
     }
 }
