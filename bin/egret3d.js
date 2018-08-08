@@ -9464,26 +9464,11 @@ var egret3d;
         }
         //matrixNormal: paper.matrix = new paper.matrix();
         RenderContext.prototype.updateLightmap = function (texture, uv, offset, intensity) {
-            if (this.lightmap !== texture) {
-                this.lightmap = texture;
-                this.version++;
-            }
-            if (this.lightmapUV !== uv) {
-                this.lightmapUV = uv;
-                this.version++;
-            }
-            if (this.lightmapOffset !== offset ||
-                this.lightmapOffset[0] !== offset[0] ||
-                this.lightmapOffset[1] !== offset[1] ||
-                this.lightmapOffset[2] !== offset[2] ||
-                this.lightmapOffset[3] !== offset[3]) {
-                this.lightmapOffset = offset;
-                this.version++;
-            }
-            if (this.lightmapIntensity !== intensity) {
-                this.lightmapIntensity = intensity;
-                this.version++;
-            }
+            this.lightmap = texture;
+            this.lightmapUV = uv;
+            this.lightmapOffset = offset;
+            this.lightmapIntensity = intensity;
+            this.version++;
         };
         RenderContext.prototype.updateCamera = function (camera, matrix) {
             camera.calcViewPortPixel(this.viewPortPixel); // update viewport
@@ -10743,7 +10728,7 @@ var egret3d;
         MeshFilter.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
             if (this._mesh) {
-                this._mesh.dispose();
+                // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
             }
             this._mesh = null;
         };
@@ -10759,7 +10744,7 @@ var egret3d;
                     return;
                 }
                 if (this._mesh) {
-                    this._mesh.dispose();
+                    // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
                 }
                 this._mesh = mesh;
                 paper.EventPool.dispatchEvent("mesh" /* Mesh */, this);
@@ -16301,7 +16286,7 @@ var egret3d;
                 return;
             }
             this._glTFMesh = this.config.meshes[0];
-            var accessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION);
+            var accessor = this.getAccessor(0);
             this._vertexCount = accessor.count;
             for (var k in this._glTFMesh.primitives[0].attributes) {
                 this._attributeNames.push(k);
@@ -16473,7 +16458,7 @@ var egret3d;
          * @internal
          */
         Mesh.prototype.createVBOAndIBOs = function () {
-            var vertexBufferViewAccessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION);
+            var vertexBufferViewAccessor = this.getAccessor(0);
             var vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), 5126 /* Float */);
             var webgl = egret3d.WebGLCapabilities.webgl;
             var vbo = webgl.createBuffer();
@@ -17304,6 +17289,7 @@ var RES;
                                 }
                                 glb.name = resource.name;
                                 glb.parseFromBinary(new Uint32Array(result));
+                                paper.Asset.register(glb);
                                 return [2 /*return*/, glb];
                         }
                     });
@@ -17365,7 +17351,9 @@ var RES;
                             case 7:
                                 _i++;
                                 return [3 /*break*/, 2];
-                            case 8: return [2 /*return*/, glTF];
+                            case 8:
+                                paper.Asset.register(glTF);
+                                return [2 /*return*/, glTF];
                         }
                     });
                 });
@@ -19385,7 +19373,7 @@ var egret3d;
             var webgl = egret3d.WebGLCapabilities.webgl;
             var mesh = drawCall.mesh;
             var primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
-            var vertexAccessor = mesh.getAccessor(primitive.attributes.POSITION);
+            var vertexAccessor = mesh.getAccessor(0);
             var bufferOffset = mesh.getBufferOffset(vertexAccessor);
             if (primitive.indices !== undefined) {
                 var indexAccessor = mesh.getAccessor(primitive.indices);

@@ -97,6 +97,8 @@ namespace RES.processor {
             glb.name = resource.name;
             glb.parseFromBinary(new Uint32Array(result));
 
+            paper.Asset.register(glb);
+
             return glb;
         },
 
@@ -132,6 +134,7 @@ namespace RES.processor {
                     }
                 }
             }
+            paper.Asset.register(glTF);
 
             return glTF;
         },
