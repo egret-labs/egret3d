@@ -49,7 +49,6 @@ namespace RES.processor {
             loader.load(imgResource.root + imgResource.url);
             let image = await promisify(loader, imgResource);
             const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
-            texture.realName = _name;
             texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
             paper.Asset.register(texture);
 
