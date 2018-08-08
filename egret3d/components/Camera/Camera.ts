@@ -13,6 +13,7 @@ namespace egret3d {
      * @platform Web
      * @language
      */
+    @paper.disallowMultiple
     export class Camera extends paper.BaseComponent {
         /**
          * current main camera

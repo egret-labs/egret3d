@@ -1,7 +1,4 @@
 namespace egret3d {
-    /**
-     * @private
-     */
     const enum BlendModeEnum {
         Close,
         Blend,
@@ -9,7 +6,9 @@ namespace egret3d {
         Add,
         Add_PreMultiply,
     }
-
+    /**
+     * 
+     */
     export class DefaultShaders extends paper.SingletonComponent {
 
         // public static DIFFUSE_VERT_COLOR: Shader;

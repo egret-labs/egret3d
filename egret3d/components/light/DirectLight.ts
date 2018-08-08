@@ -2,6 +2,7 @@ namespace egret3d {
     /**
      * 
      */
+    @paper.disallowMultiple
     export class DirectLight extends BaseLight {
         public readonly type: LightType = LightType.Direction;
         public renderTarget: IRenderTarget = new GlRenderTarget(WebGLCapabilities.webgl, 1024, 1024, true); // TODO

@@ -252,6 +252,16 @@ namespace egret3d {
             }
 
             this.aabb.
+
+            if (minimum) {
+                Vector3.copy(minimum, this.srcmin);
+                Vector3.copy(minimum, this.minimum);
+            }
+
+            if (maximum) {
+                Vector3.copy(maximum, this.srcmax);
+                Vector3.copy(maximum, this.maximum);
+            }
         }
 
         public initialize() {
