@@ -15,7 +15,6 @@ namespace paper.editor {
         public static CHANGE_PROPERTY = "changeProperty";
         public static CHANGE_EDIT_MODE = "changeEditMode";
         public static CHANGE_EDIT_TYPE = "changeEditType";
-        public static CHANGE_SCENE = "changeScene";
         public static ADD_COMPONENT: string = "addComponent";
         public static REMOVE_COMPONENT: string = "removeComponent";
         public static UPDATE_GAMEOBJECTS_HIREARCHY: string = "updateGameObjectsHierarchy";
@@ -31,17 +30,29 @@ namespace paper.editor {
      * 编辑模型
      */
     export class EditorModel extends EventDispatcher {
-        private history: History;
+        
+        private _history: History;
+        private _scene:paper.Scene;
+        public get history():History{
+            return this._history
+        }
+        public get scene():Scene{
+            return this._scene;
+        }
         /**
          * 初始化
          * @param history 
          */
-        public init(history: History): void {
-            this.history = history;
+        public init(scene: paper.Scene): void {
+            this._scene=scene;
+            this._history=new History();
         }
 
-        public addState(state: BaseState) {
-            state && this.history.add(state);
+        public addState(state: BaseState|null) {
+            if(state){
+                state.editorModel=this;
+                this.history.add(state);
+            }
         }
 
         public getEditType(propName: string, target: any): editor.EditType | null {
@@ -120,13 +131,7 @@ namespace paper.editor {
         }
 
         public createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]) {
-            const data = {
-                assetUrl,
-                newValueList,
-                preValueCopylist,
-            }
-
-            const state = ModifyAssetPropertyState.create(data);
+            const state = ModifyAssetPropertyState.create(assetUrl,newValueList,preValueCopylist);
             this.addState(state);
         }
 
@@ -193,7 +198,7 @@ namespace paper.editor {
                     let target: ISerializable | null = null;
                     if (clazz) {
                         target = new clazz();
-                        target.deserialize(serializeData.serializeData.objects[0]);
+                        target!.deserialize(serializeData.serializeData.objects[0]);
                     }
                     return target;
                 case editor.EditType.SHADER:
@@ -236,7 +241,7 @@ namespace paper.editor {
                 gameObjectUUid: gameObjectUUid,
                 compClzName: compClzName
             }
-            let state = AddComponentState.create(data);
+            let state = AddComponentState.create(gameObjectUUid,compClzName);
             this.addState(state);
         }
 
@@ -265,13 +270,8 @@ namespace paper.editor {
             }
             let serializeData = serialize(removeComponent);
 
-            let data = {
-                gameObjectUUid: gameObjectUUid,
-                componentUUid: componentUUid,
-                serializeData: serializeData,
-            }
 
-            let state = RemoveComponentState.create(data);
+            let state = RemoveComponentState.create(gameObjectUUid,componentUUid,serializeData);
             this.addState(state);
         }
 
@@ -288,14 +288,18 @@ namespace paper.editor {
         public getComponentByAssetId(gameObject: GameObject, assetId: string): BaseComponent | null {
             for (let i: number = 0; i < gameObject.components.length; i++) {
                 let comp = gameObject.components[i];
-                if (comp.linkedID === assetId) {
+                if (comp.extras.linkedID === assetId) {
                     return comp;
                 }
             }
             return null;;
         }
 
-        public copy(objs: GameObject[]): void {
+        /**
+         * 复制游戏对象
+         * @param objs 
+         */
+        public copyGameObject(objs: GameObject[]): void {
             let clipboard = __global.runtimeModule.getClipborad();
             let content: any[] = [];
             //过滤
@@ -311,7 +315,10 @@ namespace paper.editor {
             }
             clipboard.writeText(JSON.stringify(content), "paper");
         }
-
+        /**
+         * 粘贴游戏对象
+         * @param parent 
+         */
         public pasteGameObject(parent: GameObject): void {
             let clipboard = __global.runtimeModule.getClipborad()
             let msg = clipboard.readText("paper");
@@ -330,7 +337,7 @@ namespace paper.editor {
          * @param gameObjects 
          */
         public duplicateGameObjects(gameObjects: GameObject[]): void {
-            let state = DuplicateGameObjectsState.create(gameObjects);
+            let state = DuplicateGameObjectsState.create(gameObjects,this);
             this.addState(state);
         }
         /**
@@ -338,10 +345,10 @@ namespace paper.editor {
          * @param gameObjects 
          */
         public deleteGameObject(gameObjects: GameObject[]) {
-            let deleteState = DeleteGameObjectsState.create(gameObjects);
+            let deleteState = DeleteGameObjectsState.create(gameObjects,this);
             let breakList: GameObject[] = [];
             gameObjects.forEach(obj => {
-                if (Editor.editorModel.isPrefabChild(obj) && !Editor.editorModel.isPrefabRoot(obj)) {
+                if (this.isPrefabChild(obj) && !this.isPrefabRoot(obj)) {
                     breakList.push(obj);
                 }
             });
@@ -354,13 +361,6 @@ namespace paper.editor {
                 this.addState(deleteState);
             }
         }
-
-        public _deleteGameObject(gameObjects: GameObject[]) {
-            for (let index = 0; index < gameObjects.length; index++) {
-                const element = gameObjects[index];
-                element.destroy();
-            }
-        }
         /**
          * 解除预置体联系
          * @param gameObjects 
@@ -368,7 +368,7 @@ namespace paper.editor {
         public breakPrefab(gameObjects:GameObject[]):void{
             let breakList: GameObject[] = [];
             gameObjects.forEach(obj => {
-                if (Editor.editorModel.isPrefabChild(obj)||Editor.editorModel.isPrefabRoot(obj)) {
+                if (this.isPrefabChild(obj)||this.isPrefabRoot(obj)) {
                     breakList.push(obj);
                 }
             });
@@ -381,11 +381,11 @@ namespace paper.editor {
          * 更改层级
          * */
         public updateGameObjectsHierarchy(gameObjects: GameObject[], targetGameobjcet: GameObject, dir: 'top' | 'inner' | 'bottom'): void {
-            let gameObjectHierarchyState = GameObjectHierarchyState.create(gameObjects, targetGameobjcet, dir);
+            let gameObjectHierarchyState = GameObjectHierarchyState.create(gameObjects, targetGameobjcet, dir,this);
             let breakList: GameObject[] = [];
             gameObjects.forEach(obj => {
-                if (Editor.editorModel.isPrefabChild(obj) &&
-                    !Editor.editorModel.isPrefabRoot(obj) &&
+                if (this.isPrefabChild(obj) &&
+                    !this.isPrefabRoot(obj) &&
                     (obj.transform.parent !== targetGameobjcet.transform.parent || dir === 'inner')) {
                     breakList.push(obj);
                 }
@@ -567,55 +567,18 @@ namespace paper.editor {
         }
 
         public isPrefabRoot(gameObj: GameObject): boolean {
-            if (gameObj.extras.isPrefabRoot === true) {
+            if (gameObj.extras.prefab) {
                 return true;
             }
             return false;
         }
 
         public isPrefabChild(gameObj: GameObject): boolean {
-            if (gameObj.extras.isPrefabRoot === false) {
+            if (gameObj.extras.prefabRootId) {
                 return true;
             }
             return false;
         }
-
-        /**
-        * 从一个预置体文件创建实例
-        * @param prefabPath 预置体资源路径
-        */
-        public async createGameObjectFromPrefab(prefabPath: string, paper: any, RES: any): Promise<paper.GameObject> {
-            const prefab = await RES.getResAsync(prefabPath) as Prefab | null;
-            if (prefab) {
-                const instance = prefab.createInstance();
-                instance.extras.isPrefabRoot = true;
-                this.setGameObjectPrefab(instance, prefab, instance);
-                return instance;
-            }
-            return null;
-        }
-
-        /**
-         * 设置children prefab属性
-         * @param gameObj 
-         * @param prefab 
-         */
-        public setGameObjectPrefab(gameObj: GameObject, prefab: Prefab, rootObj: GameObject) {
-            if (!gameObj) {
-                return;
-            }
-            (gameObj as any).prefab = prefab;
-            if (gameObj != rootObj) {
-                gameObj.extras.isPrefabRoot = false;
-                gameObj.extras.prefabRootId = rootObj.uuid;
-            }
-            for (let index = 0; index < gameObj.transform.children.length; index++) {
-                const element = gameObj.transform.children[index];
-                const obj: GameObject = element.gameObject;
-                this.setGameObjectPrefab(obj, prefab, rootObj);
-            }
-        }
-
         /**将对象按照层级进行排序
          */
         public sortGameObjectsForHierarchy(gameobjects: paper.GameObject[]): paper.GameObject[] {
@@ -761,40 +724,6 @@ namespace paper.editor {
                 }
             }
             else return false;
-        }
-
-        public getRootGameObjectsByPrefab = (prefab: egret3d.Prefab): GameObject[] => {
-            let objects = Application.sceneManager.activeScene.gameObjects;
-            let result: GameObject[] = [];
-            objects.forEach(obj => {
-                if (obj.prefab && obj.prefab.name === prefab.name && Editor.editorModel.isPrefabRoot(obj)) {
-                    result.push(obj);
-                }
-            })
-            return result;
-        }
-
-        public getApplyGameobjectParentUUids = (gameObj:GameObject):string[] => {
-            let parentAssetId = gameObj.transform.parent.gameObject.assetID;
-            let parentIds:string[] = [];
-
-            let paper = this.backRunTime.paper;
-            let objects = paper.Application.sceneManager.activeScene.gameObjects;
-            for (let i: number = 0; i < objects.length; i++) {
-                if (objects[i].assetID === parentAssetId) {
-                    parentIds.push(objects[i].uuid);
-                }
-            }
-
-            paper = __global['paper'];
-            objects = paper.Application.sceneManager.activeScene.gameObjects;   
-            for (let i: number = 0; i < objects.length; i++) {
-                if (objects[i].assetID === parentAssetId && objects[i].transform.children.indexOf(gameObj.transform) < 0) {
-                    parentIds.push(objects[i].uuid);
-                }
-            }
-
-            return parentIds;
         }
     }
 }

@@ -21,17 +21,21 @@ namespace paper.editor{
 
         public undo(): boolean {
             if (super.undo()) {
-                const {gameObjectUUid,cacheComponentId} = this.stateData;
-                const gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
-                if (gameObject && cacheComponentId) {
-                    const comp = Editor.editorModel.getComponentById(gameObject,cacheComponentId);
-                    if (comp) {
-                        gameObject.removeComponent(comp.constructor as any);
-                        this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
-                        return true;
+                let gameObjectUUid = this.stateData.gameObjectUUid;
+                let componentId = this.stateData.cacheComponentId;
+                let gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
+                if (gameObject) {
+                    for (let i: number = 0; i < gameObject.components.length; i++) {
+                        let comp = gameObject.components[i];
+                        if (comp.uuid === componentId) {
+                            gameObject.removeComponent(comp.constructor as any);
+                            break;
+                        }
                     }
                 }
 
+                this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
+                return true;
             }
 
             return false;
@@ -39,13 +43,15 @@ namespace paper.editor{
 
         public redo(): boolean {
             if (super.redo()) {
-                const {gameObjectUUid,compClzName} = this.stateData;
-                let gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                let gameObjectUUid = this.stateData.gameObjectUUid;
+                let compClzName = this.stateData.compClzName;
+                let gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (gameObject) {
                     let addComponent;
                     if (this.stateData.serializeData) {
-                        addComponent = deserialize(this.stateData.serializeData, true);
-                        Editor.editorModel.addComponentToGameObject(gameObject, addComponent);
+                        let deserializer=new Deserializer();
+                        addComponent = deserializer.deserialize(this.data.serializeData, true);
+                        this.editorModel.addComponentToGameObject(gameObject, addComponent);
                     } else {
                         let compClz = egret.getDefinitionByName(compClzName);
                         addComponent = gameObject.addComponent(compClz);

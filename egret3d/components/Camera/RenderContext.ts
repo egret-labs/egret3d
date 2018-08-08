@@ -18,6 +18,8 @@ namespace egret3d {
         public directLightCount: number = 0;
         public pointLightCount: number = 0;
         public spotLightCount: number = 0;
+
+        public shaderContextDefine: string = "";
         /**
          * 
          */
@@ -56,11 +58,6 @@ namespace egret3d {
         public readonly matrix_mv: Matrix = new Matrix();
         public readonly matrix_vp: Matrix = new Matrix();
         //matrixNormal: paper.matrix = new paper.matrix();
-
-        /**
-         * 
-         */
-        public drawCall: DrawCall;
 
         public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
             if (this.lightmap !== texture) {
@@ -130,7 +127,7 @@ namespace egret3d {
             let allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
-                
+
                 if (light instanceof DirectLight) {
                     directLightCount++;
                 }
@@ -316,6 +313,48 @@ namespace egret3d {
                 this.lightShadowCameraNear = light.shadowCameraNear;
                 this.lightShadowCameraFar = light.shadowCameraFar;
                 this.version++;
+            }
+        }
+
+        public update(drawCall: DrawCall) {
+            this.shaderContextDefine = "";
+            const renderer = drawCall.renderer;
+            this.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
+            if (drawCall.boneData) {
+                this.updateBones(drawCall.boneData);
+                //this.shaderContextDefine += "#define SKINNING \n";
+            }
+            //
+            if (renderer.lightmapIndex >= 0) {
+                const activeScene = paper.Application.sceneManager.activeScene;
+                if (activeScene.lightmaps.length > renderer.lightmapIndex) {
+                    this.updateLightmap(
+                        activeScene.lightmaps[renderer.lightmapIndex],
+                        drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0,
+                        renderer.lightmapScaleOffset,
+                        activeScene.lightmapIntensity
+                    );
+
+                    this.shaderContextDefine += "#define LIGHTMAP \n";
+                }
+            }
+
+            if (this.lightCount > 0) {
+                this.shaderContextDefine += "#define USE_LIGHT " + this.lightCount + "\n";
+
+                if (this.directLightCount > 0) {
+                    this.shaderContextDefine += "#define USE_DIRECT_LIGHT " + this.directLightCount + "\n";
+                }
+                if (this.pointLightCount > 0) {
+                    this.shaderContextDefine += "#define USE_POINT_LIGHT " + this.pointLightCount + "\n";
+                }
+                if (this.spotLightCount > 0) {
+                    this.shaderContextDefine += "#define USE_SPOT_LIGHT " + this.spotLightCount + "\n";
+                }
+                if (renderer.receiveShadows) {
+                    this.shaderContextDefine += "#define USE_SHADOW \n";
+                    this.shaderContextDefine += "#define USE_PCF_SOFT_SHADOW \n";
+                }
             }
         }
     }

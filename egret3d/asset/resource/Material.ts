@@ -192,6 +192,8 @@ namespace egret3d {
         addDefine(key: string) {
             if (this._defines.indexOf(key) < 0) {
                 this._defines.push(key);
+                //减少同样的宏定义因为顺序不同重新编译
+                this._defines.sort();
                 this._version++;
             }
         }

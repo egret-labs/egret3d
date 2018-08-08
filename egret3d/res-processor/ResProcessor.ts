@@ -48,13 +48,9 @@ namespace RES.processor {
             let loader = new egret.ImageLoader();
             loader.load(imgResource.root + imgResource.url);
             let image = await promisify(loader, imgResource);
-
-            let texture = new egret3d.Texture(imgResource.name);
+            const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
             texture.realName = _name;
-            const gl = egret3d.WebGLCapabilities.webgl;
-            let t2d = new egret3d.GlTexture2D(gl, _textureFormat);
-            t2d.uploadImage(image.source, _mipmap, _linear, true, _repeat);
-            texture.glTexture = t2d;
+            texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
             paper.Asset.register(texture);
 
             return texture;
@@ -70,15 +66,11 @@ namespace RES.processor {
     export const TextureProcessor: RES.processor.Processor = {
 
         async onLoadStart(host, resource) {
-            const gl = egret3d.WebGLCapabilities.webgl;
             const loader = new egret.ImageLoader();
             loader.load(resource.root + resource.url);
             const image = await promisify(loader, resource);
-            const texture = new egret3d.Texture(resource.name);
-            const textureFormat = egret3d.TextureFormatEnum.RGBA;
-            const t2d = new egret3d.GlTexture2D(gl, textureFormat);
-            t2d.uploadImage(image.source, true, true, true, true);
-            texture.glTexture = t2d;
+            const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, egret3d.TextureFormatEnum.RGBA);
+            texture.uploadImage(image.source, true, true, true, true);
             paper.Asset.register(texture);
             return texture;
         },
@@ -116,7 +108,7 @@ namespace RES.processor {
 
     export const GLTFProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
-            const result = await host.load(resource, RES.processor.JsonProcessor);
+            const result = await host.load(resource, 'json');
             const glTF = new egret3d.Material(null!);
             glTF.name = resource.name;
             glTF.parse(result);
