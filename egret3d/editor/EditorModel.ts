@@ -106,16 +106,6 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createModifyPrefabGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]) {
-            let state = ModifyPrefabGameObjectPropertyState.create(gameObjectUUid, newValueList, preValueCopylist);
-            this.addState(state);
-        }
-
-        public createModifyPrefabComponentPropertyState(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]) {
-            let state = ModifyPrefabComponentPropertyState.create(gameObjUUid, componentUUid, newValueList, preValueCopylist);
-            this.addState(state);
-        }
-
         public createRemoveComponentFromPrefab(stateData: any) {
             const data = {
                 ...stateData
@@ -126,8 +116,8 @@ namespace paper.editor {
         }
 
         public createAddComponentToPrefab(serializeData: any, gameObjIds: string[]) {
-            const state = AddPrefabComponentState.create(serializeData, gameObjIds);
-            this.addState(state);
+            // const state = AddPrefabComponentState.create(serializeData, gameObjIds);
+            // this.addState(state);
         }
 
         public createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]) {
@@ -288,7 +278,7 @@ namespace paper.editor {
         public getComponentByAssetId(gameObject: GameObject, assetId: string): BaseComponent | null {
             for (let i: number = 0; i < gameObject.components.length; i++) {
                 let comp = gameObject.components[i];
-                if (comp.extras.linkedID === assetId) {
+                if (comp.extras!.linkedID === assetId) {
                     return comp;
                 }
             }
@@ -642,29 +632,8 @@ namespace paper.editor {
             return gameobjects;
         }
 
-        public createApplyPrefabState(applyGameObjectPropertyList: any[], applyComponentPropertyList: any[],addGameObjectList:any[]) {
-            let group: BaseState[] = [];
-
-            for (const p of applyGameObjectPropertyList) {
-                const { gameObjUUid, newValueList, preValueCopylist } = p;
-                let state = ModifyPrefabGameObjectPropertyState.create(gameObjUUid, newValueList, preValueCopylist);
-                group.push(state);
-            }
-
-            for (const p of applyComponentPropertyList) {
-                const { gameObjUUid, componentUUid, newValueList, preValueCopylist } = p;
-                let state = ModifyPrefabComponentPropertyState.create(gameObjUUid, componentUUid, newValueList, preValueCopylist);
-                group.push(state);
-            }
+        public createApplyPrefabState() {
             
-            for (const p of addGameObjectList) {
-                const {serializeData,parentIds} = p;
-                let state = ApplyGameObjectToPrefabState.create(serializeData,parentIds);
-                group.push(state);
-            }
-
-            let applyPrefabState = StateGroup.create(group);
-            this.addState(applyPrefabState);
         }
 
         public createRevertPrefabState(modifyGameObjectPropertyList:any[],modifyComponentPropertyList:any[])
