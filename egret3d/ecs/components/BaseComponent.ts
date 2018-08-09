@@ -5,7 +5,7 @@ namespace paper {
     export type ComponentClass<T extends BaseComponent> = {
         new(): T;
         executeInEditMode: boolean;
-        disallowMultiple: boolean;
+        allowMultiple: boolean;
         /**
          * @internal
          */
@@ -38,9 +38,9 @@ namespace paper {
          */
         public static executeInEditMode: boolean = false;
         /**
-         * 是否禁止在同一实体上添加多个实例。
+         * 是否允许在同一实体上添加多个实例。
          */
-        public static disallowMultiple: boolean = false;
+        public static allowMultiple: boolean = false;
         /**
          * @internal
          */
@@ -86,7 +86,7 @@ namespace paper {
         /**
          * 组件挂载的 GameObject
          */
-        public readonly gameObject: GameObject = null as any;
+        public readonly gameObject: GameObject = null!;
         /**
          * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
          */

@@ -521,7 +521,7 @@ namespace egret3d {
                         continue;
                     }
 
-                    const channel = new AnimationChannel();
+                    const channel = new AnimationChannel(); // TODO cache.
                     channel.glTFChannel = glTFChannel;
                     channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
                     channel.gameObject = gameObject;
@@ -559,7 +559,7 @@ namespace egret3d {
                             break;
 
                         default:
-                            console.warn("Unknown animation channel.", channel.glTFChannel.target.path);
+                            console.debug("Unknown animation channel.", channel.glTFChannel.target.path);
                             break;
                     }
 
@@ -672,7 +672,7 @@ namespace egret3d {
     /**
      * 动画组件。
      */
-    @paper.disallowMultiple
+    @paper.allowMultiple
     export class Animation extends paper.BaseComponent {
         /**
          * @private
@@ -916,45 +916,6 @@ namespace egret3d {
         }
         public get animations(): ReadonlyArray<GLTFAsset> {
             return this._animations;
-        }
-    }
-    /**
-     * 
-     */
-    export class AnimationSystem extends paper.BaseSystem {
-        protected readonly _interests = [
-            { componentClass: Animation }
-        ];
-
-        public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
-            const component = gameObject.getComponent(Animation) as Animation;
-            component._addToSystem = true;
-
-            if (!component._skinnedMeshRenderer) {
-                component._skinnedMeshRenderer = gameObject.getComponentsInChildren(SkinnedMeshRenderer)[0];
-
-                if (component._skinnedMeshRenderer) {
-                    for (const bone of component._skinnedMeshRenderer.bones) {
-                        const boneBlendLayer = new BoneBlendLayer();
-                        component._boneBlendLayers.push(boneBlendLayer);
-                    }
-                }
-            }
-
-            if (component.autoPlay) {
-                component.play();
-            }
-        }
-
-        public onUpdate() { // TODO 应将组件功能尽量移到系统
-            const globalTime = this._clock.time;
-            for (const gameObject of this._groups[0].gameObjects) {
-                (gameObject.getComponent(Animation) as Animation).update(globalTime);
-            }
-        }
-
-        public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
-            (gameObject.getComponent(Animation) as Animation)._addToSystem = false;
         }
     }
 }

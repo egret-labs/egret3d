@@ -267,7 +267,7 @@ namespace paper {
             const componentIndex = componentClass.index;
             const existedComponent = this._components[componentIndex];
             // disallowMultipleComponents.
-            if (componentClass.disallowMultiple && existedComponent) {
+            if (!componentClass.allowMultiple && existedComponent) {
                 console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the game object (${this.path}) again.`);
                 return existedComponent as T;
             }

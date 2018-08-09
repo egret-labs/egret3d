@@ -96,8 +96,8 @@ namespace RES.processor {
             }
 
             glb.name = resource.name;
-            glb.config = parseResult.config; 
-            for(const b of parseResult.buffers){
+            glb.config = parseResult.config;
+            for (const b of parseResult.buffers) {
                 glb.buffers.push(b);
             }
             glb.initialize();
@@ -116,12 +116,12 @@ namespace RES.processor {
 
     export const GLTFProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
-            const result = await host.load(resource, 'json') as egret3d.GLTFEgret;
             const glTF = new egret3d.Material(null!);
             glTF.name = resource.name;
+            glTF.config = await host.load(resource, 'json') as egret3d.GLTFEgret;
 
-            if (result.materials && result.materials.length > 0) {
-                for (const mat of result.materials) {
+            if (glTF.config.materials && glTF.config.materials.length > 0) {
+                for (const mat of glTF.config.materials) {
                     const values = mat.extensions.KHR_techniques_webgl.values;
                     for (const key in values) {
                         const value = values[key];
@@ -140,7 +140,7 @@ namespace RES.processor {
                 }
             }
 
-            glTF.parse(result);
+            glTF.initialize();
             paper.Asset.register(glTF);
 
             return glTF;

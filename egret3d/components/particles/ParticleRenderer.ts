@@ -99,8 +99,9 @@ namespace egret3d.particle {
         RENDERMESH = "RENDERMESH",
         SHAPE = "SHAPE",
     }
-
-    @paper.disallowMultiple
+    /**
+     * 
+     */
     export class ParticleRenderer extends paper.BaseRenderer {
         @paper.serializedField
         private _mesh: egret3d.Mesh | null;

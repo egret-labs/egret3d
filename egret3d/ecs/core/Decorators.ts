@@ -58,11 +58,11 @@ namespace paper {
         target.executeInEditMode = true;
     }
     /**
-     * 标记组件是否禁止在同一实体上添加多个实例。
+     * 标记组件是否允许在同一实体上添加多个实例。
      */
-    export function disallowMultiple(target: ComponentClass<BaseComponent>) {
+    export function allowMultiple(target: ComponentClass<BaseComponent>) {
         BaseComponent.register(target);
-        target.disallowMultiple = true;
+        target.allowMultiple = true;
     }
     /**
      * 标记组件依赖的其他组件。

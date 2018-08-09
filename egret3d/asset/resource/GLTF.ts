@@ -121,7 +121,6 @@ namespace egret3d {
          */
         stringVariable: string;
     }
-    export type ParseGLTFResult = { config: GLTFEgret, buffers: (Float32Array | Uint32Array | Uint16Array)[] };
     /**
      * glTF 资源。
      */
@@ -141,6 +140,55 @@ namespace egret3d {
             } as GLTFEgret;
 
             return config;
+        }
+        /**
+         * 
+         */
+        public static parseFromBinary(array: Uint32Array) {
+            let index = 0;
+            let result: { config: GLTFEgret, buffers: (Float32Array | Uint32Array | Uint16Array)[] } = { config: {}, buffers: [] } as any;
+
+            if (
+                array[index++] !== 0x46546C67 ||
+                array[index++] !== 2
+            ) {
+                console.assert(false, "Nonsupport glTF data.");
+                return;
+            }
+
+            if (array[index++] !== array.byteLength) {
+                console.assert(false, "Error glTF data.");
+                return;
+            }
+
+            let chunkLength = 0;
+            let chunkType = 0;
+            while (index < array.length) {
+                chunkLength = array[index++];
+                chunkType = array[index++];
+
+                if (chunkLength % 4) {
+                    console.assert(false, "Error glTF data.");
+                }
+
+                if (chunkType === 0x4E4F534A) {
+                    const jsonArray = new Uint8Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint8Array.BYTES_PER_ELEMENT);
+                    const jsonString = io.BinReader.utf8ArrayToString(jsonArray);
+                    result.config = JSON.parse(jsonString);
+                }
+                else if (chunkType === 0x004E4942) {
+                    const buffer = new Uint32Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint32Array.BYTES_PER_ELEMENT);
+                    result.buffers.push(buffer);
+                }
+                else {
+                    console.assert(false, "Nonsupport glTF data.");
+                    return;
+                }
+
+                index += chunkLength / 4;
+            }
+
+            return result;
         }
         /**
          * 
@@ -242,59 +290,8 @@ namespace egret3d {
         }
         /**
          * @internal
-         *  TODO
-         */
-        public static parseFromBinary(array: Uint32Array): ParseGLTFResult {
-            let index = 0;
-            let result: ParseGLTFResult = { config: {}, buffers: [] } as any;
-            if (
-                array[index++] !== 0x46546C67 ||
-                array[index++] !== 2
-            ) {
-                console.assert(false, "Nonsupport glTF data.");
-                return;
-            }
-
-            if (array[index++] !== array.byteLength) {
-                console.assert(false, "Error glTF data.");
-                return;
-            }
-
-            let chunkLength = 0;
-            let chunkType = 0;
-            while (index < array.length) {
-                chunkLength = array[index++];
-                chunkType = array[index++];
-
-                if (chunkLength % 4) {
-                    console.assert(false, "Error glTF data.");
-                }
-
-                if (chunkType === 0x4E4F534A) {
-                    const jsonArray = new Uint8Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint8Array.BYTES_PER_ELEMENT);
-                    const jsonString = io.BinReader.utf8ArrayToString(jsonArray);
-                    result.config = JSON.parse(jsonString);
-                }
-                else if (chunkType === 0x004E4942) {
-                    const buffer = new Uint32Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint32Array.BYTES_PER_ELEMENT);
-                    result.buffers.push(buffer);
-                }
-                else {
-                    console.assert(false, "Nonsupport glTF data.");
-                    return;
-                }
-
-                index += chunkLength / 4;
-            }
-
-            return result;
-            // this.initialize();
-        }
-        /**
-         * @internal
          */
         public initialize() {
-
         }
 
         public dispose() {
@@ -307,7 +304,7 @@ namespace egret3d {
         }
 
         public caclByteLength() {
-            return 0; // TODO
+            return 0;
         }
         /**
          * 根据指定 BufferView 创建二进制数组。
@@ -532,9 +529,9 @@ namespace egret3d {
         }
     }
 }
-
-
-
+/**
+ * 
+ */
 declare namespace gltf {
     /**
      * glTF index.
@@ -548,6 +545,7 @@ declare namespace gltf {
         ElementArrayBuffer = 34963,
     }
     /**
+     * 
      */
     export const enum DrawMode {
         Stream = 35040,
@@ -576,7 +574,6 @@ declare namespace gltf {
         TrianglesStrip = 5,
         TrianglesFan = 6,
     }
-
     /**
      * The uniform type.  All valid values correspond to WebGL enums.
      */
