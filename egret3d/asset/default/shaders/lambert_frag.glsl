@@ -23,6 +23,7 @@ void main() {
     vec4 outColor = vec4(0., 0., 0., 1.);
 
     vec4 diffuseColor = _Color * texture2D(_MainTex, xlv_TEXCOORD0);
+    outColor.xyz = diffuseColor.xyz;
 
     #include <normal_frag>
     #include <light_frag>

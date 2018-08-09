@@ -26,11 +26,11 @@ namespace egret3d {
 
             const filter = gameObject.getComponent(MeshFilter) as MeshFilter;
             const renderer = gameObject.renderer as MeshRenderer;
+
+            this._drawCalls.removeDrawCalls(renderer);
             if (!filter.mesh || renderer.materials.length === 0) {
                 return;
             }
-
-            this._drawCalls.removeDrawCalls(renderer);
             //
             this._drawCalls.renderers.push(renderer);
             //

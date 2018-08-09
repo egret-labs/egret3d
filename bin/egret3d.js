@@ -8167,6 +8167,7 @@ var egret3d;
             technique.uniforms["_LightmapTex"] = { type: 35678 /* SAMPLER_2D */, semantic: "_LIGHTMAPTEX" /* _LIGHTMAPTEX */, value: {} };
             technique.uniforms["_LightmapIntensity"] = { type: 5126 /* FLOAT */, semantic: "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */, value: 1.0 };
             technique.uniforms["_MainTex"] = { type: 35678 /* SAMPLER_2D */, value: egret3d.DefaultTextures.GRAY };
+            technique.uniforms["_MainColor"] = { type: 35666 /* FLOAT_VEC4 */, value: [1, 1, 1, 1] };
             technique.uniforms["_MainTex_ST"] = { type: 35666 /* FLOAT_VEC4 */, value: [1, 1, 0, 0] };
             technique.uniforms["_AlphaCut"] = { type: 5126 /* FLOAT */, value: 0 };
             return shader;
@@ -8190,7 +8191,7 @@ var egret3d;
             technique.uniforms["glstate_vec4_bones[0]"] = { type: 35666 /* FLOAT_VEC4 */, semantic: "_BONESVEC4" /* _BONESVEC4 */, value: [] };
             technique.uniforms["glstate_matrix_mvp"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */, value: [] };
             technique.uniforms["glstate_matrix_model"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "MODEL" /* MODEL */, value: [] };
-            technique.uniforms["_NormalTex"] = { type: 35678 /* SAMPLER_2D */, semantic: "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */, value: {} };
+            technique.uniforms["_NormalTex"] = { type: 35678 /* SAMPLER_2D */, value: egret3d.DefaultTextures.GRAY };
             technique.uniforms["_MainTex"] = { type: 35678 /* SAMPLER_2D */, value: egret3d.DefaultTextures.GRAY };
             technique.uniforms["_MainTex_ST"] = { type: 35666 /* FLOAT_VEC4 */, value: [1, 1, 0, 0] };
             technique.uniforms["_Color"] = { type: 35666 /* FLOAT_VEC4 */, value: [1, 1, 1, 1] };
@@ -16898,11 +16899,11 @@ var egret3d;
         ShaderLib.depthpackage_vert = "#include <common>\nattribute vec3 _glesVertex;\n\nuniform mat4 glstate_matrix_mvp;\n\nvoid main() { \n    gl_Position = glstate_matrix_mvp * vec4(_glesVertex, 1.0);\n}";
         ShaderLib.diffuselightmap_frag = "#include <common>\nuniform sampler2D _MainTex;\nuniform sampler2D _LightmapTex;\nuniform lowp float _LightmapIntensity;\nuniform lowp float _AlphaCut;\nvarying highp vec2 xlv_TEXCOORD0;\nvarying highp vec2 xlv_TEXCOORD1;\nlowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n{\n    highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n    return data.rgb * power * intensity;\n}\nvoid main() \n{\n    lowp vec4 outColor = texture2D(_MainTex, xlv_TEXCOORD0);\n    if(outColor.a < _AlphaCut)\n        discard;\n    lowp vec4 lightmap = texture2D(_LightmapTex, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, _LightmapIntensity);\n    gl_FragData[0] = outColor;\n}";
         ShaderLib.diffuselightmap_vert = "#include <common>\nattribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nattribute vec4 _glesMultiTexCoord1;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 glstate_lightmapOffset;\nuniform lowp float glstate_lightmapUV;\nuniform highp vec4 _MainTex_ST; \nvarying highp vec2 xlv_TEXCOORD0;\nvarying highp vec2 xlv_TEXCOORD1;\nvoid main()\n{\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  \n\n    highp vec2 beforelightUV = _glesMultiTexCoord1.xy;\n    if(glstate_lightmapUV == 0.0)\n    {\n        beforelightUV = _glesMultiTexCoord0.xy;\n    }\n    highp float u = beforelightUV.x * glstate_lightmapOffset.x + glstate_lightmapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * glstate_lightmapOffset.y + glstate_lightmapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
-        ShaderLib.diffuse_frag = "#include <common>\n#include <lightmap_pars_frag>\nuniform sampler2D _MainTex;\nuniform lowp float _AlphaCut;\nvarying highp vec2 xlv_TEXCOORD0;\nvoid main() {\n    lowp vec4 outColor = texture2D(_MainTex, xlv_TEXCOORD0);\n    if(outColor.a < _AlphaCut)\n        discard;\n    #include <lightmap_frag>    \n}";
+        ShaderLib.diffuse_frag = "#include <common>\n#include <lightmap_pars_frag>\nuniform vec4 _MainColor;\nuniform sampler2D _MainTex;\nuniform lowp float _AlphaCut;\nvarying highp vec2 xlv_TEXCOORD0;\nvoid main() {\n    lowp vec4 outColor = texture2D(_MainTex, xlv_TEXCOORD0) * _MainColor;\n    if(outColor.a < _AlphaCut)\n        discard;\n    #include <lightmap_frag>    \n}";
         ShaderLib.diffuse_vert = "#include <common>\n#include <skinning_pars_vert>\n#include <lightmap_pars_vert> \nattribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 _MainTex_ST;  \nvarying highp vec2 xlv_TEXCOORD0;\n\nvoid main() {\n    #include <skinning_base_vert>\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;\n    #include <lightmap_vert>\n    gl_Position = (glstate_matrix_mvp * tmpVertex);\n}";
         ShaderLib.distancepackage_frag = "#include <common>\n#include <packing>\n\nvarying vec3 xlv_POS;\nuniform vec4 glstate_referencePosition;\nuniform float glstate_nearDistance;\nuniform float glstate_farDistance;\n\nvoid main() {\n    float dist = length( xlv_POS - glstate_referencePosition.xyz );\n dist = ( dist - glstate_nearDistance ) / ( glstate_farDistance - glstate_nearDistance );\n dist = saturate( dist ); // clamp to [ 0, 1 ]\n\n gl_FragColor = packDepthToRGBA( dist );\n}";
         ShaderLib.distancepackage_vert = "#include <common>\nattribute vec3 _glesVertex;\n\nuniform mat4 glstate_matrix_mvp;\nuniform mat4 glstate_matrix_model;\n\nvarying vec3 xlv_POS;\n\nvoid main() {   \n    xlv_POS = (glstate_matrix_model * vec4(_glesVertex, 1.0)).xyz;\n    gl_Position = glstate_matrix_mvp * vec4(_glesVertex, 1.0);\n}";
-        ShaderLib.lambert_frag = "// #extension GL_OES_standard_derivatives : enable\n#include <common>\nuniform sampler2D _MainTex;\nuniform vec4 _Color;         \n\n#include <bsdfs>\n#include <light_pars_frag>\n#include <shadowMap_pars_frag>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#ifdef USE_NORMAL_MAP\n    #include <tbn>\n    #include <tsn>\n    uniform sampler2D _NormalTex;\n#endif\n\n#include <bumpMap_pars_frag>\n\nvoid main() {\n    vec4 outColor = vec4(0., 0., 0., 1.);\n\n    vec4 diffuseColor = _Color * texture2D(_MainTex, xlv_TEXCOORD0);\n\n    #include <normal_frag>\n    #include <light_frag>\n    \n    outColor.a = diffuseColor.a;\n\n    gl_FragColor = outColor;\n}";
+        ShaderLib.lambert_frag = "// #extension GL_OES_standard_derivatives : enable\n#include <common>\nuniform sampler2D _MainTex;\nuniform vec4 _Color;         \n\n#include <bsdfs>\n#include <light_pars_frag>\n#include <shadowMap_pars_frag>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#ifdef USE_NORMAL_MAP\n    #include <tbn>\n    #include <tsn>\n    uniform sampler2D _NormalTex;\n#endif\n\n#include <bumpMap_pars_frag>\n\nvoid main() {\n    vec4 outColor = vec4(0., 0., 0., 1.);\n\n    vec4 diffuseColor = _Color * texture2D(_MainTex, xlv_TEXCOORD0);\n    outColor.xyz = diffuseColor.xyz;\n\n    #include <normal_frag>\n    #include <light_frag>\n    \n    outColor.a = diffuseColor.a;\n\n    gl_FragColor = outColor;\n}";
         ShaderLib.lambert_vert = "#include <common>\nattribute vec4 _glesVertex;   \nattribute vec3 _glesNormal;               \nattribute vec4 _glesMultiTexCoord0;\n#include <skinning_pars_vert>\n\nuniform mat4 glstate_matrix_mvp;      \nuniform mat4 glstate_matrix_model;\nuniform vec4 _MainTex_ST;  \n\n#include <shadowMap_pars_vert>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;             \nvarying vec2 xlv_TEXCOORD0;\n\n#include <transpose>\n#include <inverse>\n\nvoid main() {   \n    #include <skinning_base_vert>\n\n    vec3 tmpNormal;      \n    #include <skinning_normal_vert>              \n\n    vec3 normal = (transpose(inverse(glstate_matrix_model)) * vec4(tmpNormal, 1.0)).xyz;\n    xlv_NORMAL = normal;\n    #ifdef FLIP_SIDED\n     xlv_NORMAL = - xlv_NORMAL;\n    #endif\n\n    vec3 worldpos = (glstate_matrix_model * tmpVertex).xyz;\n    xlv_POS = worldpos; \n\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;\n\n    #include <shadowMap_vert>\n     \n    gl_Position = (glstate_matrix_mvp * tmpVertex);\n}";
         ShaderLib.line_frag = "#include <common>\nvarying lowp vec4 xlv_COLOR;\nvoid main() {\n    gl_FragData[0] = xlv_COLOR;\n}";
         ShaderLib.line_vert = "#include <common>\nattribute vec4 _glesVertex;\nattribute vec4 _glesColor;\nuniform highp mat4 glstate_matrix_mvp;\nvarying lowp vec4 xlv_COLOR;\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_COLOR = _glesColor;\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
@@ -18821,7 +18822,7 @@ var egret3d;
                 //
                 egret3d.MeshRendererSystem,
                 egret3d.SkinnedMeshRendererSystem,
-                egret3d.particle.ParticleSystem,
+                // particle.ParticleSystem,
                 egret3d.Egret2DRendererSystem,
                 //
                 egret3d.CameraSystem,
@@ -20120,9 +20121,9 @@ var egret3d;
             this._width = width;
             this._height = height;
             this._texture = webgl.createTexture();
+            this._fbo = webgl.createFramebuffer();
             this._fbo["width"] = width;
             this._fbo["height"] = height;
-            this._fbo = webgl.createFramebuffer();
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
             if (depth || stencil) {
                 this._renderbuffer = webgl.createRenderbuffer();
@@ -24689,10 +24690,10 @@ var egret3d;
             }
             var filter = gameObject.getComponent(egret3d.MeshFilter);
             var renderer = gameObject.renderer;
+            this._drawCalls.removeDrawCalls(renderer);
             if (!filter.mesh || renderer.materials.length === 0) {
                 return;
             }
-            this._drawCalls.removeDrawCalls(renderer);
             //
             this._drawCalls.renderers.push(renderer);
             //

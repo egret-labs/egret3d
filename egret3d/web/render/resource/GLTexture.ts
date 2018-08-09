@@ -212,9 +212,9 @@ namespace egret3d {
             this._width = width;
             this._height = height;
             this._texture = webgl.createTexture()!;
+            this._fbo = webgl.createFramebuffer()!;
             (this._fbo as any)["width"] = width;
             (this._fbo as any)["height"] = height;
-            this._fbo = webgl.createFramebuffer()!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
             if (depth || stencil) {
                 this._renderbuffer = webgl.createRenderbuffer()!;
@@ -225,7 +225,6 @@ namespace egret3d {
                 } else if (depth) {
                     webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
                     webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
-
                 } else {
                     webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.STENCIL_INDEX8, width, height);
                     webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
