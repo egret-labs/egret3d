@@ -16955,148 +16955,105 @@ var RES;
     var processor;
     (function (processor) {
         function promisify(loader, resource) {
-            return __awaiter(this, void 0, void 0, function () {
-                var _this = this;
-                return __generator(this, function (_a) {
-                    return [2 /*return*/, new Promise(function (resolve, reject) {
-                            var onSuccess = function () {
-                                var texture = loader['data'] ? loader['data'] : loader['response'];
-                                resolve(texture);
-                            };
-                            var onError = function () {
-                                var e = new RES.ResourceManagerError(1001, resource.url);
-                                reject(e);
-                            };
-                            loader.addEventListener(egret.Event.COMPLETE, onSuccess, _this);
-                            loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, _this);
-                        })];
-                });
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var onSuccess = function () {
+                    var texture = loader['data'] ? loader['data'] : loader['response'];
+                    resolve(texture);
+                };
+                var onError = function () {
+                    var e = new RES.ResourceManagerError(1001, resource.url);
+                    reject(e);
+                };
+                loader.addEventListener(egret.Event.COMPLETE, onSuccess, _this);
+                loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, _this);
             });
         }
         processor.TextureDescProcessor = {
             onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data, _name, _filterMode, _format, _mipmap, _wrap, _textureFormat, _linear, _repeat, imgResource, loader, image, texture;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "json")];
-                            case 1:
-                                data = _a.sent();
-                                _name = data["name"];
-                                _filterMode = data["filterMode"];
-                                _format = data["format"];
-                                _mipmap = data["mipmap"];
-                                _wrap = data["wrap"];
-                                _textureFormat = 1 /* RGBA */;
-                                if (_format == "RGB") {
-                                    _textureFormat = 2 /* RGB */;
-                                }
-                                else if (_format == "Gray") {
-                                    _textureFormat = 3 /* Gray */;
-                                }
-                                _linear = true;
-                                if (_filterMode.indexOf("linear") < 0) {
-                                    _linear = false;
-                                }
-                                _repeat = false;
-                                if (_wrap.indexOf("Repeat") >= 0) {
-                                    _repeat = true;
-                                }
-                                imgResource = RES.host.resourceConfig["getResource"](_name);
-                                loader = new egret.ImageLoader();
-                                loader.load(imgResource.root + imgResource.url);
-                                return [4 /*yield*/, promisify(loader, imgResource)];
-                            case 2:
-                                image = _a.sent();
-                                texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
-                                texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
-                                paper.Asset.register(texture);
-                                return [2 /*return*/, texture];
-                        }
+                return host.load(resource, "json").then(function (data) {
+                    var _name = data["name"];
+                    var _filterMode = data["filterMode"];
+                    var _format = data["format"];
+                    var _mipmap = data["mipmap"];
+                    var _wrap = data["wrap"];
+                    var _textureFormat = 1 /* RGBA */;
+                    if (_format == "RGB") {
+                        _textureFormat = 2 /* RGB */;
+                    }
+                    else if (_format == "Gray") {
+                        _textureFormat = 3 /* Gray */;
+                    }
+                    var _linear = true;
+                    if (_filterMode.indexOf("linear") < 0) {
+                        _linear = false;
+                    }
+                    var _repeat = false;
+                    if (_wrap.indexOf("Repeat") >= 0) {
+                        _repeat = true;
+                    }
+                    var imgResource = RES.host.resourceConfig["getResource"](_name);
+                    var loader = new egret.ImageLoader();
+                    loader.load(imgResource.root + imgResource.url);
+                    return promisify(loader, imgResource)
+                        .then(function (image) {
+                        var texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
+                        texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
+                        paper.Asset.register(texture);
+                        return texture;
                     });
                 });
             },
             onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
+                var data = host.get(resource);
+                data.dispose();
+                return Promise.resolve();
             }
         };
         processor.TextureProcessor = {
             onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var loader, image, texture;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                loader = new egret.ImageLoader();
-                                loader.load(resource.root + resource.url);
-                                return [4 /*yield*/, promisify(loader, resource)];
-                            case 1:
-                                image = _a.sent();
-                                texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, 1 /* RGBA */);
-                                texture.uploadImage(image.source, true, true, true, true);
-                                paper.Asset.register(texture);
-                                return [2 /*return*/, texture];
-                        }
-                    });
+                var loader = new egret.ImageLoader();
+                loader.load(resource.root + resource.url);
+                return promisify(loader, resource).then(function (image) {
+                    var texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, 1 /* RGBA */);
+                    texture.uploadImage(image.source, true, true, true, true);
+                    paper.Asset.register(texture);
+                    return texture;
                 });
             },
             onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
+                var data = host.get(resource);
+                data.dispose();
+                return Promise.resolve();
             }
         };
-        processor.GLBProcessor = {
+        processor.GLTFBinaryProcessor = {
             onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var result, parseResult, glb, _i, _a, b;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, RES.processor.BinaryProcessor)];
-                            case 1:
-                                result = _b.sent();
-                                parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
-                                if (parseResult.config.meshes) {
-                                    glb = new egret3d.Mesh(0, 0);
-                                }
-                                else {
-                                    glb = new egret3d.GLTFAsset();
-                                }
-                                glb.name = resource.name;
-                                glb.config = parseResult.config;
-                                for (_i = 0, _a = parseResult.buffers; _i < _a.length; _i++) {
-                                    b = _a[_i];
-                                    glb.buffers.push(b);
-                                }
-                                glb.initialize();
-                                // glb.parseFromBinary(new Uint32Array(result));
-                                paper.Asset.register(glb);
-                                return [2 /*return*/, glb];
-                        }
-                    });
+                return host.load(resource, RES.processor.BinaryProcessor).then(function (result) {
+                    var parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
+                    var glb;
+                    if (parseResult.config.meshes) {
+                        glb = new egret3d.Mesh(0, 0);
+                    }
+                    else {
+                        glb = new egret3d.GLTFAsset();
+                    }
+                    glb.name = resource.name;
+                    glb.config = parseResult.config;
+                    for (var _i = 0, _a = parseResult.buffers; _i < _a.length; _i++) {
+                        var b = _a[_i];
+                        glb.buffers.push(b);
+                    }
+                    glb.initialize();
+                    // glb.parseFromBinary(new Uint32Array(result));
+                    paper.Asset.register(glb);
+                    return glb;
                 });
             },
             onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
+                var data = host.get(resource);
+                data.dispose();
+                return Promise.resolve();
             }
         };
         processor.GLTFProcessor = {
@@ -17152,115 +17109,61 @@ var RES;
                 });
             },
             onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
+                var data = host.get(resource);
+                data.dispose();
+                return Promise.resolve();
             }
         };
         processor.PrefabProcessor = {
             onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data, prefab;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "json")];
-                            case 1:
-                                data = _a.sent();
-                                prefab = new paper.Prefab(resource.name);
-                                return [4 /*yield*/, loadSubAssets(data, resource)];
-                            case 2:
-                                _a.sent();
-                                prefab.$parse(data);
-                                paper.Asset.register(prefab);
-                                return [2 /*return*/, prefab];
-                        }
+                return host.load(resource, "json").then(function (data) {
+                    var prefab = new paper.Prefab(resource.name);
+                    return loadSubAssets(data, resource).then(function () {
+                        prefab.$parse(data);
+                        paper.Asset.register(prefab);
+                        return prefab;
                     });
                 });
             },
             onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
+                var data = host.get(resource);
+                data.dispose();
+                return Promise.resolve();
             }
         };
         processor.SceneProcessor = {
             onLoadStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data, rawScene;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, host.load(resource, "json")];
-                            case 1:
-                                data = _a.sent();
-                                rawScene = new paper.RawScene(resource.name);
-                                return [4 /*yield*/, loadSubAssets(data, resource)];
-                            case 2:
-                                _a.sent();
-                                rawScene.$parse(data);
-                                paper.Asset.register(rawScene);
-                                return [2 /*return*/, rawScene];
-                        }
+                return host.load(resource, "json").then(function (data) {
+                    var rawScene = new paper.RawScene(resource.name);
+                    return loadSubAssets(data, resource).then(function () {
+                        rawScene.$parse(data);
+                        paper.Asset.register(rawScene);
+                        return rawScene;
                     });
                 });
             },
             onRemoveStart: function (host, resource) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var data;
-                    return __generator(this, function (_a) {
-                        data = host.get(resource);
-                        data.dispose();
-                        return [2 /*return*/];
-                    });
-                });
+                var data = host.get(resource);
+                data.dispose();
+                return Promise.resolve();
             }
         };
         function loadSubAssets(data, resource) {
-            return __awaiter(this, void 0, void 0, function () {
-                var _this = this;
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            if (!data.assets) return [3 /*break*/, 2];
-                            return [4 /*yield*/, Promise.all(data.assets.map((function (item) { return __awaiter(_this, void 0, void 0, function () {
-                                    var r;
-                                    return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0:
-                                                r = RES.host.resourceConfig["getResource"](item);
-                                                if (!r) return [3 /*break*/, 2];
-                                                return [4 /*yield*/, RES.host.load(r)];
-                                            case 1:
-                                                _a.sent();
-                                                return [3 /*break*/, 3];
-                                            case 2:
-                                                console.error("");
-                                                _a.label = 3;
-                                            case 3: return [2 /*return*/];
-                                        }
-                                    });
-                                }); })))];
-                        case 1:
-                            _a.sent();
-                            _a.label = 2;
-                        case 2: return [2 /*return*/];
-                    }
-                });
-            });
+            return Promise.all(data.assets.map((function (item) {
+                var r = RES.host.resourceConfig["getResource"](item);
+                if (r) {
+                    return RES.host.load(r);
+                }
+                else {
+                    console.error("加载不存在的资源", item);
+                    return Promise.resolve();
+                }
+            })));
         }
         RES.processor.map("Texture", processor.TextureProcessor);
         RES.processor.map("TextureDesc", processor.TextureDescProcessor);
         RES.processor.map("GLTF", processor.GLTFProcessor);
-        RES.processor.map("GLTFBinary", processor.GLBProcessor);
+        RES.processor.map("GLTFBinary", processor.GLTFBinaryProcessor);
         RES.processor.map("Prefab", processor.PrefabProcessor);
         RES.processor.map("Scene", processor.SceneProcessor);
     })(processor = RES.processor || (RES.processor = {}));
@@ -23284,36 +23187,7 @@ var paper;
              */
             ModifyPrefabGameObjectPropertyState.prototype.modifyPrefabGameObjectPropertyValues = function (gameObjectUUid, valueList) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var _this = this;
-                    var prefabObj, objects;
                     return __generator(this, function (_a) {
-                        prefabObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
-                        if (!prefabObj) {
-                            return [2 /*return*/];
-                        }
-                        objects = this.editorModel.getRootGameObjectsByPrefab(prefabObj.prefab);
-                        valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                            var _this = this;
-                            var propName, copyValue, valueEditType, newValue;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                        return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
-                                    case 1:
-                                        newValue = _a.sent();
-                                        objects.forEach(function (object) {
-                                            if (_this.editorModel.compareValue(object[propName], prefabObj[propName])) {
-                                                _this.editorModel.setTargetProperty(propName, object, newValue);
-                                                _this.dispathPropertyEvent(object, propName, newValue);
-                                            }
-                                        });
-                                        this.editorModel.setTargetProperty(propName, prefabObj, newValue);
-                                        this.dispathPropertyEvent(prefabObj, propName, newValue);
-                                        return [2 /*return*/];
-                                }
-                            });
-                        }); });
                         return [2 /*return*/];
                     });
                 });

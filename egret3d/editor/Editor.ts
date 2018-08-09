@@ -93,7 +93,7 @@ namespace paper.editor {
                 this.dispatchEvent(new EditorEvent(EditorEvent.CHANGE_SCENE));
             }
         }
-        private static detachCurrentPrefabEditScene(): void {
+        public static detachCurrentPrefabEditScene(): void {
             if (this.prefabEditorModel) {
                 this.prefabEditorModel.scene.destroy();
                 paper.Application.sceneManager.activeScene = this.editorModel.scene;
@@ -117,13 +117,13 @@ namespace paper.editor {
             return JSON.stringify(historyData);
         }
         private static eventDispatcher: EventDispatcher;
-        private static addEventListener(type: string, fun: Function, thisObj: any, level: number = 0): void {
+        public static addEventListener(type: string, fun: Function, thisObj: any, level: number = 0): void {
             this.eventDispatcher.addEventListener(type, fun, thisObj, level);
         }
-        private static removeEventListener(type: string, fun: Function, thisObj: any): void {
+        public static removeEventListener(type: string, fun: Function, thisObj: any): void {
             this.eventDispatcher.removeEventListener(type, fun, thisObj);
         }
-        private static dispatchEvent(event: BaseEvent): void {
+        public static dispatchEvent(event: BaseEvent): void {
             this.eventDispatcher.dispatchEvent(event);
         }
     }
