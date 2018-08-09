@@ -101,6 +101,7 @@
         "egret3d/components/SkinnedMeshRenderer/SkinnedMeshRenderer.ts",
         "egret3d/components/SkinnedMeshRenderer/SkinnedMeshRendererSystem.ts",
         "egret3d/components/animation/Animation.ts",
+        "egret3d/components/animation/AnimationSystem.ts",
         "egret3d/components/particles/ParticleHelper.ts",
         "egret3d/components/particles/ParticleModules.ts",
         "egret3d/components/particles/ParticleBatcher.ts",
