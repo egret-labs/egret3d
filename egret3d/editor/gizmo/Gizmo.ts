@@ -95,7 +95,7 @@ namespace paper.editor {
 
         private _oldTransform
         private nrLine
-        public DrawCoord() {
+        public static DrawCoord() {
             let gl = Gizmo.webgl;
             let prg = Gizmo.glProgram_line;
 

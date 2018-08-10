@@ -48,18 +48,21 @@ namespace paper.editor {
         public set geoCtrlType(value: string) {
             this._geoCtrlType = value;
         }
-        editorModel: EditorModel;
+        private _editorModel: EditorModel;
+        public set editorModel(v: EditorModel) {
+            this._editorModel = v;
+            this._addEventListener()
+        }
+        public get editorModel(): EditorModel {
+            return this._editorModel;
+        }
         // public setEditorMode(editorModel: EditorModel) {
         //     this.editorModel = editorModel
-        //     this._addEventListener()
+        //     
         // }
         constructor() {
             super();
-            // this.editorModel = editorModel;
-            this.editorModel = paper.editor.Editor.editorModel
-            console.log(this.editorModel)
             this._addGizmoController();
-            this._addEventListener();
             this.bindMouse = egret3d.InputManager.mouse;
             this.bindKeyboard = egret3d.InputManager.keyboard;
 
@@ -79,6 +82,9 @@ namespace paper.editor {
         private _oldTransform: any//TODO
 
         public update() {
+            if (!this.editorModel) {
+                return;
+            }
             //控制杆随相机变化
             var dis1;
             var delta;
@@ -129,6 +135,7 @@ namespace paper.editor {
             let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
 
             //变色逻辑
+
             const result = this.checkIntersects(ray, this.controller)
 
             if (this._oldResult.target != result) {
@@ -886,7 +893,7 @@ namespace paper.editor {
             ball.transform.setLocalScale(0.3, 0.3, 0.3);
 
             let mesh = ball.addComponent(egret3d.MeshFilter);
-            mesh.mesh = egret3d.DefaultMeshes.SPHERE;
+            mesh.mesh = egret3d.DefaultMeshes.CUBE;
             let renderer = ball.addComponent(egret3d.MeshRenderer);
 
             let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
@@ -990,7 +997,7 @@ namespace paper.editor {
                     mesh.mesh = egret3d.DefaultMeshes.CIRCLE_LINE;
                     break;
                 case 2:
-                    mesh.mesh = egret3d.DefaultMeshes.SPHERE;
+                    mesh.mesh = egret3d.DefaultMeshes.CUBE;
                     break;
             }
             let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
