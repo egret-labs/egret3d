@@ -25,24 +25,24 @@ namespace paper.editor{
          * @param valueList 
          */
         private async modifyPrefabGameObjectPropertyValues(gameObjectUUid: string, valueList: any[]): Promise<void> {
-            let prefabObj = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
-            if (!prefabObj) {
-                return;
-            }
-            let objects = Editor.editorModel.getRootGameObjectsByPrefab(prefabObj.prefab);
-            valueList.forEach(async (propertyValue) => {
-                const { propName, copyValue, valueEditType } = propertyValue;
-                let newValue = await Editor.editorModel.deserializeProperty(copyValue, valueEditType);
-                objects.forEach(object => {
-                    if (Editor.editorModel.compareValue(object[propName], prefabObj[propName])) {
-                        Editor.editorModel.setTargetProperty(propName, object, newValue);
-                        this.dispathPropertyEvent(object, propName, newValue);
-                    }
-                });
+            // let prefabObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
+            // if (!prefabObj) {
+            //     return;
+            // }
+            // let objects = this.editorModel.getRootGameObjectsByPrefab(prefabObj.prefab);
+            // valueList.forEach(async (propertyValue) => {
+            //     const { propName, copyValue, valueEditType } = propertyValue;
+            //     let newValue = await this.editorModel.deserializeProperty(copyValue, valueEditType);
+            //     objects.forEach(object => {
+            //         if (this.editorModel.compareValue(object[propName], prefabObj[propName])) {
+            //             this.editorModel.setTargetProperty(propName, object, newValue);
+            //             this.dispathPropertyEvent(object, propName, newValue);
+            //         }
+            //     });
 
-                Editor.editorModel.setTargetProperty(propName, prefabObj, newValue);
-                this.dispathPropertyEvent(prefabObj, propName, newValue);
-            });
+            //     this.editorModel.setTargetProperty(propName, prefabObj, newValue);
+            //     this.dispathPropertyEvent(prefabObj, propName, newValue);
+            // });
         }
 
         public undo(): boolean {

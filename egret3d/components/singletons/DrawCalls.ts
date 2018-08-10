@@ -15,8 +15,6 @@ namespace egret3d {
         zdist: number,
 
         boneData?: Float32Array,
-
-        shadow?: Material,
     };
     /**
      * 
@@ -55,10 +53,10 @@ namespace egret3d {
                 return aMat.renderQueue - bMat.renderQueue;
             }
             else if (aMat._glTFTechnique.program !== bMat._glTFTechnique.program) {
-                return aMat._glTFTechnique.program - bMat._glTFTechnique.program;
+                return aMat._glTFTechnique.program! - bMat._glTFTechnique.program!;
             }
-            else if (aMat.id !== bMat.id) {
-                return aMat.id - bMat.id;
+            else if (aMat._id !== bMat._id) {
+                return aMat._id - bMat._id;
             }
             else {
                 return a.zdist - b.zdist;
@@ -69,7 +67,7 @@ namespace egret3d {
          * @param a 
          * @param b 
          */
-        private _sortTransparent(a: DrawCall, b: DrawCall) {
+        private _sortFromFarToNear(a: DrawCall, b: DrawCall) {
             if (a.material.renderQueue === b.material.renderQueue) {
                 return b.zdist - a.zdist;
             }
@@ -88,6 +86,8 @@ namespace egret3d {
                     }
                 }
             }
+
+            this.shadowCalls.sort(this._sortFromFarToNear);
         }
         public sortAfterFrustumCulling(camera: Camera) {
             //每次根据视锥裁切填充TODO，放到StartSystem
@@ -112,7 +112,7 @@ namespace egret3d {
             }
             //
             this.opaqueCalls.sort(this._sortOpaque);
-            this.transparentCalls.sort(this._sortTransparent);
+            this.transparentCalls.sort(this._sortFromFarToNear);
         }
         /**
          * 移除指定渲染器的 draw call 列表。

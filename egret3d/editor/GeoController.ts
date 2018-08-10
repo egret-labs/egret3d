@@ -688,7 +688,7 @@ namespace paper.editor {
 
             // 复制粘贴
             if (this.bindKeyboard.isPressed('CONTROL') && this.bindKeyboard.wasPressed('C')) {
-                this.editorModel.copy(this.selectedGameObjs);
+                this.editorModel.copyGameObject(this.selectedGameObjs);
             }
 
             if (this.bindKeyboard.isPressed('CONTROL') && this.bindKeyboard.wasPressed('V')) {

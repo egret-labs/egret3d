@@ -1,6 +1,8 @@
 namespace egret3d {
 
     export class Color implements paper.ISerializable {
+         public static readonly WHITE: Readonly<Color> = new Color(1.0, 1.0, 1.0, 1.0);
+         public static readonly BLACK: Readonly<Color> = new Color(0.0, 0.0, 0.0, 1.0);
 
         r: number;
 
@@ -26,6 +28,8 @@ namespace egret3d {
             this.g = element[1];
             this.b = element[2];
             this.a = element[3];
+
+            return this;
         }
 
         public set(r: number = 1, g: number = 1, b: number = 1, a: number = 1) {

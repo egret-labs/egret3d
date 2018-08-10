@@ -130,29 +130,27 @@ namespace paper {
             this._onRemoveUnessentialComponent = this._onRemoveUnessentialComponent.bind(this);
 
             for (const config of this._interestConfig) {
-                if (config.type && (config.type & InterestType.Unessential)) {
-                    if (Array.isArray(config.componentClass)) {
-                        for (const componentClass of config.componentClass) {
-                            EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddUnessentialComponent);
-                            EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveUnessentialComponent);
-                        }
-                    }
-                    else {
-                        EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddUnessentialComponent);
-                        EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveUnessentialComponent);
-                    }
-                }
-                else {
-                    if (Array.isArray(config.componentClass)) {
-                        for (const componentClass of config.componentClass) {
+                const isUnessential = config.type && (config.type & InterestType.Unessential);
+
+                if (Array.isArray(config.componentClass)) {
+                    for (const componentClass of config.componentClass) {
+                        EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddUnessentialComponent);
+                        EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveUnessentialComponent);
+
+                        if (!isUnessential) {
                             EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddComponent);
                             EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveComponent);
                         }
                     }
-                    else {
+                }
+                else {
+                    if (!isUnessential) {
                         EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddComponent);
                         EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveComponent);
                     }
+
+                    EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddUnessentialComponent);
+                    EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveUnessentialComponent);
                 }
             }
 

@@ -1,5 +1,6 @@
 namespace paper.editor {
     export abstract class BaseState {
+        public editorModel:EditorModel;
         public autoClear: boolean = false;
         public batchIndex: number = 0;
         private _isDone: boolean = false;
@@ -18,6 +19,7 @@ namespace paper.editor {
                 return false;
             }
             this._isDone = true;
+            this.editorModel.dirty=true;
             return true;
         }
 
@@ -29,7 +31,7 @@ namespace paper.editor {
             this._isDone = value;
         }
         public dispatchEditorModelEvent(type: string, data?: any) {
-            Editor.editorModel.dispatchEvent(new EditorModelEvent(type, data));
+            this.editorModel.dispatchEvent(new EditorModelEvent(type, data));
         }
         public serialize():any{
             return null;

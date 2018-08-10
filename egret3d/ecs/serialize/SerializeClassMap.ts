@@ -16,8 +16,6 @@ namespace paper {
         10: "egret3d.SphereCollider",
         11: "egret3d.Transform",
         12: "egret3d.Shader",
-        13: "egret3d.Mesh",
-        14: "egret3d.Material",
         15: "egret3d.AnimationClip",
         16: "egret3d.TPoseInfo",
         17: "egret3d.PoseBoneMatrix",
@@ -47,5 +45,24 @@ namespace paper {
         41: "egret3d.GLTFAsset",
         //
         "egret3d.Light": "egret3d.DirectLight",
+        //
+        13: "paper.Compatible",
+        14: "paper.Compatible",
     };
+    /**
+     * @internal
+     */
+    export class Compatible implements ISerializable {
+        public serialize() {
+            throw new Error("Never");
+        }
+
+        public deserialize(element: ISerializedStruct, data?: Deserializer) {
+            if (!data) {
+                throw new Error("Never");
+            }
+
+            return data.getAssetOrComponent(element._glTFAsset as IAssetReference);
+        }
+    }
 }

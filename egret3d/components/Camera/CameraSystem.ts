@@ -13,7 +13,7 @@ namespace egret3d {
         ];
         protected readonly _camerasAndLights: CamerasAndLights = this._globalGameObject.getOrAddComponent(CamerasAndLights);
 
-        public onAddGameObject(gameObject: paper.GameObject, group: paper.Group) {
+        public onAddGameObject(_gameObject: paper.GameObject, group: paper.Group) {
             if (group === this._groups[0]) {
                 this._camerasAndLights.updateCamera(this._groups[0].gameObjects);
             }
@@ -22,7 +22,7 @@ namespace egret3d {
             }
         }
 
-        public onRemoveGameObject(gameObject: paper.GameObject, group: paper.Group) {
+        public onRemoveGameObject(_gameObject: paper.GameObject, group: paper.Group) {
             if (group === this._groups[0]) {
                 this._camerasAndLights.updateCamera(this._groups[0].gameObjects);
             }

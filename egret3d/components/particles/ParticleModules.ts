@@ -86,6 +86,8 @@ namespace egret3d.particle {
         public deserialize(element: any) {
             this.time = element[0];
             this.value = element[1];
+
+            return this;
         }
         public clone(source: Keyframe) {
             this.time = source.time;
@@ -111,6 +113,8 @@ namespace egret3d.particle {
                 keyframe.deserialize(element[i]);
                 this._keys.push(keyframe);
             }
+
+            return this;
         }
 
         public evaluate(t: number = 0): number {
@@ -153,7 +157,7 @@ namespace egret3d.particle {
         }
     }
 
-    export class GradientColorKey extends paper.SerializableObject {
+    export class GradientColorKey extends paper.BaseObject {
         @paper.serializedField
         public color: Color = new Color();
         @paper.serializedField
@@ -162,10 +166,12 @@ namespace egret3d.particle {
         public deserialize(element: any) {
             this.color.deserialize(element.color);
             this.time = element.time;
+
+            return this;
         }
     }
 
-    export class GradientAlphaKey extends paper.SerializableObject {
+    export class GradientAlphaKey extends paper.BaseObject {
         @paper.serializedField
         public alpha: number;
         @paper.serializedField
@@ -174,10 +180,12 @@ namespace egret3d.particle {
         public deserialize(element: any) {
             this.alpha = element.alpha;
             this.time = element.time;
+
+            return this;
         }
     }
 
-    export class Gradient extends paper.SerializableObject {
+    export class Gradient extends paper.BaseObject {
         @paper.serializedField
         public mode: GradientMode = GradientMode.Blend;
         @paper.serializedField
@@ -202,6 +210,8 @@ namespace egret3d.particle {
                 alpha.deserialize(element.alphaKeys[i]);
                 this.alphaKeys.push(alpha);
             }
+
+            return this;
         }
 
         public evaluate(t: number = 0, out: Color): Color {
@@ -257,7 +267,7 @@ namespace egret3d.particle {
         }
     }
 
-    export class MinMaxCurve extends paper.SerializableObject {
+    export class MinMaxCurve extends paper.BaseObject {
         @paper.serializedField
         public mode: CurveMode = CurveMode.Constant;
         @paper.serializedField
@@ -281,6 +291,8 @@ namespace egret3d.particle {
             element.curve && this.curve.deserialize(element.curve);
             element.curveMin && this.curveMin.deserialize(element.curveMin);
             element.curveMax && this.curveMax.deserialize(element.curveMax);
+
+            return this;
         }
 
         public evaluate(t: number = 0): number {
@@ -308,7 +320,7 @@ namespace egret3d.particle {
         }
     }
 
-    export class MinMaxGradient extends paper.SerializableObject {
+    export class MinMaxGradient extends paper.BaseObject {
         @paper.serializedField
         public mode: ColorGradientMode = ColorGradientMode.Gradient;
         @paper.serializedField
@@ -345,6 +357,8 @@ namespace egret3d.particle {
             if (element.gradientMax) {
                 this.gradientMax.deserialize(element.gradientMax);
             }
+
+            return this;
         }
 
         public evaluate(t: number = 0, out: Color): Color {
@@ -395,10 +409,12 @@ namespace egret3d.particle {
             this.maxCount = element[2];
             this.cycleCount = element[3];
             this.repeatInterval = element[4];
+
+            return this;
         }
     }
 
-    export abstract class ParticleSystemModule extends paper.SerializableObject {
+    export abstract class ParticleSystemModule extends paper.BaseObject {
         @paper.serializedField
         public enable: boolean = false;
 
@@ -415,6 +431,8 @@ namespace egret3d.particle {
 
         public deserialize(element: any) {
             this.enable = true;
+
+            return this;
         }
     }
 
@@ -495,6 +513,8 @@ namespace egret3d.particle {
             this._scaleMode = (element._scaleMode || element.scaleMode) || ScalingMode.Hierarchy;
             this.playOnAwake = element.playOnAwake;
             this._maxParticles = (element._maxParticles || element.maxParticles) || 0;
+
+            return this;
         }
 
         public set startRotation3D(value: boolean) {
@@ -552,6 +572,8 @@ namespace egret3d.particle {
                     this.bursts.push(burst);
                 }
             }
+
+            return this;
         }
     }
 
@@ -592,6 +614,8 @@ namespace egret3d.particle {
             this.box.deserialize(element.box);
             this.randomDirection = element.randomDirection;
             this.spherizeDirection = element.spherizeDirection;
+
+            return this;
         }
         public invalidUpdate(): void {
             paper.EventPool.dispatchEvent(ParticleCompEventType.ShapeChanged, this._comp);
@@ -636,6 +660,8 @@ namespace egret3d.particle {
             this._x.deserialize(element._x || element.x);
             this._y.deserialize(element._y || element.y);
             this._z.deserialize(element._z || element.z);
+
+            return this;
         }
 
         public set mode(value: CurveMode) {
@@ -695,6 +721,8 @@ namespace egret3d.particle {
         public deserialize(element: any) {
             super.deserialize(element);
             this._color.deserialize(element._color || element.color);
+
+            return this;
         }
         public set color(value: Readonly<MinMaxGradient>) {
             if (this._color !== value) {
@@ -741,6 +769,8 @@ namespace egret3d.particle {
             this._x.deserialize(element._x || element.x);
             this._y.deserialize(element._y || element.y);
             this._z.deserialize(element._z || element.z);
+
+            return this;
         }
         public set separateAxes(value: boolean) {
             if (this._separateAxes !== value) {
@@ -817,6 +847,8 @@ namespace egret3d.particle {
             this._x.deserialize(element._x || element.x);
             this._y.deserialize(element._y || element.y);
             this._z.deserialize(element._z || element.z);
+
+            return this;
         }
         public set separateAxes(value: boolean) {
             if (this._separateAxes !== value) {
@@ -910,6 +942,8 @@ namespace egret3d.particle {
             this._startFrame.deserialize(element._startFrame || element.startFrame);
             this._cycleCount = (element._cycleCount || element.cycleCount) || 0;
             this._rowIndex = (element._rowIndex || element.rowIndex) || 0;
+
+            return this;
         }
 
         public set numTilesX(value: number) {

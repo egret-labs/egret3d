@@ -1,31 +1,140 @@
+/// <reference path="./EventDispatcher.ts" />
 namespace paper.editor {
     /**
-     * 场景编辑器
+     * 编辑器事件
+     */
+    export class EditorEvent extends BaseEvent {
+        public static CHANGE_SCENE = "changeScene";
+        constructor(type: string, data?: any) {
+            super(type, data);
+        }
+    }
+    /**
+     * 编辑器
      **/
     export class Editor {
-
-        private static _editorModel: EditorModel;
-        /**编辑模型 */
-        public static get editorModel(): EditorModel {
-            return this._editorModel;
-        }
-        private static history: History;
+        private static editorSceneModel: EditorSceneModel;
         /**初始化 */
         public static async init() {
-            // 覆盖生成 uuid 的方式。
+            this.eventDispatcher = new EventDispatcher();
+            //覆盖生成 uuid 的方式。
             createUUID = generateUuid;
-            createAssetID = generateUuid;
-            //初始化编辑模型
-            this.history = new History();
-            this._editorModel = new EditorModel();
-            this._editorModel.init(this.history);
-            //启动egret3编辑环境
-            this.runEgret();
+            //初始化编辑环境
+            this.initEditEnvironment();
+            //初始化资源
             await RES.loadConfig("resource/default.res.json", "resource/");
+            //初始化编辑场景
+            this.editorSceneModel = new EditorSceneModel();
+            this.editorSceneModel.init();
+
+            Application.sceneManager.camerasScene = this.editorSceneModel.editorScene;
         }
-        private static runEgret() {
+        private static _activeEditorModel: EditorModel;
+        /**
+         * 当前激活的编辑模型
+         */
+        public static get activeEditorModel(): EditorModel {
+            return this._activeEditorModel;
+        }
+        private static sceneEditorModel: EditorModel;
+        /**
+         * 加载一个场景
+         * @param sceneUrl 场景资源URL
+         */
+        public static async loadScene(sceneUrl: string) {
+            await RES.getResAsync(sceneUrl);
+            const rawScene = RES.getRes(sceneUrl) as RawScene;
+            if (rawScene) {
+                let scene = rawScene.createInstance(true);
+                this.sceneEditorModel = new EditorModel();
+                this.sceneEditorModel.init(scene, 'scene', sceneUrl);
+                this.setActiveModel(this.sceneEditorModel);
+            }
+        }
+        //设置激活模型
+        private static setActiveModel(model: EditorModel): void {
+            this.activeScene(model.scene);
+            this._activeEditorModel = model;
+            this.editorSceneModel.editorModel = model;
+            this.dispatchEvent(new EditorEvent(EditorEvent.CHANGE_SCENE));
+        }
+        private static activeScene(scene: Scene): void {
+            if (paper.Application.sceneManager.activeScene) {
+                let objs = paper.Application.sceneManager.activeScene.getRootGameObjects();
+                objs.forEach(obj => {
+                    obj.activeSelf = false;
+                });
+            }
+            paper.Application.sceneManager.activeScene = scene;
+            let objs = paper.Application.sceneManager.activeScene.getRootGameObjects();
+            objs.forEach(obj => {
+                obj.activeSelf = true;
+            });
+        }
+        private static prefabEditorModel: EditorModel;
+        /**
+         * 附加一个预置体编辑场景
+         * @param prefabUrl 预置体资源URL
+         */
+        public static async attachPrefabEditScene(prefabUrl: string) {
+            await RES.getResAsync(prefabUrl);
+            const prefab = RES.getRes(prefabUrl) as Prefab;
+            if (prefab) {
+                if (this.prefabEditorModel) {
+                    this.prefabEditorModel.scene.destroy();
+                }
+                let scene = Scene.createEmpty('prefabEditScene', false);
+                prefab.createInstance(scene, true);
+                this.prefabEditorModel = new EditorModel();
+                this.prefabEditorModel.init(scene, 'prefab', prefabUrl);
+                this.setActiveModel(this.prefabEditorModel);
+            }
+        }
+        /**
+         * 解除当前附加的预置体编辑场景
+         */
+        public static detachCurrentPrefabEditScene(): void {
+            if (this.prefabEditorModel) {
+                this.prefabEditorModel.scene.destroy();
+                this.setActiveModel(this.sceneEditorModel);
+            }
+        }
+        /**
+         * 撤销
+         */
+        public static undo() {
+            if (this.activeEditorModel)
+                this.activeEditorModel.history.back();
+        }
+        /**
+         * 重做
+         */
+        public static redo() {
+            if (this.activeEditorModel)
+                this.activeEditorModel.history.forward();
+        }
+        public static deserializeHistory(data: any): void {
+            this.sceneEditorModel.history.deserialize(data);
+        }
+        public static serializeHistory(): string {
+            const historyData = this.sceneEditorModel.history.serialize();
+            return JSON.stringify(historyData);
+        }
+        private static eventDispatcher: EventDispatcher;
+        public static addEventListener(type: string, fun: Function, thisObj: any, level: number = 0): void {
+            this.eventDispatcher.addEventListener(type, fun, thisObj, level);
+        }
+        public static removeEventListener(type: string, fun: Function, thisObj: any): void {
+            this.eventDispatcher.removeEventListener(type, fun, thisObj);
+        }
+        public static dispatchEvent(event: BaseEvent): void {
+            this.eventDispatcher.dispatchEvent(event);
+        }
+        private static initEditEnvironment() {
             egret3d.runEgret({
                 antialias: false,
+                isEditor: true,
+                isPlaying: false,
                 systems: [
                     egret3d.BeginSystem,
                     paper.EnableSystem,
@@ -49,84 +158,6 @@ namespace paper.editor {
                     egret3d.EndSystem
                 ]
             });
-
-            // 摄像机激活场景设置为编辑场景。
-            Application.sceneManager.camerasScene = Application.sceneManager.editorScene;
-            // 创建编辑器的相机。
-            this._createEditCamera();
-            //
-            Gizmo.Enabled();
-        }
-        /**切换场景 */
-        public static switchScene(url: string) {
-            Application.sceneManager.unloadAllScene();
-            Application.callLater(() => {
-                this.loadEditScene(url).then(() => {
-                    this.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_SCENE, url));
-                });
-
-                // Application.sceneManager.camerasScene = Application.sceneManager.editorScene;
-            });
-        }
-
-        private static async loadEditScene(url: string) {
-            await RES.getResAsync(url);
-            this.loadScene(url, true);
-        }
-        //此方法是对Application.sceneManager.loadScene的一个重写，增加keepUUID参数
-        private static loadScene(resourceName: string, keepUUID: boolean = false) {
-            const rawScene = RES.getRes(resourceName) as RawScene;
-            if (rawScene) {
-                const scene = rawScene.createInstance(keepUUID);
-                return scene;
-            }
-            return null;
-        }
-
-        // private static geoController: GeoController;
-        public static gizmo: Gizmo;
-        private static _createEditCamera() {
-            const cameraObject = GameObject.create("EditorCamera", DefaultTags.EditorOnly, Application.sceneManager.editorScene);
-            console.log(cameraObject.scene)
-            {
-                const camera = cameraObject.addComponent(egret3d.Camera);
-                camera.near = 0.1;
-                camera.far = 1000.0;
-                camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
-                cameraObject.transform.setLocalPosition(5.0, 8.0, -3.0);
-                cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
-            }
-
-            {
-                const script = cameraObject.addComponent(EditorCameraScript);
-                script.editorModel = this.editorModel;
-                script.moveSpeed = 10;
-                script.rotateSpeed = 0.5;
-
-                // this.geoController = 
-                cameraObject.addComponent(GeoController)
-                this.gizmo = cameraObject.addComponent(Gizmo)
-                // this.geoController.setEditorMode(this.editorModel)
-            }
-
-            {
-                const script = cameraObject.addComponent(PickGameObjectScript);
-                script.editorModel = this.editorModel;
-            }
-        }
-
-        public static undo() {
-            this.history.back();
-        }
-        public static redo() {
-            this.history.forward();
-        }
-        public static deserializeHistory(data: any): void {
-            this.history.deserialize(data);
-        }
-        public static serializeHistory(): string {
-            const historyData = this.history.serialize();
-            return JSON.stringify(historyData);
         }
     }
 }

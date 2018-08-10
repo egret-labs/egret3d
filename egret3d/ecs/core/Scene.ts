@@ -2,12 +2,52 @@ namespace paper {
     /**
      * 场景类
      */
-    export class Scene extends SerializableObject {
+    export class Scene extends BaseObject {
+        /**
+         * 
+         */
+        public static createEmpty(name: string = DefaultNames.NoName, isActive: boolean = true) {
+            const exScene = Application.sceneManager.getSceneByName(name);
+            if (exScene) {
+                console.warn("The scene with the same name already exists.");
+                return exScene;
+            }
+
+            const scene = new Scene(name);
+            Application.sceneManager._addScene(scene, isActive);
+
+            return scene;
+        }
+        /**
+         * 
+         */
+        public static create(name: string, combineStaticObjects: boolean = true) {
+            const exScene = Application.sceneManager.getSceneByName(name);
+            if (exScene) {
+                console.warn("The scene with the same name already exists.");
+                return exScene;
+            }
+
+            const rawScene = paper.Asset.find<RawScene>(name);
+            if (rawScene) {
+                const scene = rawScene.createInstance();
+
+                if (scene) {
+                    if (combineStaticObjects && Application.isPlaying) {
+                        egret3d.combine(scene.gameObjects);
+                    }
+
+                    return scene;
+                }
+            }
+
+            return null;
+        }
         /**
          * 场景名称。
          */
         @serializedField
-        public name: string = "";
+        public readonly name: string = "";
         /**
          * 场景的light map列表。
          */
@@ -19,44 +59,19 @@ namespace paper {
         @serializedField
         public lightmapIntensity: number = 1.0;
         /**
-         * 存储着关联的数据
-         * 场景保存时，将场景快照数据保存至对应的资源中
-         */
-        public rawScene: RawScene | null = null;
-        /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @paper.serializedField
-        public extras?: any;
+        public extras?: { rawScene?: RawScene } = Application.isEditor && !Application.isPlaying ? {} : undefined;
         /**
          * @internal
          */
         public readonly _gameObjects: GameObject[] = [];
-        /**
-         * @internal
-         */
-        public constructor(isActive: boolean = true) {
+
+        private constructor(name: string) {
             super();
 
-            Application.sceneManager._addScene(this, isActive);
-        }
-        /**
-         * @internal
-         */
-        public _destroy() {
-            let i = this._gameObjects.length;
-            while (i--) {
-                const gameObject = this._gameObjects[i];
-                if (!gameObject || gameObject.transform.parent) {
-                    continue;
-                }
-
-                gameObject.destroy();
-            }
-
-            this.lightmaps.length = 0;
-            this._gameObjects.length = 0;
-            this.rawScene = null as any;
+            this.name = name;
         }
         /**
          * @internal
@@ -80,6 +95,27 @@ namespace paper {
             else {
                 console.debug("Remove game object error.", gameObject.path);
             }
+        }
+        /**
+         * 
+         */
+        public destroy() {
+            if (!Application.sceneManager._removeScene(this)) {
+                return;
+            }
+
+            let i = this._gameObjects.length;
+            while (i--) {
+                const gameObject = this._gameObjects[i];
+                if (!gameObject || gameObject.transform.parent) {
+                    continue;
+                }
+
+                gameObject.destroy();
+            }
+
+            this.lightmaps.length = 0;
+            this._gameObjects.length = 0;
         }
         /**
          * 返回当前激活场景中查找对应名称的GameObject

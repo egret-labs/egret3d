@@ -12,7 +12,7 @@ namespace paper {
      * @platform Web
      * @language zh_CN
      */
-    export abstract class Asset extends SerializableObject {
+    export abstract class Asset extends BaseObject {
         /**
          * @deprecated
          */
@@ -43,9 +43,7 @@ namespace paper {
          * @internal
          */
         public _isBuiltin: boolean = false;
-        /**
-         * 
-         */
+
         public constructor(name: string = "") {
             super();
 

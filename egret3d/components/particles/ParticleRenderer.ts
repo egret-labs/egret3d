@@ -1,7 +1,4 @@
 namespace egret3d.particle {
-    export const BillboardPerVertexCount = 37;
-    export const MeshPerVertexCount = 42;
-
     export const enum ParticleRendererEventType {
         Mesh = "mesh",
         Materials = "materials",
@@ -10,18 +7,6 @@ namespace egret3d.particle {
         VelocityScaleChanged = "velocityScale",
 
     }
-    export const enum ParticleSortMode {
-        None = 0,
-        Distance = 1,
-        OldestInFront = 2,
-        YoungestInFront = 3
-    }
-    export const enum ParticleRenderSpace {
-        View = 0,
-        World = 1,
-        Local = 2,
-        Facing = 3
-    }
     export const enum ParticleRenderMode {
         Billboard = 0,
         Stretch = 1,
@@ -29,26 +14,6 @@ namespace egret3d.particle {
         VerticalBillboard = 3,
         Mesh = 4,
         None = 5
-    }
-
-    /**
-     * 粒子着色器用到的属性
-     */
-    export const enum ParticleMaterialAttribute {
-        POSITION = "POSITION",
-        COLOR_0 = "COLOR_0",
-        TEXCOORD_0 = "TEXCOORD_0",
-        CORNER = "CORNER",
-        START_POSITION = "START_POSITION",
-        START_VELOCITY = "START_VELOCITY",
-        START_COLOR = "START_COLOR",
-        START_SIZE = "START_SIZE",
-        START_ROTATION = "START_ROTATION",
-        TIME = "TIME",
-        RANDOM0 = "RANDOM0",
-        RANDOM1 = "RANDOM1",
-        WORLD_POSITION = "WORLD_POSITION",
-        WORLD_ROTATION = "WORLD_ROTATION",
     }
     /**
      * 粒子着色器用到的变量
@@ -135,42 +100,8 @@ namespace egret3d.particle {
         SHAPE = "SHAPE",
     }
     /**
-     * 渲染类型为Mesh的属性格式
+     * 
      */
-    export const MeshShaderAttributeFormat: { key: string, type: gltf.AccessorType }[] = [
-        { key: ParticleMaterialAttribute.POSITION, type: gltf.AccessorType.VEC3 },
-        { key: ParticleMaterialAttribute.COLOR_0, type: gltf.AccessorType.VEC4 },
-        { key: ParticleMaterialAttribute.TEXCOORD_0, type: gltf.AccessorType.VEC2 },
-        { key: ParticleMaterialAttribute.START_POSITION, type: gltf.AccessorType.VEC3 },
-        { key: ParticleMaterialAttribute.START_VELOCITY, type: gltf.AccessorType.VEC3 },
-        { key: ParticleMaterialAttribute.START_COLOR, type: gltf.AccessorType.VEC4 },
-        { key: ParticleMaterialAttribute.START_SIZE, type: gltf.AccessorType.VEC3 },
-        { key: ParticleMaterialAttribute.START_ROTATION, type: gltf.AccessorType.VEC3 },
-        { key: ParticleMaterialAttribute.TIME, type: gltf.AccessorType.VEC2 },
-        { key: ParticleMaterialAttribute.RANDOM0, type: gltf.AccessorType.VEC4 },
-        { key: ParticleMaterialAttribute.RANDOM1, type: gltf.AccessorType.VEC4 },
-        { key: ParticleMaterialAttribute.WORLD_POSITION, type: gltf.AccessorType.VEC3 },
-        { key: ParticleMaterialAttribute.WORLD_ROTATION, type: gltf.AccessorType.VEC4 },
-    ];
-    /**
-     * 渲染类型为Billboard的属性格式
-     */
-    export const BillboardShaderAttributeFormat: { key: string, type: gltf.AccessorType }[] = [
-        { key: ParticleMaterialAttribute.CORNER, type: gltf.AccessorType.VEC2 },
-        { key: ParticleMaterialAttribute.TEXCOORD_0, type: gltf.AccessorType.VEC2 },
-        { key: ParticleMaterialAttribute.START_POSITION, type: gltf.AccessorType.VEC3 },
-        { key: ParticleMaterialAttribute.START_VELOCITY, type: gltf.AccessorType.VEC3 },
-        { key: ParticleMaterialAttribute.START_COLOR, type: gltf.AccessorType.VEC4 },
-        { key: ParticleMaterialAttribute.START_SIZE, type: gltf.AccessorType.VEC3 },
-        { key: ParticleMaterialAttribute.START_ROTATION, type: gltf.AccessorType.VEC3 },
-        { key: ParticleMaterialAttribute.TIME, type: gltf.AccessorType.VEC2 },
-        { key: ParticleMaterialAttribute.RANDOM0, type: gltf.AccessorType.VEC4 },
-        { key: ParticleMaterialAttribute.RANDOM1, type: gltf.AccessorType.VEC4 },
-        { key: ParticleMaterialAttribute.WORLD_POSITION, type: gltf.AccessorType.VEC3 },
-        { key: ParticleMaterialAttribute.WORLD_ROTATION, type: gltf.AccessorType.VEC4 },
-    ];
-
-    @paper.disallowMultiple
     export class ParticleRenderer extends paper.BaseRenderer {
         @paper.serializedField
         private _mesh: egret3d.Mesh | null;
@@ -199,111 +130,6 @@ namespace egret3d.particle {
             this._renderMode = ParticleRenderMode.Billboard;
             this.velocityScale = 1.0;
             this.lengthScale = 1.0;
-        }
-        /**
-         * @internal
-         * @param key 
-         */
-        public _addShaderDefine(key: string) {
-            if (!this.batchMaterial && this._materials.length > 0) {
-                this.batchMaterial = this._materials[0];
-            }
-            if (this.batchMaterial) {
-                this.batchMaterial.addDefine(key);
-            }
-        }
-        /**
-         * @internal
-         * @param key 
-         */
-        public _removeShaderDefine(key: string) {
-            if (!this.batchMaterial && this._materials.length > 0) {
-                this.batchMaterial = this._materials[0];
-            }
-            if (this.batchMaterial) {
-                this.batchMaterial.removeDefine(key);
-            }
-        }
-        /**
-         * @internal
-         * @param key 
-         */
-        public _setBoolean(_id: string, _value: boolean) {
-            if (this.batchMaterial) {
-                this.batchMaterial.setBoolean(_id, _value);
-            }
-        }
-        /**
-         * @internal
-         * @param key 
-         */
-        public _setInt(_id: string, _value: number) {
-            if (this.batchMaterial) {
-                this.batchMaterial.setInt(_id, _value);
-            }
-        }
-        /**
-         * @internal
-         * @param key 
-         */
-        public _setFloat(_id: string, _value: number) {
-            if (this.batchMaterial) {
-                this.batchMaterial.setFloat(_id, _value);
-            }
-        }
-        /**
-         * @internal
-         * @param key 
-         */
-        public _setVector2(_id: string, _value: Vector2) {
-            if (this.batchMaterial) {
-                this.batchMaterial.setVector2(_id, _value);
-            }
-        }
-        /**
-         * @internal
-         * @param key 
-         */
-        public _setVector2v(_id: string, _value: Float32Array) {
-            if (this.batchMaterial) {
-                this.batchMaterial.setVector2v(_id, _value);
-            }
-        }
-        /**
-         * @internal
-         * @param key 
-         */
-        public _setVector3(_id: string, _value: Vector3) {
-            if (this.batchMaterial) {
-                this.batchMaterial.setVector3(_id, _value);
-            }
-        }
-        /**
-         * @internal
-         * @param key 
-         */
-        public _setVector4(_id: string, _value: Vector4) {
-            if (this.batchMaterial) {
-                this.batchMaterial.setVector4(_id, _value);
-            }
-        }
-        /**
-         * @internal
-         * @param key 
-         */
-        public _setVector3v(_id: string, _value: Float32Array) {
-            if (this.batchMaterial) {
-                this.batchMaterial.setVector3v(_id, _value);
-            }
-        }
-        /**
-         * @internal
-         * @param key 
-         */
-        public _setVector4v(_id: string, _value: Float32Array) {
-            if (this.batchMaterial) {
-                this.batchMaterial.setVector4v(_id, _value);
-            }
         }
         /**
          * mesh model
@@ -364,7 +190,6 @@ namespace egret3d.particle {
                 return;
             }
 
-            const old = this._renderMode;
             this._renderMode = value;
             paper.EventPool.dispatchEvent(ParticleRendererEventType.RenderMode, this);
         }

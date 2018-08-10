@@ -8,7 +8,6 @@ namespace egret3d {
     /**
      * MeshFilter 组件
      */
-    @paper.disallowMultiple
     export class MeshFilter extends paper.BaseComponent {
         @paper.serializedField
         private _mesh: Mesh | null = null;
@@ -17,7 +16,7 @@ namespace egret3d {
             super.uninitialize();
 
             if (this._mesh) {
-                this._mesh.dispose();
+                // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
             }
 
             this._mesh = null;
@@ -36,7 +35,7 @@ namespace egret3d {
             }
 
             if (this._mesh) {
-                this._mesh.dispose();
+                // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
             }
 
             this._mesh = mesh;

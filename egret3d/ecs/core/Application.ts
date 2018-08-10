@@ -30,6 +30,10 @@ namespace paper {
         }
 
         /**
+         * 
+         */
+        public readonly version: string = "0.9.000";
+        /**
          * 系统管理器。
          */
         public readonly systemManager: SystemManager = SystemManager.getInstance();
@@ -42,16 +46,16 @@ namespace paper {
         private _isFocused = false;
         private _isPlaying = false;
         private _isRunning = false;
-        private _bindUpdate: FrameRequestCallback = null as any;
-		
-		public _option:egret3d.RequiredRuntimeOptions;//TODO临时
-        public _canvas:HTMLCanvasElement;//TODO临时
-        public _webgl:WebGLRenderingContext;////TODO临时
+        private _bindUpdate: FrameRequestCallback | null = null;
+
+        public _option: egret3d.RequiredRuntimeOptions;//TODO临时
+        public _canvas: HTMLCanvasElement;//TODO临时
+        public _webgl: WebGLRenderingContext;////TODO临时
 
 
         private _update() {
             if (this._isRunning) {
-                requestAnimationFrame(this._bindUpdate);
+                requestAnimationFrame(this._bindUpdate!);
             }
 
             Time && Time.update();
@@ -59,17 +63,17 @@ namespace paper {
             this.systemManager.update();
         }
 
-        public init({ isEditor = false, isPlaying = true, systems = [] as { new(): BaseSystem }[], option = {}, canvas = {}, webgl = {}} = {}) {
+        public init({ isEditor = false, isPlaying = true, systems = [] as { new(): BaseSystem }[], option = {}, canvas = {}, webgl = {} } = {}) {
+            this._isEditor = isEditor;
+            this._isPlaying = isPlaying;
+            this._option = option as egret3d.RequiredRuntimeOptions;
+            this._canvas = canvas as HTMLCanvasElement;
+            this._webgl = webgl as WebGLRenderingContext;
+
             for (const systemClass of systems) {
                 this.systemManager.register(systemClass);
             }
 
-            this._isEditor = isEditor;
-            this._isPlaying = isPlaying;
-
-            this._option = option as egret3d.RequiredRuntimeOptions;
-            this._canvas = canvas as HTMLCanvasElement;
-            this._webgl = webgl as WebGLRenderingContext;
             this.resume();
         }
 
@@ -95,7 +99,7 @@ namespace paper {
         }
 
         public callLater(callback: () => void): void {
-            (this.systemManager.getSystem(paper.LateUpdateSystem) as paper.LateUpdateSystem).callLater(callback);
+            (this.systemManager.getSystem(paper.LateUpdateSystem)!).callLater(callback);
         }
 
         public get isEditor() {
