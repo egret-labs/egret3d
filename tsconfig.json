@@ -115,7 +115,7 @@
         "egret3d/asset/resource/GLTF.ts",
         "egret3d/asset/resource/BaseMesh.ts",
         "egret3d/asset/resource/BaseTexture.ts",
-        "egret3d/asset/resource/Material.ts",s
+        "egret3d/asset/resource/Material.ts",
 
         "egret3d/asset/default/ShaderLib.ts",
         "egret3d/asset/default/ShaderChunk.ts",
