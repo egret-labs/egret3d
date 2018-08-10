@@ -37,7 +37,6 @@ namespace egret3d {
      * @platform Web
      * @language
      */
-    @paper.disallowMultiple
     export class SkinnedMeshRenderer extends paper.BaseRenderer {
         /**
          * 

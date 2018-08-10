@@ -23,7 +23,7 @@ namespace egret3d {
         /**
          * 
          */
-        public lightmap: BaseTexture | null = null;
+        public lightmap: Texture | null = null;
         public lightmapUV: number = 1;
         public lightmapIntensity: number = 1.0;
         public lightmapOffset: Float32Array | null = null;
@@ -40,9 +40,9 @@ namespace egret3d {
         public spotShadowMatrix: Float32Array = new Float32Array(0);
         public readonly matrix_m: Matrix = new Matrix();
         public readonly matrix_mvp: Matrix = new Matrix();
-        public readonly directShadowMaps: (BaseTexture | null)[] = [];
-        public readonly pointShadowMaps: (BaseTexture | null)[] = [];
-        public readonly spotShadowMaps: (BaseTexture | null)[] = [];
+        public readonly directShadowMaps: (WebGLTexture | null)[] = [];
+        public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
+        public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
 
         public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
 
@@ -59,7 +59,7 @@ namespace egret3d {
         public readonly matrix_vp: Matrix = new Matrix();
         //matrixNormal: paper.matrix = new paper.matrix();
 
-        public updateLightmap(texture: BaseTexture, uv: number, offset: Float32Array, intensity: number) {
+        public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
             this.lightmap = texture;
             this.lightmapUV = uv;
             this.lightmapOffset = offset;

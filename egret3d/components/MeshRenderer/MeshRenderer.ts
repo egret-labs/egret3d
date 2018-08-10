@@ -3,7 +3,6 @@ namespace egret3d {
     /**
      * mesh的渲染组件
      */
-    @paper.disallowMultiple
     export class MeshRenderer extends paper.BaseRenderer {
         @paper.serializedField
         private readonly _materials: Material[] = [DefaultMaterials.DefaultDiffuse];

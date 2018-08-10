@@ -31,7 +31,7 @@ namespace egret3d {
         public _version: number = 0;
 
         private _cacheDefines: string = '';
-        private _textureRef: BaseTexture[] = [];//TODO
+        private _textureRef: Texture[] = [];//TODO
         private readonly _defines: Array<string> = new Array();
         /**
         * @internal
@@ -367,7 +367,7 @@ namespace egret3d {
             }
         }
 
-        setTexture(id: string, value: egret3d.BaseTexture) {
+        setTexture(id: string, value: egret3d.Texture) {
             value = value || egret3d.DefaultTextures.GRAY;
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {

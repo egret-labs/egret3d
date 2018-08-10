@@ -5,7 +5,7 @@ namespace egret3d {
     /**
      * 相机组件
      */
-    @paper.disallowMultiple
+    @paper.allowMultiple
     export class Camera extends paper.BaseComponent {
 
         /**

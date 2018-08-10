@@ -12,6 +12,7 @@ namespace paper.editor {
         public static ADD_GAMEOBJECTS = "addGameObject";
         public static DELETE_GAMEOBJECTS = "deleteGameObject";
         public static SELECT_GAMEOBJECTS = "selectGame";
+        public static CHANGE_DIRTY: string = 'change_dirty';
         public static CHANGE_PROPERTY = "changeProperty";
         public static CHANGE_EDIT_MODE = "changeEditMode";
         public static CHANGE_EDIT_TYPE = "changeEditType";
@@ -30,27 +31,47 @@ namespace paper.editor {
      * 编辑模型
      */
     export class EditorModel extends EventDispatcher {
-        
+
         private _history: History;
-        private _scene:paper.Scene;
-        public get history():History{
+        public get history(): History {
             return this._history
         }
-        public get scene():Scene{
+        private _scene: paper.Scene;
+        public get scene(): Scene {
             return this._scene;
+        }
+        private _contentType: 'scene' | 'prefab';
+        public get contentType() {
+            return this._contentType;
+        }
+        private _contentUrl: string;
+        public get contentUrl() {
+            return this._contentUrl;
+        }
+        private _dirty: boolean = false;
+        public get dirty(): boolean {
+            return this._dirty;
+        }
+        public set dirty(v: boolean) {
+            if (this._dirty !== v) {
+                this._dirty = v;
+                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_DIRTY));
+            }
         }
         /**
          * 初始化
          * @param history 
          */
-        public init(scene: paper.Scene): void {
-            this._scene=scene;
-            this._history=new History();
+        public init(scene: paper.Scene, contentType: 'scene' | 'prefab', contentUrl: string): void {
+            this._history = new History();
+            this._scene = scene;
+            this._contentType = contentType;
+            this._contentUrl = contentUrl;
         }
 
-        public addState(state: BaseState|null) {
-            if(state){
-                state.editorModel=this;
+        public addState(state: BaseState | null) {
+            if (state) {
+                state.editorModel = this;
                 this.history.add(state);
             }
         }
@@ -75,34 +96,33 @@ namespace paper.editor {
             return null;
         }
 
-        public setTransformProperty(propName: string, propValue: any, target: BaseComponent):void
-        {
-            let valueEditType:paper.editor.EditType | null = this.getEditType(propName,target);
+        public setTransformProperty(propName: string, propValue: any, target: BaseComponent): void {
+            let valueEditType: paper.editor.EditType | null = this.getEditType(propName, target);
 
             if (valueEditType != null) {
                 let newPropertyData = {
                     propName,
-                    copyValue:this.serializeProperty(propValue,valueEditType),
-                    valueEditType
-                } 
-    
-                let prePropertyData = {
-                    propName,
-                    copyValue:this.serializeProperty(target[propName],valueEditType),
+                    copyValue: this.serializeProperty(propValue, valueEditType),
                     valueEditType
                 }
-    
-                this.createModifyComponent(target.gameObject.uuid,target.uuid,[newPropertyData],[prePropertyData]);
+
+                let prePropertyData = {
+                    propName,
+                    copyValue: this.serializeProperty(target[propName], valueEditType),
+                    valueEditType
+                }
+
+                this.createModifyComponent(target.gameObject.uuid, target.uuid, [newPropertyData], [prePropertyData]);
             }
         }
-        
-        public createModifyGameObjectPropertyState(gameObjectUUid:string,newValueList:any[],preValueCopylist:any[]) {
-            let state = ModifyGameObjectPropertyState.create(gameObjectUUid,newValueList,preValueCopylist);
+
+        public createModifyGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]) {
+            let state = ModifyGameObjectPropertyState.create(gameObjectUUid, newValueList, preValueCopylist);
             this.addState(state);
         }
 
-        public createModifyComponent(gameObjectUUid:string,componentUUid:string,newValueList:any[],preValueCopylist:any[]): any {
-            let state = ModifyComponentPropertyState.create(gameObjectUUid,componentUUid,newValueList,preValueCopylist);
+        public createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any {
+            let state = ModifyComponentPropertyState.create(gameObjectUUid, componentUUid, newValueList, preValueCopylist);
             this.addState(state);
         }
 
@@ -159,7 +179,7 @@ namespace paper.editor {
                 case editor.EditType.COLOR:
                 case editor.EditType.RECT:
                     const className = egret.getQualifiedClassName(value);
-                    const serializeData = serialize(value);
+                    const serializeData = value.serialize(value);
                     return { className, serializeData };
                 case editor.EditType.SHADER:
                     return value.url;
@@ -204,7 +224,7 @@ namespace paper.editor {
                     let target: ISerializable | null = null;
                     if (clazz) {
                         target = new clazz();
-                        target.deserialize(serializeData.serializeData.objects[0]);
+                        target!.deserialize(serializeData.serializeData);
                     }
                     return target;
                 case editor.EditType.SHADER:
@@ -348,7 +368,7 @@ namespace paper.editor {
          * @param gameObjects 
          */
         public duplicateGameObjects(gameObjects: GameObject[]): void {
-            let state = DuplicateGameObjectsState.create(gameObjects,this);
+            let state = DuplicateGameObjectsState.create(gameObjects, this);
             this.addState(state);
         }
         /**
@@ -356,7 +376,7 @@ namespace paper.editor {
          * @param gameObjects 
          */
         public deleteGameObject(gameObjects: GameObject[]) {
-            let deleteState = DeleteGameObjectsState.create(gameObjects,this);
+            let deleteState = DeleteGameObjectsState.create(gameObjects, this);
             let breakList: GameObject[] = [];
             gameObjects.forEach(obj => {
                 if (this.isPrefabChild(obj) && !this.isPrefabRoot(obj)) {
@@ -376,10 +396,10 @@ namespace paper.editor {
          * 解除预置体联系
          * @param gameObjects 
          */
-        public breakPrefab(gameObjects:GameObject[]):void{
+        public breakPrefab(gameObjects: GameObject[]): void {
             let breakList: GameObject[] = [];
             gameObjects.forEach(obj => {
-                if (this.isPrefabChild(obj)||this.isPrefabRoot(obj)) {
+                if (this.isPrefabChild(obj) || this.isPrefabRoot(obj)) {
                     breakList.push(obj);
                 }
             });
@@ -392,7 +412,7 @@ namespace paper.editor {
          * 更改层级
          * */
         public updateGameObjectsHierarchy(gameObjects: GameObject[], targetGameobjcet: GameObject, dir: 'top' | 'inner' | 'bottom'): void {
-            let gameObjectHierarchyState = GameObjectHierarchyState.create(gameObjects, targetGameobjcet, dir,this);
+            let gameObjectHierarchyState = GameObjectHierarchyState.create(gameObjects, targetGameobjcet, dir, this);
             let breakList: GameObject[] = [];
             gameObjects.forEach(obj => {
                 if (this.isPrefabChild(obj) &&
@@ -674,8 +694,7 @@ namespace paper.editor {
             this.addState(applyPrefabState);
         }
 
-        public createRevertPrefabState(modifyGameObjectPropertyList:any[],modifyComponentPropertyList:any[])
-        {
+        public createRevertPrefabState(modifyGameObjectPropertyList: any[], modifyComponentPropertyList: any[]) {
             let group: BaseState[] = [];
 
             //revert gameobject proerty
@@ -696,8 +715,7 @@ namespace paper.editor {
             this.addState(revertPrefabState);
         }
 
-        public compareValue(a:any,b:any):boolean
-        {
+        public compareValue(a: any, b: any): boolean {
             if (typeof a != typeof b) {
                 throw new Error("diffrent type");
             }

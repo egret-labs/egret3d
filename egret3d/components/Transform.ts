@@ -21,7 +21,6 @@ namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    @paper.disallowMultiple
     export class Transform extends paper.BaseComponent {
         private _dirtyAABB: boolean = true;
         private _dirtyLocal: boolean = true;

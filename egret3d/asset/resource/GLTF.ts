@@ -1,4 +1,21 @@
 namespace egret3d {
+    /**
+     * 
+     */
+    export interface GLTFTexture extends gltf.Texture {
+        extensions: {
+            paper?: {
+                mipmap?: boolean;
+                format?: 6407 | 6408 | 6409;
+                pixelSize?: number;
+                width?: number;
+                height?: number;
+            }
+        }
+    }
+    /**
+     * 
+     */
     export interface GLTFMaterial extends gltf.Material {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
@@ -7,7 +24,9 @@ namespace egret3d {
             }
         }
     }
-
+    /**
+     * 
+     */
     export interface GLTF extends gltf.GLTF {
         version: string;
         extensions: {
@@ -20,7 +39,7 @@ namespace egret3d {
         extensionsRequired: string[];
     }
     /**
-     * @private
+     * 
      */
     export interface GLTFAnimation extends gltf.Animation {
         extensions: {
@@ -121,7 +140,6 @@ namespace egret3d {
          */
         stringVariable: string;
     }
-    export type ParseGLTFResult = { config: GLTF, buffers: (Float32Array | Uint32Array | Uint16Array)[] };
     /**
      * glTF 资源。
      */
@@ -141,6 +159,55 @@ namespace egret3d {
             } as GLTF;
 
             return config;
+        }
+        /**
+         * 
+         */
+        public static parseFromBinary(array: Uint32Array) {
+            let index = 0;
+            let result: { config: GLTF, buffers: (Float32Array | Uint32Array | Uint16Array)[] } = { config: {}, buffers: [] } as any;
+
+            if (
+                array[index++] !== 0x46546C67 ||
+                array[index++] !== 2
+            ) {
+                console.assert(false, "Nonsupport glTF data.");
+                return;
+            }
+
+            if (array[index++] !== array.byteLength) {
+                console.assert(false, "Error glTF data.");
+                return;
+            }
+
+            let chunkLength = 0;
+            let chunkType = 0;
+            while (index < array.length) {
+                chunkLength = array[index++];
+                chunkType = array[index++];
+
+                if (chunkLength % 4) {
+                    console.assert(false, "Error glTF data.");
+                }
+
+                if (chunkType === 0x4E4F534A) {
+                    const jsonArray = new Uint8Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint8Array.BYTES_PER_ELEMENT);
+                    const jsonString = io.BinReader.utf8ArrayToString(jsonArray);
+                    result.config = JSON.parse(jsonString);
+                }
+                else if (chunkType === 0x004E4942) {
+                    const buffer = new Uint32Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint32Array.BYTES_PER_ELEMENT);
+                    result.buffers.push(buffer);
+                }
+                else {
+                    console.assert(false, "Nonsupport glTF data.");
+                    return;
+                }
+
+                index += chunkLength / 4;
+            }
+
+            return result;
         }
         /**
          * 
@@ -242,59 +309,8 @@ namespace egret3d {
         }
         /**
          * @internal
-         *  TODO
-         */
-        public static parseFromBinary(array: Uint32Array): ParseGLTFResult {
-            let index = 0;
-            let result: ParseGLTFResult = { config: {}, buffers: [] } as any;
-            if (
-                array[index++] !== 0x46546C67 ||
-                array[index++] !== 2
-            ) {
-                console.assert(false, "Nonsupport glTF data.");
-                return;
-            }
-
-            if (array[index++] !== array.byteLength) {
-                console.assert(false, "Error glTF data.");
-                return;
-            }
-
-            let chunkLength = 0;
-            let chunkType = 0;
-            while (index < array.length) {
-                chunkLength = array[index++];
-                chunkType = array[index++];
-
-                if (chunkLength % 4) {
-                    console.assert(false, "Error glTF data.");
-                }
-
-                if (chunkType === 0x4E4F534A) {
-                    const jsonArray = new Uint8Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint8Array.BYTES_PER_ELEMENT);
-                    const jsonString = io.BinReader.utf8ArrayToString(jsonArray);
-                    result.config = JSON.parse(jsonString);
-                }
-                else if (chunkType === 0x004E4942) {
-                    const buffer = new Uint32Array(array.buffer, index * 4 + array.byteOffset, chunkLength / Uint32Array.BYTES_PER_ELEMENT);
-                    result.buffers.push(buffer);
-                }
-                else {
-                    console.assert(false, "Nonsupport glTF data.");
-                    return;
-                }
-
-                index += chunkLength / 4;
-            }
-
-            return result;
-            // this.initialize();
-        }
-        /**
-         * @internal
          */
         public initialize() {
-
         }
 
         public dispose() {
@@ -307,7 +323,7 @@ namespace egret3d {
         }
 
         public caclByteLength() {
-            return 0; // TODO
+            return 0;
         }
         /**
          * 根据指定 BufferView 创建二进制数组。
@@ -338,9 +354,10 @@ namespace egret3d {
 
                 case gltf.ComponentType.Float:
                     return new Float32Array(buffer.buffer, bufferOffset, bufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
-            }
 
-            throw new Error();
+                default:
+                    throw new Error();
+            }
         }
         /**
          * 根据指定 Accessor 创建二进制数组。
@@ -378,9 +395,10 @@ namespace egret3d {
 
                 case gltf.ComponentType.Float:
                     return new Float32Array(buffer.buffer, bufferOffset, bufferCount);
-            }
 
-            throw new Error();
+                default:
+                    throw new Error();
+            }
         }
         /**
          * 
@@ -532,9 +550,9 @@ namespace egret3d {
         }
     }
 }
-
-
-
+/**
+ * 
+ */
 declare namespace gltf {
     /**
      * glTF index.
@@ -546,13 +564,6 @@ declare namespace gltf {
     export const enum BufferViewTarget {
         ArrayBuffer = 34962,
         ElementArrayBuffer = 34963,
-    }
-    /**
-     */
-    export const enum DrawMode {
-        Stream = 35040,
-        Static = 35044,
-        Dynamic = 35048,
     }
     /**
      * Component type.
@@ -576,7 +587,6 @@ declare namespace gltf {
         TrianglesStrip = 5,
         TrianglesFan = 6,
     }
-
     /**
      * The uniform type.  All valid values correspond to WebGL enums.
      */
@@ -598,6 +608,22 @@ declare namespace gltf {
         FLOAT_MAT4 = 35676,
         SAMPLER_2D = 35678,
         SAMPLER_CUBE = 35680,
+    }
+    /**
+     * 
+     */
+    export const enum DrawMode {
+        Stream = 35040,
+        Static = 35044,
+        Dynamic = 35048,
+    }
+    /**
+     * 
+     */
+    export const enum TextureFormat {
+        RGB = 6407,
+        RGBA = 6408,
+        LUMINANCE = 6409,
     }
     /**
      * The shader stage.  All valid values correspond to WebGL enums.
@@ -1121,6 +1147,7 @@ declare namespace gltf {
         extras?: any;
         // [k: string]: any;
     }
+
     export interface MaterialNormalTextureInfo {
         index?: any;
         texCoord?: any;
@@ -1132,6 +1159,7 @@ declare namespace gltf {
         extras?: any;
         // [k: string]: any;
     }
+
     export interface MaterialOcclusionTextureInfo {
         index?: any;
         texCoord?: any;
@@ -1458,7 +1486,7 @@ declare namespace gltf {
         name: any;
         extensions?: any;
         extras?: any;
-        [k: string]: any;
+        // [k: string]: any;
     }
     /**
      * An attribute input to a technique and the corresponding semantic.
@@ -1500,7 +1528,7 @@ declare namespace gltf {
         name?: any;
         extensions?: any;
         extras?: any;
-        [k: string]: any;
+        // [k: string]: any;
     }
     /**
      * A template for material appearances.

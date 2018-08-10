@@ -1,7 +1,34 @@
 namespace egret3d {
 
-    export abstract class Texture extends egret3d.BaseTexture {
-        protected _texture: WebGLTexture | null = null;
+    export const enum TextureFormatEnum {
+        RGBA = 1, // WebGLRenderingContext.RGBA,
+        RGB = 2, // WebGLRenderingContext.RGB,
+        Gray = 3, // WebGLRenderingContext.LUMINANCE,
+        PVRTC4_RGB = 4,
+        PVRTC4_RGBA = 4,
+        PVRTC2_RGB = 4,
+        PVRTC2_RGBA = 4,
+    }
+
+    export interface ITexture {
+        texture: WebGLTexture;
+        width: number;
+        height: number;
+        dispose(): void;
+        caclByteLength(): number;
+    }
+
+    export interface IRenderTarget extends ITexture {
+        use() : void;
+    }
+
+    export abstract class GLTexture extends egret3d.Texture implements ITexture {
+        /**
+         * @internal
+         */
+        public _texture: WebGLTexture;
+        protected _width: number;
+        protected _height: number;
 
         public constructor(name: string = "", width: number = 0, height: number = 0) {
             super(name);
@@ -11,35 +38,30 @@ namespace egret3d {
             this._texture = WebGLCapabilities.webgl.createTexture()!;
         }
 
-        public dispose() {
-            if (this._isBuiltin) {
-                return;
-            }
-
-            if (this._texture) {
-                WebGLCapabilities.webgl.deleteTexture(this._texture);
-            }
-
-            this._texture = null;
-        }
-
-        public caclByteLength() { return 0; };
+        dispose() { }
+        caclByteLength() { return 0; };
 
         public get texture() {
             return this._texture;
+        }
+        public get width() {
+            return this._width;
+        }
+        public get height() {
+            return this._height;
         }
     }
     /**
      * 
      */
-    export class Texture2D extends Texture {
+    export class GLTexture2D extends GLTexture {
         public static createColorTexture(name: string, r: number, g: number, b: number) {
             const mipmap = false;
             const linear = true;
             const width = 1;
             const height = 1;
             const data = new Uint8Array([r, g, b, 255]);
-            const texture = new Texture2D(name, width, height, TextureFormatEnum.RGBA);
+            const texture = new GLTexture2D(name, width, height, TextureFormatEnum.RGBA);
             texture.uploadImage(data, mipmap, linear, true, false);
             return texture;
         }
@@ -58,7 +80,7 @@ namespace egret3d {
                     data[seek + 3] = 255;
                 }
             }
-            const texture = new Texture2D(name, width, height, TextureFormatEnum.RGBA);
+            const texture = new GLTexture2D(name, width, height, TextureFormatEnum.RGBA);
             texture.uploadImage(data, mipmap, linear, true, false);
             return texture;
         }
@@ -171,22 +193,28 @@ namespace egret3d {
         }
     }
 
-    export abstract class BaseRenderTarget extends Texture implements IRenderTarget {
+    export abstract class RenderTarget implements IRenderTarget {
+        static useNull() {
+            const webgl = WebGLCapabilities.webgl;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+        }
+        /**
+         * @internal
+         */
+        public _texture: WebGLTexture;
+        protected _width: number;
+        protected _height: number;
         protected _fbo: WebGLFramebuffer;
         protected _renderbuffer: WebGLRenderbuffer;
 
         public constructor(width: number, height: number, depth: boolean = false, stencil: boolean = false) {
-            super("", width, height);
-
             const webgl = WebGLCapabilities.webgl;
-
             this._width = width;
             this._height = height;
-
+            this._texture = webgl.createTexture()!;
             this._fbo = webgl.createFramebuffer()!;
             (this._fbo as any)["width"] = width;
             (this._fbo as any)["height"] = height;
-
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
             if (depth || stencil) {
                 this._renderbuffer = webgl.createRenderbuffer()!;
@@ -197,7 +225,6 @@ namespace egret3d {
                 } else if (depth) {
                     webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
                     webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
-
                 } else {
                     webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.STENCIL_INDEX8, width, height);
                     webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
@@ -206,30 +233,36 @@ namespace egret3d {
             }
         }
 
-        public dispose() {
-            if (this._isBuiltin) {
-                return;
+        use() { }
+
+        dispose() {
+            if (this._texture != null) {
+                const webgl = WebGLCapabilities.webgl;
+                webgl.deleteFramebuffer(this._renderbuffer);
+                webgl.deleteTexture(this._texture);
+                this._renderbuffer = null as any;
+                this._texture = null as any;
             }
-
-            super.dispose();
-
-            const webgl = WebGLCapabilities.webgl;
-
-            if (this._fbo !== null) {
-                webgl.deleteFramebuffer(this._fbo);
-            }
-
-            if (this._renderbuffer !== null) {
-                webgl.deleteRenderbuffer(this._renderbuffer);
-            }
-
-            this._renderbuffer = null as any;
         }
 
-        public use() { }
+        caclByteLength() {
+            return this.width * this.height * 4;
+        }
+
+        public get texture() {
+            return this._texture;
+        }
+
+        public get width() {
+            return this._width;
+        }
+
+        public get height() {
+            return this._height;
+        }
     }
 
-    export class GlRenderTarget extends BaseRenderTarget {
+    export class GlRenderTarget extends RenderTarget {
         constructor(width: number, height: number, depth: boolean = false, stencil: boolean = false) {
             super(width, height, depth, stencil);
 
@@ -249,7 +282,7 @@ namespace egret3d {
         }
     }
 
-    export class GlRenderTargetCube extends BaseRenderTarget {
+    export class GlRenderTargetCube extends RenderTarget {
         public activeCubeFace: number = 0; // PX 0, NX 1, PY 2, NY 3, PZ 4, NZ 5
 
         constructor(width: number, height: number, depth: boolean = false, stencil: boolean = false) {
@@ -325,78 +358,78 @@ namespace egret3d {
         }
     }
 
-    // export class WriteableTexture2D extends BaseTexture {
-    //     public width: number = 0;
-    //     public height: number = 0;
-    //     public format: TextureFormatEnum;
-    //     public texture: WebGLTexture;
+    export class WriteableTexture2D implements ITexture {
+        public width: number = 0;
+        public height: number = 0;
+        public format: TextureFormatEnum;
+        public texture: WebGLTexture;
 
-    //     constructor(format: TextureFormatEnum = TextureFormatEnum.RGBA, width: number, height: number, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
-    //         const webgl = WebGLCapabilities.webgl;
+        constructor(format: TextureFormatEnum = TextureFormatEnum.RGBA, width: number, height: number, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
+            const webgl = WebGLCapabilities.webgl;
 
-    //         this.texture = webgl.createTexture()!;
+            this.texture = webgl.createTexture()!;
 
-    //         webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
-    //         webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
+            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
+            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
 
-    //         webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
-    //         this.format = format;
-    //         let formatGL = webgl.RGBA;
+            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
+            this.format = format;
+            let formatGL = webgl.RGBA;
 
-    //         if (format == TextureFormatEnum.RGB) {
-    //             formatGL = webgl.RGB;
-    //         }
-    //         else if (format == TextureFormatEnum.Gray) {
-    //             formatGL = webgl.LUMINANCE;
-    //         }
+            if (format == TextureFormatEnum.RGB) {
+                formatGL = webgl.RGB;
+            }
+            else if (format == TextureFormatEnum.Gray) {
+                formatGL = webgl.LUMINANCE;
+            }
 
-    //         let data: Uint8Array = null as any;
-    //         webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, width, height, 0, formatGL, webgl.UNSIGNED_BYTE, data);
-    //         if (linear) {
-    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
-    //         }
-    //         else {
-    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
-    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
-    //         }
-    //         if (repeat) {
-    //             if (mirroredU) {
-    //                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.MIRRORED_REPEAT);
-    //             }
-    //             else {
-    //                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.REPEAT);
-    //             }
+            let data: Uint8Array = null as any;
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, width, height, 0, formatGL, webgl.UNSIGNED_BYTE, data);
+            if (linear) {
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+            }
+            else {
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
+            }
+            if (repeat) {
+                if (mirroredU) {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.MIRRORED_REPEAT);
+                }
+                else {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.REPEAT);
+                }
 
-    //             if (mirroredV) {
-    //                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.MIRRORED_REPEAT);
-    //             }
-    //             else {
-    //                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.REPEAT);
-    //             }
-    //         } else {
-    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
-    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
-    //         }
-    //     }
+                if (mirroredV) {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.MIRRORED_REPEAT);
+                }
+                else {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.REPEAT);
+                }
+            } else {
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
+            }
+        }
 
-    //     dispose() {
-    //         if (this.texture != null) {
-    //             WebGLCapabilities.webgl.deleteTexture(this.texture);
-    //             this.texture = null as any;
-    //         }
-    //     }
+        dispose() {
+            if (this.texture != null) {
+                WebGLCapabilities.webgl.deleteTexture(this.texture);
+                this.texture = null as any;
+            }
+        }
 
-    //     caclByteLength(): number {
-    //         let pixellen = 1;
-    //         if (this.format == TextureFormatEnum.RGBA) {
-    //             pixellen = 4;
-    //         }
-    //         else if (this.format == TextureFormatEnum.RGB) {
-    //             pixellen = 3;
-    //         }
-    //         const len = this.width * this.height * pixellen;
-    //         return len;
-    //     }
-    // }
+        caclByteLength(): number {
+            let pixellen = 1;
+            if (this.format == TextureFormatEnum.RGBA) {
+                pixellen = 4;
+            }
+            else if (this.format == TextureFormatEnum.RGB) {
+                pixellen = 3;
+            }
+            const len = this.width * this.height * pixellen;
+            return len;
+        }
+    }
 }

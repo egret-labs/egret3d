@@ -180,11 +180,11 @@ namespace paper {
         return "";
     }
 
-    function _getSerializedKeys(serializedClass: SerializedClass, keys: string[] | null = null) {
-        if (serializedClass.__serializeInfo) {
+    function _getSerializedKeys(serializedClass: BaseClass, keys: string[] | null = null) {
+        if (serializedClass.__serializeKeys) {
             keys = keys || [];
 
-            for (const key of serializedClass.__serializeInfo.keys!) {
+            for (const key of serializedClass.__serializeKeys) {
                 keys.push(key);
             }
         }
@@ -281,7 +281,7 @@ namespace paper {
     }
 
     function _serializeChildren(source: BaseObject, target: ISerializedObject, temp: GameObject | BaseComponent | null, ignoreKeys: string[] | null) {
-        const serializedKeys = _getSerializedKeys(<any>source.constructor as SerializedClass);
+        const serializedKeys = _getSerializedKeys(<any>source.constructor as BaseClass);
         if (!serializedKeys) {
             return;
         }

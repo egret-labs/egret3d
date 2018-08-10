@@ -17,7 +17,7 @@ namespace egret3d {
                 ]
             },
         ];
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getOrAddComponent(DrawCalls);
+        private readonly _drawCalls: DrawCalls = DrawCalls.getInstance(DrawCalls);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
             if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
@@ -26,6 +26,8 @@ namespace egret3d {
 
             const filter = gameObject.getComponent(MeshFilter) as MeshFilter;
             const renderer = gameObject.renderer as MeshRenderer;
+
+            this._drawCalls.removeDrawCalls(renderer);
             if (!filter.mesh || renderer.materials.length === 0) {
                 return;
             }

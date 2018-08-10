@@ -19,6 +19,7 @@ namespace paper.editor {
                 return false;
             }
             this._isDone = true;
+            this.editorModel.dirty=true;
             return true;
         }
 
