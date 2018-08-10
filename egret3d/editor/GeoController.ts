@@ -991,7 +991,7 @@ namespace paper.editor {
             let mesh = gizmoAxis.addComponent(egret3d.MeshFilter);
             switch (type) {
                 case 0:
-                    mesh.mesh = egret3d.DefaultMeshes.CYLINDER;
+                    mesh.mesh = egret3d.DefaultMeshes.CUBE;
                     break;
                 case 1:
                     mesh.mesh = egret3d.DefaultMeshes.CIRCLE_LINE;
