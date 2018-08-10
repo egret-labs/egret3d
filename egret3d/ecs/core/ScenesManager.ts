@@ -79,6 +79,7 @@ namespace paper {
 
                 scene.destroy();
             }
+
         }
         /**
          * 
@@ -123,8 +124,9 @@ namespace paper {
             if (
                 this._scenes.length <= 1 ||
                 this._scenes[0] === value ||
-                this._globalScene === value || // Cannot active global scene.
-                this._editorScene === value // Cannot active editor scene.
+                this._globalScene === value //|| // Cannot active global scene.
+                // this._editorScene === value // Cannot active editor scene.
+
             ) {
                 return;
             }

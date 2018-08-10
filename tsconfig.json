@@ -22,7 +22,6 @@
     "files": [
         "libs/egret.d.ts",
         "libs/resourcemanager.d.ts",
-
         "egret3d/ecs/core/Decorators.ts",
         "egret3d/ecs/core/Layer.ts",
         "egret3d/ecs/core/BaseObject.ts",
@@ -35,7 +34,6 @@
         "egret3d/ecs/core/ScenesManager.ts",
         "egret3d/ecs/core/EventPool.ts",
         "egret3d/ecs/core/Application.ts",
-
         "egret3d/ecs/components/BaseComponent.ts",
         "egret3d/ecs/components/SingletonComponent.ts",
         "egret3d/ecs/components/GroupComponent.ts",
@@ -44,7 +42,6 @@
         "egret3d/ecs/components/ContactColliders.ts",
         "egret3d/ecs/components/BaseRenderer.ts",
         "egret3d/ecs/components/Behaviour.ts",
-
         "egret3d/ecs/systems/Group.ts",
         "egret3d/ecs/systems/BaseSystem.ts",
         "egret3d/ecs/systems/EnableSystem.ts",
@@ -52,12 +49,10 @@
         "egret3d/ecs/systems/UpdateSystem.ts",
         "egret3d/ecs/systems/LateUpdateSystem.ts",
         "egret3d/ecs/systems/DisableSystem.ts",
-
         "egret3d/ecs/serialize/SerializeClassMap.ts",
         "egret3d/ecs/serialize/ISerializable.ts",
         "egret3d/ecs/serialize/Deserialize.ts",
         "egret3d/ecs/serialize/Serialize.ts",
-
         "egret3d/math/Vector2.ts",
         "egret3d/math/Vector3.ts",
         "egret3d/math/Vector4.ts",
@@ -70,10 +65,8 @@
         "egret3d/math/Matrix.ts",
         "egret3d/math/Math.ts",
         "egret3d/EventDispatcher.ts",
-        
         "egret3d/systems/BeginSystem.ts",
         "egret3d/systems/EndSystem.ts",
-
         "egret3d/components/Pool.ts",
         "egret3d/components/Transform.ts",
         "egret3d/components/singletons/DefaultMeshes.ts",
@@ -82,7 +75,6 @@
         "egret3d/components/singletons/DefaultMaterials.ts",
         "egret3d/components/singletons/Cameras.ts",
         "egret3d/components/singletons/DrawCalls.ts",
-
         "egret3d/components/Camera/CameraSystem.ts",
         "egret3d/components/Camera/Camera.ts",
         "egret3d/components/Camera/CameraPostQueue.ts",
@@ -112,17 +104,13 @@
         "egret3d/web/render/Stage3D.ts",
         "egret3d/web/render/WebGLCapabilities.ts",
         "egret3d/math/Ray.ts",
-
         "egret3d/asset/resource/GLTF.ts",
         "egret3d/asset/resource/Mesh.ts",
         "egret3d/asset/resource/texture.ts",
         "egret3d/asset/resource/Material.ts",
-
         "egret3d/asset/default/ShaderLib.ts",
         "egret3d/asset/default/ShaderChunk.ts",
-
         "egret3d/res-processor/ResProcessor.ts",
-
         "egret3d/util/regexputil.ts",
         "egret3d/util/stream.ts",
         "egret3d/util/utils.ts",

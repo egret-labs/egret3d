@@ -7328,14 +7328,35 @@ declare namespace paper.editor {
         /**初始化 */
         static init(): Promise<void>;
         private static _activeEditorModel;
+        /**
+         * 当前激活的编辑模型
+         */
         static readonly activeEditorModel: EditorModel;
-        private static runEgret();
-        private static editorModel;
-        static editScene(sceneUrl: string): Promise<void>;
+        private static sceneEditorModel;
+        /**
+         * 加载一个场景
+         * @param sceneUrl 场景资源URL
+         */
+        static loadScene(sceneUrl: string): Promise<void>;
+        private static setActiveModel(model);
+        private static activeScene(scene);
         private static prefabEditorModel;
+        /**
+         * 附加一个预置体编辑场景
+         * @param prefabUrl 预置体资源URL
+         */
         static attachPrefabEditScene(prefabUrl: string): Promise<void>;
+        /**
+         * 解除当前附加的预置体编辑场景
+         */
         static detachCurrentPrefabEditScene(): void;
+        /**
+         * 撤销
+         */
         static undo(): void;
+        /**
+         * 重做
+         */
         static redo(): void;
         static deserializeHistory(data: any): void;
         static serializeHistory(): string;
@@ -7343,6 +7364,7 @@ declare namespace paper.editor {
         static addEventListener(type: string, fun: Function, thisObj: any, level?: number): void;
         static removeEventListener(type: string, fun: Function, thisObj: any): void;
         static dispatchEvent(event: BaseEvent): void;
+        private static initEditEnvironment();
     }
 }
 declare namespace paper {
@@ -7371,6 +7393,7 @@ declare namespace paper.editor {
         static ADD_GAMEOBJECTS: string;
         static DELETE_GAMEOBJECTS: string;
         static SELECT_GAMEOBJECTS: string;
+        static CHANGE_DIRTY: string;
         static CHANGE_PROPERTY: string;
         static CHANGE_EDIT_MODE: string;
         static CHANGE_EDIT_TYPE: string;
@@ -7388,14 +7411,20 @@ declare namespace paper.editor {
      */
     class EditorModel extends EventDispatcher {
         private _history;
-        private _scene;
         readonly history: History;
+        private _scene;
         readonly scene: Scene;
+        private _contentType;
+        readonly contentType: "scene" | "prefab";
+        private _contentUrl;
+        readonly contentUrl: string;
+        private _dirty;
+        dirty: boolean;
         /**
          * 初始化
          * @param history
          */
-        init(scene: paper.Scene): void;
+        init(scene: paper.Scene, contentType: 'scene' | 'prefab', contentUrl: string): void;
         addState(state: BaseState | null): void;
         getEditType(propName: string, target: any): editor.EditType | null;
         setTransformProperty(propName: string, propValue: any, target: BaseComponent): void;
@@ -7496,11 +7525,12 @@ declare namespace paper.editor {
         editorModel: EditorModel;
         private editorCameraScript;
         private pickGameScript;
+        private geoController;
         init(): void;
     }
 }
 declare namespace paper.editor {
-    class GeoController {
+    class GeoController extends paper.Behaviour {
         selectedGameObjs: GameObject[];
         private _isEditing;
         private _geoCtrlMode;
@@ -7508,11 +7538,20 @@ declare namespace paper.editor {
         geoCtrlMode: string;
         private _geoCtrlType;
         geoCtrlType: string;
-        private editorModel;
-        constructor(editorModel: EditorModel);
+        private _editorModel;
+        editorModel: EditorModel;
+        constructor();
         private bindMouse;
         private bindKeyboard;
+        onUpdate(): void;
+        private _oldTransform;
         update(): void;
+        /**
+         * 鼠标射线 改变dragMode以及控制杆颜色
+         */
+        private _oldResult;
+        private mouseRayCastUpdate();
+        private checkIntersects(ray, target);
         /**
          * 几何操作逻辑
          */
@@ -7843,6 +7882,7 @@ declare namespace paper.editor {
         private _lastMouseY;
         private _mouseDown_r;
         private _mouseDown_l;
+        private _mouseDown_m;
         onStart(): any;
         onUpdate(delta: number): any;
         OnEnable(): void;
@@ -7871,15 +7911,18 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
-    class Gizmo {
+    class Gizmo extends paper.Behaviour {
         private static enabled;
         private static webgl;
         private static camera;
+        onStart(): void;
         static Enabled(): void;
         static DrawIcon(path: string, pos: egret3d.Vector3, size: number, color?: egret3d.Color): void;
         private static verticesLine;
         private static lineVertexBuffer;
         static DrawLine(posStart: egret3d.Vector3, posEnd: egret3d.Vector3, size?: number, color?: number[]): void;
+        private _oldTransform;
+        private nrLine;
         static DrawCoord(): void;
         private static verticesCoord;
         private static verticesCylinder;

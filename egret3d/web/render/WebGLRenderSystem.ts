@@ -460,7 +460,7 @@ namespace egret3d {
                     }
                     else {
                         for (const item of camera.postQueues) {
-                            item.render(camera, this);
+                            console.log(camera)
                         }
                     }
                 }
@@ -471,6 +471,24 @@ namespace egret3d {
                 webgl.clearDepth(1.0);
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
+
+            if (this._isEditorUpdate) {
+                // if (paper.editor.Editor.gizmo) {
+
+
+                // }
+                paper.editor.Gizmo.DrawCoord();
+                paper.editor.Gizmo.DrawLights();
+                paper.editor.Gizmo.DrawCameras();
+
+
+                // for (const key in this._cacheStateEnable) {
+                //     delete this._cacheStateEnable[key];
+                // }
+                // this._cacheProgram = undefined;
+                // this._cacheState = undefined;//???
+            }
+
 
             Performance.endCounter("render");
         }
