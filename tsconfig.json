@@ -7,16 +7,16 @@
             "es2015.promise"
         ],
         "sourceMap": false,
-        "declaration": true,
-        "stripInternal": true,
-        "alwaysStrict": true,
-        "noImplicitAny": true,
-        "noImplicitThis": true,
+        "declaration": false,
+        "stripInternal": false,
+        "alwaysStrict": false,
+        "noImplicitAny": false,
+        "noImplicitThis": false,
         "noUnusedLocals": false,
-        "noUnusedParameters": true,
-        "strictNullChecks": true,
+        "noUnusedParameters": false,
+        "strictNullChecks": false,
         "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": true,
+        "allowSyntheticDefaultImports": false,
         "outFile": "bin/egret3d.js"
     },
     "files": [
@@ -113,9 +113,9 @@
         "egret3d/math/Ray.ts",
 
         "egret3d/asset/resource/GLTF.ts",
-        "egret3d/asset/resource/Mesh.ts",
-        "egret3d/asset/resource/texture.ts",
-        "egret3d/asset/resource/Material.ts",
+        "egret3d/asset/resource/BaseMesh.ts",
+        "egret3d/asset/resource/BaseTexture.ts",
+        "egret3d/asset/resource/Material.ts",s
 
         "egret3d/asset/default/ShaderLib.ts",
         "egret3d/asset/default/ShaderChunk.ts",
@@ -126,21 +126,24 @@
         "egret3d/util/stream.ts",
         "egret3d/util/utils.ts",
         "egret3d/Stats.ts",
+
         "egret3d/web/input/InputManager.ts",
         "egret3d/web/input/KeyboardDevice.ts",
         "egret3d/web/input/MouseDevice.ts",
         "egret3d/web/input/TouchDevice.ts",
-        "egret3d/RunEgret.ts",
+        "egret3d/web/render/resource/Mesh.ts",
+        "egret3d/web/render/resource/Texture.ts",
+        "egret3d/web/render/resource/GLProgram.ts",
         "egret3d/web/render/WebGLRenderSystem.ts",
+
         "egret3d/components/StaticBatchingUtility.ts",
         "egret3d/Performance.ts",
         "egret3d/Profile.ts",
-        "egret3d/web/render/resource/GLProgram.ts",
-        "egret3d/web/render/resource/texture.ts",
-        "egret3d/Deprecated.ts",
+
         "egret3d/editor/Editor.ts",
         "egret3d/editor/EditorDecorator.ts",
         "egret3d/editor/EditorModel.ts",
+        "egret3d/editor/EditorSceneModel.ts",
         "egret3d/editor/EventDispatcher.ts",
         "egret3d/editor/GeoController.ts",
         "egret3d/editor/history/History.ts",
@@ -167,6 +170,9 @@
         "egret3d/editor/components/PickGameObjectScript.ts",
         "egret3d/editor/gizmo/Gizmo.ts",
         "egret3d/editor/gizmo/GizmoShader.ts",
-        "egret3d/editor/gizmo/GizmoShaderLibs.ts"
+        "egret3d/editor/gizmo/GizmoShaderLibs.ts",
+
+        "egret3d/Deprecated.ts",
+        "egret3d/RunEgret.ts"
     ]
 }

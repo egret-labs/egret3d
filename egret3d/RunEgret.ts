@@ -25,7 +25,7 @@ namespace egret3d {
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound'] //TODO:Sound
         egret.Capabilities["renderMode" + ""] = "webgl";
         const requiredOptions = getOptions(options);
-        const canvas = getMainCanvas();
+        const canvas = getMainCanvas(options);
         //TODO
         options.canvas = canvas;
         options.option = requiredOptions;
@@ -65,9 +65,12 @@ namespace egret3d {
         paper.Application.init(options);
     }
 
-    function getMainCanvas() {
+    function getMainCanvas(options: RunEgretOptions) {
         if (window.canvas) {
             return window.canvas;
+        }
+        else if (options.canvas) {
+            return options.canvas;
         }
         else {
             const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];

@@ -31,7 +31,7 @@ namespace egret3d {
         public _version: number = 0;
 
         private _cacheDefines: string = '';
-        private _textureRef: Texture[] = [];//TODO
+        private _textureRef: BaseTexture[] = [];//TODO
         private readonly _defines: Array<string> = new Array();
         /**
         * @internal
@@ -163,7 +163,7 @@ namespace egret3d {
                 }
             }
 
-            if (this._glTFMaterial.extensions.paper) {
+            if (this._glTFMaterial.extensions.paper && this._glTFMaterial.extensions.paper.renderQueue !== -1) {
                 this.renderQueue = this._glTFMaterial.extensions.paper.renderQueue!;
             }
             else {
@@ -192,6 +192,8 @@ namespace egret3d {
         addDefine(key: string) {
             if (this._defines.indexOf(key) < 0) {
                 this._defines.push(key);
+                //减少同样的宏定义因为顺序不同重新编译
+                this._defines.sort();
                 this._version++;
             }
         }
@@ -365,7 +367,7 @@ namespace egret3d {
             }
         }
 
-        setTexture(id: string, value: egret3d.Texture) {
+        setTexture(id: string, value: egret3d.BaseTexture) {
             value = value || egret3d.DefaultTextures.GRAY;
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {

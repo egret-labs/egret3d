@@ -45,5 +45,24 @@ namespace paper {
         41: "egret3d.GLTFAsset",
         //
         "egret3d.Light": "egret3d.DirectLight",
+        //
+        13: "paper.Compatible",
+        14: "paper.Compatible",
     };
+    /**
+     * @internal
+     */
+    export class Compatible implements ISerializable {
+        public serialize() {
+            throw new Error("Never");
+        }
+
+        public deserialize(element: ISerializedStruct, data?: Deserializer) {
+            if (!data) {
+                throw new Error("Never");
+            }
+
+            return data.getAssetOrComponent(element._glTFAsset as IAssetReference);
+        }
+    }
 }

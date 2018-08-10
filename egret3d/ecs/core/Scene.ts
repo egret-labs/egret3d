@@ -57,7 +57,7 @@ namespace paper {
          * 场景的light map列表。
          */
         @serializedField
-        public readonly lightmaps: egret3d.Texture[] = [];
+        public readonly lightmaps: egret3d.BaseTexture[] = [];
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */

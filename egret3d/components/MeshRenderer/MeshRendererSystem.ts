@@ -30,8 +30,8 @@ namespace egret3d {
                 return;
             }
 
+            filter.mesh.createBuffer();
             this._drawCalls.removeDrawCalls(renderer);
-            //
             this._drawCalls.renderers.push(renderer);
             //
             let subMeshIndex = 0;
@@ -46,13 +46,9 @@ namespace egret3d {
                     frustumTest: false,
                     zdist: -1,
                 };
-
-                if (!filter.mesh.vbo) {
-                    filter.mesh.createVBOAndIBOs();
-                }
-
                 this._drawCalls.drawCalls.push(drawCall);
             }
+
         }
 
         public onEnable() {

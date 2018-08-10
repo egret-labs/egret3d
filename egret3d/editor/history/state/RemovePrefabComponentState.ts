@@ -18,13 +18,13 @@ namespace paper.editor{
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
                     const { gameObjUUid, componentUUid, serializeData } = element;
-                    const addComponent: BaseComponent = deserialize(serializeData,true);
+                    const addComponent: BaseComponent = new Deserializer().deserialize(serializeData,true);
                     if (addComponent) {
-                        const gameObj = Editor.editorModel.getGameObjectByUUid(gameObjUUid);
+                        const gameObj = this.editorModel.getGameObjectByUUid(gameObjUUid);
                         if (gameObj) {
                             // addComponent.uuid = componentUUid;
                             (addComponent as any).gameObject = gameObj;
-                            Editor.editorModel.addComponentToGameObject(gameObj, addComponent);
+                            this.editorModel.addComponentToGameObject(gameObj, addComponent);
                             this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                         }
                     }
@@ -41,9 +41,9 @@ namespace paper.editor{
                 for (let index = 0; index < datas.length; index++) {
                     const element = datas[index];
                     const { gameObjUUid, componentUUid } = element;
-                    const gameObj = Editor.editorModel.getGameObjectByUUid(gameObjUUid);
+                    const gameObj = this.editorModel.getGameObjectByUUid(gameObjUUid);
                     if (gameObj) {
-                        const componentObj = Editor.editorModel.getComponentById(gameObj, componentUUid);
+                        const componentObj = this.editorModel.getComponentById(gameObj, componentUUid);
                         if (componentObj) {
                             gameObj.removeComponent(componentObj.constructor as any);
                             this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);

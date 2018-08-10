@@ -15,7 +15,7 @@ namespace paper.editor{
             if (super.undo()) {
                 let gameObjectUUid = this.data.gameObjectUUid;
                 let componentId = this.data.cacheUUid;
-                let gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                let gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (gameObject) {
                     for (let i: number = 0; i < gameObject.components.length; i++) {
                         let comp = gameObject.components[i];
@@ -36,12 +36,13 @@ namespace paper.editor{
             if (super.redo()) {
                 let gameObjectUUid = this.data.gameObjectUUid;
                 let compClzName = this.data.compClzName;
-                let gameObject = Editor.editorModel.getGameObjectByUUid(gameObjectUUid);
+                let gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (gameObject) {
                     let addComponent;
                     if (this.data.serializeData) {
-                        addComponent = deserialize(this.data.serializeData, true);
-                        Editor.editorModel.addComponentToGameObject(gameObject, addComponent);
+                        let deserializer=new Deserializer();
+                        addComponent = deserializer.deserialize(this.data.serializeData, true);
+                        this.editorModel.addComponentToGameObject(gameObject, addComponent);
                     } else {
                         let compClz = egret.getDefinitionByName(compClzName);
                         addComponent = gameObject.addComponent(compClz);

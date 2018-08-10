@@ -11,12 +11,12 @@ namespace paper.editor {
         private targetObject: string;
         private targetDir: dir;
 
-        public static create(gameObjects: GameObject[], targetGameObj: GameObject, dir: 'top' | 'inner' | 'bottom'): GameObjectHierarchyState {
+        public static create(gameObjects: GameObject[], targetGameObj: GameObject, dir: 'top' | 'inner' | 'bottom',editorModel:EditorModel): GameObjectHierarchyState {
             //筛选
             gameObjects = gameObjects.concat();
-            Editor.editorModel.filtTopHierarchyGameObjects(gameObjects);
+            editorModel.filtTopHierarchyGameObjects(gameObjects);
             //必须进行层级排序
-            let objs = Editor.editorModel.sortGameObjectsForHierarchy(gameObjects);
+            let objs = editorModel.sortGameObjectsForHierarchy(gameObjects);
             //整理对象信息
             let objInfos: Info[] = [];
             for (let i: number = 0; i < objs.length; i++) {
@@ -60,15 +60,15 @@ namespace paper.editor {
                 tmpList.reverse();
                 for (let index = 0; index < tmpList.length; index++) {
                     let info=tmpList[index];
-                    let obj = Editor.editorModel.getGameObjectByUUid(info.UUID);
-                    let oldTarget=Editor.editorModel.getGameObjectByUUid(info.oldTargetUUID);;
+                    let obj = this.editorModel.getGameObjectByUUid(info.UUID);
+                    let oldTarget=this.editorModel.getGameObjectByUUid(info.oldTargetUUID);;
                     let oldDir=info.oldDir;
                     if(info.oldTargetUUID==='scene'){
                         let all=paper.Application.sceneManager.activeScene.gameObjects;
                         oldTarget=all[all.length-1];
                         oldDir='bottom';
                     }
-                    Editor.editorModel.setGameObjectsHierarchy([obj],oldTarget,oldDir);
+                    this.editorModel.setGameObjectsHierarchy([obj],oldTarget,oldDir);
                 }
                 this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
                 return true;
@@ -79,10 +79,10 @@ namespace paper.editor {
         public redo(): boolean {
             if (super.redo()) {
                 let gameObjectUUids = this.gameObjectsInfo.map(v => { return v.UUID });
-                let gameObjs = Editor.editorModel.getGameObjectsByUUids(gameObjectUUids);
-                let targetGameObj = Editor.editorModel.getGameObjectByUUid(this.targetObject);
-                gameObjs = Editor.editorModel.sortGameObjectsForHierarchy(gameObjs);
-                Editor.editorModel.setGameObjectsHierarchy(gameObjs, targetGameObj, this.targetDir);
+                let gameObjs = this.editorModel.getGameObjectsByUUids(gameObjectUUids);
+                let targetGameObj = this.editorModel.getGameObjectByUUid(this.targetObject);
+                gameObjs = this.editorModel.sortGameObjectsForHierarchy(gameObjs);
+                this.editorModel.setGameObjectsHierarchy(gameObjs, targetGameObj, this.targetDir);
 
                 this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
                 return true;

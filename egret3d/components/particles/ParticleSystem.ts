@@ -437,23 +437,17 @@ namespace egret3d.particle {
             if (!renderer.batchMesh || !renderer.batchMaterial) {
                 return;
             }
-            //
-            this._drawCalls.removeDrawCalls(renderer);
-            //
-            this._drawCalls.renderers.push(renderer);
-            //
-            let subMeshIndex = 0;
-            const primitives = renderer.batchMesh.glTFMesh.primitives;
-
-            if (primitives.length !== 1) {
-                console.error("ParticleSystem : materials.length != 1");
-            }
 
             if (renderer._renderMode === ParticleRenderMode.None) {
                 console.error("ParticleSystem : error renderMode");
             }
 
-            for (const primitive of primitives) {
+            renderer.batchMesh.createBuffer();
+            this._drawCalls.removeDrawCalls(renderer);
+            this._drawCalls.renderers.push(renderer);
+
+            let subMeshIndex = 0;
+            for (const _primitive of renderer.batchMesh.glTFMesh.primitives) {
                 const drawCall: DrawCall = {
                     renderer: renderer,
 
@@ -464,11 +458,6 @@ namespace egret3d.particle {
                     frustumTest: false,
                     zdist: -1,
                 };
-
-                if (!renderer.batchMesh.vbo) {
-                    renderer.batchMesh.createVBOAndIBOs();
-                }
-
                 this._drawCalls.drawCalls.push(drawCall);
             }
         }

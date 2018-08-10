@@ -1,46 +1,39 @@
 namespace egret3d {
-    /**
-     * 
-     */
+
     export class DefaultTextures extends paper.SingletonComponent {
         /**
          * 
          */
-        public static WHITE: Texture;
+        public static WHITE: BaseTexture;
         /**
          * 
          */
-        public static GRAY: Texture;
+        public static GRAY: BaseTexture;
         /**
          * 
          */
-        public static GRID: Texture;
+        public static GRID: BaseTexture;
 
         public initialize() {
-            const webgl = WebGLCapabilities.webgl;
-
             {
-                const texture = new Texture("builtin/white.image.gltf");
+                const texture = Texture2D.createColorTexture("builtin/white.image.gltf", 255, 255, 255);
                 texture._isBuiltin = true;
-                texture.glTexture = GlTexture2D.createColorTexture(webgl, 255, 255, 255);
-                paper.Asset.register(texture);
                 DefaultTextures.WHITE = texture;
+                paper.Asset.register(texture);
             }
 
             {
-                const texture = new Texture("builtin/gray.image.gltf");
+                const texture = Texture2D.createColorTexture("builtin/gray.image.gltf", 128, 128, 128);
                 texture._isBuiltin = true;
-                texture.glTexture = GlTexture2D.createColorTexture(webgl, 128, 128, 128);
-                paper.Asset.register(texture);
                 DefaultTextures.GRAY = texture;
+                paper.Asset.register(texture);
             }
 
             {
-                const texture = new Texture("builtin/grid.image.gltf");
+                const texture = Texture2D.createGridTexture("builtin/grid.image.gltf");
                 texture._isBuiltin = true;
-                texture.glTexture = egret3d.GlTexture2D.createGridTexture(webgl);
-                paper.Asset.register(texture);
                 DefaultTextures.GRID = texture;
+                paper.Asset.register(texture);
             }
         }
     }

@@ -388,13 +388,13 @@ namespace egret3d.particle {
                 const bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
                 if (this._firstAliveCursor > this._lastFrameFirstCursor) {
                     const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
-                    renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
+                    renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
                         // uploadVertexSubData(this._vertexAttributes, bufferOffset, bufferCount);
                 } else {
                     const addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
                     //先更新尾部的，再更新头部的
-                    renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                    renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+                    renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                    renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
 
 
                     // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
