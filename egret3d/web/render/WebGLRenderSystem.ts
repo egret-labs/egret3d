@@ -14,18 +14,17 @@ namespace egret3d {
                 { componentClass: [DirectLight, SpotLight, PointLight] }
             ]
         ];
-        private readonly _camerasAndLights: CamerasAndLights = this._globalGameObject.getOrAddComponent(CamerasAndLights);
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getOrAddComponent(DrawCalls);
+        private readonly _drawCalls: DrawCalls = DrawCalls.getInstance(DrawCalls);
+        private readonly _renderState: WebGLRenderState = WebGLRenderState.getInstance(WebGLRenderState);
+        private readonly _camerasAndLights: CamerasAndLights = CamerasAndLights.getInstance(CamerasAndLights);
         private readonly _lightCamera: Camera = this._globalGameObject.getOrAddComponent(Camera);
-        private readonly _renderState:WebGLRenderState = this._globalGameObject.getOrAddComponent(WebGLRenderState);
         //
         private readonly _filteredLights: BaseLight[] = [];
         private _cacheContextVersion: number = -1;
         private _cacheMaterialVerision: number = -1;
-        private _cacheMeshVersion: number = -1;
         private _cacheContext: RenderContext | undefined;
         private _cacheMaterial: Material | undefined;
-        private _cacheMesh: Mesh | undefined;        
+        private _cacheMesh: Mesh | undefined;
 
         private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
             const needUpdate = this._cacheContext !== context || this._cacheContextVersion !== context.version || forceUpdate;
@@ -355,7 +354,7 @@ namespace egret3d {
             //Draw
             this._drawCall(drawCall);
         }
-        
+
         /**
          * @internal
          * @param camera 

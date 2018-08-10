@@ -8,22 +8,23 @@ namespace egret3d {
         ];
 
         public onAddComponent(component: Animation) {
-            const animations = component.gameObject.getComponents(Animation);
             component._addToSystem = true;
 
-            if (component === animations[0] && !component._skinnedMeshRenderer) {
-                component._skinnedMeshRenderer = component.gameObject.getComponentsInChildren(SkinnedMeshRenderer)[0];
-
-                if (component._skinnedMeshRenderer) {
-                    for (const bone of component._skinnedMeshRenderer.bones) {
-                        const boneBlendLayer = new BoneBlendLayer();
-                        component._boneBlendLayers.push(boneBlendLayer);
+            if (component.animations.length > 0) {
+                const animaitonClip = component.animations[0].config.animations![0];
+                if (!animaitonClip.channels || animaitonClip.channels.length < 0) {
+                    component._skinnedMeshRenderer = component.gameObject.getComponentsInChildren(SkinnedMeshRenderer)[0];
+                    if (component._skinnedMeshRenderer) {
+                        for (const bone of component._skinnedMeshRenderer.bones) {
+                            const boneBlendLayer = new BoneBlendLayer();
+                            component._boneBlendLayers.push(boneBlendLayer);
+                        }
                     }
                 }
+            }
 
-                if (component.autoPlay) {
-                    component.play();
-                }
+            if (component.autoPlay) {
+                component.play();
             }
         }
 
