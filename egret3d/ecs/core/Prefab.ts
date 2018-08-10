@@ -31,10 +31,10 @@ namespace paper {
         /**
          * 
          */
-        public static create(name: string, scene: Scene | null = null) {
+        public static create(name: string, scene: Scene | null = null,keepUUID: boolean = false) {
             const prefab = paper.Asset.find<Prefab>(name);
             if (prefab) {
-                return prefab.createInstance(scene);
+                return prefab.createInstance(scene,keepUUID);
             }
 
             return null;

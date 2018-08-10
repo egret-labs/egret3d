@@ -143,7 +143,7 @@ namespace paper.editor {
                 case editor.EditType.COLOR:
                 case editor.EditType.RECT:
                     const className = egret.getQualifiedClassName(value);
-                    const serializeData = serialize(value);
+                    const serializeData = value.serialize();
                     return { className, serializeData };
                 case editor.EditType.SHADER:
                     return value.url;
@@ -188,7 +188,7 @@ namespace paper.editor {
                     let target: ISerializable | null = null;
                     if (clazz) {
                         target = new clazz();
-                        target!.deserialize(serializeData.serializeData.objects[0]);
+                        target!.deserialize(serializeData.serializeData);
                     }
                     return target;
                 case editor.EditType.SHADER:
@@ -632,8 +632,9 @@ namespace paper.editor {
             return gameobjects;
         }
 
-        public createApplyPrefabState() {
-            
+        public createApplyPrefabState(applyData:editor.ApplyData,applyPrefabInstanceId:string,prefabName:string) {
+            let state = ApplyPrefabInstanceState.create(applyData,applyPrefabInstanceId,prefabName);
+            this.addState(state);
         }
 
         public createRevertPrefabState(modifyGameObjectPropertyList:any[],modifyComponentPropertyList:any[])

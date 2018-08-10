@@ -14,7 +14,7 @@ namespace paper.editor{
             return state;
         }
 
-        public get stateData():AddComponentStateData
+        private get stateData():AddComponentStateData
         {
             return this.data as AddComponentStateData;
         }

@@ -15,7 +15,7 @@ namespace paper.editor{
             return state;
         }
 
-        public get stateData():CreatePrefabStateData
+        private get stateData():CreatePrefabStateData
         {
             return this.data as CreatePrefabStateData;
         }
@@ -40,13 +40,7 @@ namespace paper.editor{
             if (super.redo()) {
                 const prefab = this.stateData.prefab;
                 if (prefab) {
-                    let instance:GameObject;
-                    if (this.data.serializeData) {
-                        instance = new Deserializer().deserialize(this.data.serializeData,true);
-                    } else {
-                        instance = prefab.createInstance();
-                        this.data.serializeData = serialize(instance);
-                    }
+                    let instance:GameObject = Prefab.create(this.stateData.prefab.prefab.name);
 
                     if (instance) {
                         this.stateData.cachePrefabUUid = instance.uuid
