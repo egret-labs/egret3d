@@ -22,6 +22,7 @@ namespace paper.editor {
         ScaZ
     }
 
+    @paper.executeInEditMode
     export class GeoController extends paper.Behaviour {
 
         public selectedGameObjs: GameObject[] = [];
@@ -48,19 +49,25 @@ namespace paper.editor {
             this._geoCtrlType = value;
         }
         editorModel: EditorModel;
-        public setEditorMode(editorModel: EditorModel) {
-            this.editorModel = editorModel
-            this._addEventListener()
-        }
+        // public setEditorMode(editorModel: EditorModel) {
+        //     this.editorModel = editorModel
+        //     this._addEventListener()
+        // }
         constructor() {
             super();
             // this.editorModel = editorModel;
+            this.editorModel = paper.editor.Editor.editorModel
+            console.log(this.editorModel)
             this._addGizmoController();
-            // this._addEventListener();
+            this._addEventListener();
             this.bindMouse = egret3d.InputManager.mouse;
             this.bindKeyboard = egret3d.InputManager.keyboard;
 
+            this._oldResult = { target: null, oldColor: null }
             this._cameraObject = Application.sceneManager.editorScene.find("EditorCamera");
+            this._oldTransform = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
+            this.controller.transform.setLocalScale(new egret3d.Vector3(0.8, 0.8, 0.8))
+            console.log(this.gameObject.transform)
         }
 
         private bindMouse: egret3d.MouseDevice;
@@ -68,11 +75,21 @@ namespace paper.editor {
         public onUpdate() {
             this.update();
         }
+
+        private _oldTransform: any//TODO
+
         public update() {
-            // console.log(this.pCtrl);
+            //控制杆随相机变化
+            var dis1;
+            var delta;
+            dis1 = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
+            delta = (dis1 - this._oldTransform) / 20;
+            this._oldTransform = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
+            var scale = this.controller.transform.getLocalScale();
+            this.controller.transform.setScale(new egret3d.Vector3(scale.x + delta, scale.y + delta, scale.z + delta));
+
             let len = this.selectedGameObjs.length;
             if (this.selectedGameObjs.length > 0) {
-                Gizmo.DrawArrowXYZ(this.controller.transform);
                 if (this.bindKeyboard.wasPressed('DELETE')) {
                     this.editorModel.deleteGameObject(this.selectedGameObjs);
                     this.selectedGameObjs = [];
@@ -84,7 +101,7 @@ namespace paper.editor {
             }
 
             this.inputUpdate();
-
+            this.mouseRayCastUpdate();
             if (this._isEditing) {
                 (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
             }
@@ -101,7 +118,162 @@ namespace paper.editor {
                 this.zScl.transform.setLocalPosition(0, 0, 2);
             }
         }
+        /**
+         * 鼠标射线 改变dragMode以及控制杆颜色
+         */
+        private _oldResult: { target: GameObject, oldColor: egret3d.Material }
 
+        private mouseRayCastUpdate() {
+            let camera = this._cameraObject.getComponent(egret3d.Camera);
+            // if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+            let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
+
+            //变色逻辑
+            const result = this.checkIntersects(ray, this.controller)
+
+            if (this._oldResult.target != result) {
+                if (this._oldResult.target) {
+                    let oldRender = this._oldResult.target.getComponent(egret3d.MeshRenderer)
+                    oldRender.materials = [this._oldResult.oldColor];
+                }
+                this._oldResult.target = result
+                this._oldResult.oldColor = null
+                if (result) {
+                    this._oldResult.oldColor = result.getComponent(egret3d.MeshRenderer).materials[0];
+                    let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                    mat.setVector4v("_Color", [0.4, 0.3, 0.3, 0.8]);
+                    result.getComponent(egret3d.MeshRenderer).materials = [mat];
+                }
+            }
+
+            //控制杆移动逻辑初始化
+            if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT') && result) {
+                if (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) {
+
+                    //world模式下控制杆几何操作逻辑初始化
+
+                    let len = this.selectedGameObjs.length
+                    let ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                    for (let i = 0; i < len; i++) {
+                        let obj = this.selectedGameObjs[i];
+                        egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                    }
+                    ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+
+                    let ctrlRot = this.controller.transform.getRotation();
+                    this._ctrlRot = ctrlRot;
+
+                    egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
+
+                    switch (result) {
+                        case null:
+                            this._dragMode = DRAG_MODE.NONE
+                            break;
+                        case this.xAxis: this._dragMode = DRAG_MODE.X
+                            egret3d.Vector3.copy(up, this._dragPlaneNormal);
+                            break;
+                        case this.yAxis: this._dragMode = DRAG_MODE.Y
+                            egret3d.Vector3.copy(forward, this._dragPlaneNormal);
+                            break;
+                        case this.zAxis: this._dragMode = DRAG_MODE.Z
+                            egret3d.Vector3.copy(up, this._dragPlaneNormal);
+                            break;
+                        case this.xRot: this._dragMode = DRAG_MODE.RotX
+                            egret3d.Quaternion.transformVector3(ctrlRot, right, this._dragPlaneNormal);
+                            break;
+                        case this.yRot: this._dragMode = DRAG_MODE.RotY
+                            egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
+                            break;
+                        case this.zRot: this._dragMode = DRAG_MODE.RotZ
+                            egret3d.Quaternion.transformVector3(ctrlRot, forward, this._dragPlaneNormal);
+                            break;
+                        case this.xScl: this._dragMode = DRAG_MODE.ScaX
+                            egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
+                            break;
+                        case this.yScl: this._dragMode = DRAG_MODE.ScaY
+                            egret3d.Quaternion.transformVector3(ctrlRot, forward, this._dragPlaneNormal);
+                            break;
+                        case this.zScl: this._dragMode = DRAG_MODE.ScaZ
+                            egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
+                            break;
+                    }
+                    this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+
+                } else {
+
+                    //Local模式下控制杆几何操作逻辑初始化
+
+                    let worldRotation = this.selectedGameObjs[0].transform.getRotation();
+                    let worldPosition = this.selectedGameObjs[0].transform.getPosition();
+
+                    switch (result) {
+                        case null:
+                            this._dragMode = DRAG_MODE.NONE
+                            break;
+                        case this.xAxis:
+                            this._dragMode = DRAG_MODE.X
+                            egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+                            break;
+                        case this.yAxis:
+                            this._dragMode = DRAG_MODE.Y
+                            egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
+                            break;
+                        case this.zAxis:
+                            this._dragMode = DRAG_MODE.Z
+                            egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+                            break;
+                        case this.xRot:
+                            this._dragMode = DRAG_MODE.RotX
+                            egret3d.Quaternion.transformVector3(worldRotation, right, this._dragPlaneNormal);
+                            break;
+                        case this.yRot:
+                            this._dragMode = DRAG_MODE.RotY
+                            egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+                            break;
+                        case this.zRot:
+                            this._dragMode = DRAG_MODE.RotZ
+                            egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
+                            break;
+                        case this.xScl:
+                            this._dragMode = DRAG_MODE.ScaX
+                            egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+                            break;
+                        case this.yScl:
+                            this._dragMode = DRAG_MODE.ScaY
+                            egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
+                            break;
+                        case this.zScl:
+                            this._dragMode = DRAG_MODE.ScaZ
+                            egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+                            break;
+                    }
+                    egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+                    this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                    egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
+                    egret3d.Quaternion.copy(worldRotation, this._initRotation);
+                    egret3d.Vector3.copy(this.selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
+
+                }
+
+            }
+
+
+        }
+
+        private checkIntersects(ray: egret3d.Ray, target: GameObject) {
+            if (target.transform.children.length != 0) {
+                if (target.activeSelf == true) {
+                    for (let item of target.transform.children) {
+                        const temp = this.checkIntersects(ray, item.gameObject)
+                        if (temp) { return temp }
+                    }
+                }
+            } else {
+                const temp = target.getComponent(egret3d.MeshFilter).mesh.intersects(ray, target.transform.getWorldMatrix())
+                if (temp) { return target }
+            }
+            return null;
+        }
         /**
          * 几何操作逻辑
          */
@@ -127,69 +299,70 @@ namespace paper.editor {
             let camera = this._cameraObject.getComponent(egret3d.Camera);
             let worldRotation = this.selectedGameObjs[0].transform.getRotation();
             let worldPosition = this.selectedGameObjs[0].transform.getPosition();
-            if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
-                //worldPosition = this.selectedGameObj.transform.getPosition();
-                //worldRotation = this.selectedGameObj.transform.getRotation();
-                let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                let pickInfoArray = egret3d.Ray.raycastAll(ray, true);
-                if (pickInfoArray && pickInfoArray.length > 0) {
-                    pickInfoArray.forEach(pickInfo => {
-                        let picked = pickInfo.transform.gameObject;
-                        if (this.geoCtrlType == "position" && (picked == this.ball || picked == this.xAxis || picked == this.yAxis || picked == this.zAxis)) {
-                            egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+            // if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+            //     //worldPosition = this.selectedGameObj.transform.getPosition();
+            //     //worldRotation = this.selectedGameObj.transform.getRotation();
+            //     let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
 
-                            if (picked == this.ball) {
-                                this._dragMode = DRAG_MODE.BALL;
-                                this._cameraObject.transform.getForward(this._dragPlaneNormal);
-                            } else if (picked == this.xAxis) {
-                                this._dragMode = DRAG_MODE.X;
-                                egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
-                            } else if (picked == this.yAxis) {
-                                this._dragMode = DRAG_MODE.Y;
-                                egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
-                            } else if (picked == this.zAxis) {
-                                this._dragMode = DRAG_MODE.Z;
-                                egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
-                            }
+            //     let pickInfoArray = egret3d.Ray.raycastAll(ray, true);
+            //     if (pickInfoArray && pickInfoArray.length > 0) {
+            //         pickInfoArray.forEach(pickInfo => {
+            //             let picked = pickInfo.transform.gameObject;
+            //             if (this.geoCtrlType == "position" && (picked == this.ball || picked == this.xAxis || picked == this.yAxis || picked == this.zAxis)) {
+            //                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
 
-                            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                            egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                        } else if (this.geoCtrlType == "rotation" && (picked == this.xRot || picked == this.yRot || picked == this.zRot)) {
-                            egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+            //                 if (picked == this.ball) {
+            //                     this._dragMode = DRAG_MODE.BALL;
+            //                     this._cameraObject.transform.getForward(this._dragPlaneNormal);
+            //                 } else if (picked == this.xAxis) {
+            //                     this._dragMode = DRAG_MODE.X;
+            //                     egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+            //                 } else if (picked == this.yAxis) {
+            //                     this._dragMode = DRAG_MODE.Y;
+            //                     egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
+            //                 } else if (picked == this.zAxis) {
+            //                     this._dragMode = DRAG_MODE.Z;
+            //                     egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+            //                 }
 
-                            if (picked == this.xRot) {
-                                this._dragMode = DRAG_MODE.RotX;
-                                egret3d.Quaternion.transformVector3(worldRotation, right, this._dragPlaneNormal);
-                            } else if (picked == this.yRot) {
-                                this._dragMode = DRAG_MODE.RotY;
-                                egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
-                            } else if (picked == this.zRot) {
-                                this._dragMode = DRAG_MODE.RotY;
-                                egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
-                            }
+            //                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+            //                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
+            //             } else if (this.geoCtrlType == "rotation" && (picked == this.xRot || picked == this.yRot || picked == this.zRot)) {
+            //                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
 
-                            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                            egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                            egret3d.Quaternion.copy(worldRotation, this._initRotation);
-                        } else if (this.geoCtrlType == "scale" && (picked == this.xScl || picked == this.yScl || picked == this.zScl)) {
-                            egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                            if (picked == this.xScl) {
-                                this._dragMode = DRAG_MODE.ScaX;
-                                egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
-                            } else if (picked == this.yScl) {
-                                this._dragMode = DRAG_MODE.ScaY;
-                                egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
-                            } else if (picked == this.zScl) {
-                                this._dragMode = DRAG_MODE.ScaZ;
-                                egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
-                            }
-                            egret3d.Vector3.copy(this.selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
-                            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                            egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                        }
-                    });
-                }
-            }
+            //                 if (picked == this.xRot) {
+            //                     this._dragMode = DRAG_MODE.RotX;
+            //                     egret3d.Quaternion.transformVector3(worldRotation, right, this._dragPlaneNormal);
+            //                 } else if (picked == this.yRot) {
+            //                     this._dragMode = DRAG_MODE.RotY;
+            //                     egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+            //                 } else if (picked == this.zRot) {
+            //                     this._dragMode = DRAG_MODE.RotY;
+            //                     egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
+            //                 }
+
+            //                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+            //                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
+            //                 egret3d.Quaternion.copy(worldRotation, this._initRotation);
+            //             } else if (this.geoCtrlType == "scale" && (picked == this.xScl || picked == this.yScl || picked == this.zScl)) {
+            //                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+            //                 if (picked == this.xScl) {
+            //                     this._dragMode = DRAG_MODE.ScaX;
+            //                     egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+            //                 } else if (picked == this.yScl) {
+            //                     this._dragMode = DRAG_MODE.ScaY;
+            //                     egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
+            //                 } else if (picked == this.zScl) {
+            //                     this._dragMode = DRAG_MODE.ScaZ;
+            //                     egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+            //                 }
+            //                 egret3d.Vector3.copy(this.selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
+            //                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+            //                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
+            //             }
+            //         });
+            //     }
+            // }
             if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                 if (this.geoCtrlType == "position" && this._dragMode != DRAG_MODE.NONE) {
                     let screenPosition = this.bindMouse.position;
@@ -217,6 +390,8 @@ namespace paper.editor {
                         egret3d.Vector3.copy(position, this._ctrlPos);
                         this.editorModel.setTransformProperty("position", position, this.selectedGameObjs[0].transform);
                     }
+                    this.controller.transform.setPosition(this.selectedGameObjs[0].transform.getPosition());
+                    this.controller.transform.setRotation(this.selectedGameObjs[0].transform.getRotation());
                 } else if (this.geoCtrlType == "rotation" && this._dragMode != DRAG_MODE.NONE) {
                     let screenPosition = this.bindMouse.position;
                     let ray = camera.createRayByScreen(screenPosition.x, screenPosition.y);
@@ -236,7 +411,7 @@ namespace paper.editor {
                     let screenPosition = this.bindMouse.position;
                     let ray = camera.createRayByScreen(screenPosition.x, screenPosition.y);
                     let hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                    egret3d.Vector3.subtract(hit, worldPosition, hit);
+                    egret3d.Vector3.subtract(hit, worldPosition, this._delta);
                     let worldOffset: egret3d.Vector3;
                     let scale: egret3d.Vector3;
                     if (this._dragMode == DRAG_MODE.ScaX) {
@@ -259,6 +434,7 @@ namespace paper.editor {
                     let sx = this.xScl.transform.getLocalPosition().x / 2;
                     let sy = this.yScl.transform.getLocalPosition().y / 2;
                     let sz = this.zScl.transform.getLocalPosition().z / 2;
+
                     scale = egret3d.Vector3.set(oldScale.x * sx, oldScale.y * sy, oldScale.z * sz, helpVec3_2);
                     this.editorModel.setTransformProperty("localScale", scale, this.selectedGameObjs[0].transform);
                 }
@@ -269,75 +445,75 @@ namespace paper.editor {
             if (len <= 0) return;
             let camera = this._cameraObject.getComponent(egret3d.Camera);
 
-            if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
-                let ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                for (let i = 0; i < len; i++) {
-                    let obj = this.selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+            // if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+            //     let ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+            //     for (let i = 0; i < len; i++) {
+            //         let obj = this.selectedGameObjs[i];
+            //         egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+            //     }
+            //     ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
 
-                let ctrlRot = this.controller.transform.getRotation();
-                this._ctrlRot = ctrlRot;
+            //     let ctrlRot = this.controller.transform.getRotation();
+            //     this._ctrlRot = ctrlRot;
 
-                let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                let pickInfoArray = egret3d.Ray.raycastAll(ray, true);
-                if (pickInfoArray && pickInfoArray.length > 0) {
-                    pickInfoArray.forEach(pickInfo => {
-                        let picked = pickInfo.transform.gameObject;
-                        if (this.geoCtrlType == "position" && (picked == this.ball || picked == this.xAxis || picked == this.yAxis || picked == this.zAxis)) {
-                            egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
+            //     let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
+            //     let pickInfoArray = egret3d.Ray.raycastAll(ray, true);
+            //     if (pickInfoArray && pickInfoArray.length > 0) {
+            //         pickInfoArray.forEach(pickInfo => {
+            //             let picked = pickInfo.transform.gameObject;
+            //             if (this.geoCtrlType == "position" && (picked == this.ball || picked == this.xAxis || picked == this.yAxis || picked == this.zAxis)) {
+            //                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
 
-                            if (picked == this.ball) {
-                                this._dragMode = DRAG_MODE.BALL;
-                                this._cameraObject.transform.getForward(this._dragPlaneNormal);
-                            } else if (picked == this.xAxis) {
-                                this._dragMode = DRAG_MODE.X;
-                                egret3d.Vector3.copy(up, this._dragPlaneNormal);
-                            } else if (picked == this.yAxis) {
-                                this._dragMode = DRAG_MODE.Y;
-                                egret3d.Vector3.copy(forward, this._dragPlaneNormal);
-                            } else if (picked == this.zAxis) {
-                                this._dragMode = DRAG_MODE.Z;
-                                egret3d.Vector3.copy(up, this._dragPlaneNormal);
-                            }
+            //                 if (picked == this.ball) {
+            //                     this._dragMode = DRAG_MODE.BALL;
+            //                     this._cameraObject.transform.getForward(this._dragPlaneNormal);
+            //                 } else if (picked == this.xAxis) {
+            //                     this._dragMode = DRAG_MODE.X;
+            //                     egret3d.Vector3.copy(up, this._dragPlaneNormal);
+            //                 } else if (picked == this.yAxis) {
+            //                     this._dragMode = DRAG_MODE.Y;
+            //                     egret3d.Vector3.copy(forward, this._dragPlaneNormal);
+            //                 } else if (picked == this.zAxis) {
+            //                     this._dragMode = DRAG_MODE.Z;
+            //                     egret3d.Vector3.copy(up, this._dragPlaneNormal);
+            //                 }
 
-                            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                        } else if (this.geoCtrlType == "rotation" && (picked == this.xRot || picked == this.yRot || picked == this.zRot)) {
-                            egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                            //let ctrlRot = this.controller.transform.getRotation();
-                            //this._ctrlRot = ctrlRot;
-                            if (picked == this.xRot) {
-                                this._dragMode = DRAG_MODE.RotX;
-                                egret3d.Quaternion.transformVector3(ctrlRot, right, this._dragPlaneNormal);
-                            } else if (picked == this.yRot) {
-                                this._dragMode = DRAG_MODE.RotY;
-                                egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
-                            } else if (picked == this.zRot) {
-                                this._dragMode = DRAG_MODE.RotZ;
-                                egret3d.Quaternion.transformVector3(ctrlRot, forward, this._dragPlaneNormal);
-                            }
+            //                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+            //             } else if (this.geoCtrlType == "rotation" && (picked == this.xRot || picked == this.yRot || picked == this.zRot)) {
+            //                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
+            //                 //let ctrlRot = this.controller.transform.getRotation();
+            //                 //this._ctrlRot = ctrlRot;
+            //                 if (picked == this.xRot) {
+            //                     this._dragMode = DRAG_MODE.RotX;
+            //                     egret3d.Quaternion.transformVector3(ctrlRot, right, this._dragPlaneNormal);
+            //                 } else if (picked == this.yRot) {
+            //                     this._dragMode = DRAG_MODE.RotY;
+            //                     egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
+            //                 } else if (picked == this.zRot) {
+            //                     this._dragMode = DRAG_MODE.RotZ;
+            //                     egret3d.Quaternion.transformVector3(ctrlRot, forward, this._dragPlaneNormal);
+            //                 }
 
-                            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                            egret3d.Vector3.subtract(this._dragOffset, this._ctrlPos, this._dragOffset);
-                            egret3d.Vector3.normalize(this._dragOffset);
-                        } else if (this.geoCtrlType == "scale" && (picked == this.xScl || picked == this.yScl || picked == this.zScl)) {
-                            egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                            if (picked == this.xScl) {
-                                this._dragMode = DRAG_MODE.ScaX;
-                                egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
-                            } else if (picked == this.yScl) {
-                                this._dragMode = DRAG_MODE.ScaY;
-                                egret3d.Quaternion.transformVector3(ctrlRot, forward, this._dragPlaneNormal);
-                            } else if (picked == this.zScl) {
-                                this._dragMode = DRAG_MODE.ScaZ;
-                                egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
-                            }
-                            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                        }
-                    });
-                }
-            }
+            //                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+            //                 egret3d.Vector3.subtract(this._dragOffset, this._ctrlPos, this._dragOffset);
+            //                 egret3d.Vector3.normalize(this._dragOffset);
+            //             } else if (this.geoCtrlType == "scale" && (picked == this.xScl || picked == this.yScl || picked == this.zScl)) {
+            //                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
+            //                 if (picked == this.xScl) {
+            //                     this._dragMode = DRAG_MODE.ScaX;
+            //                     egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
+            //                 } else if (picked == this.yScl) {
+            //                     this._dragMode = DRAG_MODE.ScaY;
+            //                     egret3d.Quaternion.transformVector3(ctrlRot, forward, this._dragPlaneNormal);
+            //                 } else if (picked == this.zScl) {
+            //                     this._dragMode = DRAG_MODE.ScaZ;
+            //                     egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
+            //                 }
+            //                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+            //             }
+            //         });
+            //     }
+            // }
             if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                 if (this.geoCtrlType == "position" && this._dragMode != DRAG_MODE.NONE) {
                     let screenPosition = this.bindMouse.position;
@@ -369,6 +545,7 @@ namespace paper.editor {
 
                         this.editorModel.setTransformProperty("position", this._newPosition, obj.transform);
                     }
+                    this.controller.transform.setPosition(this.selectedGameObjs[0].transform.getPosition());
                     egret3d.Vector3.copy(hit, this._dragOffset);
                 } else if (this.geoCtrlType == "rotation" && this._dragMode != DRAG_MODE.NONE) {
                     let screenPosition = this.bindMouse.position;
@@ -681,28 +858,28 @@ namespace paper.editor {
         private controller: GameObject;
         public controllerPool: GameObject[] = [];
         public _addGizmoController() {
-            let controller = new paper.GameObject();
+            let controller = new paper.GameObject("", "", Application.sceneManager.editorScene);
             controller.activeSelf = false;
             controller.name = "GizmoController";
             controller.tag = "Editor";
 
-            let pcontroller = new paper.GameObject();
+            let pcontroller = new paper.GameObject("", "", Application.sceneManager.editorScene);
             pcontroller.activeSelf = true;
             pcontroller.name = "GizmoController_Position";
             pcontroller.tag = "Editor";
             pcontroller.transform.setParent(controller.transform);
-            let rcontroller = new paper.GameObject();
+            let rcontroller = new paper.GameObject("", "", Application.sceneManager.editorScene);
             rcontroller.activeSelf = false;
             rcontroller.name = "GizmoController_Rotation";
             rcontroller.tag = "Editor";
             rcontroller.transform.setParent(controller.transform);
-            let scontroller = new paper.GameObject();
+            let scontroller = new paper.GameObject("", "", Application.sceneManager.editorScene);
             scontroller.activeSelf = false;
             scontroller.name = "GizmoController_Scale";
             scontroller.tag = "Editor";
             scontroller.transform.setParent(controller.transform);
 
-            let ball = new paper.GameObject();
+            let ball = new paper.GameObject("", "", Application.sceneManager.editorScene);
             ball.name = "GizmoController_Ball";
             ball.tag = "Editor";
             ball.transform.setParent(pcontroller.transform);
@@ -744,7 +921,7 @@ namespace paper.editor {
             xRotate.name = "GizmoController_Rotate_X";
             xRotate.tag = "Editor";
             xRotate.transform.setParent(rcontroller.transform);
-            xRotate.transform.setLocalScale(3, 0.05, 3);
+            xRotate.transform.setLocalScale(3, 3, 3);
             xRotate.transform.setLocalEulerAngles(0, 0, -90);
 
             let yRotate = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.5), 1);
@@ -802,7 +979,7 @@ namespace paper.editor {
          * type 0:控制位置 1:控制旋转
          */
         private _createAxis(color: egret3d.Vector4, type: number): GameObject {
-            let gizmoAxis = new paper.GameObject();
+            let gizmoAxis = new paper.GameObject("", "", Application.sceneManager.editorScene);
 
             let mesh = gizmoAxis.addComponent(egret3d.MeshFilter);
             switch (type) {
@@ -810,18 +987,17 @@ namespace paper.editor {
                     mesh.mesh = egret3d.DefaultMeshes.CYLINDER;
                     break;
                 case 1:
-                    mesh.mesh = egret3d.DefaultMeshes.CYLINDER;
+                    mesh.mesh = egret3d.DefaultMeshes.CIRCLE_LINE;
                     break;
                 case 2:
                     mesh.mesh = egret3d.DefaultMeshes.SPHERE;
                     break;
             }
             let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
-
             let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
             mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
             renderer.materials = [mat];
-
+            console.log(gizmoAxis.scene)
             return gizmoAxis;
         }
         public _removeGizmoController() {

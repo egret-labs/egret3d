@@ -28,9 +28,9 @@ namespace paper.editor {
             this.inputUpdate(delta);
             //this.mouseUpdate(delta);
             //Gizmo.DrawLine(new egret3d.Vector3(-5, 5, 0.5), new egret3d.Vector3(5, 5, 0.5), 100.0, [1.0, 0.0, 0.0, 1.0]);
-            Gizmo.DrawCoord();
-            Gizmo.DrawLights();
-            Gizmo.DrawCameras();
+            // Gizmo.DrawCoord();
+            // Gizmo.DrawLights();
+            // Gizmo.DrawCameras();
             //Gizmo.DrawArrowXYZ();
 
             // this.editorModel.geoController.update();

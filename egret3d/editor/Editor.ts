@@ -15,13 +15,13 @@ namespace paper.editor {
             // 覆盖生成 uuid 的方式。
             createUUID = generateUuid;
             createAssetID = generateUuid;
+            //初始化编辑模型
+            this.history = new History();
+            this._editorModel = new EditorModel();
+            this._editorModel.init(this.history);
             //启动egret3编辑环境
             this.runEgret();
             await RES.loadConfig("resource/default.res.json", "resource/");
-            this.history = new History();
-            //初始化编辑模型
-            this._editorModel = new EditorModel();
-            this._editorModel.init(this.history);
         }
         private static runEgret() {
             egret3d.runEgret({
@@ -60,11 +60,13 @@ namespace paper.editor {
         /**切换场景 */
         public static switchScene(url: string) {
             Application.sceneManager.unloadAllScene();
-            // Application.callLater(() => {
-            this.loadEditScene(url).then(() => {
-                this.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_SCENE, url));
+            Application.callLater(() => {
+                this.loadEditScene(url).then(() => {
+                    this.editorModel.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_SCENE, url));
+                });
+
+                // Application.sceneManager.camerasScene = Application.sceneManager.editorScene;
             });
-            // });
         }
 
         private static async loadEditScene(url: string) {
@@ -78,19 +80,20 @@ namespace paper.editor {
                 const scene = rawScene.createInstance(keepUUID);
                 return scene;
             }
-
             return null;
         }
 
+        // private static geoController: GeoController;
+        public static gizmo: Gizmo;
         private static _createEditCamera() {
             const cameraObject = GameObject.create("EditorCamera", DefaultTags.EditorOnly, Application.sceneManager.editorScene);
-
+            console.log(cameraObject.scene)
             {
                 const camera = cameraObject.addComponent(egret3d.Camera);
                 camera.near = 0.1;
                 camera.far = 1000.0;
                 camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
-                cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
+                cameraObject.transform.setLocalPosition(5.0, 8.0, -3.0);
                 cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
             }
 
@@ -99,6 +102,11 @@ namespace paper.editor {
                 script.editorModel = this.editorModel;
                 script.moveSpeed = 10;
                 script.rotateSpeed = 0.5;
+
+                // this.geoController = 
+                cameraObject.addComponent(GeoController)
+                this.gizmo = cameraObject.addComponent(Gizmo)
+                // this.geoController.setEditorMode(this.editorModel)
             }
 
             {

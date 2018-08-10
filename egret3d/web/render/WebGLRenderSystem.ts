@@ -489,11 +489,7 @@ namespace egret3d {
         }
 
         public onUpdate() {
-            for (const key in this._cacheStateEnable) {
-                delete this._cacheStateEnable[key];
-            }
-            this._cacheProgram = undefined;
-            this._cacheState = undefined;//???
+
             Performance.startCounter("render");
             const cameras = this._camerasAndLights.cameras;
             const lights = this._camerasAndLights.lights;
@@ -527,11 +523,16 @@ namespace egret3d {
                     }
 
                     if (camera.postQueues.length === 0) {
+                        // let v = camera.gameObject.transform.getLocalPosition();
+                        // v.x++;
+                        // v.y = v.y + 1;
+                        // camera.gameObject.transform.setLocalPosition(v)
+                        // console.log(camera.gameObject.transform)
                         this._renderCamera(camera);
                     }
                     else {
                         for (const item of camera.postQueues) {
-                            item.render(camera, this);
+                            console.log(camera)
                         }
                     }
                 }
@@ -542,6 +543,23 @@ namespace egret3d {
                 webgl.clearDepth(1.0);
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
+
+            if (this._isEditorUpdate) {
+                if (paper.editor.Editor.gizmo) {
+                    paper.editor.Editor.gizmo.DrawCoord();
+
+                }
+                paper.editor.Gizmo.DrawLights();
+                paper.editor.Gizmo.DrawCameras();
+
+
+                for (const key in this._cacheStateEnable) {
+                    delete this._cacheStateEnable[key];
+                }
+                this._cacheProgram = undefined;
+                this._cacheState = undefined;//???
+            }
+
 
             Performance.endCounter("render");
         }

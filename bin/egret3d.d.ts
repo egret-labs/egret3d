@@ -6890,6 +6890,7 @@ declare namespace paper.editor {
         static switchScene(url: string): void;
         private static loadEditScene(url);
         private static loadScene(resourceName, keepUUID?);
+        static gizmo: Gizmo;
         private static _createEditCamera();
         static undo(): void;
         static redo(): void;
@@ -7068,12 +7069,18 @@ declare namespace paper.editor {
         private _geoCtrlType;
         geoCtrlType: string;
         editorModel: EditorModel;
-        setEditorMode(editorModel: EditorModel): void;
         constructor();
         private bindMouse;
         private bindKeyboard;
         onUpdate(): void;
+        private _oldTransform;
         update(): void;
+        /**
+         * 鼠标射线 改变dragMode以及控制杆颜色
+         */
+        private _oldResult;
+        private mouseRayCastUpdate();
+        private checkIntersects(ray, target);
         /**
          * 几何操作逻辑
          */
@@ -7496,16 +7503,19 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
-    class Gizmo {
+    class Gizmo extends paper.Behaviour {
         private static enabled;
         private static webgl;
         private static camera;
+        onStart(): void;
         static Enabled(): void;
         static DrawIcon(path: string, pos: egret3d.Vector3, size: number, color?: egret3d.Color): void;
         private static verticesLine;
         private static lineVertexBuffer;
         static DrawLine(posStart: egret3d.Vector3, posEnd: egret3d.Vector3, size?: number, color?: number[]): void;
-        static DrawCoord(): void;
+        private _oldTransform;
+        private nrLine;
+        DrawCoord(): void;
         private static verticesCoord;
         private static verticesCylinder;
         private static verticesArrow;
