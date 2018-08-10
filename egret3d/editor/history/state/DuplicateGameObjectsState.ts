@@ -35,7 +35,7 @@ namespace paper.editor {
                     const element = objs[index];
                     element.destroy();
                 }
-                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, objs);
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
                 return true;
             }
 

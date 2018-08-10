@@ -7,7 +7,6 @@ namespace paper.editor {
             this.editorCameraScript.editorModel = v;
             this.pickGameScript.editorModel = v;
             this.geoController.editorModel = v;
-
         }
         private editorCameraScript: EditorCameraScript;
         private pickGameScript: PickGameObjectScript;
