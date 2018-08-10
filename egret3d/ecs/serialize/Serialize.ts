@@ -167,7 +167,10 @@ namespace paper {
      */
     export function serializeStruct(source: BaseObject): ISerializedStruct {
         const className = egret.getQualifiedClassName(source);
-        return { class: _findClassCode(className) || className };
+        const target = { class: _findClassCode(className) || className } as ISerializedStruct;
+        _serializeChildren(source, target, null, null);
+
+        return target;
     }
 
     function _findClassCode(name: string) {
@@ -280,7 +283,7 @@ namespace paper {
         return true;
     }
 
-    function _serializeChildren(source: BaseObject, target: ISerializedObject, temp: GameObject | BaseComponent | null, ignoreKeys: string[] | null) {
+    function _serializeChildren(source: BaseObject, target: ISerializedObject | ISerializedStruct, temp: GameObject | BaseComponent | null, ignoreKeys: string[] | null) {
         const serializedKeys = _getSerializedKeys(<any>source.constructor as BaseClass);
         if (!serializedKeys) {
             return;
