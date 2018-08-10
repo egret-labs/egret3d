@@ -133,6 +133,8 @@
         "egret3d/editor/EditorSceneModel.ts",
         "egret3d/editor/EventDispatcher.ts",
         "egret3d/editor/GeoController.ts",
+        "egret3d/editor/geoController/GeoController.ts",
+        "egret3d/editor/geoController/BaseGeo.ts",
         "egret3d/editor/history/History.ts",
         "egret3d/editor/history/BaseState.ts",
         "egret3d/editor/history/state/StateGroup.ts",
