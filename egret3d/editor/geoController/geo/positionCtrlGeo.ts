@@ -1,0 +1,3 @@
+namespace paper.editor {
+
+}

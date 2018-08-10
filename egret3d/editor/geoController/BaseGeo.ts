@@ -12,5 +12,11 @@ namespace paper.editor {
         public isPressed() {
 
         }
+        public onMouseOn() {
+
+        }
+        public changeGeo(newGeo: BaseGeo) {
+
+        }
     }
 }
