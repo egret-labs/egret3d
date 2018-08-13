@@ -200,7 +200,7 @@ namespace egret3d {
                 matrix.copy(this.matProjP);
             }
             else {
-                Matrix.lerp(this.matProjO, this.matProjP, this.opvalue, matrix);
+                matrix.lerp(this.opvalue, this.matProjO, this.matProjP);
             }
 
             return matrix;

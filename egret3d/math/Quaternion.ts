@@ -5,7 +5,20 @@ namespace egret3d {
     const helpVec3_3: Vector3 = new Vector3();
 
     const helpMat4_1: Matrix = new Matrix();
-
+    /**
+     * 
+     */
+    export const enum EulerOrder {
+        XYZ,
+        XZY,
+        YXZ,
+        YZX,
+        ZXY,
+        ZYX,
+    }
+    /**
+     * 
+     */
     export class Quaternion implements IVector4, paper.ISerializable {
 
         private static readonly _instances: Quaternion[] = [];
@@ -79,8 +92,12 @@ namespace egret3d {
             return this;
         }
 
-        public normalize() {
-            const l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+        public normalize(value?: Readonly<Quaternion>) {
+            if (!value) {
+                value = this;
+            }
+
+            const l = Math.sqrt(value.x * value.x + value.y * value.y + value.z * value.z + value.w * value.w);
 
             if (l > Number.MIN_VALUE) {
                 this.x /= l;
@@ -98,8 +115,12 @@ namespace egret3d {
             return this;
         }
 
-        public inverse() {
-            const ll = this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z;
+        public inverse(value?: Readonly<Quaternion>) {
+            if (!value) {
+                value = this;
+            }
+
+            const ll = value.w * value.w + value.x * value.x + value.y * value.y + value.z * value.z;
 
             if (ll > 0.0) {
                 const ill = 1.0 / ll;
@@ -158,30 +179,151 @@ namespace egret3d {
             return this;
         }
 
-        public multiply(value: Readonly<IVector4>) {
-            const w1 = this.w, x1 = this.x, y1 = this.y, z1 = this.z;
-            const w2 = value.w, x2 = value.x, y2 = value.y, z2 = value.z;
+        public fromEuler(value: Readonly<IVector3>, order: EulerOrder = EulerOrder.XYZ) {
+            const { x, y, z } = value;
+
+            // http://www.mathworks.com/matlabcentral/fileexchange/
+            // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
+            //	content/SpinCalc.m
+
+            const cos = Math.cos;
+            const sin = Math.sin;
+
+            const c1 = cos(x / 2);
+            const c2 = cos(y / 2);
+            const c3 = cos(z / 2);
+
+            const s1 = sin(x / 2);
+            const s2 = sin(y / 2);
+            const s3 = sin(z / 2);
+
+            switch (order) {
+                case EulerOrder.XYZ:
+                    this.x = s1 * c2 * c3 + c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 - s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 + s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 - s1 * s2 * s3;
+                    break;
+
+                case EulerOrder.XZY:
+                    this.x = s1 * c2 * c3 - c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 - s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 + s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 + s1 * s2 * s3;
+                    break;
+
+                case EulerOrder.YXZ:
+                    this.x = s1 * c2 * c3 + c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 - s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 - s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 + s1 * s2 * s3;
+                    break;
+
+                case EulerOrder.YZX:
+                    this.x = s1 * c2 * c3 + c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 + s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 - s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 - s1 * s2 * s3;
+                    break;
+
+                case EulerOrder.ZXY:
+                    this.x = s1 * c2 * c3 - c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 + s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 + s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 - s1 * s2 * s3;
+                    break;
+
+                case EulerOrder.ZYX:
+                    this.x = s1 * c2 * c3 - c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 + s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 - s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 + s1 * s2 * s3;
+                    break;
+            }
+
+            return this;
+        }
+
+        public fromEulerAngle(x: number, y: number, z: number) {
+            return this.fromEuler(helpVec3_1.set(x * DEG_RAD, y * DEG_RAD, z * DEG_RAD));
+        }
+        /**
+         * - 向量必须是归一化的。
+         */
+        public fromAxisAngle(axis: Readonly<IVector3>, angle: number) {
+            angle *= DEG_RAD;
+            // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
+
+            // assumes axis is normalized
+
+            const halfAngle = angle * 0.5, s = Math.sin(halfAngle);
+            this.x = axis.x * s;
+            this.y = axis.y * s;
+            this.z = axis.z * s;
+            this.w = Math.cos(halfAngle);
+
+            return this;
+        }
+
+        public multiply(valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            const w1 = valueA.w, x1 = valueA.x, y1 = valueA.y, z1 = valueA.z;
+            const w2 = valueB.w, x2 = valueB.x, y2 = valueB.y, z2 = valueB.z;
 
             this.x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2;
             this.y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2;
             this.z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2;
             this.w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2;
 
-            this.normalize();
+            this.normalize(); // TODO 
 
             return this;
         }
 
-        public transformVector3(value: IVector3) {
+        public lerp(t: number, srca: Quaternion, srcb?: Quaternion) {
+            if (!srcb) {
+                srcb = srca;
+                srca = this;
+            }
+
+            let w1 = srca.w, x1 = srca.x, y1 = srca.y, z1 = srca.z;
+            let w2 = srcb.w, x2 = srcb.x, y2 = srcb.y, z2 = srcb.z;
+
+            if (w1 * w2 + x1 * x2 + y1 * y2 + z1 * z2 < 0) {
+                w2 = -w2;
+                x2 = -x2;
+                y2 = -y2;
+                z2 = -z2;
+            }
+
+            this.w = w1 + t * (w2 - w1);
+            this.x = x1 + t * (x2 - x1);
+            this.y = y1 + t * (y2 - y1);
+            this.z = z1 + t * (z2 - z1);
+
+            this.normalize(); // TODO 
+
+            return this;
+        }
+
+        public transformVector3(value: Vector3, out?: Vector3) {
+            if (!out) {
+                value = out;
+            }
+
             const x2 = value.x, y2 = value.y, z2 = value.z;
             const x1 = this.w * x2 + this.y * z2 - this.z * y2;
             const y1 = this.w * y2 - this.x * z2 + this.z * x2;
             const z1 = this.w * z2 + this.x * y2 - this.y * x2;
             const w1 = -this.x * x2 - this.y * y2 - this.z * z2;
 
-            value.x = -w1 * this.x + x1 * this.w - y1 * this.z + z1 * this.y;
-            value.y = -w1 * this.y + x1 * this.z + y1 * this.w - z1 * this.x;
-            value.z = -w1 * this.z - x1 * this.y + y1 * this.x + z1 * this.w;
+            out.x = -w1 * this.x + x1 * this.w - y1 * this.z + z1 * this.y;
+            out.y = -w1 * this.y + x1 * this.z + y1 * this.w - z1 * this.x;
+            out.z = -w1 * this.z - x1 * this.y + y1 * this.x + z1 * this.w;
 
             return value;
         }
@@ -207,39 +349,6 @@ namespace egret3d {
             out.y = (sinYaw * cosPitch * cosRoll) - (cosYaw * sinPitch * sinRoll);
             out.z = (cosYaw * cosPitch * sinRoll) - (sinYaw * sinPitch * cosRoll);
             out.w = (cosYaw * cosPitch * cosRoll) + (sinYaw * sinPitch * sinRoll);
-
-            return out;
-        }
-
-        public static fromEulerAngles(ax: number, ay: number, az: number, out: Quaternion): Quaternion {
-            ax *= Math.PI / 180;
-            ay *= Math.PI / 180;
-            az *= Math.PI / 180;
-
-            let halfX: number = ax * 0.5, halfY: number = ay * 0.5, halfZ: number = az * 0.5;
-            let cosX: number = Math.cos(halfX), sinX: number = Math.sin(halfX);
-            let cosY: number = Math.cos(halfY), sinY: number = Math.sin(halfY);
-            let cosZ: number = Math.cos(halfZ), sinZ: number = Math.sin(halfZ);
-
-            out.w = cosX * cosY * cosZ + sinX * sinY * sinZ;
-            out.x = sinX * cosY * cosZ + cosX * sinY * sinZ;
-            out.y = cosX * sinY * cosZ - sinX * cosY * sinZ;
-            out.z = cosX * cosY * sinZ - sinX * sinY * cosZ;
-
-            return this.normalize(out);
-        }
-
-        public static fromAxisAngle(axis: Vector3, angle: number, out: Quaternion): Quaternion {
-            angle *= Math.PI / 180.0;
-            let halfAngle: number = angle * 0.5;
-            let sin_a: number = Math.sin(halfAngle);
-
-            out.w = Math.cos(halfAngle);
-            out.x = axis.x * sin_a;
-            out.y = axis.y * sin_a;
-            out.z = axis.z * sin_a;
-
-            this.normalize(out);
 
             return out;
         }
@@ -313,43 +422,14 @@ namespace egret3d {
 
             return out;
         }
-        /**
-         * @deprecated
-         */
-        public static normalize(out: Quaternion): Quaternion {
+
+        private static normalize(out: Quaternion): Quaternion {
             let mag: number = 1 / Math.sqrt(out.x * out.x + out.y * out.y + out.z * out.z + out.w * out.w);
 
             out.x *= mag;
             out.y *= mag;
             out.z *= mag;
             out.w *= mag;
-
-            return out;
-        }
-        /**
-         * @deprecated
-         */
-        public static copy(q: Quaternion, out: Quaternion): Quaternion {
-            out.x = q.x;
-            out.y = q.y;
-            out.z = q.z;
-            out.w = q.w;
-
-            return out;
-        }
-        /**
-         * @deprecated
-         */
-        public static inverse(q: Quaternion, out: Quaternion): Quaternion {
-            let norm: number = q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z;
-
-            if (norm > 0.0) {
-                let invNorm = 1.0 / norm;
-                out.w = q.w * invNorm;
-                out.x = -q.x * invNorm;
-                out.y = -q.y * invNorm;
-                out.z = -q.z * invNorm;
-            }
 
             return out;
         }
@@ -366,31 +446,6 @@ namespace egret3d {
             out.x /= Math.PI / 180;
             out.y /= Math.PI / 180;
             out.z /= Math.PI / 180;
-
-            return out;
-        }
-
-        public static toMatrix(q: Quaternion, out: Matrix): Matrix {
-            let xy2: number = 2.0 * q.x * q.y, xz2: number = 2.0 * q.x * q.z, xw2: number = 2.0 * q.x * q.w;
-            let yz2: number = 2.0 * q.y * q.z, yw2: number = 2.0 * q.y * q.w, zw2: number = 2.0 * q.z * q.w;
-            let xx: number = q.x * q.x, yy: number = q.y * q.y, zz: number = q.z * q.z, ww: number = q.w * q.w;
-
-            out.rawData[0] = xx - yy - zz + ww;
-            out.rawData[4] = xy2 - zw2;
-            out.rawData[8] = xz2 + yw2;
-            out.rawData[12] = 0;
-            out.rawData[1] = xy2 + zw2;
-            out.rawData[5] = -xx + yy - zz + ww;
-            out.rawData[9] = yz2 - xw2;
-            out.rawData[13] = 0;
-            out.rawData[2] = xz2 - yw2;
-            out.rawData[6] = yz2 + xw2;
-            out.rawData[10] = -xx - yy + zz + ww;
-            out.rawData[14] = 0;
-            out.rawData[3] = 0.0;
-            out.rawData[7] = 0.0;
-            out.rawData[11] = 0;
-            out.rawData[15] = 1;
 
             return out;
         }
@@ -413,7 +468,9 @@ namespace egret3d {
             angle /= Math.PI / 180.0;
             return angle;
         }
-
+        /**
+         * @deprecated
+         */
         public static transformVector3(src: Quaternion, vector: Vector3, out: Vector3): Vector3 {
             let x1: number, y1: number, z1: number, w1: number;
             let x2: number = vector.x, y2: number = vector.y, z2: number = vector.z;
@@ -429,62 +486,5 @@ namespace egret3d {
 
             return out;
         }
-
-        public static transformVector3ByQuaternionData(src: Float32Array, srcseek: number, vector: Vector3, out: Vector3): Vector3 {
-            let x1: number, y1: number, z1: number, w1: number;
-            let x2: number = vector.x, y2: number = vector.y, z2: number = vector.z;
-            let srcx = src[srcseek]; let srcy = src[srcseek + 1]; let srcz = src[srcseek + 2]; let srcw = src[srcseek + 3];
-
-            w1 = -srcx * x2 - srcy * y2 - srcz * z2;
-            x1 = srcw * x2 + srcy * z2 - srcz * y2;
-            y1 = srcw * y2 - srcx * z2 + srcz * x2;
-            z1 = srcw * z2 + srcx * y2 - srcy * x2;
-
-            out.x = -w1 * srcx + x1 * srcw - y1 * srcz + z1 * srcy;
-            out.y = -w1 * srcy + x1 * srcz + y1 * srcw - z1 * srcx;
-            out.z = -w1 * srcz - x1 * srcy + y1 * srcx + z1 * srcw;
-
-            return out;
-        }
-
-        public static multiplyByQuaternionData(srca: Float32Array, srcaseek: number, srcb: Quaternion, out: Quaternion): Quaternion {
-            let w1: number = srca[srcaseek + 3], x1: number = srca[srcaseek + 0], y1: number = srca[srcaseek + 1], z1: number = srca[srcaseek + 2];
-            let w2: number = srcb.w, x2: number = srcb.x, y2: number = srcb.y, z2: number = srcb.z;
-
-            out.w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2;
-            out.x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2;
-            out.y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2;
-            out.z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2;
-
-            this.normalize(out);
-
-            return out;
-        }
-
-        public static lerp(srca: Quaternion, srcb: Quaternion, out: Quaternion, t: number): Quaternion {
-            let w1: number = srca.w, x1: number = srca.x, y1: number = srca.y, z1: number = srca.z;
-            let w2: number = srcb.w, x2: number = srcb.x, y2: number = srcb.y, z2: number = srcb.z;
-
-            if (w1 * w2 + x1 * x2 + y1 * y2 + z1 * z2 < 0) {
-                w2 = -w2;
-                x2 = -x2;
-                y2 = -y2;
-                z2 = -z2;
-            }
-
-            out.w = w1 + t * (w2 - w1);
-            out.x = x1 + t * (x2 - x1);
-            out.y = y1 + t * (y2 - y1);
-            out.z = z1 + t * (z2 - z1);
-
-            let len: number = 1.0 / Math.sqrt(out.w * out.w + out.x * out.x + out.y * out.y + out.z * out.z);
-            out.w *= len;
-            out.x *= len;
-            out.y *= len;
-            out.z *= len;
-
-            return out;
-        }
-
     }
 }

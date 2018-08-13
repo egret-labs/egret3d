@@ -194,14 +194,14 @@ namespace egret3d {
                 mat2.compose(vec32p, vec42r as any, Vector3.ONE);
                 mat3.compose(vec33p, vec43r as any, Vector3.ONE);
 
-                egret3d.Matrix.scale(blendWeights.x, mat0);
-                egret3d.Matrix.scale(blendWeights.y, mat1);
-                egret3d.Matrix.scale(blendWeights.z, mat2);
-                egret3d.Matrix.scale(blendWeights.w, mat3);
+                mat0.scale(blendWeights.x);
+                mat1.scale(blendWeights.y);
+                mat2.scale(blendWeights.z);
+                mat3.scale(blendWeights.w);
 
-                egret3d.Matrix.add(mat0, mat1, out);
-                egret3d.Matrix.add(out, mat2, out);
-                egret3d.Matrix.add(out, mat3, out);
+                out.add(mat0, mat1);
+                out.add(mat2);
+                out.add(mat3);
             }
             else {
                 // TODO

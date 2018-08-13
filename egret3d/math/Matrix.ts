@@ -340,8 +340,28 @@ namespace egret3d {
             return this;
         }
 
+        public fromTranslate(x: number, y: number, z: number) {
+            this.identity();
+
+            this.rawData[12] = x;
+            this.rawData[13] = y;
+            this.rawData[14] = z;
+
+            return this;
+        }
+
         public fromRotation(rotation: Quaternion) {
             return this.compose(Vector3.ZERO, rotation, Vector3.ONE);
+        }
+
+        public formScale(x: number, y: number, z: number) {
+            this.identity();
+
+            this.rawData[0] = x;
+            this.rawData[5] = y;
+            this.rawData[10] = z;
+
+            return this;
         }
 
         public transformVector3(value: Vector3, out?: Vector3) {
@@ -375,6 +395,61 @@ namespace egret3d {
             out.z = z;
 
             return out;
+        }
+
+        public scale(scaler: number) {
+            const rawData = this.rawData;
+
+            rawData[0] *= scaler;
+            rawData[1] *= scaler;
+            rawData[2] *= scaler;
+            rawData[3] *= scaler;
+
+            rawData[4] *= scaler;
+            rawData[5] *= scaler;
+            rawData[6] *= scaler;
+            rawData[7] *= scaler;
+
+            rawData[8] *= scaler;
+            rawData[9] *= scaler;
+            rawData[10] *= scaler;
+            rawData[11] *= scaler;
+
+            rawData[12] *= scaler;
+            rawData[13] *= scaler;
+            rawData[14] *= scaler;
+            rawData[15] *= scaler;
+
+            return this;
+        }
+
+        public add(left: Matrix, right?: Matrix) {
+            if (!right) {
+                right = left;
+                left = this;
+            }
+
+            this.rawData[0] = left.rawData[0] + right.rawData[0];
+            this.rawData[1] = left.rawData[1] + right.rawData[1];
+            this.rawData[2] = left.rawData[2] + right.rawData[2];
+            this.rawData[3] = left.rawData[3] + right.rawData[3];
+
+            this.rawData[4] = left.rawData[4] + right.rawData[4];
+            this.rawData[5] = left.rawData[5] + right.rawData[5];
+            this.rawData[6] = left.rawData[6] + right.rawData[6];
+            this.rawData[7] = left.rawData[7] + right.rawData[7];
+
+            this.rawData[8] = left.rawData[8] + right.rawData[8];
+            this.rawData[9] = left.rawData[9] + right.rawData[9];
+            this.rawData[10] = left.rawData[10] + right.rawData[10];
+            this.rawData[11] = left.rawData[11] + right.rawData[11];
+
+            this.rawData[12] = left.rawData[12] + right.rawData[12];
+            this.rawData[13] = left.rawData[13] + right.rawData[13];
+            this.rawData[14] = left.rawData[14] + right.rawData[14];
+            this.rawData[15] = left.rawData[15] + right.rawData[15];
+
+            return this;
         }
 
         public multiply(lhs: Matrix, rhs?: Matrix) {
@@ -431,37 +506,25 @@ namespace egret3d {
             return this;
         }
 
-        public static lerp(left: Matrix, right: Matrix, v: number, out: Matrix): Matrix {
-            for (let i = 0; i < 16; i++) {
-                out.rawData[i] = left.rawData[i] * (1 - v) + right.rawData[i] * v;
+        public lerp(v: number, left: Matrix, right?: Matrix) {
+            const p = 1.0 - v;
+            if (right) {
+                for (let i = 0; i < 16; i++) {
+                    this.rawData[i] = left.rawData[i] * p + right.rawData[i] * v;
+                }
             }
-            return out;
+            else {
+                for (let i = 0; i < 16; i++) {
+                    this.rawData[i] = this.rawData[i] * p + left.rawData[i] * v;
+                }
+            }
+
+            return this;
         }
 
-        public static add(left: Matrix, right: Matrix, out: Matrix): Matrix {
-            out.rawData[0] = left.rawData[0] + right.rawData[0];
-            out.rawData[1] = left.rawData[1] + right.rawData[1];
-            out.rawData[2] = left.rawData[2] + right.rawData[2];
-            out.rawData[3] = left.rawData[3] + right.rawData[3];
-
-            out.rawData[4] = left.rawData[4] + right.rawData[4];
-            out.rawData[5] = left.rawData[5] + right.rawData[5];
-            out.rawData[6] = left.rawData[6] + right.rawData[6];
-            out.rawData[7] = left.rawData[7] + right.rawData[7];
-
-            out.rawData[8] = left.rawData[8] + right.rawData[8];
-            out.rawData[9] = left.rawData[9] + right.rawData[9];
-            out.rawData[10] = left.rawData[10] + right.rawData[10];
-            out.rawData[11] = left.rawData[11] + right.rawData[11];
-
-            out.rawData[12] = left.rawData[12] + right.rawData[12];
-            out.rawData[13] = left.rawData[13] + right.rawData[13];
-            out.rawData[14] = left.rawData[14] + right.rawData[14];
-            out.rawData[15] = left.rawData[15] + right.rawData[15];
-
-            return out;
-        }
-
+        /**
+         * @deprecated
+         */
         public static multiply(lhs: Matrix, rhs: Matrix, out: Matrix): Matrix {
             const a00 = lhs.rawData[0], a01 = lhs.rawData[1], a02 = lhs.rawData[2], a03 = lhs.rawData[3];
             const a10 = lhs.rawData[4], a11 = lhs.rawData[5], a12 = lhs.rawData[6], a13 = lhs.rawData[7];
@@ -510,47 +573,9 @@ namespace egret3d {
 
             return out;
         }
-
-        public static scale(scaler: number, m: Matrix): Matrix {
-            m.rawData[0] *= scaler;
-            m.rawData[1] *= scaler;
-            m.rawData[2] *= scaler;
-            m.rawData[3] *= scaler;
-
-            m.rawData[4] *= scaler;
-            m.rawData[5] *= scaler;
-            m.rawData[6] *= scaler;
-            m.rawData[7] *= scaler;
-
-            m.rawData[8] *= scaler;
-            m.rawData[9] *= scaler;
-            m.rawData[10] *= scaler;
-            m.rawData[11] *= scaler;
-
-            m.rawData[12] *= scaler;
-            m.rawData[13] *= scaler;
-            m.rawData[14] *= scaler;
-            m.rawData[15] *= scaler;
-
-            return m;
-        }
-
-        public static formScale(xScale: number, yScale: number, zScale: number, out: Matrix): Matrix {
-            out.rawData[0] = xScale; out.rawData[1] = 0.0; out.rawData[2] = 0.0; out.rawData[3] = 0.0;
-            out.rawData[4] = 0.0; out.rawData[5] = yScale; out.rawData[6] = 0.0; out.rawData[7] = 0.0;
-            out.rawData[8] = 0.0; out.rawData[9] = 0.0; out.rawData[10] = zScale; out.rawData[11] = 0.0;
-            out.rawData[12] = 0.0; out.rawData[13] = 0.0; out.rawData[14] = 0.0; out.rawData[15] = 1.0;
-            return out;
-        }
-
-        public static fromTranslate(x: number, y: number, z: number, out: Matrix): Matrix {
-            out.rawData[0] = 1.0; out.rawData[1] = 0.0; out.rawData[2] = 0.0; out.rawData[3] = 0;
-            out.rawData[4] = 0.0; out.rawData[5] = 1.0; out.rawData[6] = 0.0; out.rawData[7] = 0.0;
-            out.rawData[8] = 0.0; out.rawData[9] = 0.0; out.rawData[10] = 1.0; out.rawData[11] = 0.0;
-            out.rawData[12] = x; out.rawData[13] = y; out.rawData[14] = z; out.rawData[15] = 1.0;
-            return out;
-        }
-
+        /**
+         * @deprecated
+         */
         public static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix): Matrix {
             let tan = 1.0 / (Math.tan(fov * 0.5));
             out.rawData[0] = tan / aspect;
@@ -568,7 +593,9 @@ namespace egret3d {
 
             return out;
         }
-
+        /**
+         * @deprecated
+         */
         public static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix): Matrix {
             let hw = 2.0 / width;
             let hh = 2.0 / height;

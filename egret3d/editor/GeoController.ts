@@ -257,7 +257,7 @@ namespace paper.editor {
                     egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
                     this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                     egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                    egret3d.Quaternion.copy(worldRotation, this._initRotation);
+                    this._initRotation.copy(worldRotation);
                     egret3d.Vector3.copy(this.selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
 
                 }
@@ -412,7 +412,7 @@ namespace paper.editor {
                     let cos = Math.cos(theta * 0.5), sin = Math.sin(theta * 0.5);
                     helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
                     egret3d.Quaternion.multiply(helpQuat_1, this._initRotation, helpQuat_2);
-                    egret3d.Quaternion.copy(helpQuat_2, this._ctrlRot);
+                    this._ctrlRot.copy(helpQuat_2);
                     this.editorModel.setTransformProperty("rotation", helpQuat_2, this.selectedGameObjs[0].transform);
                 } else if (this.geoCtrlType == "scale" && this._dragMode != DRAG_MODE.NONE) {
                     let screenPosition = this.bindMouse.position;

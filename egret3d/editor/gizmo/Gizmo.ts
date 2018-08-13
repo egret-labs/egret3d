@@ -462,9 +462,10 @@ namespace paper.editor {
             let sca = egret3d.Vector3.getLength(p_c) / fixScale;
 
             let matS = this.helpMat1;
-            egret3d.Matrix.formScale(sca, sca, sca, matS);
-
-            egret3d.Quaternion.toMatrix(r, out);
+            // egret3d.Quaternion.toMatrix(r, out);
+            out.fromRotation(r);
+            matS.formScale(sca, sca, sca);
+            
             egret3d.Matrix.multiply(out, matS, out);
             out.rawData[12] = p.x;
             out.rawData[13] = p.y;

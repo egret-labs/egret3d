@@ -571,20 +571,20 @@ namespace egret3d {
         public setRotation(x: number, y: number, z: number, w: number): void;
         public setRotation(q1: IVector4 | number, q2?: number, q3?: number, q4?: number): void {
             if (q1.hasOwnProperty("x")) {
-                Quaternion.copy(<Quaternion>q1, helpQuat4);
+                helpQuat4.copy(q1 as IVector4);
             } else {
-                helpQuat4.x = <number>q1;
-                helpQuat4.y = q2 || 0;
-                helpQuat4.z = q3 || 0;
-                helpQuat4.w = q4 !== undefined ? q4 : 1;
+                helpQuat4.x = q1 as number;
+                helpQuat4.y = q2 || 0.0;
+                helpQuat4.z = q3 || 0.0;
+                helpQuat4.w = q4 !== undefined ? q4 : 1.0;
             }
 
             if (!this._parent) {
-                Quaternion.copy(helpQuat4, this.localRotation);
+                this.localRotation.copy(helpQuat4);
             } else {
                 let parentRot = this._parent.getRotation();
-                Quaternion.copy(parentRot, helpQuat4_2);
-                Quaternion.multiply(helpQuat4_2.inverse(), helpQuat4, this.localRotation);
+                helpQuat4_2.copy(parentRot);
+                this.localRotation.multiply(helpQuat4_2.inverse(), helpQuat4);
             }
 
             if (!this._dirtyLocal) {
