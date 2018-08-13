@@ -60,73 +60,59 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
 var paper;
 (function (paper) {
     /**
-     * 标记序列化属性
-     * 通过装饰器标记需要序列化的属性
+     * 通过装饰器标记序列化属性。
      */
     function serializedField(classPrototype, key) {
-        var serializedClass = classPrototype.constructor;
-        if (!serializedClass.__serializeInfo || serializedClass.__serializeInfo.owner !== serializedClass) {
-            serializedClass.__serializeInfo = { owner: serializedClass };
-        }
-        if (!serializedClass.__serializeInfo.keys) {
-            serializedClass.__serializeInfo.keys = [];
-        }
-        var keys = serializedClass.__serializeInfo.keys;
+        var baseClass = classPrototype.constructor;
+        paper.registerClass(baseClass);
+        var keys = baseClass.__serializeKeys;
         if (keys.indexOf(key) < 0) {
             keys.push(key);
         }
     }
     paper.serializedField = serializedField;
     /**
-     * 标记反序列化时需要忽略的属性
-     * 通过装饰器标记反序列化时需要被忽略的属性（但属性中引用的对象依然会被实例化）
+     * 通过装饰器标记反序列化时需要忽略的属性。
      */
     function deserializedIgnore(classPrototype, key) {
-        var serializedClass = classPrototype.constructor;
-        if (!serializedClass.__serializeInfo || serializedClass.__serializeInfo.owner !== serializedClass) {
-            serializedClass.__serializeInfo = { owner: serializedClass };
-        }
-        if (!serializedClass.__serializeInfo.ignore) {
-            serializedClass.__serializeInfo.ignore = [];
-        }
-        var keys = serializedClass.__serializeInfo.ignore;
+        var baseClass = classPrototype.constructor;
+        paper.registerClass(baseClass);
+        var keys = baseClass.__deserializeIgnore;
         if (keys.indexOf(key) < 0) {
             keys.push(key);
         }
     }
     paper.deserializedIgnore = deserializedIgnore;
     /**
-     * 标记组件是否在编辑模式拥有生命周期。
+     * 通过装饰器标记组件是否允许在同一实体上添加多个实例。
      */
-    function executeInEditMode(target) {
-        paper.BaseComponent.register(target);
-        target.executeInEditMode = true;
-    }
-    paper.executeInEditMode = executeInEditMode;
-    /**
-     * 标记组件是否允许在同一实体上添加多个实例。
-     */
-    function allowMultiple(target) {
-        paper.BaseComponent.register(target);
-        target.allowMultiple = true;
+    function allowMultiple(componentClass) {
+        paper.registerClass(componentClass);
+        if (!componentClass.__isSingleton) {
+            componentClass.allowMultiple = true;
+        }
     }
     paper.allowMultiple = allowMultiple;
     /**
-     * 标记组件依赖的其他组件。
+     * 通过装饰器标记组件依赖的其他组件。
      */
-    function requireComponent(requireTarget) {
-        return function (target) {
-            var parentRequireComponents = target.prototype.__proto__.constructor.requireComponents;
-            if (!target.requireComponents ||
-                target.requireComponents === parentRequireComponents) {
-                target.requireComponents = !parentRequireComponents ? [] : parentRequireComponents.concat();
-            }
-            if (target.requireComponents.indexOf(requireTarget) < 0) {
-                target.requireComponents.push(requireTarget);
+    function requireComponent(requireComponentClass) {
+        return function (componentClass) {
+            var requireComponents = componentClass.requireComponents;
+            if (requireComponents.indexOf(requireComponentClass) < 0) {
+                requireComponents.push(requireComponentClass);
             }
         };
     }
     paper.requireComponent = requireComponent;
+    /**
+     * 通过装饰器标记组件是否在编辑模式拥有生命周期。
+     */
+    function executeInEditMode(componentClass) {
+        paper.registerClass(componentClass);
+        componentClass.executeInEditMode = true;
+    }
+    paper.executeInEditMode = executeInEditMode;
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -139,6 +125,15 @@ var paper;
         return (_hashCount++).toString();
     };
     /**
+     * @internal
+     */
+    function registerClass(baseClass) {
+        if (!baseClass.__owner || baseClass.__owner !== baseClass) {
+            baseClass.__onRegister(baseClass);
+        }
+    }
+    paper.registerClass = registerClass;
+    /**
      * 基础对象。
      */
     var BaseObject = (function () {
@@ -148,6 +143,14 @@ var paper;
              */
             this.uuid = paper.createUUID();
         }
+        /**
+         * @internal
+         */
+        BaseObject.__onRegister = function (baseClass) {
+            baseClass.__serializeKeys = [];
+            baseClass.__deserializeIgnore = [];
+            baseClass.__owner = baseClass;
+        };
         __decorate([
             paper.serializedField
         ], BaseObject.prototype, "uuid", void 0);
@@ -625,21 +628,27 @@ var paper;
         /**
          * @internal
          */
-        BaseComponent.register = function (target) {
-            if (target === BaseComponent) {
+        BaseComponent.__onRegister = function (componentClass) {
+            if (componentClass === BaseComponent) {
                 return;
             }
-            if (this._componentClasses.indexOf(target) < 0) {
-                target.index = this._componentClasses.length;
-                this._componentClasses.push(target);
+            paper.BaseObject.__onRegister(componentClass); // Super.
+            if (this.requireComponents) {
+                this.requireComponents = this.requireComponents.concat();
+            }
+            else {
+                this.requireComponents = [];
+            }
+            if (this._componentClasses.indexOf(componentClass) < 0) {
+                componentClass.__index = this._componentClasses.length;
+                this._componentClasses.push(componentClass);
             }
         };
         /**
          * @internal
          */
         BaseComponent.create = function (componentClass, gameObject) {
-            this.register(componentClass);
-            BaseComponent._createEnabled = gameObject;
+            this._createEnabled = gameObject;
             return new componentClass();
         };
         /**
@@ -705,24 +714,19 @@ var paper;
          */
         BaseComponent.allowMultiple = false;
         /**
-         * @internal
-         */
-        BaseComponent.level = -1;
-        /**
-         * @internal
-         */
-        BaseComponent.componentIndex = -1;
-        /**
-         * @internal
-         */
-        BaseComponent.index = -1;
-        /**
          * 依赖的其他组件。
          */
         BaseComponent.requireComponents = null;
-        BaseComponent._createEnabled = null;
-        BaseComponent._componentCount = 0;
+        /**
+         * @internal
+         */
+        BaseComponent.__isSingleton = false;
+        /**
+         * @internal
+         */
+        BaseComponent.__index = -1;
         BaseComponent._componentClasses = [];
+        BaseComponent._createEnabled = null;
         __decorate([
             paper.serializedField
         ], BaseComponent.prototype, "extras", void 0);
@@ -1594,6 +1598,7 @@ var paper;
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
+    ;
     /**
      * 单例组件基类。
      */
@@ -1602,25 +1607,32 @@ var paper;
         function SingletonComponent() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
+        /**
+         *
+         */
+        SingletonComponent.getInstance = function (componentClass) {
+            return paper.Application.sceneManager.globalGameObject.getOrAddComponent(componentClass);
+        };
         SingletonComponent.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            if (!this.constructor.instance) {
-                this.constructor.instance = this;
-            }
-            else {
-                console.error("Cannot add singleton component again.", egret.getQualifiedClassName(this));
+            if (!this.constructor.__instance) {
+                this.constructor.__instance = this;
             }
         };
         SingletonComponent.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
-            if (this.constructor.instance === this) {
-                this.constructor.instance = null;
+            if (this.constructor.__instance === this) {
+                this.constructor.__instance = null;
             }
         };
         /**
-         *
+         * @internal
          */
-        SingletonComponent.instance = null;
+        SingletonComponent.__isSingleton = true;
+        /**
+         * @internal
+         */
+        SingletonComponent.__instance = null;
         return SingletonComponent;
     }(paper.BaseComponent));
     paper.SingletonComponent = SingletonComponent;
@@ -1812,7 +1824,7 @@ var paper;
             /**
              *
              */
-            this._clock = this._globalGameObject.getOrAddComponent(paper.Clock);
+            this._clock = paper.Clock.getInstance(paper.Clock);
             if (!BaseSystem._createEnabled) {
                 throw new Error("Create an instance of a system is not allowed.");
             }
@@ -3850,7 +3862,7 @@ var paper;
             ];
             _this._bufferedComponents = [];
             _this._bufferedGameObjects = [];
-            _this._contactColliders = _this._globalGameObject.getOrAddComponent(paper.ContactColliders);
+            _this._contactColliders = paper.ContactColliders.getInstance(paper.ContactColliders);
             return _this;
         }
         DisableSystem.prototype.onRemoveComponent = function (component) {
@@ -4026,9 +4038,9 @@ var paper;
         ;
         Deserializer.prototype._getDeserializedIgnoreKeys = function (serializedClass, keys) {
             if (keys === void 0) { keys = null; }
-            if (serializedClass.__serializeInfo && serializedClass.__serializeInfo.ignore) {
+            if (serializedClass.__deserializeIgnore) {
                 keys = keys || [];
-                for (var _i = 0, _a = serializedClass.__serializeInfo.ignore; _i < _a.length; _i++) {
+                for (var _i = 0, _a = serializedClass.__deserializeIgnore; _i < _a.length; _i++) {
                     var key = _a[_i];
                     keys.push(key);
                 }
@@ -4482,9 +4494,9 @@ var paper;
     }
     function _getSerializedKeys(serializedClass, keys) {
         if (keys === void 0) { keys = null; }
-        if (serializedClass.__serializeInfo) {
+        if (serializedClass.__serializeKeys) {
             keys = keys || [];
-            for (var _i = 0, _a = serializedClass.__serializeInfo.keys; _i < _a.length; _i++) {
+            for (var _i = 0, _a = serializedClass.__serializeKeys; _i < _a.length; _i++) {
                 var key = _a[_i];
                 keys.push(key);
             }
@@ -4791,7 +4803,7 @@ var paper;
                 }
             }
             else {
-                delete this._components[value.constructor.index];
+                delete this._components[value.constructor.__index];
             }
         };
         GameObject.prototype._getComponentsInChildren = function (componentClass, child, components, isExtends) {
@@ -4820,7 +4832,7 @@ var paper;
             }
         };
         GameObject.prototype._getComponent = function (componentClass) {
-            var componentIndex = componentClass.index;
+            var componentIndex = componentClass.__index;
             return componentIndex < 0 ? null : this._components[componentIndex];
         };
         /**
@@ -4875,8 +4887,8 @@ var paper;
          * 添加组件。
          */
         GameObject.prototype.addComponent = function (componentClass, config) {
-            paper.BaseComponent.register(componentClass);
-            var componentIndex = componentClass.index;
+            paper.registerClass(componentClass);
+            var componentIndex = componentClass.__index;
             var existedComponent = this._components[componentIndex];
             // disallowMultipleComponents.
             if (!componentClass.allowMultiple && existedComponent) {
@@ -4904,6 +4916,7 @@ var paper;
                     existedComponent._addComponent(component);
                 }
                 else {
+                    paper.registerClass(paper.GroupComponent);
                     var groupComponent = paper.BaseComponent.create(paper.GroupComponent, this);
                     groupComponent.initialize();
                     groupComponent.componentIndex = componentIndex;
@@ -5058,7 +5071,7 @@ var paper;
                 }
                 return null;
             }
-            var componentClassIndex = componentClass.index;
+            var componentClassIndex = componentClass.__index;
             if (componentClassIndex < 0) {
                 return null;
             }
@@ -8720,7 +8733,7 @@ var egret3d;
                     { componentClass: [egret3d.DirectLight, egret3d.PointLight, egret3d.SpotLight] }
                 ]
             ];
-            _this._camerasAndLights = _this._globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+            _this._camerasAndLights = egret3d.CamerasAndLights.getInstance(egret3d.CamerasAndLights);
             return _this;
         }
         CameraSystem.prototype.onAddGameObject = function (_gameObject, group) {
@@ -10620,7 +10633,7 @@ var egret3d;
                     ]
                 },
             ];
-            _this._drawCalls = _this._globalGameObject.getOrAddComponent(egret3d.DrawCalls);
+            _this._drawCalls = egret3d.DrawCalls.getInstance(egret3d.DrawCalls);
             return _this;
         }
         MeshRendererSystem.prototype._updateDrawCalls = function (gameObject) {
@@ -10701,7 +10714,7 @@ var egret3d;
                     ]
                 }
             ];
-            _this._drawCalls = _this._globalGameObject.getOrAddComponent(egret3d.DrawCalls);
+            _this._drawCalls = egret3d.DrawCalls.getInstance(egret3d.DrawCalls);
             return _this;
         }
         SkinnedMeshRendererSystem.prototype._updateDrawCalls = function (gameObject) {
@@ -11637,20 +11650,22 @@ var egret3d;
             return _this;
         }
         AnimationSystem.prototype.onAddComponent = function (component) {
-            var animations = component.gameObject.getComponents(egret3d.Animation);
             component._addToSystem = true;
-            if (component === animations[0] && !component._skinnedMeshRenderer) {
-                component._skinnedMeshRenderer = component.gameObject.getComponentsInChildren(egret3d.SkinnedMeshRenderer)[0];
-                if (component._skinnedMeshRenderer) {
-                    for (var _i = 0, _a = component._skinnedMeshRenderer.bones; _i < _a.length; _i++) {
-                        var bone = _a[_i];
-                        var boneBlendLayer = new egret3d.BoneBlendLayer();
-                        component._boneBlendLayers.push(boneBlendLayer);
+            if (component.animations.length > 0) {
+                var animaitonClip = component.animations[0].config.animations[0];
+                if (!animaitonClip.channels || animaitonClip.channels.length < 0) {
+                    component._skinnedMeshRenderer = component.gameObject.getComponentsInChildren(egret3d.SkinnedMeshRenderer)[0];
+                    if (component._skinnedMeshRenderer) {
+                        for (var _i = 0, _a = component._skinnedMeshRenderer.bones; _i < _a.length; _i++) {
+                            var bone = _a[_i];
+                            var boneBlendLayer = new egret3d.BoneBlendLayer();
+                            component._boneBlendLayers.push(boneBlendLayer);
+                        }
                     }
                 }
-                if (component.autoPlay) {
-                    component.play();
-                }
+            }
+            if (component.autoPlay) {
+                component.play();
             }
         };
         AnimationSystem.prototype.onUpdate = function () {
@@ -14073,7 +14088,7 @@ var egret3d;
                         ]
                     }
                 ];
-                _this._drawCalls = _this._globalGameObject.getOrAddComponent(egret3d.DrawCalls);
+                _this._drawCalls = egret3d.DrawCalls.getInstance(egret3d.DrawCalls);
                 return _this;
             }
             /**
@@ -15409,13 +15424,13 @@ var paper;
         };
         Group.prototype._onAddUnessentialComponent = function (component) {
             var gameObject = component.gameObject;
-            if (gameObject === this._globalGameObject) {
-                return;
-            }
-            if (!this._isBehaviour &&
-                this._bufferedGameObjects.indexOf(gameObject) < 0 && this._gameObjects.indexOf(gameObject) < 0 // Uninclude.
-            ) {
-                return;
+            if (!this._isBehaviour) {
+                if (gameObject === this._globalGameObject) {
+                    return;
+                }
+                if (this._bufferedGameObjects.indexOf(gameObject) < 0 && this._gameObjects.indexOf(gameObject) < 0) {
+                    return;
+                }
             }
             if (this._bufferedComponents.indexOf(component) >= 0 || this._components.indexOf(component) >= 0) {
                 return;
@@ -15424,9 +15439,6 @@ var paper;
         };
         Group.prototype._onRemoveUnessentialComponent = function (component) {
             var gameObject = component.gameObject;
-            if (gameObject === this._globalGameObject) {
-                return;
-            }
             var index = this._bufferedComponents.indexOf(component);
             if (index >= 0) {
                 this._bufferedComponents.splice(index, 1);
@@ -15445,6 +15457,9 @@ var paper;
                 }
             }
             else {
+                if (gameObject === this._globalGameObject) {
+                    return;
+                }
                 if (this._gameObjects.indexOf(gameObject) < 0) {
                     return;
                 }
@@ -15465,7 +15480,7 @@ var paper;
             this._removeGameObject(component.gameObject);
         };
         Group.prototype._addGameObject = function (gameObject) {
-            if (gameObject === this._globalGameObject) {
+            if (!this._isBehaviour && gameObject === this._globalGameObject) {
                 return;
             }
             if (this._bufferedGameObjects.indexOf(gameObject) >= 0 ||
@@ -16789,6 +16804,52 @@ var RES;
                 return Promise.resolve();
             }
         };
+        processor.GLTFShaderProcessor = {
+            onLoadStart: function (host, resource) {
+                return __awaiter(this, void 0, void 0, function () {
+                    var result, glTF, shaders, _i, shaders_1, shader, source, shaderSource;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, host.load(resource, 'json')];
+                            case 1:
+                                result = _a.sent();
+                                glTF = new egret3d.GLTFAsset();
+                                glTF.name = resource.name;
+                                if (!(result.extensions.KHR_techniques_webgl.shaders && result.extensions.KHR_techniques_webgl.shaders.length === 2)) return [3 /*break*/, 6];
+                                shaders = result.extensions.KHR_techniques_webgl.shaders;
+                                _i = 0, shaders_1 = shaders;
+                                _a.label = 2;
+                            case 2:
+                                if (!(_i < shaders_1.length)) return [3 /*break*/, 5];
+                                shader = shaders_1[_i];
+                                source = RES.host.resourceConfig["getResource"](shader.uri);
+                                if (!source) return [3 /*break*/, 4];
+                                return [4 /*yield*/, host.load(source)];
+                            case 3:
+                                shaderSource = _a.sent();
+                                shader.uri = shaderSource;
+                                _a.label = 4;
+                            case 4:
+                                _i++;
+                                return [3 /*break*/, 2];
+                            case 5: return [3 /*break*/, 7];
+                            case 6:
+                                console.error("错误的Shader格式数据");
+                                _a.label = 7;
+                            case 7:
+                                glTF.parse(result);
+                                paper.Asset.register(glTF);
+                                return [2 /*return*/, glTF];
+                        }
+                    });
+                });
+            },
+            onRemoveStart: function (host, resource) {
+                var data = host.get(resource);
+                data.dispose();
+                return Promise.resolve();
+            }
+        };
         processor.PrefabProcessor = {
             onLoadStart: function (host, resource) {
                 return host.load(resource, "json").then(function (data) {
@@ -16835,6 +16896,7 @@ var RES;
                 }
             })));
         }
+        RES.processor.map("Shader", processor.GLTFShaderProcessor);
         RES.processor.map("Texture", processor.TextureProcessor);
         RES.processor.map("TextureDesc", processor.TextureDescProcessor);
         RES.processor.map("GLTF", processor.GLTFProcessor);
@@ -18470,15 +18532,14 @@ var egret3d;
                     { componentClass: [egret3d.DirectLight, egret3d.SpotLight, egret3d.PointLight] }
                 ]
             ];
-            _this._camerasAndLights = _this._globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
-            _this._drawCalls = _this._globalGameObject.getOrAddComponent(egret3d.DrawCalls);
+            _this._drawCalls = egret3d.DrawCalls.getInstance(egret3d.DrawCalls);
+            _this._renderState = egret3d.WebGLRenderState.getInstance(egret3d.WebGLRenderState);
+            _this._camerasAndLights = egret3d.CamerasAndLights.getInstance(egret3d.CamerasAndLights);
             _this._lightCamera = _this._globalGameObject.getOrAddComponent(egret3d.Camera);
-            _this._renderState = _this._globalGameObject.getOrAddComponent(egret3d.WebGLRenderState);
             //
             _this._filteredLights = [];
             _this._cacheContextVersion = -1;
             _this._cacheMaterialVerision = -1;
-            _this._cacheMeshVersion = -1;
             return _this;
         }
         WebGLRenderSystem.prototype._updateContextUniforms = function (program, context, technique, forceUpdate) {
@@ -19622,11 +19683,11 @@ var egret3d;
                 formatGL = webgl.LUMINANCE;
             }
             //
-            if (img instanceof HTMLImageElement) {
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, formatGL, webgl.UNSIGNED_BYTE, img);
+            if (ArrayBuffer.isView(img)) {
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this._width, this._height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
             }
             else {
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this._width, this._height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, formatGL, webgl.UNSIGNED_BYTE, img);
             }
             if (mipmap) {
                 webgl.generateMipmap(webgl.TEXTURE_2D);
@@ -22726,7 +22787,7 @@ var paper;
                         var element = objs[index];
                         element.destroy();
                     }
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, objs);
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
                     return true;
                 }
                 return false;
