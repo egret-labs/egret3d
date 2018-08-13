@@ -1,52 +1,76 @@
 declare namespace paper {
     /**
-     * @internal
-     */
-    interface SerializedClass {
-        __serializeInfo: {
-            owner: SerializedClass;
-            keys?: string[];
-            ignore?: string[];
-        };
-        prototype?: {
-            __proto__: {
-                constructor: SerializedClass;
-            };
-        };
-    }
-    /**
-     * 标记序列化属性
-     * 通过装饰器标记需要序列化的属性
+     * 通过装饰器标记序列化属性。
      */
     function serializedField(classPrototype: any, key: string): void;
     /**
-     * 标记反序列化时需要忽略的属性
-     * 通过装饰器标记反序列化时需要被忽略的属性（但属性中引用的对象依然会被实例化）
+     * 通过装饰器标记反序列化时需要忽略的属性。
      */
     function deserializedIgnore(classPrototype: any, key: string): void;
     /**
-     * 标记组件是否在编辑模式拥有生命周期。
+     * 通过装饰器标记组件是否允许在同一实体上添加多个实例。
      */
-    function executeInEditMode(target: ComponentClass<BaseComponent>): void;
+    function allowMultiple(componentClass: ComponentClass<BaseComponent>): void;
     /**
-     * 标记组件是否允许在同一实体上添加多个实例。
+     * 通过装饰器标记组件依赖的其他组件。
      */
-    function allowMultiple(target: ComponentClass<BaseComponent>): void;
+    function requireComponent(requireComponentClass: ComponentClass<BaseComponent>): (componentClass: ComponentClass<BaseComponent>) => void;
     /**
-     * 标记组件依赖的其他组件。
+     * 通过装饰器标记组件是否在编辑模式拥有生命周期。
      */
-    function requireComponent(requireTarget: ComponentClass<BaseComponent>): (target: ComponentClass<BaseComponent>) => void;
+    function executeInEditMode(componentClass: ComponentClass<Behaviour>): void;
 }
 declare namespace paper {
+    /**
+     *
+     */
+    interface BaseClass extends Function {
+        /**
+         * @internal
+         */
+        __serializeKeys?: string[];
+        /**
+         * @internal
+         */
+        __deserializeIgnore?: string[];
+        /**
+         * @internal
+         */
+        __owner?: BaseClass;
+        /**
+         * @internal
+         */
+        readonly __onRegister: (baseClass: BaseClass) => void;
+    }
     /**
      * 生成 uuid 的方式。
      * @internal
      */
     let createUUID: () => string;
     /**
+     * @internal
+     */
+    function registerClass(baseClass: BaseClass): void;
+    /**
      * 基础对象。
      */
     abstract class BaseObject implements IUUID {
+        /**
+         * @internal
+         */
+        static __serializeKeys?: string[];
+        /**
+         * @internal
+         */
+        static __deserializeIgnore?: string[];
+        /**
+         * @internal
+         */
+        static __owner?: BaseClass;
+        /**
+         * @internal
+         */
+        static __onRegister(baseClass: BaseClass): void;
         /**
          *
          */
@@ -250,22 +274,20 @@ declare namespace paper {
     /**
      *
      */
-    type ComponentClass<T extends BaseComponent> = {
-        new (): T;
+    interface ComponentClass<T extends BaseComponent> extends BaseClass {
         executeInEditMode: boolean;
         allowMultiple: boolean;
+        requireComponents: ComponentClass<BaseComponent>[] | null;
         /**
          * @internal
          */
-        index: number;
-        requireComponents: ComponentClass<BaseComponent>[] | null;
-    };
-    /**
-     *
-     */
-    type SingletonComponentClass<T extends SingletonComponent> = ComponentClass<T> & {
-        instance: T | null;
-    };
+        readonly __isSingleton: boolean;
+        /**
+         * @internal
+         */
+        __index: number;
+        new (): T;
+    }
     /**
      *
      */
@@ -293,28 +315,23 @@ declare namespace paper {
          */
         static allowMultiple: boolean;
         /**
-         * @internal
-         */
-        static level: number;
-        /**
-         * @internal
-         */
-        static componentIndex: number;
-        /**
-         * @internal
-         */
-        static index: number;
-        /**
          * 依赖的其他组件。
          */
         static requireComponents: ComponentClass<BaseComponent>[] | null;
-        private static _createEnabled;
-        private static _componentCount;
-        private static readonly _componentClasses;
         /**
          * @internal
          */
-        static register(target: ComponentClass<BaseComponent>): void;
+        static readonly __isSingleton: boolean;
+        /**
+         * @internal
+         */
+        static __index: number;
+        private static readonly _componentClasses;
+        private static _createEnabled;
+        /**
+         * @internal
+         */
+        static __onRegister(componentClass: ComponentClass<BaseComponent>): void;
         /**
          * @internal
          */
@@ -498,11 +515,19 @@ declare namespace paper {
     /**
      * 单例组件基类。
      */
-    class SingletonComponent extends BaseComponent {
+    abstract class SingletonComponent extends BaseComponent {
+        /**
+         * @internal
+         */
+        static readonly __isSingleton: boolean;
+        /**
+         * @internal
+         */
+        static __instance: SingletonComponent | null;
         /**
          *
          */
-        static instance: SingletonComponent | null;
+        static getInstance<T extends SingletonComponent>(componentClass: ComponentClass<T>): T;
         initialize(): void;
         uninitialize(): void;
     }
@@ -1178,6 +1203,7 @@ declare namespace egret3d {
         extensions: {
             KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
             paper?: {
+                shaders?: gltf.Shader[];
                 renderQueue?: number;
             };
         };
@@ -6359,6 +6385,7 @@ declare namespace RES.processor {
     const TextureProcessor: RES.processor.Processor;
     const GLTFBinaryProcessor: RES.processor.Processor;
     const GLTFProcessor: RES.processor.Processor;
+    const GLTFShaderProcessor: RES.processor.Processor;
     const PrefabProcessor: RES.processor.Processor;
     const SceneProcessor: RES.processor.Processor;
 }
@@ -7057,14 +7084,13 @@ declare namespace egret3d {
         }[] | {
             componentClass: typeof DirectLight[];
         }[])[];
-        private readonly _camerasAndLights;
         private readonly _drawCalls;
-        private readonly _lightCamera;
         private readonly _renderState;
+        private readonly _camerasAndLights;
+        private readonly _lightCamera;
         private readonly _filteredLights;
         private _cacheContextVersion;
         private _cacheMaterialVerision;
-        private _cacheMeshVersion;
         private _cacheContext;
         private _cacheMaterial;
         private _cacheMesh;
