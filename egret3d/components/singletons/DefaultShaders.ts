@@ -14,6 +14,7 @@ namespace egret3d {
 
         // public static DIFFUSE_VERT_COLOR: Shader;
         // public static LAMBERT_NORMAL: Shader;
+        public static TEST: GLTFAsset;
 
         public static SHADOW_DEPTH: GLTFAsset;
         public static SHADOW_DISTANCE: GLTFAsset;
@@ -144,6 +145,33 @@ namespace egret3d {
 
             technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
             technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
+
+            return shader;
+        }
+
+        private _createTestShaderTemplate(url: string, renderQueue: RenderQueue) {
+            const shader = this.createBuildinShader(url, "test_vs", ShaderLib.test_vert, "test_fs", ShaderLib.test_frag, renderQueue);
+            const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
+
+            technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
+            technique.attributes["normal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
+            technique.attributes["uv"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["uv2"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_1 };
+            technique.attributes["color"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
+            technique.attributes["morphTarget0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphTarget1"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphTarget2"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphTarget3"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphTarget4"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphTarget5"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphTarget6"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphTarget7"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphNormal0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphNormal1"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphNormal2"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphNormal3"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["skinIndex"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
+            technique.attributes["skinWeight"] = { semantic: gltf.AttributeSemanticType.WEIGHTS_0 };
 
             return shader;
         }

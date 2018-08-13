@@ -668,6 +668,16 @@ declare namespace gltf {
         JOINTS_0 = "JOINTS_0",
         WEIGHTS_0 = "WEIGHTS_0",
 
+        
+        MORPHTARGET_0 = "WEIGHTS_0",
+        MORPHTARGET_1 = "WEIGHTS_1",
+        MORPHTARGET_2 = "WEIGHTS_2",
+        MORPHTARGET_3 = "WEIGHTS_3",
+        MORPHTARGET_4 = "WEIGHTS_4",
+        MORPHTARGET_5 = "WEIGHTS_5",
+        MORPHTARGET_6 = "WEIGHTS_6",
+        MORPHTARGET_7 = "WEIGHTS_7",
+
         _CORNER = "CORNER",
         _START_POSITION = "START_POSITION",
         _START_VELOCITY = "START_VELOCITY",
