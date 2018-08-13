@@ -156,9 +156,9 @@ namespace egret3d {
                                 index = indices[i + 2] * 3;
                                 Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p2);
 
-                                Matrix.transformVector3(p0, matrix, t0);
-                                Matrix.transformVector3(p1, matrix, t1);
-                                Matrix.transformVector3(p2, matrix, t2);
+                                matrix.transformVector3(p0);
+                                matrix.transformVector3(p1);
+                                matrix.transformVector3(p2);
 
                                 const result = ray.intersectsTriangle(t0, t1, t2);
                                 if (result) {
@@ -302,9 +302,8 @@ namespace egret3d {
         }
         /**
          * 绑定显存。
-         * @internal
          */
-        public abstract createBuffer(): void;
+        public abstract _createBuffer(): void;
         /**
          * 
          */

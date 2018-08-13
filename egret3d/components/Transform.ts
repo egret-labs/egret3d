@@ -22,12 +22,11 @@ namespace egret3d {
      * @language zh_CN
      */
     export class Transform extends paper.BaseComponent {
-        private _dirtyAABB: boolean = true;
         private _dirtyLocal: boolean = true;
         private _dirtyWorld: boolean = true;
         /**
          * 世界矩阵的行列式，如果小于0，说明进行了反转
-         * @internals
+         * @internal
          */
         public _worldMatrixDeterminant: number = 0.0;
         private readonly _localMatrix: Matrix = new Matrix();
@@ -134,17 +133,19 @@ namespace egret3d {
 
         private _sync() {
             if (this._dirtyLocal) {
-                Matrix.fromRTS(this.localPosition, this.localScale, this.localRotation, this._localMatrix);
+                this._localMatrix.compose(this.localPosition, this.localRotation, this.localScale);
                 this._dirtyLocal = false;
             }
 
             if (this._dirtyWorld) {
                 if (!this._parent) {
-                    Matrix.copy(this._localMatrix, this._worldMatrix);
-                } else {
-                    Matrix.multiply(this._parent._worldMatrix, this._localMatrix, this._worldMatrix);
+                    this._worldMatrix.copy(this._localMatrix);
                 }
-                this._worldMatrixDeterminant = Matrix.determinant(this._worldMatrix);
+                else {
+                    this._worldMatrix.multiply(this._localMatrix);
+                }
+
+                this._worldMatrixDeterminant = this._worldMatrix.determinant();
                 this._dirtyWorld = false;
             }
         }
@@ -153,9 +154,11 @@ namespace egret3d {
             if ((!local || (local && this._dirtyLocal)) && this._dirtyWorld) {
                 return;
             }
+
             if (local) {
                 this._dirtyLocal = true;
             }
+
             if (!this._dirtyWorld) {
                 this._dirtyWorld = true;
                 let i = this._children.length;
@@ -163,11 +166,14 @@ namespace egret3d {
                     if (this._children[i]._dirtyWorld) {
                         continue;
                     }
+
                     this._children[i]._dirtify();
                 }
             }
-            // transform dirty
-            this._dirtyAABB = true;
+
+            if (this.gameObject.renderer) {
+                this.gameObject.renderer._boundingSphereDirty = true;
+            }
         }
 
         /**
@@ -477,7 +483,7 @@ namespace egret3d {
          */
         public getLocalMatrix(): Readonly<Matrix> {
             if (this._dirtyLocal) {
-                Matrix.fromRTS(this.localPosition, this.localScale, this.localRotation, this._localMatrix);
+                this._localMatrix.compose(this.localPosition, this.localRotation, this.localScale);
                 this._dirtyLocal = false;
             }
 
@@ -496,7 +502,7 @@ namespace egret3d {
          * @language zh_CN
          */
         public getPosition(): Readonly<Vector3> {
-            Matrix.getTranslation(this.getWorldMatrix(), this._position);
+            this.getWorldMatrix().decompose(this._position, null, null); // TODO dirty.
             return this._position;
         }
         /**
@@ -524,7 +530,7 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                helpMatrix.copy(this._parent.getWorldMatrix()).inverse().transformVector3(helpVector3);
+                helpMatrix.inverse(this._parent.getWorldMatrix()).transformVector3(helpVector3);
             }
 
             this.localPosition.copy(helpVector3);
@@ -546,7 +552,7 @@ namespace egret3d {
          * @language zh_CN
          */
         public getRotation(): Readonly<Quaternion> {
-            Quaternion.fromMatrix(this.getWorldMatrix(), this._rotation);
+            this.getWorldMatrix().decompose(null, this._rotation, null); // TODO dirty.
             return this._rotation;
         }
         /**
@@ -598,7 +604,7 @@ namespace egret3d {
          * @language zh_CN
          */
         public getEulerAngles(): Readonly<Vector3> {
-            Matrix.toEulerAngles(this.getWorldMatrix(), this._eulerAngles);
+            Matrix.toEulerAngles(this.getWorldMatrix(), this._eulerAngles); // TODO dirty
             return this._eulerAngles;
         }
 
@@ -649,7 +655,7 @@ namespace egret3d {
          * @language zh_CN
          */
         public getScale(): Readonly<Vector3> {
-            Matrix.getScale(this.getWorldMatrix(), this._scale);
+            this.getWorldMatrix().decompose(null, null, this._scale); // TODO dirty.
             return this._scale;
         }
         /**
@@ -677,7 +683,7 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                helpMatrix.copy(this._parent.getWorldMatrix()).inverse().transformVector3(helpVector3);
+                helpMatrix.inverse(this._parent.getWorldMatrix()).transformVector3(helpVector3);
             }
 
             this.localScale.copy(helpVector3);
@@ -712,23 +718,6 @@ namespace egret3d {
             return this._worldMatrix;
         }
         /**
-         * z-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前z轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public getForward(out: Vector3): Vector3 {
-            Matrix.transformNormal(helpFoward, this.getWorldMatrix(), out);
-            Vector3.normalize(out);
-            return out;
-        }
-        /**
          * x-axis towards in world space
          * @version paper 1.0
          * @platform Web
@@ -740,9 +729,12 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getRight(out: Vector3) {
-            Matrix.transformNormal(helpRight, this.getWorldMatrix(), out);
-            Vector3.normalize(out);
+        public getRight(out?: Vector3) {
+            if (!out) {
+                out = Vector3.create();
+            }
+
+            return this.getWorldMatrix().transformNormal(Vector3.RIGHT, out).normalize();
         }
         /**
          * y-axis towards in world space
@@ -756,9 +748,31 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getUp(out: Vector3) {
-            Matrix.transformNormal(helpUp, this.getWorldMatrix(), out);
-            Vector3.normalize(out);
+        public getUp(out?: Vector3) {
+            if (!out) {
+                out = Vector3.create();
+            }
+
+            return this.getWorldMatrix().transformNormal(Vector3.UP, out).normalize();
+        }
+        /**
+         * z-axis towards in world space
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取世界坐标系下当前z轴的朝向
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        public getForward(out?: Vector3) {
+            if (!out) {
+                out = Vector3.create();
+            }
+
+            return this.getWorldMatrix().transformNormal(Vector3.FORWARD, out).normalize();
         }
         /**
          * look at a target
@@ -792,21 +806,6 @@ namespace egret3d {
          */
         public get childCount(): number {
             return this._children.length;
-        }
-        /**
-         * 
-         */
-        public get aabb() {
-            if (!this._aabb) {
-                this._aabb = this._buildAABB();
-            }
-
-            if (this._dirtyAABB) {
-                this._aabb.update(this.getWorldMatrix());
-                this._dirtyAABB = false;
-            }
-
-            return this._aabb;
         }
         /**
          * children list

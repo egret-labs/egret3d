@@ -269,7 +269,7 @@ namespace egret3d {
                 const primitive = mesh.glTFMesh.primitives[subMeshIndex];
                 const gl = WebGLCapabilities.webgl;
 
-                gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
+                gl.bindBuffer(gl.ARRAY_BUFFER, mesh._vbo);
 
                 const glAttributes = program.attributes;
                 const attributes = technique.attributes;
@@ -289,7 +289,7 @@ namespace egret3d {
                     }
                 }
 
-                const ibo = mesh.ibos[subMeshIndex];
+                const ibo = mesh._ibos[subMeshIndex];
                 if (ibo) {
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
                 }

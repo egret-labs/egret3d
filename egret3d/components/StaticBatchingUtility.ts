@@ -136,7 +136,7 @@ namespace egret3d {
      */
     function _combineMesh(combineInstance: CombineInstance): Mesh {
         //
-        egret3d.Matrix.inverse(combineInstance.root.transform.getWorldMatrix(), helpInverseMatrix);
+        helpInverseMatrix.inverse(combineInstance.root.transform.getWorldMatrix());
 
         const meshAttribute = combineInstance.meshAttribute;
         const lightmapScaleOffset = combineInstance.lightmapScaleOffset;
@@ -174,8 +174,8 @@ namespace egret3d {
                         helpVec3_1.y = positionBuffer[j + 1];
                         helpVec3_1.z = positionBuffer[j + 2];
                         //转换成世界坐标后在转换为合并节点的本地坐标
-                        egret3d.Matrix.transformVector3(helpVec3_1, worldMatrix, helpVec3_2);
-                        egret3d.Matrix.transformVector3(helpVec3_2, helpInverseMatrix, helpVec3_1);
+                        worldMatrix.transformVector3(helpVec3_1, helpVec3_2);
+                        helpInverseMatrix.transformVector3(helpVec3_2, helpVec3_1);
                         //
                         tempVertexBuffers[gltf.MeshAttributeType.POSITION].push(helpVec3_1.x, helpVec3_1.y, helpVec3_1.z);
                     }

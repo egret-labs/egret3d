@@ -410,7 +410,7 @@ namespace paper.editor {
                     egret3d.Vector3.cross(this._dragOffset, hit, helpVec3_1)
                     let theta = egret3d.Vector3.dot(helpVec3_1, this._dragPlaneNormal) >= 0 ? Math.acos(cosHitOffset) : -Math.acos(cosHitOffset);
                     let cos = Math.cos(theta * 0.5), sin = Math.sin(theta * 0.5);
-                    egret3d.Quaternion.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos, helpQuat_1);
+                    helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
                     egret3d.Quaternion.multiply(helpQuat_1, this._initRotation, helpQuat_2);
                     egret3d.Quaternion.copy(helpQuat_2, this._ctrlRot);
                     this.editorModel.setTransformProperty("rotation", helpQuat_2, this.selectedGameObjs[0].transform);
@@ -566,7 +566,7 @@ namespace paper.editor {
                     egret3d.Vector3.cross(this._dragOffset, hit, helpVec3_1);
                     let theta = egret3d.Vector3.dot(helpVec3_1, this._dragPlaneNormal) >= 0 ? Math.acos(cosHitOffset) : -Math.acos(cosHitOffset);
                     let cos = Math.cos(theta * 0.5), sin = Math.sin(theta * 0.5);
-                    egret3d.Quaternion.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos, helpQuat_1);
+                    helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
 
                     egret3d.Quaternion.multiply(helpQuat_1, this._ctrlRot, this._ctrlRot);
 

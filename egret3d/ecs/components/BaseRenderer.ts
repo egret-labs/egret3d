@@ -3,6 +3,7 @@ namespace paper {
         Materials = "materials",
     }
 
+    const _helpVector3A = egret3d.Vector3.create();
     /**
      * renderer component interface
      * @version paper 1.0
@@ -17,24 +18,34 @@ namespace paper {
      */
     export abstract class BaseRenderer extends BaseComponent {
         /**
-         * 
+         * @protected
          */
-        public readonly aabb: egret3d.AABB = new egret3d.AABB();
-        /**
-         * @internal
-         */
-        public _aabbDirty: boolean = true;
+        public _boundingSphereDirty: boolean = true;
         @serializedField
         protected _receiveShadows: boolean = false;
         @serializedField
         protected _castShadows: boolean = false;
         @serializedField
         protected _lightmapIndex: number = -1;
+        protected readonly _boundingSphere: egret3d.Sphere = new egret3d.Sphere();
+        protected readonly _aabb: egret3d.AABB = new egret3d.AABB();
         @serializedField
         protected readonly _lightmapScaleOffset: Float32Array = new Float32Array([1.0, 1.0, 0.0, 0.0]);
 
-        protected abstract _updateAABB(): void;
-
+        protected _recalculateSphere() {
+            const worldMatrix = this.gameObject.transform.getWorldMatrix();
+            this._boundingSphere.copy(this._aabb.sphere);
+            worldMatrix.transformVector3(this._boundingSphere.center);
+            worldMatrix.decompose(null, null, _helpVector3A);
+            this._boundingSphere.radius *= Math.max(Math.abs(_helpVector3A.x), Math.abs(_helpVector3A.y), Math.abs(_helpVector3A.z));
+        }
+        /**
+         * 重新计算 AABB。
+         */
+        public abstract recalculateAABB(): void;
+        /**
+         * 
+         */
         @editor.property(editor.EditType.CHECKBOX)
         public get receiveShadows() {
             return this._receiveShadows;
@@ -46,7 +57,9 @@ namespace paper {
 
             this._receiveShadows = value;
         }
-
+        /**
+         * 
+         */
         @editor.property(editor.EditType.CHECKBOX)
         public get castShadows() {
             return this._castShadows;
@@ -58,7 +71,9 @@ namespace paper {
 
             this._castShadows = value;
         }
-
+        /**
+         * 
+         */
         @editor.property(editor.EditType.NUMBER)
         public get lightmapIndex() {
             return this._lightmapIndex;
@@ -70,7 +85,26 @@ namespace paper {
 
             this._lightmapIndex = value;
         }
+        /**
+         * 
+         */
+        public get aabb(): Readonly<egret3d.AABB> {
+            return this._aabb;
+        }
+        /**
+         * 
+         */
+        public get boundingSphere(): Readonly<egret3d.Sphere> {
+            if (this._boundingSphereDirty) {
+                this._recalculateSphere();
+                this._boundingSphereDirty = false;
+            }
 
+            return this._boundingSphere;
+        }
+        /**
+         * 
+         */
         public get lightmapScaleOffset() {
             return this._lightmapScaleOffset;
         }

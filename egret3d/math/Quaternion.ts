@@ -112,6 +112,52 @@ namespace egret3d {
             return this;
         }
 
+        public fromMatrix(matrix: Readonly<Matrix>) {
+            // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
+
+            // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
+            const rawData = matrix.rawData;
+            const m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];
+            const m21 = rawData[1], m22 = rawData[5], m23 = rawData[9];
+            const m31 = rawData[2], m32 = rawData[6], m33 = rawData[10];
+            const trace = m11 + m22 + m33;
+            let s = 0.0;
+
+            if (trace > 0) {
+                s = 0.5 / Math.sqrt(trace + 1.0);
+                this.w = 0.25 / s;
+                this.x = (m32 - m23) * s;
+                this.y = (m13 - m31) * s;
+                this.z = (m21 - m12) * s;
+
+            }
+            else if (m11 > m22 && m11 > m33) {
+                s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
+                this.w = (m32 - m23) / s;
+                this.x = 0.25 * s;
+                this.y = (m12 + m21) / s;
+                this.z = (m13 + m31) / s;
+
+            }
+            else if (m22 > m33) {
+                s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
+                this.w = (m13 - m31) / s;
+                this.x = (m12 + m21) / s;
+                this.y = 0.25 * s;
+                this.z = (m23 + m32) / s;
+
+            }
+            else {
+                s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
+                this.w = (m21 - m12) / s;
+                this.x = (m13 + m31) / s;
+                this.y = (m23 + m32) / s;
+                this.z = 0.25 * s;
+            }
+
+            return this;
+        }
+
         public multiply(value: Readonly<IVector4>) {
             const w1 = this.w, x1 = this.x, y1 = this.y, z1 = this.z;
             const w2 = value.w, x2 = value.x, y2 = value.y, z2 = value.z;
@@ -140,19 +186,8 @@ namespace egret3d {
             return value;
         }
 
-        /**
-         * @deprecated
-         */
-        public static set(x: number, y: number, z: number, w: number, out: Quaternion): Quaternion {
-            out.x = x;
-            out.y = y;
-            out.z = z;
-            out.w = w;
-            return out;
-        }
-
-        public static getMagnitude(src: Quaternion): number {
-            return Math.sqrt(src.w * src.w + src.x * src.x + src.y * src.y + src.z * src.z);
+        public getMagnitude() {
+            return Math.sqrt(this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z);
         }
 
         public static fromYawPitchRoll(yaw: number, pitch: number, roll: number, out: Quaternion): Quaternion {
@@ -209,97 +244,6 @@ namespace egret3d {
             return out;
         }
 
-        public static fromMatrix(matrix: Matrix, out: Quaternion): Quaternion {
-            let m00, m01, m02, m10, m11, m12, m20, m21, m22,
-                tr, s, rs, lx, ly, lz;
-
-            let m = matrix.rawData;
-
-            // Cache matrix values for super-speed
-            m00 = m[0];
-            m01 = m[1];
-            m02 = m[2];
-            m10 = m[4];
-            m11 = m[5];
-            m12 = m[6];
-            m20 = m[8];
-            m21 = m[9];
-            m22 = m[10];
-
-            // Remove the scale from the matrix
-            lx = 1 / Math.sqrt(m00 * m00 + m01 * m01 + m02 * m02);
-            ly = 1 / Math.sqrt(m10 * m10 + m11 * m11 + m12 * m12);
-            lz = 1 / Math.sqrt(m20 * m20 + m21 * m21 + m22 * m22);
-
-            m00 *= lx;
-            m01 *= lx;
-            m02 *= lx;
-            m10 *= ly;
-            m11 *= ly;
-            m12 *= ly;
-            m20 *= lz;
-            m21 *= lz;
-            m22 *= lz;
-
-            // http://www.cs.ucr.edu/~vbz/resources/quatut.pdf
-
-            tr = m00 + m11 + m22;
-            if (tr >= 0) {
-                s = Math.sqrt(tr + 1);
-                out.w = s * 0.5;
-                s = 0.5 / s;
-                out.x = (m12 - m21) * s;
-                out.y = (m20 - m02) * s;
-                out.z = (m01 - m10) * s;
-            } else {
-                if (m00 > m11) {
-                    if (m00 > m22) {
-                        // XDiagDomMatrix
-                        rs = (m00 - (m11 + m22)) + 1;
-                        rs = Math.sqrt(rs);
-
-                        out.x = rs * 0.5;
-                        rs = 0.5 / rs;
-                        out.w = (m12 - m21) * rs;
-                        out.y = (m01 + m10) * rs;
-                        out.z = (m02 + m20) * rs;
-                    } else {
-                        // ZDiagDomMatrix
-                        rs = (m22 - (m00 + m11)) + 1;
-                        rs = Math.sqrt(rs);
-
-                        out.z = rs * 0.5;
-                        rs = 0.5 / rs;
-                        out.w = (m01 - m10) * rs;
-                        out.x = (m20 + m02) * rs;
-                        out.y = (m21 + m12) * rs;
-                    }
-                } else if (m11 > m22) {
-                    // YDiagDomMatrix
-                    rs = (m11 - (m22 + m00)) + 1;
-                    rs = Math.sqrt(rs);
-
-                    out.y = rs * 0.5;
-                    rs = 0.5 / rs;
-                    out.w = (m20 - m02) * rs;
-                    out.z = (m12 + m21) * rs;
-                    out.x = (m10 + m01) * rs;
-                } else {
-                    // ZDiagDomMatrix
-                    rs = (m22 - (m00 + m11)) + 1;
-                    rs = Math.sqrt(rs);
-
-                    out.z = rs * 0.5;
-                    rs = 0.5 / rs;
-                    out.w = (m01 - m10) * rs;
-                    out.x = (m20 + m02) * rs;
-                    out.y = (m21 + m12) * rs;
-                }
-            }
-
-            return out;
-        }
-
         public static lookAt(pos: Vector3, target: Vector3, out: Quaternion): Quaternion {
             let dir = helpVec3_1;
             Vector3.subtract(target, pos, dir);
@@ -346,14 +290,16 @@ namespace egret3d {
 
             let yaxis = Vector3.cross(zaxis, xaxis, helpVec3_3);
 
-            return Quaternion.fromMatrix(Matrix.set(
+            return out.fromMatrix(helpMat4_1.set(
                 xaxis.x, yaxis.x, zaxis.x, 0,
                 xaxis.y, yaxis.y, zaxis.y, 0,
                 xaxis.z, yaxis.z, zaxis.z, 0,
-                0, 0, 0, 1, helpMat4_1
-            ), out);
+                0, 0, 0, 1
+            ));
         }
-
+        /**
+         * @deprecated
+         */
         public static multiply(q1: Quaternion, q2: Quaternion, out: Quaternion): Quaternion {
             let w1: number = q1.w, x1: number = q1.x, y1: number = q1.y, z1: number = q1.z;
             let w2: number = q2.w, x2: number = q2.x, y2: number = q2.y, z2: number = q2.z;
@@ -367,7 +313,9 @@ namespace egret3d {
 
             return out;
         }
-
+        /**
+         * @deprecated
+         */
         public static normalize(out: Quaternion): Quaternion {
             let mag: number = 1 / Math.sqrt(out.x * out.x + out.y * out.y + out.z * out.z + out.w * out.w);
 
@@ -378,7 +326,9 @@ namespace egret3d {
 
             return out;
         }
-
+        /**
+         * @deprecated
+         */
         public static copy(q: Quaternion, out: Quaternion): Quaternion {
             out.x = q.x;
             out.y = q.y;
@@ -387,7 +337,9 @@ namespace egret3d {
 
             return out;
         }
-
+        /**
+         * @deprecated
+         */
         public static inverse(q: Quaternion, out: Quaternion): Quaternion {
             let norm: number = q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z;
 

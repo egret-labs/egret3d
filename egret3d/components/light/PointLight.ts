@@ -10,7 +10,6 @@ namespace egret3d {
     /**
      * 
      */
-    @paper.disallowMultiple
     export class PointLight extends BaseLight {
         public readonly type: LightType = LightType.Point;
         public renderTarget: IRenderTarget = new GlRenderTarget(1024, 1024, true); // TODO

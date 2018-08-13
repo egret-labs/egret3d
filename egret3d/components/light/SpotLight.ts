@@ -2,7 +2,6 @@ namespace egret3d {
     /**
      * 
      */
-    @paper.disallowMultiple
     export class SpotLight extends BaseLight {
         public readonly type: LightType = LightType.Spot;
 

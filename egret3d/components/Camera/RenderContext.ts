@@ -71,9 +71,9 @@ namespace egret3d {
             camera.calcViewPortPixel(this.viewPortPixel); // update viewport
 
             const asp = this.viewPortPixel.w / this.viewPortPixel.h;
-            this.matrix_v.copy(matrix).inverse();
+            this.matrix_v.inverse(matrix);
             camera.calcProjectMatrix(asp, this.matrix_p);
-            Matrix.multiply(this.matrix_p, this.matrix_v, this.matrix_vp);
+            this.matrix_vp.multiply(this.matrix_p, this.matrix_v);
 
             const worldMatrix = matrix.rawData;
 
@@ -263,9 +263,9 @@ namespace egret3d {
         }
 
         updateModel(matrix: Matrix) {
-            Matrix.copy(matrix, this.matrix_m); // clone matrix because getWorldMatrix returns a reference
-            Matrix.multiply(this.matrix_v, this.matrix_m, this.matrix_mv);
-            Matrix.multiply(this.matrix_vp, this.matrix_m, this.matrix_mvp);
+            this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
+            this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
+            this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
 
             this.version++;
         }

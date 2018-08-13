@@ -237,7 +237,7 @@ namespace paper.editor {
             this.camera.calcProjectMatrix(asp, this.pMatrix);
             egret3d.Matrix.multiply(this.pMatrix, this.vMatrix, this.mvpMatrix);
             m = m || new egret3d.Matrix();
-            egret3d.Matrix.copy(m, this.mMatrix);
+            this.mMatrix.copy(m);
             egret3d.Matrix.multiply(this.mvpMatrix, this.mMatrix, this.mvpMatrix);
         }
 
@@ -454,7 +454,7 @@ namespace paper.editor {
             Gizmo.DrawArrow(worldMat, [0.0, 0.0, 1.0, 1.0], true);
         }
         private static getWorldMatrixWithoutScale(transform: egret3d.Transform, fixScale: number, out: egret3d.Matrix) {
-            egret3d.Matrix.identify(out);
+            out.identity();
             let p = transform.getPosition();
             let r = transform.getRotation();
             let p_c = this.camera.gameObject.transform.getPosition();

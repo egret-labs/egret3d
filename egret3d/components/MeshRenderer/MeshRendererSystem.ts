@@ -7,7 +7,15 @@ namespace egret3d {
             {
                 componentClass: MeshFilter,
                 listeners: [
-                    { type: MeshFilterEventType.Mesh, listener: (component: MeshFilter) => { this._updateDrawCalls(component.gameObject); } }
+                    {
+                        type: MeshFilterEventType.Mesh, listener: (component: MeshFilter) => {
+                            this._updateDrawCalls(component.gameObject);
+
+                            if (component.gameObject.renderer) {
+                                component.gameObject.renderer.recalculateAABB();
+                            }
+                        }
+                    }
                 ]
             },
             {
@@ -32,7 +40,7 @@ namespace egret3d {
                 return;
             }
 
-            filter.mesh.createBuffer();
+            filter.mesh._createBuffer();
             this._drawCalls.removeDrawCalls(renderer);
             this._drawCalls.renderers.push(renderer);
             //

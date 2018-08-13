@@ -92,14 +92,6 @@ namespace paper {
         }
 
         if (
-            source instanceof Asset ||
-            source.constructor === GameObject ||
-            source instanceof BaseComponent
-        ) {
-            return source === target;
-        }
-
-        if (
             (Array.isArray(source) || ArrayBuffer.isView(source)) &&
             (Array.isArray(target) || ArrayBuffer.isView(target))
         ) {
@@ -125,6 +117,14 @@ namespace paper {
             return false;
         }
 
+        if (
+            source instanceof Asset ||
+            source.constructor === GameObject ||
+            source instanceof BaseComponent
+        ) {
+            return source === target;
+        }
+
         if (source.constructor === Object) {
             for (let k of source) {
                 if (!equal(source[k], target[k])) {
@@ -135,8 +135,12 @@ namespace paper {
             return true;
         }
 
-        if (egret.is(source, "paper.ISerializable") && egret.is(target, "paper.ISerializable")) { // TODO 字符串依赖。
+        if (egret.is(source, "paper.ISerializable")) { // TODO 字符串依赖。
             return equal((source as ISerializable).serialize(), (target as ISerializable).serialize());
+        }
+
+        if (source instanceof BaseObject) {
+            return equal(serializeStruct(source), serializeStruct(target));
         }
 
         throw new Error("Unsupported data.");
@@ -332,42 +336,46 @@ namespace paper {
                     return target;
                 }
 
+                if (egret.is(source, "paper.ISerializable")) { // TODO 字符串依赖。
+                    return (source as paper.ISerializable).serialize();
+                }
+
                 if (source instanceof BaseObject) {
                     if (source.constructor === Scene) { // Cannot serialize scene reference.
-                        return undefined;
+                        return undefined; // Pass.
                     }
 
                     if (source instanceof Asset) {
                         return serializeAsset(source);
                     }
 
-                    if (parent) {
-                        if (parent.constructor === Scene) {
-                            if (key === KEY_GAMEOBJECTS) {
-                                return _serializeObject(source) ? { uuid: source.uuid } : undefined;
+                    if (source instanceof GameObject || source instanceof BaseComponent) {
+                        if (parent) {
+                            if (parent.constructor === Scene) {
+                                if (key === KEY_GAMEOBJECTS) {
+                                    return _serializeObject(source) ? { uuid: source.uuid } : undefined; // Pass.
+                                }
+                            }
+                            else if (parent.constructor === GameObject) {
+                                if (key === KEY_COMPONENTS) {
+                                    return _serializeObject(source) ? { uuid: source.uuid } : undefined; // Pass.
+                                }
+                            }
+                            else if (parent.constructor === egret3d.Transform) {
+                                if (key === KEY_CHILDREN) {
+                                    return _serializeObject((source as egret3d.Transform).gameObject) ? { uuid: source.uuid } : undefined; // Pass.
+                                }
                             }
                         }
-                        else if (parent.constructor === GameObject) {
-                            if (key === KEY_COMPONENTS) {
-                                return _serializeObject(source) ? { uuid: source.uuid } : undefined;
-                            }
-                        }
-                        else if (parent.constructor === egret3d.Transform) {
-                            if (key === KEY_CHILDREN) {
-                                return _serializeObject((source as egret3d.Transform).gameObject) ? { uuid: source.uuid } : undefined;
-                            }
-                        }
+
+                        return _serializeReference(source);
                     }
 
-                    return _serializeReference(source);
-                }
-
-                if (egret.is(source, "paper.ISerializable")) { // TODO 字符串依赖。
-                    return (source as paper.ISerializable).serialize();
+                    return serializeStruct(source);
                 }
 
                 console.warn("Serialize error.", source);
-                return undefined;
+                return undefined; // Pass.
             }
 
             default:

@@ -6,11 +6,11 @@ namespace egret3d {
         /**
          * @internal
          */
-        public readonly ibos: WebGLBuffer[] = [];
+        public readonly _ibos: WebGLBuffer[] = [];
         /**
          * @internal
          */
-        public vbo: WebGLBuffer | null = null;
+        public _vbo: WebGLBuffer | null = null;
 
         public dispose() {
             if (this._isBuiltin) {
@@ -19,26 +19,26 @@ namespace egret3d {
 
             const webgl = WebGLCapabilities.webgl;
 
-            for (const ibo of this.ibos) {
+            for (const ibo of this._ibos) {
                 webgl.deleteBuffer(ibo);
             }
 
-            if (this.vbo) {
-                webgl.deleteBuffer(this.vbo);
+            if (this._vbo) {
+                webgl.deleteBuffer(this._vbo);
             }
 
             super.dispose();
 
-            this.ibos.length = 0;
-            this.vbo = null;
+            this._ibos.length = 0;
+            this._vbo = null;
         }
 
-        public createBuffer() {
-            if (this.vbo) {
+        public _createBuffer() {
+            if (this._vbo) {
                 return;
             }
 
-            this.vbo = true;
+            this._vbo = true;
 
             const vertexBufferViewAccessor = this.getAccessor(0);
             const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
@@ -46,7 +46,7 @@ namespace egret3d {
             const vbo = webgl.createBuffer();
 
             if (vbo) {
-                this.vbo = vbo;
+                this._vbo = vbo;
 
                 const attributeNames: gltf.MeshAttribute[] = [];
                 for (const k in this._glTFMesh!.primitives[0].attributes) {
@@ -56,10 +56,10 @@ namespace egret3d {
                 let subMeshIndex = 0;
                 for (const primitive of this._glTFMesh!.primitives) {
                     if (primitive.indices !== undefined) {
-                        if (this.ibos.length === subMeshIndex) {
+                        if (this._ibos.length === subMeshIndex) {
                             const ibo = webgl.createBuffer();
                             if (ibo) {
-                                this.ibos.push(ibo);
+                                this._ibos.push(ibo);
                                 webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
                                 webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this.drawMode);
                                 this.uploadSubIndexBuffer(subMeshIndex);
@@ -72,14 +72,14 @@ namespace egret3d {
                             console.error("Error arguments.");
                         }
                     }
-                    else if (this.ibos.length > 0) {
+                    else if (this._ibos.length > 0) {
                         console.error("Error arguments.");
                     }
 
                     subMeshIndex++;
                 }
 
-                webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
+                webgl.bindBuffer(webgl.ARRAY_BUFFER, this._vbo);
                 webgl.bufferData(webgl.ARRAY_BUFFER, vertexBuffer.byteLength, this.drawMode);
                 this.uploadVertexBuffer(attributeNames);
             }
@@ -91,14 +91,14 @@ namespace egret3d {
          * 
          */
         public uploadVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset: number = 0, count: number = 0) {
-            if (!this.vbo) {
+            if (!this._vbo) {
                 return;
             }
 
             const webgl = WebGLCapabilities.webgl;
             const { attributes } = this._glTFMesh!.primitives[0];
 
-            webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, this._vbo);
 
             if (Array.isArray(uploadAttributes)) {
                 for (const attributeName of uploadAttributes) {
@@ -132,7 +132,7 @@ namespace egret3d {
          */
         public uploadSubIndexBuffer(subMeshIndex: number = 0) {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh!.primitives.length) {
-                if (!this.vbo) {
+                if (!this._vbo) {
                     return;
                 }
 
@@ -142,7 +142,7 @@ namespace egret3d {
                 if (primitive.indices !== undefined) {
                     const accessor = this.getAccessor(primitive.indices);
                     const subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
-                    const ibo = this.ibos[subMeshIndex];
+                    const ibo = this._ibos[subMeshIndex];
                     webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
                     webgl.bufferSubData(webgl.ELEMENT_ARRAY_BUFFER, 0, subIndexBuffer);
                 }

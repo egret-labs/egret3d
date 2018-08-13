@@ -7,14 +7,14 @@ namespace egret3d {
     }
 
     export class Vector3 implements IVector3, paper.ISerializable {
-        public static readonly ZERO: Readonly<Vector3> = new Vector3(0.0, 0.0, 0.0);
-        public static readonly ONE: Readonly<Vector3> = new Vector3(1.0, 1.0, 1.0);
-        public static readonly UP: Readonly<Vector3> = new Vector3(0.0, 1.0, 0.0);
-        public static readonly DOWN: Readonly<Vector3> = new Vector3(0.0, -1.0, 0.0);
-        public static readonly LEFT: Readonly<Vector3> = new Vector3(-1.0, 0.0, 0.0);
-        public static readonly RIGHT: Readonly<Vector3> = new Vector3(1.0, 0.0, 0.0);
-        public static readonly FORWARD: Readonly<Vector3> = new Vector3(0.0, 0.0, 1.0);
-        public static readonly BACK: Readonly<Vector3> = new Vector3(0.0, 0.0, -1.0);
+        public static readonly ZERO: Readonly<Vector3> = Vector3.create(0.0, 0.0, 0.0);
+        public static readonly ONE: Readonly<Vector3> = Vector3.create(1.0, 1.0, 1.0);
+        public static readonly UP: Readonly<Vector3> = Vector3.create(0.0, 1.0, 0.0);
+        public static readonly DOWN: Readonly<Vector3> = Vector3.create(0.0, -1.0, 0.0);
+        public static readonly LEFT: Readonly<Vector3> = Vector3.create(-1.0, 0.0, 0.0);
+        public static readonly RIGHT: Readonly<Vector3> = Vector3.create(1.0, 0.0, 0.0);
+        public static readonly FORWARD: Readonly<Vector3> = Vector3.create(0.0, 0.0, 1.0);
+        public static readonly BACK: Readonly<Vector3> = Vector3.create(0.0, 0.0, -1.0);
 
         private static readonly _instances: Vector3[] = [];
 
@@ -32,26 +32,6 @@ namespace egret3d {
             }
 
             this._instances.push(value);
-        }
-
-        public static subtract(v1: Readonly<IVector3>, v2: Readonly<IVector3>, out: IVector3) {
-            out.x = v1.x - v2.x;
-            out.y = v1.y - v2.y;
-            out.z = v1.z - v2.z;
-
-            return out;
-        }
-
-        public static getSqrLength(v: Readonly<IVector3>) {
-            return v.x * v.x + v.y * v.y + v.z * v.z;
-        }
-
-        public static getLength(v: Readonly<IVector3>) {
-            return Math.sqrt(this.getSqrLength(v));
-        }
-
-        public static getDistance(a: Readonly<IVector3>, b: Readonly<IVector3>) {
-            return this.getLength(this.subtract(a, b, helpVector));
         }
 
         public x: number;
@@ -87,7 +67,7 @@ namespace egret3d {
         }
 
         public clone() {
-            const value = new Vector3();
+            const value = Vector3.create();
             value.copy(this);
 
             return value;
@@ -117,6 +97,14 @@ namespace egret3d {
             return this;
         }
 
+        public fromMatrix(value: Matrix, offset: number = 0) {
+            this.x = value.rawData[offset];
+            this.y = value.rawData[offset + 1];
+            this.z = value.rawData[offset + 2];
+
+            return this;
+        }
+
         public scale(scale: number) {
             this.x *= scale;
             this.y *= scale;
@@ -125,34 +113,62 @@ namespace egret3d {
             return this;
         }
 
-        public add(value: Readonly<IVector3>) {
-            this.x += value.x;
-            this.y += value.y;
-            this.z += value.z;
+        public add(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
+            if (v2) {
+                this.x = v1.x + v2.x;
+                this.y = v1.y + v2.y;
+                this.z = v1.z + v2.z;
+            }
+            else {
+                this.x += v1.x;
+                this.y += v1.y;
+                this.z += v1.z;
+            }
+
 
             return this;
         }
 
-        public subtract(value: Readonly<IVector3>) {
-            this.x -= value.x;
-            this.y -= value.y;
-            this.z -= value.z;
+        public subtract(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
+            if (v2) {
+                this.x = v1.x - v2.x;
+                this.y = v1.y - v2.y;
+                this.z = v1.z - v2.z;
+            }
+            else {
+                this.x -= v1.x;
+                this.y -= v1.y;
+                this.z -= v1.z;
+            }
 
             return this;
         }
 
-        public multiply(value: Readonly<IVector3>) {
-            this.x *= value.x;
-            this.y *= value.y;
-            this.z *= value.z;
+        public multiply(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
+            if (v2) {
+                this.x = v1.x * v2.x;
+                this.y = v1.y * v2.y;
+                this.z = v1.z * v2.z;
+            }
+            else {
+                this.x *= v1.x;
+                this.y *= v1.y;
+                this.z *= v1.z;
+            }
 
             return this;
         }
 
-        public cross(rhs: Readonly<IVector3>) {
-            const x = this.x;
-            const y = this.y;
-            const z = this.z;
+        public cross(lhs: Readonly<IVector3>, rhs?: Readonly<IVector3>) {
+            if (!rhs) {
+                rhs = lhs;
+                lhs = this;
+            }
+
+            const x = lhs.x;
+            const y = lhs.y;
+            const z = lhs.z;
+
             this.x = y * rhs.z - z * rhs.y;
             this.y = z * rhs.x - x * rhs.z;
             this.z = x * rhs.y - y * rhs.x;
@@ -160,11 +176,19 @@ namespace egret3d {
             return this;
         }
 
-        public dot(value: Readonly<IVector3>) {
-            return this.x * value.x + this.y * value.y + this.z * value.z;
+        public dot(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
+            if (!v2) {
+                v2 = this;
+            }
+
+            return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
         }
 
-        public min(v1: Readonly<IVector3>, v2: Readonly<IVector3>) {
+        public min(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
+            if (!v2) {
+                v2 = this;
+            }
+
             this.x = Math.min(v1.x, v2.x);
             this.y = Math.min(v1.y, v2.y);
             this.z = Math.min(v1.z, v2.z);
@@ -172,7 +196,11 @@ namespace egret3d {
             return this;
         }
 
-        public max(v1: Readonly<IVector3>, v2: Readonly<IVector3>) {
+        public max(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
+            if (!v2) {
+                v2 = this;
+            }
+
             this.x = Math.max(v1.x, v2.x);
             this.y = Math.max(v1.y, v2.y);
             this.z = Math.max(v1.z, v2.z);
@@ -180,10 +208,18 @@ namespace egret3d {
             return this;
         }
 
-        public lerp(v1: Readonly<IVector3>, v2: Readonly<IVector3>, v: number) {
-            this.x = v1.x * (1 - v) + v2.x * v;
-            this.y = v1.y * (1 - v) + v2.y * v;
-            this.z = v1.z * (1 - v) + v2.z * v;
+        public lerp(v: number, v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
+            const p = 1.0 - v;
+            if (v2) {
+                this.x = v1.x * p + v2.x * v;
+                this.y = v1.y * p + v2.y * v;
+                this.z = v1.z * p + v2.z * v;
+            }
+            else {
+                this.x = this.x * p + v1.x * v;
+                this.y = this.y * p + v1.y * v;
+                this.z = this.z * p + v1.z * v;
+            }
 
             return this;
         }
@@ -204,8 +240,12 @@ namespace egret3d {
             return true;
         }
 
-        public getDistance(value: Readonly<IVector3>): number {
-            return helpVector.copy(this).subtract(value).length;
+        public getDistance(v1: Readonly<IVector3>, v2?: Readonly<IVector3>): number {
+            if (v2) {
+                return helpVector.subtract(v1, v2).length;
+            }
+
+            return helpVector.subtract(this, v1).length;
         }
 
         public get length() {
@@ -337,6 +377,34 @@ namespace egret3d {
             }
 
             return true;
+        }
+        /**
+         * @deprecated
+         */
+        public static subtract(v1: Readonly<IVector3>, v2: Readonly<IVector3>, out: IVector3) {
+            out.x = v1.x - v2.x;
+            out.y = v1.y - v2.y;
+            out.z = v1.z - v2.z;
+
+            return out;
+        }
+        /**
+         * @deprecated
+         */
+        public static getSqrLength(v: Readonly<IVector3>) {
+            return v.x * v.x + v.y * v.y + v.z * v.z;
+        }
+        /**
+         * @deprecated
+         */
+        public static getLength(v: Readonly<IVector3>) {
+            return Math.sqrt(this.getSqrLength(v));
+        }
+        /**
+         * @deprecated
+         */
+        public static getDistance(a: Readonly<IVector3>, b: Readonly<IVector3>) {
+            return this.getLength(this.subtract(a, b, helpVector));
         }
     }
 

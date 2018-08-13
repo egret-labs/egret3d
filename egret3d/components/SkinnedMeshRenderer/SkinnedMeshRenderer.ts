@@ -189,10 +189,10 @@ namespace egret3d {
                 const mat2 = helpMatrixC;
                 const mat3 = helpMatrixD;
 
-                egret3d.Matrix.fromRTS(vec30p, Vector3.ONE, vec40r as any, mat0);
-                egret3d.Matrix.fromRTS(vec31p, Vector3.ONE, vec41r as any, mat1);
-                egret3d.Matrix.fromRTS(vec32p, Vector3.ONE, vec42r as any, mat2);
-                egret3d.Matrix.fromRTS(vec33p, Vector3.ONE, vec43r as any, mat3);
+                mat0.compose(vec30p, vec40r as any, Vector3.ONE);
+                mat1.compose(vec31p, vec41r as any, Vector3.ONE);
+                mat2.compose(vec32p, vec42r as any, Vector3.ONE);
+                mat3.compose(vec33p, vec43r as any, Vector3.ONE);
 
                 egret3d.Matrix.scale(blendWeights.x, mat0);
                 egret3d.Matrix.scale(blendWeights.y, mat1);
@@ -225,42 +225,6 @@ namespace egret3d {
             }
 
             return out;
-        }
-
-        protected _updateAABB() {
-            if (!this._aabbDirty) {
-                return;
-            }
-
-            this._aabbDirty = false;
-
-            const minimum = helpVector3A;
-            const maximum = helpVector3B;
-
-            if (this._mesh) {
-                const vertices = this._mesh.getVertices();
-                const position = helpVector3C;
-                minimum.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-                maximum.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-
-                for (let i = 0, l = vertices.length; i < l; i += 3) {
-                    position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
-                    maximum.max(position, maximum);
-                    minimum.min(position, minimum);
-                }
-            }
-
-            this.aabb.
-
-            if (minimum) {
-                Vector3.copy(minimum, this.srcmin);
-                Vector3.copy(minimum, this.minimum);
-            }
-
-            if (maximum) {
-                Vector3.copy(maximum, this.srcmax);
-                Vector3.copy(maximum, this.maximum);
-            }
         }
 
         public initialize() {
@@ -323,6 +287,20 @@ namespace egret3d {
             this._bones.length = 0;
             this._mesh = null;
         }
+
+        public recalculateAABB() {
+            this.aabb.clear();
+
+            if (this._mesh) {
+                const vertices = this._mesh.getVertices();
+                const position = helpVector3A;
+
+                for (let i = 0, l = vertices.length; i < l; i += 3) {
+                    position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
+                    this.aabb.add(position);
+                }
+            }
+        }
         /**
          * ray intersects
          * @param ray ray
@@ -384,13 +362,13 @@ namespace egret3d {
                         this._getMatByIndex(verindex2, mat2);
                         if (mat0 === null || mat1 === null || mat2 === null) continue;
 
-                        egret3d.Matrix.multiply(mvpmat, mat0, mat00);
-                        egret3d.Matrix.multiply(mvpmat, mat1, mat11);
-                        egret3d.Matrix.multiply(mvpmat, mat2, mat22);
+                        mat00.multiply(mvpmat, mat0);
+                        mat11.multiply(mvpmat, mat1);
+                        mat22.multiply(mvpmat, mat2);
 
-                        egret3d.Matrix.transformVector3(p0, mat00, t0);
-                        egret3d.Matrix.transformVector3(p1, mat11, t1);
-                        egret3d.Matrix.transformVector3(p2, mat22, t2);
+                        mat00.transformVector3(p0, t0);
+                        mat11.transformVector3(p1, t1);
+                        mat22.transformVector3(p2, t2);
 
                         const result = ray.intersectsTriangle(t0, t1, t2);
                         if (result) {

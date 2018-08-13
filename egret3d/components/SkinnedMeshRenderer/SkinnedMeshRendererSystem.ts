@@ -24,7 +24,7 @@ namespace egret3d {
                 return;
             }
 
-            renderer.mesh.createBuffer();
+            renderer.mesh._createBuffer();
             this._drawCalls.removeDrawCalls(renderer);
             this._drawCalls.renderers.push(renderer);
             //

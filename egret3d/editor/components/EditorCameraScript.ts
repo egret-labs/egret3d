@@ -161,11 +161,11 @@ namespace paper.editor {
 
                     this.gameObject.transform.getRight(this._helpVec3);
                     egret3d.Vector3.normalize(this._helpVec3);
-                    egret3d.Quaternion.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX, this._helpQuat);
+                    this._helpQuat.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX);
                     egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
 
                     egret3d.Vector3.set(0, 1, 0, this._helpVec3);
-                    egret3d.Quaternion.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY, this._helpQuat);
+                    this._helpQuat.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY);
                     egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
 
                     this.gameObject.transform.setRotation(rot);
@@ -203,12 +203,12 @@ namespace paper.editor {
 
                     this.gameObject.transform.getRight(this._helpVec3);
                     egret3d.Vector3.normalize(this._helpVec3);
-                    egret3d.Quaternion.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX, this._helpQuat);
+                    this._helpQuat.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX);
                     egret3d.Quaternion.transformVector3(this._helpQuat, pos, pos);
                     egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
 
                     egret3d.Vector3.set(0, 1, 0, this._helpVec3);
-                    egret3d.Quaternion.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY, this._helpQuat);
+                    this._helpQuat.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY);
                     egret3d.Quaternion.transformVector3(this._helpQuat, pos, pos);
                     egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
 
