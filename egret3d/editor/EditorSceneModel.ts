@@ -4,6 +4,8 @@ namespace paper.editor {
             return Application.sceneManager.editorScene;
         }
         public set editorModel(v: EditorModel) {
+            this.pickGameScript.clearSelected();
+            this.geoController.clearSelected();
             this.editorCameraScript.editorModel = v;
             this.pickGameScript.editorModel = v;
             this.geoController.editorModel = v;
@@ -11,7 +13,7 @@ namespace paper.editor {
         }
         private editorCameraScript: EditorCameraScript;
         private pickGameScript: PickGameObjectScript;
-        private geoController: Controller;
+        private geoController: GeoController;
         public init(): void {
             const cameraObject = GameObject.create("EditorCamera", DefaultTags.EditorOnly, Application.sceneManager.editorScene);
             const camera = cameraObject.addComponent(egret3d.Camera);
@@ -27,7 +29,7 @@ namespace paper.editor {
 
             this.pickGameScript = cameraObject.addComponent(PickGameObjectScript);
 
-            this.geoController = cameraObject.addComponent(Controller)
+            this.geoController = cameraObject.addComponent(GeoController)
             Gizmo.Enabled();
         }
     }

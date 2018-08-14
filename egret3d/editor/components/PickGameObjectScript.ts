@@ -18,6 +18,10 @@ namespace paper.editor {
 
         private _tapStart: number = 0;
         private selectedGameObjects: GameObject[] = [];
+
+        public clearSelected() {
+            this.selectedGameObjects = [];
+        }
         public onUpdate(delta: number): any {
             try {
                 // 点击 game object 激活

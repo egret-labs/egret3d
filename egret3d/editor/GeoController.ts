@@ -26,6 +26,9 @@ namespace paper.editor {
     export class GeoController extends paper.Behaviour {
 
         public selectedGameObjs: GameObject[] = [];
+        public clearSelected() {
+            this.selectedGameObjs = []
+        }
         private _isEditing: boolean = false;
 
         private _geoCtrlMode: string = "local";
