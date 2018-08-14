@@ -2,20 +2,21 @@ namespace paper {
     /**
      * 
      */
-    export type ComponentClass<T extends BaseComponent> = {
-        new(): T;
+    export interface ComponentClass<T extends BaseComponent> extends BaseClass {
         executeInEditMode: boolean;
         allowMultiple: boolean;
+        requireComponents: ComponentClass<BaseComponent>[] | null;
         /**
          * @internal
          */
-        index: number;
-        requireComponents: ComponentClass<BaseComponent>[] | null;
-    };
-    /**
-     * 
-     */
-    export type SingletonComponentClass<T extends SingletonComponent> = ComponentClass<T> & { instance: T | null };
+        readonly __isSingleton: boolean;
+        /**
+         * @internal
+         */
+        __index: number;
+
+        new(): T;
+    }
     /**
      * 
      */
@@ -28,7 +29,6 @@ namespace paper {
      * 
      */
     export type ComponentExtras = { linkedID?: string };
-
     /**
      * 组件基类
      */
@@ -42,44 +42,46 @@ namespace paper {
          */
         public static allowMultiple: boolean = false;
         /**
-         * @internal
-         */
-        public static level: number = -1;
-        /**
-         * @internal
-         */
-        public static componentIndex: number = -1;
-        /**
-         * @internal
-         */
-        public static index: number = -1;
-        /**
          * 依赖的其他组件。
          */
         public static requireComponents: ComponentClass<BaseComponent>[] | null = null;
-
-        private static _createEnabled: GameObject | null = null;
-        private static _componentCount: number = 0;
-        private static readonly _componentClasses: ComponentClass<BaseComponent>[] = [];
         /**
          * @internal
          */
-        public static register(target: ComponentClass<BaseComponent>) {
-            if (target === BaseComponent as any) {
+        public static readonly __isSingleton: boolean = false;
+        /**
+         * @internal
+         */
+        public static __index: number = -1;
+        private static readonly _componentClasses: ComponentClass<BaseComponent>[] = [];
+        private static _createEnabled: GameObject | null = null;
+        /**
+         * @internal
+         */
+        public static __onRegister(componentClass: ComponentClass<BaseComponent>) {
+            if (componentClass === BaseComponent as any) { // Skip BaseComponent.
                 return;
             }
 
-            if (this._componentClasses.indexOf(target) < 0) {
-                target.index = this._componentClasses.length;
-                this._componentClasses.push(target);
+            BaseObject.__onRegister(componentClass); // Super.
+
+            if (this.requireComponents) {
+                this.requireComponents = this.requireComponents.concat();
+            }
+            else {
+                this.requireComponents = [];
+            }
+
+            if (this._componentClasses.indexOf(componentClass) < 0) {
+                componentClass.__index = this._componentClasses.length;
+                this._componentClasses.push(componentClass);
             }
         }
         /**
          * @internal
          */
         public static create<T extends BaseComponent>(componentClass: ComponentClass<T>, gameObject: GameObject): T {
-            this.register(componentClass);
-            BaseComponent._createEnabled = gameObject;
+            this._createEnabled = gameObject;
 
             return new componentClass();
         }

@@ -32,7 +32,7 @@ namespace paper {
         /**
          * 
          */
-        protected readonly _clock: Clock = this._globalGameObject.getOrAddComponent(Clock);
+        protected readonly _clock: Clock = Clock.getInstance(Clock);
         /**
          * 禁止实例化系统。
          * @protected

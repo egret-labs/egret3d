@@ -36,11 +36,11 @@ namespace paper {
         private readonly _deserializers: { [key: string]: Deserializer } = {};
         private _scene: Scene | null = null;;
 
-        private _getDeserializedIgnoreKeys(serializedClass: SerializedClass, keys: string[] | null = null) {
-            if (serializedClass.__serializeInfo && serializedClass.__serializeInfo.ignore) {
+        private _getDeserializedIgnoreKeys(serializedClass: BaseClass, keys: string[] | null = null) {
+            if (serializedClass.__deserializeIgnore) {
                 keys = keys || [];
 
-                for (const key of serializedClass.__serializeInfo.ignore) {
+                for (const key of serializedClass.__deserializeIgnore) {
                     keys.push(key);
                 }
             }
@@ -53,7 +53,7 @@ namespace paper {
         }
 
         private _deserializeObject(source: ISerializedObject, target: BaseObject) {
-            const deserializedIgnoreKeys = this._getDeserializedIgnoreKeys(<any>target.constructor as SerializedClass);
+            const deserializedIgnoreKeys = this._getDeserializedIgnoreKeys(<any>target.constructor as BaseClass);
 
             for (const k in source) {
                 if (k === KEY_CLASS) {

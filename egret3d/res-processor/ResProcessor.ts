@@ -163,6 +163,41 @@ namespace RES.processor {
 
     };
 
+    export const GLTFShaderProcessor: RES.processor.Processor = {
+        async onLoadStart(host, resource) {
+            const result = await host.load(resource, 'json') as egret3d.GLTFEgret;
+            const glTF = new egret3d.GLTFAsset();
+            glTF.name = resource.name;
+
+            if (result.extensions.KHR_techniques_webgl.shaders && result.extensions.KHR_techniques_webgl.shaders.length === 2) {
+                //
+                const shaders = result.extensions.KHR_techniques_webgl.shaders;
+                for (const shader of shaders) {
+                    const source = (RES.host.resourceConfig as any)["getResource"](shader.uri);
+                    if (source) {
+                        const shaderSource = await host.load(source);
+                        shader.uri = shaderSource;
+                    }
+                }
+            }
+            else {
+                console.error("错误的Shader格式数据");
+            }
+
+            glTF.parse(result);
+            paper.Asset.register(glTF);
+
+            return glTF;
+        },
+
+        onRemoveStart(host, resource) {
+            let data = host.get(resource);
+            data.dispose();
+            return Promise.resolve();
+        }
+
+    };
+
     export const PrefabProcessor: RES.processor.Processor = {
 
         onLoadStart(host, resource) {
@@ -221,6 +256,7 @@ namespace RES.processor {
         })));
     }
 
+    RES.processor.map("Shader", GLTFShaderProcessor);
     RES.processor.map("Texture", TextureProcessor);
     RES.processor.map("TextureDesc", TextureDescProcessor);
     RES.processor.map("GLTF", GLTFProcessor);

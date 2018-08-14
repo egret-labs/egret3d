@@ -168,15 +168,14 @@ namespace paper {
         private _onAddUnessentialComponent(component: BaseComponent) {
             const gameObject = component.gameObject;
 
-            if (gameObject === this._globalGameObject) { // Pass global game object.
-                return;
-            }
+            if (!this._isBehaviour) {
+                if (gameObject === this._globalGameObject) { // Pass global game object.
+                    return;
+                }
 
-            if (
-                !this._isBehaviour &&
-                this._bufferedGameObjects.indexOf(gameObject) < 0 && this._gameObjects.indexOf(gameObject) < 0 // Uninclude.
-            ) {
-                return;
+                if (this._bufferedGameObjects.indexOf(gameObject) < 0 && this._gameObjects.indexOf(gameObject) < 0) {// Uninclude.
+                    return;
+                }
             }
 
             if (this._bufferedComponents.indexOf(component) >= 0 || this._components.indexOf(component) >= 0) { // Buffered or added.
@@ -188,10 +187,6 @@ namespace paper {
 
         private _onRemoveUnessentialComponent(component: BaseComponent) {
             const gameObject = component.gameObject;
-
-            if (gameObject === this._globalGameObject) { // Pass global game object.
-                return;
-            }
 
             let index = this._bufferedComponents.indexOf(component);
             if (index >= 0) { // Buffered.
@@ -214,6 +209,10 @@ namespace paper {
                 }
             }
             else {
+                if (gameObject === this._globalGameObject) { // Pass global game object.
+                    return;
+                }
+
                 if (this._gameObjects.indexOf(gameObject) < 0) { // Uninclude.
                     return;
                 }
@@ -238,7 +237,7 @@ namespace paper {
         }
 
         private _addGameObject(gameObject: GameObject) {
-            if (gameObject === this._globalGameObject) { // Pass global game object.
+            if (!this._isBehaviour && gameObject === this._globalGameObject) { // Pass global game object.
                 return;
             }
 

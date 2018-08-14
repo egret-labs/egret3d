@@ -1,85 +1,53 @@
 namespace paper {
     /**
-     * @internal
-     */
-    export interface SerializedClass {
-        __serializeInfo: {
-            owner: SerializedClass;
-            keys?: string[];
-            ignore?: string[];
-        };
-        prototype?: {
-            __proto__: { constructor: SerializedClass };
-        };
-    }
-    /**
-     * 标记序列化属性
-     * 通过装饰器标记需要序列化的属性
+     * 通过装饰器标记序列化属性。
      */
     export function serializedField(classPrototype: any, key: string) {
-        const serializedClass = classPrototype.constructor as SerializedClass;
-        if (!serializedClass.__serializeInfo || serializedClass.__serializeInfo.owner !== serializedClass) {
-            serializedClass.__serializeInfo = { owner: serializedClass };
-        }
+        const baseClass = classPrototype.constructor as BaseClass;
+        registerClass(baseClass);
 
-        if (!serializedClass.__serializeInfo.keys) {
-            serializedClass.__serializeInfo.keys = [];
-        }
-
-        const keys = serializedClass.__serializeInfo.keys!;
+        const keys = baseClass.__serializeKeys!;
         if (keys.indexOf(key) < 0) {
             keys.push(key);
         }
     }
     /**
-     * 标记反序列化时需要忽略的属性
-     * 通过装饰器标记反序列化时需要被忽略的属性（但属性中引用的对象依然会被实例化）
+     * 通过装饰器标记反序列化时需要忽略的属性。
      */
     export function deserializedIgnore(classPrototype: any, key: string) {
-        const serializedClass = classPrototype.constructor as SerializedClass;
-        if (!serializedClass.__serializeInfo || serializedClass.__serializeInfo.owner !== serializedClass) {
-            serializedClass.__serializeInfo = { owner: serializedClass };
-        }
+        const baseClass = classPrototype.constructor as BaseClass;
+        registerClass(baseClass);
 
-        if (!serializedClass.__serializeInfo.ignore) {
-            serializedClass.__serializeInfo.ignore = [];
-        }
-
-        const keys = serializedClass.__serializeInfo.ignore!;
+        const keys = baseClass.__deserializeIgnore!;
         if (keys.indexOf(key) < 0) {
             keys.push(key);
         }
     }
     /**
-     * 标记组件是否在编辑模式拥有生命周期。
+     * 通过装饰器标记组件是否允许在同一实体上添加多个实例。
      */
-    export function executeInEditMode(target: ComponentClass<BaseComponent>) {
-        BaseComponent.register(target);
-        target.executeInEditMode = true;
+    export function allowMultiple(componentClass: ComponentClass<BaseComponent>) {
+        registerClass(componentClass);
+        if (!componentClass.__isSingleton) {
+            componentClass.allowMultiple = true;
+        }
     }
     /**
-     * 标记组件是否允许在同一实体上添加多个实例。
+     * 通过装饰器标记组件依赖的其他组件。
      */
-    export function allowMultiple(target: ComponentClass<BaseComponent>) {
-        BaseComponent.register(target);
-        target.allowMultiple = true;
-    }
-    /**
-     * 标记组件依赖的其他组件。
-     */
-    export function requireComponent(requireTarget: ComponentClass<BaseComponent>) {
-        return function (target: ComponentClass<BaseComponent>) {
-            const parentRequireComponents = (target.prototype.__proto__.constructor as ComponentClass<BaseComponent>).requireComponents;
-            if (
-                !target.requireComponents ||
-                target.requireComponents === parentRequireComponents
-            ) {
-                target.requireComponents = !parentRequireComponents ? [] : parentRequireComponents.concat();
-            }
-
-            if (target.requireComponents.indexOf(requireTarget) < 0) {
-                target.requireComponents.push(requireTarget);
+    export function requireComponent(requireComponentClass: ComponentClass<BaseComponent>) {
+        return function (componentClass: ComponentClass<BaseComponent>) {
+            const requireComponents = componentClass.requireComponents!;
+            if (requireComponents.indexOf(requireComponentClass) < 0) {
+                requireComponents.push(requireComponentClass);
             }
         };
+    }
+    /**
+     * 通过装饰器标记组件是否在编辑模式拥有生命周期。
+     */
+    export function executeInEditMode(componentClass: ComponentClass<Behaviour>) {
+        registerClass(componentClass);
+        componentClass.executeInEditMode = true;
     }
 }
