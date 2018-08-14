@@ -290,40 +290,6 @@ namespace egret3d {
 
             return this;
         }
-        /**
-         * @deprecated
-         */
-        public static multiply(q1: Quaternion, q2: Quaternion, out: Quaternion): Quaternion {
-            let w1: number = q1.w, x1: number = q1.x, y1: number = q1.y, z1: number = q1.z;
-            let w2: number = q2.w, x2: number = q2.x, y2: number = q2.y, z2: number = q2.z;
-
-            out.w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2;
-            out.x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2;
-            out.y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2;
-            out.z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2;
-
-            out.normalize();
-
-            return out;
-        }
-        /**
-         * @deprecated
-         */
-        public static transformVector3(src: Quaternion, vector: Vector3, out: Vector3): Vector3 {
-            let x1: number, y1: number, z1: number, w1: number;
-            let x2: number = vector.x, y2: number = vector.y, z2: number = vector.z;
-
-            w1 = -src.x * x2 - src.y * y2 - src.z * z2;
-            x1 = src.w * x2 + src.y * z2 - src.z * y2;
-            y1 = src.w * y2 - src.x * z2 + src.z * x2;
-            z1 = src.w * z2 + src.x * y2 - src.y * x2;
-
-            out.x = -w1 * src.x + x1 * src.w - y1 * src.z + z1 * src.y;
-            out.y = -w1 * src.y + x1 * src.z + y1 * src.w - z1 * src.x;
-            out.z = -w1 * src.z - x1 * src.y + y1 * src.x + z1 * src.w;
-
-            return out;
-        }
     }
 
     const _helpVector3A: Vector3 = new Vector3();

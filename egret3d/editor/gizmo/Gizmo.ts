@@ -235,10 +235,10 @@ namespace paper.editor {
             var asp = this.camera.context.viewPortPixel.w / this.camera.context.viewPortPixel.h;
             this.camera.calcViewMatrix(this.vMatrix);
             this.camera.calcProjectMatrix(asp, this.pMatrix);
-            egret3d.Matrix.multiply(this.pMatrix, this.vMatrix, this.mvpMatrix);
+            this.mvpMatrix.multiply(this.pMatrix, this.vMatrix);
             m = m || new egret3d.Matrix();
             this.mMatrix.copy(m);
-            egret3d.Matrix.multiply(this.mvpMatrix, this.mMatrix, this.mvpMatrix);
+            this.mvpMatrix.multiply(this.mMatrix);
         }
 
         private static glProgram_line: editor.GizmoShader;
@@ -446,11 +446,11 @@ namespace paper.editor {
             console.log("now drawXYZ", transform)
             let worldMat = Gizmo.helpMat;
             Gizmo.getWorldMatrixWithoutScale(transform, 10, worldMat);
-            egret3d.Matrix.multiply(worldMat, this.xArrowMMatrix, worldMat);
+            worldMat.multiply(this.xArrowMMatrix);
             Gizmo.DrawArrow(worldMat, [1.0, 0.0, 0.0, 1.0], true);
-            egret3d.Matrix.multiply(worldMat, this.yArrowMMatrix, worldMat);
+            worldMat.multiply(this.yArrowMMatrix);
             Gizmo.DrawArrow(worldMat, [0.0, 1.0, 0.0, 1.0], true);
-            egret3d.Matrix.multiply(worldMat, this.zArrowMMatrix, worldMat);
+            worldMat.multiply(this.zArrowMMatrix);
             Gizmo.DrawArrow(worldMat, [0.0, 0.0, 1.0, 1.0], true);
         }
         private static getWorldMatrixWithoutScale(transform: egret3d.Transform, fixScale: number, out: egret3d.Matrix) {
@@ -466,7 +466,7 @@ namespace paper.editor {
             out.fromRotation(r);
             matS.formScale(sca, sca, sca);
 
-            egret3d.Matrix.multiply(out, matS, out);
+            out.multiply(matS);
             out.rawData[12] = p.x;
             out.rawData[13] = p.y;
             out.rawData[14] = p.z;

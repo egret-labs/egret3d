@@ -186,22 +186,22 @@ namespace paper.editor {
                             egret3d.Vector3.copy(up, this._dragPlaneNormal);
                             break;
                         case this.xRot: this._dragMode = DRAG_MODE.RotX
-                            egret3d.Quaternion.transformVector3(ctrlRot, right, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(ctrlRot, right);
                             break;
                         case this.yRot: this._dragMode = DRAG_MODE.RotY
-                            egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(ctrlRot, up);
                             break;
                         case this.zRot: this._dragMode = DRAG_MODE.RotZ
-                            egret3d.Quaternion.transformVector3(ctrlRot, forward, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(ctrlRot, forward);
                             break;
                         case this.xScl: this._dragMode = DRAG_MODE.ScaX
-                            egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(ctrlRot, up);
                             break;
                         case this.yScl: this._dragMode = DRAG_MODE.ScaY
-                            egret3d.Quaternion.transformVector3(ctrlRot, forward, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(ctrlRot, forward);
                             break;
                         case this.zScl: this._dragMode = DRAG_MODE.ScaZ
-                            egret3d.Quaternion.transformVector3(ctrlRot, up, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(ctrlRot, up);
                             break;
                     }
                     this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
@@ -219,39 +219,39 @@ namespace paper.editor {
                             break;
                         case this.xAxis:
                             this._dragMode = DRAG_MODE.X
-                            egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(worldRotation, up);
                             break;
                         case this.yAxis:
                             this._dragMode = DRAG_MODE.Y
-                            egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(worldRotation, forward);
                             break;
                         case this.zAxis:
                             this._dragMode = DRAG_MODE.Z
-                            egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(worldRotation, up);
                             break;
                         case this.xRot:
                             this._dragMode = DRAG_MODE.RotX
-                            egret3d.Quaternion.transformVector3(worldRotation, right, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(worldRotation, right);
                             break;
                         case this.yRot:
                             this._dragMode = DRAG_MODE.RotY
-                            egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(worldRotation, up);
                             break;
                         case this.zRot:
                             this._dragMode = DRAG_MODE.RotZ
-                            egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(worldRotation, forward);
                             break;
                         case this.xScl:
                             this._dragMode = DRAG_MODE.ScaX
-                            egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(worldRotation, up);
                             break;
                         case this.yScl:
                             this._dragMode = DRAG_MODE.ScaY
-                            egret3d.Quaternion.transformVector3(worldRotation, forward, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(worldRotation, forward);
                             break;
                         case this.zScl:
                             this._dragMode = DRAG_MODE.ScaZ
-                            egret3d.Quaternion.transformVector3(worldRotation, up, this._dragPlaneNormal);
+                            this._dragPlaneNormal.applyQuaternion(worldRotation, up);
                             break;
                     }
                     egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
@@ -385,11 +385,11 @@ namespace paper.editor {
                         egret3d.Vector3.subtract(hit, worldPosition, hit);
                         let worldOffset: egret3d.Vector3;
                         if (this._dragMode == DRAG_MODE.X) {
-                            worldOffset = egret3d.Quaternion.transformVector3(worldRotation, right, helpVec3_1);
+                            worldOffset = helpVec3_1.applyQuaternion(worldRotation, right);
                         } else if (this._dragMode == DRAG_MODE.Y) {
-                            worldOffset = egret3d.Quaternion.transformVector3(worldRotation, up, helpVec3_1);
+                            worldOffset = helpVec3_1.applyQuaternion(worldRotation, up);
                         } else if (this._dragMode == DRAG_MODE.Z) {
-                            worldOffset = egret3d.Quaternion.transformVector3(worldRotation, forward, helpVec3_1);
+                            worldOffset = helpVec3_1.applyQuaternion(worldRotation, forward);
                         }
                         let cosHit = egret3d.Vector3.dot(hit, worldOffset);
                         egret3d.Vector3.scale(worldOffset, cosHit);
@@ -411,7 +411,7 @@ namespace paper.editor {
                     let theta = egret3d.Vector3.dot(helpVec3_1, this._dragPlaneNormal) >= 0 ? Math.acos(cosHitOffset) : -Math.acos(cosHitOffset);
                     let cos = Math.cos(theta * 0.5), sin = Math.sin(theta * 0.5);
                     helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
-                    egret3d.Quaternion.multiply(helpQuat_1, this._initRotation, helpQuat_2);
+                    helpQuat_2.multiply(helpQuat_1, this._initRotation);
                     this._ctrlRot.copy(helpQuat_2);
                     this.editorModel.setTransformProperty("rotation", helpQuat_2, this.selectedGameObjs[0].transform);
                 } else if (this.geoCtrlType == "scale" && this._dragMode != DRAG_MODE.NONE) {
@@ -422,17 +422,17 @@ namespace paper.editor {
                     let worldOffset: egret3d.Vector3;
                     let scale: egret3d.Vector3;
                     if (this._dragMode == DRAG_MODE.ScaX) {
-                        worldOffset = egret3d.Quaternion.transformVector3(worldRotation, right, helpVec3_1);
+                        worldOffset = helpVec3_1.applyQuaternion(worldRotation, right);
                         let cosHit = egret3d.Vector3.dot(hit, worldOffset);
                         let len = egret3d.Vector3.dot(this._dragOffset, worldOffset);
                         this.xScl.transform.setLocalPosition(cosHit / len * 2, 0, 0);
                     } else if (this._dragMode == DRAG_MODE.ScaY) {
-                        worldOffset = egret3d.Quaternion.transformVector3(worldRotation, up, helpVec3_1);
+                        worldOffset = helpVec3_1.applyQuaternion(worldRotation, up);
                         let cosHit = egret3d.Vector3.dot(hit, worldOffset);
                         let len = egret3d.Vector3.dot(this._dragOffset, worldOffset);
                         this.yScl.transform.setLocalPosition(0, cosHit / len * 2, 0);
                     } else if (this._dragMode == DRAG_MODE.ScaZ) {
-                        worldOffset = egret3d.Quaternion.transformVector3(worldRotation, forward, helpVec3_1);
+                        worldOffset = helpVec3_1.applyQuaternion(worldRotation, forward);
                         let cosHit = egret3d.Vector3.dot(hit, worldOffset);
                         let len = egret3d.Vector3.dot(this._dragOffset, worldOffset);
                         this.zScl.transform.setLocalPosition(0, 0, cosHit / len * 2);
@@ -568,17 +568,17 @@ namespace paper.editor {
                     let cos = Math.cos(theta * 0.5), sin = Math.sin(theta * 0.5);
                     helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
 
-                    egret3d.Quaternion.multiply(helpQuat_1, this._ctrlRot, this._ctrlRot);
+                    this._ctrlRot.premultiply(helpQuat_1);
 
                     for (let i = 0; i < len; i++) {
                         let obj = this.selectedGameObjs[i];
                         let lastPos = obj.transform.getPosition();
                         let lastRot = obj.transform.getRotation();
 
-                        egret3d.Quaternion.multiply(helpQuat_1, lastRot, helpQuat_2);
+                        helpQuat_2.multiply(helpQuat_1, lastRot);
 
                         egret3d.Vector3.subtract(lastPos, this._ctrlPos, lastPos);
-                        egret3d.Quaternion.transformVector3(helpQuat_1, lastPos, lastPos);
+                        lastPos.applyQuaternion(helpQuat_1);
                         egret3d.Vector3.add(lastPos, this._ctrlPos, lastPos);
 
                         this.editorModel.setTransformProperty("rotation", helpQuat_2, obj.transform);
@@ -595,7 +595,7 @@ namespace paper.editor {
                     let worldOffset: egret3d.Vector3;
                     let scale: egret3d.Vector3;
                     if (this._dragMode == DRAG_MODE.ScaX) {
-                        worldOffset = egret3d.Quaternion.transformVector3(this._ctrlRot, right, helpVec3_1);
+                        worldOffset = helpVec3_1.applyQuaternion(this._ctrlRot, right);
                         let cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
                         let src = this.xScl.transform.getLocalPosition().x;
                         this.xScl.transform.setLocalPosition(cosHit + src, 0, 0);
@@ -610,14 +610,14 @@ namespace paper.editor {
                             let pos = this.selectedGameObjs[i].transform.getPosition();
                             let sub = helpVec3_2;
                             egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
-                            egret3d.Quaternion.transformVector3(this.controller.transform.getRotation(), right, helpVec3_3);
+                            helpVec3_3.applyQuaternion(this.controller.transform.getRotation(), right);
                             let cos = egret3d.Vector3.dot(sub, helpVec3_3);
                             egret3d.Vector3.scale(helpVec3_3, cos * (s - 1));
                             egret3d.Vector3.add(pos, helpVec3_3, pos);
                             this.editorModel.setTransformProperty("position", pos, this.selectedGameObjs[i].transform);
                         }
                     } else if (this._dragMode == DRAG_MODE.ScaY) {
-                        worldOffset = egret3d.Quaternion.transformVector3(this._ctrlRot, up, helpVec3_1);
+                        worldOffset = helpVec3_1.applyQuaternion(this._ctrlRot, up);
                         let cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
                         let src = this.yScl.transform.getLocalPosition().y;
                         this.yScl.transform.setLocalPosition(0, cosHit + src, 0);
@@ -632,14 +632,14 @@ namespace paper.editor {
                             let pos = this.selectedGameObjs[i].transform.getPosition();
                             let sub = helpVec3_2;
                             egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
-                            egret3d.Quaternion.transformVector3(this.controller.transform.getRotation(), up, helpVec3_3);
+                            helpVec3_3.applyQuaternion(this.controller.transform.getRotation(), up);
                             let cos = egret3d.Vector3.dot(sub, helpVec3_3);
                             egret3d.Vector3.scale(helpVec3_3, cos * (s - 1));
                             egret3d.Vector3.add(pos, helpVec3_3, pos);
                             this.editorModel.setTransformProperty("position", pos, this.selectedGameObjs[i].transform);
                         }
                     } else if (this._dragMode == DRAG_MODE.ScaZ) {
-                        worldOffset = egret3d.Quaternion.transformVector3(this._ctrlRot, forward, helpVec3_1);
+                        worldOffset = helpVec3_1.applyQuaternion(this._ctrlRot, forward);
                         let cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
                         let src = this.zScl.transform.getLocalPosition().z;
                         this.zScl.transform.setLocalPosition(0, 0, cosHit + src);
@@ -654,7 +654,7 @@ namespace paper.editor {
                             let pos = this.selectedGameObjs[i].transform.getPosition();
                             let sub = helpVec3_2;
                             egret3d.Vector3.subtract(pos, this._ctrlPos, helpVec3_2);
-                            egret3d.Quaternion.transformVector3(this.controller.transform.getRotation(), forward, helpVec3_3);
+                            helpVec3_3.applyQuaternion(this.controller.transform.getRotation(), forward);
                             let cos = egret3d.Vector3.dot(sub, helpVec3_3);
                             egret3d.Vector3.scale(helpVec3_3, cos * (s - 1));
                             egret3d.Vector3.add(pos, helpVec3_3, pos);

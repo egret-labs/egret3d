@@ -369,12 +369,11 @@ namespace paper {
 
                         this._deserializeObject(componentSource, component);
                     }
-                    else {
+                    else if (target) {
                         component = this._createComponent(componentSource);
                         root = root || component;
+                        this._deserializeObject(componentSource, component);
                     }
-
-                    this._deserializeObject(componentSource, component);
                 }
             }
 

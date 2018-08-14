@@ -545,6 +545,10 @@ namespace egret3d {
 
             return this;
         }
+
+        public premultiply(value: Readonly<Matrix>) {
+            return this.multiply(value, this);
+        }
         /**
          * - 两点位置不重合。
          * @param eye 
@@ -772,57 +776,6 @@ namespace egret3d {
             }
 
             return this;
-        }
-        /**
-         * @deprecated
-         */
-        public static multiply(lhs: Matrix, rhs: Matrix, out: Matrix): Matrix {
-            const a00 = lhs.rawData[0], a01 = lhs.rawData[1], a02 = lhs.rawData[2], a03 = lhs.rawData[3];
-            const a10 = lhs.rawData[4], a11 = lhs.rawData[5], a12 = lhs.rawData[6], a13 = lhs.rawData[7];
-            const a20 = lhs.rawData[8], a21 = lhs.rawData[9], a22 = lhs.rawData[10], a23 = lhs.rawData[11];
-            const a30 = lhs.rawData[12], a31 = lhs.rawData[13], a32 = lhs.rawData[14], a33 = lhs.rawData[15];
-
-            let b0 = rhs.rawData[0],
-                b1 = rhs.rawData[1],
-                b2 = rhs.rawData[2],
-                b3 = rhs.rawData[3];
-
-            out.rawData[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-            out.rawData[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-            out.rawData[2] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-            out.rawData[3] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
-
-            b0 = rhs.rawData[4];
-            b1 = rhs.rawData[5];
-            b2 = rhs.rawData[6];
-            b3 = rhs.rawData[7];
-
-            out.rawData[4] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-            out.rawData[5] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-            out.rawData[6] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-            out.rawData[7] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
-
-            b0 = rhs.rawData[8];
-            b1 = rhs.rawData[9];
-            b2 = rhs.rawData[10];
-            b3 = rhs.rawData[11];
-
-            out.rawData[8] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-            out.rawData[9] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-            out.rawData[10] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-            out.rawData[11] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
-
-            b0 = rhs.rawData[12];
-            b1 = rhs.rawData[13];
-            b2 = rhs.rawData[14];
-            b3 = rhs.rawData[15];
-
-            out.rawData[12] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-            out.rawData[13] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-            out.rawData[14] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-            out.rawData[15] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
-
-            return out;
         }
         /**
          * @deprecated
