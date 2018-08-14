@@ -169,6 +169,13 @@ namespace egret3d {
                 0.0, 0.0, 0.0, 1.0
             );
 
+            // matrix.set(
+            //     0.5, 0.0, 0.0, 0.0,
+            //     0.0, 0.5, 0.0, 0.0,
+            //     0.0, 0.0, 0.5, 0.0,
+            //     0.5, 0.5, 0.5, 1.0
+            // );
+
             camera.calcProjectMatrix(512 / 512, helpMatrixA);
             helpMatrixB.copy(this.gameObject.transform.getWorldMatrix()).inverse();
             Matrix.multiply(matrix, helpMatrixA, matrix);

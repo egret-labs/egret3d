@@ -20,12 +20,16 @@ IncidentLight directLight;
 float dotNL;
 vec3 directLightColor_Diffuse;
 
-#if NUM_POINT_LIGHTS > 0
-
-	#pragma unroll_loop
+#if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0
+	PointLight pointLight;
+	// #pragma unroll_loop
 	for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {
 
-		getPointDirectLightIrradiance( pointLights[ i ], geometry, directLight );
+		pointLight.position = vec3(pointLights[i* 15 + 0], pointLights[i * 15 + 1], pointLights[i * 15 + 2]);
+		pointLight.color = vec3(pointLights[i* 15 + 3], pointLights[i * 15 + 4], pointLights[i * 15 + 5]);
+		pointLight.distance = pointLights[i * 15 + 6];
+		pointLight.decay = pointLights[i * 15 + 7];
+		getPointDirectLightIrradiance( pointLight, geometry, directLight );
 
 		dotNL = dot( geometry.normal, directLight.direction );
 		directLightColor_Diffuse = PI * directLight.color;
@@ -42,12 +46,19 @@ vec3 directLightColor_Diffuse;
 
 #endif
 
-#if NUM_SPOT_LIGHTS > 0
-
-	#pragma unroll_loop
+#if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0
+	SpotLight spotLight;
+	// #pragma unroll_loop
 	for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {
+		spotLight.position = vec3(spotLights[i * 18 + 0], spotLights[i * 18 + 1], spotLights[i * 18 + 2]);
+		spotLight.direction = vec3(spotLights[i * 18 + 3], spotLights[i * 18 + 4], spotLights[i * 18 + 5]);
+		spotLight.color = vec3(spotLights[i * 18 + 6], spotLights[i * 18 + 7], spotLights[i * 18 + 8]);
+		spotLight.distance = spotLights[i * 18 + 9];
+		spotLight.decay = spotLights[i * 18 + 10];
+		spotLight.coneCos = spotLights[i * 18 + 11];
+		spotLight.penumbraCos = spotLights[i * 18 + 12];
 
-		getSpotDirectLightIrradiance( spotLights[ i ], geometry, directLight );
+		getSpotDirectLightIrradiance( spotLight, geometry, directLight );
 
 		dotNL = dot( geometry.normal, directLight.direction );
 		directLightColor_Diffuse = PI * directLight.color;
@@ -75,12 +86,14 @@ vec3 directLightColor_Diffuse;
 #endif
 */
 
-#if NUM_DIR_LIGHTS > 0
-
-	#pragma unroll_loop
+#if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0
+	DirectionalLight directionalLight;
+	// #pragma unroll_loop
 	for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
 
-		getDirectionalDirectLightIrradiance( directionalLights[ i ], geometry, directLight );
+		directionalLight.direction = vec3(directionalLights[i * 12 + 0], directionalLights[i * 12 + 1], directionalLights[i * 12 + 2]);
+		directionalLight.color = vec3(directionalLights[i * 12 + 3], directionalLights[i * 12 + 4], directionalLights[i * 12 + 5]);
+		getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );
 
 		dotNL = dot( geometry.normal, directLight.direction );
 		directLightColor_Diffuse = PI * directLight.color;
@@ -97,9 +110,9 @@ vec3 directLightColor_Diffuse;
 
 #endif
 
-#if NUM_HEMI_LIGHTS > 0
+#if defined(NUM_HEMI_LIGHTS) && NUM_HEMI_LIGHTS > 0
 
-	#pragma unroll_loop
+	// #pragma unroll_loop
 	for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {
 
 		vLightFront += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry );

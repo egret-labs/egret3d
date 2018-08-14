@@ -14,7 +14,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 
 }
 
-#if NUM_DIR_LIGHTS > 0
+#if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0
 
 	struct DirectionalLight {
 		vec3 direction;
@@ -26,20 +26,18 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		vec2 shadowMapSize;
 	};
 
-	uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
+	uniform float directionalLights[NUM_DIR_LIGHTS * 12];
 
 	void getDirectionalDirectLightIrradiance( const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight directLight ) {
-
-		directLight.color = directionalLight.color;
 		directLight.direction = directionalLight.direction;
+		directLight.color = directionalLight.color;
 		directLight.visible = true;
-
 	}
 
 #endif
 
 
-#if NUM_POINT_LIGHTS > 0
+#if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0
 
 	struct PointLight {
 		vec3 position;
@@ -55,7 +53,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		float shadowCameraFar;
 	};
 
-	uniform PointLight pointLights[ NUM_POINT_LIGHTS ];
+	uniform float pointLights[NUM_POINT_LIGHTS * 15 ];
 
 	// directLight is an out parameter as having it as a return value caused compiler errors on some devices
 	void getPointDirectLightIrradiance( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight directLight ) {
@@ -74,7 +72,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 #endif
 
 
-#if NUM_SPOT_LIGHTS > 0
+#if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0
 
 	struct SpotLight {
 		vec3 position;
@@ -91,7 +89,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		vec2 shadowMapSize;
 	};
 
-	uniform SpotLight spotLights[ NUM_SPOT_LIGHTS ];
+	uniform float spotLights[NUM_SPOT_LIGHTS * 18];
 
 	// directLight is an out parameter as having it as a return value caused compiler errors on some devices
 	void getSpotDirectLightIrradiance( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight directLight  ) {
@@ -121,7 +119,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 #endif
 
 
-#if NUM_RECT_AREA_LIGHTS > 0
+#if defined(NUM_RECT_AREA_LIGHTS) && NUM_RECT_AREA_LIGHTS > 0
 
 	struct RectAreaLight {
 		vec3 color;
@@ -140,7 +138,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 #endif
 
 
-#if NUM_HEMI_LIGHTS > 0
+#if defined(NUM_HEMI_LIGHTS) && NUM_HEMI_LIGHTS > 0
 
 	struct HemisphereLight {
 		vec3 direction;

@@ -158,20 +158,71 @@ namespace egret3d {
             technique.attributes["uv"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
             technique.attributes["uv2"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_1 };
             technique.attributes["color"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
-            technique.attributes["morphTarget0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["morphTarget1"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["morphTarget2"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["morphTarget3"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["morphTarget4"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["morphTarget5"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["morphTarget6"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["morphTarget7"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["morphNormal0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["morphNormal1"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["morphNormal2"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["morphNormal3"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["morphTarget0"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_0 };
+            technique.attributes["morphTarget1"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_1 };
+            technique.attributes["morphTarget2"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_2 };
+            technique.attributes["morphTarget3"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_3 };
+            technique.attributes["morphTarget4"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_4 };
+            technique.attributes["morphTarget5"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_5 };
+            technique.attributes["morphTarget6"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_6 };
+            technique.attributes["morphTarget7"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_7 };
+            technique.attributes["morphNormal0"] = { semantic: gltf.AttributeSemanticType.MORPHNORMAL_0 };
+            technique.attributes["morphNormal1"] = { semantic: gltf.AttributeSemanticType.MORPHNORMAL_1 };
+            technique.attributes["morphNormal2"] = { semantic: gltf.AttributeSemanticType.MORPHNORMAL_2 };
+            technique.attributes["morphNormal3"] = { semantic: gltf.AttributeSemanticType.MORPHNORMAL_3 };
             technique.attributes["skinIndex"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
             technique.attributes["skinWeight"] = { semantic: gltf.AttributeSemanticType.WEIGHTS_0 };
+
+            technique.uniforms["modelMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };
+            technique.uniforms["modelViewMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEW, value: [] };
+            technique.uniforms["projectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.PROJECTION, value: [] };
+            technique.uniforms["viewMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.VIEW, value: [] };
+            technique.uniforms["normalMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWINVERSE, value: [] };
+            technique.uniforms["cameraPosition"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_POS, value: [] };
+
+            technique.uniforms["ambientLightColor"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._AMBIENTLIGHTCOLOR, value: [0, 0, 0] };
+            technique.uniforms["directionalLights[0]"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._DIRECTLIGHTS, value: [] };//
+            technique.uniforms["pointLights[0]"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._POINTLIGHTS, value: [] };//
+            technique.uniforms["spotLights[0]"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._SPOTLIGHTS, value: [] };//
+            // technique.uniforms["ltc_1"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType.MODEL, value: [] };
+            // technique.uniforms["ltc_2"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType.MODEL, value: [] };
+            // technique.uniforms["rectAreaLights"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType.MODEL, value: [] };//
+            // technique.uniforms["hemisphereLights"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType.MODEL, value: [] };//
+
+            technique.uniforms["bindMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._BINDMATRIX, value: [] };
+            technique.uniforms["bindMatrixInverse"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._BINDMATRIXINVERSE, value: [] };
+            // technique.uniforms["boneTexture"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._BONETEXTURE, value: [] };
+            // technique.uniforms["boneTextureSize"] = { type: gltf.UniformType.INT, semantic: gltf.UniformSemanticType._BONETEXTURESIZE, value: [] };
+            technique.uniforms["boneMatrices"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._BONEMATRIX, value: [] };
+
+            technique.uniforms["directionalShadowMatrix[0]"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._DIRECTIONSHADOWMAT, value: [] };
+            technique.uniforms["spotShadowMatrix[0]"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._SPOTSHADOWMAT, value: [] };
+            technique.uniforms["pointShadowMatrix[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._POINTSHADOWMAT, value: [] };
+            technique.uniforms["directionalShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._DIRECTIONSHADOWMAP, value: [] };
+            technique.uniforms["spotShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._SPOTSHADOWMAP, value: [] };
+            technique.uniforms["pointShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._POINTSHADOWMAT, value: [] };
+            technique.uniforms["lightMap"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._LIGHTMAPTEX, value: [] };
+            technique.uniforms["lightMapIntensity"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPINTENSITY, value: [] };
+
+            technique.uniforms["uvTransform"] = { type: gltf.UniformType.FLOAT_MAT3, value: [1, 0, 0, 0, 1, 0, 0, 0, 1] };
+            technique.uniforms["refractionRatio"] = { type: gltf.UniformType.FLOAT, value: 0 };
+            technique.uniforms["diffuse"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
+            technique.uniforms["emissive"] = { type: gltf.UniformType.FLOAT_VEC3, value: [0, 0, 0] };
+            technique.uniforms["opacity"] = { type: gltf.UniformType.FLOAT, value: 1 };
+            technique.uniforms["map"] = { type: gltf.UniformType.SAMPLER_2D, value: egret3d.DefaultTextures.GRAY };
+            technique.uniforms["alphaMap"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
+            technique.uniforms["aoMap"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
+            technique.uniforms["aoMapIntensity"] = { type: gltf.UniformType.FLOAT, value: 1 };
+            technique.uniforms["emissiveMap"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
+            technique.uniforms["reflectivity"] = { type: gltf.UniformType.FLOAT, value: 0 };
+            technique.uniforms["envMapIntensity"] = { type: gltf.UniformType.FLOAT, value: 1 };
+            // technique.uniforms["envMap"] = { type: gltf.UniformType.SAMPLER_CUBE, value: [] };
+            // technique.uniforms["envMap"] = { type: gltf.UniformType.SAMPLER_2D, value: [] };
+            technique.uniforms["flipEnvMap"] = { type: gltf.UniformType.FLOAT, value: 1 };
+            technique.uniforms["maxMipLevel"] = { type: gltf.UniformType.INT, value: 0 };
+            technique.uniforms["specularMap"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
+            technique.uniforms["clippingPlanes"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
+
 
             return shader;
         }
@@ -262,13 +313,13 @@ namespace egret3d {
             technique.uniforms["u_worldPosition"] = { type: gltf.UniformType.FLOAT_VEC3, value: [0, 0, 0] };
             technique.uniforms["u_worldRotation"] = { type: gltf.UniformType.FLOAT_VEC4, value: [0, 0, 0, 1] };
             technique.uniforms["u_startRotation3D"] = { type: gltf.UniformType.BOOL, value: false };
-            technique.uniforms["u_scalingMode"] = { type: gltf.UniformType.Int, value: 0 };
+            technique.uniforms["u_scalingMode"] = { type: gltf.UniformType.INT, value: 0 };
             technique.uniforms["u_positionScale"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
             technique.uniforms["u_sizeScale"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
             technique.uniforms["u_lengthScale"] = { type: gltf.UniformType.FLOAT, value: [1, 1, 1] };
             technique.uniforms["u_speeaScale"] = { type: gltf.UniformType.FLOAT, value: [1, 1, 1] };
-            technique.uniforms["u_simulationSpace"] = { type: gltf.UniformType.Int, value: 0 };
-            technique.uniforms["u_spaceType"] = { type: gltf.UniformType.Int, value: 0 };
+            technique.uniforms["u_simulationSpace"] = { type: gltf.UniformType.INT, value: 0 };
+            technique.uniforms["u_spaceType"] = { type: gltf.UniformType.INT, value: 0 };
             technique.uniforms["u_velocityConst"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
             technique.uniforms["u_velocityCurveX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
             technique.uniforms["u_velocityCurveY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
@@ -361,6 +412,17 @@ namespace egret3d {
                 this._setBlend(technique, BlendModeEnum.Close);
 
                 DefaultShaders.LINE = shader;
+                paper.Asset.register(shader);
+            }
+
+            {
+                const shader = this._createTestShaderTemplate("buildin/test.shader.gltf", RenderQueue.Geometry);
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Close);
+
+                DefaultShaders.TEST = shader;
                 paper.Asset.register(shader);
             }
 

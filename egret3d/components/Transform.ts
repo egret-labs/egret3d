@@ -730,6 +730,7 @@ namespace egret3d {
          * @language zh_CN
          */
         public getForward(out: Vector3): Vector3 {
+            Matrix.getTranslation(this.getWorldMatrix(), helpFoward);
             Matrix.transformNormal(helpFoward, this.getWorldMatrix(), out);
             Vector3.normalize(out);
             return out;

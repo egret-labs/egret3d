@@ -54,6 +54,12 @@ namespace egret3d {
                     case gltf.UniformSemanticType.PROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_p.rawData);
                         break;
+                    case gltf.UniformSemanticType.MODELVIEW:
+                        webgl.uniformMatrix4fv(location, false, context.matrix_mv.rawData);
+                        break;
+                    case gltf.UniformSemanticType.MODELVIEWINVERSE:
+                        webgl.uniformMatrix3fv(location, false, context.matrix_mv_invers.rawData);
+                        break;
                     case gltf.UniformSemanticType._VIEWPROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_vp.rawData);
                         break;
@@ -87,11 +93,17 @@ namespace egret3d {
                             webgl.uniform1fv(location, context.spotLightArray);
                         }
                         break;
+                    case gltf.UniformSemanticType._AMBIENTLIGHTCOLOR:
+                        webgl.uniform3fv(location, context.ambientLightColor);
+                        break;
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.directShadowMatrix);
                         break;
                     case gltf.UniformSemanticType._SPOTSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.spotShadowMatrix);
+                        break;
+                    case gltf.UniformSemanticType._POINTSHADOWMAT:
+                        webgl.uniformMatrix4fv(location, false, context.pointShadowMatrix);
                         break;
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAP:
                         const directShadowLen = context.directShadowMaps.length;
@@ -172,6 +184,9 @@ namespace egret3d {
                     case gltf.UniformSemanticType._FARDISTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraFar);
                         break;
+                    default:
+                        console.warn("不识别的Uniform语义:" + uniform.semantic);
+                        break;
                 }
             }
         }
@@ -197,7 +212,7 @@ namespace egret3d {
                 const value = uniform.value;
                 switch (uniform.type) {
                     case gltf.UniformType.BOOL:
-                    case gltf.UniformType.Int:
+                    case gltf.UniformType.INT:
                         if (glUniform.size > 1) {
                             webgl.uniform1iv(location, value);
                         }

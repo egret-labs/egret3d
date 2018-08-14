@@ -579,7 +579,7 @@ declare namespace gltf {
      * The uniform type.  All valid values correspond to WebGL enums.
      */
     export const enum UniformType {
-        Int = 5124,
+        INT = 5124,
         FLOAT = 5126,
         FLOAT_VEC2 = 35664,
         FLOAT_VEC3 = 35665,
@@ -668,7 +668,6 @@ declare namespace gltf {
         COLOR_1 = "COLOR_1",
         JOINTS_0 = "JOINTS_0",
         WEIGHTS_0 = "WEIGHTS_0",
-
         
         MORPHTARGET_0 = "WEIGHTS_0",
         MORPHTARGET_1 = "WEIGHTS_1",
@@ -678,6 +677,11 @@ declare namespace gltf {
         MORPHTARGET_5 = "WEIGHTS_5",
         MORPHTARGET_6 = "WEIGHTS_6",
         MORPHTARGET_7 = "WEIGHTS_7",
+        
+        MORPHNORMAL_0 = "MORPHNORMAL_0",
+        MORPHNORMAL_1 = "MORPHNORMAL_1",
+        MORPHNORMAL_2 = "MORPHNORMAL_2",
+        MORPHNORMAL_3 = "MORPHNORMAL_3",
 
         _CORNER = "CORNER",
         _START_POSITION = "START_POSITION",
@@ -709,6 +713,16 @@ declare namespace gltf {
         VIEWPORT = "VIEWPORT",
         JOINTMATRIX = "JOINTMATRIX",
 
+        //
+        _AMBIENTLIGHTCOLOR = "_AMBIENTLIGHTCOLOR",
+        _BINDMATRIX = "_BINDMATRIX",
+        _BINDMATRIXINVERSE = "_BINDMATRIXINVERSE",
+        // _BONETEXTURE = "_BONETEXTURE",
+        // _BONETEXTURESIZE = "_BONETEXTURESIZE",
+        _BONEMATRIX = "_BONEMATRIX",
+
+
+
         _VIEWPROJECTION = "_VIEWPROJECTION",
         _CAMERA_POS = "_CAMERA_POS",
         _CAMERA_UP = "CAMERA_UP",
@@ -719,6 +733,7 @@ declare namespace gltf {
         _LIGHTCOUNT = "_LIGHTCOUNT",
         _DIRECTIONSHADOWMAT = "_DIRECTIONSHADOWMAT",
         _SPOTSHADOWMAT = "_SPOTSHADOWMAT",
+        _POINTSHADOWMAT = "_POINTSHADOWMAT",
         _DIRECTIONSHADOWMAP = "_DIRECTIONSHADOWMAP",
         _POINTSHADOWMAP = "_POINTSHADOWMAP",
         _SPOTSHADOWMAP = "_SPOTSHADOWMAP",

@@ -1,8 +1,8 @@
-#if NUM_CLIPPING_PLANES > 0
+#if defined(NUM_CLIPPING_PLANES) && NUM_CLIPPING_PLANES > 0
 
 	vec4 plane;
 
-	#pragma unroll_loop
+	// #pragma unroll_loop
 	for ( int i = 0; i < UNION_CLIPPING_PLANES; i ++ ) {
 
 		plane = clippingPlanes[ i ];
@@ -14,7 +14,7 @@
 
 		bool clipped = true;
 
-		#pragma unroll_loop
+		// #pragma unroll_loop
 		for ( int i = UNION_CLIPPING_PLANES; i < NUM_CLIPPING_PLANES; i ++ ) {
 
 			plane = clippingPlanes[ i ];
