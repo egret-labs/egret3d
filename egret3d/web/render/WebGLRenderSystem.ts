@@ -408,13 +408,13 @@ namespace egret3d {
             const drawCalls = this._drawCalls;
             const faceCount = light.type === LightType.Point ? 6 : 1;
             const renderState = this._renderState;
-
+            const lightWorldMatrix = light.gameObject.transform.getWorldMatrix();
             for (let i = 0; i < faceCount; ++i) {
                 (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
-                light.update(camera, i);
                 const context = camera.context;
-                context.updateCamera(camera, light.matrix);
+                context.updateCamera(camera, lightWorldMatrix);
                 context.updateLightDepth(light);
+                light.update(camera, i);
 
                 renderState.targetAndViewport(camera.viewport, light.renderTarget);
                 renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
