@@ -247,39 +247,7 @@ declare namespace paper {
     /**
      *
      */
-<<<<<<< HEAD
-    type ComponentClass<T extends BaseComponent> = {
-        new (): T;
-=======
-    class BaseObjectAsset extends Asset {
-        protected _raw: ISerializedData;
-        /**
-         * @internal
-         */
-        $parse(json: ISerializedData): void;
-        dispose(): void;
-        caclByteLength(): number;
-    }
-    /**
-     * 预制体资源。
-     */
-    class Prefab extends BaseObjectAsset {
-        /**
-         *
-         */
-        static create(name: string, scene?: Scene | null): GameObject;
-        /**
-         * @deprecated
-         */
-        createInstance(scene?: Scene | null, keepUUID?: boolean): GameObject;
-    }
-}
-declare namespace paper {
-    /**
-     *
-     */
     interface ComponentClass<T extends BaseComponent> extends BaseClass {
->>>>>>> bde307cc3cf110561fb98fa95b253db7b5479932
         executeInEditMode: boolean;
         allowMultiple: boolean;
         requireComponents: ComponentClass<BaseComponent>[] | null;
@@ -547,7 +515,6 @@ declare namespace egret3d {
     /**
      *
      */
-<<<<<<< HEAD
     interface IRectangle {
         x: number;
         y: number;
@@ -580,23 +547,6 @@ declare namespace egret3d {
         constructor(x?: number, y?: number, w?: number, h?: number);
         serialize(): number[];
         deserialize(element: number[]): this;
-=======
-    abstract class SingletonComponent extends BaseComponent {
-        /**
-         * @internal
-         */
-        static readonly __isSingleton: boolean;
-        /**
-         * @internal
-         */
-        static __instance: SingletonComponent | null;
-        /**
-         *
-         */
-        static getInstance<T extends SingletonComponent>(componentClass: ComponentClass<T>): T;
-        initialize(): void;
-        uninitialize(): void;
->>>>>>> bde307cc3cf110561fb98fa95b253db7b5479932
     }
 }
 declare namespace paper {
@@ -2590,11 +2540,19 @@ declare namespace paper {
     /**
      * 单例组件基类。
      */
-    class SingletonComponent extends BaseComponent {
+    abstract class SingletonComponent extends BaseComponent {
+        /**
+         * @internal
+         */
+        static readonly __isSingleton: boolean;
+        /**
+         * @internal
+         */
+        static __instance: SingletonComponent | null;
         /**
          *
          */
-        static instance: SingletonComponent | null;
+        static getInstance<T extends SingletonComponent>(componentClass: ComponentClass<T>): T;
         initialize(): void;
         uninitialize(): void;
     }
@@ -2603,15 +2561,21 @@ declare namespace paper.editor {
     class BaseGeo {
         editorModel: EditorModel;
         geo: GameObject;
+        private baseColor;
         private forward;
         private up;
         private right;
         constructor();
         onSet(): void;
         isPressed(): void;
-        onMouseOn(): void;
-        changeGeo(newGeo: BaseGeo): void;
+        changeColor(color: string): void;
         _createAxis(color: egret3d.Vector4, type: number): GameObject;
+    }
+    class GeoContainer extends BaseGeo {
+        private geos;
+        constructor();
+        onSet(): void;
+        changeType(type: string): void;
     }
 }
 declare namespace paper.editor {
@@ -5212,98 +5176,18 @@ declare namespace egret3d {
         animations: ReadonlyArray<GLTFAsset>;
     }
 }
-declare namespace paper {
+declare namespace egret3d {
     /**
      *
      */
-    const enum HideFlags {
-        /**
-         *
-         */
-        None = 0,
-        /**
-         *
-         */
-        NotEditable = 1,
-        /**
-         *
-         */
-        Hide = 2,
+    class AnimationSystem extends paper.BaseSystem {
+        protected readonly _interests: {
+            componentClass: typeof Animation;
+        }[];
+        onAddComponent(component: Animation): void;
+        onUpdate(): void;
+        onRemoveComponent(component: Animation): void;
     }
-    /**
-     *
-     */
-    const enum DefaultNames {
-        NoName = "NoName",
-        Global = "Global",
-        MainCamera = "MainCamera",
-        EditorCamera = "EditorCamera",
-        Editor = "Editor",
-    }
-    /**
-     *
-     */
-    const enum DefaultTags {
-        Untagged = "",
-        Respawn = "Respawn",
-        Finish = "Finish",
-        EditorOnly = "EditorOnly",
-        MainCamera = "MainCamera",
-        Player = "Player",
-        GameController = "GameController",
-        Global = "Global",
-    }
-    /**
-     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
-     * 这个属性可以实现相机的选择性剔除。
-     */
-    const enum Layer {
-        Default = 2,
-        UI = 4,
-        UserLayer1 = 8,
-        UserLayer2 = 16,
-        UserLayer3 = 32,
-        UserLayer4 = 64,
-        UserLayer5 = 128,
-        UserLayer6 = 240,
-        UserLayer7 = 256,
-        UserLayer8 = 512,
-        UserLayer9 = 1024,
-        UserLayer10 = 2048,
-        UserLayer11 = 3840,
-    }
-    /**
-     * culling mask
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * culling mask 枚举。
-     * 相机的cullingmask与renderer的renderLayer相匹配，才会执行渲染。否则将会被跳过。
-     * 这个属性可以实现相机的选择性剔除。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    const enum CullingMask {
-        Everything = 16777215,
-        Nothing = 1,
-        Default = 2,
-        UI = 4,
-        UserLayer1 = 8,
-        UserLayer2 = 16,
-        UserLayer3 = 32,
-        UserLayer4 = 64,
-        UserLayer5 = 128,
-        UserLayer6 = 240,
-        UserLayer7 = 256,
-        UserLayer8 = 512,
-        UserLayer9 = 1024,
-        UserLayer10 = 2048,
-        UserLayer11 = 3840,
-    }
-    function layerTest(cullingMask: CullingMask, layer: Layer): boolean;
 }
 declare namespace egret3d.particle {
     /**
@@ -5652,63 +5536,98 @@ declare namespace egret3d.particle {
         readonly floatValues: Readonly<Float32Array>;
     }
 }
-declare namespace egret3d.particle {
+declare namespace paper {
     /**
-     * @internal
+     *
      */
-    class ParticleBatcher {
-        private _dirty;
-        private _time;
-        private _emittsionTime;
-        private _frameRateTime;
-        private _firstAliveCursor;
-        private _lastFrameFirstCursor;
-        private _lastAliveCursor;
-        private _vertexStride;
-        private _burstIndex;
-        private _finalGravity;
-        private _vertexAttributes;
-        private _startPositionBuffer;
-        private _startVelocityBuffer;
-        private _startColorBuffer;
-        private _startSizeBuffer;
-        private _startRotationBuffer;
-        private _startTimeBuffer;
-        private _random0Buffer;
-        private _random1Buffer;
-        private _worldPostionBuffer;
-        private _worldRoationBuffer;
-        private _worldPostionCache;
-        private _worldRotationCache;
-        private _comp;
-        private _renderer;
-        /**
-        * 计算粒子爆发数量
-        * @param startTime
-        * @param endTime
-        */
-        private _getBurstCount(startTime, endTime);
-        /**
-         * 判断粒子是否已经过期
-         * @param particleIndex
-         */
-        private _isParticleExpired(particleIndex);
+    const enum HideFlags {
         /**
          *
-         * @param time 批量增加粒子
-         * @param startCursor
-         * @param endCursor
          */
-        private _addParticles(time, startCursor, count);
-        private _tryEmit(time);
-        clean(): void;
-        resetTime(): void;
-        init(comp: ParticleComponent, renderer: ParticleRenderer): void;
-        update(elapsedTime: number): void;
-        private _updateEmission(elapsedTime);
-        private _updateRender();
-        readonly aliveParticleCount: number;
+        None = 0,
+        /**
+         *
+         */
+        NotEditable = 1,
+        /**
+         *
+         */
+        Hide = 2,
     }
+    /**
+     *
+     */
+    const enum DefaultNames {
+        NoName = "NoName",
+        Global = "Global",
+        MainCamera = "MainCamera",
+        EditorCamera = "EditorCamera",
+        Editor = "Editor",
+    }
+    /**
+     *
+     */
+    const enum DefaultTags {
+        Untagged = "",
+        Respawn = "Respawn",
+        Finish = "Finish",
+        EditorOnly = "EditorOnly",
+        MainCamera = "MainCamera",
+        Player = "Player",
+        GameController = "GameController",
+        Global = "Global",
+    }
+    /**
+     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
+     * 这个属性可以实现相机的选择性剔除。
+     */
+    const enum Layer {
+        Default = 2,
+        UI = 4,
+        UserLayer1 = 8,
+        UserLayer2 = 16,
+        UserLayer3 = 32,
+        UserLayer4 = 64,
+        UserLayer5 = 128,
+        UserLayer6 = 240,
+        UserLayer7 = 256,
+        UserLayer8 = 512,
+        UserLayer9 = 1024,
+        UserLayer10 = 2048,
+        UserLayer11 = 3840,
+    }
+    /**
+     * culling mask
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * culling mask 枚举。
+     * 相机的cullingmask与renderer的renderLayer相匹配，才会执行渲染。否则将会被跳过。
+     * 这个属性可以实现相机的选择性剔除。
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    const enum CullingMask {
+        Everything = 16777215,
+        Nothing = 1,
+        Default = 2,
+        UI = 4,
+        UserLayer1 = 8,
+        UserLayer2 = 16,
+        UserLayer3 = 32,
+        UserLayer4 = 64,
+        UserLayer5 = 128,
+        UserLayer6 = 240,
+        UserLayer7 = 256,
+        UserLayer8 = 512,
+        UserLayer9 = 1024,
+        UserLayer10 = 2048,
+        UserLayer11 = 3840,
+    }
+    function layerTest(cullingMask: CullingMask, layer: Layer): boolean;
 }
 declare namespace egret3d.particle {
     const enum ParticleCompEventType {
@@ -7493,24 +7412,18 @@ declare namespace paper.editor {
          * 当前激活的编辑模型
          */
         static readonly activeEditorModel: EditorModel;
-        private static sceneEditorModel;
-        /**
-         * 加载一个场景
-         * @param sceneUrl 场景资源URL
-         */
-        static loadScene(sceneUrl: string): Promise<void>;
         private static setActiveModel(model);
         private static activeScene(scene);
-        private static prefabEditorModel;
         /**
-         * 附加一个预置体编辑场景
+         * 编辑场景
+         * @param sceneUrl 场景资源URL
+         */
+        static editScene(sceneUrl: string): Promise<void>;
+        /**
+         * 编辑预置体
          * @param prefabUrl 预置体资源URL
          */
-        static attachPrefabEditScene(prefabUrl: string): Promise<void>;
-        /**
-         * 解除当前附加的预置体编辑场景
-         */
-        static detachCurrentPrefabEditScene(): void;
+        static editPrefab(prefabUrl: string): Promise<void>;
         /**
          * 撤销
          */
@@ -7687,12 +7600,14 @@ declare namespace paper.editor {
         private editorCameraScript;
         private pickGameScript;
         private geoController;
+        private cameraObject;
         init(): void;
     }
 }
 declare namespace paper.editor {
     class GeoController extends paper.Behaviour {
         selectedGameObjs: GameObject[];
+        clearSelected(): void;
         private _isEditing;
         private _geoCtrlMode;
         private _modeCanChange;
@@ -7807,10 +7722,58 @@ declare namespace paper {
     }
 }
 declare namespace paper.editor {
+    class xAxis extends BaseGeo {
+        constructor();
+        onSet(): void;
+    }
 }
 declare namespace paper.editor {
+    class yAxis extends BaseGeo {
+        constructor();
+        onSet(): void;
+    }
 }
 declare namespace paper.editor {
+    class zAxis extends BaseGeo {
+        constructor();
+        onSet(): void;
+    }
+}
+declare namespace paper.editor {
+    class xRot extends BaseGeo {
+        constructor();
+        onSet(): void;
+    }
+}
+declare namespace paper.editor {
+    class yRot extends BaseGeo {
+        constructor();
+        onSet(): void;
+    }
+}
+declare namespace paper.editor {
+    class zRot extends BaseGeo {
+        constructor();
+        onSet(): void;
+    }
+}
+declare namespace paper.editor {
+    class xScl extends BaseGeo {
+        constructor();
+        onSet(): void;
+    }
+}
+declare namespace paper.editor {
+    class yScl extends BaseGeo {
+        constructor();
+        onSet(): void;
+    }
+}
+declare namespace paper.editor {
+    class zScl extends BaseGeo {
+        constructor();
+        onSet(): void;
+    }
 }
 declare namespace paper.editor {
     class positionCtrlGeo extends BaseGeo {
@@ -8119,6 +8082,7 @@ declare namespace paper.editor {
         onStart(): any;
         private _tapStart;
         private selectedGameObjects;
+        clearSelected(): void;
         onUpdate(delta: number): any;
         private setStroke(picked);
     }
@@ -8199,16 +8163,61 @@ declare namespace paper.editor {
         setTexture(name: string, value: number): void;
     }
 }
-declare namespace egret3d {
+declare namespace egret3d.particle {
     /**
-     *
+     * @internal
      */
-    class AnimationSystem extends paper.BaseSystem {
-        protected readonly _interests: {
-            componentClass: typeof Animation;
-        }[];
-        onAddComponent(component: Animation): void;
-        onUpdate(): void;
-        onRemoveComponent(component: Animation): void;
+    class ParticleBatcher {
+        private _dirty;
+        private _time;
+        private _emittsionTime;
+        private _frameRateTime;
+        private _firstAliveCursor;
+        private _lastFrameFirstCursor;
+        private _lastAliveCursor;
+        private _vertexStride;
+        private _burstIndex;
+        private _finalGravity;
+        private _vertexAttributes;
+        private _startPositionBuffer;
+        private _startVelocityBuffer;
+        private _startColorBuffer;
+        private _startSizeBuffer;
+        private _startRotationBuffer;
+        private _startTimeBuffer;
+        private _random0Buffer;
+        private _random1Buffer;
+        private _worldPostionBuffer;
+        private _worldRoationBuffer;
+        private _worldPostionCache;
+        private _worldRotationCache;
+        private _comp;
+        private _renderer;
+        /**
+        * 计算粒子爆发数量
+        * @param startTime
+        * @param endTime
+        */
+        private _getBurstCount(startTime, endTime);
+        /**
+         * 判断粒子是否已经过期
+         * @param particleIndex
+         */
+        private _isParticleExpired(particleIndex);
+        /**
+         *
+         * @param time 批量增加粒子
+         * @param startCursor
+         * @param endCursor
+         */
+        private _addParticles(time, startCursor, count);
+        private _tryEmit(time);
+        clean(): void;
+        resetTime(): void;
+        init(comp: ParticleComponent, renderer: ParticleRenderer): void;
+        update(elapsedTime: number): void;
+        private _updateEmission(elapsedTime);
+        private _updateRender();
+        readonly aliveParticleCount: number;
     }
 }

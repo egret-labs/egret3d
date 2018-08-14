@@ -22,20 +22,25 @@ namespace paper.editor {
         public set editorModel(editorModel: EditorModel) {
             this._editorModel = editorModel
             this.addEventListener();
+            this.changeEditType('position')
         }
         public get editorModel() {
             return this._editorModel;
         }
 
         private geoCtrlMode: string = 'local';
-        private geoCtrlType: string = 'position';
+        private geoCtrlType: string;
         constructor() {
             super();
             this.bindMouse = egret3d.InputManager.mouse;
             this.bindKeyboard = egret3d.InputManager.keyboard;
-            this.changeEditType('position')
+            this.mainGeo = new GeoContainer();
         }
-        onUpdate() {
+        public onUpdate() {
+            console.log("now update", this.editorModel)
+            if (!this.editorModel) {
+                return;
+            }
             this.geoChangeByCamera();
             this.inputUpdate();
         }
@@ -46,6 +51,27 @@ namespace paper.editor {
         private inputUpdate() {
             let mouse = this.bindMouse;
             let keyboard = this.bindKeyboard;
+            if (keyboard.wasPressed("Q")) {
+                if (this.geoCtrlMode == "local") {
+                    this.editorModel.changeEditMode("world");
+                } else {
+                    this.editorModel.changeEditMode("local");
+                }
+            }
+            if (keyboard.wasPressed("W")) {
+                this.changeEditType("position")
+                this.editorModel.changeEditType("position");
+            }
+            if (keyboard.wasPressed("E")) {
+                this.changeEditType("rotation")
+                this.editorModel.changeEditType("rotation");
+            }
+            if (keyboard.wasPressed("R")) {
+                this.changeEditType("scale")
+                this.editorModel.changeEditType("scale");
+            }
+
+
         }
 
         private changeEditMode(mode: string) {
@@ -79,7 +105,7 @@ namespace paper.editor {
             // this._modeCanChange = true;            
             if (len > 0) {
                 this._isEditing = true;
-                this.controller.activeSelf
+                this.controller.activeSelf = true
                 if (len == 1) {
                     // console.log("select: " + this.selectedGameObjs[0].name);
                     this.controller.transform.setPosition(this.selectedGameObjs[0].transform.getPosition());

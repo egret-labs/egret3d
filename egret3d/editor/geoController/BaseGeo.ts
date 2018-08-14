@@ -14,7 +14,8 @@ namespace paper.editor {
         constructor() {
             this.onSet();
             if (this.geo) {
-                this.baseColor = this.geo.getComponent(egret3d.MeshRenderer).materials[0]
+                if (this.geo.getComponent(egret3d.MeshRenderer))
+                    this.baseColor = this.geo.getComponent(egret3d.MeshRenderer).materials[0]
             }
         }
 
@@ -53,11 +54,9 @@ namespace paper.editor {
             let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
             mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
             renderer.materials = [mat];
-            console.log(gizmoAxis.scene)
             return gizmoAxis;
         }
 
-        public _checkInter
     }
 
 
@@ -68,7 +67,13 @@ namespace paper.editor {
             super();
             this.changeType("position")
         }
-
+        onSet() {
+            let controller = new paper.GameObject("", "", Application.sceneManager.editorScene);
+            controller.activeSelf = false;
+            controller.name = "GizmoController";
+            controller.tag = "Editor";
+            this.geo = controller
+        }
         changeType(type: string) {
             this.geos = []
             switch (type) {
@@ -81,13 +86,27 @@ namespace paper.editor {
                     }
                     break;
                 case "rotation":
+                    {
+                        let x = new xRot
+                        let y = new yRot
+                        let z = new zRot
+                        this.geos.push(x, y, z)
+                    }
+
                     break;
                 case "scale":
+                    {
+                        let x = new xScl
+                        let y = new yScl
+                        let z = new zScl
+                        this.geos.push(x, y, z)
+                    }
                     break;
             }
             for (let geo of this.geos) {
                 geo.geo.transform.setParent(this.geo.transform)
             }
+            console.log(this.geos)
         }
     }
 }

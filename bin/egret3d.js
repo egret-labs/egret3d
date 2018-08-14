@@ -1596,48 +1596,15 @@ var paper;
         editor.getExtraInfo = getExtraInfo;
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
-<<<<<<< HEAD
 var egret3d;
 (function (egret3d) {
-=======
-var paper;
-(function (paper) {
-    ;
->>>>>>> bde307cc3cf110561fb98fa95b253db7b5479932
     /**
      * 矩形可序列化对象
      */
-<<<<<<< HEAD
     var Rectangle = (function () {
-=======
-    var SingletonComponent = (function (_super) {
-        __extends(SingletonComponent, _super);
-        function SingletonComponent() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
         /**
          *
          */
-        SingletonComponent.getInstance = function (componentClass) {
-            return paper.Application.sceneManager.globalGameObject.getOrAddComponent(componentClass);
-        };
-        SingletonComponent.prototype.initialize = function () {
-            _super.prototype.initialize.call(this);
-            if (!this.constructor.__instance) {
-                this.constructor.__instance = this;
-            }
-        };
-        SingletonComponent.prototype.uninitialize = function () {
-            _super.prototype.uninitialize.call(this);
-            if (this.constructor.__instance === this) {
-                this.constructor.__instance = null;
-            }
-        };
->>>>>>> bde307cc3cf110561fb98fa95b253db7b5479932
-        /**
-         * @internal
-         */
-<<<<<<< HEAD
         function Rectangle(x, y, w, h) {
             if (x === void 0) { x = 0.0; }
             if (y === void 0) { y = 0.0; }
@@ -1663,18 +1630,6 @@ var paper;
     egret3d.Rectangle = Rectangle;
     __reflect(Rectangle.prototype, "egret3d.Rectangle", ["egret3d.IRectangle", "paper.ISerializable"]);
 })(egret3d || (egret3d = {}));
-=======
-        SingletonComponent.__isSingleton = true;
-        /**
-         * @internal
-         */
-        SingletonComponent.__instance = null;
-        return SingletonComponent;
-    }(paper.BaseComponent));
-    paper.SingletonComponent = SingletonComponent;
-    __reflect(SingletonComponent.prototype, "paper.SingletonComponent");
-})(paper || (paper = {}));
->>>>>>> bde307cc3cf110561fb98fa95b253db7b5479932
 var paper;
 (function (paper) {
     /**
@@ -3748,6 +3703,7 @@ var paper;
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
+    ;
     /**
      * 单例组件基类。
      */
@@ -3756,25 +3712,32 @@ var paper;
         function SingletonComponent() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
+        /**
+         *
+         */
+        SingletonComponent.getInstance = function (componentClass) {
+            return paper.Application.sceneManager.globalGameObject.getOrAddComponent(componentClass);
+        };
         SingletonComponent.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            if (!this.constructor.instance) {
-                this.constructor.instance = this;
-            }
-            else {
-                console.error("Cannot add singleton component again.", egret.getQualifiedClassName(this));
+            if (!this.constructor.__instance) {
+                this.constructor.__instance = this;
             }
         };
         SingletonComponent.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
-            if (this.constructor.instance === this) {
-                this.constructor.instance = null;
+            if (this.constructor.__instance === this) {
+                this.constructor.__instance = null;
             }
         };
         /**
-         *
+         * @internal
          */
-        SingletonComponent.instance = null;
+        SingletonComponent.__isSingleton = true;
+        /**
+         * @internal
+         */
+        SingletonComponent.__instance = null;
         return SingletonComponent;
     }(paper.BaseComponent));
     paper.SingletonComponent = SingletonComponent;
@@ -3790,14 +3753,24 @@ var paper;
                 this.up = new egret3d.Vector3(0, 1, 0);
                 this.right = new egret3d.Vector3(1, 0, 0);
                 this.onSet();
+                if (this.geo) {
+                    if (this.geo.getComponent(egret3d.MeshRenderer))
+                        this.baseColor = this.geo.getComponent(egret3d.MeshRenderer).materials[0];
+                }
             }
             BaseGeo.prototype.onSet = function () {
             };
             BaseGeo.prototype.isPressed = function () {
             };
-            BaseGeo.prototype.onMouseOn = function () {
-            };
-            BaseGeo.prototype.changeGeo = function (newGeo) {
+            BaseGeo.prototype.changeColor = function (color) {
+                if (color == "origin") {
+                    this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor];
+                }
+                else if (color == "yellow") {
+                    var mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                    mat.setVector4v("_Color", [0.9, 0.9, 0.7, 0.8]);
+                    this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
+                }
             };
             BaseGeo.prototype._createAxis = function (color, type) {
                 var gizmoAxis = new paper.GameObject("", "", paper.Application.sceneManager.editorScene);
@@ -3817,13 +3790,65 @@ var paper;
                 var mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
                 mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
                 renderer.materials = [mat];
-                console.log(gizmoAxis.scene);
                 return gizmoAxis;
             };
             return BaseGeo;
         }());
         editor.BaseGeo = BaseGeo;
         __reflect(BaseGeo.prototype, "paper.editor.BaseGeo");
+        var GeoContainer = (function (_super) {
+            __extends(GeoContainer, _super);
+            function GeoContainer() {
+                var _this = _super.call(this) || this;
+                _this.geos = [];
+                _this.changeType("position");
+                return _this;
+            }
+            GeoContainer.prototype.onSet = function () {
+                var controller = new paper.GameObject("", "", paper.Application.sceneManager.editorScene);
+                controller.activeSelf = false;
+                controller.name = "GizmoController";
+                controller.tag = "Editor";
+                this.geo = controller;
+            };
+            GeoContainer.prototype.changeType = function (type) {
+                this.geos = [];
+                switch (type) {
+                    case "position":
+                        {
+                            var x = new editor.xAxis;
+                            var y = new editor.yAxis;
+                            var z = new editor.zAxis;
+                            this.geos.push(x, y, z);
+                        }
+                        break;
+                    case "rotation":
+                        {
+                            var x = new editor.xRot;
+                            var y = new editor.yRot;
+                            var z = new editor.zRot;
+                            this.geos.push(x, y, z);
+                        }
+                        break;
+                    case "scale":
+                        {
+                            var x = new editor.xScl;
+                            var y = new editor.yScl;
+                            var z = new editor.zScl;
+                            this.geos.push(x, y, z);
+                        }
+                        break;
+                }
+                for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
+                    var geo = _a[_i];
+                    geo.geo.transform.setParent(this.geo.transform);
+                }
+                console.log(this.geos);
+            };
+            return GeoContainer;
+        }(BaseGeo));
+        editor.GeoContainer = GeoContainer;
+        __reflect(GeoContainer.prototype, "paper.editor.GeoContainer");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -3889,180 +3914,6 @@ var paper;
             ];
             _this._bufferedComponents = [];
             _this._bufferedGameObjects = [];
-            _this._contactColliders = _this._globalGameObject.getOrAddComponent(paper.ContactColliders);
-            return _this;
-        }
-        DisableSystem.prototype.onRemoveComponent = function (component) {
-            if (!component) {
-                return;
-            }
-            if (this._isEditorUpdate() &&
-                !component.constructor.executeInEditMode) {
-                return;
-            }
-<<<<<<< HEAD
-=======
-            return this;
-        };
-        Object.defineProperty(Vector2.prototype, "length", {
-            get: function () {
-                return Math.sqrt(this.sqrtLength);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Vector2.prototype, "sqrtLength", {
-            get: function () {
-                return this.x * this.x + this.y * this.y;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Vector2.set = function (x, y, out) {
-            out.x = x;
-            out.y = y;
-            return out;
-        };
-        Vector2.normalize = function (v) {
-            var num = this.getLength(v);
-            if (num > Number.MIN_VALUE) {
-                v.x = v.x / num;
-                v.y = v.y / num;
-            }
-            else {
-                v.x = 1.0;
-                v.y = 0.0;
-            }
-            return v;
-        };
-        Vector2.add = function (v1, v2, out) {
-            out.x = v1.x + v2.x;
-            out.y = v1.y + v2.y;
-            return out;
-        };
-        Vector2.subtract = function (v1, v2, out) {
-            out.x = v1.x - v2.x;
-            out.y = v1.y - v2.y;
-            return out;
-        };
-        Vector2.multiply = function (v1, v2, out) {
-            out.x = v1.x * v2.x;
-            out.y = v1.y * v2.y;
-            return out;
-        };
-        Vector2.dot = function (v1, v2) {
-            return v1.x * v2.x + v1.y * v2.y;
-        };
-        Vector2.scale = function (v, scaler) {
-            v.x = v.x * scaler;
-            v.y = v.y * scaler;
-            return v;
-        };
-        Vector2.getLength = function (v) {
-            return Math.sqrt(v.x * v.x + v.y * v.y);
-        };
-        Vector2.getDistance = function (v1, v2) {
-            this.subtract(v1, v2, _helpVector2A);
-            return this.getLength(_helpVector2A);
-        };
-        Vector2.copy = function (v, out) {
-            out.x = v.x;
-            out.y = v.y;
-            return out;
-        };
-        Vector2.equal = function (v1, v2, threshold) {
-            if (threshold === void 0) { threshold = 0.00001; }
-            if (Math.abs(v1.x - v2.x) > threshold) {
-                return false;
-            }
-            if (Math.abs(v1.y - v2.y) > threshold) {
-                return false;
-            }
-            return true;
-        };
-        Vector2.lerp = function (v1, v2, value, out) {
-            out.x = v1.x * (1 - value) + v2.x * value;
-            out.y = v1.y * (1 - value) + v2.y * value;
-            return out;
-        };
-        Vector2.ZERO = new Vector2(0.0, 0.0);
-        Vector2.ONE = new Vector2(1.0, 1.0);
-        return Vector2;
-    }());
-    egret3d.Vector2 = Vector2;
-    __reflect(Vector2.prototype, "egret3d.Vector2", ["egret3d.IVector2", "paper.ISerializable"]);
-    var _helpVector2A = new Vector2();
-})(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
-    /**
-     *
-     */
-    var LateUpdateSystem = (function (_super) {
-        __extends(LateUpdateSystem, _super);
-        function LateUpdateSystem() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._interests = [
-                { componentClass: paper.Behaviour, type: 1 /* Extends */ | 4 /* Unessential */, isBehaviour: true }
-            ];
-            _this._laterCalls = [];
-            return _this;
-        }
-        LateUpdateSystem.prototype.onUpdate = function (deltaTime) {
-            // Update behaviours.
-            var components = this._groups[0].components;
-            if (this._isEditorUpdate()) {
-                for (var _i = 0, components_1 = components; _i < components_1.length; _i++) {
-                    var component = components_1[_i];
-                    if (component && component.constructor.executeInEditMode) {
-                        component.onLateUpdate && component.onLateUpdate(deltaTime);
-                    }
-                }
-            }
-            else {
-                for (var _a = 0, components_2 = components; _a < components_2.length; _a++) {
-                    var component = components_2[_a];
-                    if (component) {
-                        component.onLateUpdate && component.onLateUpdate(deltaTime);
-                    }
-                }
-            }
-            //
-            egret.ticker.update(); // TODO 帧频
-            //
-            if (this._laterCalls.length > 0) {
-                for (var _b = 0, _c = this._laterCalls; _b < _c.length; _b++) {
-                    var callback = _c[_b];
-                    callback();
-                }
-                this._laterCalls.length = 0;
-            }
-        };
-        /**
-         *
-         */
-        LateUpdateSystem.prototype.callLater = function (callback) {
-            this._laterCalls.push(callback);
-        };
-        return LateUpdateSystem;
-    }(paper.BaseSystem));
-    paper.LateUpdateSystem = LateUpdateSystem;
-    __reflect(LateUpdateSystem.prototype, "paper.LateUpdateSystem");
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     * @internal
-     */
-    var DisableSystem = (function (_super) {
-        __extends(DisableSystem, _super);
-        function DisableSystem() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._interests = [
-                { componentClass: paper.Behaviour, type: 1 /* Extends */ | 4 /* Unessential */, isBehaviour: true }
-            ];
-            _this._bufferedComponents = [];
-            _this._bufferedGameObjects = [];
             _this._contactColliders = paper.ContactColliders.getInstance(paper.ContactColliders);
             return _this;
         }
@@ -4074,7 +3925,6 @@ var paper;
                 !component.constructor.executeInEditMode) {
                 return;
             }
->>>>>>> bde307cc3cf110561fb98fa95b253db7b5479932
             component.onDisable && component.onDisable();
         };
         DisableSystem.prototype.onUpdate = function () {
@@ -10923,7 +10773,6 @@ var egret3d;
         __extends(SkinnedMeshRenderer, _super);
         function SkinnedMeshRenderer() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-<<<<<<< HEAD
             _this._materials = [];
             _this._mesh = null;
             _this._bones = [];
@@ -10941,18 +10790,6 @@ var egret3d;
             _this._efficient = true; // 是否高效模式
             _this._joints = null;
             _this._weights = null;
-=======
-            _this._interests = [
-                {
-                    componentClass: egret3d.SkinnedMeshRenderer,
-                    listeners: [
-                        { type: "mesh" /* Mesh */, listener: function (component) { _this._updateDrawCalls(component.gameObject); } },
-                        { type: "materials" /* Materials */, listener: function (component) { _this._updateDrawCalls(component.gameObject); } },
-                    ]
-                }
-            ];
-            _this._drawCalls = egret3d.DrawCalls.getInstance(egret3d.DrawCalls);
->>>>>>> bde307cc3cf110561fb98fa95b253db7b5479932
             return _this;
         }
         Object.defineProperty(SkinnedMeshRenderer.prototype, "mesh", {
@@ -11311,7 +11148,7 @@ var egret3d;
                     ]
                 }
             ];
-            _this._drawCalls = _this._globalGameObject.getOrAddComponent(egret3d.DrawCalls);
+            _this._drawCalls = egret3d.DrawCalls.getInstance(egret3d.DrawCalls);
             return _this;
         }
         SkinnedMeshRendererSystem.prototype._updateDrawCalls = function (gameObject) {
@@ -12232,15 +12069,6 @@ var egret3d;
     egret3d.Animation = Animation;
     __reflect(Animation.prototype, "egret3d.Animation");
 })(egret3d || (egret3d = {}));
-<<<<<<< HEAD
-var paper;
-(function (paper) {
-    function layerTest(cullingMask, layer) {
-        return (cullingMask & layer) !== 0;
-    }
-    paper.layerTest = layerTest;
-})(paper || (paper = {}));
-=======
 var egret3d;
 (function (egret3d) {
     /**
@@ -12292,7 +12120,6 @@ var egret3d;
     egret3d.AnimationSystem = AnimationSystem;
     __reflect(AnimationSystem.prototype, "egret3d.AnimationSystem");
 })(egret3d || (egret3d = {}));
->>>>>>> bde307cc3cf110561fb98fa95b253db7b5479932
 var egret3d;
 (function (egret3d) {
     var particle;
@@ -13941,409 +13768,13 @@ var egret3d;
         __reflect(TextureSheetAnimationModule.prototype, "egret3d.particle.TextureSheetAnimationModule");
     })(particle = egret3d.particle || (egret3d.particle = {}));
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var particle;
-    (function (particle) {
-        //
-        var positionHelper = new egret3d.Vector3();
-        var velocityHelper = new egret3d.Vector3();
-        var startSizeHelper = new egret3d.Vector3();
-        var startColorHelper = new egret3d.Color();
-        var startRotationHelper = new egret3d.Vector3();
-        var GRAVITY = new egret3d.Vector3(0, -9.81, 0); //TODO没有物理系统，暂时先放到这里
-        /**
-         * @internal
-         */
-        var ParticleBatcher = (function () {
-            function ParticleBatcher() {
-                this._dirty = false;
-                this._time = 0.0;
-                this._emittsionTime = 0;
-                this._frameRateTime = 0;
-                //最新存活位置
-                this._firstAliveCursor = 0;
-                this._lastFrameFirstCursor = 0;
-                //最后存活位置
-                this._lastAliveCursor = 0;
-                //原始顶点数量
-                this._vertexStride = 0;
-                //当前爆发的索引
-                this._burstIndex = 0;
-                //最终重力
-                this._finalGravity = new egret3d.Vector3();
-            }
-            /**
-            * 计算粒子爆发数量
-            * @param startTime
-            * @param endTime
-            */
-            ParticleBatcher.prototype._getBurstCount = function (startTime, endTime) {
-                var totalEmitCount = 0;
-                var bursts = this._comp.emission.bursts;
-                for (var l = bursts.length; this._burstIndex < l; this._burstIndex++) {
-                    var burst = bursts[this._burstIndex];
-                    if (burst.time >= startTime && burst.time < endTime) {
-                        totalEmitCount += egret3d.numberLerp(burst.minCount, burst.maxCount, Math.random());
-                    }
-                    else {
-                        break;
-                    }
-                }
-                return totalEmitCount;
-            };
-            /**
-             * 判断粒子是否已经过期
-             * @param particleIndex
-             */
-            ParticleBatcher.prototype._isParticleExpired = function (particleIndex) {
-                var startTimeOffset = particleIndex * this._vertexStride * 2;
-                return this._time - this._startTimeBuffer[startTimeOffset + 1] + 0.0001 > this._startTimeBuffer[startTimeOffset];
-            };
-            /**
-             *
-             * @param time 批量增加粒子
-             * @param startCursor
-             * @param endCursor
-             */
-            ParticleBatcher.prototype._addParticles = function (time, startCursor, count) {
-                var comp = this._comp;
-                var main = comp.main;
-                var velocityModule = comp.velocityOverLifetime;
-                var colorModule = comp.colorOverLifetime;
-                var sizeModule = comp.sizeOverLifetime;
-                var rotationModule = comp.rotationOverLifetime;
-                var textureSheetModule = comp.textureSheetAnimation;
-                var isVelocityRandom = velocityModule.enable && (velocityModule._mode === 3 /* TwoConstants */ || velocityModule._mode === 2 /* TwoCurves */);
-                var isColorRandom = colorModule.enable && colorModule._color.mode === 3 /* TwoGradients */;
-                var isSizeRandom = sizeModule.enable && (sizeModule._size.mode === 3 /* TwoConstants */ || sizeModule._size.mode === 2 /* TwoCurves */);
-                var isRotationRandom = rotationModule.enable && (rotationModule._x.mode === 3 /* TwoConstants */ || rotationModule._x.mode === 2 /* TwoCurves */);
-                var isTextureRandom = textureSheetModule.enable && (textureSheetModule._startFrame.mode === 3 /* TwoConstants */ || textureSheetModule._startFrame.mode === 2 /* TwoCurves */);
-                var needRandom0 = isColorRandom || isSizeRandom || isRotationRandom || isTextureRandom;
-                var worldPosition = this._worldPostionCache;
-                var worldRotation = this._worldRotationCache;
-                var isWorldSpace = main._simulationSpace === 1 /* World */;
-                var startPositionBuffer = this._startPositionBuffer;
-                var startVelocityBuffer = this._startVelocityBuffer;
-                var startColorBuffer = this._startColorBuffer;
-                var startSizeBuffer = this._startSizeBuffer;
-                var startRotationBuffer = this._startRotationBuffer;
-                var startTimeBuffer = this._startTimeBuffer;
-                var random0Buffer = this._random0Buffer;
-                var random1Buffer = this._random1Buffer;
-                var worldPostionBuffer = this._worldPostionBuffer;
-                var worldRoationBuffer = this._worldRoationBuffer;
-                var age = Math.min(this._emittsionTime / main.duration, 1.0);
-                var vertexStride = this._vertexStride;
-                var addCount = 0, startIndex = 0, endIndex = 0;
-                var lifetime = 0.0;
-                var startSpeed = 0.0;
-                var randomVelocityX = 0.0, randomVelocityY = 0.0, randomVelocityZ = 0.0;
-                var randomColor = 0.0, randomSize = 0.0, randomRotation = 0.0, randomTextureAnimation = 0.0;
-                var vector2Offset = 0, vector3Offset = 0, vector4Offset = 0;
-                while (addCount !== count) {
-                    //发射粒子要根据粒子发射器的形状发射
-                    comp.shape.generatePositionAndDirection(positionHelper, velocityHelper);
-                    main.startColor.evaluate(age, startColorHelper);
-                    lifetime = main.startLifetime.evaluate(age);
-                    startSpeed = main.startSpeed.evaluate(age);
-                    velocityHelper.x *= startSpeed;
-                    velocityHelper.y *= startSpeed;
-                    velocityHelper.z *= startSpeed;
-                    startSizeHelper.x = main.startSizeX.evaluate(age);
-                    startSizeHelper.y = main.startSizeY.evaluate(age);
-                    startSizeHelper.z = main.startSizeZ.evaluate(age);
-                    startRotationHelper.x = main.startRotationX.evaluate(age);
-                    startRotationHelper.y = main.startRotationY.evaluate(age);
-                    startRotationHelper.z = main.startRotationZ.evaluate(age);
-                    randomVelocityX = isVelocityRandom ? Math.random() : 0.0;
-                    randomVelocityY = isVelocityRandom ? Math.random() : 0.0;
-                    randomVelocityZ = isVelocityRandom ? Math.random() : 0.0;
-                    randomColor = isColorRandom ? Math.random() : 0.0;
-                    randomSize = isSizeRandom ? Math.random() : 0.0;
-                    randomRotation = isRotationRandom ? Math.random() : 0.0;
-                    randomTextureAnimation = isTextureRandom ? Math.random() : 0.0;
-                    for (startIndex = startCursor * vertexStride, endIndex = startIndex + vertexStride; startIndex < endIndex; startIndex++) {
-                        vector2Offset = startIndex * 2;
-                        vector3Offset = startIndex * 3;
-                        vector4Offset = startIndex * 4;
-                        //
-                        startPositionBuffer[vector3Offset] = positionHelper.x;
-                        startPositionBuffer[vector3Offset + 1] = positionHelper.y;
-                        startPositionBuffer[vector3Offset + 2] = positionHelper.z;
-                        startVelocityBuffer[vector3Offset] = velocityHelper.x;
-                        startVelocityBuffer[vector3Offset + 1] = velocityHelper.y;
-                        startVelocityBuffer[vector3Offset + 2] = velocityHelper.z;
-                        startColorBuffer[vector4Offset] = startColorHelper.r;
-                        startColorBuffer[vector4Offset + 1] = startColorHelper.g;
-                        startColorBuffer[vector4Offset + 2] = startColorHelper.b;
-                        startColorBuffer[vector4Offset + 3] = startColorHelper.a;
-                        startSizeBuffer[vector3Offset] = startSizeHelper.x;
-                        startSizeBuffer[vector3Offset + 1] = startSizeHelper.y;
-                        startSizeBuffer[vector3Offset + 2] = startSizeHelper.z;
-                        startRotationBuffer[vector3Offset] = startRotationHelper.x;
-                        startRotationBuffer[vector3Offset + 1] = startRotationHelper.y;
-                        startRotationBuffer[vector3Offset + 2] = startRotationHelper.z;
-                        startTimeBuffer[vector2Offset] = lifetime;
-                        startTimeBuffer[vector2Offset + 1] = time;
-                        //
-                        if (needRandom0) {
-                            random0Buffer[vector4Offset] = randomColor;
-                            random0Buffer[vector4Offset + 1] = randomSize;
-                            random0Buffer[vector4Offset + 2] = randomRotation;
-                            random0Buffer[vector4Offset + 3] = randomTextureAnimation;
-                        }
-                        if (isVelocityRandom) {
-                            random1Buffer[vector4Offset] = randomVelocityX;
-                            random1Buffer[vector4Offset + 1] = randomVelocityY;
-                            random1Buffer[vector4Offset + 2] = randomVelocityZ;
-                            random1Buffer[vector4Offset + 3] = 0;
-                        }
-                        if (isWorldSpace) {
-                            worldPostionBuffer[vector3Offset] = worldPosition.x;
-                            worldPostionBuffer[vector3Offset + 1] = worldPosition.y;
-                            worldPostionBuffer[vector3Offset + 2] = worldPosition.z;
-                            worldRoationBuffer[vector4Offset] = worldRotation.x;
-                            worldRoationBuffer[vector4Offset + 1] = worldRotation.y;
-                            worldRoationBuffer[vector4Offset + 2] = worldRotation.z;
-                            worldRoationBuffer[vector4Offset + 3] = worldRotation.w;
-                        }
-                    }
-                    ;
-                    startCursor++;
-                    if (startCursor >= main._maxParticles) {
-                        startCursor = 0;
-                    }
-                    addCount++;
-                }
-                //TODO理论上应该是每帧更新，不过现在没有物理系统，先放到这里
-                var gravityModifier = main.gravityModifier.constant;
-                this._finalGravity.x = GRAVITY.x * gravityModifier;
-                this._finalGravity.y = GRAVITY.y * gravityModifier;
-                this._finalGravity.z = GRAVITY.z * gravityModifier;
-            };
-            ParticleBatcher.prototype._tryEmit = function (time) {
-                var maxParticles = this._comp.main._maxParticles;
-                var nextCursor = this._firstAliveCursor + 1 > maxParticles ? 0 : this._firstAliveCursor + 1;
-                if (nextCursor >= maxParticles) {
-                    nextCursor = 0;
-                }
-                if (!this._isParticleExpired(nextCursor)) {
-                    return false;
-                }
-                //
-                this._firstAliveCursor = nextCursor;
-                this._dirty = true;
-                return true;
-            };
-            ParticleBatcher.prototype.clean = function () {
-                this._time = 0.0;
-                this._dirty = false;
-                this._emittsionTime = 0.0;
-                this._frameRateTime = 0.0;
-                this._firstAliveCursor = 0;
-                this._lastFrameFirstCursor = 0;
-                this._lastAliveCursor = 0;
-                this._vertexStride = 0;
-                this._vertexAttributes = null;
-                this._burstIndex = 0;
-                this._startPositionBuffer = null;
-                this._startVelocityBuffer = null;
-                this._startColorBuffer = null;
-                this._startSizeBuffer = null;
-                this._startRotationBuffer = null;
-                this._startTimeBuffer = null;
-                this._random0Buffer = null;
-                this._random1Buffer = null;
-                this._worldPostionBuffer = null;
-                this._worldRoationBuffer = null;
-                this._worldPostionCache = null;
-                this._worldRotationCache = null;
-                this._comp = null;
-                this._renderer = null;
-            };
-            ParticleBatcher.prototype.resetTime = function () {
-                this._burstIndex = 0;
-                this._emittsionTime = 0;
-            };
-            ParticleBatcher.prototype.init = function (comp, renderer) {
-                this._comp = comp;
-                this._renderer = renderer;
-                var mesh = particle.createBatchMesh(renderer, comp.main._maxParticles);
-                this._vertexStride = renderer._renderMode === 4 /* Mesh */ ? renderer.mesh.vertexCount : 4;
-                this._startPositionBuffer = mesh.getAttributes("START_POSITION" /* _START_POSITION */);
-                this._startVelocityBuffer = mesh.getAttributes("START_VELOCITY" /* _START_VELOCITY */);
-                this._startColorBuffer = mesh.getAttributes("START_COLOR" /* _START_COLOR */);
-                this._startSizeBuffer = mesh.getAttributes("START_SIZE" /* _START_SIZE */);
-                this._startRotationBuffer = mesh.getAttributes("START_ROTATION" /* _START_ROTATION */);
-                this._startTimeBuffer = mesh.getAttributes("TIME" /* _TIME */);
-                this._random0Buffer = mesh.getAttributes("RANDOM0" /* _RANDOM0 */);
-                this._random1Buffer = mesh.getAttributes("RANDOM1" /* _RANDOM1 */);
-                this._worldPostionBuffer = mesh.getAttributes("WORLD_POSITION" /* _WORLD_POSITION */);
-                this._worldRoationBuffer = mesh.getAttributes("WORLD_ROTATION" /* _WORLD_ROTATION */);
-                var primitive = mesh.glTFMesh.primitives[0];
-                this._vertexAttributes = [];
-                for (var k in primitive.attributes) {
-                    this._vertexAttributes.push(k);
-                }
-                renderer.batchMesh = mesh;
-                //粒子系统不能用共享材质
-                renderer.batchMaterial = renderer.materials[0].clone();
-                mesh.uploadSubIndexBuffer();
-            };
-            ParticleBatcher.prototype.update = function (elapsedTime) {
-                if (this._comp.isPaused) {
-                    return;
-                }
-                //
-                this._time += elapsedTime;
-                var comp = this._comp;
-                var mainModule = comp.main;
-                //
-                while (this._lastAliveCursor != this._firstAliveCursor) {
-                    if (!this._isParticleExpired(this._lastAliveCursor)) {
-                        break;
-                    }
-                    this._lastAliveCursor++;
-                    if (this._lastAliveCursor >= mainModule._maxParticles) {
-                        this._lastAliveCursor = 0;
-                    }
-                }
-                var transform = comp.gameObject.transform;
-                this._worldPostionCache = transform.getPosition();
-                this._worldRotationCache = transform.getRotation();
-                //检测是否已经过了Delay时间，否则不能发射
-                if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
-                    this._updateEmission(elapsedTime);
-                }
-                this._updateRender();
-            };
-            ParticleBatcher.prototype._updateEmission = function (elapsedTime) {
-                var comp = this._comp;
-                var mainModule = comp.main;
-                //根据时间判断
-                var lastEmittsionTime = this._emittsionTime;
-                this._emittsionTime += elapsedTime;
-                var isOver = this._emittsionTime > mainModule.duration;
-                if (!isOver) {
-                    //由爆发触发的粒子发射
-                    var totalEmitCount = 0;
-                    if (comp.emission.bursts.length > 0) {
-                        var readyEmitCount = 0;
-                        readyEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
-                        readyEmitCount = Math.min(mainModule._maxParticles - this.aliveParticleCount, readyEmitCount);
-                        //
-                        for (var i = 0; i < readyEmitCount; i++) {
-                            if (this._tryEmit(this._time)) {
-                                totalEmitCount++;
-                            }
-                        }
-                    }
-                    //由时间触发的粒子发射,不支持曲线
-                    var rateOverTime = comp.emission.rateOverTime.constant;
-                    if (rateOverTime > 0) {
-                        var minEmissionTime = 1 / rateOverTime;
-                        this._frameRateTime += elapsedTime;
-                        while (this._frameRateTime > minEmissionTime) {
-                            if (!this._tryEmit(this._time)) {
-                                break;
-                            }
-                            totalEmitCount++;
-                            this._frameRateTime -= minEmissionTime;
-                        }
-                    }
-                    if (totalEmitCount > 0) {
-                        this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount);
-                    }
-                }
-                else {
-                    //一个生命周期结束
-                    if (mainModule.loop) {
-                        //直接置零，对时间敏感的可能有问题
-                        this._emittsionTime = 0;
-                        this._burstIndex = 0;
-                    }
-                    else {
-                        //自己停止，不要影响子粒子播放状态
-                        comp.stop(false);
-                    }
-                }
-            };
-            ParticleBatcher.prototype._updateRender = function () {
-                var renderer = this._renderer;
-                var comp = this._comp;
-                var mainModule = comp.main;
-                //
-                if (this._dirty) {
-                    //为了性能，不能提交整个buffer，只提交改变的buffer
-                    var bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
-                    if (this._firstAliveCursor > this._lastFrameFirstCursor) {
-                        var bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
-                        renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
-                        // uploadVertexSubData(this._vertexAttributes, bufferOffset, bufferCount);
-                    }
-                    else {
-                        var addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
-                        //先更新尾部的，再更新头部的
-                        renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                        renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
-                        // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                        // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
-                    }
-                    this._lastFrameFirstCursor = this._firstAliveCursor;
-                    this._dirty = false;
-                }
-                var transform = comp.gameObject.transform;
-                var material = renderer.batchMaterial;
-                if (mainModule._simulationSpace === 0 /* Local */) {
-                    material.setVector3("u_worldPosition" /* WORLD_POSITION */, this._worldPostionCache);
-                    material.setVector4("u_worldRotation" /* WORLD_ROTATION */, this._worldRotationCache);
-                }
-                //
-                switch (mainModule._scaleMode) {
-                    case 1 /* Local */:
-                        {
-                            var scale = transform.getLocalScale();
-                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
-                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, scale);
-                        }
-                        break;
-                    case 2 /* Shape */:
-                        {
-                            var scale = transform.getScale();
-                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
-                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, egret3d.Vector3.ONE);
-                        }
-                        break;
-                    case 0 /* Hierarchy */:
-                        {
-                            var scale = transform.getScale();
-                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
-                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, scale);
-                        }
-                        break;
-                }
-                material.setFloat("u_currentTime" /* CURRENTTIME */, this._time);
-                material.setVector3("u_gravity" /* GRAVIT */, this._finalGravity);
-            };
-            Object.defineProperty(ParticleBatcher.prototype, "aliveParticleCount", {
-                get: function () {
-                    if (this._firstAliveCursor >= this._lastAliveCursor) {
-                        return this._firstAliveCursor - this._lastAliveCursor;
-                    }
-                    else {
-                        return this._comp.main._maxParticles - this._lastAliveCursor + this._firstAliveCursor;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            return ParticleBatcher;
-        }());
-        particle.ParticleBatcher = ParticleBatcher;
-        __reflect(ParticleBatcher.prototype, "egret3d.particle.ParticleBatcher");
-    })(particle = egret3d.particle || (egret3d.particle = {}));
-})(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    function layerTest(cullingMask, layer) {
+        return (cullingMask & layer) !== 0;
+    }
+    paper.layerTest = layerTest;
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     var particle;
@@ -20712,30 +20143,6 @@ var paper;
                 enumerable: true,
                 configurable: true
             });
-            /**
-             * 加载一个场景
-             * @param sceneUrl 场景资源URL
-             */
-            Editor.loadScene = function (sceneUrl) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var rawScene, scene;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, RES.getResAsync(sceneUrl)];
-                            case 1:
-                                _a.sent();
-                                rawScene = RES.getRes(sceneUrl);
-                                if (rawScene) {
-                                    scene = rawScene.createInstance(true);
-                                    this.sceneEditorModel = new editor.EditorModel();
-                                    this.sceneEditorModel.init(scene, 'scene', sceneUrl);
-                                    this.setActiveModel(this.sceneEditorModel);
-                                }
-                                return [2 /*return*/];
-                        }
-                    });
-                });
-            };
             //设置激活模型
             Editor.setActiveModel = function (model) {
                 this.activeScene(model.scene);
@@ -20757,27 +20164,26 @@ var paper;
                 });
             };
             /**
-             * 附加一个预置体编辑场景
-             * @param prefabUrl 预置体资源URL
+             * 编辑场景
+             * @param sceneUrl 场景资源URL
              */
-            Editor.attachPrefabEditScene = function (prefabUrl) {
+            Editor.editScene = function (sceneUrl) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var prefab, scene;
+                    var rawScene, scene, sceneEditorModel;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, RES.getResAsync(prefabUrl)];
+                            case 0: return [4 /*yield*/, RES.getResAsync(sceneUrl)];
                             case 1:
                                 _a.sent();
-                                prefab = RES.getRes(prefabUrl);
-                                if (prefab) {
-                                    if (this.prefabEditorModel) {
-                                        this.prefabEditorModel.scene.destroy();
+                                rawScene = RES.getRes(sceneUrl);
+                                if (rawScene) {
+                                    if (this.activeEditorModel) {
+                                        this.activeEditorModel.scene.destroy();
                                     }
-                                    scene = paper.Scene.createEmpty('prefabEditScene', false);
-                                    prefab.createInstance(scene, true);
-                                    this.prefabEditorModel = new editor.EditorModel();
-                                    this.prefabEditorModel.init(scene, 'prefab', prefabUrl);
-                                    this.setActiveModel(this.prefabEditorModel);
+                                    scene = rawScene.createInstance(true);
+                                    sceneEditorModel = new editor.EditorModel();
+                                    sceneEditorModel.init(scene, 'scene', sceneUrl);
+                                    this.setActiveModel(sceneEditorModel);
                                 }
                                 return [2 /*return*/];
                         }
@@ -20785,13 +20191,43 @@ var paper;
                 });
             };
             /**
-             * 解除当前附加的预置体编辑场景
+             * 编辑预置体
+             * @param prefabUrl 预置体资源URL
              */
-            Editor.detachCurrentPrefabEditScene = function () {
-                if (this.prefabEditorModel) {
-                    this.prefabEditorModel.scene.destroy();
-                    this.setActiveModel(this.sceneEditorModel);
-                }
+            Editor.editPrefab = function (prefabUrl) {
+                return __awaiter(this, void 0, void 0, function () {
+                    var prefab, scene, prefabInstance, prefabEditorModel_1, clearPrefabInfo_1;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, RES.getResAsync(prefabUrl)];
+                            case 1:
+                                _a.sent();
+                                prefab = RES.getRes(prefabUrl);
+                                if (prefab) {
+                                    if (this.activeEditorModel) {
+                                        this.activeEditorModel.scene.destroy();
+                                    }
+                                    scene = paper.Scene.createEmpty('prefabEditScene', false);
+                                    prefabInstance = prefab.createInstance(scene, true);
+                                    prefabEditorModel_1 = new editor.EditorModel();
+                                    prefabEditorModel_1.init(scene, 'prefab', prefabUrl);
+                                    clearPrefabInfo_1 = function (obj) {
+                                        obj.extras.linkedID = undefined;
+                                        obj.extras.prefab = undefined;
+                                        obj.extras.prefabRootId = undefined;
+                                        for (var i = 0; i < obj.transform.children.length; i++) {
+                                            var child = obj.transform.children[i].gameObject;
+                                            if (prefabEditorModel_1.isPrefabChild(child))
+                                                clearPrefabInfo_1(child);
+                                        }
+                                    };
+                                    clearPrefabInfo_1(prefabInstance);
+                                    this.setActiveModel(prefabEditorModel_1);
+                                }
+                                return [2 /*return*/];
+                        }
+                    });
+                });
             };
             /**
              * 撤销
@@ -20808,10 +20244,10 @@ var paper;
                     this.activeEditorModel.history.forward();
             };
             Editor.deserializeHistory = function (data) {
-                this.sceneEditorModel.history.deserialize(data);
+                this.activeEditorModel.history.deserialize(data);
             };
             Editor.serializeHistory = function () {
-                var historyData = this.sceneEditorModel.history.serialize();
+                var historyData = this.activeEditorModel.history.serialize();
                 return JSON.stringify(historyData);
             };
             Editor.addEventListener = function (type, fun, thisObj, level) {
@@ -21690,26 +21126,30 @@ var paper;
             });
             Object.defineProperty(EditorSceneModel.prototype, "editorModel", {
                 set: function (v) {
+                    // this.pickGameScript.clearSelected();
+                    // this.geoController.clearSelected();//TODO:应在controller里新增清空状态函数
                     this.editorCameraScript.editorModel = v;
                     this.pickGameScript.editorModel = v;
                     this.geoController.editorModel = v;
+                    this.cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
+                    this.cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
                 },
                 enumerable: true,
                 configurable: true
             });
             EditorSceneModel.prototype.init = function () {
-                var cameraObject = paper.GameObject.create("EditorCamera", "EditorOnly" /* EditorOnly */, paper.Application.sceneManager.editorScene);
-                var camera = cameraObject.addComponent(egret3d.Camera);
+                this.cameraObject = paper.GameObject.create("EditorCamera", "EditorOnly" /* EditorOnly */, paper.Application.sceneManager.editorScene);
+                var camera = this.cameraObject.addComponent(egret3d.Camera);
                 camera.near = 0.1;
                 camera.far = 500.0;
                 camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
-                cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
-                cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
-                this.editorCameraScript = cameraObject.addComponent(editor.EditorCameraScript);
+                this.cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
+                this.cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
+                this.editorCameraScript = this.cameraObject.addComponent(editor.EditorCameraScript);
                 this.editorCameraScript.moveSpeed = 10;
                 this.editorCameraScript.rotateSpeed = 0.5;
-                this.pickGameScript = cameraObject.addComponent(editor.PickGameObjectScript);
-                this.geoController = cameraObject.addComponent(editor.Controller);
+                this.pickGameScript = this.cameraObject.addComponent(editor.PickGameObjectScript);
+                this.geoController = this.cameraObject.addComponent(editor.Controller);
                 editor.Gizmo.Enabled();
             };
             return EditorSceneModel;
@@ -21785,6 +21225,9 @@ var paper;
                 console.log(_this.gameObject.transform);
                 return _this;
             }
+            GeoController.prototype.clearSelected = function () {
+                this.selectedGameObjs = [];
+            };
             Object.defineProperty(GeoController.prototype, "geoCtrlMode", {
                 get: function () {
                     return this._geoCtrlMode;
@@ -22688,10 +22131,9 @@ var paper;
                 _this._isEditing = false;
                 _this.selectedGameObjs = [];
                 _this.geoCtrlMode = 'local';
-                _this.geoCtrlType = 'position';
                 _this.bindMouse = egret3d.InputManager.mouse;
                 _this.bindKeyboard = egret3d.InputManager.keyboard;
-                _this.mainGeo = new editor.positionCtrlGeo();
+                _this.mainGeo = new editor.GeoContainer();
                 return _this;
             }
             Object.defineProperty(Controller.prototype, "controller", {
@@ -22708,11 +22150,16 @@ var paper;
                 set: function (editorModel) {
                     this._editorModel = editorModel;
                     this.addEventListener();
+                    this.changeEditType('position');
                 },
                 enumerable: true,
                 configurable: true
             });
             Controller.prototype.onUpdate = function () {
+                console.log("now update", this.editorModel);
+                if (!this.editorModel) {
+                    return;
+                }
                 this.geoChangeByCamera();
                 this.inputUpdate();
             };
@@ -22722,6 +22169,26 @@ var paper;
             Controller.prototype.inputUpdate = function () {
                 var mouse = this.bindMouse;
                 var keyboard = this.bindKeyboard;
+                if (keyboard.wasPressed("Q")) {
+                    if (this.geoCtrlMode == "local") {
+                        this.editorModel.changeEditMode("world");
+                    }
+                    else {
+                        this.editorModel.changeEditMode("local");
+                    }
+                }
+                if (keyboard.wasPressed("W")) {
+                    this.changeEditType("position");
+                    this.editorModel.changeEditType("position");
+                }
+                if (keyboard.wasPressed("E")) {
+                    this.changeEditType("rotation");
+                    this.editorModel.changeEditType("rotation");
+                }
+                if (keyboard.wasPressed("R")) {
+                    this.changeEditType("scale");
+                    this.editorModel.changeEditType("scale");
+                }
             };
             Controller.prototype.changeEditMode = function (mode) {
             };
@@ -22730,11 +22197,12 @@ var paper;
                     return;
                 this.geoCtrlType = type;
                 this.editorModel.changeEditType(type);
-                switch (type) {
-                    case 'position':
-                        this.mainGeo = new editor.positionCtrlGeo();
-                        break;
-                }
+                this.mainGeo.changeType(type);
+                // switch (type) {
+                //     case 'position':
+                //         this.mainGeo = new positionCtrlGeo();
+                //         break;
+                // }
             };
             Controller.prototype.addEventListener = function () {
                 var _this = this;
@@ -22752,7 +22220,7 @@ var paper;
                 // this._modeCanChange = true;            
                 if (len > 0) {
                     this._isEditing = true;
-                    this.controller.activeSelf;
+                    this.controller.activeSelf = true;
                     if (len == 1) {
                         // console.log("select: " + this.selectedGameObjs[0].name);
                         this.controller.transform.setPosition(this.selectedGameObjs[0].transform.getPosition());
@@ -22846,7 +22314,8 @@ var paper;
             };
             return xAxis;
         }(editor.BaseGeo));
-        __reflect(xAxis.prototype, "xAxis");
+        editor.xAxis = xAxis;
+        __reflect(xAxis.prototype, "paper.editor.xAxis");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -22869,7 +22338,8 @@ var paper;
             };
             return yAxis;
         }(editor.BaseGeo));
-        __reflect(yAxis.prototype, "yAxis");
+        editor.yAxis = yAxis;
+        __reflect(yAxis.prototype, "paper.editor.yAxis");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -22892,7 +22362,146 @@ var paper;
             };
             return zAxis;
         }(editor.BaseGeo));
-        __reflect(zAxis.prototype, "zAxis");
+        editor.zAxis = zAxis;
+        __reflect(zAxis.prototype, "paper.editor.zAxis");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var xRot = (function (_super) {
+            __extends(xRot, _super);
+            function xRot() {
+                return _super.call(this) || this;
+            }
+            xRot.prototype.onSet = function () {
+                var xRotate = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.5), 1);
+                xRotate.name = "GizmoController_Rotate_X";
+                xRotate.tag = "Editor";
+                xRotate.transform.setLocalScale(3, 3, 3);
+                xRotate.transform.setLocalEulerAngles(0, 0, -90);
+                this.geo = xRotate;
+            };
+            return xRot;
+        }(editor.BaseGeo));
+        editor.xRot = xRot;
+        __reflect(xRot.prototype, "paper.editor.xRot");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var yRot = (function (_super) {
+            __extends(yRot, _super);
+            function yRot() {
+                return _super.call(this) || this;
+            }
+            yRot.prototype.onSet = function () {
+                var yRotate = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.5), 1);
+                yRotate.name = "GizmoController_Rotate_Y";
+                yRotate.tag = "Editor";
+                yRotate.transform.setLocalScale(3, 0.05, 3);
+                yRotate.transform.setLocalEulerAngles(0, 0, 0);
+                this.geo = yRotate;
+            };
+            return yRot;
+        }(editor.BaseGeo));
+        editor.yRot = yRot;
+        __reflect(yRot.prototype, "paper.editor.yRot");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var zRot = (function (_super) {
+            __extends(zRot, _super);
+            function zRot() {
+                return _super.call(this) || this;
+            }
+            zRot.prototype.onSet = function () {
+                var zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.5), 1);
+                zRotate.name = "GizmoController_Rotate_Z";
+                zRotate.tag = "Editor";
+                zRotate.transform.setLocalEulerAngles(90, 0, 0);
+                zRotate.transform.setLocalScale(3, 0.05, 3);
+                this.geo = zRotate;
+            };
+            return zRot;
+        }(editor.BaseGeo));
+        editor.zRot = zRot;
+        __reflect(zRot.prototype, "paper.editor.zRot");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var xScl = (function (_super) {
+            __extends(xScl, _super);
+            function xScl() {
+                return _super.call(this) || this;
+            }
+            xScl.prototype.onSet = function () {
+                var xScale = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 1), 2);
+                xScale.name = "GizmoController_Scale_X";
+                xScale.tag = "Editor";
+                xScale.transform.setLocalScale(0.2, 0.2, 0.2);
+                xScale.transform.setLocalPosition(2, 0, 0);
+                this.geo = xScale;
+            };
+            return xScl;
+        }(editor.BaseGeo));
+        editor.xScl = xScl;
+        __reflect(xScl.prototype, "paper.editor.xScl");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var yScl = (function (_super) {
+            __extends(yScl, _super);
+            function yScl() {
+                return _super.call(this) || this;
+            }
+            yScl.prototype.onSet = function () {
+                var yScale = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 1), 2);
+                yScale.name = "GizmoController_Scale_Y";
+                yScale.tag = "Editor";
+                yScale.transform.setLocalScale(0.2, 0.2, 0.2);
+                yScale.transform.setLocalPosition(0, 2, 0);
+                this.geo = yScale;
+            };
+            return yScl;
+        }(editor.BaseGeo));
+        editor.yScl = yScl;
+        __reflect(yScl.prototype, "paper.editor.yScl");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var zScl = (function (_super) {
+            __extends(zScl, _super);
+            function zScl() {
+                return _super.call(this) || this;
+            }
+            zScl.prototype.onSet = function () {
+                var zScale = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 1), 2);
+                zScale.name = "GizmoController_Scale_Z";
+                zScale.tag = "Editor";
+                zScale.transform.setLocalScale(0.2, 0.2, 0.2);
+                zScale.transform.setLocalPosition(0, 0, 2);
+                this.geo = zScale;
+            };
+            return zScl;
+        }(editor.BaseGeo));
+        editor.zScl = zScl;
+        __reflect(zScl.prototype, "paper.editor.zScl");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -22909,27 +22518,9 @@ var paper;
                 pcontroller.activeSelf = true;
                 pcontroller.name = "GizmoController_Position";
                 pcontroller.tag = "Editor";
-                var xAxis = this._createAxis(new egret3d.Vector4(1, 0.0, 0.0, 1), 0);
-                xAxis.name = "GizmoController_X";
-                xAxis.tag = "Editor";
-                xAxis.transform.setParent(pcontroller.transform);
-                xAxis.transform.setLocalScale(0.1, 2, 0.1);
-                xAxis.transform.setLocalEulerAngles(0, 0, 90);
-                xAxis.transform.setLocalPosition(1, 0, 0);
-                var yAxis = this._createAxis(new egret3d.Vector4(0.0, 1, 0.0, 1), 0);
-                yAxis.name = "GizmoController_Y";
-                yAxis.tag = "Editor";
-                yAxis.transform.setParent(pcontroller.transform);
-                yAxis.transform.setLocalScale(0.1, 2, 0.1);
-                yAxis.transform.setLocalEulerAngles(0, 0, 0);
-                yAxis.transform.setLocalPosition(0, 1, 0);
-                var zAxis = this._createAxis(new egret3d.Vector4(0.0, 0.0, 1, 1), 0);
-                zAxis.name = "GizmoController_Z";
-                zAxis.tag = "Editor";
-                zAxis.transform.setParent(pcontroller.transform);
-                zAxis.transform.setLocalScale(0.1, 2, 0.1);
-                zAxis.transform.setLocalEulerAngles(90, 0, 0);
-                zAxis.transform.setLocalPosition(0, 0, 1);
+                var x = new editor.xAxis();
+                var y = new editor.yAxis();
+                var z = new editor.zAxis();
                 this.geo = pcontroller;
             };
             return positionCtrlGeo;
@@ -24902,6 +24493,9 @@ var paper;
                 this.cameraScript = this.gameObject.getComponent(editor.EditorCameraScript);
                 this.selectedGameObjects = [];
             };
+            PickGameObjectScript.prototype.clearSelected = function () {
+                this.selectedGameObjects = [];
+            };
             PickGameObjectScript.prototype.onUpdate = function (delta) {
                 try {
                     // 点击 game object 激活
@@ -25492,50 +25086,404 @@ var paper;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     *
-     */
-    var AnimationSystem = (function (_super) {
-        __extends(AnimationSystem, _super);
-        function AnimationSystem() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._interests = [
-                { componentClass: egret3d.Animation }
-            ];
-            return _this;
-        }
-        AnimationSystem.prototype.onAddComponent = function (component) {
-            var animations = component.gameObject.getComponents(egret3d.Animation);
-            component._addToSystem = true;
-            if (component === animations[0] && !component._skinnedMeshRenderer) {
-                component._skinnedMeshRenderer = component.gameObject.getComponentsInChildren(egret3d.SkinnedMeshRenderer)[0];
-                if (component._skinnedMeshRenderer) {
-                    for (var _i = 0, _a = component._skinnedMeshRenderer.bones; _i < _a.length; _i++) {
-                        var bone = _a[_i];
-                        var boneBlendLayer = new egret3d.BoneBlendLayer();
-                        component._boneBlendLayers.push(boneBlendLayer);
+    var particle;
+    (function (particle) {
+        //
+        var positionHelper = new egret3d.Vector3();
+        var velocityHelper = new egret3d.Vector3();
+        var startSizeHelper = new egret3d.Vector3();
+        var startColorHelper = new egret3d.Color();
+        var startRotationHelper = new egret3d.Vector3();
+        var GRAVITY = new egret3d.Vector3(0, -9.81, 0); //TODO没有物理系统，暂时先放到这里
+        /**
+         * @internal
+         */
+        var ParticleBatcher = (function () {
+            function ParticleBatcher() {
+                this._dirty = false;
+                this._time = 0.0;
+                this._emittsionTime = 0;
+                this._frameRateTime = 0;
+                //最新存活位置
+                this._firstAliveCursor = 0;
+                this._lastFrameFirstCursor = 0;
+                //最后存活位置
+                this._lastAliveCursor = 0;
+                //原始顶点数量
+                this._vertexStride = 0;
+                //当前爆发的索引
+                this._burstIndex = 0;
+                //最终重力
+                this._finalGravity = new egret3d.Vector3();
+            }
+            /**
+            * 计算粒子爆发数量
+            * @param startTime
+            * @param endTime
+            */
+            ParticleBatcher.prototype._getBurstCount = function (startTime, endTime) {
+                var totalEmitCount = 0;
+                var bursts = this._comp.emission.bursts;
+                for (var l = bursts.length; this._burstIndex < l; this._burstIndex++) {
+                    var burst = bursts[this._burstIndex];
+                    if (burst.time >= startTime && burst.time < endTime) {
+                        totalEmitCount += egret3d.numberLerp(burst.minCount, burst.maxCount, Math.random());
+                    }
+                    else {
+                        break;
                     }
                 }
-                if (component.autoPlay) {
-                    component.play();
+                return totalEmitCount;
+            };
+            /**
+             * 判断粒子是否已经过期
+             * @param particleIndex
+             */
+            ParticleBatcher.prototype._isParticleExpired = function (particleIndex) {
+                var startTimeOffset = particleIndex * this._vertexStride * 2;
+                return this._time - this._startTimeBuffer[startTimeOffset + 1] + 0.0001 > this._startTimeBuffer[startTimeOffset];
+            };
+            /**
+             *
+             * @param time 批量增加粒子
+             * @param startCursor
+             * @param endCursor
+             */
+            ParticleBatcher.prototype._addParticles = function (time, startCursor, count) {
+                var comp = this._comp;
+                var main = comp.main;
+                var velocityModule = comp.velocityOverLifetime;
+                var colorModule = comp.colorOverLifetime;
+                var sizeModule = comp.sizeOverLifetime;
+                var rotationModule = comp.rotationOverLifetime;
+                var textureSheetModule = comp.textureSheetAnimation;
+                var isVelocityRandom = velocityModule.enable && (velocityModule._mode === 3 /* TwoConstants */ || velocityModule._mode === 2 /* TwoCurves */);
+                var isColorRandom = colorModule.enable && colorModule._color.mode === 3 /* TwoGradients */;
+                var isSizeRandom = sizeModule.enable && (sizeModule._size.mode === 3 /* TwoConstants */ || sizeModule._size.mode === 2 /* TwoCurves */);
+                var isRotationRandom = rotationModule.enable && (rotationModule._x.mode === 3 /* TwoConstants */ || rotationModule._x.mode === 2 /* TwoCurves */);
+                var isTextureRandom = textureSheetModule.enable && (textureSheetModule._startFrame.mode === 3 /* TwoConstants */ || textureSheetModule._startFrame.mode === 2 /* TwoCurves */);
+                var needRandom0 = isColorRandom || isSizeRandom || isRotationRandom || isTextureRandom;
+                var worldPosition = this._worldPostionCache;
+                var worldRotation = this._worldRotationCache;
+                var isWorldSpace = main._simulationSpace === 1 /* World */;
+                var startPositionBuffer = this._startPositionBuffer;
+                var startVelocityBuffer = this._startVelocityBuffer;
+                var startColorBuffer = this._startColorBuffer;
+                var startSizeBuffer = this._startSizeBuffer;
+                var startRotationBuffer = this._startRotationBuffer;
+                var startTimeBuffer = this._startTimeBuffer;
+                var random0Buffer = this._random0Buffer;
+                var random1Buffer = this._random1Buffer;
+                var worldPostionBuffer = this._worldPostionBuffer;
+                var worldRoationBuffer = this._worldRoationBuffer;
+                var age = Math.min(this._emittsionTime / main.duration, 1.0);
+                var vertexStride = this._vertexStride;
+                var addCount = 0, startIndex = 0, endIndex = 0;
+                var lifetime = 0.0;
+                var startSpeed = 0.0;
+                var randomVelocityX = 0.0, randomVelocityY = 0.0, randomVelocityZ = 0.0;
+                var randomColor = 0.0, randomSize = 0.0, randomRotation = 0.0, randomTextureAnimation = 0.0;
+                var vector2Offset = 0, vector3Offset = 0, vector4Offset = 0;
+                while (addCount !== count) {
+                    //发射粒子要根据粒子发射器的形状发射
+                    comp.shape.generatePositionAndDirection(positionHelper, velocityHelper);
+                    main.startColor.evaluate(age, startColorHelper);
+                    lifetime = main.startLifetime.evaluate(age);
+                    startSpeed = main.startSpeed.evaluate(age);
+                    velocityHelper.x *= startSpeed;
+                    velocityHelper.y *= startSpeed;
+                    velocityHelper.z *= startSpeed;
+                    startSizeHelper.x = main.startSizeX.evaluate(age);
+                    startSizeHelper.y = main.startSizeY.evaluate(age);
+                    startSizeHelper.z = main.startSizeZ.evaluate(age);
+                    startRotationHelper.x = main.startRotationX.evaluate(age);
+                    startRotationHelper.y = main.startRotationY.evaluate(age);
+                    startRotationHelper.z = main.startRotationZ.evaluate(age);
+                    randomVelocityX = isVelocityRandom ? Math.random() : 0.0;
+                    randomVelocityY = isVelocityRandom ? Math.random() : 0.0;
+                    randomVelocityZ = isVelocityRandom ? Math.random() : 0.0;
+                    randomColor = isColorRandom ? Math.random() : 0.0;
+                    randomSize = isSizeRandom ? Math.random() : 0.0;
+                    randomRotation = isRotationRandom ? Math.random() : 0.0;
+                    randomTextureAnimation = isTextureRandom ? Math.random() : 0.0;
+                    for (startIndex = startCursor * vertexStride, endIndex = startIndex + vertexStride; startIndex < endIndex; startIndex++) {
+                        vector2Offset = startIndex * 2;
+                        vector3Offset = startIndex * 3;
+                        vector4Offset = startIndex * 4;
+                        //
+                        startPositionBuffer[vector3Offset] = positionHelper.x;
+                        startPositionBuffer[vector3Offset + 1] = positionHelper.y;
+                        startPositionBuffer[vector3Offset + 2] = positionHelper.z;
+                        startVelocityBuffer[vector3Offset] = velocityHelper.x;
+                        startVelocityBuffer[vector3Offset + 1] = velocityHelper.y;
+                        startVelocityBuffer[vector3Offset + 2] = velocityHelper.z;
+                        startColorBuffer[vector4Offset] = startColorHelper.r;
+                        startColorBuffer[vector4Offset + 1] = startColorHelper.g;
+                        startColorBuffer[vector4Offset + 2] = startColorHelper.b;
+                        startColorBuffer[vector4Offset + 3] = startColorHelper.a;
+                        startSizeBuffer[vector3Offset] = startSizeHelper.x;
+                        startSizeBuffer[vector3Offset + 1] = startSizeHelper.y;
+                        startSizeBuffer[vector3Offset + 2] = startSizeHelper.z;
+                        startRotationBuffer[vector3Offset] = startRotationHelper.x;
+                        startRotationBuffer[vector3Offset + 1] = startRotationHelper.y;
+                        startRotationBuffer[vector3Offset + 2] = startRotationHelper.z;
+                        startTimeBuffer[vector2Offset] = lifetime;
+                        startTimeBuffer[vector2Offset + 1] = time;
+                        //
+                        if (needRandom0) {
+                            random0Buffer[vector4Offset] = randomColor;
+                            random0Buffer[vector4Offset + 1] = randomSize;
+                            random0Buffer[vector4Offset + 2] = randomRotation;
+                            random0Buffer[vector4Offset + 3] = randomTextureAnimation;
+                        }
+                        if (isVelocityRandom) {
+                            random1Buffer[vector4Offset] = randomVelocityX;
+                            random1Buffer[vector4Offset + 1] = randomVelocityY;
+                            random1Buffer[vector4Offset + 2] = randomVelocityZ;
+                            random1Buffer[vector4Offset + 3] = 0;
+                        }
+                        if (isWorldSpace) {
+                            worldPostionBuffer[vector3Offset] = worldPosition.x;
+                            worldPostionBuffer[vector3Offset + 1] = worldPosition.y;
+                            worldPostionBuffer[vector3Offset + 2] = worldPosition.z;
+                            worldRoationBuffer[vector4Offset] = worldRotation.x;
+                            worldRoationBuffer[vector4Offset + 1] = worldRotation.y;
+                            worldRoationBuffer[vector4Offset + 2] = worldRotation.z;
+                            worldRoationBuffer[vector4Offset + 3] = worldRotation.w;
+                        }
+                    }
+                    ;
+                    startCursor++;
+                    if (startCursor >= main._maxParticles) {
+                        startCursor = 0;
+                    }
+                    addCount++;
                 }
-            }
-        };
-        AnimationSystem.prototype.onUpdate = function () {
-            var globalTime = this._clock.time;
-            for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                for (var _b = 0, _c = gameObject.getComponents(egret3d.Animation); _b < _c.length; _b++) {
-                    var animation = _c[_b];
-                    animation.update(globalTime);
+                //TODO理论上应该是每帧更新，不过现在没有物理系统，先放到这里
+                var gravityModifier = main.gravityModifier.constant;
+                this._finalGravity.x = GRAVITY.x * gravityModifier;
+                this._finalGravity.y = GRAVITY.y * gravityModifier;
+                this._finalGravity.z = GRAVITY.z * gravityModifier;
+            };
+            ParticleBatcher.prototype._tryEmit = function (time) {
+                var maxParticles = this._comp.main._maxParticles;
+                var nextCursor = this._firstAliveCursor + 1 > maxParticles ? 0 : this._firstAliveCursor + 1;
+                if (nextCursor >= maxParticles) {
+                    nextCursor = 0;
                 }
-            }
-        };
-        AnimationSystem.prototype.onRemoveComponent = function (component) {
-            component._addToSystem = false;
-        };
-        return AnimationSystem;
-    }(paper.BaseSystem));
-    egret3d.AnimationSystem = AnimationSystem;
-    __reflect(AnimationSystem.prototype, "egret3d.AnimationSystem");
+                if (!this._isParticleExpired(nextCursor)) {
+                    return false;
+                }
+                //
+                this._firstAliveCursor = nextCursor;
+                this._dirty = true;
+                return true;
+            };
+            ParticleBatcher.prototype.clean = function () {
+                this._time = 0.0;
+                this._dirty = false;
+                this._emittsionTime = 0.0;
+                this._frameRateTime = 0.0;
+                this._firstAliveCursor = 0;
+                this._lastFrameFirstCursor = 0;
+                this._lastAliveCursor = 0;
+                this._vertexStride = 0;
+                this._vertexAttributes = null;
+                this._burstIndex = 0;
+                this._startPositionBuffer = null;
+                this._startVelocityBuffer = null;
+                this._startColorBuffer = null;
+                this._startSizeBuffer = null;
+                this._startRotationBuffer = null;
+                this._startTimeBuffer = null;
+                this._random0Buffer = null;
+                this._random1Buffer = null;
+                this._worldPostionBuffer = null;
+                this._worldRoationBuffer = null;
+                this._worldPostionCache = null;
+                this._worldRotationCache = null;
+                this._comp = null;
+                this._renderer = null;
+            };
+            ParticleBatcher.prototype.resetTime = function () {
+                this._burstIndex = 0;
+                this._emittsionTime = 0;
+            };
+            ParticleBatcher.prototype.init = function (comp, renderer) {
+                this._comp = comp;
+                this._renderer = renderer;
+                var mesh = particle.createBatchMesh(renderer, comp.main._maxParticles);
+                this._vertexStride = renderer._renderMode === 4 /* Mesh */ ? renderer.mesh.vertexCount : 4;
+                this._startPositionBuffer = mesh.getAttributes("START_POSITION" /* _START_POSITION */);
+                this._startVelocityBuffer = mesh.getAttributes("START_VELOCITY" /* _START_VELOCITY */);
+                this._startColorBuffer = mesh.getAttributes("START_COLOR" /* _START_COLOR */);
+                this._startSizeBuffer = mesh.getAttributes("START_SIZE" /* _START_SIZE */);
+                this._startRotationBuffer = mesh.getAttributes("START_ROTATION" /* _START_ROTATION */);
+                this._startTimeBuffer = mesh.getAttributes("TIME" /* _TIME */);
+                this._random0Buffer = mesh.getAttributes("RANDOM0" /* _RANDOM0 */);
+                this._random1Buffer = mesh.getAttributes("RANDOM1" /* _RANDOM1 */);
+                this._worldPostionBuffer = mesh.getAttributes("WORLD_POSITION" /* _WORLD_POSITION */);
+                this._worldRoationBuffer = mesh.getAttributes("WORLD_ROTATION" /* _WORLD_ROTATION */);
+                var primitive = mesh.glTFMesh.primitives[0];
+                this._vertexAttributes = [];
+                for (var k in primitive.attributes) {
+                    this._vertexAttributes.push(k);
+                }
+                renderer.batchMesh = mesh;
+                //粒子系统不能用共享材质
+                renderer.batchMaterial = renderer.materials[0].clone();
+                mesh.uploadSubIndexBuffer();
+            };
+            ParticleBatcher.prototype.update = function (elapsedTime) {
+                if (this._comp.isPaused) {
+                    return;
+                }
+                //
+                this._time += elapsedTime;
+                var comp = this._comp;
+                var mainModule = comp.main;
+                //
+                while (this._lastAliveCursor != this._firstAliveCursor) {
+                    if (!this._isParticleExpired(this._lastAliveCursor)) {
+                        break;
+                    }
+                    this._lastAliveCursor++;
+                    if (this._lastAliveCursor >= mainModule._maxParticles) {
+                        this._lastAliveCursor = 0;
+                    }
+                }
+                var transform = comp.gameObject.transform;
+                this._worldPostionCache = transform.getPosition();
+                this._worldRotationCache = transform.getRotation();
+                //检测是否已经过了Delay时间，否则不能发射
+                if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
+                    this._updateEmission(elapsedTime);
+                }
+                this._updateRender();
+            };
+            ParticleBatcher.prototype._updateEmission = function (elapsedTime) {
+                var comp = this._comp;
+                var mainModule = comp.main;
+                //根据时间判断
+                var lastEmittsionTime = this._emittsionTime;
+                this._emittsionTime += elapsedTime;
+                var isOver = this._emittsionTime > mainModule.duration;
+                if (!isOver) {
+                    //由爆发触发的粒子发射
+                    var totalEmitCount = 0;
+                    if (comp.emission.bursts.length > 0) {
+                        var readyEmitCount = 0;
+                        readyEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
+                        readyEmitCount = Math.min(mainModule._maxParticles - this.aliveParticleCount, readyEmitCount);
+                        //
+                        for (var i = 0; i < readyEmitCount; i++) {
+                            if (this._tryEmit(this._time)) {
+                                totalEmitCount++;
+                            }
+                        }
+                    }
+                    //由时间触发的粒子发射,不支持曲线
+                    var rateOverTime = comp.emission.rateOverTime.constant;
+                    if (rateOverTime > 0) {
+                        var minEmissionTime = 1 / rateOverTime;
+                        this._frameRateTime += elapsedTime;
+                        while (this._frameRateTime > minEmissionTime) {
+                            if (!this._tryEmit(this._time)) {
+                                break;
+                            }
+                            totalEmitCount++;
+                            this._frameRateTime -= minEmissionTime;
+                        }
+                    }
+                    if (totalEmitCount > 0) {
+                        this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount);
+                    }
+                }
+                else {
+                    //一个生命周期结束
+                    if (mainModule.loop) {
+                        //直接置零，对时间敏感的可能有问题
+                        this._emittsionTime = 0;
+                        this._burstIndex = 0;
+                    }
+                    else {
+                        //自己停止，不要影响子粒子播放状态
+                        comp.stop(false);
+                    }
+                }
+            };
+            ParticleBatcher.prototype._updateRender = function () {
+                var renderer = this._renderer;
+                var comp = this._comp;
+                var mainModule = comp.main;
+                //
+                if (this._dirty) {
+                    //为了性能，不能提交整个buffer，只提交改变的buffer
+                    var bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
+                    if (this._firstAliveCursor > this._lastFrameFirstCursor) {
+                        var bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
+                        renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
+                        // uploadVertexSubData(this._vertexAttributes, bufferOffset, bufferCount);
+                    }
+                    else {
+                        var addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
+                        //先更新尾部的，再更新头部的
+                        renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                        renderer.batchMesh.uploadSubVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+                        // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                        // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+                    }
+                    this._lastFrameFirstCursor = this._firstAliveCursor;
+                    this._dirty = false;
+                }
+                var transform = comp.gameObject.transform;
+                var material = renderer.batchMaterial;
+                if (mainModule._simulationSpace === 0 /* Local */) {
+                    material.setVector3("u_worldPosition" /* WORLD_POSITION */, this._worldPostionCache);
+                    material.setVector4("u_worldRotation" /* WORLD_ROTATION */, this._worldRotationCache);
+                }
+                //
+                switch (mainModule._scaleMode) {
+                    case 1 /* Local */:
+                        {
+                            var scale = transform.getLocalScale();
+                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
+                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, scale);
+                        }
+                        break;
+                    case 2 /* Shape */:
+                        {
+                            var scale = transform.getScale();
+                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
+                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, egret3d.Vector3.ONE);
+                        }
+                        break;
+                    case 0 /* Hierarchy */:
+                        {
+                            var scale = transform.getScale();
+                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
+                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, scale);
+                        }
+                        break;
+                }
+                material.setFloat("u_currentTime" /* CURRENTTIME */, this._time);
+                material.setVector3("u_gravity" /* GRAVIT */, this._finalGravity);
+            };
+            Object.defineProperty(ParticleBatcher.prototype, "aliveParticleCount", {
+                get: function () {
+                    if (this._firstAliveCursor >= this._lastAliveCursor) {
+                        return this._firstAliveCursor - this._lastAliveCursor;
+                    }
+                    else {
+                        return this._comp.main._maxParticles - this._lastAliveCursor + this._firstAliveCursor;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            return ParticleBatcher;
+        }());
+        particle.ParticleBatcher = ParticleBatcher;
+        __reflect(ParticleBatcher.prototype, "egret3d.particle.ParticleBatcher");
+    })(particle = egret3d.particle || (egret3d.particle = {}));
 })(egret3d || (egret3d = {}));
