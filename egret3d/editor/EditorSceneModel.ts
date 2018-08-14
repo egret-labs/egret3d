@@ -5,11 +5,10 @@ namespace paper.editor {
         }
         public set editorModel(v: EditorModel) {
             this.pickGameScript.clearSelected();
-            this.geoController.clearSelected();
+            this.geoController.clearSelected();//TODO:应在controller里新增清空状态函数
             this.editorCameraScript.editorModel = v;
             this.pickGameScript.editorModel = v;
             this.geoController.editorModel = v;
-
         }
         private editorCameraScript: EditorCameraScript;
         private pickGameScript: PickGameObjectScript;
