@@ -212,9 +212,9 @@ namespace egret3d {
          */
         public update(matrix: Readonly<Matrix>) {
             matrix.decompose(this.center);
-            this._directions[0].fromMatrix(matrix, 0);
-            this._directions[0].fromMatrix(matrix, 4);
-            this._directions[0].fromMatrix(matrix, 8);
+            this._directions[0].fromArray(matrix.rawData, 0);
+            this._directions[0].fromArray(matrix.rawData, 4);
+            this._directions[0].fromArray(matrix.rawData, 8);
         }
         /**
          * intersect width obb

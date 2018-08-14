@@ -23,6 +23,7 @@
         "libs/egret.d.ts",
         "libs/resourcemanager.d.ts",
         
+        "egret3d/math/Math.ts",
         "egret3d/math/Vector2.ts",
         "egret3d/math/Vector3.ts",
         "egret3d/math/Vector4.ts",
@@ -34,7 +35,6 @@
         "egret3d/math/OBB.ts",
         "egret3d/math/Curve.ts",
         "egret3d/math/Color.ts",
-        "egret3d/math/Math.ts",
 
         "egret3d/ecs/core/Decorators.ts",
         "egret3d/ecs/core/Layer.ts",

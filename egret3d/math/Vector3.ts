@@ -4,17 +4,31 @@ namespace egret3d {
         x: number;
         y: number;
         z: number;
+        readonly length: number;
     }
-
+    /**
+     * 
+     */
+    export const enum EulerOrder {
+        XYZ,
+        XZY,
+        YXZ,
+        YZX,
+        ZXY,
+        ZYX,
+    }
+    /**
+     * 
+     */
     export class Vector3 implements IVector3, paper.ISerializable {
-        public static readonly ZERO: Readonly<Vector3> = Vector3.create(0.0, 0.0, 0.0);
-        public static readonly ONE: Readonly<Vector3> = Vector3.create(1.0, 1.0, 1.0);
-        public static readonly UP: Readonly<Vector3> = Vector3.create(0.0, 1.0, 0.0);
-        public static readonly DOWN: Readonly<Vector3> = Vector3.create(0.0, -1.0, 0.0);
-        public static readonly LEFT: Readonly<Vector3> = Vector3.create(-1.0, 0.0, 0.0);
-        public static readonly RIGHT: Readonly<Vector3> = Vector3.create(1.0, 0.0, 0.0);
-        public static readonly FORWARD: Readonly<Vector3> = Vector3.create(0.0, 0.0, 1.0);
-        public static readonly BACK: Readonly<Vector3> = Vector3.create(0.0, 0.0, -1.0);
+        public static readonly ZERO: Readonly<Vector3> = new Vector3(0.0, 0.0, 0.0);
+        public static readonly ONE: Readonly<Vector3> = new Vector3(1.0, 1.0, 1.0);
+        public static readonly UP: Readonly<Vector3> = new Vector3(0.0, 1.0, 0.0);
+        public static readonly DOWN: Readonly<Vector3> = new Vector3(0.0, -1.0, 0.0);
+        public static readonly LEFT: Readonly<Vector3> = new Vector3(-1.0, 0.0, 0.0);
+        public static readonly RIGHT: Readonly<Vector3> = new Vector3(1.0, 0.0, 0.0);
+        public static readonly FORWARD: Readonly<Vector3> = new Vector3(0.0, 0.0, 1.0);
+        public static readonly BACK: Readonly<Vector3> = new Vector3(0.0, 0.0, -1.0);
 
         private static readonly _instances: Vector3[] = [];
 
@@ -39,7 +53,10 @@ namespace egret3d {
         public y: number;
 
         public z: number;
-
+        /**
+         * @deprecated
+         * @private
+         */
         public constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
             this.x = x;
             this.y = y;
@@ -73,158 +90,7 @@ namespace egret3d {
             return value;
         }
 
-        public set(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-
-            return this;
-        }
-
-        public normalize() {
-            const l = this.length;
-            if (l > Number.MIN_VALUE) {
-                this.x /= l;
-                this.y /= l;
-                this.z /= l;
-            }
-            else {
-                this.x = 1.0;
-                this.y = 0.0;
-                this.z = 0.0;
-            }
-
-            return this;
-        }
-
-        public fromMatrix(value: Matrix, offset: number = 0) {
-            this.x = value.rawData[offset];
-            this.y = value.rawData[offset + 1];
-            this.z = value.rawData[offset + 2];
-
-            return this;
-        }
-
-        public scale(scale: number) {
-            this.x *= scale;
-            this.y *= scale;
-            this.z *= scale;
-
-            return this;
-        }
-
-        public add(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
-            if (v2) {
-                this.x = v1.x + v2.x;
-                this.y = v1.y + v2.y;
-                this.z = v1.z + v2.z;
-            }
-            else {
-                this.x += v1.x;
-                this.y += v1.y;
-                this.z += v1.z;
-            }
-
-
-            return this;
-        }
-
-        public subtract(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
-            if (v2) {
-                this.x = v1.x - v2.x;
-                this.y = v1.y - v2.y;
-                this.z = v1.z - v2.z;
-            }
-            else {
-                this.x -= v1.x;
-                this.y -= v1.y;
-                this.z -= v1.z;
-            }
-
-            return this;
-        }
-
-        public multiply(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
-            if (v2) {
-                this.x = v1.x * v2.x;
-                this.y = v1.y * v2.y;
-                this.z = v1.z * v2.z;
-            }
-            else {
-                this.x *= v1.x;
-                this.y *= v1.y;
-                this.z *= v1.z;
-            }
-
-            return this;
-        }
-
-        public cross(lhs: Readonly<IVector3>, rhs?: Readonly<IVector3>) {
-            if (!rhs) {
-                rhs = lhs;
-                lhs = this;
-            }
-
-            const x = lhs.x;
-            const y = lhs.y;
-            const z = lhs.z;
-
-            this.x = y * rhs.z - z * rhs.y;
-            this.y = z * rhs.x - x * rhs.z;
-            this.z = x * rhs.y - y * rhs.x;
-
-            return this;
-        }
-
-        public dot(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
-            if (!v2) {
-                v2 = this;
-            }
-
-            return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-        }
-
-        public min(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
-            if (!v2) {
-                v2 = this;
-            }
-
-            this.x = Math.min(v1.x, v2.x);
-            this.y = Math.min(v1.y, v2.y);
-            this.z = Math.min(v1.z, v2.z);
-
-            return this;
-        }
-
-        public max(v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
-            if (!v2) {
-                v2 = this;
-            }
-
-            this.x = Math.max(v1.x, v2.x);
-            this.y = Math.max(v1.y, v2.y);
-            this.z = Math.max(v1.z, v2.z);
-
-            return this;
-        }
-
-        public lerp(v: number, v1: Readonly<IVector3>, v2?: Readonly<IVector3>) {
-            const p = 1.0 - v;
-            if (v2) {
-                this.x = v1.x * p + v2.x * v;
-                this.y = v1.y * p + v2.y * v;
-                this.z = v1.z * p + v2.z * v;
-            }
-            else {
-                this.x = this.x * p + v1.x * v;
-                this.y = this.y * p + v1.y * v;
-                this.z = this.z * p + v1.z * v;
-            }
-
-            return this;
-        }
-
-        public equal(value: Readonly<IVector3>, threshold: number = 0.00001) {
+        public equal(value: Readonly<IVector3>, threshold: number = 0.000001) {
             if (Math.abs(this.x - value.x) > threshold) {
                 return false;
             }
@@ -240,16 +106,246 @@ namespace egret3d {
             return true;
         }
 
-        public getDistance(v1: Readonly<IVector3>, v2?: Readonly<IVector3>): number {
-            if (v2) {
-                return helpVector.subtract(v1, v2).length;
+        public set(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+
+            return this;
+        }
+
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+            this.x = value[offset];
+            this.y = value[offset + 1];
+            this.z = value[offset + 2];
+
+            return this;
+        }
+
+        public applyMatrix(matrix: Readonly<Matrix>, value?: Readonly<IVector3>) {
+            if (!value) {
+                value = this;
             }
 
-            return helpVector.subtract(this, v1).length;
+            const x = value.x, y = value.y, z = value.z;
+            const rawData = matrix.rawData;
+
+            const w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
+            this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
+            this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
+            this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
+
+            return this;
+        }
+
+        public applyDirection(matrix: Readonly<Matrix>, value?: Readonly<IVector3>) {
+            if (!value) {
+                value = this;
+            }
+
+            const x = value.x, y = value.y, z = value.z;
+            const rawData = matrix.rawData;
+
+            this.x = rawData[0] * x + rawData[4] * y + rawData[8] * z;
+            this.y = rawData[1] * x + rawData[5] * y + rawData[9] * z;
+            this.z = rawData[2] * x + rawData[6] * y + rawData[10] * z;
+
+            return this;
+        }
+
+        public applyQuaternion(quaternion: Readonly<IVector4>, value?: Readonly<IVector3>) {
+            if (!value) {
+                value = this;
+            }
+
+            const x = value.x, y = value.y, z = value.z;
+            const qx = quaternion.x, qy = quaternion.y, qz = quaternion.z, qw = quaternion.w;
+            // calculate quat * vector
+            const ix = qw * x + qy * z - qz * y;
+            const iy = qw * y + qz * x - qx * z;
+            const iz = qw * z + qx * y - qy * x;
+            const iw = - qx * x - qy * y - qz * z;
+            // calculate result * inverse quat
+            this.x = ix * qw + iw * - qx + iy * - qz - iz * - qy;
+            this.y = iy * qw + iw * - qy + iz * - qx - ix * - qz;
+            this.z = iz * qw + iw * - qz + ix * - qy - iy * - qx;
+
+            return this;
+        }
+
+        public normalize(value?: Readonly<IVector3>) {
+            if (!value) {
+                value = this;
+            }
+
+            let l = value.length;
+            if (l > egret3d.EPSILON) {
+                l = 1.0 / l;
+                this.x *= l;
+                this.y *= l;
+                this.z *= l;
+            }
+            else {
+                this.x = 1.0;
+                this.y = 0.0;
+                this.z = 0.0;
+            }
+
+            return this;
+        }
+
+        public addScalar(add: number, value?: Readonly<IVector3>) {
+            if (value) {
+                this.x = value.x + add;
+                this.y = value.y + add;
+                this.z = value.z + add;
+            }
+            else {
+                this.x += add;
+                this.y += add;
+                this.z += add;
+            }
+
+            return this;
+        }
+
+        public add(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
+            if (valueB) {
+                this.x = valueA.x + valueB.x;
+                this.y = valueA.y + valueB.y;
+                this.z = valueA.z + valueB.z;
+            }
+            else {
+                this.x += valueA.x;
+                this.y += valueA.y;
+                this.z += valueA.z;
+            }
+
+            return this;
+        }
+
+        public subtract(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
+            if (valueB) {
+                this.x = valueA.x - valueB.x;
+                this.y = valueA.y - valueB.y;
+                this.z = valueA.z - valueB.z;
+            }
+            else {
+                this.x -= valueA.x;
+                this.y -= valueA.y;
+                this.z -= valueA.z;
+            }
+
+            return this;
+        }
+
+        public multiplyScalar(scale: number, value?: Readonly<IVector3>) {
+            if (value) {
+                this.x = scale * value.x;
+                this.y = scale * value.y;
+                this.z = scale * value.z;
+            }
+            else {
+                this.x *= scale;
+                this.y *= scale;
+                this.z *= scale;
+            }
+
+            return this;
+        }
+
+        public multiply(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
+            if (valueB) {
+                this.x = valueA.x * valueB.x;
+                this.y = valueA.y * valueB.y;
+                this.z = valueA.z * valueB.z;
+            }
+            else {
+                this.x *= valueA.x;
+                this.y *= valueA.y;
+                this.z *= valueA.z;
+            }
+
+            return this;
+        }
+
+        public dot(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            return valueA.x * valueB.x + valueA.y * valueB.y + valueA.z * valueB.z;
+        }
+
+        public cross(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            const x = valueA.x;
+            const y = valueA.y;
+            const z = valueA.z;
+
+            this.x = y * valueB.z - z * valueB.y;
+            this.y = z * valueB.x - x * valueB.z;
+            this.z = x * valueB.y - y * valueB.x;
+
+            return this;
+        }
+
+        public lerp(v: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            const p = 1.0 - v;
+            this.x = valueA.x * p + valueB.x * v;
+            this.y = valueA.y * p + valueB.y * v;
+            this.z = valueA.z * p + valueB.z * v;
+
+            return this;
+        }
+
+        public min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            this.x = Math.min(valueA.x, valueB.x);
+            this.y = Math.min(valueA.y, valueB.y);
+            this.z = Math.min(valueA.z, valueB.z);
+
+            return this;
+        }
+
+        public max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            this.x = Math.max(valueA.x, valueB.x);
+            this.y = Math.max(valueA.y, valueB.y);
+            this.z = Math.max(valueA.z, valueB.z);
+
+            return this;
+        }
+
+        public getDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            return helpVector.subtract(valueA, valueB).length;
         }
 
         public get length() {
-            return Math.sqrt(this.sqrtLength);
+            return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
         }
 
         public get sqrtLength() {
@@ -336,24 +432,6 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public static min(v1: Vector3, v2: Vector3, out: Vector3): Vector3 {
-            out.x = Math.min(v1.x, v2.x);
-            out.y = Math.min(v1.y, v2.y);
-            out.z = Math.min(v1.z, v2.z);
-            return out;
-        }
-        /**
-         * @deprecated
-         */
-        public static max(v1: Vector3, v2: Vector3, out: Vector3): Vector3 {
-            out.x = Math.max(v1.x, v2.x);
-            out.y = Math.max(v1.y, v2.y);
-            out.z = Math.max(v1.z, v2.z);
-            return out;
-        }
-        /**
-         * @deprecated
-         */
         public static lerp(v1: Vector3, v2: Vector3, v: number, out: Vector3): Vector3 {
             out.x = v1.x * (1 - v) + v2.x * v;
             out.y = v1.y * (1 - v) + v2.y * v;
@@ -408,21 +486,21 @@ namespace egret3d {
         }
     }
 
-    const helpVector = new Vector3();
+    const helpVector = Vector3.create();
 
-    export const helpVector3A: Vector3 = new Vector3();
+    export const helpVector3A: Vector3 = Vector3.create();
 
-    export const helpVector3B: Vector3 = new Vector3();
+    export const helpVector3B: Vector3 = Vector3.create();
 
-    export const helpVector3C: Vector3 = new Vector3();
+    export const helpVector3C: Vector3 = Vector3.create();
 
-    export const helpVector3D: Vector3 = new Vector3();
+    export const helpVector3D: Vector3 = Vector3.create();
 
-    export const helpVector3E: Vector3 = new Vector3();
+    export const helpVector3E: Vector3 = Vector3.create();
 
-    export const helpVector3F: Vector3 = new Vector3();
+    export const helpVector3F: Vector3 = Vector3.create();
 
-    export const helpVector3G: Vector3 = new Vector3();
+    export const helpVector3G: Vector3 = Vector3.create();
 
-    export const helpVector3H: Vector3 = new Vector3();
+    export const helpVector3H: Vector3 = Vector3.create();
 }

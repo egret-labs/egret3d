@@ -427,18 +427,18 @@ namespace paper.editor {
         }
 
         private static xArrowMMatrix = new egret3d.Matrix();
-        private static yArrowMMatrix = new egret3d.Matrix(new Float32Array([
+        private static yArrowMMatrix = egret3d.Matrix.create([
             0, 1, 0, 0,
             -1, 0, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1
-        ]));
-        private static zArrowMMatrix = new egret3d.Matrix(new Float32Array([
+        ]);
+        private static zArrowMMatrix = egret3d.Matrix.create([
             0, 0, 1, 0,
             0, 1, 0, 0,
             -1, 0, 0, 0,
             0, 0, 0, 1
-        ]));
+        ]);
 
         private static helpMat: egret3d.Matrix = new egret3d.Matrix();
         private static helpMat1: egret3d.Matrix = new egret3d.Matrix();
@@ -465,7 +465,7 @@ namespace paper.editor {
             // egret3d.Quaternion.toMatrix(r, out);
             out.fromRotation(r);
             matS.formScale(sca, sca, sca);
-            
+
             egret3d.Matrix.multiply(out, matS, out);
             out.rawData[12] = p.x;
             out.rawData[13] = p.y;

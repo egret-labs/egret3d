@@ -201,12 +201,12 @@ namespace egret3d {
          */
         public get sphere(): Readonly<Sphere> {
             if (this._dirtyCenter) {
-                this._sphere.center.add(this._maximum, this._minimum).scale(0.5);
+                this._sphere.center.add(this._maximum, this._minimum).multiplyScalar(0.5);
                 this._dirtyCenter = false;
             }
 
             if (this._dirtyRadius) {
-                _helpVector3.subtract(this._maximum, this._minimum).scale(0.5);
+                _helpVector3.subtract(this._maximum, this._minimum).multiplyScalar(0.5);
                 this._sphere.radius = _helpVector3.length;
                 this._dirtyRadius = false;
             }
