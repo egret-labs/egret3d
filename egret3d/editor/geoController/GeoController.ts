@@ -5,7 +5,7 @@ namespace paper.editor {
     let helpQuat_1 = new egret3d.Quaternion();
     let helpQuat_2 = new egret3d.Quaternion();
 
-    class Controller extends paper.Behaviour {
+    export class Controller extends paper.Behaviour {
 
         private _isEditing: boolean = false;
         public selectedGameObjs: GameObject[] = [];
@@ -13,7 +13,7 @@ namespace paper.editor {
         private bindMouse: egret3d.MouseDevice;
         private bindKeyboard: egret3d.KeyboardDevice;
 
-        private mainGeo: BaseGeo;
+        private mainGeo: GeoContainer;
         private get controller() {
             return this.mainGeo.geo;
         }
@@ -33,6 +33,7 @@ namespace paper.editor {
             super();
             this.bindMouse = egret3d.InputManager.mouse;
             this.bindKeyboard = egret3d.InputManager.keyboard;
+            this.changeEditType('position')
         }
         onUpdate() {
             this.geoChangeByCamera();
@@ -56,6 +57,13 @@ namespace paper.editor {
             this.geoCtrlType = type;
 
             this.editorModel.changeEditType(type)
+            this.mainGeo.changeType(type)
+            // switch (type) {
+            //     case 'position':
+            //         this.mainGeo = new positionCtrlGeo();
+            //         break;
+
+            // }
         }
         private addEventListener() {
             this.editorModel.addEventListener(EditorModelEvent.SELECT_GAMEOBJECTS, e => this.selectGameObjects(e.data), this);

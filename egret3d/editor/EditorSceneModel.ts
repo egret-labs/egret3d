@@ -11,7 +11,7 @@ namespace paper.editor {
         }
         private editorCameraScript: EditorCameraScript;
         private pickGameScript: PickGameObjectScript;
-        private geoController: GeoController;
+        private geoController: Controller;
         public init(): void {
             const cameraObject = GameObject.create("EditorCamera", DefaultTags.EditorOnly, Application.sceneManager.editorScene);
             const camera = cameraObject.addComponent(egret3d.Camera);
@@ -27,7 +27,7 @@ namespace paper.editor {
 
             this.pickGameScript = cameraObject.addComponent(PickGameObjectScript);
 
-            this.geoController = cameraObject.addComponent(GeoController)
+            this.geoController = cameraObject.addComponent(Controller)
             Gizmo.Enabled();
         }
     }

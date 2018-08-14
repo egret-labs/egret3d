@@ -1,22 +1,93 @@
 namespace paper.editor {
     export class BaseGeo {
+
         public editorModel: EditorModel;
+
         public geo: GameObject;
+
+        private baseColor: egret3d.Material;
 
         private forward = new egret3d.Vector3(0, 0, 1);
         private up = new egret3d.Vector3(0, 1, 0);
         private right = new egret3d.Vector3(1, 0, 0);
+
+        constructor() {
+            this.onSet();
+            if (this.geo) {
+                this.baseColor = this.geo.getComponent(egret3d.MeshRenderer).materials[0]
+            }
+        }
+
         public onSet() {
 
         }
         public isPressed() {
 
         }
-        public onMouseOn() {
-
+        public changeColor(color: string) {
+            if (color == "origin") {
+                this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor]
+            } else if (color == "yellow") {
+                let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                mat.setVector4v("_Color", [0.9, 0.9, 0.7, 0.8]);
+                this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
+            }
         }
-        public changeGeo(newGeo: BaseGeo) {
 
+        public _createAxis(color: egret3d.Vector4, type: number): GameObject {
+            let gizmoAxis = new paper.GameObject("", "", Application.sceneManager.editorScene);
+
+            let mesh = gizmoAxis.addComponent(egret3d.MeshFilter);
+            switch (type) {
+                case 0:
+                    mesh.mesh = egret3d.DefaultMeshes.CUBE;
+                    break;
+                case 1:
+                    mesh.mesh = egret3d.DefaultMeshes.CIRCLE_LINE;
+                    break;
+                case 2:
+                    mesh.mesh = egret3d.DefaultMeshes.CUBE;
+                    break;
+            }
+            let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
+            let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+            mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
+            renderer.materials = [mat];
+            console.log(gizmoAxis.scene)
+            return gizmoAxis;
+        }
+
+        public _checkInter
+    }
+
+
+    export class GeoContainer extends BaseGeo {
+        private geos: BaseGeo[] = []
+
+        constructor() {
+            super();
+            this.changeType("position")
+        }
+
+        changeType(type: string) {
+            this.geos = []
+            switch (type) {
+                case "position":
+                    {
+                        let x = new xAxis
+                        let y = new yAxis
+                        let z = new zAxis
+                        this.geos.push(x, y, z)
+                    }
+                    break;
+                case "rotation":
+                    break;
+                case "scale":
+                    break;
+            }
+            for (let geo of this.geos) {
+                geo.geo.transform.setParent(this.geo.transform)
+            }
         }
     }
 }
