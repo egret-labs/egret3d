@@ -19,7 +19,7 @@ namespace egret3d {
     }
 
     export interface IRenderTarget extends ITexture {
-        use() : void;
+        use(): void;
     }
 
     export abstract class GLTexture extends egret3d.Texture implements ITexture {
@@ -107,11 +107,11 @@ namespace egret3d {
                 formatGL = webgl.LUMINANCE;
             }
             //
-            if (img instanceof HTMLImageElement) {
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, formatGL, webgl.UNSIGNED_BYTE, img);
+            if (ArrayBuffer.isView(img)) {
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this._width, this._height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
             }
             else {
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this._width, this._height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, formatGL, webgl.UNSIGNED_BYTE, img);
             }
 
             if (mipmap) {
@@ -212,9 +212,9 @@ namespace egret3d {
             this._width = width;
             this._height = height;
             this._texture = webgl.createTexture()!;
+            this._fbo = webgl.createFramebuffer()!;
             (this._fbo as any)["width"] = width;
             (this._fbo as any)["height"] = height;
-            this._fbo = webgl.createFramebuffer()!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
             if (depth || stencil) {
                 this._renderbuffer = webgl.createRenderbuffer()!;
@@ -225,7 +225,6 @@ namespace egret3d {
                 } else if (depth) {
                     webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
                     webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
-
                 } else {
                     webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.STENCIL_INDEX8, width, height);
                     webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);

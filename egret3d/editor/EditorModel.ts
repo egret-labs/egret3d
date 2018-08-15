@@ -12,6 +12,7 @@ namespace paper.editor {
         public static ADD_GAMEOBJECTS = "addGameObject";
         public static DELETE_GAMEOBJECTS = "deleteGameObject";
         public static SELECT_GAMEOBJECTS = "selectGame";
+        public static CHANGE_DIRTY: string = 'change_dirty';
         public static CHANGE_PROPERTY = "changeProperty";
         public static CHANGE_EDIT_MODE = "changeEditMode";
         public static CHANGE_EDIT_TYPE = "changeEditType";
@@ -34,21 +35,40 @@ namespace paper.editor {
     export class EditorModel extends EventDispatcher {
 
         private _history: History;
-        private _scene: paper.Scene;
-
         public get history(): History {
             return this._history
         }
+        private _scene: paper.Scene;
         public get scene(): Scene {
             return this._scene;
+        }
+        private _contentType: 'scene' | 'prefab';
+        public get contentType() {
+            return this._contentType;
+        }
+        private _contentUrl: string;
+        public get contentUrl() {
+            return this._contentUrl;
+        }
+        private _dirty: boolean = false;
+        public get dirty(): boolean {
+            return this._dirty;
+        }
+        public set dirty(v: boolean) {
+            if (this._dirty !== v) {
+                this._dirty = v;
+                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_DIRTY));
+            }
         }
         /**
          * 初始化
          * @param history 
          */
-        public init(scene: paper.Scene): void {
-            this._scene = scene;
+        public init(scene: paper.Scene, contentType: 'scene' | 'prefab', contentUrl: string): void {
             this._history = new History();
+            this._scene = scene;
+            this._contentType = contentType;
+            this._contentUrl = contentUrl;
         }
 
         public addState(state: BaseState | null) {
@@ -145,7 +165,7 @@ namespace paper.editor {
                 case editor.EditType.COLOR:
                 case editor.EditType.RECT:
                     const className = egret.getQualifiedClassName(value);
-                    const serializeData = value.serialize();
+                    const serializeData = value.serialize(value);
                     return { className, serializeData };
                 case editor.EditType.SHADER:
                     return value.url;

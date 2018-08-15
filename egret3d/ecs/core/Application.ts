@@ -30,6 +30,10 @@ namespace paper {
         }
 
         /**
+         * 
+         */
+        public readonly version: string = "0.9.000";
+        /**
          * 系统管理器。
          */
         public readonly systemManager: SystemManager = SystemManager.getInstance();

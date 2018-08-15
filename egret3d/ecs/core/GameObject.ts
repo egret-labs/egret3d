@@ -175,7 +175,7 @@ namespace paper {
                 }
             }
             else {
-                delete this._components[(value.constructor as ComponentClass<BaseComponent>).index];
+                delete this._components[(value.constructor as ComponentClass<BaseComponent>).__index];
             }
         }
 
@@ -204,7 +204,7 @@ namespace paper {
         }
 
         private _getComponent(componentClass: ComponentClass<BaseComponent>) {
-            const componentIndex = componentClass.index;
+            const componentIndex = componentClass.__index;
             return componentIndex < 0 ? null : this._components[componentIndex];
         }
         /**
@@ -263,11 +263,11 @@ namespace paper {
          * 添加组件。
          */
         public addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T {
-            BaseComponent.register(componentClass);
-            const componentIndex = componentClass.index;
+            registerClass(componentClass);
+            const componentIndex = componentClass.__index;
             const existedComponent = this._components[componentIndex];
             // disallowMultipleComponents.
-            if (componentClass.disallowMultiple && existedComponent) {
+            if (!componentClass.allowMultiple && existedComponent) {
                 console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the game object (${this.path}) again.`);
                 return existedComponent as T;
             }
@@ -291,6 +291,7 @@ namespace paper {
                     (existedComponent as GroupComponent)._addComponent(component);
                 }
                 else {
+                    registerClass(GroupComponent);
                     const groupComponent = BaseComponent.create(GroupComponent as any, this) as GroupComponent;
                     groupComponent.initialize();
                     groupComponent.componentIndex = componentIndex;
@@ -462,7 +463,7 @@ namespace paper {
                 return null;
             }
 
-            const componentClassIndex = componentClass.index;
+            const componentClassIndex = componentClass.__index;
             if (componentClassIndex < 0) {
                 return null;
             }

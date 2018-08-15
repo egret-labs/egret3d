@@ -1,5 +1,6 @@
 namespace RES.processor {
-    async function promisify(loader: egret.ImageLoader | egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
+
+    function promisify(loader: egret.ImageLoader | egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
 
         return new Promise((resolve, reject) => {
             let onSuccess = () => {
@@ -18,99 +19,107 @@ namespace RES.processor {
 
     export const TextureDescProcessor: RES.processor.Processor = {
 
-        async onLoadStart(host, resource) {
-            let data = await host.load(resource, "json");
+        onLoadStart(host, resource) {
 
-            let _name: string = data["name"];
-            let _filterMode: string = data["filterMode"];
-            let _format: string = data["format"];
-            let _mipmap: boolean = data["mipmap"];
-            let _wrap: string = data["wrap"];
+            return host.load(resource, "json").then((data) => {
+                let _name: string = data["name"];
+                let _filterMode: string = data["filterMode"];
+                let _format: string = data["format"];
+                let _mipmap: boolean = data["mipmap"];
+                let _wrap: string = data["wrap"];
 
-            let _textureFormat = egret3d.TextureFormatEnum.RGBA;
-            if (_format == "RGB") {
-                _textureFormat = egret3d.TextureFormatEnum.RGB;
-            } else if (_format == "Gray") {
-                _textureFormat = egret3d.TextureFormatEnum.Gray;
-            }
+                let _textureFormat = egret3d.TextureFormatEnum.RGBA;
+                if (_format == "RGB") {
+                    _textureFormat = egret3d.TextureFormatEnum.RGB;
+                } else if (_format == "Gray") {
+                    _textureFormat = egret3d.TextureFormatEnum.Gray;
+                }
 
-            let _linear: boolean = true;
-            if (_filterMode.indexOf("linear") < 0) {
-                _linear = false;
-            }
+                let _linear: boolean = true;
+                if (_filterMode.indexOf("linear") < 0) {
+                    _linear = false;
+                }
 
-            let _repeat: boolean = false;
-            if (_wrap.indexOf("Repeat") >= 0) {
-                _repeat = true;
-            }
-
-            const imgResource = (RES.host.resourceConfig as any)["getResource"](_name);
-            let loader = new egret.ImageLoader();
-            loader.load(imgResource.root + imgResource.url);
-            let image = await promisify(loader, imgResource);
-            const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
-            texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
-            paper.Asset.register(texture);
-
-            return texture;
+                let _repeat: boolean = false;
+                if (_wrap.indexOf("Repeat") >= 0) {
+                    _repeat = true;
+                }
+                const imgResource = (RES.host.resourceConfig as any)["getResource"](_name);
+                let loader = new egret.ImageLoader();
+                loader.load(imgResource.root + imgResource.url);
+                return promisify(loader, imgResource)
+                    .then((image) => {
+                        const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
+                        texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
+                        paper.Asset.register(texture);
+                        return texture;
+                    })
+            })
         },
 
-        async onRemoveStart(host, resource) {
+        onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
+            return Promise.resolve();
         }
 
     };
 
     export const TextureProcessor: RES.processor.Processor = {
 
-        async onLoadStart(host, resource) {
+        onLoadStart(host, resource) {
+
             const loader = new egret.ImageLoader();
             loader.load(resource.root + resource.url);
-            const image = await promisify(loader, resource);
-            const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, egret3d.TextureFormatEnum.RGBA);
-            texture.uploadImage(image.source, true, true, true, true);
-            paper.Asset.register(texture);
-            return texture;
+            return promisify(loader, resource).then((image) => {
+                const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, egret3d.TextureFormatEnum.RGBA);
+                texture.uploadImage(image.source, true, true, true, true);
+                paper.Asset.register(texture);
+                return texture;
+            })
+
         },
 
-        async onRemoveStart(host, resource) {
+        onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
+            return Promise.resolve();
         }
 
     };
 
-    export const GLBProcessor: RES.processor.Processor = {
-        async onLoadStart(host, resource) {
-            const result = await host.load(resource, RES.processor.BinaryProcessor);
+    export const GLTFBinaryProcessor: RES.processor.Processor = {
+        onLoadStart(host, resource) {
 
-            const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
-            let glb: egret3d.GLTFAsset;
+            return host.load(resource, RES.processor.BinaryProcessor).then((result) => {
+                const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
+                let glb: egret3d.GLTFAsset;
 
-            if (parseResult.config.meshes) {
-                glb = new egret3d.Mesh(0, 0);
-            }
-            else {
-                glb = new egret3d.GLTFAsset();
-            }
+                if (parseResult.config.meshes) {
+                    glb = new egret3d.Mesh(0, 0);
+                }
+                else {
+                    glb = new egret3d.GLTFAsset();
+                }
+                glb.name = resource.name;
+                glb.config = parseResult.config;
+                for (const b of parseResult.buffers) {
+                    glb.buffers.push(b);
+                }
+                glb.initialize();
+                // glb.parseFromBinary(new Uint32Array(result));
+                paper.Asset.register(glb);
+                return glb;
+            })
 
-            glb.name = resource.name;
-            glb.config = parseResult.config; 
-            for(const b of parseResult.buffers){
-                glb.buffers.push(b);
-            }
-            glb.initialize();
-            // glb.parseFromBinary(new Uint32Array(result));
 
-            paper.Asset.register(glb);
 
-            return glb;
         },
 
-        async onRemoveStart(host, resource) {
+        onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
+            return Promise.resolve();
         }
     }
 
@@ -146,71 +155,112 @@ namespace RES.processor {
             return glTF;
         },
 
-        async onRemoveStart(host, resource) {
+        onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
+            return Promise.resolve();
+        }
+
+    };
+
+    export const GLTFShaderProcessor: RES.processor.Processor = {
+        async onLoadStart(host, resource) {
+            const result = await host.load(resource, 'json') as egret3d.GLTFEgret;
+            const glTF = new egret3d.GLTFAsset();
+            glTF.name = resource.name;
+
+            if (result.extensions.KHR_techniques_webgl.shaders && result.extensions.KHR_techniques_webgl.shaders.length === 2) {
+                //
+                const shaders = result.extensions.KHR_techniques_webgl.shaders;
+                for (const shader of shaders) {
+                    const source = (RES.host.resourceConfig as any)["getResource"](shader.uri);
+                    if (source) {
+                        const shaderSource = await host.load(source);
+                        shader.uri = shaderSource;
+                    }
+                }
+            }
+            else {
+                console.error("错误的Shader格式数据");
+            }
+
+            glTF.parse(result);
+            paper.Asset.register(glTF);
+
+            return glTF;
+        },
+
+        onRemoveStart(host, resource) {
+            let data = host.get(resource);
+            data.dispose();
+            return Promise.resolve();
         }
 
     };
 
     export const PrefabProcessor: RES.processor.Processor = {
 
-        async onLoadStart(host, resource) {
-            const data: paper.ISerializedData = await host.load(resource, "json");
-            // const url = getUrl(resource);
-            const prefab = new paper.Prefab(resource.name);
+        onLoadStart(host, resource) {
 
-            await loadSubAssets(data, resource)
-            prefab.$parse(data);
-            paper.Asset.register(prefab);
 
-            return prefab;
+            return host.load(resource, "json").then((data: paper.ISerializedData) => {
+                const prefab = new paper.Prefab(resource.name);
+                return loadSubAssets(data, resource).then(() => {
+                    prefab.$parse(data);
+                    paper.Asset.register(prefab);
+                    return prefab;
+                })
+            })
+
+
         },
 
-        async onRemoveStart(host, resource) {
+        onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
+            return Promise.resolve();
         }
     };
 
     export const SceneProcessor: RES.processor.Processor = {
 
-        async onLoadStart(host, resource) {
-            const data: paper.ISerializedData = await host.load(resource, "json");
-            // const url = getUrl(resource);
-            const rawScene = new paper.RawScene(resource.name);
+        onLoadStart(host, resource) {
 
-            await loadSubAssets(data, resource)
-            rawScene.$parse(data);
-            paper.Asset.register(rawScene);
-
-            return rawScene;
+            return host.load(resource, "json").then((data: paper.ISerializedData) => {
+                const rawScene = new paper.RawScene(resource.name);
+                return loadSubAssets(data, resource).then(() => {
+                    rawScene.$parse(data);
+                    paper.Asset.register(rawScene);
+                    return rawScene;
+                })
+            })
         },
 
-        async onRemoveStart(host, resource) {
+        onRemoveStart(host, resource) {
             let data = host.get(resource);
             data.dispose();
+            return Promise.resolve();
         }
     };
 
-    async function loadSubAssets(data: paper.ISerializedData, resource: RES.ResourceInfo) {
-        if (data.assets) {
-            await Promise.all(data.assets.map((async (item) => {
-                const r = (RES.host.resourceConfig as any)["getResource"](item);
-                if (r) {
-                    await host.load(r);
-                }
-                else {
-                    console.error("")
-                }
-            })));
-        }
+    function loadSubAssets(data: paper.ISerializedData, resource: RES.ResourceInfo) {
+        return Promise.all(data.assets.map(((item) => {
+            const r = (RES.host.resourceConfig as any)["getResource"](item);
+            if (r) {
+                return host.load(r);
+            }
+            else {
+                console.error("加载不存在的资源", item);
+                return Promise.resolve();
+            }
+        })));
     }
 
+    RES.processor.map("Shader", GLTFShaderProcessor);
     RES.processor.map("Texture", TextureProcessor);
     RES.processor.map("TextureDesc", TextureDescProcessor);
     RES.processor.map("GLTF", GLTFProcessor);
-    RES.processor.map("GLTFBinary", GLBProcessor);
+    RES.processor.map("GLTFBinary", GLTFBinaryProcessor);
     RES.processor.map("Prefab", PrefabProcessor);
     RES.processor.map("Scene", SceneProcessor);
 }

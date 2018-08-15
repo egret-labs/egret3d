@@ -8,7 +8,7 @@ namespace paper {
         ];
         private readonly _bufferedComponents: BaseComponent[] = [];
         private readonly _bufferedGameObjects: GameObject[] = [];
-        private readonly _contactColliders: paper.ContactColliders = this._globalGameObject.getOrAddComponent(paper.ContactColliders);
+        private readonly _contactColliders: ContactColliders = ContactColliders.getInstance(ContactColliders);
 
         public onRemoveComponent(component: Behaviour) {
             if (!component) {
