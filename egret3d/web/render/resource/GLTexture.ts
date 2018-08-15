@@ -19,7 +19,7 @@ namespace egret3d {
     }
 
     export interface IRenderTarget extends ITexture {
-        use() : void;
+        use(): void;
     }
 
     export abstract class GLTexture extends egret3d.Texture implements ITexture {
@@ -107,11 +107,11 @@ namespace egret3d {
                 formatGL = webgl.LUMINANCE;
             }
             //
-            if (img instanceof HTMLImageElement) {
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, formatGL, webgl.UNSIGNED_BYTE, img);
+            if (ArrayBuffer.isView(img)) {
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this._width, this._height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
             }
             else {
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this._width, this._height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, formatGL, webgl.UNSIGNED_BYTE, img);
             }
 
             if (mipmap) {

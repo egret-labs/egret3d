@@ -1,20 +1,28 @@
 namespace paper.editor{
+    type AddComponentStateData = {gameObjectUUid:string,compClzName:string,serializeData?:any,cacheComponentId?:string};
+
     //添加组件
     export class AddComponentState extends BaseState {
         public static toString(): string {
             return "[class common.AddComponentState]";
         }
 
-        public static create(data: any = null): AddComponentState | null {
+        public static create(gameObjectUUid:string,compClzName:string): AddComponentState | null {
             const state = new AddComponentState();
+            let data:AddComponentStateData = {gameObjectUUid,compClzName};
             state.data = data;
             return state;
         }
 
+        private get stateData():AddComponentStateData
+        {
+            return this.data as AddComponentStateData;
+        }
+
         public undo(): boolean {
             if (super.undo()) {
-                let gameObjectUUid = this.data.gameObjectUUid;
-                let componentId = this.data.cacheUUid;
+                let gameObjectUUid = this.stateData.gameObjectUUid;
+                let componentId = this.stateData.cacheComponentId;
                 let gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (gameObject) {
                     for (let i: number = 0; i < gameObject.components.length; i++) {
@@ -25,6 +33,7 @@ namespace paper.editor{
                         }
                     }
                 }
+
                 this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
                 return true;
             }
@@ -34,22 +43,21 @@ namespace paper.editor{
 
         public redo(): boolean {
             if (super.redo()) {
-                let gameObjectUUid = this.data.gameObjectUUid;
-                let compClzName = this.data.compClzName;
+                let gameObjectUUid = this.stateData.gameObjectUUid;
+                let compClzName = this.stateData.compClzName;
                 let gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (gameObject) {
                     let addComponent;
-                    if (this.data.serializeData) {
+                    if (this.stateData.serializeData) {
                         let deserializer=new Deserializer();
                         addComponent = deserializer.deserialize(this.data.serializeData, true);
                         this.editorModel.addComponentToGameObject(gameObject, addComponent);
                     } else {
                         let compClz = egret.getDefinitionByName(compClzName);
                         addComponent = gameObject.addComponent(compClz);
-                        this.data.serializeData = serialize(addComponent);
+                        this.stateData.serializeData = serialize(addComponent);
                     }
-
-                    this.data.cacheUUid = addComponent.uuid;
+                    addComponent && (this.stateData.cacheComponentId = addComponent.uuid);
                 }
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                 return true;
