@@ -1,6 +1,24 @@
 namespace paper.editor {
     export type EventData = { isUndo: boolean };
 
+    export type ApplyData = {
+        [linkedId: string]:{
+            addGameObjects?: { serializeData: any,cacheSerializeData?:{ [key: string]:ISerializedData[] } }[],
+            addComponents?: { serializeData: any,cacheSerializeData?:any }[],
+            modifyGameObjectPropertyList?: { newValueList: any[], preValueCopylist: any[] }[],
+            modifyComponentPropertyList?: { componentId: string, newValueList: any[], preValueCopylist: any[] }[]
+        }
+    };
+
+    export type revertData = {
+        [linkedId: string]:{
+            revertGameObjects?: { serializeData: any,id:string}[],
+            revertComponents?: { serializeData: any,id?:string }[],
+            modifyGameObjectPropertyList?: { newValueList: any[], preValueCopylist: any[] }[],
+            modifyComponentPropertyList?: { componentId: string, newValueList: any[], preValueCopylist: any[] }[]
+        }
+    }
+
     export const EventType = {
         HistoryState: "HistoryState",
         HistoryAdd: "HistoryAdd",
@@ -198,7 +216,7 @@ namespace paper.editor {
             for (let index = 0; index < statesData.length; index++) {
                 const element = statesData[index];
                 const clazz = egret.getDefinitionByName(element.className);
-                let state: BaseState = null;
+                let state: BaseState;
                 if (clazz) {
                     state = new clazz();
                     state.batchIndex = element.batchIndex;

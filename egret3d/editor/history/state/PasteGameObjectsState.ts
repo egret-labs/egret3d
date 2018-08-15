@@ -35,8 +35,8 @@ namespace paper.editor {
                 let keepUID = this.cacheSerializeData ? true : false;
                 for (let i: number = 0; i < serializeDataList.length; i++) {
                     let info = serializeDataList[i];
-                    let obj: GameObject = new Deserializer().deserialize(info, keepUID);
-                    if (parent) {
+                    let obj: GameObject | null = new Deserializer().deserialize(info, keepUID);
+                    if (obj && parent) {
                         obj.transform.parent = parent.transform;
                     }
                     //清理预置体信息
@@ -55,9 +55,9 @@ namespace paper.editor {
         }
         private clearPrefabInfo(obj: GameObject): void {
             if (this.editorModel.isPrefabChild(obj)) {
-                obj.extras.linkedID=undefined;
-                obj.extras.prefab=undefined;
-                obj.extras.rootID=undefined;
+                obj.extras!.linkedID=undefined;
+                obj.extras!.prefab=undefined;
+                obj.extras!.rootID=undefined;
                 for (let i: number = 0; i < obj.transform.children.length; i++) {
                     this.clearPrefabInfo(obj.transform.children[i].gameObject);
                 }

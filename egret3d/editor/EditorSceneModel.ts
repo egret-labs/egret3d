@@ -4,8 +4,8 @@ namespace paper.editor {
             return Application.sceneManager.editorScene;
         }
         public set editorModel(v: EditorModel) {
-            this.pickGameScript.clearSelected();
-            this.geoController.clearSelected();//TODO:应在controller里新增清空状态函数
+            // this.pickGameScript.clearSelected();
+            // this.geoController.clearSelected();//TODO:应在controller里新增清空状态函数
             this.editorCameraScript.editorModel = v;
             this.pickGameScript.editorModel = v;
             this.geoController.editorModel = v;
@@ -15,7 +15,7 @@ namespace paper.editor {
         }
         private editorCameraScript: EditorCameraScript;
         private pickGameScript: PickGameObjectScript;
-        private geoController: GeoController;
+        private geoController: Controller;
         private cameraObject: GameObject;
         public init(): void {
             this.cameraObject = GameObject.create("EditorCamera", DefaultTags.EditorOnly, Application.sceneManager.editorScene);
@@ -32,7 +32,7 @@ namespace paper.editor {
 
             this.pickGameScript = this.cameraObject.addComponent(PickGameObjectScript);
 
-            this.geoController = this.cameraObject.addComponent(GeoController)
+            this.geoController = this.cameraObject.addComponent(Controller)
             Gizmo.Enabled();
         }
     }
