@@ -119,10 +119,10 @@ namespace paper.editor {
             }
             this.geos = []
         }
-        public clearAll() {
-            this.clear();
-            this.selectedGeo = null;
-        }
+        // public clearAll() {
+        //     this.clear();
+        //     this.selectedGeo = null;
+        // }
         changeType(type: string) {
             this.clear();
             switch (type) {

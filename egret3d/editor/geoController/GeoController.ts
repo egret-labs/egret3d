@@ -25,8 +25,7 @@ namespace paper.editor {
         public set editorModel(editorModel: EditorModel) {
             this._editorModel = editorModel
             this.mainGeo.editorModel = editorModel
-            this.selectedGameObjs = []
-            this.mainGeo.clearAll();
+            this.selectGameObjects([])
             this.addEventListener();
             this.changeEditType('position')
         }
