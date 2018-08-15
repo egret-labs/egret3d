@@ -71,6 +71,7 @@ namespace paper.editor {
             egret3d.Vector3.copy(hit, this._dragOffset);
 
         }
+        wasReleased() { return }
 
     }
 }

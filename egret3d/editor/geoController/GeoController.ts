@@ -8,6 +8,7 @@ namespace paper.editor {
     @paper.executeInEditMode
     export class Controller extends paper.Behaviour {
 
+        private _modeCanChange: boolean = true;
         private _isEditing: boolean = false;
         public selectedGameObjs: GameObject[] = [];
 
@@ -24,6 +25,7 @@ namespace paper.editor {
         public set editorModel(editorModel: EditorModel) {
             this._editorModel = editorModel
             this.mainGeo.editorModel = editorModel
+            this.mainGeo.clearAll();
             this.addEventListener();
             this.changeEditType('position')
         }
@@ -52,6 +54,9 @@ namespace paper.editor {
             if (this._isEditing) {
                 (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
             }
+            if (this.bindMouse.wasReleased(0)) {
+                this.mainGeo.wasReleased();
+            }
 
         }
 
@@ -68,8 +73,6 @@ namespace paper.editor {
             if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.isPressed_local(ray, this.selectedGameObjs)
-                this.controller.transform.setLocalPosition(this.selectedGameObjs[0].transform.getPosition())
-
             }
 
         }
@@ -84,8 +87,6 @@ namespace paper.editor {
             if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.isPressed_world(ray, this.selectedGameObjs)
-                this.controller.transform.setLocalPosition(this.selectedGameObjs[0].transform.getPosition())
-
             }
 
         }
@@ -128,8 +129,10 @@ namespace paper.editor {
             let keyboard = this.bindKeyboard;
             if (keyboard.wasPressed("Q")) {
                 if (this.geoCtrlMode == "local") {
+                    this.changeEditMode("world")
                     this.editorModel.changeEditMode("world");
                 } else {
+                    this.changeEditMode("local")
                     this.editorModel.changeEditMode("local");
                 }
             }
@@ -150,7 +153,26 @@ namespace paper.editor {
         }
 
         private changeEditMode(mode: string) {
-
+            if (!this._modeCanChange) {
+                console.log("current mode: " + this.geoCtrlMode);
+                return;
+            }
+            this.geoCtrlMode = mode;
+            let len = this.selectedGameObjs.length;
+            if (len < 1) return;
+            if (this.geoCtrlType != "scale") {
+                switch (mode) {
+                    case "local":
+                        this.controller.transform.setRotation(this.selectedGameObjs[0].transform.getRotation());
+                        break;
+                    case "world":
+                        this.controller.transform.setRotation(0, 0, 0, 1);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            console.log("current mode: " + this.geoCtrlMode);
         }
 
         private changeEditType(type: string) {
@@ -177,7 +199,7 @@ namespace paper.editor {
             if (!gameObjs) { gameObjs = [] }
             this.selectedGameObjs = gameObjs;
             let len = this.selectedGameObjs.length;
-            // this._modeCanChange = true;            
+            this._modeCanChange = true;
             if (len > 0) {
                 this._isEditing = true;
                 this.controller.activeSelf = true
@@ -200,7 +222,7 @@ namespace paper.editor {
                     this.controller.transform.setPosition(ctrlPos);
                     this.controller.transform.setRotation(0, 0, 0, 1);
                     this.geoCtrlMode = "world";
-                    // this._modeCanChange = false;
+                    this._modeCanChange = false;
                 }
             } else {
                 this._isEditing = false;

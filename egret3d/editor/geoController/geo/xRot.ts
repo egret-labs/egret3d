@@ -24,5 +24,7 @@ namespace paper.editor {
         isPressed_world() {
 
         }
+        wasReleased() { return }
+
     }
 }

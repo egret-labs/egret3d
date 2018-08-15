@@ -47,6 +47,7 @@ namespace paper.editor {
         public abstract wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any)
         public abstract isPressed_world(ray: egret3d.Ray, selectedGameObjs: any)
         public abstract wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any)
+        public abstract wasReleased()
         public _checkIntersect(ray: egret3d.Ray) {
             const mesh = this.geo.getComponent(egret3d.MeshFilter).mesh
             const temp = mesh.intersects(ray, this.geo.transform.getWorldMatrix())
@@ -118,6 +119,10 @@ namespace paper.editor {
             }
             this.geos = []
         }
+        public clearAll() {
+            this.clear();
+            this.selectedGeo = null;
+        }
         changeType(type: string) {
             this.clear();
             switch (type) {
@@ -166,6 +171,7 @@ namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selected: any) {
             if (this.selectedGeo) {
                 this.selectedGeo.isPressed_local(ray, selected)
+                this.geo.transform.setLocalPosition(selected[0].transform.getPosition())
             }
         }
         wasPressed_world(ray: egret3d.Ray, selected: any) {
@@ -187,9 +193,26 @@ namespace paper.editor {
         isPressed_world(ray: egret3d.Ray, selected: any) {
             if (this.selectedGeo) {
                 this.selectedGeo.isPressed_world(ray, selected)
+                let len = selected.length
+                let ctrlPos = egret3d.Vector3.set(0, 0, 0, this.helpVec3_3);
+                for (let i = 0; i < len; i++) {
+                    // console.log("select: " + i + " " + this.selectedGameObjs[i].name);
+                    let obj = selected[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                this.geo.transform.setPosition(ctrlPos);
+                this.geo.transform.setRotation(0, 0, 0, 1);
+
             }
 
         }
+        wasReleased() {
+            if (this.selectedGeo) {
+                this.selectedGeo.wasReleased();
+            }
+        }
+
 
 
         // private pCtrl

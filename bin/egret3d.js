@@ -3849,6 +3849,10 @@ var paper;
                 }
                 this.geos = [];
             };
+            GeoContainer.prototype.clearAll = function () {
+                this.clear();
+                this.selectedGeo = null;
+            };
             GeoContainer.prototype.changeType = function (type) {
                 this.clear();
                 switch (type) {
@@ -3897,6 +3901,7 @@ var paper;
             GeoContainer.prototype.isPressed_local = function (ray, selected) {
                 if (this.selectedGeo) {
                     this.selectedGeo.isPressed_local(ray, selected);
+                    this.geo.transform.setLocalPosition(selected[0].transform.getPosition());
                 }
             };
             GeoContainer.prototype.wasPressed_world = function (ray, selected) {
@@ -3915,6 +3920,21 @@ var paper;
             GeoContainer.prototype.isPressed_world = function (ray, selected) {
                 if (this.selectedGeo) {
                     this.selectedGeo.isPressed_world(ray, selected);
+                    var len = selected.length;
+                    var ctrlPos = egret3d.Vector3.set(0, 0, 0, this.helpVec3_3);
+                    for (var i = 0; i < len; i++) {
+                        // console.log("select: " + i + " " + this.selectedGameObjs[i].name);
+                        var obj = selected[i];
+                        egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                    }
+                    ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                    this.geo.transform.setPosition(ctrlPos);
+                    this.geo.transform.setRotation(0, 0, 0, 1);
+                }
+            };
+            GeoContainer.prototype.wasReleased = function () {
+                if (this.selectedGeo) {
+                    this.selectedGeo.wasReleased();
                 }
             };
             return GeoContainer;
@@ -21337,6 +21357,7 @@ var paper;
             __extends(Controller, _super);
             function Controller() {
                 var _this = _super.call(this) || this;
+                _this._modeCanChange = true;
                 _this._isEditing = false;
                 _this.selectedGameObjs = [];
                 _this.geoCtrlMode = 'world';
@@ -21361,6 +21382,7 @@ var paper;
                 set: function (editorModel) {
                     this._editorModel = editorModel;
                     this.mainGeo.editorModel = editorModel;
+                    this.mainGeo.clearAll();
                     this.addEventListener();
                     this.changeEditType('position');
                 },
@@ -21377,6 +21399,9 @@ var paper;
                 if (this._isEditing) {
                     (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
                 }
+                if (this.bindMouse.wasReleased(0)) {
+                    this.mainGeo.wasReleased();
+                }
             };
             Controller.prototype.updateInLocalMode = function () {
                 var len = this.selectedGameObjs.length;
@@ -21390,7 +21415,6 @@ var paper;
                 if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                     var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                     this.mainGeo.isPressed_local(ray, this.selectedGameObjs);
-                    this.controller.transform.setLocalPosition(this.selectedGameObjs[0].transform.getPosition());
                 }
             };
             Controller.prototype.updateInWorldMode = function () {
@@ -21405,7 +21429,6 @@ var paper;
                 if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                     var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                     this.mainGeo.isPressed_world(ray, this.selectedGameObjs);
-                    this.controller.transform.setLocalPosition(this.selectedGameObjs[0].transform.getPosition());
                 }
             };
             Controller.prototype.mouseRayCastUpdate = function () {
@@ -21439,9 +21462,11 @@ var paper;
                 var keyboard = this.bindKeyboard;
                 if (keyboard.wasPressed("Q")) {
                     if (this.geoCtrlMode == "local") {
+                        this.changeEditMode("world");
                         this.editorModel.changeEditMode("world");
                     }
                     else {
+                        this.changeEditMode("local");
                         this.editorModel.changeEditMode("local");
                     }
                 }
@@ -21459,6 +21484,27 @@ var paper;
                 }
             };
             Controller.prototype.changeEditMode = function (mode) {
+                if (!this._modeCanChange) {
+                    console.log("current mode: " + this.geoCtrlMode);
+                    return;
+                }
+                this.geoCtrlMode = mode;
+                var len = this.selectedGameObjs.length;
+                if (len < 1)
+                    return;
+                if (this.geoCtrlType != "scale") {
+                    switch (mode) {
+                        case "local":
+                            this.controller.transform.setRotation(this.selectedGameObjs[0].transform.getRotation());
+                            break;
+                        case "world":
+                            this.controller.transform.setRotation(0, 0, 0, 1);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                console.log("current mode: " + this.geoCtrlMode);
             };
             Controller.prototype.changeEditType = function (type) {
                 if (this.geoCtrlType == type)
@@ -21485,7 +21531,7 @@ var paper;
                 }
                 this.selectedGameObjs = gameObjs;
                 var len = this.selectedGameObjs.length;
-                // this._modeCanChange = true;            
+                this._modeCanChange = true;
                 if (len > 0) {
                     this._isEditing = true;
                     this.controller.activeSelf = true;
@@ -21510,7 +21556,7 @@ var paper;
                         this.controller.transform.setPosition(ctrlPos);
                         this.controller.transform.setRotation(0, 0, 0, 1);
                         this.geoCtrlMode = "world";
-                        // this._modeCanChange = false;
+                        this._modeCanChange = false;
                     }
                 }
                 else {
@@ -21638,6 +21684,7 @@ var paper;
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
+            xAxis.prototype.wasReleased = function () { };
             return xAxis;
         }(editor.BaseGeo));
         editor.xAxis = xAxis;
@@ -21716,6 +21763,7 @@ var paper;
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
+            yAxis.prototype.wasReleased = function () { return; };
             return yAxis;
         }(editor.BaseGeo));
         editor.yAxis = yAxis;
@@ -21793,6 +21841,7 @@ var paper;
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
+            zAxis.prototype.wasReleased = function () { return; };
             return zAxis;
         }(editor.BaseGeo));
         editor.zAxis = zAxis;
@@ -21824,6 +21873,7 @@ var paper;
             };
             xRot.prototype.isPressed_world = function () {
             };
+            xRot.prototype.wasReleased = function () { return; };
             return xRot;
         }(editor.BaseGeo));
         editor.xRot = xRot;
@@ -21855,6 +21905,7 @@ var paper;
             };
             yRot.prototype.isPressed_world = function () {
             };
+            yRot.prototype.wasReleased = function () { return; };
             return yRot;
         }(editor.BaseGeo));
         editor.yRot = yRot;
@@ -21886,6 +21937,7 @@ var paper;
             };
             zRot.prototype.isPressed_world = function () {
             };
+            zRot.prototype.wasReleased = function () { return; };
             return zRot;
         }(editor.BaseGeo));
         editor.zRot = zRot;
@@ -21909,13 +21961,52 @@ var paper;
                 xScale.transform.setLocalPosition(2, 0, 0);
                 this.geo = xScale;
             };
-            xScl.prototype.wasPressed_local = function () {
+            xScl.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                egret3d.Quaternion.transformVector3(worldRotation, this.up, this._dragPlaneNormal);
+                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
+                egret3d.Quaternion.copy(worldRotation, this._initRotation);
+                egret3d.Vector3.copy(selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
             };
-            xScl.prototype.isPressed_local = function () {
+            xScl.prototype.isPressed_local = function (ray, selectedGameObjs) {
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(hit, worldPosition, this._delta);
+                var worldOffset;
+                var scale;
+                worldOffset = egret3d.Quaternion.transformVector3(worldRotation, this.right, this.helpVec3_1);
+                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
+                var len = egret3d.Vector3.dot(this._dragOffset, worldOffset);
+                this.geo.transform.setLocalPosition(cosHit / len * 2, 0, 0);
+                var oldScale = this._oldLocalScale;
+                var sx = this.geo.transform.getLocalPosition().x / 2;
+                var sy = 1;
+                var sz = 1;
+                scale = egret3d.Vector3.set(oldScale.x * sx, oldScale.y * sy, oldScale.z * sz, this.helpVec3_2);
+                this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[0].transform);
             };
-            xScl.prototype.wasPressed_world = function () {
+            xScl.prototype.wasPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                var ctrlRot = this.geo.transform.parent.getRotation();
+                this._ctrlRot = ctrlRot;
+                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
+                egret3d.Quaternion.transformVector3(ctrlRot, this.up, this._dragPlaneNormal);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             };
             xScl.prototype.isPressed_world = function () {
+            };
+            xScl.prototype.wasReleased = function () {
+                this.geo.transform.setLocalPosition(2, 0, 0);
             };
             return xScl;
         }(editor.BaseGeo));
@@ -21940,14 +22031,35 @@ var paper;
                 yScale.transform.setLocalPosition(0, 2, 0);
                 this.geo = yScale;
             };
-            yScl.prototype.wasPressed_local = function () {
+            yScl.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                egret3d.Quaternion.transformVector3(worldRotation, this.forward, this._dragPlaneNormal);
+                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
+                egret3d.Quaternion.copy(worldRotation, this._initRotation);
+                egret3d.Vector3.copy(selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
             };
             yScl.prototype.isPressed_local = function () {
             };
-            yScl.prototype.wasPressed_world = function () {
+            yScl.prototype.wasPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                var ctrlRot = this.geo.transform.parent.getRotation();
+                this._ctrlRot = ctrlRot;
+                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
+                egret3d.Quaternion.transformVector3(ctrlRot, this.forward, this._dragPlaneNormal);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             };
             yScl.prototype.isPressed_world = function () {
             };
+            yScl.prototype.wasReleased = function () { return; };
             return yScl;
         }(editor.BaseGeo));
         editor.yScl = yScl;
@@ -21971,14 +22083,35 @@ var paper;
                 zScale.transform.setLocalPosition(0, 0, 2);
                 this.geo = zScale;
             };
-            zScl.prototype.wasPressed_local = function () {
+            zScl.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                egret3d.Quaternion.transformVector3(worldRotation, this.up, this._dragPlaneNormal);
+                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
+                egret3d.Quaternion.copy(worldRotation, this._initRotation);
+                egret3d.Vector3.copy(selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
             };
             zScl.prototype.isPressed_local = function () {
             };
-            zScl.prototype.wasPressed_world = function () {
+            zScl.prototype.wasPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                var ctrlRot = this.geo.transform.parent.getRotation();
+                this._ctrlRot = ctrlRot;
+                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
+                egret3d.Quaternion.transformVector3(ctrlRot, this.up, this._dragPlaneNormal);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             };
             zScl.prototype.isPressed_world = function () {
             };
+            zScl.prototype.wasReleased = function () { return; };
             return zScl;
         }(editor.BaseGeo));
         editor.zScl = zScl;
