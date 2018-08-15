@@ -7,11 +7,11 @@ namespace paper {
          * 
          */
         public static createEmpty(name: string = DefaultNames.NoName, isActive: boolean = true) {
-            const exScene = Application.sceneManager.getSceneByName(name);
-            if (exScene) {
-                console.warn("The scene with the same name already exists.");
-                return exScene;
-            }
+            // const exScene = Application.sceneManager.getSceneByName(name);
+            // if (exScene) {
+            //     console.warn("The scene with the same name already exists.");
+            //     return exScene;
+            // }
 
             const scene = new Scene(name);
             Application.sceneManager._addScene(scene, isActive);
@@ -62,7 +62,7 @@ namespace paper {
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @paper.serializedField
-        public extras?: { rawScene?: RawScene } = Application.isEditor && !Application.isPlaying ? {} : undefined;
+        public extras?: any = Application.isEditor && !Application.isPlaying ? {} : undefined;
         /**
          * @internal
          */

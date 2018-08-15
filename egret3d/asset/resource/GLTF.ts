@@ -32,6 +32,7 @@ namespace egret3d {
         extensions: {
             KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
             paper?: {
+                shaders?: gltf.Shader[],
                 renderQueue?: number;
             };
         };

@@ -50,7 +50,7 @@ namespace paper {
             const scene = deserializer.deserialize(this._raw, keepUUID) as Scene | null;
 
             if (scene && isEditor) {
-                scene.extras!.rawScene = this;
+
             }
 
             return scene;

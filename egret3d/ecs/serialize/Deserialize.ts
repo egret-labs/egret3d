@@ -99,7 +99,7 @@ namespace paper {
                         const componentExtras = componentSource[KEY_EXTRAS] as ComponentExtras;
                         const extras = source[KEY_EXTRAS] as GameObjectExtras;
                         const linkedID = componentExtras.linkedID!;
-                        const prefabDeserializer = this._deserializers[extras.prefab ? source.uuid : extras.prefabRootId!];
+                        const prefabDeserializer = this._deserializers[extras.prefab ? source.uuid : extras.rootID!];
                         componentTarget = prefabDeserializer.components[linkedID];
 
                         if (!componentTarget) {
@@ -268,12 +268,11 @@ namespace paper {
 
             this._keepUUID = keepUUID;
             this._makeLink = makeLink;
-            this._target = target || Application.sceneManager.activeScene;
+            this._target = target;
 
             const sceneClassName = egret.getQualifiedClassName(Scene);
             const transformClassName = egret.getQualifiedClassName(egret3d.Transform);
             const components: { [key: string]: ISerializedObject } = {};
-            const scene = this._target instanceof GameObject ? this._target.scene : this._target;
             let root: Scene | GameObject | BaseComponent | null = null;
 
             if (data.components) {
@@ -285,10 +284,11 @@ namespace paper {
             if (data.objects) {
                 for (const source of data.objects) { // 场景和实体实例化。
                     const className = serializeClassMap[source.class] || source.class;
-                    let target: Scene | GameObject | null | undefined;
+                    let target: Scene | GameObject | null | undefined = undefined;
 
                     if (className === sceneClassName) {
                         target = Scene.createEmpty((<any>source as { name: string }).name);
+                        this._target = target;
                     }
                     else {
                         const hasLink = KEY_EXTRAS in source && (source[KEY_EXTRAS] as GameObjectExtras).linkedID;
@@ -299,14 +299,14 @@ namespace paper {
 
                             if (prefab) {
                                 const assetName = this.assets[((<any>prefab) as IAssetReference).asset];
-                                target = Prefab.create(assetName, scene);
+                                target = Prefab.create(assetName, this._target as Scene);
 
                                 if (target) {
                                     this._deserializers[source.uuid] = Deserializer._lastDeserializer;
                                 }
                             }
                             else {
-                                const prefabDeserializer = this._deserializers[extras.prefabRootId!];
+                                const prefabDeserializer = this._deserializers[extras.rootID!];
                                 target = prefabDeserializer.objects[linkedID];
                             }
 
@@ -315,14 +315,18 @@ namespace paper {
                             }
                         }
 
+                        if (!this._target) {
+                            this._target = paper.Application.sceneManager.activeScene;
+                        }
+
                         if (!hasLink || !target) {
-                            target = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, scene);
+                            target = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, this._target as Scene);
                         }
 
                         if (!hasLink && this._makeLink) {
                             (target as GameObject).extras!.linkedID = source.uuid;
                             if (root) {
-                                (target as GameObject).extras!.prefabRootId = (root as GameObject).uuid;
+                                (target as GameObject).extras!.rootID = (root as GameObject).uuid;
                             }
                         }
 
@@ -351,7 +355,7 @@ namespace paper {
 
                     if (target.constructor === GameObject && KEY_COMPONENTS in source) {
                         for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
-                            root = root || this._createComponent(components[componentUUID.uuid], source, target as GameObject);
+                            this._createComponent(components[componentUUID.uuid], source, target as GameObject);
                         }
                     }
                 }

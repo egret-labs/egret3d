@@ -605,7 +605,7 @@ namespace paper.editor {
         }
 
         public isPrefabChild(gameObj: GameObject): boolean {
-            if (gameObj.extras.prefabRootId) {
+            if (gameObj.extras.rootID) {
                 return true;
             }
             return false;

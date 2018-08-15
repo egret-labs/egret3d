@@ -27,14 +27,14 @@ namespace paper.editor {
                 return false;
             }
             let isPrefabChild = (gameObj: GameObject): boolean => {
-                if (gameObj.extras.prefabRootId) {
+                if (gameObj.extras.rootID) {
                     return true;
                 }
                 return false;
             }
 
             let makeInfo = (target: GameObject, result: Info[] = []) => {
-                result.push({ uuid: target.uuid, linkid: target.extras.linkedID, rootid: target.extras.prefabRootId, prefab: target.extras.prefab.name });
+                result.push({ uuid: target.uuid, linkid: target.extras.linkedID, rootid: target.extras.rootID, prefab: target.extras.prefab.name });
                 target.transform.children.forEach(transform => {
                     let obj = transform.gameObject;
                     if (isPrefabChild(obj) && !isPrefabRoot(obj)) {
@@ -65,7 +65,7 @@ namespace paper.editor {
             objs.forEach(obj => {
                 obj.extras.linkedID = undefined;
                 obj.extras.prefab = undefined;
-                obj.extras.prefabRootId = undefined;
+                obj.extras.rootID = undefined;
                 this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: null });
             });
             return true;
@@ -79,7 +79,7 @@ namespace paper.editor {
                     if (obj.uuid === info.uuid) {
                         obj.extras.linkedID = info.linkid;
                         obj.extras.prefab = paper.Asset.find(info.prefab)
-                        obj.extras.prefabRootId = info.rootid;
+                        obj.extras.rootID = info.rootid;
                         this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.extras.prefab });
                         break b;
                     }

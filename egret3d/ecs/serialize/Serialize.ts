@@ -208,6 +208,14 @@ namespace paper {
         return { uuid: source.uuid, class: _findClassCode(className) || className };
     }
 
+    function _findPrefabRoot(gameObject: GameObject) {
+        while (!gameObject.extras!.prefab) {
+            gameObject = gameObject.parent;
+        }
+
+        return gameObject;
+    }
+
     function _serializeObject(source: BaseObject) {
         if (_serializeds.indexOf(source.uuid) >= 0) {
             return true;
@@ -217,54 +225,22 @@ namespace paper {
         let temp: GameObject | BaseComponent | null = null;
         let ignoreKeys: string[] = _ignoreKeys;
 
-        if (source instanceof BaseComponent) {
-            if (source.isDestroyed) {
-                console.warn("Missing component.");
-                return false;
-            }
-
-            if (source.extras && source.extras.linkedID) { // Prefab component.
-                const prefabObjectUUID = source.gameObject.extras!.prefab ? source.gameObject.uuid : source.gameObject.extras!.prefabRootId!;
-                if (!(prefabObjectUUID in _deserializers)) {
-                    const prefabGameObject = Prefab.create(
-                        (source.gameObject.extras!.prefab || (source.gameObject.scene.findWithUUID(prefabObjectUUID)!.extras!.prefab))!.name,
-                        _defaultGameObject!.scene
-                    )!;
-                    prefabGameObject.parent = _defaultGameObject;
-                    _deserializers[prefabObjectUUID] = Deserializer._lastDeserializer;
-                }
-
-                const deserializer = _deserializers[prefabObjectUUID];
-                temp = deserializer.components[source.extras.linkedID];
-
-                if (source.gameObject.extras!.prefab) {
-                    ignoreKeys = _rootIgnoreKeys;
-                }
-            }
-            else {
-                temp = _defaultGameObject!.getOrAddComponent(source.constructor as ComponentClass<BaseComponent>);
-            }
-
-            _serializeData!.components!.push(target as ISerializedObject);
-        }
-        else if (source instanceof GameObject) {
+        if (source instanceof GameObject) {
             if (source.isDestroyed) {
                 console.warn("Missing game object.");
                 return false;
             }
 
             if (source.extras && source.extras.linkedID) {
-                const prefabObjectUUID = source.extras.prefab ? source.uuid : source.extras.prefabRootId!;
-                if (!(prefabObjectUUID in _deserializers)) {
-                    const prefabGameObject = Prefab.create(
-                        (source.extras.prefab || (source.scene.findWithUUID(prefabObjectUUID)!.extras!.prefab))!.name,
-                        _defaultGameObject!.scene
-                    )!;
+                const rootPrefabObject = _findPrefabRoot(source);
+                const prefabName = rootPrefabObject.extras!.prefab!.name;
+                if (!(prefabName in _deserializers)) {
+                    const prefabGameObject = Prefab.create(prefabName, _defaultGameObject!.scene)!;
                     prefabGameObject.parent = _defaultGameObject;
-                    _deserializers[prefabObjectUUID] = Deserializer._lastDeserializer;
+                    _deserializers[prefabName] = Deserializer._lastDeserializer;
                 }
 
-                const deserializer = _deserializers[prefabObjectUUID];
+                const deserializer = _deserializers[prefabName];
                 temp = deserializer.objects[source.extras.linkedID] as GameObject;
 
                 if (source.extras.prefab) {
@@ -276,6 +252,34 @@ namespace paper {
             }
 
             _serializeData!.objects!.push(target);
+        }
+        else if (source instanceof BaseComponent) {
+            if (source.isDestroyed) {
+                console.warn("Missing component.");
+                return false;
+            }
+
+            if (source.extras && source.extras.linkedID) { // Prefab component.
+                const rootPrefabObject = _findPrefabRoot(source.gameObject);
+                const prefabName = rootPrefabObject.extras!.prefab!.name;
+                if (!(prefabName in _deserializers)) {
+                    const prefabGameObject = Prefab.create(prefabName, _defaultGameObject!.scene)!;
+                    prefabGameObject.parent = _defaultGameObject;
+                    _deserializers[prefabName] = Deserializer._lastDeserializer;
+                }
+
+                const deserializer = _deserializers[prefabName];
+                temp = deserializer.components[source.extras.linkedID];
+
+                if (source.gameObject.extras!.prefab) {
+                    ignoreKeys = _rootIgnoreKeys;
+                }
+            }
+            else {
+                temp = _defaultGameObject!.getOrAddComponent(source.constructor as ComponentClass<BaseComponent>);
+            }
+
+            _serializeData!.components!.push(target as ISerializedObject);
         }
         else {
             _serializeData!.objects!.push(target);

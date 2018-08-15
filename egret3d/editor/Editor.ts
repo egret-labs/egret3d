@@ -36,21 +36,6 @@ namespace paper.editor {
         public static get activeEditorModel(): EditorModel {
             return this._activeEditorModel;
         }
-        private static sceneEditorModel: EditorModel;
-        /**
-         * 加载一个场景
-         * @param sceneUrl 场景资源URL
-         */
-        public static async loadScene(sceneUrl: string) {
-            await RES.getResAsync(sceneUrl);
-            const rawScene = RES.getRes(sceneUrl) as RawScene;
-            if (rawScene) {
-                let scene = rawScene.createInstance(true);
-                this.sceneEditorModel = new EditorModel();
-                this.sceneEditorModel.init(scene, 'scene', sceneUrl);
-                this.setActiveModel(this.sceneEditorModel);
-            }
-        }
         //设置激活模型
         private static setActiveModel(model: EditorModel): void {
             this.activeScene(model.scene);
@@ -71,32 +56,52 @@ namespace paper.editor {
                 obj.activeSelf = true;
             });
         }
-        private static prefabEditorModel: EditorModel;
         /**
-         * 附加一个预置体编辑场景
-         * @param prefabUrl 预置体资源URL
+         * 编辑场景
+         * @param sceneUrl 场景资源URL
          */
-        public static async attachPrefabEditScene(prefabUrl: string) {
-            await RES.getResAsync(prefabUrl);
-            const prefab = RES.getRes(prefabUrl) as Prefab;
-            if (prefab) {
-                if (this.prefabEditorModel) {
-                    this.prefabEditorModel.scene.destroy();
+        public static async editScene(sceneUrl: string) {
+            await RES.getResAsync(sceneUrl);
+            const rawScene = RES.getRes(sceneUrl) as RawScene;
+            if (rawScene) {
+                if (this.activeEditorModel) {
+                    this.activeEditorModel.scene.destroy();
                 }
-                let scene = Scene.createEmpty('prefabEditScene', false);
-                prefab.createInstance(scene, true);
-                this.prefabEditorModel = new EditorModel();
-                this.prefabEditorModel.init(scene, 'prefab', prefabUrl);
-                this.setActiveModel(this.prefabEditorModel);
+                let scene = rawScene.createInstance(true);
+                let sceneEditorModel = new EditorModel();
+                sceneEditorModel.init(scene, 'scene', sceneUrl);
+                this.setActiveModel(sceneEditorModel);
             }
         }
         /**
-         * 解除当前附加的预置体编辑场景
+         * 编辑预置体
+         * @param prefabUrl 预置体资源URL
          */
-        public static detachCurrentPrefabEditScene(): void {
-            if (this.prefabEditorModel) {
-                this.prefabEditorModel.scene.destroy();
-                this.setActiveModel(this.sceneEditorModel);
+        public static async editPrefab(prefabUrl: string) {
+            await RES.getResAsync(prefabUrl);
+            const prefab = RES.getRes(prefabUrl) as Prefab;
+            if (prefab) {
+                if (this.activeEditorModel) {
+                    this.activeEditorModel.scene.destroy();
+                }
+                let scene = Scene.createEmpty('prefabEditScene', false);
+                let prefabInstance = prefab.createInstance(scene, true);
+
+                let prefabEditorModel = new EditorModel();
+                prefabEditorModel.init(scene, 'prefab', prefabUrl);
+                //清除自身的预置体信息
+                let clearPrefabInfo = (obj: GameObject): void => {
+                    obj.extras.linkedID = undefined;
+                    obj.extras.prefab = undefined;
+                    obj.extras.rootID = undefined;
+                    for (let i: number = 0; i < obj.transform.children.length; i++) {
+                        let child = obj.transform.children[i].gameObject;
+                        if (prefabEditorModel.isPrefabChild(child))
+                            clearPrefabInfo(child);
+                    }
+                }
+                clearPrefabInfo(prefabInstance);
+                this.setActiveModel(prefabEditorModel);
             }
         }
         /**
@@ -114,10 +119,10 @@ namespace paper.editor {
                 this.activeEditorModel.history.forward();
         }
         public static deserializeHistory(data: any): void {
-            this.sceneEditorModel.history.deserialize(data);
+            this.activeEditorModel.history.deserialize(data);
         }
         public static serializeHistory(): string {
-            const historyData = this.sceneEditorModel.history.serialize();
+            const historyData = this.activeEditorModel.history.serialize();
             return JSON.stringify(historyData);
         }
         private static eventDispatcher: EventDispatcher;

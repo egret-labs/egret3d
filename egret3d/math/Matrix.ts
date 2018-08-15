@@ -119,23 +119,23 @@ namespace egret3d {
             return this;
         }
 
-        public fromTranslate(x: number, y: number, z: number, keepRotationAndScale: boolean = false) {
-            if (!keepRotationAndScale) {
+        public fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays: boolean = false) {
+            if (!rotationAndScaleStays) {
                 this.identity();
             }
 
-            this.rawData[12] = x;
-            this.rawData[13] = y;
-            this.rawData[14] = z;
+            this.rawData[12] = value.x;
+            this.rawData[13] = value.y;
+            this.rawData[14] = value.z;
 
             return this;
         }
 
-        public fromRotation(rotation: Quaternion, keepTranslate: boolean = false) {
-            return this.compose(keepTranslate ? _helpVector3A.fromArray(this.rawData, 12) : Vector3.ZERO, rotation, Vector3.ONE);
+        public fromRotation(rotation: Quaternion, translateStays: boolean = false) {
+            return this.compose(translateStays ? _helpVector3A.fromArray(this.rawData, 12) : Vector3.ZERO, rotation, Vector3.ONE);
         }
 
-        public fromEuler(value: Readonly<IVector3>, order: EulerOrder = EulerOrder.XYZ, keepTranslate: boolean = false) {
+        public fromEuler(value: Readonly<IVector3>, order: EulerOrder = EulerOrder.XYZ, translateStays: boolean = false) {
             // http://www.mathworks.com/matlabcentral/fileexchange/
             // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
             //	content/SpinCalc.m
@@ -259,7 +259,7 @@ namespace egret3d {
             rawData[7] = 0.0;
             rawData[11] = 0.0;
 
-            if (!keepTranslate) {
+            if (!translateStays) {
                 // last column
                 rawData[12] = 0.0;
                 rawData[13] = 0.0;
@@ -270,8 +270,8 @@ namespace egret3d {
             return this;
         }
 
-        public formScale(x: number, y: number, z: number, keepTranslate: boolean = false) {
-            if (keepTranslate) {
+        public formScale(x: number, y: number, z: number, translateStays: boolean = false) {
+            if (translateStays) {
                 _helpVector3A.fromArray(this.rawData, 12);
             }
 
@@ -281,7 +281,7 @@ namespace egret3d {
             this.rawData[5] = y;
             this.rawData[10] = z;
 
-            if (keepTranslate) {
+            if (translateStays) {
                 this.rawData[12] = _helpVector3A.x;
                 this.rawData[13] = _helpVector3A.y;
                 this.rawData[14] = _helpVector3A.z;
@@ -385,29 +385,29 @@ namespace egret3d {
 
                 // if determine is negative, we need to invert one scale
                 const det = this.determinant();
-                if (det < 0.0) sx = - sx;
+                if (det < 0.0) sx = -sx;
 
                 if (rotation) {
                     // scale the rotation part
-                    _helpMatrixA.copy(this);
+                    _helpMatrix.copy(this);
 
                     const invSX = 1.0 / sx;
                     const invSY = 1.0 / sy;
                     const invSZ = 1.0 / sz;
 
-                    _helpMatrixA.rawData[0] *= invSX;
-                    _helpMatrixA.rawData[1] *= invSX;
-                    _helpMatrixA.rawData[2] *= invSX;
+                    _helpMatrix.rawData[0] *= invSX;
+                    _helpMatrix.rawData[1] *= invSX;
+                    _helpMatrix.rawData[2] *= invSX;
 
-                    _helpMatrixA.rawData[4] *= invSY;
-                    _helpMatrixA.rawData[5] *= invSY;
-                    _helpMatrixA.rawData[6] *= invSY;
+                    _helpMatrix.rawData[4] *= invSY;
+                    _helpMatrix.rawData[5] *= invSY;
+                    _helpMatrix.rawData[6] *= invSY;
 
-                    _helpMatrixA.rawData[8] *= invSZ;
-                    _helpMatrixA.rawData[9] *= invSZ;
-                    _helpMatrixA.rawData[10] *= invSZ;
+                    _helpMatrix.rawData[8] *= invSZ;
+                    _helpMatrix.rawData[9] *= invSZ;
+                    _helpMatrix.rawData[10] *= invSZ;
 
-                    rotation.fromMatrix(_helpMatrixA);
+                    rotation.fromMatrix(_helpMatrix);
                 }
 
                 if (scale) {
@@ -427,15 +427,15 @@ namespace egret3d {
 
             const valueRawData = value.rawData;
             const rawData = this.rawData;
-            let tmp = 0.0;
+            let temp = 0.0;
 
-            tmp = valueRawData[1]; rawData[1] = valueRawData[4]; rawData[4] = tmp;
-            tmp = valueRawData[2]; rawData[2] = valueRawData[8]; rawData[8] = tmp;
-            tmp = valueRawData[6]; rawData[6] = valueRawData[9]; rawData[9] = tmp;
+            temp = valueRawData[1]; rawData[1] = valueRawData[4]; rawData[4] = temp;
+            temp = valueRawData[2]; rawData[2] = valueRawData[8]; rawData[8] = temp;
+            temp = valueRawData[6]; rawData[6] = valueRawData[9]; rawData[9] = temp;
 
-            tmp = valueRawData[3]; rawData[3] = valueRawData[12]; rawData[12] = tmp;
-            tmp = valueRawData[7]; rawData[7] = valueRawData[13]; rawData[13] = tmp;
-            tmp = valueRawData[11]; rawData[11] = valueRawData[14]; rawData[14] = tmp;
+            temp = valueRawData[3]; rawData[3] = valueRawData[12]; rawData[12] = temp;
+            temp = valueRawData[7]; rawData[7] = valueRawData[13]; rawData[13] = temp;
+            temp = valueRawData[11]; rawData[11] = valueRawData[14]; rawData[14] = temp;
 
             return this;
         }
@@ -445,13 +445,12 @@ namespace egret3d {
                 value = this;
             }
 
-            const rawData = this.rawData,
-                tragetRawData = value.rawData,
-
-                n11 = tragetRawData[0], n21 = tragetRawData[1], n31 = tragetRawData[2], n41 = tragetRawData[3],
-                n12 = tragetRawData[4], n22 = tragetRawData[5], n32 = tragetRawData[6], n42 = tragetRawData[7],
-                n13 = tragetRawData[8], n23 = tragetRawData[9], n33 = tragetRawData[10], n43 = tragetRawData[11],
-                n14 = tragetRawData[12], n24 = tragetRawData[13], n34 = tragetRawData[14], n44 = tragetRawData[15],
+            const valueRawData = value.rawData;
+            const rawData = this.rawData;
+            const n11 = valueRawData[0], n21 = valueRawData[1], n31 = valueRawData[2], n41 = valueRawData[3],
+                n12 = valueRawData[4], n22 = valueRawData[5], n32 = valueRawData[6], n42 = valueRawData[7],
+                n13 = valueRawData[8], n23 = valueRawData[9], n33 = valueRawData[10], n43 = valueRawData[11],
+                n14 = valueRawData[12], n24 = valueRawData[13], n34 = valueRawData[14], n44 = valueRawData[15],
 
                 t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44,
                 t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44,
@@ -461,7 +460,6 @@ namespace egret3d {
             const det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
 
             if (det === 0.0) {
-
                 console.warn("Cannot invert matrix, determinant is 0.");
 
                 return this.identity();
@@ -492,56 +490,45 @@ namespace egret3d {
             return this;
         }
 
-        public multiply(lhs: Matrix, rhs?: Matrix) {
-            if (!rhs) {
-                rhs = lhs;
-                lhs = this;
+        public multiply(valueA: Matrix, valueB?: Matrix) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
             }
 
-            const a00 = lhs.rawData[0], a01 = lhs.rawData[1], a02 = lhs.rawData[2], a03 = lhs.rawData[3];
-            const a10 = lhs.rawData[4], a11 = lhs.rawData[5], a12 = lhs.rawData[6], a13 = lhs.rawData[7];
-            const a20 = lhs.rawData[8], a21 = lhs.rawData[9], a22 = lhs.rawData[10], a23 = lhs.rawData[11];
-            const a30 = lhs.rawData[12], a31 = lhs.rawData[13], a32 = lhs.rawData[14], a33 = lhs.rawData[15];
+            const ae = valueA.rawData;
+            const be = valueB.rawData;
+            const te = this.rawData;
 
-            let b0 = rhs.rawData[0],
-                b1 = rhs.rawData[1],
-                b2 = rhs.rawData[2],
-                b3 = rhs.rawData[3];
+            const a11 = ae[0], a12 = ae[4], a13 = ae[8], a14 = ae[12];
+            const a21 = ae[1], a22 = ae[5], a23 = ae[9], a24 = ae[13];
+            const a31 = ae[2], a32 = ae[6], a33 = ae[10], a34 = ae[14];
+            const a41 = ae[3], a42 = ae[7], a43 = ae[11], a44 = ae[15];
 
-            this.rawData[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-            this.rawData[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-            this.rawData[2] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-            this.rawData[3] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+            const b11 = be[0], b12 = be[4], b13 = be[8], b14 = be[12];
+            const b21 = be[1], b22 = be[5], b23 = be[9], b24 = be[13];
+            const b31 = be[2], b32 = be[6], b33 = be[10], b34 = be[14];
+            const b41 = be[3], b42 = be[7], b43 = be[11], b44 = be[15];
 
-            b0 = rhs.rawData[4];
-            b1 = rhs.rawData[5];
-            b2 = rhs.rawData[6];
-            b3 = rhs.rawData[7];
+            te[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
+            te[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
+            te[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
+            te[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
 
-            this.rawData[4] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-            this.rawData[5] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-            this.rawData[6] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-            this.rawData[7] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+            te[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
+            te[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
+            te[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
+            te[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
 
-            b0 = rhs.rawData[8];
-            b1 = rhs.rawData[9];
-            b2 = rhs.rawData[10];
-            b3 = rhs.rawData[11];
+            te[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
+            te[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
+            te[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
+            te[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
 
-            this.rawData[8] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-            this.rawData[9] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-            this.rawData[10] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-            this.rawData[11] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
-
-            b0 = rhs.rawData[12];
-            b1 = rhs.rawData[13];
-            b2 = rhs.rawData[14];
-            b3 = rhs.rawData[15];
-
-            this.rawData[12] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-            this.rawData[13] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-            this.rawData[14] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-            this.rawData[15] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+            te[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
+            te[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
+            te[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
+            te[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
 
             return this;
         }
@@ -762,17 +749,10 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public lerp(v: number, left: Matrix, right?: Matrix) { // TODO
+        public lerp(v: number, left: Matrix, right: Matrix) { // TODO
             const p = 1.0 - v;
-            if (right) {
-                for (let i = 0; i < 16; i++) {
-                    this.rawData[i] = left.rawData[i] * p + right.rawData[i] * v;
-                }
-            }
-            else {
-                for (let i = 0; i < 16; i++) {
-                    this.rawData[i] = this.rawData[i] * p + left.rawData[i] * v;
-                }
+            for (let i = 0; i < 16; i++) {
+                this.rawData[i] = left.rawData[i] * p + right.rawData[i] * v;
             }
 
             return this;
@@ -830,13 +810,13 @@ namespace egret3d {
         }
     }
 
-    const _helpVector3A = new Vector3();
-    const _helpVector3B = new Vector3();
-    const _helpVector3C = new Vector3();
-    const _helpMatrixA = new Matrix();
+    const _helpVector3A = Vector3.create();
+    const _helpVector3B = Vector3.create();
+    const _helpVector3C = Vector3.create();
+    const _helpMatrix = Matrix.create();
 
-    export const helpMatrixA = new Matrix();
-    export const helpMatrixB = new Matrix();
-    export const helpMatrixC = new Matrix();
-    export const helpMatrixD = new Matrix();
+    export const helpMatrixA = Matrix.create();
+    export const helpMatrixB = Matrix.create();
+    export const helpMatrixC = Matrix.create();
+    export const helpMatrixD = Matrix.create();
 }

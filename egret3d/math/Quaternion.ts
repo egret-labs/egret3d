@@ -290,9 +290,15 @@ namespace egret3d {
 
             return this;
         }
+
+
+        public toEuler(value: Vector3, order: EulerOrder = EulerOrder.XYZ) {
+            return _helpMatrix.fromRotation(this).toEuler(value, order);
+        }
     }
 
-    const _helpVector3A: Vector3 = new Vector3();
-    const _helpVector3B: Vector3 = new Vector3();
-    const _helpVector3C: Vector3 = new Vector3();
+    const _helpVector3A = Vector3.create();
+    const _helpVector3B = Vector3.create();
+    const _helpVector3C = Vector3.create();
+    const _helpMatrix = Matrix.create();
 }

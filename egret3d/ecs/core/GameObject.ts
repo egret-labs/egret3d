@@ -2,7 +2,7 @@ namespace paper {
     /**
      * 
      */
-    export type GameObjectExtras = { linkedID?: string, prefabRootId?: string, prefab?: Prefab };
+    export type GameObjectExtras = { linkedID?: string, rootID?: string, prefab?: Prefab };
     /**
      * 可以挂载Component的实体类。
      */

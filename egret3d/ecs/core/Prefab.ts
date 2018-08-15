@@ -9,7 +9,10 @@ namespace paper {
         public static create(name: string, scene: Scene | null = null) {
             const prefab = paper.Asset.find<Prefab>(name);
             if (prefab) {
-                return prefab.createInstance(scene);
+                const gameObject = prefab.createInstance(scene);
+                gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+
+                return gameObject;
             }
 
             return null;
@@ -28,7 +31,9 @@ namespace paper {
             const gameObject = deserializer.deserialize(this._raw, keepUUID, isEditor, scene) as GameObject | null;
 
             if (gameObject && isEditor) {
-                gameObject.extras!.prefab = this;
+                if (!gameObject.extras!.prefab) {
+                    gameObject.extras!.prefab = this;
+                }
             }
 
             return gameObject;
