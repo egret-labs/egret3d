@@ -2,13 +2,22 @@ namespace paper.editor {
     export type EventData = { isUndo: boolean };
 
     export type ApplyData = {
-        [gameObjectAssetId: string]:{
-            addGameObjects?: { serializeData: any,cacheSerializeData?:{ [key: string]:ISerializedData } }[],
+        [linkedId: string]:{
+            addGameObjects?: { serializeData: any,cacheSerializeData?:{ [key: string]:ISerializedData[] } }[],
             addComponents?: { serializeData: any,cacheSerializeData?:any }[],
             modifyGameObjectPropertyList?: { newValueList: any[], preValueCopylist: any[] }[],
             modifyComponentPropertyList?: { componentId: string, newValueList: any[], preValueCopylist: any[] }[]
         }
     };
+
+    export type revertData = {
+        [linkedId: string]:{
+            revertGameObjects?: { serializeData: any,id:string}[],
+            revertComponents?: { serializeData: any,id?:string }[],
+            modifyGameObjectPropertyList?: { newValueList: any[], preValueCopylist: any[] }[],
+            modifyComponentPropertyList?: { componentId: string, newValueList: any[], preValueCopylist: any[] }[]
+        }
+    }
 
     export const EventType = {
         HistoryState: "HistoryState",

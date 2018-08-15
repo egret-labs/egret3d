@@ -27,7 +27,7 @@ namespace paper.editor{
                     let gameObj = this.editorModel.getGameObjectByUUid(deleteUUid);
                     gameObj.destroy();
                     if (gameObj) {
-                        this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS);
+                        this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS);
                         this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,[]);
                     }
                 }

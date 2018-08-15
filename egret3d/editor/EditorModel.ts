@@ -18,6 +18,8 @@ namespace paper.editor {
         public static ADD_COMPONENT: string = "addComponent";
         public static REMOVE_COMPONENT: string = "removeComponent";
         public static UPDATE_GAMEOBJECTS_HIREARCHY: string = "updateGameObjectsHierarchy";
+        public static SAVE_ASSET = "saveAsset";
+
         constructor(type: string, data?: any) {
             super(type, data);
         }
@@ -30,13 +32,14 @@ namespace paper.editor {
      * 编辑模型
      */
     export class EditorModel extends EventDispatcher {
-        
+
         private _history: History;
-        private _scene:paper.Scene;
-        public get history():History{
+        private _scene: paper.Scene;
+
+        public get history(): History {
             return this._history
         }
-        public get scene():Scene{
+        public get scene(): Scene {
             return this._scene;
         }
         /**
@@ -44,13 +47,13 @@ namespace paper.editor {
          * @param history 
          */
         public init(scene: paper.Scene): void {
-            this._scene=scene;
-            this._history=new History();
+            this._scene = scene;
+            this._history = new History();
         }
 
-        public addState(state: BaseState|null) {
-            if(state){
-                state.editorModel=this;
+        public addState(state: BaseState | null) {
+            if (state) {
+                state.editorModel = this;
                 this.history.add(state);
             }
         }
@@ -75,34 +78,33 @@ namespace paper.editor {
             return null;
         }
 
-        public setTransformProperty(propName: string, propValue: any, target: BaseComponent):void
-        {
-            let valueEditType:paper.editor.EditType | null = this.getEditType(propName,target);
+        public setTransformProperty(propName: string, propValue: any, target: BaseComponent): void {
+            let valueEditType: paper.editor.EditType | null = this.getEditType(propName, target);
 
             if (valueEditType != null) {
                 let newPropertyData = {
                     propName,
-                    copyValue:this.serializeProperty(propValue,valueEditType),
-                    valueEditType
-                } 
-    
-                let prePropertyData = {
-                    propName,
-                    copyValue:this.serializeProperty(target[propName],valueEditType),
+                    copyValue: this.serializeProperty(propValue, valueEditType),
                     valueEditType
                 }
-    
-                this.createModifyComponent(target.gameObject.uuid,target.uuid,[newPropertyData],[prePropertyData]);
+
+                let prePropertyData = {
+                    propName,
+                    copyValue: this.serializeProperty(target[propName], valueEditType),
+                    valueEditType
+                }
+
+                this.createModifyComponent(target.gameObject.uuid, target.uuid, [newPropertyData], [prePropertyData]);
             }
         }
-        
-        public createModifyGameObjectPropertyState(gameObjectUUid:string,newValueList:any[],preValueCopylist:any[]) {
-            let state = ModifyGameObjectPropertyState.create(gameObjectUUid,newValueList,preValueCopylist);
+
+        public createModifyGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]) {
+            let state = ModifyGameObjectPropertyState.create(gameObjectUUid, newValueList, preValueCopylist);
             this.addState(state);
         }
 
-        public createModifyComponent(gameObjectUUid:string,componentUUid:string,newValueList:any[],preValueCopylist:any[]): any {
-            let state = ModifyComponentPropertyState.create(gameObjectUUid,componentUUid,newValueList,preValueCopylist);
+        public createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any {
+            let state = ModifyComponentPropertyState.create(gameObjectUUid, componentUUid, newValueList, preValueCopylist);
             this.addState(state);
         }
 
@@ -121,7 +123,7 @@ namespace paper.editor {
         }
 
         public createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]) {
-            const state = ModifyAssetPropertyState.create(assetUrl,newValueList,preValueCopylist);
+            const state = ModifyAssetPropertyState.create(assetUrl, newValueList, preValueCopylist);
             this.addState(state);
         }
 
@@ -231,7 +233,7 @@ namespace paper.editor {
                 gameObjectUUid: gameObjectUUid,
                 compClzName: compClzName
             }
-            let state = AddComponentState.create(gameObjectUUid,compClzName);
+            let state = AddComponentState.create(gameObjectUUid, compClzName);
             this.addState(state);
         }
 
@@ -261,7 +263,7 @@ namespace paper.editor {
             let serializeData = serialize(removeComponent);
 
 
-            let state = RemoveComponentState.create(gameObjectUUid,componentUUid,serializeData);
+            let state = RemoveComponentState.create(gameObjectUUid, componentUUid, serializeData);
             this.addState(state);
         }
 
@@ -327,7 +329,7 @@ namespace paper.editor {
          * @param gameObjects 
          */
         public duplicateGameObjects(gameObjects: GameObject[]): void {
-            let state = DuplicateGameObjectsState.create(gameObjects,this);
+            let state = DuplicateGameObjectsState.create(gameObjects, this);
             this.addState(state);
         }
         /**
@@ -335,7 +337,7 @@ namespace paper.editor {
          * @param gameObjects 
          */
         public deleteGameObject(gameObjects: GameObject[]) {
-            let deleteState = DeleteGameObjectsState.create(gameObjects,this);
+            let deleteState = DeleteGameObjectsState.create(gameObjects, this);
             let breakList: GameObject[] = [];
             gameObjects.forEach(obj => {
                 if (this.isPrefabChild(obj) && !this.isPrefabRoot(obj)) {
@@ -355,10 +357,10 @@ namespace paper.editor {
          * 解除预置体联系
          * @param gameObjects 
          */
-        public breakPrefab(gameObjects:GameObject[]):void{
+        public breakPrefab(gameObjects: GameObject[]): void {
             let breakList: GameObject[] = [];
             gameObjects.forEach(obj => {
-                if (this.isPrefabChild(obj)||this.isPrefabRoot(obj)) {
+                if (this.isPrefabChild(obj) || this.isPrefabRoot(obj)) {
                     breakList.push(obj);
                 }
             });
@@ -371,7 +373,7 @@ namespace paper.editor {
          * 更改层级
          * */
         public updateGameObjectsHierarchy(gameObjects: GameObject[], targetGameobjcet: GameObject, dir: 'top' | 'inner' | 'bottom'): void {
-            let gameObjectHierarchyState = GameObjectHierarchyState.create(gameObjects, targetGameobjcet, dir,this);
+            let gameObjectHierarchyState = GameObjectHierarchyState.create(gameObjects, targetGameobjcet, dir, this);
             let breakList: GameObject[] = [];
             gameObjects.forEach(obj => {
                 if (this.isPrefabChild(obj) &&
@@ -632,68 +634,120 @@ namespace paper.editor {
             return gameobjects;
         }
 
-        public createApplyPrefabState(applyData:editor.ApplyData,applyPrefabInstanceId:string,prefabName:string) {
-            let state = ApplyPrefabInstanceState.create(applyData,applyPrefabInstanceId,prefabName);
+        public createApplyPrefabState(applyData: editor.ApplyData, applyPrefabInstanceId: string, prefab: paper.Prefab) {
+            let state = ApplyPrefabInstanceState.create(applyData, applyPrefabInstanceId, prefab);
             this.addState(state);
         }
 
-        public createRevertPrefabState(modifyGameObjectPropertyList:any[],modifyComponentPropertyList:any[])
-        {
-            let group: BaseState[] = [];
-
-            //revert gameobject proerty
-            for (const p of modifyGameObjectPropertyList) {
-                const { gameObjUUid, newValueList, preValueCopylist } = p;
-                let state = ModifyGameObjectPropertyState.create(gameObjUUid, newValueList, preValueCopylist);
-                group.push(state);
-            }
-
-            //revert component property
-            for (const p of modifyComponentPropertyList) {
-                const { gameObjUUid, componentUUid, newValueList, preValueCopylist } = p;
-                let state = ModifyComponentPropertyState.create(gameObjUUid, componentUUid, newValueList, preValueCopylist);
-                group.push(state);
-            }
-
-
-            let revertPrefabState = StateGroup.create(group);
-            this.addState(revertPrefabState);
+        public createRevertPrefabState(revertData:editor.revertData,revertPrefabInstanceId:string) {
+            let state = RevertPrefabInstanceState.create(revertData,revertPrefabInstanceId);
+            this.addState(state);
         }
 
-        public compareValue(a:any,b:any):boolean
-        {
-            if (typeof a != typeof b) {
-                throw new Error("diffrent type");
+        public deepClone<T>(obj: T): T {
+            if (!obj || typeof obj !== 'object') {
+                return obj;
             }
-            let valueType = typeof a;
-            if (valueType === 'number' || valueType === 'boolean' || valueType === 'string') {
-                if (a === b) {
-                    return true;
+            if (obj instanceof RegExp) {
+                return obj as any;
+            }
+            const result: any = Array.isArray(obj) ? [] : {};
+            Object.keys(obj).forEach((key: string) => {
+                if (obj[key] && typeof obj[key] === 'object') {
+                    result[key] = this.deepClone(obj[key]);
+                } else {
+                    result[key] = obj[key];
                 }
-            }
-            else {
-                if (this.equal(a, b)) {
-                    return true;
-                }
-            }
-            return false;
+            });
+            return result;
         }
 
-        private equal(a: any, b: any): boolean {
-            let className = egret.getQualifiedClassName(a);
-            if (className === egret.getQualifiedClassName(b)) {
-                switch (className) {
-                    case 'egret3d.Vector2': return egret3d.Vector2.equal(a, b);
-                    case 'egret3d.Vector3': return egret3d.Vector3.equal(a, b);
-                    case 'egret3d.Vector4': return a.x === b.x && a.y === b.y && a.z === b.z && a.w === b.w;
-                    case 'egret3d.Quaternion': return a.x === b.x && a.y === b.y && a.z === b.z && a.w === b.w;
-                    case 'egret3d.Rect': return a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
-                    case 'egret3d.Color': return a.r === b.r && a.g === b.g && a.b === b.b && a.a === b.a;
-                    default:
-                        return false;
+        public updateAsset(asset:Asset,prefabInstance:GameObject | null = null)
+        {
+            const refs = this.findAssetRefs(Application.sceneManager.activeScene,asset);
+
+            let serializeData:ISerializedData;
+            if (asset instanceof Prefab) {
+                serializeData = paper.serialize(prefabInstance!);
+
+            }else{
+
+            }
+
+            //save asset
+
+            //destory asset,getRes
+
+            //update refrence
+
+            this._cacheIds.length = 0;
+        }
+
+        private _cacheIds:string[] = [];
+
+        private findAssetRefs(target: any, as: Asset, refs: any[] | null = null) {
+            if (this._cacheIds.indexOf(target.uuid) >= 0) {
+                return;
+            }
+        
+            this._cacheIds.push(target.uuid);
+        
+            refs = refs || [];
+        
+            for (const key in target) {
+                const source = target[key];
+                if ((typeof source) === "object") {
+                    this.findFromChildren(source, as, refs, target, key);
                 }
             }
-            else return false;
+        
+            return refs;
+        }
+        
+        private findFromChildren(source: any, as: Asset, refs: any[], parent: any, key: any) {
+            if ((typeof source) !== "object") {
+                return;
+            }
+
+            if (Array.isArray(source) || ArrayBuffer.isView(source)) {
+                for (let index = 0; index < (source as any).length; index++) {
+                    const element = (source as any)[index];
+                    this.findFromChildren(element, as, refs, source, index);
+                }
+            }
+        
+            if (source.constructor === Object) {
+                for (const key in source) {
+                    const element = source[key];
+                    this.findFromChildren(element, as, refs, source, key);
+                }
+            }
+        
+            if (source instanceof BaseObject) {
+                if (source instanceof Asset && source === as) {
+                    refs.push({ p: parent, k: key });
+                    return;
+                }
+        
+                this.findAssetRefs(source, as, refs);
+            }
+        }
+
+        public getAllGameObjectsFromPrefabInstance(gameObj: paper.GameObject, objs: paper.GameObject[] | null = null) {
+            if (gameObj) {
+                objs = objs || [];
+                if (gameObj.extras!.linkedID) {
+                    objs.push(gameObj);
+                }
+            }
+
+            for (let index = 0; index < gameObj.transform.children.length; index++) {
+                const element = gameObj.transform.children[index];
+                const obj: paper.GameObject = element.gameObject;
+                this.getAllGameObjectsFromPrefabInstance(obj, objs);
+            }
+
+            return objs;
         }
     }
 }

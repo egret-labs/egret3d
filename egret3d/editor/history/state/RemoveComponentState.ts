@@ -18,7 +18,7 @@ namespace paper.editor{
             return state;
         }
 
-        public get stateData():RemoveComponentStateData
+        private get stateData():RemoveComponentStateData
         {
             return this.data as RemoveComponentStateData;
         }
