@@ -11,5 +11,18 @@ namespace paper.editor {
             xScale.transform.setLocalPosition(2, 0, 0);
             this.geo = xScale
         }
+        wasPressed_local() {
+
+        }
+        isPressed_local() {
+
+        }
+        wasPressed_world() {
+
+        }
+        isPressed_world() {
+
+        }
+
     }
 }

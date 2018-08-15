@@ -11,5 +11,18 @@ namespace paper.editor {
             xRotate.transform.setLocalEulerAngles(0, 0, -90);
             this.geo = xRotate
         }
+
+        wasPressed_local() {
+
+        }
+        isPressed_local() {
+
+        }
+        wasPressed_world() {
+
+        }
+        isPressed_world() {
+
+        }
     }
 }

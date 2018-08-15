@@ -11,5 +11,18 @@ namespace paper.editor {
             zRotate.transform.setLocalScale(3, 0.05, 3);
             this.geo = zRotate
         }
+        wasPressed_local() {
+
+        }
+        isPressed_local() {
+
+        }
+        wasPressed_world() {
+
+        }
+        isPressed_world() {
+
+        }
+
     }
 }

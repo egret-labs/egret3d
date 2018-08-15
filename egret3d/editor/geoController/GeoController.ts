@@ -5,11 +5,13 @@ namespace paper.editor {
     let helpQuat_1 = new egret3d.Quaternion();
     let helpQuat_2 = new egret3d.Quaternion();
 
+    @paper.executeInEditMode
     export class Controller extends paper.Behaviour {
 
         private _isEditing: boolean = false;
         public selectedGameObjs: GameObject[] = [];
 
+        private _cameraObject: paper.GameObject
         private bindMouse: egret3d.MouseDevice;
         private bindKeyboard: egret3d.KeyboardDevice;
 
@@ -21,6 +23,7 @@ namespace paper.editor {
         private _editorModel: EditorModel;
         public set editorModel(editorModel: EditorModel) {
             this._editorModel = editorModel
+            this.mainGeo.editorModel = editorModel
             this.addEventListener();
             this.changeEditType('position')
         }
@@ -28,26 +31,98 @@ namespace paper.editor {
             return this._editorModel;
         }
 
-        private geoCtrlMode: string = 'local';
+        private geoCtrlMode: string = 'world';
         private geoCtrlType: string;
         constructor() {
             super();
+            this.mainGeo = new GeoContainer();
             this.bindMouse = egret3d.InputManager.mouse;
             this.bindKeyboard = egret3d.InputManager.keyboard;
-            this.mainGeo = new GeoContainer();
+            this._cameraObject = Application.sceneManager.editorScene.find("EditorCamera");
+            this._oldTransform = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
+
         }
         public onUpdate() {
-            console.log("now update", this.editorModel)
             if (!this.editorModel) {
                 return;
             }
             this.geoChangeByCamera();
             this.inputUpdate();
+            this.mouseRayCastUpdate();
+            if (this._isEditing) {
+                (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
+            }
+
         }
 
+        private updateInLocalMode() {
+            let len = this.selectedGameObjs.length;
+            if (len <= 0) return;
+
+
+            let camera = this._cameraObject.getComponent(egret3d.Camera);
+            if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+                let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
+                this.mainGeo.wasPressed_local(ray, this.selectedGameObjs)
+            }
+            if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+                let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
+                this.mainGeo.isPressed_local(ray, this.selectedGameObjs)
+                this.controller.transform.setLocalPosition(this.selectedGameObjs[0].transform.getPosition())
+
+            }
+
+        }
+        private updateInWorldMode() {
+            let len = this.selectedGameObjs.length;
+            if (len <= 0) return;
+            let camera = this._cameraObject.getComponent(egret3d.Camera);
+            if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+                let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
+                this.mainGeo.wasPressed_world(ray, this.selectedGameObjs)
+            }
+            if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+                let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
+                this.mainGeo.isPressed_world(ray, this.selectedGameObjs)
+                this.controller.transform.setLocalPosition(this.selectedGameObjs[0].transform.getPosition())
+
+            }
+
+        }
+
+        private _oldResult: BaseGeo
+        private mouseRayCastUpdate() {
+            let camera = this._cameraObject.getComponent(egret3d.Camera);
+            let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
+
+            //变色逻辑
+            const result = this.mainGeo.checkIntersect(ray)
+            if (this._oldResult != result) {
+                if (this._oldResult) {
+                    this._oldResult.changeColor("origin")
+                }
+                this._oldResult = result
+                if (result) {
+                    result.changeColor("yellow")
+                }
+            }
+
+            //控制杆移动逻辑初始化
+        }
+
+        private _oldTransform: any//TODO
         private geoChangeByCamera() {
             //控制杆大小随镜头远近变化
+            var dis1;
+            var delta;
+            dis1 = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
+            delta = (dis1 - this._oldTransform) / 20;
+            this._oldTransform = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
+            var scale = this.controller.transform.getLocalScale();
+            this.controller.transform.setScale(new egret3d.Vector3(scale.x + delta, scale.y + delta, scale.z + delta));
+
         }
+
         private inputUpdate() {
             let mouse = this.bindMouse;
             let keyboard = this.bindKeyboard;
