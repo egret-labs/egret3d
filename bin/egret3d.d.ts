@@ -2562,12 +2562,12 @@ declare namespace paper.editor {
         editorModel: EditorModel;
         geo: GameObject;
         private baseColor;
+        canDrag: boolean;
         protected helpVec3_1: egret3d.Vector3;
         protected helpVec3_2: egret3d.Vector3;
         protected helpVec3_3: egret3d.Vector3;
         protected helpQuat_1: egret3d.Quaternion;
         protected helpQuat_2: egret3d.Quaternion;
-        canDrag: boolean;
         protected forward: egret3d.Vector3;
         protected up: egret3d.Vector3;
         protected right: egret3d.Vector3;
@@ -7550,7 +7550,7 @@ declare namespace paper.editor {
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasReleased(): void;
     }
 }
@@ -7561,7 +7561,7 @@ declare namespace paper.editor {
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasReleased(): void;
     }
 }
@@ -7570,9 +7570,9 @@ declare namespace paper.editor {
         constructor();
         onSet(): void;
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasReleased(): void;
     }
 }

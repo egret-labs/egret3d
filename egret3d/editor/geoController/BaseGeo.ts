@@ -7,14 +7,13 @@ namespace paper.editor {
 
         private baseColor: egret3d.Material;
 
+        public canDrag: boolean = false
+
         protected helpVec3_1 = new egret3d.Vector3();
         protected helpVec3_2 = new egret3d.Vector3();
         protected helpVec3_3 = new egret3d.Vector3();
         protected helpQuat_1 = new egret3d.Quaternion();
         protected helpQuat_2 = new egret3d.Quaternion();
-
-        public canDrag: boolean = false
-
         protected forward = new egret3d.Vector3(0, 0, 1);
         protected up = new egret3d.Vector3(0, 1, 0);
         protected right = new egret3d.Vector3(1, 0, 0);
@@ -23,14 +22,10 @@ namespace paper.editor {
         protected _newPosition: egret3d.Vector3 = new egret3d.Vector3();
         protected _ctrlPos: egret3d.Vector3 = new egret3d.Vector3();
         protected _ctrlRot: egret3d.Quaternion = new egret3d.Quaternion();
-
         protected _dragPlanePoint: egret3d.Vector3 = new egret3d.Vector3();
         protected _dragPlaneNormal: egret3d.Vector3 = new egret3d.Vector3();
-
         protected _initRotation = new egret3d.Quaternion();
         protected _oldLocalScale = new egret3d.Vector3();
-
-
 
         constructor() {
             this.onSet();
@@ -56,9 +51,15 @@ namespace paper.editor {
         public changeColor(color: string) {
             if (color == "origin") {
                 this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor]
-            } else if (color == "yellow") {
+            }
+            else if (color == "yellow") {
                 let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
                 mat.setVector4v("_Color", [0.9, 0.9, 0.7, 0.8]);
+                this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
+            }
+            else if (color == "grey") {
+                let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
                 this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
             }
         }
@@ -76,6 +77,7 @@ namespace paper.editor {
                     break;
                 case 2:
                     mesh.mesh = egret3d.DefaultMeshes.CUBE;
+                    mesh.mesh.addSubMesh(12, 0, gltf.MeshPrimitiveMode.Lines)
                     break;
             }
             let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
@@ -84,7 +86,6 @@ namespace paper.editor {
             renderer.materials = [mat];
             return gizmoAxis;
         }
-
     }
 
 
@@ -115,6 +116,7 @@ namespace paper.editor {
             if (this.geos) {
                 for (let item of this.geos) {
                     item.geo.destroy()
+                    item.geo = null;
                 }
             }
             this.geos = []
@@ -163,6 +165,11 @@ namespace paper.editor {
                 console.log(result.geo.name)
                 result.wasPressed_local(ray, selected)
                 this.selectedGeo = result
+
+                for (let item of this.geos) {
+                    item.changeColor('grey')
+                }
+                this.selectedGeo.changeColor('yellow')
                 return;
             }
             this.selectedGeo = null
@@ -176,14 +183,17 @@ namespace paper.editor {
         }
         wasPressed_world(ray: egret3d.Ray, selected: any) {
             let ctrlRot = this.geo.transform.getRotation();
-
-
             const result = this.checkIntersect(ray)
             if (result) {
                 console.log(result.geo.name)
                 this._ctrlRot = ctrlRot;
                 result.wasPressed_world(ray, selected)
                 this.selectedGeo = result
+
+                for (let item of this.geos) {
+                    item.changeColor('grey')
+                }
+                this.selectedGeo.changeColor('yellow')
                 return;
             }
             this.selectedGeo = null
@@ -210,60 +220,11 @@ namespace paper.editor {
         wasReleased() {
             if (this.selectedGeo) {
                 this.selectedGeo.wasReleased();
+                for (let item of this.geos) {
+                    item.changeColor('origin')
+                }
+                this.selectedGeo = null
             }
         }
-
-
-
-        // private pCtrl
-        // private rCtrl
-        // private sCtrl
-        // private initGeo() {
-        //     {
-        //         let pcontroller = new paper.GameObject("", "", Application.sceneManager.editorScene);
-        //         pcontroller.activeSelf = true;
-        //         pcontroller.name = "GizmoController_Position";
-        //         pcontroller.tag = "Editor";
-        //         pcontroller.transform.setParent(this.geo.transform);
-
-        //         let x = new xAxis
-        //         let y = new yAxis
-        //         let z = new zAxis
-        //         x.geo.transform.setParent(pcontroller.transform)
-        //         y.geo.transform.setParent(pcontroller.transform)
-        //         z.geo.transform.setParent(pcontroller.transform)
-
-        //         // this.geos.push(pcontroller)
-        //     }
-        //     {
-        //         let rcontroller = new paper.GameObject("", "", Application.sceneManager.editorScene);
-        //         rcontroller.activeSelf = false;
-        //         rcontroller.name = "GizmoController_Rotation";
-        //         rcontroller.tag = "Editor";
-        //         rcontroller.transform.setParent(this.geo.transform);
-
-        //         let x = new xAxis
-        //         let y = new yAxis
-        //         let z = new zAxis
-        //         x.geo.transform.setParent(rcontroller.transform)
-        //         y.geo.transform.setParent(rcontroller.transform)
-        //         z.geo.transform.setParent(rcontroller.transform)
-        //     }
-        //     {
-        //         let scontroller = new paper.GameObject("", "", Application.sceneManager.editorScene);
-        //         scontroller.activeSelf = false;
-        //         scontroller.name = "GizmoController_Scale";
-        //         scontroller.tag = "Editor";
-        //         scontroller.transform.setParent(this.geo.transform);
-
-        //         let x = new xAxis
-        //         let y = new yAxis
-        //         let z = new zAxis
-        //         x.geo.transform.setParent(scontroller.transform)
-        //         y.geo.transform.setParent(scontroller.transform)
-        //         z.geo.transform.setParent(scontroller.transform)
-        //     }
-
-        // }
     }
 }

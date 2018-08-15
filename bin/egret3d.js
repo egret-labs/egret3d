@@ -3749,12 +3749,12 @@ var paper;
     (function (editor) {
         var BaseGeo = (function () {
             function BaseGeo() {
+                this.canDrag = false;
                 this.helpVec3_1 = new egret3d.Vector3();
                 this.helpVec3_2 = new egret3d.Vector3();
                 this.helpVec3_3 = new egret3d.Vector3();
                 this.helpQuat_1 = new egret3d.Quaternion();
                 this.helpQuat_2 = new egret3d.Quaternion();
-                this.canDrag = false;
                 this.forward = new egret3d.Vector3(0, 0, 1);
                 this.up = new egret3d.Vector3(0, 1, 0);
                 this.right = new egret3d.Vector3(1, 0, 0);
@@ -3791,6 +3791,11 @@ var paper;
                     mat.setVector4v("_Color", [0.9, 0.9, 0.7, 0.8]);
                     this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
                 }
+                else if (color == "grey") {
+                    var mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                    mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
+                    this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
+                }
             };
             BaseGeo.prototype._createAxis = function (color, type) {
                 var gizmoAxis = new paper.GameObject("", "", paper.Application.sceneManager.editorScene);
@@ -3804,6 +3809,7 @@ var paper;
                         break;
                     case 2:
                         mesh.mesh = egret3d.DefaultMeshes.CUBE;
+                        mesh.mesh.addSubMesh(12, 0, 1 /* Lines */);
                         break;
                 }
                 var renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
@@ -3845,6 +3851,7 @@ var paper;
                     for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
                         var item = _a[_i];
                         item.geo.destroy();
+                        item.geo = null;
                     }
                 }
                 this.geos = [];
@@ -3893,6 +3900,11 @@ var paper;
                     console.log(result.geo.name);
                     result.wasPressed_local(ray, selected);
                     this.selectedGeo = result;
+                    for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
+                        var item = _a[_i];
+                        item.changeColor('grey');
+                    }
+                    this.selectedGeo.changeColor('yellow');
                     return;
                 }
                 this.selectedGeo = null;
@@ -3912,6 +3924,11 @@ var paper;
                     this._ctrlRot = ctrlRot;
                     result.wasPressed_world(ray, selected);
                     this.selectedGeo = result;
+                    for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
+                        var item = _a[_i];
+                        item.changeColor('grey');
+                    }
+                    this.selectedGeo.changeColor('yellow');
                     return;
                 }
                 this.selectedGeo = null;
@@ -3935,6 +3952,11 @@ var paper;
             GeoContainer.prototype.wasReleased = function () {
                 if (this.selectedGeo) {
                     this.selectedGeo.wasReleased();
+                    for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
+                        var item = _a[_i];
+                        item.changeColor('origin');
+                    }
+                    this.selectedGeo = null;
                 }
             };
             return GeoContainer;
@@ -21395,7 +21417,7 @@ var paper;
                 }
                 this.geoChangeByCamera();
                 this.inputUpdate();
-                this.mouseRayCastUpdate();
+                // this.mouseRayCastUpdate();
                 if (this._isEditing) {
                     (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
                 }
@@ -21412,9 +21434,12 @@ var paper;
                     var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                     this.mainGeo.wasPressed_local(ray, this.selectedGameObjs);
                 }
-                if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+                else if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                     var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                     this.mainGeo.isPressed_local(ray, this.selectedGameObjs);
+                }
+                else {
+                    this.mouseRayCastUpdate();
                 }
             };
             Controller.prototype.updateInWorldMode = function () {
@@ -21426,26 +21451,30 @@ var paper;
                     var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                     this.mainGeo.wasPressed_world(ray, this.selectedGameObjs);
                 }
-                if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+                else if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                     var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                     this.mainGeo.isPressed_world(ray, this.selectedGameObjs);
                 }
+                else {
+                    this.mouseRayCastUpdate();
+                }
             };
             Controller.prototype.mouseRayCastUpdate = function () {
+                //变色逻辑
                 var camera = this._cameraObject.getComponent(egret3d.Camera);
                 var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                //变色逻辑
                 var result = this.mainGeo.checkIntersect(ray);
                 if (this._oldResult != result) {
                     if (this._oldResult) {
-                        this._oldResult.changeColor("origin");
+                        if (this._oldResult.geo) {
+                            this._oldResult.changeColor("origin");
+                        }
                     }
                     this._oldResult = result;
                     if (result) {
                         result.changeColor("yellow");
                     }
                 }
-                //控制杆移动逻辑初始化
             };
             Controller.prototype.geoChangeByCamera = function () {
                 //控制杆大小随镜头远近变化
@@ -21511,12 +21540,10 @@ var paper;
                     return;
                 this.geoCtrlType = type;
                 this.editorModel.changeEditType(type);
+                if (type == 'scale') {
+                    this.mainGeo.geo.transform.setRotation(this.selectedGameObjs[0].transform.getRotation());
+                }
                 this.mainGeo.changeType(type);
-                // switch (type) {
-                //     case 'position':
-                //         this.mainGeo = new positionCtrlGeo();
-                //         break;
-                // }
             };
             Controller.prototype.addEventListener = function () {
                 var _this = this;
@@ -21731,7 +21758,6 @@ var paper;
                 var position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
                 egret3d.Vector3.copy(position, this._ctrlPos);
                 this.editorModel.setTransformProperty("position", position, selectedGameObjs[0].transform);
-                console.log(position);
             };
             yAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 egret3d.Vector3.set(0, 0, 0, this._dragOffset);
@@ -22003,7 +22029,31 @@ var paper;
                 egret3d.Quaternion.transformVector3(ctrlRot, this.up, this._dragPlaneNormal);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             };
-            xScl.prototype.isPressed_world = function () {
+            xScl.prototype.isPressed_world = function (ray, selectedGameObjs) {
+                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
+                var worldOffset;
+                var scale;
+                var len = selectedGameObjs.length;
+                worldOffset = egret3d.Quaternion.transformVector3(this._ctrlRot, this.right, this.helpVec3_1);
+                var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
+                var src = this.geo.transform.getLocalPosition().x;
+                this.geo.transform.setLocalPosition(cosHit + src, 0, 0);
+                var s = cosHit / src + 1;
+                for (var i = 0; i < len; i++) {
+                    var lastSca = selectedGameObjs[i].transform.getLocalScale();
+                    scale = egret3d.Vector3.set(lastSca.x * s, lastSca.y, lastSca.z, this.helpVec3_2);
+                    this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[i].transform);
+                    var pos = selectedGameObjs[i].transform.getPosition();
+                    var sub = this.helpVec3_2;
+                    egret3d.Vector3.subtract(pos, this._ctrlPos, this.helpVec3_2);
+                    egret3d.Quaternion.transformVector3(this.geo.transform.parent.getRotation(), this.right, this.helpVec3_3);
+                    var cos = egret3d.Vector3.dot(sub, this.helpVec3_3);
+                    egret3d.Vector3.scale(this.helpVec3_3, cos * (s - 1));
+                    egret3d.Vector3.add(pos, this.helpVec3_3, pos);
+                    this.editorModel.setTransformProperty("position", pos, selectedGameObjs[i].transform);
+                }
+                egret3d.Vector3.copy(hit, this._dragOffset);
             };
             xScl.prototype.wasReleased = function () {
                 this.geo.transform.setLocalPosition(2, 0, 0);
@@ -22053,8 +22103,8 @@ var paper;
                 var len = egret3d.Vector3.dot(this._dragOffset, worldOffset);
                 this.geo.transform.setLocalPosition(0, cosHit / len * 2, 0);
                 var oldScale = this._oldLocalScale;
-                var sx = this.geo.transform.getLocalPosition().x / 2;
-                var sy = 1;
+                var sx = 1;
+                var sy = this.geo.transform.getLocalPosition().y / 2;
                 var sz = 1;
                 scale = egret3d.Vector3.set(oldScale.x * sx, oldScale.y * sy, oldScale.z * sz, this.helpVec3_2);
                 this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[0].transform);
@@ -22073,9 +22123,35 @@ var paper;
                 egret3d.Quaternion.transformVector3(ctrlRot, this.forward, this._dragPlaneNormal);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             };
-            yScl.prototype.isPressed_world = function () {
+            yScl.prototype.isPressed_world = function (ray, selectedGameObjs) {
+                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
+                var worldOffset;
+                var scale;
+                var len = selectedGameObjs.length;
+                worldOffset = egret3d.Quaternion.transformVector3(this._ctrlRot, this.up, this.helpVec3_1);
+                var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
+                var src = this.geo.transform.getLocalPosition().y;
+                this.geo.transform.setLocalPosition(0, cosHit + src, 0);
+                var s = cosHit / src + 1;
+                for (var i = 0; i < len; i++) {
+                    var lastSca = selectedGameObjs[i].transform.getLocalScale();
+                    scale = egret3d.Vector3.set(lastSca.x, lastSca.y * s, lastSca.z, this.helpVec3_2);
+                    this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[i].transform);
+                    var pos = selectedGameObjs[i].transform.getPosition();
+                    var sub = this.helpVec3_2;
+                    egret3d.Vector3.subtract(pos, this._ctrlPos, this.helpVec3_2);
+                    egret3d.Quaternion.transformVector3(this.geo.parent.transform.getRotation(), this.up, this.helpVec3_3);
+                    var cos = egret3d.Vector3.dot(sub, this.helpVec3_3);
+                    egret3d.Vector3.scale(this.helpVec3_3, cos * (s - 1));
+                    egret3d.Vector3.add(pos, this.helpVec3_3, pos);
+                    this.editorModel.setTransformProperty("position", pos, selectedGameObjs[i].transform);
+                }
+                egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            yScl.prototype.wasReleased = function () { return; };
+            yScl.prototype.wasReleased = function () {
+                this.geo.transform.setLocalPosition(0, 2, 0);
+            };
             return yScl;
         }(editor.BaseGeo));
         editor.yScl = yScl;
@@ -22109,7 +22185,23 @@ var paper;
                 egret3d.Quaternion.copy(worldRotation, this._initRotation);
                 egret3d.Vector3.copy(selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
             };
-            zScl.prototype.isPressed_local = function () {
+            zScl.prototype.isPressed_local = function (ray, selectedGameObjs) {
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(hit, worldPosition, this._delta);
+                var worldOffset;
+                var scale;
+                worldOffset = egret3d.Quaternion.transformVector3(worldRotation, this.forward, this.helpVec3_1);
+                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
+                var len = egret3d.Vector3.dot(this._dragOffset, worldOffset);
+                this.geo.transform.setLocalPosition(0, 0, cosHit / len * 2);
+                var oldScale = this._oldLocalScale;
+                var sx = 1;
+                var sy = 1;
+                var sz = this.geo.transform.getLocalPosition().z / 2;
+                scale = egret3d.Vector3.set(oldScale.x * sx, oldScale.y * sy, oldScale.z * sz, this.helpVec3_2);
+                this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[0].transform);
             };
             zScl.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
@@ -22125,9 +22217,35 @@ var paper;
                 egret3d.Quaternion.transformVector3(ctrlRot, this.up, this._dragPlaneNormal);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             };
-            zScl.prototype.isPressed_world = function () {
+            zScl.prototype.isPressed_world = function (ray, selectedGameObjs) {
+                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
+                var worldOffset;
+                var scale;
+                var len = selectedGameObjs.length;
+                worldOffset = egret3d.Quaternion.transformVector3(this._ctrlRot, this.forward, this.helpVec3_1);
+                var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
+                var src = this.geo.transform.getLocalPosition().z;
+                this.geo.transform.setLocalPosition(0, 0, cosHit + src);
+                var s = cosHit / src + 1;
+                for (var i = 0; i < len; i++) {
+                    var lastSca = selectedGameObjs[i].transform.getLocalScale();
+                    scale = egret3d.Vector3.set(lastSca.x, lastSca.y, lastSca.z * s, this.helpVec3_2);
+                    this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[i].transform);
+                    var pos = selectedGameObjs[i].transform.getPosition();
+                    var sub = this.helpVec3_2;
+                    egret3d.Vector3.subtract(pos, this._ctrlPos, this.helpVec3_2);
+                    egret3d.Quaternion.transformVector3(this.geo.parent.transform.getRotation(), this.forward, this.helpVec3_3);
+                    var cos = egret3d.Vector3.dot(sub, this.helpVec3_3);
+                    egret3d.Vector3.scale(this.helpVec3_3, cos * (s - 1));
+                    egret3d.Vector3.add(pos, this.helpVec3_3, pos);
+                    this.editorModel.setTransformProperty("position", pos, selectedGameObjs[i].transform);
+                }
+                egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            zScl.prototype.wasReleased = function () { return; };
+            zScl.prototype.wasReleased = function () {
+                this.geo.transform.setLocalPosition(0, 0, 2);
+            };
             return zScl;
         }(editor.BaseGeo));
         editor.zScl = zScl;
