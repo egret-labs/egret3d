@@ -66,15 +66,15 @@ namespace egret3d {
             n31: number, n32: number, n33: number,
         ) {
             this.rawData[0] = n11;
-            this.rawData[1] = n12;
-            this.rawData[2] = n13;
+            this.rawData[3] = n12;
+            this.rawData[6] = n13;
 
-            this.rawData[3] = n21;
+            this.rawData[1] = n21;
             this.rawData[4] = n22;
-            this.rawData[5] = n23;
+            this.rawData[7] = n23;
 
-            this.rawData[6] = n31;
-            this.rawData[7] = n32;
+            this.rawData[2] = n31;
+            this.rawData[5] = n32;
             this.rawData[8] = n33;
 
             return this;
@@ -106,7 +106,7 @@ namespace egret3d {
 
             if (det === 0) {
 
-                var msg = "THREE.Matrix3: .getInverse() can't invert matrix, determinant is 0";
+                var msg = "can't invert matrix, determinant is 0";
 
                 console.warn(msg);
 
@@ -155,6 +155,11 @@ namespace egret3d {
                 me[1], me[5], me[9],
                 me[2], me[6], me[10]
             );
+            // this.set(
+            //     me[0], me[1], me[2],
+            //     me[4], me[5], me[6],
+            //     me[8], me[9], me[10]
+            // );
 
             return this;
         }

@@ -419,25 +419,30 @@ namespace egret3d {
         }
 
         public static toMatrix(q: Quaternion, out: Matrix): Matrix {
-            let xy2: number = 2.0 * q.x * q.y, xz2: number = 2.0 * q.x * q.z, xw2: number = 2.0 * q.x * q.w;
-            let yz2: number = 2.0 * q.y * q.z, yw2: number = 2.0 * q.y * q.w, zw2: number = 2.0 * q.z * q.w;
-            let xx: number = q.x * q.x, yy: number = q.y * q.y, zz: number = q.z * q.z, ww: number = q.w * q.w;
+            var x = q.x, y = q.y, z = q.z, w = q.w;
+            var x2 = x + x, y2 = y + y, z2 = z + z;
+            var xx = x * x2, xy = x * y2, xz = x * z2;
+            var yy = y * y2, yz = y * z2, zz = z * z2;
+            var wx = w * x2, wy = w * y2, wz = w * z2;
 
-            out.rawData[0] = xx - yy - zz + ww;
-            out.rawData[4] = xy2 - zw2;
-            out.rawData[8] = xz2 + yw2;
-            out.rawData[12] = 0;
-            out.rawData[1] = xy2 + zw2;
-            out.rawData[5] = -xx + yy - zz + ww;
-            out.rawData[9] = yz2 - xw2;
-            out.rawData[13] = 0;
-            out.rawData[2] = xz2 - yw2;
-            out.rawData[6] = yz2 + xw2;
-            out.rawData[10] = -xx - yy + zz + ww;
-            out.rawData[14] = 0;
+            let te = out.rawData;
+            te[0] = 1 - (yy + zz);
+            te[4] = xy - wz;
+            te[8] = xz + wy;
+
+            te[1] = xy + wz;
+            te[5] = 1 - (xx + zz);
+            te[9] = yz - wx;
+
+            te[2] = xz - wy;
+            te[6] = yz + wx;
+            te[10] = 1 - (xx + yy);
             out.rawData[3] = 0.0;
             out.rawData[7] = 0.0;
             out.rawData[11] = 0;
+            out.rawData[12] = 0;
+            out.rawData[13] = 0;
+            out.rawData[14] = 0;
             out.rawData[15] = 1;
 
             return out;

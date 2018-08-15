@@ -63,6 +63,7 @@
         "egret3d/math/Curve.ts",
         "egret3d/math/Color.ts",
         "egret3d/math/Matrix.ts",
+        "egret3d/math/Matrix3.ts",
         "egret3d/math/Math.ts",
         "egret3d/EventDispatcher.ts",
         "egret3d/systems/BeginSystem.ts",

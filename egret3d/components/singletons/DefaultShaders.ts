@@ -177,7 +177,7 @@ namespace egret3d {
             technique.uniforms["modelViewMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEW, value: [] };
             technique.uniforms["projectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.PROJECTION, value: [] };
             technique.uniforms["viewMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.VIEW, value: [] };
-            technique.uniforms["normalMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWINVERSE, value: [] };
+            technique.uniforms["normalMatrix"] = { type: gltf.UniformType.FLOAT_MAT3, semantic: gltf.UniformSemanticType.MODELVIEWINVERSE, value: [] };
             technique.uniforms["cameraPosition"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_POS, value: [] };
 
             technique.uniforms["ambientLightColor"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._AMBIENTLIGHTCOLOR, value: [0, 0, 0] };

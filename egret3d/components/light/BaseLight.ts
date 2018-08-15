@@ -176,15 +176,25 @@ namespace egret3d {
             //     0.5, 0.5, 0.5, 1.0
             // );
 
-            camera.calcProjectMatrix(512 / 512, helpMatrixA);
-            helpMatrixB.copy(this.gameObject.transform.getWorldMatrix()).inverse();
-            Matrix.multiply(matrix, helpMatrixA, matrix);
-            Matrix.multiply(matrix, helpMatrixB, matrix);
+            // camera.calcProjectMatrix(512 / 512, helpMatrixA);
+            // camera.context.matrix_p;
+            // helpMatrixB.copy(this.gameObject.transform.getWorldMatrix()).inverse();
+            // Matrix.multiply(matrix, camera.context.matrix_p, matrix);
+            // Matrix.multiply(matrix, helpMatrixB, matrix);
+
+            let viewMatrix = camera.calcViewMatrix(helpMatrixA);
+            let projectionMatrix = camera.calcProjectMatrix(512 / 512, helpMatrixB);
+            Matrix.multiply(matrix, projectionMatrix, matrix);
+            Matrix.multiply(matrix, viewMatrix, matrix);
         }
         /**
          * @internal
          */
         public update(camera: Camera, faceIndex: number) {
+            (camera as any).gameObject = this.gameObject;//TODO
+            camera.near = this.shadowCameraNear;
+            camera.far = this.shadowCameraFar;
+            camera.size = this.shadowSize;
             camera.opvalue = 1.0;
             camera.backgroundColor.set(1.0, 1.0, 1.0, 1.0);
             camera.clearOption_Color = true;

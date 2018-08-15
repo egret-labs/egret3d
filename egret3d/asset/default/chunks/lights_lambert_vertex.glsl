@@ -97,8 +97,10 @@ vec3 directLightColor_Diffuse;
 
 		dotNL = dot( geometry.normal, directLight.direction );
 		directLightColor_Diffuse = PI * directLight.color;
+		// directLightColor_Diffuse = directLight.color;
 
 		vLightFront += saturate( dotNL ) * directLightColor_Diffuse;
+		// vLightFront += directLightColor_Diffuse;
 
 		#ifdef DOUBLE_SIDED
 

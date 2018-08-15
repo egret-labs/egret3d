@@ -410,14 +410,14 @@ namespace egret3d {
             const renderState = this._renderState;
             const lightWorldMatrix = light.gameObject.transform.getWorldMatrix();
             for (let i = 0; i < faceCount; ++i) {
-                (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
                 const context = camera.context;
-                context.updateCamera(camera, lightWorldMatrix);
-                context.updateLightDepth(light);
                 light.update(camera, i);
 
+                (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
                 renderState.targetAndViewport(camera.viewport, light.renderTarget);
                 renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                context.updateCamera(camera, lightWorldMatrix);
+                // context.updateLightDepth(light);
                 drawCalls.shadowFrustumCulling(camera);
                 //
                 const shadowCalls = drawCalls.shadowCalls;
@@ -463,7 +463,7 @@ namespace egret3d {
                     if (camera.gameObject.scene !== camerasScene) {
                         continue;
                     }
-
+                    
                     if (filteredLights.length > 0) {
                         camera.context.updateLights(filteredLights); // TODO 性能优化
                     }

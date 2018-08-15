@@ -62,7 +62,6 @@ namespace egret3d {
         public readonly matrix_p: Matrix = new Matrix();
         public readonly matrix_mv: Matrix = new Matrix();
         public readonly matrix_vp: Matrix = new Matrix();
-
         public readonly matrix_mv_invers: Matrix3 = new Matrix3();//INVERS
         //matrixNormal: paper.matrix = new paper.matrix();
 
@@ -114,10 +113,8 @@ namespace egret3d {
 
         public updateLights(lights: ReadonlyArray<BaseLight>) {
             let allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
-
-            let viewMatrixInverse: Matrix = new Matrix();
-            Matrix.inverse(this.matrix_v, viewMatrixInverse);
             let dirHelper: Vector3 = new Vector3();
+            let dir: Vector3 = new Vector3();
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
 
@@ -170,8 +167,9 @@ namespace egret3d {
                 let lightArray = this.directLightArray;
                 const pos = light.gameObject.transform.getPosition();
                 Matrix.getTranslation(light.gameObject.transform.getWorldMatrix(), dirHelper);
-                let dir: Vector3 = new Vector3();
-                Matrix.transformNormal(dirHelper, viewMatrixInverse, dir);
+                Matrix.transformNormal(dirHelper, this.matrix_v, dir);
+                dir.normalize();
+                
                 // const dir = light.gameObject.transform.getForward(helpVec3_1);
                 let offset = 0;
 
@@ -273,77 +271,6 @@ namespace egret3d {
                     }
                 }
 
-
-                // lightArray[index * size + offset++] = pos.x;
-                // lightArray[index * size + offset++] = pos.y;
-                // lightArray[index * size + offset++] = pos.z;
-
-                // lightArray[index * size + offset++] = dir.x;
-                // lightArray[index * size + offset++] = dir.y;
-                // lightArray[index * size + offset++] = dir.z;
-
-                // lightArray[index * size + offset++] = light.color.r;
-                // lightArray[index * size + offset++] = light.color.g;
-                // lightArray[index * size + offset++] = light.color.b;
-
-                // lightArray[index * size + offset++] = light.intensity;
-
-                // if (light.type === LightType.Point || light.type === LightType.Spot) {
-                //     lightArray[index * size + offset++] = light.distance;
-                //     lightArray[index * size + offset++] = light.decay;
-                //     if (light.type === LightType.Spot) {
-                //         lightArray[index * size + offset++] = Math.cos(light.angle);
-                //         lightArray[index * size + offset++] = Math.cos(light.angle * (1 - light.penumbra));
-                //     }
-                // }
-
-                // if (light.castShadows) {
-                //     lightArray[index * size + offset++] = 1;
-
-                //     if (light.type === LightType.Direction) {
-                //         lightArray[index * size + offset++] = light.shadowBias;
-                //         lightArray[index * size + offset++] = light.shadowRadius;
-                //         lightArray[index * size + offset++] = light.shadowSize;
-                //         lightArray[index * size + offset++] = light.shadowSize;
-                //         this.directShadowMatrix.set(light.matrix.rawData, directLightIndex * 16);
-                //         this.directShadowMaps[directLightIndex] = light.renderTarget.texture;
-                //     }
-                //     else if (light.type === LightType.Point) {
-                //         lightArray[index * size + offset++] = light.shadowBias;
-                //         lightArray[index * size + offset++] = light.shadowRadius
-                //         lightArray[index * size + offset++] = light.shadowCameraNear;
-                //         lightArray[index * size + offset++] = light.shadowCameraFar;
-                //         lightArray[index * size + offset++] = light.shadowSize
-                //         lightArray[index * size + offset++] = light.shadowSize
-                //         this.pointShadowMaps[pointLightIndex] = light.renderTarget.texture;
-                //     }
-                //     else if (light.type === LightType.Spot) {
-                //         lightArray[index * size + offset++] = light.shadowBias;
-                //         lightArray[index * size + offset++] = light.shadowRadius;
-                //         lightArray[index * size + offset++] = light.shadowSize;
-                //         lightArray[index * size + offset++] = light.shadowSize;
-                //         this.spotShadowMatrix.set(light.matrix.rawData, spotLightIndex * 16);
-                //         this.spotShadowMaps[spotLightIndex] = light.renderTarget.texture;
-                //     }
-                // }
-                // else {
-                //     lightArray[index * size + offset++] = 0;
-                //     lightArray[index * size + offset++] = 0;
-                //     lightArray[index * size + offset++] = 0;
-                //     lightArray[index * size + offset++] = 0;
-                //     lightArray[index * size + offset++] = 0;
-
-                //     if (light.type === LightType.Direction) {
-                //         this.directShadowMaps[directLightIndex] = null;
-                //     }
-                //     else if (light.type === LightType.Point) {
-                //         this.pointShadowMaps[pointLightIndex] = null;
-                //     }
-                //     else if (light.type === LightType.Spot) {
-                //         this.spotShadowMaps[spotLightIndex] = null;
-                //     }
-                // }
-
                 if (light.type === LightType.Direction) {
                     directLightIndex++;
                 }
@@ -362,6 +289,8 @@ namespace egret3d {
             Matrix.copy(matrix, this.matrix_m); // clone matrix because getWorldMatrix returns a reference
             Matrix.multiply(this.matrix_v, this.matrix_m, this.matrix_mv);
             Matrix.multiply(this.matrix_vp, this.matrix_m, this.matrix_mvp);
+
+
             this.matrix_mv_invers.getNormalMatrix(this.matrix_mv);
 
             this.version++;
@@ -372,7 +301,7 @@ namespace egret3d {
 
             this.version++;
         }
-
+        //TODO废弃
         public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0, 1.0]);
         public lightShadowCameraNear: number = 0;
         public lightShadowCameraFar: number = 0;

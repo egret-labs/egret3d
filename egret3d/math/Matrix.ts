@@ -439,6 +439,53 @@ namespace egret3d {
         }
 
         public static inverse(src: Matrix, out: Matrix): Matrix {
+            // based on http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm
+            var te = out.rawData,
+                me = src.rawData,
+
+                n11 = me[0], n21 = me[1], n31 = me[2], n41 = me[3],
+                n12 = me[4], n22 = me[5], n32 = me[6], n42 = me[7],
+                n13 = me[8], n23 = me[9], n33 = me[10], n43 = me[11],
+                n14 = me[12], n24 = me[13], n34 = me[14], n44 = me[15],
+
+                t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44,
+                t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44,
+                t13 = n13 * n24 * n42 - n14 * n23 * n42 + n14 * n22 * n43 - n12 * n24 * n43 - n13 * n22 * n44 + n12 * n23 * n44,
+                t14 = n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34;
+
+            var det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
+
+            if (det === 0) {
+
+
+            }
+
+            var detInv = 1 / det;
+
+            te[0] = t11 * detInv;
+            te[1] = (n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44) * detInv;
+            te[2] = (n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44) * detInv;
+            te[3] = (n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43) * detInv;
+
+            te[4] = t12 * detInv;
+            te[5] = (n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44) * detInv;
+            te[6] = (n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44) * detInv;
+            te[7] = (n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43) * detInv;
+
+            te[8] = t13 * detInv;
+            te[9] = (n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44) * detInv;
+            te[10] = (n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44) * detInv;
+            te[11] = (n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43) * detInv;
+
+            te[12] = t14 * detInv;
+            te[13] = (n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34) * detInv;
+            te[14] = (n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34) * detInv;
+            te[15] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) * detInv;
+
+            return out;
+        }
+
+        public static inverse2(src: Matrix, out: Matrix): Matrix {
             let l1 = src.rawData[0];
             let l2 = src.rawData[1];
             let l3 = src.rawData[2];
@@ -615,16 +662,45 @@ namespace egret3d {
         }
 
         public static fromRTS(p: Vector3, s: Vector3, q: Quaternion, out: Matrix): Matrix {
-            let matS = helpMat_1;
-            this.formScale(s.x, s.y, s.z, matS);
-            let matR = helpMat_2;
-            Quaternion.toMatrix(q, matR);
-            this.multiply(matR, matS, out);
+            // let matR = helpMat_2;
+            // Quaternion.toMatrix(q, matR);
+            // let matS = helpMat_1;
+            // this.formScale(s.x, s.y, s.z, matS);
+            // this.multiply(matR, matS, out);
+            var x = q.x, y = q.y, z = q.z, w = q.w;
+            var x2 = x + x, y2 = y + y, z2 = z + z;
+            var xx = x * x2, xy = x * y2, xz = x * z2;
+            var yy = y * y2, yz = y * z2, zz = z * z2;
+            var wx = w * x2, wy = w * y2, wz = w * z2;
 
-            out.rawData[12] = p.x;
-            out.rawData[13] = p.y;
-            out.rawData[14] = p.z;
-            out.rawData[15] = 1;
+            let te = out.rawData;
+
+            te[0] = 1 - (yy + zz);
+            te[4] = xy - wz;
+            te[8] = xz + wy;
+
+            te[1] = xy + wz;
+            te[5] = 1 - (xx + zz);
+            te[9] = yz - wx;
+
+            te[2] = xz - wy;
+            te[6] = yz + wx;
+            te[10] = 1 - (xx + yy);
+
+            // last column
+            te[3] = 0;
+            te[7] = 0;
+            te[11] = 0;
+
+            te[0] *= s.x; te[4] *= s.y; te[8] *= s.z;
+            te[1] *= s.x; te[5] *= s.y; te[9] *= s.z;
+            te[2] *= s.x; te[6] *= s.y; te[10] *= s.z;
+            te[3] *= s.x; te[7] *= s.y; te[11] *= s.z;
+
+            te[12] = p.x;
+            te[13] = p.y;
+            te[14] = p.z;
+            te[15] = 1;
 
             return out;
         }
