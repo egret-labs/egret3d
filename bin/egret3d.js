@@ -3849,10 +3849,10 @@ var paper;
                 }
                 this.geos = [];
             };
-            GeoContainer.prototype.clearAll = function () {
-                this.clear();
-                this.selectedGeo = null;
-            };
+            // public clearAll() {
+            //     this.clear();
+            //     this.selectedGeo = null;
+            // }
             GeoContainer.prototype.changeType = function (type) {
                 this.clear();
                 switch (type) {
@@ -21382,7 +21382,7 @@ var paper;
                 set: function (editorModel) {
                     this._editorModel = editorModel;
                     this.mainGeo.editorModel = editorModel;
-                    this.mainGeo.clearAll();
+                    this.selectGameObjects([]);
                     this.addEventListener();
                     this.changeEditType('position');
                 },
@@ -22041,7 +22041,23 @@ var paper;
                 egret3d.Quaternion.copy(worldRotation, this._initRotation);
                 egret3d.Vector3.copy(selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
             };
-            yScl.prototype.isPressed_local = function () {
+            yScl.prototype.isPressed_local = function (ray, selectedGameObjs) {
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(hit, worldPosition, this._delta);
+                var worldOffset;
+                var scale;
+                worldOffset = egret3d.Quaternion.transformVector3(worldRotation, this.up, this.helpVec3_1);
+                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
+                var len = egret3d.Vector3.dot(this._dragOffset, worldOffset);
+                this.geo.transform.setLocalPosition(0, cosHit / len * 2, 0);
+                var oldScale = this._oldLocalScale;
+                var sx = this.geo.transform.getLocalPosition().x / 2;
+                var sy = 1;
+                var sz = 1;
+                scale = egret3d.Vector3.set(oldScale.x * sx, oldScale.y * sy, oldScale.z * sz, this.helpVec3_2);
+                this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[0].transform);
             };
             yScl.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;

@@ -2598,7 +2598,6 @@ declare namespace paper.editor {
         onSet(): void;
         checkIntersect(ray: egret3d.Ray): BaseGeo;
         private clear();
-        clearAll(): void;
         changeType(type: string): void;
         wasPressed_local(ray: egret3d.Ray, selected: any): any;
         isPressed_local(ray: egret3d.Ray, selected: any): void;
@@ -7560,7 +7559,7 @@ declare namespace paper.editor {
         constructor();
         onSet(): void;
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(): void;
         wasReleased(): void;
