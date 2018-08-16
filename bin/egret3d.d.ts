@@ -2582,9 +2582,14 @@ declare namespace egret3d {
         /**
          *
          */
+        shadowCameraSize: number;
+        /**
+         *
+         */
         readonly color: Color;
         readonly matrix: Matrix;
         renderTarget: IRenderTarget;
+        readonly viewPortPixel: IRectangle;
         protected _updateMatrix(camera: Camera): void;
         /**
          * @internal

@@ -1306,7 +1306,7 @@ var egret3d;
          * @param up
          */
         Matrix.prototype.lookAt = function (eye, target, up) {
-            var z = _helpVector3C.subtract(eye, target).normalize();
+            var z = _helpVector3C.subtract(target, eye).normalize(); //right handle
             var x = _helpVector3A.cross(up, z).normalize();
             var y = _helpVector3B.cross(z, x);
             var rawData = this.rawData;
@@ -3287,15 +3287,28 @@ var egret3d;
             /**
              *
              */
+            _this.shadowCameraSize = 30;
+            /**
+             *
+             */
             _this.color = new egret3d.Color(1.0, 1.0, 1.0, 1.0);
             _this.matrix = new egret3d.Matrix();
+            _this.viewPortPixel = { x: 0, y: 0, w: 0, h: 0 };
             return _this;
         }
         BaseLight.prototype._updateMatrix = function (camera) {
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             var matrix = this.matrix;
-            matrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);
-            camera.calcProjectMatrix(512 / 512, egret3d.helpMatrixA);
+            // matrix.set(
+            //     0.5, 0.0, 0.0, 0.5,
+            //     0.0, 0.5, 0.0, 0.5,
+            //     0.0, 0.0, 0.5, 0.5,
+            //     0.0, 0.0, 0.0, 1.0
+            // );
+            matrix.set(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
+            camera.calcViewPortPixel(this.viewPortPixel);
+            var asp = this.viewPortPixel.w / this.viewPortPixel.h;
+            camera.calcProjectMatrix(asp, egret3d.helpMatrixA);
             // camera.context.matrix_p;
             egret3d.helpMatrixB.copy(this.gameObject.transform.getWorldMatrix()).inverse();
             matrix.multiply(egret3d.helpMatrixA).multiply(egret3d.helpMatrixB);
@@ -3308,7 +3321,6 @@ var egret3d;
          * @internal
          */
         BaseLight.prototype.update = function (camera, faceIndex) {
-            camera.opvalue = 1.0;
             camera.backgroundColor.set(1.0, 1.0, 1.0, 1.0);
             camera.clearOption_Color = true;
             camera.clearOption_Depth = true;
@@ -3362,6 +3374,10 @@ var egret3d;
             paper.serializedField,
             paper.editor.property(paper.editor.EditType.NUMBER)
         ], BaseLight.prototype, "shadowCameraFar", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.NUMBER)
+        ], BaseLight.prototype, "shadowCameraSize", void 0);
         __decorate([
             paper.serializedField,
             paper.editor.property(paper.editor.EditType.COLOR)
@@ -8311,7 +8327,7 @@ var egret3d;
                 technique.uniforms["glstate_matrix_mvp"] = { type: 35676 /* FLOAT_MAT4 */, semantic: "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */, value: [] };
                 //
                 this._setDepth(technique, true, true);
-                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setCullFace(technique, false);
                 this._setBlend(technique, 0 /* Close */);
                 DefaultShaders.SHADOW_DEPTH = shader;
                 paper.Asset.register(shader);
@@ -8326,7 +8342,7 @@ var egret3d;
                 technique.uniforms["glstate_nearDistance"] = { type: 5126 /* FLOAT */, semantic: "_NEARDICTANCE" /* _NEARDICTANCE */, value: {} };
                 technique.uniforms["glstate_farDistance"] = { type: 5126 /* FLOAT */, semantic: "_FARDISTANCE" /* _FARDISTANCE */, value: {} };
                 this._setDepth(technique, true, true);
-                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
+                this._setCullFace(technique, false);
                 this._setBlend(technique, 0 /* Close */);
                 DefaultShaders.SHADOW_DISTANCE = shader;
                 paper.Asset.register(shader);
@@ -11180,8 +11196,9 @@ var egret3d;
         DirectLight.prototype.update = function (camera, faceIndex) {
             camera.near = this.shadowCameraNear;
             camera.far = this.shadowCameraFar;
-            camera.size = this.shadowSize;
+            camera.size = this.shadowCameraSize;
             camera.fov = Math.PI * 0.25; //
+            camera.opvalue = 0.0;
             camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
             _super.prototype.update.call(this, camera, faceIndex);
         };

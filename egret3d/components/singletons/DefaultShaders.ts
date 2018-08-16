@@ -371,7 +371,7 @@ namespace egret3d {
 
                 //
                 this._setDepth(technique, true, true);
-                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Close);
 
                 DefaultShaders.SHADOW_DEPTH = shader;
@@ -391,7 +391,7 @@ namespace egret3d {
                 technique.uniforms["glstate_farDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._FARDISTANCE, value: {} };
 
                 this._setDepth(technique, true, true);
-                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Close);
 
                 DefaultShaders.SHADOW_DISTANCE = shader;
