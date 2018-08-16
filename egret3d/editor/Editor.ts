@@ -114,6 +114,8 @@ namespace paper.editor {
             if(this.activeEditorModel){
                 this.activeEditorModel.scene.destroy();
             }
+            //重置单例子
+            RES['instance']=null;
             //初始化资源
             await RES.loadConfig("resource/default.res.json", "resource/");
             if(this.currentEditInfo){
