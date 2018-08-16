@@ -20,11 +20,11 @@ namespace paper.editor {
             let worldPosition = selectedGameObjs[0].transform.getPosition();
 
             egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-            egret3d.Quaternion.transformVector3(worldRotation, this.up, this._dragPlaneNormal);
+            this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
             this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
 
-            egret3d.Quaternion.transformVector3(worldRotation, this.forward, this._dragPlaneNormal1);
+            this._dragPlaneNormal1.applyQuaternion(worldRotation, this.forward);
             this._dragOffset1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
             egret3d.Vector3.subtract(this._dragOffset1, worldPosition, this._dragOffset1);
         }
@@ -36,7 +36,7 @@ namespace paper.editor {
             egret3d.Vector3.subtract(hit, this._dragOffset, hit);
             egret3d.Vector3.subtract(hit, worldPosition, hit);
             let worldOffset1: egret3d.Vector3;
-            worldOffset1 = egret3d.Quaternion.transformVector3(worldRotation, this.right, this.helpVec3_1);
+            worldOffset1.applyQuaternion(worldRotation, this.right);
             let cosHit1 = egret3d.Vector3.dot(hit, worldOffset1);
             egret3d.Vector3.scale(worldOffset1, cosHit1);
             let position = egret3d.Vector3.add(worldPosition, worldOffset1, this.helpVec3_2);
@@ -45,7 +45,7 @@ namespace paper.editor {
             egret3d.Vector3.subtract(hit1, this._dragOffset, hit1);
             egret3d.Vector3.subtract(hit1, worldPosition, hit1);
             let worldOffset: egret3d.Vector3;
-            worldOffset = egret3d.Quaternion.transformVector3(worldRotation, this.up, this.helpVec3_1);
+            worldOffset.applyQuaternion(worldRotation, this.up);
             let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
             egret3d.Vector3.scale(worldOffset, cosHit);
             position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
