@@ -20,11 +20,15 @@ namespace paper.editor {
             let worldPosition = selectedGameObjs[0].transform.getPosition();
 
             egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-            this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
+
+            let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
+            let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
+            this._dragPlaneNormal.applyQuaternion(worldRotation, normal)
             this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
 
-            this._dragPlaneNormal1.applyQuaternion(worldRotation, this.forward);
+            let normal1 = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
+            this._dragPlaneNormal1.applyQuaternion(worldRotation, normal1)
             this._dragOffset1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
             egret3d.Vector3.subtract(this._dragOffset1, worldPosition, this._dragOffset1);
         }
@@ -35,7 +39,7 @@ namespace paper.editor {
             let hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(hit, this._dragOffset, hit);
             egret3d.Vector3.subtract(hit, worldPosition, hit);
-            let worldOffset1: egret3d.Vector3;
+            let worldOffset1 = new egret3d.Vector3();
             worldOffset1.applyQuaternion(worldRotation, this.right);
             let cosHit1 = egret3d.Vector3.dot(hit, worldOffset1);
             egret3d.Vector3.scale(worldOffset1, cosHit1);
@@ -44,14 +48,18 @@ namespace paper.editor {
             let hit1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
             egret3d.Vector3.subtract(hit1, this._dragOffset, hit1);
             egret3d.Vector3.subtract(hit1, worldPosition, hit1);
-            let worldOffset: egret3d.Vector3;
+            let worldOffset = new egret3d.Vector3();
             worldOffset.applyQuaternion(worldRotation, this.up);
             let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
             egret3d.Vector3.scale(worldOffset, cosHit);
             position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
 
+            let parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix()
+            parentMatrix = parentMatrix.inverse()
+            parentMatrix.transformNormal(position)
+
             egret3d.Vector3.copy(position, this._ctrlPos);
-            this.editorModel.setTransformProperty("position", position, selectedGameObjs[0].transform);
+            this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
 
         }
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any) {
@@ -85,7 +93,7 @@ namespace paper.editor {
                 let lastPos = obj.transform.getPosition();
                 egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
 
-                this.editorModel.setTransformProperty("position", this._newPosition, obj.transform);
+                this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
             }
             egret3d.Vector3.copy(hit, this._dragOffset);
 

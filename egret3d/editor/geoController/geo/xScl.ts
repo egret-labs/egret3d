@@ -26,7 +26,7 @@ namespace paper.editor {
             let worldPosition = selectedGameObjs[0].transform.getPosition();
             let hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(hit, worldPosition, this._delta);
-            let worldOffset: egret3d.Vector3;
+            let worldOffset = new egret3d.Vector3;
             let scale: egret3d.Vector3;
             worldOffset.applyQuaternion(worldRotation, this.right);
             let cosHit = egret3d.Vector3.dot(hit, worldOffset);
@@ -59,7 +59,7 @@ namespace paper.editor {
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any) {
             let hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-            let worldOffset: egret3d.Vector3;
+            let worldOffset = new egret3d.Vector3;
             let scale: egret3d.Vector3;
             let len = selectedGameObjs.length
             worldOffset.applyQuaternion(this._ctrlRot, this.right);
