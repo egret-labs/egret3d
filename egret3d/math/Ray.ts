@@ -31,39 +31,33 @@ namespace egret3d {
         6, 2, 7, 3,
         0, 4, 1, 5
     ];
-
     /**
      * 射线
      */
     export class Ray {
-
         /**
          * 射线起始点
          */
-        public origin: Vector3;
-
+        public readonly origin: Vector3 = Vector3.create();
         /**
          * 射线的方向向量
          */
-        public direction: Vector3;
-
+        public readonly direction: Vector3 = Vector3.create();
         /**
          * 构建一条射线
          * @param origin 射线起点
          * @param dir 射线方向
          */
-        constructor(origin: Vector3, direction: Vector3) {
-            this.origin = Vector3.copy(origin, new Vector3());
-            this.direction = Vector3.copy(direction, new Vector3());
+        public constructor(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.RIGHT) {
+            this.origin.copy(origin);
+            this.direction.copy(direction);
         }
-
         /**
          * 与aabb碰撞相交检测
          */
         public intersectAABB(aabb: AABB): boolean {
             return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
         }
-
         /**
          * 与transform表示的plane碰撞相交检测，主要用于2d检测
          * @param transform transform实例
@@ -221,54 +215,70 @@ namespace egret3d {
             return true;
         }
 
-
         /**
          * 与三角形相交检测
          */
-        public intersectsTriangle(vertex0: Vector3, vertex1: Vector3, vertex2: Vector3): PickInfo {
-            let _edge1 = helpVec3_1;
-            let _edge2 = helpVec3_2;
-            let _pvec = helpVec3_3;
-            let _tvec = helpVec3_4;
-            let _qvec = helpVec3_5;
+        public intersectTriangle(p1: Vector3, p2: Vector3, p3: Vector3, backfaceCulling: boolean = false): PickInfo | null {
+            // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
+            const diff = helpVector3A;
+            const edge1 = helpVector3B;
+            const edge2 = helpVector3C;
+            const normal = helpVector3D;
 
-            Vector3.subtract(vertex1, vertex0, _edge1);
-            Vector3.subtract(vertex2, vertex0, _edge2);
-            Vector3.cross(this.direction, _edge2, _pvec);
-            let det = Vector3.dot(_edge1, _pvec);
+            edge1.subtract(p2, p1);
+            edge2.subtract(p3, p1);
+            normal.cross(edge1, edge2);
 
-            if (det === 0) {
+            // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
+            // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
+            //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
+            //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
+            //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
+            let DdN = this.direction.dot(normal);
+            let sign = 1.0;
+
+            if (DdN > 0.0) {
+                if (backfaceCulling) return null;
+            }
+            else if (DdN < 0.0) {
+                sign = -1.0;
+                DdN = -DdN;
+            }
+            else {
                 return null;
             }
 
-            let invdet = 1 / det;
-
-            Vector3.subtract(this.origin, vertex0, _tvec);
-
-            let bu = Vector3.dot(_tvec, _pvec) * invdet;
-
-            if (bu < 0 || bu > 1.0) {
+            diff.subtract(this.origin, p1);
+            const DdQxE2 = sign * this.direction.dot(edge2.cross(diff, edge2));
+            // b1 < 0, no intersection
+            if (DdQxE2 < 0.0) {
                 return null;
             }
 
-            Vector3.cross(_tvec, _edge1, _qvec);
-
-            let bv = Vector3.dot(this.direction, _qvec) * invdet;
-
-            if (bv < 0 || bu + bv > 1.0) {
+            const DdE1xQ = sign * this.direction.dot(edge1.cross(diff));
+            // b2 < 0, no intersection
+            if (DdE1xQ < 0.0) {
+                return null;
+            }
+            // b1+b2 > 1, no intersection
+            if (DdQxE2 + DdE1xQ > DdN) {
+                return null;
+            }
+            // Line intersects triangle, check if ray does.
+            const QdN = - sign * diff.dot(normal);
+            // t < 0, no intersection
+            if (QdN < 0) {
                 return null;
             }
 
             const pickInfo = new PickInfo();
-            pickInfo.distance = Vector3.dot(_edge2, _qvec) * invdet;
-            pickInfo.textureCoordA.x = bu;
-            pickInfo.textureCoordA.y = bv;
+            pickInfo.distance = QdN / DdN;
+            pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
+            pickInfo.textureCoordA.x = DdQxE2;
+            pickInfo.textureCoordA.y = DdE1xQ;
 
             return pickInfo;
         }
-
-
-
 
         /**
          * 获取射线拾取到的最近物体。

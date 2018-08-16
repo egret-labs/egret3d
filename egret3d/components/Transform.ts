@@ -523,7 +523,7 @@ namespace egret3d {
             //     this._dirtify(true, true);
             // }
 
-            if (!this._dirtyWorld) {
+            if (!this._dirtyLocal) {
                 this._dirtify(true);
             }
         }
@@ -579,7 +579,7 @@ namespace egret3d {
             //     this._dirtify(true, false);
             // }
 
-            if (!this._dirtyWorld) {
+            if (!this._dirtyLocal) {
                 this._dirtify(true);
             }
         }
@@ -637,7 +637,7 @@ namespace egret3d {
             //     this._dirtify(true, false);
             // }
 
-            if (!this._dirtyWorld) {
+            if (!this._dirtyLocal) {
                 this._dirtify(true);
             }
         }
@@ -693,7 +693,7 @@ namespace egret3d {
             //     this._dirtify(true, false);
             // }
 
-            if (!this._dirtyWorld) {
+            if (!this._dirtyLocal) {
                 this._dirtify(true);
             }
         }

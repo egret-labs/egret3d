@@ -7,7 +7,18 @@ namespace egret3d {
      * 
      */
     export const DEG_RAD: number = Math.PI / 180.0;
+    /**
+     * 
+     */
     export const EPSILON = 2.220446049250313e-16; // Number.EPSILON
+
+    export function sign(value: number): number {
+        if (value === 0 || value !== value) {
+            return value;
+        }
+
+        return value > 0 ? 1 : -1;
+    }
 
     export function floatClamp(v: number, min: number = 0.0, max: number = 1.0) {
         if (v < min)
@@ -16,15 +27,6 @@ namespace egret3d {
             return max;
         else
             return v;
-    }
-
-    export function sign(value: number): number {
-        value = +value; // convert to a number
-
-        if (value === 0 || isNaN(value))
-            return value;
-
-        return value > 0 ? 1 : -1;
     }
 
     export function numberLerp(fromV: number, toV: number, v: number) {

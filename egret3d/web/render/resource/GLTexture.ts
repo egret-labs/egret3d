@@ -194,10 +194,6 @@ namespace egret3d {
     }
 
     export abstract class RenderTarget implements IRenderTarget {
-        static useNull() {
-            const webgl = WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-        }
         /**
          * @internal
          */

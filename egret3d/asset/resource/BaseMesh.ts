@@ -1,12 +1,7 @@
 namespace egret3d {
-    const helpVec3_1: Vector3 = new Vector3();
-    const helpVec3_2: Vector3 = new Vector3();
-    const helpVec3_3: Vector3 = new Vector3();
-    const helpVec3_4: Vector3 = new Vector3();
-    const helpVec3_5: Vector3 = new Vector3();
-    const helpVec3_6: Vector3 = new Vector3();
-    const helpVec3_7: Vector3 = new Vector3();
-    // const helpVec3_8: Vector3 = new Vector3();
+    const _helpVector3A = Vector3.create();
+    const _helpVector3B = Vector3.create();
+    const _helpVector3C = Vector3.create();
 
     const _attributes: gltf.MeshAttributeType[] = [
         gltf.MeshAttributeType.POSITION,
@@ -124,64 +119,74 @@ namespace egret3d {
          */
         public intersects(ray: Ray, matrix: Matrix) {
             let pickInfo: PickInfo | null = null; // TODO
-            let subMeshIndex = 0;
 
             for (const primitive of this._glTFMesh!.primitives) {
-                if (
-                    primitive.mode === gltf.MeshPrimitiveMode.Lines ||
-                    primitive.mode === gltf.MeshPrimitiveMode.LineLoop ||
-                    primitive.mode === gltf.MeshPrimitiveMode.LineStrip
-                ) {
-                }
-                else {
-                    if (primitive.indices === undefined) {
-                        // 不使用index TODO
-                    }
-                    else { // TODO primitive mode
-                        const indices = this.getIndices(subMeshIndex);
-                        if (indices) {
-                            const t0 = helpVec3_1;
-                            const t1 = helpVec3_2;
-                            const t2 = helpVec3_3;
-                            const vertices = this.getVertices(subMeshIndex);
+                switch (primitive.mode) { // TODO
+                    case gltf.MeshPrimitiveMode.Points:
+                        break;
 
-                            for (let i = 0; i < indices.length; i += 3) {
-                                const p0 = helpVec3_4;
-                                const p1 = helpVec3_5;
-                                const p2 = helpVec3_6;
-                                let index = indices[i] * 3;
-                                Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p0);
-                                index = indices[i + 1] * 3;
-                                Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p1);
-                                index = indices[i + 2] * 3;
-                                Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p2);
+                    case gltf.MeshPrimitiveMode.Lines:
+                        break;
 
-                                matrix.transformVector3(p0);
-                                matrix.transformVector3(p1);
-                                matrix.transformVector3(p2);
+                    case gltf.MeshPrimitiveMode.LineLoop:
+                        break;
 
-                                const result = ray.intersectsTriangle(t0, t1, t2);
-                                if (result) {
-                                    if (result.distance < 0) {
-                                        continue;
-                                    }
+                    case gltf.MeshPrimitiveMode.LineStrip:
+                        break;
 
-                                    if (!pickInfo || pickInfo.distance > result.distance) {
-                                        pickInfo = result;
-                                        pickInfo.triangleIndex = i / 3;
-                                        pickInfo.subMeshIndex = i;
-                                        const tdir = helpVec3_7;
-                                        Vector3.copy(ray.direction, tdir);
-                                        Vector3.scale(tdir, result.distance);
-                                        Vector3.add(ray.origin, tdir, pickInfo.position);
+                    case gltf.MeshPrimitiveMode.TrianglesFan:
+                        break;
+
+                    case gltf.MeshPrimitiveMode.TrianglesStrip:
+                        break;
+
+                    case gltf.MeshPrimitiveMode.Triangles:
+                    default: {
+                        if (primitive.indices === undefined) {
+                            // TODO
+                        }
+                        else {
+                            let subMeshIndex = 0;
+                            let vertexIndex = 0;
+                            const p0 = _helpVector3A;
+                            const p1 = _helpVector3B;
+                            const p2 = _helpVector3C;
+                            const vertices = this.getVertices();
+
+                            for (const _primitive of this._glTFMesh.primitives) {
+                                const indices = this.getIndices(subMeshIndex++);
+
+                                for (let i = 0, l = indices.length; i < l; i += 3) {
+                                    vertexIndex = indices[i] * 3;
+                                    p0.set(vertices[vertexIndex++], vertices[vertexIndex++], vertices[vertexIndex++]);
+                                    vertexIndex = indices[i + 1] * 3;
+                                    p1.set(vertices[vertexIndex++], vertices[vertexIndex++], vertices[vertexIndex++]);
+                                    vertexIndex = indices[i + 2] * 3;
+                                    p2.set(vertices[vertexIndex++], vertices[vertexIndex++], vertices[vertexIndex++]);
+
+                                    p0.applyMatrix(matrix);
+                                    p1.applyMatrix(matrix);
+                                    p2.applyMatrix(matrix);
+
+                                    const result = ray.intersectTriangle(p0, p1, p2);
+                                    if (result) {
+                                        if (result.distance < 0) {
+                                            continue;
+                                        }
+
+                                        if (!pickInfo || pickInfo.distance > result.distance) {
+                                            pickInfo = result;
+                                            pickInfo.subMeshIndex = subMeshIndex;
+                                            pickInfo.triangleIndex = i / 3; // TODO
+                                        }
                                     }
                                 }
                             }
                         }
+
+                        break;
                     }
                 }
-
-                subMeshIndex++;
             }
 
             return pickInfo;

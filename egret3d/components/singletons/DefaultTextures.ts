@@ -4,15 +4,15 @@ namespace egret3d {
         /**
          * 
          */
-        public static WHITE: GLTexture;
+        public static WHITE: Texture;
         /**
          * 
          */
-        public static GRAY: GLTexture;
+        public static GRAY: Texture;
         /**
          * 
          */
-        public static GRID: GLTexture;
+        public static GRID: Texture;
 
         public initialize() {
             {
