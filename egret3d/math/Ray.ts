@@ -266,63 +266,103 @@ namespace egret3d {
          * 与三角形相交检测
          */
         public intersectTriangle(p1: Vector3, p2: Vector3, p3: Vector3, backfaceCulling: boolean = false): PickInfo | null {
-            // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
-            const diff = helpVector3A;
-            const edge1 = helpVector3B;
-            const edge2 = helpVector3C;
-            const normal = helpVector3D;
+            // // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
+            // const edge1 = helpVector3A;
+            // const edge2 = helpVector3B;
+            // const diff = helpVector3C;
+            // const normal = helpVector3D;
+
+            // edge1.subtract(p2, p1);
+            // edge2.subtract(p3, p1);
+            // normal.cross(edge1, edge2);
+
+            // // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
+            // // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
+            // //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
+            // //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
+            // //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
+            // let DdN = this.direction.dot(normal);
+            // let sign = 1.0;
+
+            // if (DdN > 0.0) {
+            //     if (backfaceCulling) return null;
+            // }
+            // else if (DdN < 0.0) {
+            //     sign = -1.0;
+            //     DdN = -DdN;
+            // }
+            // else {
+            //     return null;
+            // }
+
+            // diff.subtract(this.origin, p1);
+            // const DdQxE2 = sign * this.direction.dot(edge2.cross(diff, edge2));
+            // // b1 < 0, no intersection
+            // if (DdQxE2 < 0.0) {
+            //     return null;
+            // }
+
+            // const DdE1xQ = sign * this.direction.dot(edge1.cross(diff));
+            // // b2 < 0, no intersection
+            // if (DdE1xQ < 0.0) {
+            //     return null;
+            // }
+            // // b1+b2 > 1, no intersection
+            // if (DdQxE2 + DdE1xQ > DdN) {
+            //     return null;
+            // }
+            // // Line intersects triangle, check if ray does.
+            // const QdN = - sign * diff.dot(normal);
+            // // t < 0, no intersection
+            // if (QdN < 0) {
+            //     return null;
+            // }
+
+            // const pickInfo = new PickInfo();
+            // pickInfo.distance = QdN / DdN;
+            // pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
+            // pickInfo.textureCoordA.x = DdQxE2;
+            // pickInfo.textureCoordA.y = DdE1xQ;
+
+            // return pickInfo;
+            // TODO
+            const edge1 = helpVector3A;
+            const edge2 = helpVector3B;
+            const pvec = helpVector3C;
+            const tvec = helpVector3D;
+            const qvec = helpVector3E;
 
             edge1.subtract(p2, p1);
             edge2.subtract(p3, p1);
-            normal.cross(edge1, edge2);
+            pvec.cross(this.direction, edge2);
 
-            // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
-            // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
-            //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
-            //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
-            //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
-            let DdN = this.direction.dot(normal);
-            let sign = 1.0;
-
-            if (DdN > 0.0) {
-                if (backfaceCulling) return null;
-            }
-            else if (DdN < 0.0) {
-                sign = -1.0;
-                DdN = -DdN;
-            }
-            else {
+            const det = pvec.dot(edge1);
+            if (det === 0.0) {
                 return null;
             }
 
-            diff.subtract(this.origin, p1);
-            const DdQxE2 = sign * this.direction.dot(edge2.cross(diff, edge2));
-            // b1 < 0, no intersection
-            if (DdQxE2 < 0.0) {
+            const invdet = 1.0 / det;
+
+            tvec.subtract(this.origin, p1);
+
+            const bu = pvec.dot(tvec) * invdet;
+            if (bu < 0.0 || bu > 1.0) {
                 return null;
             }
 
-            const DdE1xQ = sign * this.direction.dot(edge1.cross(diff));
-            // b2 < 0, no intersection
-            if (DdE1xQ < 0.0) {
-                return null;
-            }
-            // b1+b2 > 1, no intersection
-            if (DdQxE2 + DdE1xQ > DdN) {
-                return null;
-            }
-            // Line intersects triangle, check if ray does.
-            const QdN = - sign * diff.dot(normal);
-            // t < 0, no intersection
-            if (QdN < 0) {
+            qvec.cross(tvec, edge1);
+
+            const bv = qvec.dot(this.direction) * invdet;
+
+            if (bv < 0.0 || bu + bv > 1.0) {
                 return null;
             }
 
             const pickInfo = new PickInfo();
-            pickInfo.distance = QdN / DdN;
+            pickInfo.distance = qvec.dot(edge2) * invdet;
             pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
-            pickInfo.textureCoordA.x = DdQxE2;
-            pickInfo.textureCoordA.y = DdE1xQ;
+            pickInfo.textureCoordA.x = bu;
+            pickInfo.textureCoordA.y = bv;
 
             return pickInfo;
         }
