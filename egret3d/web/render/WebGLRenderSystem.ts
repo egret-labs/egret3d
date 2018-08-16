@@ -482,7 +482,6 @@ namespace egret3d {
                 paper.editor.Gizmo.DrawLights();
                 paper.editor.Gizmo.DrawCameras();
 
-
                 // for (const key in this._cacheStateEnable) {
                 //     delete this._cacheStateEnable[key];
                 // }
