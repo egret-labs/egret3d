@@ -63,6 +63,7 @@ namespace paper.editor {
                                 // 对GameObject的点选
                                 if (tapDelta < 200) {
                                     this.selectedGameObjects = [picked];
+                                    // this.setStroke(picked)
                                     this.editorModel.selectGameObject(this.selectedGameObjects);
                                 }
                             }
@@ -85,6 +86,10 @@ namespace paper.editor {
 
         //TODO,描边
         private setStroke(picked: GameObject) {
+            let render = picked.getComponent(egret3d.MeshRenderer)
+            let mat = new egret3d.Material(egret3d.DefaultShaders.DIFFUSE_TINT_COLOR)
+            render.materials = [mat]
+            console.log(render.materials)
         }
     }
 }

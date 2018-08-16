@@ -136,6 +136,7 @@
         "egret3d/editor/geoController/GeoController.ts",
         "egret3d/editor/geoController/BaseGeo.ts",
         "egret3d/editor/geoController/geo/xAxis.ts",
+        "egret3d/editor/geoController/geo/xyAxis.ts",
         "egret3d/editor/geoController/geo/yAxis.ts",
         "egret3d/editor/geoController/geo/zAxis.ts",
         "egret3d/editor/geoController/geo/xRot.ts",

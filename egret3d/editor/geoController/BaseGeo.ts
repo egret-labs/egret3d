@@ -77,7 +77,9 @@ namespace paper.editor {
                     break;
                 case 2:
                     mesh.mesh = egret3d.DefaultMeshes.CUBE;
-                    mesh.mesh.addSubMesh(12, 0, gltf.MeshPrimitiveMode.Lines)
+                    break;
+                case 3:
+                    mesh.mesh = egret3d.DefaultMeshes.PLANE;
                     break;
             }
             let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
@@ -133,7 +135,8 @@ namespace paper.editor {
                         let x = new xAxis
                         let y = new yAxis
                         let z = new zAxis
-                        this.geos.push(x, y, z)
+                        let xy = new xyAxis
+                        this.geos.push(x, y, z, xy)
                     }
                     break;
                 case "rotation":
