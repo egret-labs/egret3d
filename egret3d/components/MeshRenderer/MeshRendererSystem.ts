@@ -41,7 +41,6 @@ namespace egret3d {
             }
 
             filter.mesh._createBuffer();
-            this._drawCalls.removeDrawCalls(renderer);
             this._drawCalls.renderers.push(renderer);
             //
             let subMeshIndex = 0;

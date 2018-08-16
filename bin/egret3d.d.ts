@@ -7947,6 +7947,7 @@ declare namespace paper.editor {
         onUpdate(delta: number): any;
         OnEnable(): void;
         OnDisable(): void;
+        multiply(q1: egret3d.Quaternion, q2: egret3d.Quaternion, out: egret3d.Quaternion): egret3d.Quaternion;
         private inputUpdate(delta);
         private _lookAtPiont;
         private _dragPlanePoint;

@@ -434,6 +434,7 @@ namespace egret3d.particle {
             const renderer = gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             //
             this._onUpdateBatchMesh(component);
+            this._drawCalls.removeDrawCalls(renderer);
             if (!renderer.batchMesh || !renderer.batchMaterial) {
                 return;
             }
@@ -443,9 +444,8 @@ namespace egret3d.particle {
             }
 
             renderer.batchMesh._createBuffer();
-            this._drawCalls.removeDrawCalls(renderer);
             this._drawCalls.renderers.push(renderer);
-
+            //
             let subMeshIndex = 0;
             for (const _primitive of renderer.batchMesh.glTFMesh.primitives) {
                 const drawCall: DrawCall = {

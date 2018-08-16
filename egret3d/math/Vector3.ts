@@ -295,16 +295,16 @@ namespace egret3d {
             return this;
         }
 
-        public lerp(v: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
+        public lerp(t: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;
             }
 
-            const p = 1.0 - v;
-            this.x = valueA.x * p + valueB.x * v;
-            this.y = valueA.y * p + valueB.y * v;
-            this.z = valueA.z * p + valueB.z * v;
+            const p = 1.0 - t;
+            this.x = valueA.x * p + valueB.x * t;
+            this.y = valueA.y * p + valueB.y * t;
+            this.z = valueA.z * p + valueB.z * t;
 
             return this;
         }

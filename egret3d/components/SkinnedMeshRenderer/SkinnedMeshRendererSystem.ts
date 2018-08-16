@@ -20,12 +20,13 @@ namespace egret3d {
             }
 
             const renderer = gameObject.renderer as SkinnedMeshRenderer;
+            this._drawCalls.removeDrawCalls(renderer);
+
             if (!renderer.mesh || renderer.materials.length === 0) {
                 return;
             }
 
             renderer.mesh._createBuffer();
-            this._drawCalls.removeDrawCalls(renderer);
             this._drawCalls.renderers.push(renderer);
             //
             let subMeshIndex = 0;

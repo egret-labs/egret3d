@@ -291,7 +291,6 @@ namespace egret3d {
             return this;
         }
 
-
         public toEuler(value: Vector3, order: EulerOrder = EulerOrder.XYZ) {
             return _helpMatrix.fromRotation(this).toEuler(value, order);
         }

@@ -2,9 +2,9 @@ namespace egret3d {
     //最大允许合并的顶点数，超过就是下一批次
     export const MAX_VERTEX_COUNT_PER_BUFFER: number = 50000;
     //
-    const helpVec3_1: Vector3 = new Vector3();
-    const helpVec3_2: Vector3 = new Vector3();
-    const helpInverseMatrix: Matrix = new Matrix();
+    const helpVec3_1 = Vector3.create();
+    const helpVec3_2 = Vector3.create();
+    const helpInverseMatrix = Matrix.create();
     //缓存已经校验过的对象，用于过滤
     const cacheInstances: string[] = [];
 
@@ -330,9 +330,9 @@ namespace egret3d {
         let indicesCount = 0;
         for (let i = 0; i < tempIndexBuffers.length; i++) {
             const subLen = tempIndexBuffers[i].length;
-                //第一个submesh在构造函数中已经添加，需要手动添加后续的
-                combineMesh.addSubMesh(indicesCount, subLen, i);
-            
+            //第一个submesh在构造函数中已经添加，需要手动添加后续的
+            combineMesh.addSubMesh(indicesCount, subLen, i);
+
             indicesCount += subLen;
         }
 

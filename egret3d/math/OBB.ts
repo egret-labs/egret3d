@@ -15,8 +15,7 @@ namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    export class OBB extends paper.BaseObject {
-
+    export class OBB {
         /**
          * center
          * @version paper 1.0
@@ -29,7 +28,6 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        @paper.serializedField
         public readonly center: Vector3 = new Vector3();
 
         /**
@@ -44,7 +42,6 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        @paper.serializedField
         public readonly size: Vector3 = new Vector3();
 
         /**

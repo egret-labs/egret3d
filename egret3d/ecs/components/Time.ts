@@ -21,7 +21,7 @@ namespace paper {
         public initialize() {
             super.initialize();
 
-            this._lastTime = this._beginTime = Date.now() * 0.001;
+            this._beginTime = Date.now() * 0.001;
         }
         /**
          * @internal

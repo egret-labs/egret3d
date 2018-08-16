@@ -370,7 +370,7 @@ namespace egret3d {
                         mat11.transformVector3(p1, t1);
                         mat22.transformVector3(p2, t2);
 
-                        const result = ray.intersectsTriangle(t0, t1, t2);
+                        const result = ray.intersectTriangle(t0, t1, t2);
                         if (result) {
                             if (result.distance < 0) continue;
                             if (!pickinfo || pickinfo.distance > result.distance) {

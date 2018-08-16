@@ -111,9 +111,6 @@ namespace RES.processor {
                 paper.Asset.register(glb);
                 return glb;
             })
-
-
-
         },
 
         onRemoveStart(host, resource) {
