@@ -159,18 +159,16 @@ namespace paper.editor {
                     const serializeData = value.serialize(value);
                     return { className, serializeData };
                 case editor.EditType.SHADER:
-                    return value.url;
+                    return value.name;
                 case editor.EditType.LIST:
                     return value;
                 case editor.EditType.MATERIAL_ARRAY:
                     const data = value.map((item) => {
-                        let url = item.url.substr(RES.config.config.resourceRoot.length, item.url.length);
-                        return { name: url, url: url };
+                        return { name: item.name, url: item.name };
                     })
                     return data;
                 case editor.EditType.MESH:
-                    let url = value.glTFAsset.url;
-                    url = url.substr(RES.config.config.resourceRoot.length, url.length);
+                    let url = value.name;
                     return url;
                 case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
@@ -219,8 +217,7 @@ namespace paper.editor {
                     return materials;
                 case editor.EditType.MESH:
                     let meshAsset = await RES.getResAsync(serializeData);
-                    let mesh: egret3d.Mesh = new egret3d.Mesh(meshAsset, 0); // TODO
-                    return mesh;
+                    return meshAsset;
                 case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
                 case editor.EditType.TRANSFROM:
