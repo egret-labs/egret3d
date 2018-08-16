@@ -50,7 +50,7 @@ namespace paper.editor {
             }
             this.geoChangeByCamera();
             this.inputUpdate();
-            this.mouseRayCastUpdate();
+            // this.mouseRayCastUpdate();
             if (this._isEditing) {
                 (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
             }
@@ -70,9 +70,12 @@ namespace paper.editor {
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.wasPressed_local(ray, this.selectedGameObjs)
             }
-            if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+            else if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.isPressed_local(ray, this.selectedGameObjs)
+            }
+            else {
+                this.mouseRayCastUpdate();
             }
 
         }
@@ -84,31 +87,33 @@ namespace paper.editor {
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.wasPressed_world(ray, this.selectedGameObjs)
             }
-            if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+            else if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.isPressed_world(ray, this.selectedGameObjs)
+            }
+            else {
+                this.mouseRayCastUpdate();
             }
 
         }
 
         private _oldResult: BaseGeo
         private mouseRayCastUpdate() {
+            //变色逻辑
             let camera = this._cameraObject.getComponent(egret3d.Camera);
             let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-
-            //变色逻辑
             const result = this.mainGeo.checkIntersect(ray)
             if (this._oldResult != result) {
                 if (this._oldResult) {
-                    this._oldResult.changeColor("origin")
+                    if (this._oldResult.geo) {
+                        this._oldResult.changeColor("origin")
+                    }
                 }
                 this._oldResult = result
                 if (result) {
                     result.changeColor("yellow")
                 }
             }
-
-            //控制杆移动逻辑初始化
         }
 
         private _oldTransform: any//TODO
@@ -180,13 +185,10 @@ namespace paper.editor {
             this.geoCtrlType = type;
 
             this.editorModel.changeEditType(type)
+            if (type == 'scale') {
+                this.mainGeo.geo.transform.setRotation(this.selectedGameObjs[0].transform.getRotation())
+            }
             this.mainGeo.changeType(type)
-            // switch (type) {
-            //     case 'position':
-            //         this.mainGeo = new positionCtrlGeo();
-            //         break;
-
-            // }
         }
         private addEventListener() {
             this.editorModel.addEventListener(EditorModelEvent.SELECT_GAMEOBJECTS, e => this.selectGameObjects(e.data), this);

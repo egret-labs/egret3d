@@ -143,6 +143,7 @@ namespace paper.editor {
                 this._mouseDown_r = false;
             }
 
+
             //方向
             if (mouse.isPressed(2) && !keyboard.isPressed('ALT')) {
                 if (!this._mouseDown_r) {
@@ -162,11 +163,13 @@ namespace paper.editor {
                     this.gameObject.transform.getRight(this._helpVec3);
                     egret3d.Vector3.normalize(this._helpVec3);
                     this._helpQuat.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX);
-                    rot.multiply(this._helpQuat);
+                    rot.multiply(this._helpQuat, rot)
+                    rot.normalize()
 
                     egret3d.Vector3.set(0, 1, 0, this._helpVec3);
                     this._helpQuat.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY);
-                    rot.multiply(this._helpQuat);
+                    rot.multiply(this._helpQuat, rot)
+                    rot.normalize()
 
                     this.gameObject.transform.setRotation(rot);
 
@@ -205,12 +208,15 @@ namespace paper.editor {
                     egret3d.Vector3.normalize(this._helpVec3);
                     this._helpQuat.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX);
                     pos.applyQuaternion(this._helpQuat, pos);
-                    rot.multiply(this._helpQuat);
+                    rot.multiply(this._helpQuat, rot)
+                    rot.normalize()
 
                     egret3d.Vector3.set(0, 1, 0, this._helpVec3);
                     this._helpQuat.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY);
                     pos.applyQuaternion(this._helpQuat);
-                    rot.multiply(this._helpQuat);
+                    rot.multiply(this._helpQuat, rot)
+                    rot.normalize()
+
 
                     egret3d.Vector3.add(pos, this._lookAtPiont, pos);
                     this.gameObject.transform.setRotation(rot);

@@ -56,6 +56,7 @@ namespace paper.editor {
                 obj.activeSelf = true;
             });
         }
+        private static currentEditInfo:{url:string,type:string};
         /**
          * 编辑场景
          * @param sceneUrl 场景资源URL
@@ -71,6 +72,7 @@ namespace paper.editor {
                 let sceneEditorModel = new EditorModel();
                 sceneEditorModel.init(scene, 'scene', sceneUrl);
                 this.setActiveModel(sceneEditorModel);
+                this.currentEditInfo={url:sceneUrl,type:'scene'}
             }
         }
         /**
@@ -102,6 +104,25 @@ namespace paper.editor {
                 }
                 clearPrefabInfo(prefabInstance);
                 this.setActiveModel(prefabEditorModel);
+                this.currentEditInfo={url:prefabUrl,type:'prefab'}
+            }
+        }
+        /**
+         * 刷新
+         */
+        public static async refresh(){
+            if(this.activeEditorModel){
+                this.activeEditorModel.scene.destroy();
+            }
+            //重置单例子
+            RES['instance']=null;
+            //初始化资源
+            await RES.loadConfig("resource/default.res.json", "resource/");
+            if(this.currentEditInfo){
+                switch(this.currentEditInfo.type){
+                    case 'scene':this.editScene(this.currentEditInfo.url);break;
+                    case 'prefab':this.editPrefab(this.currentEditInfo.url);break;
+                }
             }
         }
         /**

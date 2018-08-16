@@ -1,5 +1,5 @@
 namespace paper.editor{
-    type CreatePrefabStateData = {prefab:any,cacheSerializeData?:any,cachePrefabUUid?:string}
+    type CreatePrefabStateData = {prefab:paper.Prefab,cacheSerializeData?:any,cachePrefabUUid?:string}
 
     export class CreatePrefabState extends BaseState {
         public static toString(): string {
@@ -25,10 +25,9 @@ namespace paper.editor{
                 let deleteUUid: string = this.stateData.cachePrefabUUid;
                 if (deleteUUid) {
                     let gameObj = this.editorModel.getGameObjectByUUid(deleteUUid);
-                    gameObj.destroy();
                     if (gameObj) {
+                        gameObj.destroy();
                         this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS);
-                        this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,[]);
                     }
                 }
                 return true;
@@ -40,12 +39,11 @@ namespace paper.editor{
             if (super.redo()) {
                 const prefab = this.stateData.prefab;
                 if (prefab) {
-                    let instance:GameObject = Prefab.create(this.stateData.prefab.prefab.name);
+                    let instance:GameObject = this.stateData.prefab.createInstance();
 
                     if (instance) {
-                        this.stateData.cachePrefabUUid = instance.uuid
+                        this.stateData.cachePrefabUUid = instance.uuid;
                         this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS);
-                        this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,[this.data.cachePrefabUUid]);
                     }
                 }
 

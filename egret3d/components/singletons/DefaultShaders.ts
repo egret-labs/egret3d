@@ -441,7 +441,7 @@ namespace egret3d {
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
                 this._setDepth(technique, false, false);
-                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW);
                 this._setBlend(technique, BlendModeEnum.Blend);
 
                 DefaultShaders.GIZMOS_COLOR = shader;
