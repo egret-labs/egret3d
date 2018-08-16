@@ -549,7 +549,7 @@ namespace paper {
         /**
          * 针对同级的组件发送消息
          * @param methodName 
-         * @param parameter
+         * @param parameter``
          */
         public sendMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {
