@@ -51,7 +51,8 @@ namespace paper.editor{
                     if (this.stateData.serializeData) {
                         let deserializer=new Deserializer();
                         addComponent = deserializer.deserialize(this.data.serializeData, true);
-                        this.editorModel.addComponentToGameObject(gameObject, addComponent);
+                        //todo:
+                        // this.editorModel.addComponentToGameObject(gameObject, addComponent);
                     } else {
                         let compClz = egret.getDefinitionByName(compClzName);
                         addComponent = gameObject.addComponent(compClz);

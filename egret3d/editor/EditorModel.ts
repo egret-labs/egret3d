@@ -128,15 +128,6 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createRemoveComponentFromPrefab(stateData: any) {
-            const data = {
-                ...stateData
-            }
-
-            const state = RemovePrefabComponentState.create(data);
-            this.addState(state);
-        }
-
         public createAddComponentToPrefab(serializeData: any, gameObjIds: string[]) {
             // const state = AddPrefabComponentState.create(serializeData, gameObjIds);
             // this.addState(state);
@@ -255,20 +246,6 @@ namespace paper.editor {
             }
             let state = AddComponentState.create(gameObjectUUid, compClzName);
             this.addState(state);
-        }
-
-        /**
-        *  TODO:因gameobject未提供通过组件实例添加组件的方法，暂时这样处理
-        * @param gameObject 
-        * @param component 
-        */
-        public addComponentToGameObject(gameObject: GameObject, component: BaseComponent) {
-            let components = gameObject.components;
-            (components as any).push(component);
-            component.initialize();
-            if (component.isActiveAndEnabled) {
-                paper.EventPool.dispatchEvent(paper.EventPool.EventType.Enabled, component);
-            }
         }
 
         public removeComponent(gameObjectUUid: string, componentUUid: string): void {
@@ -698,7 +675,7 @@ namespace paper.editor {
 
             //destory asset,getRes
 
-            //update refrence
+            //update refrence (paper.assets[])
 
             this._cacheIds.length = 0;
         }
