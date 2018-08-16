@@ -3125,30 +3125,20 @@ var egret3d;
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             var matrix = this.matrix;
             matrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);
-            // matrix.set(
-            //     0.5, 0.0, 0.0, 0.0,
-            //     0.0, 0.5, 0.0, 0.0,
-            //     0.0, 0.0, 0.5, 0.0,
-            //     0.5, 0.5, 0.5, 1.0
-            // );
-            // camera.calcProjectMatrix(512 / 512, helpMatrixA);
+            camera.calcProjectMatrix(512 / 512, egret3d.helpMatrixA);
             // camera.context.matrix_p;
-            // helpMatrixB.copy(this.gameObject.transform.getWorldMatrix()).inverse();
-            // Matrix.multiply(matrix, camera.context.matrix_p, matrix);
-            // Matrix.multiply(matrix, helpMatrixB, matrix);
-            var viewMatrix = camera.calcViewMatrix(egret3d.helpMatrixA);
-            var projectionMatrix = camera.calcProjectMatrix(512 / 512, egret3d.helpMatrixB);
-            egret3d.Matrix.multiply(matrix, projectionMatrix, matrix);
-            egret3d.Matrix.multiply(matrix, viewMatrix, matrix);
+            egret3d.helpMatrixB.copy(this.gameObject.transform.getWorldMatrix()).inverse();
+            egret3d.Matrix.multiply(matrix, egret3d.helpMatrixA, matrix);
+            egret3d.Matrix.multiply(matrix, egret3d.helpMatrixB, matrix);
+            // let viewMatrix = camera.calcViewMatrix(helpMatrixA);
+            // let projectionMatrix = camera.calcProjectMatrix(512 / 512, helpMatrixB);
+            // Matrix.multiply(matrix, projectionMatrix, matrix);
+            // Matrix.multiply(matrix, viewMatrix, matrix);
         };
         /**
          * @internal
          */
         BaseLight.prototype.update = function (camera, faceIndex) {
-            camera.gameObject = this.gameObject; //TODO
-            camera.near = this.shadowCameraNear;
-            camera.far = this.shadowCameraFar;
-            camera.size = this.shadowSize;
             camera.opvalue = 1.0;
             camera.backgroundColor.set(1.0, 1.0, 1.0, 1.0);
             camera.clearOption_Color = true;
