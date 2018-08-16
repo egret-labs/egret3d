@@ -183,15 +183,15 @@ namespace paper.editor {
             }
         }
 
-        public setGameObjectPrefabRootId(gameObj: GameObject, prefabRootId: string) {
+        public setGameObjectPrefabRootId(gameObj: GameObject, rootID: string) {
             if (gameObj.extras!.prefab == undefined) {
-                gameObj.extras!.prefabRootId = prefabRootId;
+                gameObj.extras!.rootID = rootID;
             }
 
             for (let index = 0; index < gameObj.transform.children.length; index++) {
                 const element = gameObj.transform.children[index];
                 const obj: paper.GameObject = element.gameObject;
-                this.setGameObjectPrefabRootId(obj, prefabRootId);
+                this.setGameObjectPrefabRootId(obj, rootID);
             }
         }
 
@@ -199,7 +199,7 @@ namespace paper.editor {
             let objects = paper.Application.sceneManager.activeScene.gameObjects;
             let result: GameObject[] = [];
             for (const obj of objects) {
-                if ((obj.extras && obj.extras.linkedID && obj.extras.linkedID == linkedId) && (obj.extras.prefab || (obj.extras.prefabRootId && obj.extras.prefabRootId != filterApplyRootId)) && obj.uuid != filterApplyRootId) {
+                if ((obj.extras && obj.extras.linkedID && obj.extras.linkedID == linkedId) && (obj.extras.prefab || (obj.extras.rootID && obj.extras.rootID != filterApplyRootId)) && obj.uuid != filterApplyRootId) {
                     result.push(obj);
                 }
             }
@@ -277,7 +277,7 @@ namespace paper.editor {
                                 if (this.firstRedo) {
                                     addObj = new Deserializer().deserialize(obj.serializeData, false);
                                     addObj.parent = instanceGameObject;
-                                    let rootId: string = instanceGameObject.extras!.prefab ? instanceGameObject.uuid : instanceGameObject.extras!.prefabRootId!;
+                                    let rootId: string = instanceGameObject.extras!.prefab ? instanceGameObject.uuid : instanceGameObject.extras!.rootID!;
                                     this.setGameObjectPrefabRootId(addObj, rootId);
                                     this.setLinkedId(addObj, ids.concat());
                                     obj.cacheSerializeData[instanceGameObject.uuid] = [];
