@@ -139,7 +139,7 @@ namespace paper.editor {
         }
 
         public createPrefabState(prefab: any) {
-            const state = CreatePrefabState.create({ prefab });
+            const state = CreatePrefabState.create( prefab );
             this.addState(state);
         }
 

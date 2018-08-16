@@ -24,17 +24,15 @@ namespace paper.editor{
                 let gameObjectUUid = this.stateData.gameObjectUUid;
                 let componentId = this.stateData.cacheComponentId;
                 let gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
+                
                 if (gameObject) {
-                    for (let i: number = 0; i < gameObject.components.length; i++) {
-                        let comp = gameObject.components[i];
-                        if (comp.uuid === componentId) {
-                            gameObject.removeComponent(comp.constructor as any);
-                            break;
-                        }
+                    let component = this.editorModel.getComponentById(gameObject,componentId);
+                    if (component) {
+                        gameObject.removeComponent(component);     
+                        this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);                   
                     }
                 }
 
-                this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);
                 return true;
             }
 
@@ -46,21 +44,19 @@ namespace paper.editor{
                 let gameObjectUUid = this.stateData.gameObjectUUid;
                 let compClzName = this.stateData.compClzName;
                 let gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
+
                 if (gameObject) {
-                    let addComponent;
                     if (this.stateData.serializeData) {
-                        let deserializer=new Deserializer();
-                        addComponent = deserializer.deserialize(this.data.serializeData, true);
-                        //todo:
-                        // this.editorModel.addComponentToGameObject(gameObject, addComponent);
+                        new Deserializer().deserialize(this.data.serializeData, true,false,gameObject);
                     } else {
                         let compClz = egret.getDefinitionByName(compClzName);
-                        addComponent = gameObject.addComponent(compClz);
+                        let addComponent = gameObject.addComponent(compClz);
                         this.stateData.serializeData = serialize(addComponent);
+                        this.stateData.cacheComponentId = addComponent.uuid;
                     }
-                    addComponent && (this.stateData.cacheComponentId = addComponent.uuid);
+
+                    this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                 }
-                this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                 return true;
             }
 
