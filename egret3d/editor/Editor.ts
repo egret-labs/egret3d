@@ -21,6 +21,8 @@ namespace paper.editor {
             createUUID = generateUuid;
             //初始化编辑环境
             this.initEditEnvironment();
+            //允许重新加载
+            RES.FEATURE_FLAG.FIX_DUPLICATE_LOAD=0;
             //初始化资源
             await RES.loadConfig("resource/default.res.json", "resource/");
             //初始化编辑场景
@@ -114,8 +116,6 @@ namespace paper.editor {
             if(this.activeEditorModel){
                 this.activeEditorModel.scene.destroy();
             }
-            //重置单例子
-            RES['instance']=null;
             //初始化资源
             await RES.loadConfig("resource/default.res.json", "resource/");
             if(this.currentEditInfo){
