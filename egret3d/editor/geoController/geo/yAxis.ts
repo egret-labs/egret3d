@@ -16,8 +16,13 @@ namespace paper.editor {
             this.canDrag = true;
             let worldRotation = selectedGameObjs[0].transform.getRotation();
             let worldPosition = selectedGameObjs[0].transform.getPosition();
+
+            let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
+            let normal = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
+            this._dragPlaneNormal.applyQuaternion(worldRotation, normal)
+
             egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-            this._dragPlaneNormal.applyQuaternion(worldRotation, this.forward);
+
             this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
 
@@ -30,7 +35,7 @@ namespace paper.editor {
             egret3d.Vector3.subtract(hit, this._dragOffset, hit);
             egret3d.Vector3.subtract(hit, worldPosition, hit);
             let worldOffset = new egret3d.Vector3;
-            this.helpVec3_1.applyQuaternion(worldRotation, this.up);
+            worldOffset.applyQuaternion(worldRotation, this.up);
             let cosHit = egret3d.Vector3.dot(hit, worldOffset);
             egret3d.Vector3.scale(worldOffset, cosHit);
             let position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
@@ -53,7 +58,11 @@ namespace paper.editor {
             ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
             egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
             egret3d.Vector3.copy(this.forward, this._dragPlaneNormal);
-            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+
+            let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
+            let normal = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
+
+            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
 
         }
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any) {

@@ -20,11 +20,15 @@ namespace paper.editor {
             let worldPosition = selectedGameObjs[0].transform.getPosition();
 
             egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-            this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
+
+            let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
+            let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
+            this._dragPlaneNormal.applyQuaternion(worldRotation, normal)
             this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
 
-            this._dragPlaneNormal1.applyQuaternion(worldRotation, this.forward);
+            let normal1 = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
+            this._dragPlaneNormal1.applyQuaternion(worldRotation, normal1)
             this._dragOffset1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
             egret3d.Vector3.subtract(this._dragOffset1, worldPosition, this._dragOffset1);
         }

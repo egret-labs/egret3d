@@ -17,8 +17,11 @@ namespace paper.editor {
             let worldRotation = selectedGameObjs[0].transform.getRotation();
             let worldPosition = selectedGameObjs[0].transform.getPosition();
 
+            let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
+            let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
+            this._dragPlaneNormal.applyQuaternion(worldRotation, normal)
+
             egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-            this._dragPlaneNormal.applyQuaternion(worldRotation, this.up)
             this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
 
@@ -57,8 +60,12 @@ namespace paper.editor {
             }
             ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
             egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
+
+            let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
+            let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
+
             egret3d.Vector3.copy(this.up, this._dragPlaneNormal);
-            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
 
         }
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any) {

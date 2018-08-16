@@ -20554,7 +20554,7 @@ var paper;
                 this.addState(state);
             };
             EditorModel.prototype.createPrefabState = function (prefab) {
-                var state = editor.CreatePrefabState.create({ prefab: prefab });
+                var state = editor.CreatePrefabState.create(prefab);
                 this.addState(state);
             };
             EditorModel.prototype.serializeProperty = function (value, editType) {
@@ -21495,8 +21495,10 @@ var paper;
                 this.canDrag = true;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y);
+                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
             };
@@ -21529,8 +21531,10 @@ var paper;
                 }
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y);
                 egret3d.Vector3.copy(this.up, this._dragPlaneNormal);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
             };
             xAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
@@ -21585,10 +21589,13 @@ var paper;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y);
+                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                this._dragPlaneNormal1.applyQuaternion(worldRotation, this.forward);
+                var normal1 = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x);
+                this._dragPlaneNormal1.applyQuaternion(worldRotation, normal1);
                 this._dragOffset1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
                 egret3d.Vector3.subtract(this._dragOffset1, worldPosition, this._dragOffset1);
             };
@@ -21678,8 +21685,10 @@ var paper;
                 this.canDrag = true;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x);
+                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.forward);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
             };
@@ -21690,7 +21699,7 @@ var paper;
                 egret3d.Vector3.subtract(hit, this._dragOffset, hit);
                 egret3d.Vector3.subtract(hit, worldPosition, hit);
                 var worldOffset = new egret3d.Vector3;
-                this.helpVec3_1.applyQuaternion(worldRotation, this.up);
+                worldOffset.applyQuaternion(worldRotation, this.up);
                 var cosHit = egret3d.Vector3.dot(hit, worldOffset);
                 egret3d.Vector3.scale(worldOffset, cosHit);
                 var position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
@@ -21711,7 +21720,9 @@ var paper;
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
                 egret3d.Vector3.copy(this.forward, this._dragPlaneNormal);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
             };
             yAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
@@ -21763,7 +21774,9 @@ var paper;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(pos.x + pos.y, pos.x + pos.y, 0);
+                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
             };
@@ -21795,7 +21808,9 @@ var paper;
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
                 egret3d.Vector3.copy(this.up, this._dragPlaneNormal);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(pos.x + pos.y, pos.x + pos.y, 0);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
             };
             zAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
@@ -23138,15 +23153,12 @@ var paper;
                     var componentId = this.stateData.cacheComponentId;
                     var gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObject) {
-                        for (var i = 0; i < gameObject.components.length; i++) {
-                            var comp = gameObject.components[i];
-                            if (comp.uuid === componentId) {
-                                gameObject.removeComponent(comp.constructor);
-                                break;
-                            }
+                        var component = this.editorModel.getComponentById(gameObject, componentId);
+                        if (component) {
+                            gameObject.removeComponent(component);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                         }
                     }
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                     return true;
                 }
                 return false;
@@ -23157,21 +23169,17 @@ var paper;
                     var compClzName = this.stateData.compClzName;
                     var gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObject) {
-                        var addComponent = void 0;
                         if (this.stateData.serializeData) {
-                            var deserializer = new paper.Deserializer();
-                            addComponent = deserializer.deserialize(this.data.serializeData, true);
-                            //todo:
-                            // this.editorModel.addComponentToGameObject(gameObject, addComponent);
+                            new paper.Deserializer().deserialize(this.data.serializeData, true, false, gameObject);
                         }
                         else {
                             var compClz = egret.getDefinitionByName(compClzName);
-                            addComponent = gameObject.addComponent(compClz);
+                            var addComponent = gameObject.addComponent(compClz);
                             this.stateData.serializeData = paper.serialize(addComponent);
+                            this.stateData.cacheComponentId = addComponent.uuid;
                         }
-                        addComponent && (this.stateData.cacheComponentId = addComponent.uuid);
+                        this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                     }
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                     return true;
                 }
                 return false;
@@ -23214,17 +23222,10 @@ var paper;
             });
             RemoveComponentState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
-                    var serializeData = this.stateData.cacheSerializeData;
-                    var component = new paper.Deserializer().deserialize(serializeData, true);
-                    var gameObjectUUid = this.stateData.gameObjectUUid;
-                    if (component) {
-                        var gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
-                        if (gameObject) {
-                            component.gameObject = gameObject;
-                            //todo:
-                            // this.editorModel.addComponentToGameObject(gameObject, component);
-                            this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
-                        }
+                    var gameObject = this.editorModel.getGameObjectByUUid(this.stateData.gameObjectUUid);
+                    if (gameObject) {
+                        new paper.Deserializer().deserialize(this.stateData.cacheSerializeData, true, false, gameObject);
+                        this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                     }
                     return true;
                 }
@@ -23236,18 +23237,12 @@ var paper;
                     var componentUUid = this.stateData.componentUUid;
                     var obj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (obj) {
-                        for (var i = 0; i < obj.components.length; i++) {
-                            var comp = obj.components[i];
-                            if (comp.uuid === componentUUid) {
-                                obj.removeComponent(comp.constructor);
-                                if (this.stateData.cacheSerializeData === undefined) {
-                                    this.stateData.cacheSerializeData = paper.serialize(comp);
-                                }
-                                break;
-                            }
+                        var component = this.editorModel.getComponentById(obj, componentUUid);
+                        if (component) {
+                            obj.removeComponent(component);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                         }
                     }
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                     return true;
                 }
                 return false;
