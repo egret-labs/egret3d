@@ -11,7 +11,7 @@ namespace egret3d {
                 return this._instances.pop()!.set(x, y, z, w);
             }
 
-            return new Quaternion(x, y, z, w);
+            return new Quaternion().set(x, y, z, w);
         }
 
         public static release(value: Quaternion) {
@@ -30,10 +30,7 @@ namespace egret3d {
         }
 
         public clone() {
-            const value = new Quaternion();
-            value.copy(this);
-
-            return value;
+            return Quaternion.create(this.x, this.y, this.z, this.w);
         }
 
         public fromMatrix(matrix: Readonly<Matrix>) {

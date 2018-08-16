@@ -71,7 +71,6 @@
         "egret3d/EventDispatcher.ts",
         "egret3d/systems/BeginSystem.ts",
         "egret3d/systems/EndSystem.ts",
-        "egret3d/components/Pool.ts",
         "egret3d/components/Transform.ts",
         "egret3d/components/singletons/DefaultMeshes.ts",
         "egret3d/components/singletons/DefaultTextures.ts",

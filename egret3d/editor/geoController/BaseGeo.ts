@@ -45,7 +45,7 @@ namespace paper.editor {
         public abstract wasReleased()
         public _checkIntersect(ray: egret3d.Ray) {
             const mesh = this.geo.getComponent(egret3d.MeshFilter).mesh
-            const temp = mesh.intersects(ray, this.geo.transform.getWorldMatrix())
+            const temp = mesh.raycast(ray, this.geo.transform.getWorldMatrix())
             if (temp) { return this }
         }
         public changeColor(color: string) {

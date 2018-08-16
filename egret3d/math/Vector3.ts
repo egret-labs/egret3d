@@ -32,12 +32,12 @@ namespace egret3d {
 
         private static readonly _instances: Vector3[] = [];
 
-        public static create(x?: number, y?: number, z?: number) {
+        public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
             if (this._instances.length > 0) {
                 return this._instances.pop()!.set(x, y, z);
             }
 
-            return new Vector3(x, y, z);
+            return new Vector3().set(x, y, z);
         }
 
         public static release(value: Vector3) {
@@ -84,10 +84,7 @@ namespace egret3d {
         }
 
         public clone() {
-            const value = Vector3.create();
-            value.copy(this);
-
-            return value;
+            return Vector3.create(this.x, this.y, this.z);
         }
 
         public equal(value: Readonly<IVector3>, threshold: number = 0.000001) {
@@ -106,7 +103,7 @@ namespace egret3d {
             return true;
         }
 
-        public set(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
+        public set(x: number, y: number, z: number) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -341,7 +338,7 @@ namespace egret3d {
                 valueA = this;
             }
 
-            return helpVector.subtract(valueA, valueB).length;
+            return helpVector.subtract(valueB, valueA).length;
         }
 
         public get length() {

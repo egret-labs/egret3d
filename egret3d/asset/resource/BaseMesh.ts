@@ -2,6 +2,8 @@ namespace egret3d {
     const _helpVector3A = Vector3.create();
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
+    const _helpMatrix = Matrix.create();
+    const _helpRay = Ray.create();
 
     const _attributes: gltf.MeshAttributeType[] = [
         gltf.MeshAttributeType.POSITION,
@@ -64,7 +66,7 @@ namespace egret3d {
                 buffer.byteLength = vertexBufferView.byteLength;
                 this.buffers[0] = new Float32Array(vertexBufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
 
-                if (indexCount >= 0) { // Indices.
+                if (indexCount > 0) { // Indices.
                     this.addSubMesh(indexCount, 0);
                 }
 
@@ -115,9 +117,14 @@ namespace egret3d {
             return value;
         }
         /**
-         * 
+         * TODO
          */
-        public intersects(ray: Ray, matrix: Matrix) {
+        public raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix>) {
+            _helpMatrix.inverse(worldMatrix);
+            _helpRay.copy(ray);
+            _helpRay.origin.applyMatrix(_helpMatrix);
+            _helpRay.direction.applyDirection(_helpMatrix).normalize();
+
             let pickInfo: PickInfo | null = null; // TODO
 
             for (const primitive of this._glTFMesh!.primitives) {
@@ -164,11 +171,7 @@ namespace egret3d {
                                     vertexIndex = indices[i + 2] * 3;
                                     p2.set(vertices[vertexIndex++], vertices[vertexIndex++], vertices[vertexIndex++]);
 
-                                    p0.applyMatrix(matrix);
-                                    p1.applyMatrix(matrix);
-                                    p2.applyMatrix(matrix);
-
-                                    const result = ray.intersectTriangle(p0, p1, p2);
+                                    const result = _helpRay.intersectTriangle(p0, p1, p2);
                                     if (result) {
                                         if (result.distance < 0) {
                                             continue;
@@ -312,7 +315,7 @@ namespace egret3d {
         /**
          * 
          */
-        public abstract uploadVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset: number, count: number): void;
+        public abstract uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number): void;
         /**
          * 
          */

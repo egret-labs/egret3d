@@ -179,7 +179,7 @@ namespace egret3d {
             }
 
             if (worldPositionStays) {
-                helpVector3A.copy(this.getPosition());
+                _helpVector3.copy(this.getPosition());
             }
 
             if (oldParent) {
@@ -194,7 +194,7 @@ namespace egret3d {
             this._onParentChange(newParent, oldParent);
 
             if (worldPositionStays) {
-                this.setPosition(helpVector3A);
+                this.setPosition(_helpVector3);
             }
         }
 

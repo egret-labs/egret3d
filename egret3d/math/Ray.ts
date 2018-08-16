@@ -35,6 +35,25 @@ namespace egret3d {
      * 射线
      */
     export class Ray {
+
+        private static readonly _instances: Ray[] = [];
+
+        public static create(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.RIGHT) {
+            if (this._instances.length > 0) {
+                return this._instances.pop()!.set(origin, direction);
+            }
+
+            return new Ray().set(origin, direction);
+        }
+
+        public static release(value: Ray) {
+            if (this._instances.indexOf(value) >= 0) {
+                return;
+            }
+
+            this._instances.push(value);
+        }
+
         /**
          * 射线起始点
          */
@@ -44,13 +63,41 @@ namespace egret3d {
          */
         public readonly direction: Vector3 = Vector3.create();
         /**
-         * 构建一条射线
-         * @param origin 射线起点
-         * @param dir 射线方向
+         * @deprecated
+         * @private
          */
         public constructor(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.RIGHT) {
             this.origin.copy(origin);
             this.direction.copy(direction);
+        }
+
+        public serialize() {
+            return [this.origin.x, this.origin.y, this.origin.z, this.direction.x, this.direction.y, this.direction.z];
+        }
+
+        public deserialize(element: Readonly<[number, number, number, number, number, number]>) {
+            this.origin.fromArray(element);
+            this.direction.fromArray(element);
+
+            return this;
+        }
+
+        public copy(value: Readonly<Ray>) {
+            this.origin.copy(value.origin);
+            this.direction.copy(value.direction);
+
+            return this;
+        }
+
+        public clone() {
+            return Ray.create(this.origin, this.direction);
+        }
+
+        public set(origin: Readonly<IVector3>, direction: Readonly<IVector3>) {
+            this.origin.copy(origin);
+            this.direction.copy(direction);
+
+            return this;
         }
         /**
          * 与aabb碰撞相交检测
@@ -333,7 +380,7 @@ namespace egret3d {
                 if (meshFilter) {
                     const mesh = meshFilter.mesh;
                     if (mesh) {
-                        const pickinfo = mesh.intersects(ray, transform.getWorldMatrix());
+                        const pickinfo = mesh.raycast(ray, transform.getWorldMatrix());
                         if (pickinfo) {
                             pickInfos.push(pickinfo);
                             pickinfo.transform = transform;

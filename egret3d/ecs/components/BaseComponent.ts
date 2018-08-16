@@ -157,5 +157,11 @@ namespace paper {
             // return this._enabled && this.gameObject.activeInHierarchy;
             return this._enabled && (this.gameObject._activeDirty ? this.gameObject.activeInHierarchy : this.gameObject._activeInHierarchy);
         }
+        /**
+         * 
+         */
+        public get transform() {
+            return this.gameObject.transform;
+        }
     }
 }

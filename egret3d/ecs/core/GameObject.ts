@@ -32,7 +32,6 @@ namespace paper {
          * 层级
          */
         @serializedField
-        @deserializedIgnore // TODO remove
         public layer: Layer = Layer.Default;
         /**
          * 名称
