@@ -30,9 +30,6 @@ namespace egret3d {
 
         public root: egret.DisplayObjectContainer;
 
-        /**
-         * @inheritDoc
-         */
         public initialize() {
             super.initialize();
 
@@ -60,9 +57,6 @@ namespace egret3d {
             InputManager.mouse.addEventListener("mousemove", this._onTouchMove, this);
         }
 
-        /**
-         * @inheritDoc
-         */
         public uninitialize() {
             super.uninitialize();
 
@@ -77,6 +71,9 @@ namespace egret3d {
             // this.stage.removeChild(this.root);
         }
 
+        public recalculateAABB() { 
+            // TODO
+        }
 
         /**
          * 检查屏幕接触事件是否能够穿透此2D层

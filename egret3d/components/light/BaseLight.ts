@@ -172,8 +172,7 @@ namespace egret3d {
             camera.calcProjectMatrix(512 / 512, helpMatrixA);
             // camera.context.matrix_p;
             helpMatrixB.copy(this.gameObject.transform.getWorldMatrix()).inverse();
-            Matrix.multiply(matrix, helpMatrixA, matrix);
-            Matrix.multiply(matrix, helpMatrixB, matrix);
+            matrix.multiply(helpMatrixA).multiply(helpMatrixB);
 
             // let viewMatrix = camera.calcViewMatrix(helpMatrixA);
             // let projectionMatrix = camera.calcProjectMatrix(512 / 512, helpMatrixB);

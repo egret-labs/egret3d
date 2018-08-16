@@ -1,12 +1,9 @@
 namespace egret3d {
     const helpRectA = new Rectangle();
-
-
     /**
      * 相机组件
      */
     export class Camera extends paper.BaseComponent {
-
         /**
          * 当前主相机。
          */
@@ -17,7 +14,6 @@ namespace egret3d {
 
             return gameObject.getOrAddComponent(Camera);
         }
-
 
         /**
          * 是否清除颜色缓冲区
@@ -134,28 +130,28 @@ namespace egret3d {
             const asp = vpp.w / vpp.h;
             const near_w = near_h * asp;
 
-            Vector3.set(-near_w, near_h, this.near, nearLT);
-            Vector3.set(-near_w, -near_h, this.near, nearLD);
-            Vector3.set(near_w, near_h, this.near, nearRT);
-            Vector3.set(near_w, -near_h, this.near, nearRD);
+            nearLT.set(-near_w, near_h, this.near);
+            nearLD.set(-near_w, -near_h, this.near);
+            nearRT.set(near_w, near_h, this.near);
+            nearRD.set(near_w, -near_h, this.near);
 
             const far_h = this.far * Math.tan(this.fov * 0.5);
             const far_w = far_h * asp;
 
-            Vector3.set(-far_w, far_h, this.far, farLT);
-            Vector3.set(-far_w, -far_h, this.far, farLD);
-            Vector3.set(far_w, far_h, this.far, farRT);
-            Vector3.set(far_w, -far_h, this.far, farRD);
+            farLT.set(-far_w, far_h, this.far);
+            farLD.set(-far_w, -far_h, this.far);
+            farRT.set(far_w, far_h, this.far);
+            farRD.set(far_w, -far_h, this.far);
 
             const matrix = this.gameObject.transform.getWorldMatrix();
-            Matrix.transformVector3(farLD, matrix, farLD);
-            Matrix.transformVector3(nearLD, matrix, nearLD);
-            Matrix.transformVector3(farRD, matrix, farRD);
-            Matrix.transformVector3(nearRD, matrix, nearRD);
-            Matrix.transformVector3(farLT, matrix, farLT);
-            Matrix.transformVector3(nearLT, matrix, nearLT);
-            Matrix.transformVector3(farRT, matrix, farRT);
-            Matrix.transformVector3(nearRT, matrix, nearRT);
+            matrix.transformVector3(farLD);
+            matrix.transformVector3(nearLD);
+            matrix.transformVector3(farRD);
+            matrix.transformVector3(nearRD);
+            matrix.transformVector3(farLT);
+            matrix.transformVector3(nearLT);
+            matrix.transformVector3(farRT);
+            matrix.transformVector3(nearRT);
         }
         /**
          * @inheritDoc
@@ -180,7 +176,7 @@ namespace egret3d {
          * 计算相机的 view matrix（视图矩阵）
          */
         public calcViewMatrix(matrix: Matrix): Matrix {
-            matrix.copy(this.gameObject.transform.getWorldMatrix()).inverse();
+            matrix.inverse(this.gameObject.transform.getWorldMatrix());
 
             return matrix;
         }
@@ -198,13 +194,13 @@ namespace egret3d {
             }
 
             if (this.opvalue === 0.0) {
-                Matrix.copy(this.matProjO, matrix);
+                matrix.copy(this.matProjO);
             }
             else if (this.opvalue === 1.0) {
-                Matrix.copy(this.matProjP, matrix);
+                matrix.copy(this.matProjP);
             }
             else {
-                Matrix.lerp(this.matProjO, this.matProjP, this.opvalue, matrix);
+                matrix.lerp(this.opvalue, this.matProjO, this.matProjP);
             }
 
             return matrix;
@@ -283,11 +279,9 @@ namespace egret3d {
             this.calcViewMatrix(matrixView);
             this.calcProjectMatrix(asp, matrixProject);
 
-            const matrixViewProject = helpMatrixC;
-            const matinv = helpMatrixD;
-            Matrix.multiply(matrixProject, matrixView, matrixViewProject);
-            Matrix.inverse(matrixViewProject, matinv);
-            Matrix.transformVector3(vppos, matinv, outWorldPos);
+            helpMatrixC.multiply(matrixProject, matrixView)
+                .inverse()
+                .transformVector3(vppos, outWorldPos);
         }
 
 
@@ -304,11 +298,9 @@ namespace egret3d {
             this.calcViewMatrix(matrixView);
             this.calcProjectMatrix(asp, matrixProject);
 
-            const matrixViewProject = helpMatrixC;
-            Matrix.multiply(matrixProject, matrixView, matrixViewProject);
-
+            const matrixViewProject = helpMatrixC.multiply(matrixProject, matrixView);
             const ndcPos = helpVector3A;
-            Matrix.transformVector3(worldPos, matrixViewProject, ndcPos);
+            matrixViewProject.transformVector3(worldPos, ndcPos);
             outScreenPos.x = (ndcPos.x + 1.0) * vpp.w * 0.5;
             outScreenPos.y = (1.0 - ndcPos.y) * vpp.h * 0.5;
         }
@@ -332,14 +324,46 @@ namespace egret3d {
             out.y = nearpos.y - (nearpos.y - farpos.y) * rate;
         }
 
-        public testFrustumCulling(node: Transform) {
-            const aabb = node.aabb;
-            if (!aabb.intersectPlane(this.frameVecs[0], this.frameVecs[1], this.frameVecs[5])) return false;
-            if (!aabb.intersectPlane(this.frameVecs[1], this.frameVecs[3], this.frameVecs[7])) return false;
-            if (!aabb.intersectPlane(this.frameVecs[3], this.frameVecs[2], this.frameVecs[6])) return false;
-            if (!aabb.intersectPlane(this.frameVecs[2], this.frameVecs[0], this.frameVecs[4])) return false;
-            if (!aabb.intersectPlane(this.frameVecs[5], this.frameVecs[7], this.frameVecs[6])) return false;
-            if (!aabb.intersectPlane(this.frameVecs[0], this.frameVecs[2], this.frameVecs[3])) return false;
+        private _intersectPlane(boundingSphere: egret3d.Sphere, v0: Vector3, v1: Vector3, v2: Vector3) {
+            let subV0 = helpVector3A;
+            let subV1 = helpVector3B;
+            let cross = helpVector3C;
+            let hitPoint = helpVector3D;
+            let distVec = helpVector3E;
+
+            let center = boundingSphere.center;
+
+            subV0.subtract(v1, v0);
+            subV1.subtract(v2, v1);
+            cross.cross(subV0, subV1);
+
+            calPlaneLineIntersectPoint(cross, v0, cross, center, hitPoint);
+
+            distVec.subtract(hitPoint, center);
+
+            let val = distVec.dot(cross);
+
+            if (val <= 0) {
+                return true;
+            }
+
+            let dist = hitPoint.getDistance(center);
+
+            if (dist < boundingSphere.radius) {
+                return true;
+            }
+
+            return false;
+        }
+
+        public testFrustumCulling(node: paper.BaseRenderer) {
+            const boundingSphere = node.boundingSphere;
+            if (!this._intersectPlane(boundingSphere, this.frameVecs[0], this.frameVecs[1], this.frameVecs[5])) return false;
+            if (!this._intersectPlane(boundingSphere, this.frameVecs[1], this.frameVecs[3], this.frameVecs[7])) return false;
+            if (!this._intersectPlane(boundingSphere, this.frameVecs[3], this.frameVecs[2], this.frameVecs[6])) return false;
+            if (!this._intersectPlane(boundingSphere, this.frameVecs[2], this.frameVecs[0], this.frameVecs[4])) return false;
+            if (!this._intersectPlane(boundingSphere, this.frameVecs[5], this.frameVecs[7], this.frameVecs[6])) return false;
+            if (!this._intersectPlane(boundingSphere, this.frameVecs[0], this.frameVecs[2], this.frameVecs[3])) return false;
 
             return true;
         }

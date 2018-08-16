@@ -4,29 +4,34 @@ namespace egret3d {
         /**
          * 
          */
-        public static WHITE: Texture;
+        public static WHITE: GLTexture;
         /**
          * 
          */
-        public static GRAY: Texture;
+        public static GRAY: GLTexture;
         /**
          * 
          */
-        public static GRID: Texture;
+        public static GRID: GLTexture;
 
         public initialize() {
             {
-                const texture = GLTexture2D.createColorTexture("buildin/white.image.json", 255, 255, 255);
+                const texture = GLTexture2D.createColorTexture("builtin/white.image.gltf", 255, 255, 255);
+                texture._isBuiltin = true;
                 DefaultTextures.WHITE = texture;
                 paper.Asset.register(texture);
             }
+
             {
-                const texture = GLTexture2D.createColorTexture("buildin/gray.image.json", 128, 128, 128);
+                const texture = GLTexture2D.createColorTexture("builtin/gray.image.gltf", 128, 128, 128);
+                texture._isBuiltin = true;
                 DefaultTextures.GRAY = texture;
                 paper.Asset.register(texture);
             }
+
             {
-                const texture = GLTexture2D.createGridTexture("buildin/grid.image.json");
+                const texture = GLTexture2D.createGridTexture("builtin/grid.image.gltf");
+                texture._isBuiltin = true;
                 DefaultTextures.GRID = texture;
                 paper.Asset.register(texture);
             }

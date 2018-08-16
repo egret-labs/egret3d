@@ -2,7 +2,7 @@ namespace paper {
     /**
      * 
      */
-    export type GameObjectExtras = { linkedID?: string, prefabRootId?: string, prefab?: Prefab };
+    export type GameObjectExtras = { linkedID?: string, rootID?: string, prefab?: Prefab };
     /**
      * 可以挂载Component的实体类。
      */
@@ -105,7 +105,6 @@ namespace paper {
             }
 
             this.transform = null as any;
-            this.renderer = null;
 
             this._components.length = 0;
             this._scene!._removeGameObject(this);
@@ -258,6 +257,20 @@ namespace paper {
             }
 
             this._destroy();
+        }
+        /**
+         * 
+         */
+        public destroyChildren() {
+            if (this === Application.sceneManager.globalGameObject) {
+                console.warn("Cannot destroy global game object.");
+                return;
+            }
+
+            let i = this.transform.children.length;
+            while (i--) {
+                this.transform.children[i].gameObject.destroy();
+            }
         }
         /**
          * 添加组件。
@@ -549,7 +562,7 @@ namespace paper {
         /**
          * 针对同级的组件发送消息
          * @param methodName 
-         * @param parameter
+         * @param parameter``
          */
         public sendMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {

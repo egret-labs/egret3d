@@ -7,8 +7,9 @@ namespace egret3d {
      * 
      */
     export const DEG_RAD: number = Math.PI / 180.0;
+    export const EPSILON = 2.220446049250313e-16; // Number.EPSILON
 
-    export function floatClamp(v: number, min: number = 0, max: number = 1): number {
+    export function floatClamp(v: number, min: number = 0.0, max: number = 1.0) {
         if (v < min)
             return min;
         else if (v > max)

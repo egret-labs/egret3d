@@ -5,6 +5,7 @@ namespace egret3d {
         y: number;
         z: number;
         w: number;
+        readonly length: number;
     }
 
     export class Vector4 implements IVector4, paper.ISerializable {
@@ -16,8 +17,11 @@ namespace egret3d {
         public z: number;
 
         public w: number;
-
-        constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 0.0) {
+        /**
+         * @deprecated
+         * @private
+         */
+        public constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 0.0) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -28,7 +32,7 @@ namespace egret3d {
             return [this.x, this.y, this.z, this.w];
         }
 
-        public deserialize(element: [number, number, number, number]) {
+        public deserialize(element: Readonly<[number, number, number, number]>) {
             this.x = element[0];
             this.y = element[1];
             this.z = element[2];
@@ -62,13 +66,28 @@ namespace egret3d {
             return this;
         }
 
-        public normalize() {
-            const l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-            if (l > Number.MIN_VALUE) {
-                this.x /= l;
-                this.y /= l;
-                this.z /= l;
-                this.w /= l;
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+            this.x = value[offset];
+            this.y = value[offset + 1];
+            this.z = value[offset + 2];
+            this.w = value[offset + 3];
+
+            return this;
+        }
+
+        public normalize(value?: Readonly<IVector4>) {
+            if (!value) {
+                value = this;
+            }
+
+            let l = value.length;
+
+            if (l > egret3d.EPSILON) {
+                l = 1.0 / l;
+                this.x *= l;
+                this.y *= l;
+                this.z *= l;
+                this.w *= l;
             }
             else {
                 this.x = 0.0;
@@ -78,6 +97,10 @@ namespace egret3d {
             }
 
             return this;
+        }
+
+        public get length() {
+            return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
         }
     }
 
@@ -92,5 +115,4 @@ namespace egret3d {
     export const helpVector4E = new Vector4();
 
     export const helpVector4F = new Vector4();
-
 }

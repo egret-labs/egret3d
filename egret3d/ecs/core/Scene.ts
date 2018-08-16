@@ -7,11 +7,11 @@ namespace paper {
          * 
          */
         public static createEmpty(name: string = DefaultNames.NoName, isActive: boolean = true) {
-            const exScene = Application.sceneManager.getSceneByName(name);
-            if (exScene) {
-                console.warn("The scene with the same name already exists.");
-                return exScene;
-            }
+            // const exScene = Application.sceneManager.getSceneByName(name);
+            // if (exScene) {
+            //     console.warn("The scene with the same name already exists.");
+            //     return exScene;
+            // }
 
             const scene = new Scene(name);
             Application.sceneManager._addScene(scene, isActive);
@@ -44,6 +44,11 @@ namespace paper {
             return null;
         }
         /**
+         * lightmap强度
+         */
+        @serializedField
+        public lightmapIntensity: number = 1.0;
+        /**
          * 场景名称。
          */
         @serializedField
@@ -54,15 +59,10 @@ namespace paper {
         @serializedField
         public readonly lightmaps: egret3d.Texture[] = [];
         /**
-         * lightmap强度
-         */
-        @serializedField
-        public lightmapIntensity: number = 1.0;
-        /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @paper.serializedField
-        public extras?: { rawScene?: RawScene } = Application.isEditor && !Application.isPlaying ? {} : undefined;
+        public extras?: any = Application.isEditor && !Application.isPlaying ? {} : undefined;
         /**
          * @internal
          */
@@ -118,8 +118,7 @@ namespace paper {
             this._gameObjects.length = 0;
         }
         /**
-         * 返回当前激活场景中查找对应名称的GameObject
-         * @param name 
+         * 
          */
         public find(name: string) {
             for (const gameObject of this._gameObjects) {
@@ -131,8 +130,7 @@ namespace paper {
             return null;
         }
         /**
-         * 返回一个在当前激活场景中查找对应tag的GameObject
-         * @param tag 
+         * 
          */
         public findWithTag(tag: string) {
             for (const gameObject of this._gameObjects) {
@@ -144,21 +142,7 @@ namespace paper {
             return null;
         }
         /**
-         * 返回一个在当前激活场景中查找对应 uuid 的GameObject
-         * @param uuid 
-         */
-        public findWithUUID(uuid: string) {
-            for (const gameObject of this._gameObjects) {
-                if (gameObject.uuid === uuid) {
-                    return gameObject;
-                }
-            }
-
-            return null;
-        }
-        /**
-         * 返回所有在当前激活场景中查找对应tag的GameObject
-         * @param name 
+         * 
          */
         public findGameObjectsWithTag(tag: string) {
             const gameObjects: GameObject[] = [];
@@ -171,7 +155,19 @@ namespace paper {
             return gameObjects;
         }
         /**
-         * 获取所有根级GameObject对象
+         * @internal
+         */
+        public findWithUUID(uuid: string) {
+            for (const gameObject of this._gameObjects) {
+                if (gameObject.uuid === uuid) {
+                    return gameObject;
+                }
+            }
+
+            return null;
+        }
+        /**
+         * 所有根实体。
          */
         public getRootGameObjects() {
             const gameObjects: GameObject[] = [];
@@ -183,12 +179,14 @@ namespace paper {
 
             return gameObjects;
         }
-
+        /**
+         * 
+         */
         public get gameObjectCount() {
             return this._gameObjects.length;
         }
         /**
-         * 当前场景的所有GameObject对象池
+         * 所有实体。
          */
         @serializedField
         @deserializedIgnore

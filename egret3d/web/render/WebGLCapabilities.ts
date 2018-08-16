@@ -342,7 +342,7 @@ namespace egret3d {
             if (!target) {
                 w = stage.screenViewport.w;
                 h = stage.screenViewport.h;
-                GlRenderTarget.useNull();
+                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
             }
             else {
                 w = target.width;

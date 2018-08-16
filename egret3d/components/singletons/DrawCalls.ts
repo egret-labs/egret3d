@@ -81,7 +81,7 @@ namespace egret3d {
                 const drawTarget = drawCall.renderer.gameObject;
                 const visible = (camera.cullingMask & drawTarget.layer) !== 0;
                 if (visible && drawCall.renderer.castShadows) {
-                    if (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.transform))) {
+                    if (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer))) {
                         this.shadowCalls.push(drawCall);
                     }
                 }
@@ -97,7 +97,7 @@ namespace egret3d {
             //
             for (const drawCall of this.drawCalls) {
                 const drawTarget = drawCall.renderer.gameObject;
-                const visible = ((camera.cullingMask & drawTarget.layer) !== 0 && (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.transform))));
+                const visible = ((camera.cullingMask & drawTarget.layer) !== 0 && (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer))));
                 //裁切没通过
                 if (visible) {
                     const objPos = drawTarget.transform.getPosition();

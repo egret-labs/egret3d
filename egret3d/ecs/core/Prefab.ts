@@ -1,30 +1,5 @@
 namespace paper {
     /**
-     * 
-     */
-    export class BaseObjectAsset extends Asset {
-        protected _raw: ISerializedData = null as any;
-        /**
-         * @internal
-         */
-        $parse(json: ISerializedData) {
-            this._raw = json;
-        }
-
-        public dispose() {
-            if (this._isBuiltin) {
-                return;
-            }
-
-            this._raw = null as any;
-        }
-
-        public caclByteLength() {
-            return 0;
-        }
-    }
-
-    /**
      * 预制体资源。
      */
     export class Prefab extends BaseObjectAsset {
@@ -34,7 +9,10 @@ namespace paper {
         public static create(name: string, scene: Scene | null = null) {
             const prefab = paper.Asset.find<Prefab>(name);
             if (prefab) {
-                return prefab.createInstance(scene);
+                const gameObject = prefab.createInstance(scene);
+                gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+
+                return gameObject;
             }
 
             return null;
@@ -53,7 +31,9 @@ namespace paper {
             const gameObject = deserializer.deserialize(this._raw, keepUUID, isEditor, scene) as GameObject | null;
 
             if (gameObject && isEditor) {
-                gameObject.extras!.prefab = this;
+                if (!gameObject.extras!.prefab) {
+                    gameObject.extras!.prefab = this;
+                }
             }
 
             return gameObject;

@@ -12,6 +12,21 @@ namespace egret3d {
 
             this._materials.length = 0;
         }
+
+        public recalculateAABB() {
+            this.aabb.clear();
+
+            const filter = this.gameObject.getComponent(MeshFilter);
+            if (filter && filter.mesh) {
+                const vertices = filter.mesh.getVertices();
+                const position = helpVector3A;
+
+                for (let i = 0, l = vertices.length; i < l; i += 3) {
+                    position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
+                    this.aabb.add(position);
+                }
+            }
+        }
         /**
          * material list
          * @version paper 1.0

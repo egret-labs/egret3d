@@ -235,10 +235,10 @@ namespace paper.editor {
             var asp = this.camera.context.viewPortPixel.w / this.camera.context.viewPortPixel.h;
             this.camera.calcViewMatrix(this.vMatrix);
             this.camera.calcProjectMatrix(asp, this.pMatrix);
-            egret3d.Matrix.multiply(this.pMatrix, this.vMatrix, this.mvpMatrix);
+            this.mvpMatrix.multiply(this.pMatrix, this.vMatrix);
             m = m || new egret3d.Matrix();
-            egret3d.Matrix.copy(m, this.mMatrix);
-            egret3d.Matrix.multiply(this.mvpMatrix, this.mMatrix, this.mvpMatrix);
+            this.mMatrix.copy(m);
+            this.mvpMatrix.multiply(this.mMatrix);
         }
 
         private static glProgram_line: editor.GizmoShader;
@@ -427,18 +427,18 @@ namespace paper.editor {
         }
 
         private static xArrowMMatrix = new egret3d.Matrix();
-        private static yArrowMMatrix = new egret3d.Matrix(new Float32Array([
+        private static yArrowMMatrix = egret3d.Matrix.create([
             0, 1, 0, 0,
             -1, 0, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1
-        ]));
-        private static zArrowMMatrix = new egret3d.Matrix(new Float32Array([
+        ]);
+        private static zArrowMMatrix = egret3d.Matrix.create([
             0, 0, 1, 0,
             0, 1, 0, 0,
             -1, 0, 0, 0,
             0, 0, 0, 1
-        ]));
+        ]);
 
         private static helpMat: egret3d.Matrix = new egret3d.Matrix();
         private static helpMat1: egret3d.Matrix = new egret3d.Matrix();
@@ -446,15 +446,15 @@ namespace paper.editor {
             console.log("now drawXYZ", transform)
             let worldMat = Gizmo.helpMat;
             Gizmo.getWorldMatrixWithoutScale(transform, 10, worldMat);
-            egret3d.Matrix.multiply(worldMat, this.xArrowMMatrix, worldMat);
+            worldMat.multiply(this.xArrowMMatrix);
             Gizmo.DrawArrow(worldMat, [1.0, 0.0, 0.0, 1.0], true);
-            egret3d.Matrix.multiply(worldMat, this.yArrowMMatrix, worldMat);
+            worldMat.multiply(this.yArrowMMatrix);
             Gizmo.DrawArrow(worldMat, [0.0, 1.0, 0.0, 1.0], true);
-            egret3d.Matrix.multiply(worldMat, this.zArrowMMatrix, worldMat);
+            worldMat.multiply(this.zArrowMMatrix);
             Gizmo.DrawArrow(worldMat, [0.0, 0.0, 1.0, 1.0], true);
         }
         private static getWorldMatrixWithoutScale(transform: egret3d.Transform, fixScale: number, out: egret3d.Matrix) {
-            egret3d.Matrix.identify(out);
+            out.identity();
             let p = transform.getPosition();
             let r = transform.getRotation();
             let p_c = this.camera.gameObject.transform.getPosition();
@@ -462,10 +462,11 @@ namespace paper.editor {
             let sca = egret3d.Vector3.getLength(p_c) / fixScale;
 
             let matS = this.helpMat1;
-            egret3d.Matrix.formScale(sca, sca, sca, matS);
+            // egret3d.Quaternion.toMatrix(r, out);
+            out.fromRotation(r);
+            matS.formScale(sca, sca, sca);
 
-            egret3d.Quaternion.toMatrix(r, out);
-            egret3d.Matrix.multiply(out, matS, out);
+            out.multiply(matS);
             out.rawData[12] = p.x;
             out.rawData[13] = p.y;
             out.rawData[14] = p.z;

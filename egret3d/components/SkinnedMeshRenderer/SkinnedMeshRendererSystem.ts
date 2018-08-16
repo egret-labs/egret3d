@@ -23,9 +23,9 @@ namespace egret3d {
             if (!renderer.mesh || renderer.materials.length === 0) {
                 return;
             }
-            //
+
+            renderer.mesh._createBuffer();
             this._drawCalls.removeDrawCalls(renderer);
-            //
             this._drawCalls.renderers.push(renderer);
             //
             let subMeshIndex = 0;
@@ -37,19 +37,13 @@ namespace egret3d {
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
                     material: renderer.materials[primitive.material || 0] || DefaultMaterials.Missing,
-					
+
                     frustumTest: false,
                     zdist: -1,
 
                     boneData: renderer.boneBuffer,
                 };
-
-                if (!renderer.mesh.vbo) {
-                    renderer.mesh.createVBOAndIBOs();
-                }
-
                 material.addDefine("SKINNING");
-
                 this._drawCalls.drawCalls.push(drawCall);
             }
         }

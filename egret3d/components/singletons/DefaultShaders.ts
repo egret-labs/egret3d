@@ -1,7 +1,4 @@
 namespace egret3d {
-    /**
-     * @private
-     */
     const enum BlendModeEnum {
         Close,
         Blend,
@@ -9,7 +6,9 @@ namespace egret3d {
         Add,
         Add_PreMultiply,
     }
-
+    /**
+     * 
+     */
     export class DefaultShaders extends paper.SingletonComponent {
 
         // public static DIFFUSE_VERT_COLOR: Shader;
@@ -532,7 +531,7 @@ namespace egret3d {
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
                 this._setDepth(technique, false, false);
-                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW);
                 this._setBlend(technique, BlendModeEnum.Blend);
 
                 DefaultShaders.GIZMOS_COLOR = shader;

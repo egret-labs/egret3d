@@ -125,7 +125,7 @@ namespace RES.processor {
 
     export const GLTFProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
-            const result = await host.load(resource, 'json') as egret3d.GLTFEgret;
+            const result = await host.load(resource, 'json') as egret3d.GLTF;
             const glTF = new egret3d.Material(null!);
             glTF.name = resource.name;
 
@@ -165,7 +165,7 @@ namespace RES.processor {
 
     export const GLTFShaderProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
-            const result = await host.load(resource, 'json') as egret3d.GLTFEgret;
+            const result = await host.load(resource, 'json') as egret3d.GLTF;
             const glTF = new egret3d.GLTFAsset();
             glTF.name = resource.name;
 

@@ -131,6 +131,23 @@ namespace egret3d.particle {
             this.velocityScale = 1.0;
             this.lengthScale = 1.0;
         }
+
+        public recalculateAABB() {
+            this.aabb.clear();
+            // TODO
+        }
+
+        public get renderMode(): ParticleRenderMode {
+            return this._renderMode;
+        }
+        public set renderMode(value: ParticleRenderMode) {
+            if (this._renderMode === value) {
+                return;
+            }
+
+            this._renderMode = value;
+            paper.EventPool.dispatchEvent(ParticleRendererEventType.RenderMode, this);
+        }
         /**
          * mesh model
          * @version paper 1.0
@@ -180,18 +197,8 @@ namespace egret3d.particle {
             for (const material of value) {
                 this._materials.push(material);
             }
-            paper.EventPool.dispatchEvent(ParticleRendererEventType.Materials, this);
-        }
-        public get renderMode(): ParticleRenderMode {
-            return this._renderMode;
-        }
-        public set renderMode(value: ParticleRenderMode) {
-            if (this._renderMode === value) {
-                return;
-            }
 
-            this._renderMode = value;
-            paper.EventPool.dispatchEvent(ParticleRendererEventType.RenderMode, this);
+            paper.EventPool.dispatchEvent(ParticleRendererEventType.Materials, this);
         }
     }
 }

@@ -1,4 +1,21 @@
 namespace egret3d {
+    /**
+     * 
+     */
+    export interface GLTFTexture extends gltf.Texture {
+        extensions: {
+            paper?: {
+                mipmap?: boolean;
+                format?: 6407 | 6408 | 6409;
+                pixelSize?: number;
+                width?: number;
+                height?: number;
+            }
+        }
+    }
+    /**
+     * 
+     */
     export interface GLTFMaterial extends gltf.Material {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
@@ -7,8 +24,10 @@ namespace egret3d {
             }
         }
     }
-
-    export interface GLTFEgret extends gltf.GLTF {
+    /**
+     * 
+     */
+    export interface GLTF extends gltf.GLTF {
         version: string;
         extensions: {
             KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
@@ -21,7 +40,7 @@ namespace egret3d {
         extensionsRequired: string[];
     }
     /**
-     * @private
+     * 
      */
     export interface GLTFAnimation extends gltf.Animation {
         extensions: {
@@ -138,7 +157,7 @@ namespace egret3d {
                 extensions: {},
                 extensionsRequired: ["paper"],
                 extensionsUsed: ["paper"],
-            } as GLTFEgret;
+            } as GLTF;
 
             return config;
         }
@@ -147,7 +166,7 @@ namespace egret3d {
          */
         public static parseFromBinary(array: Uint32Array) {
             let index = 0;
-            let result: { config: GLTFEgret, buffers: (Float32Array | Uint32Array | Uint16Array)[] } = { config: {}, buffers: [] } as any;
+            let result: { config: GLTF, buffers: (Float32Array | Uint32Array | Uint16Array)[] } = { config: {}, buffers: [] } as any;
 
             if (
                 array[index++] !== 0x46546C67 ||
@@ -274,11 +293,11 @@ namespace egret3d {
         /**
          * 配置。
          */
-        public config: GLTFEgret = null!;
+        public config: GLTF = null!;
         /**
          * @internal
          */
-        public parse(config: GLTFEgret, buffers?: Uint32Array[]) {
+        public parse(config: GLTF, buffers?: Uint32Array[]) {
             this.config = config;
 
             if (buffers) {
@@ -336,9 +355,10 @@ namespace egret3d {
 
                 case gltf.ComponentType.Float:
                     return new Float32Array(buffer.buffer, bufferOffset, bufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
-            }
 
-            throw new Error();
+                default:
+                    throw new Error();
+            }
         }
         /**
          * 根据指定 Accessor 创建二进制数组。
@@ -376,9 +396,10 @@ namespace egret3d {
 
                 case gltf.ComponentType.Float:
                     return new Float32Array(buffer.buffer, bufferOffset, bufferCount);
-            }
 
-            throw new Error();
+                default:
+                    throw new Error();
+            }
         }
         /**
          * 
@@ -546,14 +567,6 @@ declare namespace gltf {
         ElementArrayBuffer = 34963,
     }
     /**
-     * 
-     */
-    export const enum DrawMode {
-        Stream = 35040,
-        Static = 35044,
-        Dynamic = 35048,
-    }
-    /**
      * Component type.
      */
     export const enum ComponentType {
@@ -596,6 +609,22 @@ declare namespace gltf {
         FLOAT_MAT4 = 35676,
         SAMPLER_2D = 35678,
         SAMPLER_CUBE = 35680,
+    }
+    /**
+     * 
+     */
+    export const enum DrawMode {
+        Stream = 35040,
+        Static = 35044,
+        Dynamic = 35048,
+    }
+    /**
+     * 
+     */
+    export const enum TextureFormat {
+        RGB = 6407,
+        RGBA = 6408,
+        LUMINANCE = 6409,
     }
     /**
      * The shader stage.  All valid values correspond to WebGL enums.
@@ -1144,6 +1173,7 @@ declare namespace gltf {
         extras?: any;
         // [k: string]: any;
     }
+
     export interface MaterialNormalTextureInfo {
         index?: any;
         texCoord?: any;
@@ -1155,6 +1185,7 @@ declare namespace gltf {
         extras?: any;
         // [k: string]: any;
     }
+
     export interface MaterialOcclusionTextureInfo {
         index?: any;
         texCoord?: any;
@@ -1481,7 +1512,7 @@ declare namespace gltf {
         name: any;
         extensions?: any;
         extras?: any;
-        [k: string]: any;
+        // [k: string]: any;
     }
     /**
      * An attribute input to a technique and the corresponding semantic.
@@ -1523,7 +1554,7 @@ declare namespace gltf {
         name?: any;
         extensions?: any;
         extras?: any;
-        [k: string]: any;
+        // [k: string]: any;
     }
     /**
      * A template for material appearances.
