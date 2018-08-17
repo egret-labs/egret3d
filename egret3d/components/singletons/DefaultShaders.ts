@@ -333,12 +333,10 @@ namespace egret3d {
 
         public initialize() {
             {
-                const shader = this.createBuildinShader("buildin/depth.shader.gltf", "depth_vs", ShaderLib.depthpackage_vert, "depth_fs", ShaderLib.depthpackage_frag, RenderQueue.Geometry);
+                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.depthpackage)) as GLTFAsset;
+                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
-
-                technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
-
                 //
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, false);
@@ -349,12 +347,10 @@ namespace egret3d {
             }
 
             {
-                const shader = this.createBuildinShader("buildin/distance.shader.gltf", "distance_vs", ShaderLib.distancepackage_vert, "distance_fs", ShaderLib.distancepackage_frag, RenderQueue.Geometry);
+                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.distancepackage)) as GLTFAsset;
+                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
-                technique.uniforms["modelMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };
-                technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
                 technique.uniforms["glstate_referencePosition"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._REFERENCEPOSITION, value: [] };
                 technique.uniforms["glstate_nearDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._NEARDICTANCE, value: {} };
                 technique.uniforms["glstate_farDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._FARDISTANCE, value: {} };
@@ -368,12 +364,9 @@ namespace egret3d {
             }
 
             {
-                const shader = this.createBuildinShader("buildin/line.shader.gltf", "line_vs", ShaderLib.line_vert, "line_fs", ShaderLib.line_frag, RenderQueue.Geometry);
+                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.line)) as GLTFAsset;
+                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
-                technique.attributes["color"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
-
-                technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
@@ -384,7 +377,9 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createMeshLambertShaderTemplate("buildin/meshlambert.shader.gltf", RenderQueue.Geometry);
+                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.meshlambert)) as GLTFAsset;
+                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
@@ -395,13 +390,27 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/diffuse.shader.gltf", RenderQueue.Geometry);
+                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.diffuse)) as GLTFAsset;
+                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
 
                 DefaultShaders.DIFFUSE = shader;
+                paper.Asset.register(shader);
+            }
+
+            {
+                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.diffuse)) as GLTFAsset;
+                shader.name = "buildin/diffuse_tintcolor.shader.gltf";
+                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Close);
+                DefaultShaders.DIFFUSE_TINT_COLOR = shader;
                 paper.Asset.register(shader);
             }
 

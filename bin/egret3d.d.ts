@@ -6522,6 +6522,3603 @@ declare namespace egret3d.ShaderLib {
     const vertcolor_frag = "#include <common>\nuniform sampler2D _MainTex;                                                 \nvarying lowp vec4 xlv_COLOR;                                                 \nvarying highp vec2 xlv_TEXCOORD0;   \nvoid main() \n{\n    lowp vec4 col_1;    \n    mediump vec4 prev_2;\n    lowp vec4 tmpvar_3;\n\n    tmpvar_3 = (texture2D(_MainTex, xlv_TEXCOORD0));\n    //prev_2 = tmpvar_3;\n    //mediump vec4 tmpvar_4;\n    //tmpvar_4 = mix(vec4(1.0, 1.0, 1.0, 1.0), prev_2, prev_2.wwww);\n    //col_1 = tmpvar_4;\n    //col_1.x = xlv_TEXCOORD0.x;\n    //col_1.y = xlv_TEXCOORD0.y;\n    gl_FragData[0] = tmpvar_3;\n}";
     const vertcolor_vert = "#include <common>\nattribute vec4 position;   \nattribute vec4 normal;   \nattribute vec4 color;                  \nattribute vec4 uv;        \nuniform highp mat4 modelViewProjectionMatrix;   \nuniform highp vec4 _MainTex_ST;       \n\nvarying lowp vec4 xlv_COLOR;                \nvarying highp vec2 xlv_TEXCOORD0;   \n\nvoid main()                                     \n{                                               \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = position.xyz;             \n    xlv_COLOR = color;                     \n    xlv_TEXCOORD0 = uv.xy * _MainTex_ST.xy + _MainTex_ST.zw;   \n\n    //xlv_COLOR.xyz =pos.xyz;\n    gl_Position = (modelViewProjectionMatrix * tmpvar_1);  \n}\n";
 }
+declare namespace egret3d.ShaderLibs {
+    const cube: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "tCube": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "tFlip": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const depthpackage: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelViewProjectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const depth: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "uvTransform": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "displacementMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "displacementScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "displacementBias": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "morphTargetInfluences[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "bindMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "bindMatrixInverse": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "boneTexture": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneTextureSize": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneMatrices[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "logDepthBufFC": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "map": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "alphaMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "clippingPlanes[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const diffuse: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                            "uv2": {
+                                "semantic": string;
+                            };
+                            "position": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "glstate_vec4_bones[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "lightMapOffset": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "lightMapUV": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewProjectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "_MainTex_ST": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "lightMap": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "lightMapIntensity": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "_MainColor": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "_MainTex": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "_AlphaCut": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const distancepackage: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelViewProjectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "glstate_referencePosition": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "glstate_nearDistance": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "glstate_farDistance": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const distanceRGBA: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "uvTransform": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "displacementMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "displacementScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "displacementBias": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "morphTargetInfluences[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "bindMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "bindMatrixInverse": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "boneTexture": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneTextureSize": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneMatrices[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "referencePosition": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "nearDistance": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "farDistance": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "map": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "alphaMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "clippingPlanes[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const equirect: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "tEquirect": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const linedashed: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "lineDistance": {
+                                "semantic": string;
+                            };
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "scale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "logDepthBufFC": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "diffuse": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "dashSize": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "totalSize": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogColor": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogDensity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogNear": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogFar": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "clippingPlanes[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const line: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelViewProjectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const meshbasic: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                            "uv2": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "uvTransform": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "refractionRatio": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "morphTargetInfluences[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "bindMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "bindMatrixInverse": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "boneTexture": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneTextureSize": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneMatrices[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "logDepthBufFC": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "diffuse": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "map": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "alphaMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "aoMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "aoMapIntensity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "lightMap": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "lightMapIntensity": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "reflectivity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "envMapIntensity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "envMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "flipEnvMap": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "maxMipLevel": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogColor": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogDensity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogNear": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogFar": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "specularMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "clippingPlanes[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const meshlambert: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                            "uv2": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "uvTransform": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "refractionRatio": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "ambientLightColor": {
+                                "type": number;
+                                "value": number[];
+                                "semantic": string;
+                            };
+                            "directionalLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "ltc_1": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "ltc_2": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "rectAreaLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "hemisphereLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "morphTargetInfluences[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "bindMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "bindMatrixInverse": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "boneTexture": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneTextureSize": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneMatrices[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "directionalShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "logDepthBufFC": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "diffuse": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "emissive": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "map": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "alphaMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "aoMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "aoMapIntensity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "lightMap": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "lightMapIntensity": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "emissiveMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "reflectivity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "envMapIntensity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "envMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "flipEnvMap": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "maxMipLevel": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogColor": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogDensity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogNear": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogFar": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "directionalShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "specularMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "clippingPlanes[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const meshphong: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                            "uv2": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "uvTransform": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "displacementMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "displacementScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "displacementBias": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "refractionRatio": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "morphTargetInfluences[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "bindMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "bindMatrixInverse": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "boneTexture": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneTextureSize": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneMatrices[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "directionalShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "logDepthBufFC": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "diffuse": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "emissive": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "specular": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "shininess": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "map": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "alphaMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "aoMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "aoMapIntensity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "lightMap": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "lightMapIntensity": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "emissiveMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "reflectivity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "envMapIntensity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "envMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "flipEnvMap": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "maxMipLevel": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "gradientMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogColor": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogDensity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogNear": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogFar": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "ambientLightColor": {
+                                "type": number;
+                                "value": number[];
+                                "semantic": string;
+                            };
+                            "directionalLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "ltc_1": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "ltc_2": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "rectAreaLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "hemisphereLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "directionalShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "bumpMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "bumpScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "normalMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "normalScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "specularMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "clippingPlanes[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const meshphysical: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                            "uv2": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "uvTransform": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "displacementMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "displacementScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "displacementBias": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "morphTargetInfluences[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "bindMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "bindMatrixInverse": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "boneTexture": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneTextureSize": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneMatrices[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "directionalShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "logDepthBufFC": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "diffuse": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "emissive": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "roughness": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "metalness": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "clearCoat": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "clearCoatRoughness": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "map": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "alphaMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "aoMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "aoMapIntensity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "lightMap": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "lightMapIntensity": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "emissiveMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "reflectivity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "envMapIntensity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "envMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "flipEnvMap": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "maxMipLevel": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "refractionRatio": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogColor": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogDensity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogNear": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogFar": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "ambientLightColor": {
+                                "type": number;
+                                "value": number[];
+                                "semantic": string;
+                            };
+                            "directionalLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "ltc_1": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "ltc_2": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "rectAreaLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "hemisphereLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "directionalShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "bumpMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "bumpScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "normalMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "normalScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "roughnessMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "metalnessMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "clippingPlanes[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const normal: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "uvTransform": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "displacementMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "displacementScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "displacementBias": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "morphTargetInfluences[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "bindMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "bindMatrixInverse": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "boneTexture": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneTextureSize": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneMatrices[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "logDepthBufFC": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "bumpMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "bumpScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "normalMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "normalScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const particlesystem: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "corner": {
+                                "semantic": string;
+                            };
+                            "position": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "startPosition": {
+                                "semantic": string;
+                            };
+                            "startVelocity": {
+                                "semantic": string;
+                            };
+                            "startColor": {
+                                "semantic": string;
+                            };
+                            "startSize": {
+                                "semantic": string;
+                            };
+                            "startRotation": {
+                                "semantic": string;
+                            };
+                            "time": {
+                                "semantic": string;
+                            };
+                            "random0": {
+                                "semantic": string;
+                            };
+                            "random1": {
+                                "semantic": string;
+                            };
+                            "startWorldPosition": {
+                                "semantic": string;
+                            };
+                            "startWorldRotation": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "u_currentTime": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_gravity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_worldPosition": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_worldRotation": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_startRotation3D": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_scalingMode": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_positionScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_sizeScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "viewProjectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "_MainTex_ST": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraForward": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "cameraUp": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_lengthScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_speeaScale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_simulationSpace": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_spaceType": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_velocityConst": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_velocityCurveX[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_velocityCurveY[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_velocityCurveZ[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_velocityConstMax": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_velocityCurveMaxX[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_velocityCurveMaxY[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_velocityCurveMaxZ[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_colorGradient[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_alphaGradient[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_colorGradientMax[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_alphaGradientMax[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_sizeCurve[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_sizeCurveMax[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_sizeCurveX[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_sizeCurveY[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_sizeCurveZ[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_sizeCurveMaxX[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_sizeCurveMaxY[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_sizeCurveMaxZ[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationConst": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationConstMax": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationCurve[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationCurveMax[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationConstSeprarate": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationConstMaxSeprarate": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationCurveX[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationCurveY[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationCurveZ[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationCurveW[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationCurveMaxX[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationCurveMaxY[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationCurveMaxZ[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_rotationCurveMaxW[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_cycles": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_subUV": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_uvCurve[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "u_uvCurveMax[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "_MainTex": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "_TintColor": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const points: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "size": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "scale": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "morphTargetInfluences[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "logDepthBufFC": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "diffuse": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "uvTransform": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "map": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogColor": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogDensity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogNear": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogFar": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "clippingPlanes[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const shadow: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "directionalShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "color": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "fogColor": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogDensity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogNear": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogFar": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "ambientLightColor": {
+                                "type": number;
+                                "value": number[];
+                                "semantic": string;
+                            };
+                            "directionalLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "ltc_1": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "ltc_2": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "rectAreaLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "hemisphereLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "directionalShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const sprite: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "morphTarget0": {
+                                "semantic": string;
+                            };
+                            "morphTarget1": {
+                                "semantic": string;
+                            };
+                            "morphTarget2": {
+                                "semantic": string;
+                            };
+                            "morphTarget3": {
+                                "semantic": string;
+                            };
+                            "morphNormal0": {
+                                "semantic": string;
+                            };
+                            "morphNormal1": {
+                                "semantic": string;
+                            };
+                            "morphNormal2": {
+                                "semantic": string;
+                            };
+                            "morphNormal3": {
+                                "semantic": string;
+                            };
+                            "morphTarget4": {
+                                "semantic": string;
+                            };
+                            "morphTarget5": {
+                                "semantic": string;
+                            };
+                            "morphTarget6": {
+                                "semantic": string;
+                            };
+                            "morphTarget7": {
+                                "semantic": string;
+                            };
+                            "skinIndex": {
+                                "semantic": string;
+                            };
+                            "skinWeight": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "rotation": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "center": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "modelMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "modelViewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "projectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "viewMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "normalMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "cameraPosition": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "uvTransform": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "logDepthBufFC": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "diffuse": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "map": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogColor": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogDensity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogNear": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "fogFar": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "clippingPlanes[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const test1: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "uv2": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "uvTransform": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "refractionRatio": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "ambientLightColor": {
+                                "type": number;
+                                "value": number[];
+                                "semantic": string;
+                            };
+                            "directionalLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "ltc_1": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "ltc_2": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "rectAreaLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "hemisphereLights[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "bindMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "bindMatrixInverse": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "boneTexture": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneTextureSize": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "boneMatrices[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "directionalShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointShadowMatrix[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "diffuse": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "emissive": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "opacity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "map": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "alphaMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "aoMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "aoMapIntensity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "lightMap": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "lightMapIntensity": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "emissiveMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "reflectivity": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "envMapIntensity": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "envMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "flipEnvMap": {
+                                "type": number;
+                                "value": number;
+                            };
+                            "maxMipLevel": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "directionalShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "spotShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "pointShadowMap[0]": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "specularMap": {
+                                "type": number;
+                                "value": any[];
+                            };
+                            "clippingPlanes[0]": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+    const vertcolor: {
+        "name": string;
+        "config": {
+            "version": string;
+            "asset": {
+                "version": string;
+            };
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "shaders": {
+                        "name": string;
+                        "type": number;
+                        "uri": string;
+                    }[];
+                    "techniques": {
+                        "name": string;
+                        "attributes": {
+                            "position": {
+                                "semantic": string;
+                            };
+                            "normal": {
+                                "semantic": string;
+                            };
+                            "color": {
+                                "semantic": string;
+                            };
+                            "uv": {
+                                "semantic": string;
+                            };
+                        };
+                        "uniforms": {
+                            "modelViewProjectionMatrix": {
+                                "type": number;
+                                "value": any[];
+                                "semantic": string;
+                            };
+                            "_MainTex_ST": {
+                                "type": number;
+                                "value": number[];
+                            };
+                            "_MainTex": {
+                                "type": number;
+                                "value": any[];
+                            };
+                        };
+                        "states": {
+                            "enable": any[];
+                            "functions": {};
+                        };
+                    }[];
+                };
+                "paper": {};
+            };
+            "extensionsRequired": string[];
+            "extensionsUsed": string[];
+            "materials": any[];
+        };
+        "_isBuiltin": boolean;
+    };
+}
 declare namespace egret3d.ShaderChunk {
     const alphamap_fragment = "#ifdef USE_ALPHAMAP\n\n diffuseColor.a *= texture2D( alphaMap, vUv ).g;\n\n#endif\n";
     const alphamap_pars_fragment = "#ifdef USE_ALPHAMAP\n\n uniform sampler2D alphaMap;\n\n#endif\n";

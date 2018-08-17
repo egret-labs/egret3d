@@ -259,7 +259,17 @@ namespace egret3d {
 
             for (const key in source.uniforms) {
                 const uniform = source.uniforms[key];
-                const value = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value;
+                let value = {};
+                if (Array.isArray(uniform.value)) {
+                    value = uniform.value.concat();
+                }
+                else if (uniform.type === gltf.UniformType.SAMPLER_2D && !(uniform.value instanceof egret3d.Texture)) {
+                    value = egret3d.DefaultTextures.GRAY;
+                }
+                else {
+                    value = uniform.value;
+                }
+
                 target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value };
             }
 
@@ -697,7 +707,7 @@ declare namespace gltf {
         COLOR_1 = "COLOR_1",
         JOINTS_0 = "JOINTS_0",
         WEIGHTS_0 = "WEIGHTS_0",
-        
+
         MORPHTARGET_0 = "WEIGHTS_0",
         MORPHTARGET_1 = "WEIGHTS_1",
         MORPHTARGET_2 = "WEIGHTS_2",
@@ -706,7 +716,7 @@ declare namespace gltf {
         MORPHTARGET_5 = "WEIGHTS_5",
         MORPHTARGET_6 = "WEIGHTS_6",
         MORPHTARGET_7 = "WEIGHTS_7",
-        
+
         MORPHNORMAL_0 = "MORPHNORMAL_0",
         MORPHNORMAL_1 = "MORPHNORMAL_1",
         MORPHNORMAL_2 = "MORPHNORMAL_2",
