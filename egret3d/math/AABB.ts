@@ -175,61 +175,6 @@ namespace egret3d {
 
             return this;
         }
-
-        public intersectsPlane(value: Readonly<Plane>) {
-            // We compute the minimum and maximum dot product values. If those values
-            // are on the same side (back or front) of the plane, then there is no intersection.
-            let min: number;
-            let max: number;
-
-            if (value.normal.x > 0.0) {
-                min = value.normal.x * this._minimum.x;
-                max = value.normal.x * this._maximum.x;
-            }
-            else {
-                min = value.normal.x * this._maximum.x;
-                max = value.normal.x * this._minimum.x;
-            }
-
-            if (value.normal.y > 0.0) {
-                min += value.normal.y * this._minimum.y;
-                max += value.normal.y * this._maximum.y;
-            }
-            else {
-                min += value.normal.y * this._maximum.y;
-                max += value.normal.y * this._minimum.y;
-            }
-
-            if (value.normal.z > 0.0) {
-                min += value.normal.z * this._minimum.z;
-                max += value.normal.z * this._maximum.z;
-            }
-            else {
-                min += value.normal.z * this._maximum.z;
-                max += value.normal.z * this._minimum.z;
-            }
-
-            return min <= value.constant && max >= value.constant;
-
-        }
-
-        public intersectsAABB(value: Readonly<AABB>) {
-            const vMin = value.minimum;
-            const vMax = value.maximum;
-            const min = this._minimum;
-            const max = this._maximum;
-            // using 6 splitting planes to rule out intersections.
-            return vMax.x < min.x || vMin.x > max.x ||
-                vMax.y < min.y || vMin.y > max.y ||
-                vMax.z < min.z || vMin.z > max.z ? false : true;
-        }
-
-        public intersectsSphere(value: Readonly<Sphere>) {
-            // Find the point on the AABB closest to the sphere center.
-            helpVector3A.copy(value.center).clamp(this._minimum, this._maximum);
-            // If that point is inside the sphere, the AABB and sphere intersect.
-            return helpVector3A.getSquaredDistance(value.center) <= (value.radius * value.radius);
-        }
         /**
          * check contains vector
          * @param value a world point

@@ -8,9 +8,12 @@ namespace egret3d {
          * 当前主相机。
          */
         public static get main() {
-            const gameObject =
-                paper.Application.sceneManager.activeScene.findWithTag(paper.DefaultTags.MainCamera) ||
-                paper.GameObject.create(paper.DefaultNames.MainCamera, paper.DefaultTags.MainCamera);
+            let gameObject = paper.Application.sceneManager.activeScene.findWithTag(paper.DefaultTags.MainCamera);
+            if (!gameObject) {
+                gameObject = paper.GameObject.create(paper.DefaultNames.MainCamera, paper.DefaultTags.MainCamera);
+                gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);
+                gameObject.transform.lookAt(Vector3.ZERO);
+            }
 
             return gameObject.getOrAddComponent(Camera);
         }

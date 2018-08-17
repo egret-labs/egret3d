@@ -95,17 +95,5 @@ namespace egret3d {
 
             return this.center.getSquaredDistance(value as IVector3) <= this.radius * this.radius;
         }
-
-        public intersectsSphere(value: Readonly<Sphere>) {
-            const radiusSum = this.radius + value.radius;
-
-            return this.center.getSquaredDistance(value.center) <= (radiusSum * radiusSum);
-        }
-
-        public intersectsAABB(value: Readonly<AABB>) {
-
-            return value.intersectsSphere(this);
-
-        }
     }
 }
