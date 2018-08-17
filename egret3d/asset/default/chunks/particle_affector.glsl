@@ -9,9 +9,9 @@ vec3 gravity=u_gravity*age;
 vec3 center=computePosition(_startVelocity, lifeVelocity, age, t,gravity,worldRotation); 
 #ifdef SPHERHBILLBOARD
 			vec2 corner=_glesCorner.xy;
-	     vec3 cameraUpVector =normalize(glstate_cameraUp);
-	     vec3 sideVector = normalize(cross(glstate_cameraForward,cameraUpVector));
-	     vec3 upVector = normalize(cross(sideVector,glstate_cameraForward));
+	     vec3 cameraUpVector =normalize(cameraUp);
+	     vec3 sideVector = normalize(cross(cameraForward,cameraUpVector));
+	     vec3 upVector = normalize(cross(sideVector,cameraForward));
 	   	corner*=computeBillbardSize(_startSize.xy,t);
 		#if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)
 			if(u_startRotation3D){
@@ -51,7 +51,7 @@ vec3 center=computePosition(_startVelocity, lifeVelocity, age, t,gravity,worldRo
 	   		velocity= rotation_quaternions(u_sizeScale*_startVelocity,worldRotation)+gravity;
 	 	#endif	
 		vec3 cameraUpVector = normalize(velocity);
-		vec3 direction = normalize(center-glstate_cameraPos);
+		vec3 direction = normalize(center-cameraPosition);
 	   vec3 sideVector = normalize(cross(direction,normalize(velocity)));
 		sideVector=u_sizeScale.xzy*sideVector;
 		cameraUpVector=length(vec3(u_sizeScale.x,0.0,0.0))*cameraUpVector;
@@ -77,7 +77,7 @@ vec3 center=computePosition(_startVelocity, lifeVelocity, age, t,gravity,worldRo
 	#ifdef VERTICALBILLBOARD
 		vec2 corner=_glesCorner.xy;
 	   const vec3 cameraUpVector =vec3(0.0,1.0,0.0);
-	   vec3 sideVector = normalize(cross(glstate_cameraForward,cameraUpVector));
+	   vec3 sideVector = normalize(cross(cameraForward,cameraUpVector));
 		float rot = computeRotation(_startRotation.x, age,t);
 	   float c = cos(rot);
 	   float s = sin(rot);

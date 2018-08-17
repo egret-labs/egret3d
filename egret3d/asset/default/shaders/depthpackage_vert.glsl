@@ -1,8 +1,8 @@
 #include <common>
 attribute vec3 _glesVertex;
 
-uniform mat4 glstate_matrix_mvp;
+uniform mat4 modelViewProjectionMatrix;
 
 void main() { 
-    gl_Position = glstate_matrix_mvp * vec4(_glesVertex, 1.0);
+    gl_Position = modelViewProjectionMatrix * vec4(_glesVertex, 1.0);
 }

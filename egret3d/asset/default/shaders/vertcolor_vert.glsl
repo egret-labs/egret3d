@@ -3,7 +3,7 @@ attribute vec4 _glesVertex;
 attribute vec4 _glesNormal;   
 attribute vec4 _glesColor;                  
 attribute vec4 _glesMultiTexCoord0;        
-uniform highp mat4 glstate_matrix_mvp;   
+uniform highp mat4 modelViewProjectionMatrix;   
 uniform highp vec4 _MainTex_ST;       
 
 varying lowp vec4 xlv_COLOR;                
@@ -18,5 +18,5 @@ void main()
     xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;   
 
     //xlv_COLOR.xyz =pos.xyz;
-    gl_Position = (glstate_matrix_mvp * tmpvar_1);  
+    gl_Position = (modelViewProjectionMatrix * tmpvar_1);  
 }

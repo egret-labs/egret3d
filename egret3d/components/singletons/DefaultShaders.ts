@@ -27,7 +27,6 @@ namespace egret3d {
         public static TRANSPARENT_ADDITIVE: GLTFAsset;
         public static TRANSPARENT_BOTH_SIDE: GLTFAsset;
         public static TRANSPARENT_ADDITIVE_BOTH_SIDE: GLTFAsset;
-        public static LAMBERT: GLTFAsset;
         public static GIZMOS_COLOR: GLTFAsset;
         public static MATERIAL_COLOR: GLTFAsset;
         public static VERT_COLOR: GLTFAsset;
@@ -142,7 +141,7 @@ namespace egret3d {
             const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
             technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
-            technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+            technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
             technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
 
             return shader;
@@ -238,7 +237,7 @@ namespace egret3d {
 
             technique.uniforms["glstate_lightmapOffset"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._LIGHTMAPOFFSET, value: [] };
             technique.uniforms["glstate_lightmapUV"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPUV, value: {} };
-            technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+            technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
             technique.uniforms["glstate_vec4_bones[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._BONESVEC4, value: [] };
             technique.uniforms["_LightmapTex"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._LIGHTMAPTEX, value: {} };
             technique.uniforms["_LightmapIntensity"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPINTENSITY, value: 1.0 };
@@ -248,35 +247,6 @@ namespace egret3d {
             technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 0, 0] };
             technique.uniforms["_AlphaCut"] = { type: gltf.UniformType.FLOAT, value: 0 };
 
-            return shader;
-        }
-
-        private _createLambertShaderTemplate(url: string, renderQueue: RenderQueue) {
-            const shader = this.createBuildinShader(url, "lambert_vs", ShaderLib.lambert_vert, "lambert_fs", ShaderLib.lambert_frag, renderQueue);
-
-            const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-            technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
-            technique.attributes["_glesNormal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
-            technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["_glesBlendIndex4"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
-            technique.attributes["_glesBlendWeight4"] = { semantic: gltf.AttributeSemanticType.WEIGHTS_0 };
-
-            technique.uniforms["glstate_directionalShadowMatrix[0]"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._DIRECTIONSHADOWMAT, value: [] };
-            technique.uniforms["glstate_directionalShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._DIRECTIONSHADOWMAP, value: [] };
-            technique.uniforms["glstate_directLights[0]"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._DIRECTLIGHTS, value: [] };
-            technique.uniforms["glstate_pointShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_CUBE, semantic: gltf.UniformSemanticType._POINTSHADOWMAP, value: [] };
-            technique.uniforms["glstate_pointLights[0]"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._POINTLIGHTS, value: [] };
-            technique.uniforms["glstate_spotShadowMatrix[0]"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._SPOTSHADOWMAT, value: [] };
-            technique.uniforms["glstate_spotShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._SPOTSHADOWMAP, value: [] };
-            technique.uniforms["glstate_spotLights[0]"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._SPOTLIGHTS, value: [] };
-            technique.uniforms["glstate_vec4_bones[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._BONESVEC4, value: [] };
-            technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
-            technique.uniforms["glstate_matrix_model"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };
-
-            technique.uniforms["_NormalTex"] = { type: gltf.UniformType.SAMPLER_2D, value: DefaultTextures.GRAY };
-            technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: DefaultTextures.GRAY };
-            technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 0, 0] };
-            technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
             return shader;
         }
 
@@ -299,10 +269,10 @@ namespace egret3d {
             technique.attributes["_startWorldPosition"] = { semantic: gltf.AttributeSemanticType._WORLD_POSITION };
             technique.attributes["_startWorldRotation"] = { semantic: gltf.AttributeSemanticType._WORLD_ROTATION };
 
-            technique.uniforms["glstate_matrix_vp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._VIEWPROJECTION, value: [] };
-            technique.uniforms["glstate_cameraPos"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_POS, value: [] };
-            technique.uniforms["glstate_cameraForward"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_FORWARD, value: [] };
-            technique.uniforms["glstate_cameraUp"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_UP, value: [] };
+            technique.uniforms["viewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._VIEWPROJECTION, value: [] };
+            technique.uniforms["cameraPosition"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_POS, value: [] };
+            technique.uniforms["cameraForward"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_FORWARD, value: [] };
+            technique.uniforms["cameraUp"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_UP, value: [] };
 
             technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: egret3d.DefaultTextures.GRAY };
             technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 0, 0] };
@@ -367,7 +337,7 @@ namespace egret3d {
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
-                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+                technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
                 //
                 this._setDepth(technique, true, true);
@@ -383,8 +353,8 @@ namespace egret3d {
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
-                technique.uniforms["glstate_matrix_model"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };
-                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+                technique.uniforms["modelMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };
+                technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
                 technique.uniforms["glstate_referencePosition"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._REFERENCEPOSITION, value: [] };
                 technique.uniforms["glstate_nearDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._NEARDICTANCE, value: {} };
                 technique.uniforms["glstate_farDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._FARDISTANCE, value: {} };
@@ -403,7 +373,7 @@ namespace egret3d {
                 technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
                 technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
 
-                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+                technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
@@ -515,17 +485,6 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createLambertShaderTemplate("buildin/lambert.shader.gltf", RenderQueue.Geometry);
-                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-                this._setBlend(technique, BlendModeEnum.Close);
-
-                DefaultShaders.LAMBERT = shader;
-            }
-
-            {
                 const shader = this._createColorShaderTemplate("buildin/gizmos.shader.gltf", RenderQueue.Overlay);
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
@@ -556,7 +515,7 @@ namespace egret3d {
                 technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
                 technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
 
-                technique.uniforms["glstate_matrix_mvp"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
+                technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
                 technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
                 technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_MAT4, value: {} };

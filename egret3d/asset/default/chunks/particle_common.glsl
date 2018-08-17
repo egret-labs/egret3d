@@ -9,14 +9,14 @@ uniform bool u_startRotation3D;
 uniform int u_scalingMode;
 uniform vec3 u_positionScale;
 uniform vec3 u_sizeScale;
-uniform mat4 glstate_matrix_vp;
+uniform mat4 viewProjectionMatrix;
 uniform vec4 _MainTex_ST;  
 
 #ifdef STRETCHEDBILLBOARD
-	uniform vec3 glstate_cameraPos;
+	uniform vec3 cameraPosition;
 #endif
-uniform vec3 glstate_cameraForward;
-uniform vec3 glstate_cameraUp;
+uniform vec3 cameraForward;
+uniform vec3 cameraUp;
 
 uniform float u_lengthScale;
 uniform float u_speeaScale;
