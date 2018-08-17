@@ -20,7 +20,7 @@ namespace egret3d {
     /**
      * 
      */
-    export class Vector3 implements IVector3, paper.ISerializable {
+    export class Vector3 implements IVector3, paper.IRelease<Vector3>, paper.ISerializable {
         public static readonly ZERO: Readonly<Vector3> = new Vector3(0.0, 0.0, 0.0);
         public static readonly ONE: Readonly<Vector3> = new Vector3(1.0, 1.0, 1.0);
         public static readonly UP: Readonly<Vector3> = new Vector3(0.0, 1.0, 0.0);
@@ -40,12 +40,12 @@ namespace egret3d {
             return new Vector3().set(x, y, z);
         }
 
-        public static release(value: Vector3) {
-            if (this._instances.indexOf(value) >= 0) {
-                return;
+        public release() {
+            if (Vector3._instances.indexOf(this) < 0) {
+                Vector3._instances.push(this);
             }
 
-            this._instances.push(value);
+            return this;
         }
 
         public x: number;
@@ -67,12 +67,8 @@ namespace egret3d {
             return [this.x, this.y, this.z];
         }
 
-        public deserialize(element: Readonly<[number, number, number]>) {
-            this.x = element[0];
-            this.y = element[1];
-            this.z = element[2];
-
-            return this;
+        public deserialize(value: Readonly<[number, number, number]>) {
+            return this.fromArray(value);
         }
 
         public copy(value: Readonly<IVector3>) {
@@ -117,6 +113,14 @@ namespace egret3d {
             this.z = value[offset + 2];
 
             return this;
+        }
+
+        public fromPlaneProjection(plane: Readonly<Plane>, value?: Readonly<IVector3>) {
+            if (!value) {
+                value = this;
+            }
+
+            return this.add(helpVector3A.multiplyScalar(-plane.getDistance(value), plane.normal));
         }
 
         public applyMatrix(matrix: Readonly<Matrix>, value?: Readonly<IVector3>) {
@@ -183,12 +187,22 @@ namespace egret3d {
                 this.z *= l;
             }
             else {
-                this.x = 1.0;
+                this.x = 0.0;
                 this.y = 0.0;
-                this.z = 0.0;
+                this.z = 1.0;
             }
 
             return this;
+        }
+
+        public negate(value?: Readonly<IVector3>) {
+            if (!value) {
+                value = this;
+            }
+
+            this.x = value.x * -1.00;
+            this.y = value.y * -1.00;
+            this.z = value.z * -1.00;
         }
 
         public addScalar(add: number, value?: Readonly<IVector3>) {
@@ -332,6 +346,15 @@ namespace egret3d {
             return this;
         }
 
+        public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>) {
+            // assumes min < max, componentwise
+            this.x = Math.max(min.x, Math.min(max.x, this.x));
+            this.y = Math.max(min.y, Math.min(max.y, this.y));
+            this.z = Math.max(min.z, Math.min(max.z, this.z));
+
+            return this;
+        }
+
         public getDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number {
             if (!valueB) {
                 valueB = valueA;
@@ -341,11 +364,20 @@ namespace egret3d {
             return helpVector.subtract(valueB, valueA).length;
         }
 
+        public getSquaredDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            return helpVector.subtract(valueB, valueA).squaredLength;
+        }
+
         public get length() {
             return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
         }
 
-        public get sqrtLength() {
+        public get squaredLength() {
             return this.x * this.x + this.y * this.y + this.z * this.z;
         }
 
