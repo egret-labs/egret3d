@@ -1,6 +1,7 @@
 varying vec3 vWorldPosition;
 
 #include <common>
+#include <common2>
 
 void main() {
 

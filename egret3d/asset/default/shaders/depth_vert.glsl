@@ -1,4 +1,5 @@
 #include <common>
+#include <common2>
 #include <uv_pars_vertex>
 #include <displacementmap_pars_vertex>
 #include <morphtarget_pars_vertex>

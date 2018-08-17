@@ -1,3 +1,5 @@
+
+#include <common2>
 #include <fog_pars_vertex>
 #include <shadowmap_pars_vertex>
 
