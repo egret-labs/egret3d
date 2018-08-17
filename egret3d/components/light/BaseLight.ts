@@ -163,17 +163,11 @@ namespace egret3d {
         @paper.editor.property(paper.editor.EditType.COLOR)
         public readonly color: Color = new Color(1.0, 1.0, 1.0, 1.0);
         public readonly matrix: Matrix = new Matrix();
-        public renderTarget: IRenderTarget;       
+        public renderTarget: IRenderTarget;
         public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
         protected _updateMatrix(camera: Camera) {
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             const matrix = this.matrix;
-            // matrix.set(
-            //     0.5, 0.0, 0.0, 0.5,
-            //     0.0, 0.5, 0.0, 0.5,
-            //     0.0, 0.0, 0.5, 0.5,
-            //     0.0, 0.0, 0.0, 1.0
-            // );
             matrix.set(
                 0.5, 0.0, 0.0, 0.0,
                 0.0, 0.5, 0.0, 0.0,
@@ -181,17 +175,9 @@ namespace egret3d {
                 0.5, 0.5, 0.5, 1.0
             );
 
-            camera.calcViewPortPixel(this.viewPortPixel);
-            const asp = this.viewPortPixel.w / this.viewPortPixel.h;
-            camera.calcProjectMatrix(asp, helpMatrixA);
-            // camera.context.matrix_p;
-            helpMatrixB.copy(this.gameObject.transform.getWorldMatrix()).inverse();
-            matrix.multiply(helpMatrixA).multiply(helpMatrixB);
-
-            // let viewMatrix = camera.calcViewMatrix(helpMatrixA);
-            // let projectionMatrix = camera.calcProjectMatrix(512 / 512, helpMatrixB);
-            // Matrix.multiply(matrix, projectionMatrix, matrix);
-            // Matrix.multiply(matrix, viewMatrix, matrix);
+            const context = camera.context;
+            context.updateCamera(camera, this.gameObject.transform.getWorldMatrix());
+            matrix.multiply(context.matrix_p).multiply(context.matrix_v);
         }
         /**
          * @internal

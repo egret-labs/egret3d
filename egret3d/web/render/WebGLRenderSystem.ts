@@ -58,7 +58,7 @@ namespace egret3d {
                         webgl.uniformMatrix4fv(location, false, context.matrix_mv.rawData);
                         break;
                     case gltf.UniformSemanticType.MODELVIEWINVERSE:
-                        webgl.uniformMatrix3fv(location, false, context.matrix_mv_invers.rawData);
+                        webgl.uniformMatrix3fv(location, false, context.matrix_mv_inverse.rawData);
                         break;
                     case gltf.UniformSemanticType._VIEWPROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_vp.rawData);
@@ -408,7 +408,6 @@ namespace egret3d {
             const drawCalls = this._drawCalls;
             const faceCount = light.type === LightType.Point ? 6 : 1;
             const renderState = this._renderState;
-            const lightWorldMatrix = light.gameObject.transform.getWorldMatrix();
             for (let i = 0; i < faceCount; ++i) {
                 const context = camera.context;
                 light.update(camera, i);
@@ -416,8 +415,6 @@ namespace egret3d {
                 (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
                 renderState.targetAndViewport(camera.viewport, light.renderTarget);
                 renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
-                context.updateCamera(camera, lightWorldMatrix);
-                // context.updateLightDepth(light);
                 drawCalls.shadowFrustumCulling(camera);
                 //
                 const shadowCalls = drawCalls.shadowCalls;

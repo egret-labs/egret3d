@@ -1,7 +1,5 @@
 namespace egret3d {
 
-    let helpVec3_1: Vector3 = new Vector3();
-
     /**
      * 缓存场景通用数据
      * 包括矩阵信息，灯光，光照贴图，viewport尺寸等等
@@ -62,8 +60,7 @@ namespace egret3d {
         public readonly matrix_p: Matrix = new Matrix();
         public readonly matrix_mv: Matrix = new Matrix();
         public readonly matrix_vp: Matrix = new Matrix();
-        public readonly matrix_mv_invers: Matrix3 = new Matrix3();//INVERS
-        //matrixNormal: paper.matrix = new paper.matrix();
+        public readonly matrix_mv_inverse: Matrix3 = new Matrix3();//INVERS
 
         public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
             this.lightmap = texture;
@@ -291,7 +288,7 @@ namespace egret3d {
             this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
 
 
-            this.matrix_mv_invers.getNormalMatrix(this.matrix_mv);
+            this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
 
             this.version++;
         }

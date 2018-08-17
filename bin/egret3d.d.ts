@@ -4489,7 +4489,7 @@ declare namespace egret3d {
         readonly matrix_p: Matrix;
         readonly matrix_mv: Matrix;
         readonly matrix_vp: Matrix;
-        readonly matrix_mv_invers: Matrix3;
+        readonly matrix_mv_inverse: Matrix3;
         updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number): void;
         updateCamera(camera: Camera, matrix: Matrix): void;
         updateLights(lights: ReadonlyArray<BaseLight>): void;

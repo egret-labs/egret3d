@@ -3299,23 +3299,10 @@ var egret3d;
         BaseLight.prototype._updateMatrix = function (camera) {
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             var matrix = this.matrix;
-            // matrix.set(
-            //     0.5, 0.0, 0.0, 0.5,
-            //     0.0, 0.5, 0.0, 0.5,
-            //     0.0, 0.0, 0.5, 0.5,
-            //     0.0, 0.0, 0.0, 1.0
-            // );
             matrix.set(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
-            camera.calcViewPortPixel(this.viewPortPixel);
-            var asp = this.viewPortPixel.w / this.viewPortPixel.h;
-            camera.calcProjectMatrix(asp, egret3d.helpMatrixA);
-            // camera.context.matrix_p;
-            egret3d.helpMatrixB.copy(this.gameObject.transform.getWorldMatrix()).inverse();
-            matrix.multiply(egret3d.helpMatrixA).multiply(egret3d.helpMatrixB);
-            // let viewMatrix = camera.calcViewMatrix(helpMatrixA);
-            // let projectionMatrix = camera.calcProjectMatrix(512 / 512, helpMatrixB);
-            // Matrix.multiply(matrix, projectionMatrix, matrix);
-            // Matrix.multiply(matrix, viewMatrix, matrix);
+            var context = camera.context;
+            context.updateCamera(camera, this.gameObject.transform.getWorldMatrix());
+            matrix.multiply(context.matrix_p).multiply(context.matrix_v);
         };
         /**
          * @internal
@@ -9269,7 +9256,6 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    var helpVec3_1 = new egret3d.Vector3();
     /**
      * 缓存场景通用数据
      * 包括矩阵信息，灯光，光照贴图，viewport尺寸等等
@@ -9324,13 +9310,12 @@ var egret3d;
             this.matrix_p = new egret3d.Matrix();
             this.matrix_mv = new egret3d.Matrix();
             this.matrix_vp = new egret3d.Matrix();
-            this.matrix_mv_invers = new egret3d.Matrix3(); //INVERS
+            this.matrix_mv_inverse = new egret3d.Matrix3(); //INVERS
             //TODO废弃
             this.lightPosition = new Float32Array([0.0, 0.0, 0.0, 1.0]);
             this.lightShadowCameraNear = 0;
             this.lightShadowCameraFar = 0;
         }
-        //matrixNormal: paper.matrix = new paper.matrix();
         RenderContext.prototype.updateLightmap = function (texture, uv, offset, intensity) {
             this.lightmap = texture;
             this.lightmapUV = uv;
@@ -9524,7 +9509,7 @@ var egret3d;
             this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
             this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
             this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
-            this.matrix_mv_invers.getNormalMatrix(this.matrix_mv);
+            this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
             this.version++;
         };
         RenderContext.prototype.updateBones = function (data) {
@@ -11199,7 +11184,7 @@ var egret3d;
             camera.size = this.shadowCameraSize;
             camera.fov = Math.PI * 0.25; //
             camera.opvalue = 0.0;
-            camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
+            // camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
             _super.prototype.update.call(this, camera, faceIndex);
         };
         return DirectLight;
@@ -19488,7 +19473,7 @@ var egret3d;
                         webgl.uniformMatrix4fv(location_3, false, context.matrix_mv.rawData);
                         break;
                     case "MODELVIEWINVERSE" /* MODELVIEWINVERSE */:
-                        webgl.uniformMatrix3fv(location_3, false, context.matrix_mv_invers.rawData);
+                        webgl.uniformMatrix3fv(location_3, false, context.matrix_mv_inverse.rawData);
                         break;
                     case "_VIEWPROJECTION" /* _VIEWPROJECTION */:
                         webgl.uniformMatrix4fv(location_3, false, context.matrix_vp.rawData);
@@ -19830,15 +19815,12 @@ var egret3d;
             var drawCalls = this._drawCalls;
             var faceCount = light.type === 2 /* Point */ ? 6 : 1;
             var renderState = this._renderState;
-            var lightWorldMatrix = light.gameObject.transform.getWorldMatrix();
             for (var i = 0; i < faceCount; ++i) {
                 var context = camera.context;
                 light.update(camera, i);
                 light.renderTarget.activeCubeFace = i; // TODO 创建接口。
                 renderState.targetAndViewport(camera.viewport, light.renderTarget);
                 renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
-                context.updateCamera(camera, lightWorldMatrix);
-                // context.updateLightDepth(light);
                 drawCalls.shadowFrustumCulling(camera);
                 //
                 var shadowCalls = drawCalls.shadowCalls;

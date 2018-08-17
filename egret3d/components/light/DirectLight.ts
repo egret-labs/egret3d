@@ -12,7 +12,7 @@ namespace egret3d {
             camera.size = this.shadowCameraSize;
             camera.fov = Math.PI * 0.25; //
             camera.opvalue = 0.0;
-            camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
+            // camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
 
             super.update(camera, faceIndex);
         }
