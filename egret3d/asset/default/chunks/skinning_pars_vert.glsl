@@ -1,6 +1,6 @@
 #ifdef SKINNING
-attribute vec4 _glesBlendIndex4;
-attribute vec4 _glesBlendWeight4;
+attribute vec4 skinIndex;
+attribute vec4 skinWeight;
 uniform vec4 glstate_vec4_bones[110];
 
 mat4 buildMat4(int index)

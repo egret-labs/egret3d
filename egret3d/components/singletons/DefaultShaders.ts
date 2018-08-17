@@ -139,10 +139,10 @@ namespace egret3d {
             const shader = this.createBuildinShader(url, "color_vs", ShaderLib.materialcolor_vert, "color_fs", ShaderLib.line_frag, renderQueue);
 
             const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-            technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+            technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
             technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
-            technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
+            technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };//TODO
 
             return shader;
         }
@@ -229,18 +229,18 @@ namespace egret3d {
             const shader = this.createBuildinShader(url, "diffuse_vs", ShaderLib.diffuse_vert, "diffuse_fs", ShaderLib.diffuse_frag, renderQueue);
             const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
-            technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
-            technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["_glesMultiTexCoord1"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_1 };
-            technique.attributes["_glesBlendIndex4"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
-            technique.attributes["_glesBlendWeight4"] = { semantic: gltf.AttributeSemanticType.WEIGHTS_0 };
+            technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
+            technique.attributes["uv"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["uv2"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_1 };
+            technique.attributes["skinIndex"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
+            technique.attributes["skinWeight"] = { semantic: gltf.AttributeSemanticType.WEIGHTS_0 };
 
-            technique.uniforms["glstate_lightmapOffset"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._LIGHTMAPOFFSET, value: [] };
-            technique.uniforms["glstate_lightmapUV"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPUV, value: {} };
+            technique.uniforms["lightMapOffset"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._LIGHTMAPOFFSET, value: [] };//TODO
+            technique.uniforms["lightMapUV"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPUV, value: {} };//TODO
+            technique.uniforms["lightMap"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._LIGHTMAPTEX, value: {} };
+            technique.uniforms["lightMapIntensity"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPINTENSITY, value: 1.0 };
             technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
-            technique.uniforms["glstate_vec4_bones[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._BONESVEC4, value: [] };
-            technique.uniforms["_LightmapTex"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._LIGHTMAPTEX, value: {} };
-            technique.uniforms["_LightmapIntensity"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPINTENSITY, value: 1.0 };
+            technique.uniforms["glstate_vec4_bones[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._BONESVEC4, value: [] };//TODO
 
             technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: egret3d.DefaultTextures.GRAY };
             technique.uniforms["_MainColor"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
@@ -254,20 +254,20 @@ namespace egret3d {
             const shader = this.createBuildinShader(url, "particle_vs", ShaderLib.particlesystem_vert, "particle_fs", ShaderLib.particlesystem_frag, renderQueue);
 
             const technique = shader.config!.extensions!.KHR_techniques_webgl!.techniques[0];
-            technique.attributes["_glesCorner"] = { semantic: gltf.AttributeSemanticType._CORNER };
-            technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
-            technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
-            technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["_startPosition"] = { semantic: gltf.AttributeSemanticType._START_POSITION };
-            technique.attributes["_startVelocity"] = { semantic: gltf.AttributeSemanticType._START_VELOCITY };
-            technique.attributes["_startColor"] = { semantic: gltf.AttributeSemanticType._START_COLOR };
-            technique.attributes["_startSize"] = { semantic: gltf.AttributeSemanticType._START_SIZE };
-            technique.attributes["_startRotation"] = { semantic: gltf.AttributeSemanticType._START_ROTATION };
-            technique.attributes["_time"] = { semantic: gltf.AttributeSemanticType._TIME };
-            technique.attributes["_random0"] = { semantic: gltf.AttributeSemanticType._RANDOM0 };
-            technique.attributes["_random1"] = { semantic: gltf.AttributeSemanticType._RANDOM1 };
-            technique.attributes["_startWorldPosition"] = { semantic: gltf.AttributeSemanticType._WORLD_POSITION };
-            technique.attributes["_startWorldRotation"] = { semantic: gltf.AttributeSemanticType._WORLD_ROTATION };
+            technique.attributes["corner"] = { semantic: gltf.AttributeSemanticType._CORNER };
+            technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
+            technique.attributes["color"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
+            technique.attributes["uv"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+            technique.attributes["startPosition"] = { semantic: gltf.AttributeSemanticType._START_POSITION };
+            technique.attributes["startVelocity"] = { semantic: gltf.AttributeSemanticType._START_VELOCITY };
+            technique.attributes["startColor"] = { semantic: gltf.AttributeSemanticType._START_COLOR };
+            technique.attributes["startSize"] = { semantic: gltf.AttributeSemanticType._START_SIZE };
+            technique.attributes["startRotation"] = { semantic: gltf.AttributeSemanticType._START_ROTATION };
+            technique.attributes["time"] = { semantic: gltf.AttributeSemanticType._TIME };
+            technique.attributes["random0"] = { semantic: gltf.AttributeSemanticType._RANDOM0 };
+            technique.attributes["random1"] = { semantic: gltf.AttributeSemanticType._RANDOM1 };
+            technique.attributes["startWorldPosition"] = { semantic: gltf.AttributeSemanticType._WORLD_POSITION };
+            technique.attributes["startWorldRotation"] = { semantic: gltf.AttributeSemanticType._WORLD_ROTATION };
 
             technique.uniforms["viewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._VIEWPROJECTION, value: [] };
             technique.uniforms["cameraPosition"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_POS, value: [] };
@@ -335,7 +335,7 @@ namespace egret3d {
             {
                 const shader = this.createBuildinShader("buildin/depth.shader.gltf", "depth_vs", ShaderLib.depthpackage_vert, "depth_fs", ShaderLib.depthpackage_frag, RenderQueue.Geometry);
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+                technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
                 technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
@@ -351,7 +351,7 @@ namespace egret3d {
             {
                 const shader = this.createBuildinShader("buildin/distance.shader.gltf", "distance_vs", ShaderLib.distancepackage_vert, "distance_fs", ShaderLib.distancepackage_frag, RenderQueue.Geometry);
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
+                technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
 
                 technique.uniforms["modelMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };
                 technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
@@ -370,8 +370,8 @@ namespace egret3d {
             {
                 const shader = this.createBuildinShader("buildin/line.shader.gltf", "line_vs", ShaderLib.line_vert, "line_fs", ShaderLib.line_frag, RenderQueue.Geometry);
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
-                technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
+                technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
+                technique.attributes["color"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
 
                 technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
@@ -510,10 +510,10 @@ namespace egret3d {
                 const shader = this.createBuildinShader("buildin/vertcolor.shader.gltf", "vertcolor_vs", ShaderLib.vertcolor_vert, "vertcolor_fs", ShaderLib.vertcolor_frag, RenderQueue.Geometry);
 
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                technique.attributes["_glesVertex"] = { semantic: gltf.AttributeSemanticType.POSITION };
-                technique.attributes["_glesNormal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
-                technique.attributes["_glesColor"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
-                technique.attributes["_glesMultiTexCoord0"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
+                technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
+                technique.attributes["normal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
+                technique.attributes["color"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
+                technique.attributes["uv"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
 
                 technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
 
