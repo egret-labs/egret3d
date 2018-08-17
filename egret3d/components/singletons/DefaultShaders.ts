@@ -13,7 +13,7 @@ namespace egret3d {
 
         // public static DIFFUSE_VERT_COLOR: Shader;
         // public static LAMBERT_NORMAL: Shader;
-        public static TEST: GLTFAsset;
+        public static MESHLAMBERT: GLTFAsset;
 
         public static SHADOW_DEPTH: GLTFAsset;
         public static SHADOW_DISTANCE: GLTFAsset;
@@ -148,8 +148,8 @@ namespace egret3d {
             return shader;
         }
 
-        private _createTestShaderTemplate(url: string, renderQueue: RenderQueue) {
-            const shader = this.createBuildinShader(url, "test_vs", ShaderLib.test_vert, "test_fs", ShaderLib.test_frag, renderQueue);
+        private _createMeshLambertShaderTemplate(url: string, renderQueue: RenderQueue) {
+            const shader = this.createBuildinShader(url, "meshlambert_vs", ShaderLib.meshlambert_vert, "meshlambert_fs", ShaderLib.meshlambert_frag, renderQueue);
             const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
             technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
@@ -414,13 +414,13 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createTestShaderTemplate("buildin/test.shader.gltf", RenderQueue.Geometry);
+                const shader = this._createMeshLambertShaderTemplate("buildin/meshlambert.shader.gltf", RenderQueue.Geometry);
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
 
-                DefaultShaders.TEST = shader;
+                DefaultShaders.MESHLAMBERT = shader;
                 paper.Asset.register(shader);
             }
 
