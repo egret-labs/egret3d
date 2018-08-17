@@ -148,7 +148,7 @@ namespace egret3d {
         }
 
         private _createMeshLambertShaderTemplate(url: string, renderQueue: RenderQueue) {
-            const shader = this.createBuildinShader(url, "meshlambert_vs", ShaderLib.meshlambert_vert, "meshlambert_fs", ShaderLib.meshlambert_frag, renderQueue);
+            const shader = this.createBuildinShader(url, "meshlambert_vs", "#define USE_MAP \n" + ShaderLib.meshlambert_vert, "meshlambert_fs", "#define USE_MAP \n" + ShaderLib.meshlambert_frag, renderQueue);
             const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
             technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };

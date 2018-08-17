@@ -163,11 +163,7 @@ namespace egret3d {
             for (const light of lights) {
                 let lightArray = this.directLightArray;
                 const pos = light.gameObject.transform.getPosition();
-                dirHelper.fromArray(light.gameObject.transform.getWorldMatrix().rawData, 12);
-                dir.applyDirection(this.matrix_v, dirHelper);
-                dir.normalize();
-                
-                // const dir = light.gameObject.transform.getForward(helpVec3_1);
+                dir.applyDirection(this.matrix_v, pos).normalize();
                 let offset = 0;
 
                 if (light.type === LightType.Direction) {
@@ -178,9 +174,9 @@ namespace egret3d {
                     lightArray[index * size + offset++] = dir.y;
                     lightArray[index * size + offset++] = dir.z;
 
-                    lightArray[index * size + offset++] = light.color.r;
-                    lightArray[index * size + offset++] = light.color.g;
-                    lightArray[index * size + offset++] = light.color.b;
+                    lightArray[index * size + offset++] = light.color.r * light.intensity;
+                    lightArray[index * size + offset++] = light.color.g * light.intensity;
+                    lightArray[index * size + offset++] = light.color.b * light.intensity;
                 }
                 else if (light.type === LightType.Point) {
                     lightArray = this.pointLightArray;
@@ -191,9 +187,9 @@ namespace egret3d {
                     lightArray[index * size + offset++] = pos.y;
                     lightArray[index * size + offset++] = pos.z;
 
-                    lightArray[index * size + offset++] = light.color.r;
-                    lightArray[index * size + offset++] = light.color.g;
-                    lightArray[index * size + offset++] = light.color.b;
+                    lightArray[index * size + offset++] = light.color.r * light.intensity;
+                    lightArray[index * size + offset++] = light.color.g * light.intensity;
+                    lightArray[index * size + offset++] = light.color.b * light.intensity;
 
                     lightArray[index * size + offset++] = light.distance;
                     lightArray[index * size + offset++] = light.decay;
@@ -211,9 +207,9 @@ namespace egret3d {
                     lightArray[index * size + offset++] = dir.y;
                     lightArray[index * size + offset++] = dir.z;
 
-                    lightArray[index * size + offset++] = light.color.r;
-                    lightArray[index * size + offset++] = light.color.g;
-                    lightArray[index * size + offset++] = light.color.b;
+                    lightArray[index * size + offset++] = light.color.r * light.intensity;
+                    lightArray[index * size + offset++] = light.color.g * light.intensity;
+                    lightArray[index * size + offset++] = light.color.b * light.intensity;
 
                     lightArray[index * size + offset++] = light.distance;
                     lightArray[index * size + offset++] = light.decay;

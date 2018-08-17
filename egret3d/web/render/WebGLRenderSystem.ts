@@ -447,11 +447,14 @@ namespace egret3d {
 
             if (lights.length > 0) {
                 for (const light of lights) {
-                    if (!light.castShadows || light.gameObject.scene !== lightsScene) {
+                    if (light.gameObject.scene !== lightsScene) {
                         continue;
                     }
 
                     filteredLights.push(light);
+                    if (!light.castShadows) {
+                        continue;
+                    }
                     this._renderLightShadow(light);
                 }
             }
