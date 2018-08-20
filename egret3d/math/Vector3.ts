@@ -20,7 +20,7 @@ namespace egret3d {
     /**
      * 
      */
-    export class Vector3 implements IVector3, paper.ISerializable {
+    export class Vector3 implements IVector3, paper.IRelease<Vector3>, paper.ISerializable {
         public static readonly ZERO: Readonly<Vector3> = new Vector3(0.0, 0.0, 0.0);
         public static readonly ONE: Readonly<Vector3> = new Vector3(1.0, 1.0, 1.0);
         public static readonly UP: Readonly<Vector3> = new Vector3(0.0, 1.0, 0.0);
@@ -32,20 +32,20 @@ namespace egret3d {
 
         private static readonly _instances: Vector3[] = [];
 
-        public static create(x?: number, y?: number, z?: number) {
+        public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
             if (this._instances.length > 0) {
                 return this._instances.pop()!.set(x, y, z);
             }
 
-            return new Vector3(x, y, z);
+            return new Vector3().set(x, y, z);
         }
 
-        public static release(value: Vector3) {
-            if (this._instances.indexOf(value) >= 0) {
-                return;
+        public release() {
+            if (Vector3._instances.indexOf(this) < 0) {
+                Vector3._instances.push(this);
             }
 
-            this._instances.push(value);
+            return this;
         }
 
         public x: number;
@@ -67,12 +67,8 @@ namespace egret3d {
             return [this.x, this.y, this.z];
         }
 
-        public deserialize(element: Readonly<[number, number, number]>) {
-            this.x = element[0];
-            this.y = element[1];
-            this.z = element[2];
-
-            return this;
+        public deserialize(value: Readonly<[number, number, number]>) {
+            return this.fromArray(value);
         }
 
         public copy(value: Readonly<IVector3>) {
@@ -84,10 +80,7 @@ namespace egret3d {
         }
 
         public clone() {
-            const value = Vector3.create();
-            value.copy(this);
-
-            return value;
+            return Vector3.create(this.x, this.y, this.z);
         }
 
         public equal(value: Readonly<IVector3>, threshold: number = 0.000001) {
@@ -106,7 +99,7 @@ namespace egret3d {
             return true;
         }
 
-        public set(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
+        public set(x: number, y: number, z: number) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -120,6 +113,14 @@ namespace egret3d {
             this.z = value[offset + 2];
 
             return this;
+        }
+
+        public fromPlaneProjection(plane: Readonly<Plane>, value?: Readonly<IVector3>) {
+            if (!value) {
+                value = this;
+            }
+
+            return this.add(helpVector3A.multiplyScalar(-plane.getDistance(value), plane.normal));
         }
 
         public applyMatrix(matrix: Readonly<Matrix>, value?: Readonly<IVector3>) {
@@ -186,12 +187,22 @@ namespace egret3d {
                 this.z *= l;
             }
             else {
-                this.x = 1.0;
+                this.x = 0.0;
                 this.y = 0.0;
-                this.z = 0.0;
+                this.z = 1.0;
             }
 
             return this;
+        }
+
+        public negate(value?: Readonly<IVector3>) {
+            if (!value) {
+                value = this;
+            }
+
+            this.x = value.x * -1.00;
+            this.y = value.y * -1.00;
+            this.z = value.z * -1.00;
         }
 
         public addScalar(add: number, value?: Readonly<IVector3>) {
@@ -335,20 +346,120 @@ namespace egret3d {
             return this;
         }
 
+        public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>) {
+            // assumes min < max, componentwise
+            this.x = Math.max(min.x, Math.min(max.x, this.x));
+            this.y = Math.max(min.y, Math.min(max.y, this.y));
+            this.z = Math.max(min.z, Math.min(max.z, this.z));
+
+            return this;
+        }
+
         public getDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;
             }
 
-            return helpVector.subtract(valueA, valueB).length;
+            return helpVector.subtract(valueB, valueA).length;
+        }
+
+        public getSquaredDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            return helpVector.subtract(valueB, valueA).squaredLength;
+        }
+
+        public closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>) {
+            if (!value) {
+                value = this;
+            }
+
+            const vab = helpVector3A;
+            const vac = helpVector3B;
+            const vbc = helpVector3C;
+            const vap = helpVector3D;
+            const vbp = helpVector3E;
+            const vcp = helpVector3F;
+
+            const a = triangle.a, b = triangle.b, c = triangle.c;
+            let v: number, w: number;
+
+            // algorithm thanks to Real-Time Collision Detection by Christer Ericson,
+            // published by Morgan Kaufmann Publishers, (c) 2005 Elsevier Inc.,
+            // under the accompanying license; see chapter 5.1.5 for detailed explanation.
+            // basically, we're distinguishing which of the voronoi regions of the triangle
+            // the point lies in with the minimum amount of redundant computation.
+
+            vab.subtract(b, a);
+            vac.subtract(c, a);
+            vap.subtract(value, a);
+            const d1 = vab.dot(vap);
+            const d2 = vac.dot(vap);
+            if (d1 <= 0 && d2 <= 0) {
+                // vertex region of A; barycentric coords (1, 0, 0)
+                return this.copy(a);
+            }
+
+            vbp.subtract(value, b);
+            const d3 = vab.dot(vbp);
+            const d4 = vac.dot(vbp);
+            if (d3 >= 0 && d4 <= d3) {
+
+                // vertex region of B; barycentric coords (0, 1, 0)
+                return this.copy(b);
+            }
+
+            const vc = d1 * d4 - d3 * d2;
+            if (vc <= 0 && d1 >= 0 && d3 <= 0) {
+
+                v = d1 / (d1 - d3);
+                // edge region of AB; barycentric coords (1-v, v, 0)
+                return this.multiplyScalar(v, vab).add(a);
+            }
+
+            vcp.subtract(value, c);
+            const d5 = vab.dot(vcp);
+            const d6 = vac.dot(vcp);
+            if (d6 >= 0 && d5 <= d6) {
+
+                // vertex region of C; barycentric coords (0, 0, 1)
+                return this.copy(c);
+            }
+
+            const vb = d5 * d2 - d1 * d6;
+            if (vb <= 0 && d2 >= 0 && d6 <= 0) {
+
+                w = d2 / (d2 - d6);
+                // edge region of AC; barycentric coords (1-w, 0, w)
+                return this.multiplyScalar(w, vac).add(a);
+            }
+
+            const va = d3 * d6 - d5 * d4;
+            if (va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0) {
+
+                vbc.subtract(c, b);
+                w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+                // edge region of BC; barycentric coords (0, 1-w, w)
+                return this.multiplyScalar(w, vbc).add(b); // edge region of BC
+            }
+
+            // face region
+            const denom = 1 / (va + vb + vc);
+            // u = va * denom
+            v = vb * denom;
+            w = vc * denom;
+            return this.add(a, vac.multiplyScalar(w).add(vab.multiplyScalar(v)));
         }
 
         public get length() {
             return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
         }
 
-        public get sqrtLength() {
+        public get squaredLength() {
             return this.x * this.x + this.y * this.y + this.z * this.z;
         }
 

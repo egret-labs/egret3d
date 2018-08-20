@@ -288,6 +288,17 @@ namespace paper.editor {
             const camerasAndLights = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
 
             for (const camera of camerasAndLights.cameras) {
+                if (!camera.gameObject.getComponent(egret3d.MeshFilter) && camera.gameObject.name != "EditorCamera") {
+                    let obj = camera.gameObject
+                    let mesh = obj.addComponent(egret3d.MeshFilter)
+                    mesh.mesh = egret3d.DefaultMeshes.CUBE
+                    // let renderer = obj.addComponent(egret3d.MeshRenderer);
+                    // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                    // mat.setVector4v("_Color", [1, 0, 0, 1]);
+                    // renderer.materials = [mat];
+                    // obj.transform.setScale(0.6, 0.4, 0.4)
+                }
+
                 Gizmo.DrawIcon("camera", camera.gameObject.transform.getPosition(), 30);
                 Gizmo.DrawCameraSquare(camera.gameObject, [1, 0, 0, 1])
                 //Gizmo.DrawCameraSquare(this.cameraPool[i], [1.0, 0.0, 1.0, 1.0]);

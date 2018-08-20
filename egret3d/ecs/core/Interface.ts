@@ -29,6 +29,27 @@ namespace paper {
     /**
      * 
      */
+    export interface IRelease<T extends IRelease<T>> {
+        /**
+         * 
+         */
+        release(): T;
+        /**
+         * 
+         */
+        clone(): T;
+        /**
+         * 
+         */
+        copy(value: Readonly<T>): T;
+        /**
+         * 
+         */
+        set(...args: any[]): T;
+    }
+    /**
+     * 
+     */
     export interface ISerializedObject extends IUUID, IClass {
         [key: string]: any | IUUID | IAssetReference;
     }

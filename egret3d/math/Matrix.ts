@@ -8,7 +8,8 @@ namespace egret3d {
     /**
      * 
      */
-    export class Matrix {
+    export class Matrix implements paper.IRelease<Matrix>, paper.ISerializable {
+
         private static readonly _instances: Matrix[] = [];
         /**
          * 
@@ -30,22 +31,36 @@ namespace egret3d {
         }
         /**
          * 
-         * @param value 
          */
-        public static release(value: Matrix) {
-            if (this._instances.indexOf(value) >= 0) {
-                return;
+        public release() {
+            if (Matrix._instances.indexOf(this) < 0) {
+                Matrix._instances.push(this);
             }
 
-            this._instances.push(value);
+            return this;
         }
-
+        /**
+         * 
+         */
         public readonly rawData: Float32Array = new Float32Array(_array);
         /**
          * @deprecated
          * @private
          */
         public constructor() {
+        }
+
+        public serialize() {
+            return this.rawData;
+        }
+
+        public deserialize(value: Readonly<[
+            number, number, number, number,
+            number, number, number, number,
+            number, number, number, number,
+            number, number, number, number
+        ]>) {
+            return this.fromArray(value);
         }
 
         public copy(value: Readonly<Matrix>) {
@@ -543,7 +558,7 @@ namespace egret3d {
          * @param up 
          */
         public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>) {
-            const z = _helpVector3C.subtract(eye, target).normalize();
+            const z = _helpVector3C.subtract(target, eye).normalize();
             const x = _helpVector3A.cross(up, z).normalize();
             const y = _helpVector3B.cross(z, x);
             const rawData = this.rawData;

@@ -1,14 +1,29 @@
 namespace egret3d {
 
-    export interface IVector4 {
-        x: number;
-        y: number;
-        z: number;
+    export interface IVector4 extends IVector3 {
         w: number;
         readonly length: number;
     }
 
-    export class Vector4 implements IVector4, paper.ISerializable {
+    export class Vector4 implements IVector4, paper.IRelease<Vector4>, paper.ISerializable {
+
+        private static readonly _instances: Vector4[] = [];
+
+        public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
+            if (this._instances.length > 0) {
+                return this._instances.pop()!.set(x, y, z, w);
+            }
+
+            return new Vector4().set(x, y, z, w);
+        }
+
+        public release() {
+            if (Vector4._instances.indexOf(this) < 0) {
+                Vector4._instances.push(this);
+            }
+
+            return this;
+        }
 
         public x: number;
 
@@ -21,7 +36,7 @@ namespace egret3d {
          * @deprecated
          * @private
          */
-        public constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 0.0) {
+        public constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -42,19 +57,11 @@ namespace egret3d {
         }
 
         public copy(value: Readonly<IVector4>) {
-            this.x = value.x;
-            this.y = value.y;
-            this.z = value.z;
-            this.w = value.w;
-
-            return this;
+            return this.set(value.x, value.y, value.z, value.w);
         }
 
         public clone() {
-            const value = new Vector4();
-            value.copy(this);
-
-            return value;
+            return Vector4.create(this.x, this.y, this.z, this.w);
         }
 
         public set(x: number, y: number, z: number, w: number) {
@@ -101,6 +108,10 @@ namespace egret3d {
 
         public get length() {
             return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+        }
+
+        public get squaredLength() {
+            return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
         }
     }
 

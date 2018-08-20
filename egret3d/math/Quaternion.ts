@@ -4,36 +4,26 @@ namespace egret3d {
      */
     export class Quaternion extends Vector4 {
 
-        private static readonly _instances: Quaternion[] = [];
+        private static readonly _instancesQ: Quaternion[] = [];
 
         public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
-            if (this._instances.length > 0) {
-                return this._instances.pop()!.set(x, y, z, w);
+            if (this._instancesQ.length > 0) {
+                return this._instancesQ.pop()!.set(x, y, z, w);
             }
 
-            return new Quaternion(x, y, z, w);
+            return new Quaternion().set(x, y, z, w);
         }
 
-        public static release(value: Quaternion) {
-            if (this._instances.indexOf(value) >= 0) {
-                return;
+        public release() {
+            if (Quaternion._instancesQ.indexOf(this) < 0) {
+                Quaternion._instancesQ.push(this);
             }
 
-            this._instances.push(value);
-        }
-        /**
-         * @deprecated
-         * @private
-         */
-        public constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
-            super(x, y, z, w);
+            return this;
         }
 
         public clone() {
-            const value = new Quaternion();
-            value.copy(this);
-
-            return value;
+            return Quaternion.create(this.x, this.y, this.z, this.w);
         }
 
         public fromMatrix(matrix: Readonly<Matrix>) {

@@ -178,9 +178,9 @@ namespace paper {
                     const classCodeOrName = source[KEY_CLASS] as string | undefined;
 
                     if (KEY_ASSET in source) { // Asset.
-                        const index = (source as IAssetReference).asset;
-                        if (index >= 0) {
-                            return Asset.find(this.assets[index]);
+                        const assetIndex = (source as IAssetReference).asset;
+                        if (assetIndex >= 0) {
+                            return Asset.find(this.assets[assetIndex]);
                         }
 
                         return null;
@@ -245,7 +245,12 @@ namespace paper {
 
         public getAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent {
             if (KEY_ASSET in source) {
-                return Asset.find(this.assets[(source as IAssetReference).asset]);
+                const assetIndex = (source as IAssetReference).asset;
+                if (assetIndex >= 0) {
+                    return Asset.find(this.assets[assetIndex]);
+                }
+
+                return null;
             }
 
             const uuid = (source as IUUID).uuid;
@@ -261,8 +266,8 @@ namespace paper {
             target: Scene | GameObject | null = null,
         ): T | null {
             if (data.assets) {
-                for (const asset of data.assets) {
-                    this.assets.push(asset);
+                for (const assetName of data.assets) {
+                    this.assets.push(assetName);
                 }
             }
 
@@ -298,11 +303,14 @@ namespace paper {
                             const prefab = extras.prefab;
 
                             if (prefab) {
-                                const assetName = this.assets[((<any>prefab) as IAssetReference).asset];
-                                target = Prefab.create(assetName, this._target as Scene);
+                                const assetIndex = ((<any>prefab) as IAssetReference).asset;
+                                if (assetIndex >= 0) {
+                                    const assetName = this.assets[assetIndex];
+                                    target = Prefab.create(assetName, this._target as Scene);
 
-                                if (target) {
-                                    this._deserializers[source.uuid] = Deserializer._lastDeserializer;
+                                    if (target) {
+                                        this._deserializers[source.uuid] = Deserializer._lastDeserializer;
+                                    }
                                 }
                             }
                             else {
