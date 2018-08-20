@@ -187,8 +187,12 @@ namespace egret3d {
         return vMin <= plane.constant && vMax >= plane.constant;
     }
 
+    export function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>) {
+        return Math.abs(plane.getDistance(sphere.center)) <= sphere.radius;
+    }
+
     export function aabbIntersectsSphere(aabb: Readonly<AABB>, value: Readonly<Sphere>) {
-        // Find the point on the AABB closest to the sphere center.s
+        // Find the point on the AABB closest to the sphere center.
         helpVector3A.copy(value.center).clamp(aabb.minimum, aabb.maximum);
         // If that point is inside the sphere, the AABB and sphere intersect.
         return helpVector3A.getSquaredDistance(value.center) <= (value.radius * value.radius);

@@ -4,7 +4,7 @@ namespace egret3d {
     //
     const helpVec3_1 = Vector3.create();
     const helpVec3_2 = Vector3.create();
-    const helpInverseMatrix = Matrix.create();
+    const helpInverseMatrix = Matrix4.create();
     //缓存已经校验过的对象，用于过滤
     const cacheInstances: string[] = [];
 

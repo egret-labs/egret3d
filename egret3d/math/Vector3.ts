@@ -115,20 +115,20 @@ namespace egret3d {
             return this;
         }
 
-        public fromPlaneProjection(plane: Readonly<Plane>, value?: Readonly<IVector3>) {
-            if (!value) {
-                value = this;
+        public fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>) {
+            if (!source) {
+                source = this;
             }
 
-            return this.add(helpVector3A.multiplyScalar(-plane.getDistance(value), plane.normal));
+            return this.add(helpVector3A.multiplyScalar(-plane.getDistance(source), plane.normal));
         }
 
-        public applyMatrix(matrix: Readonly<Matrix>, value?: Readonly<IVector3>) {
-            if (!value) {
-                value = this;
+        public applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>) {
+            if (!source) {
+                source = this;
             }
 
-            const x = value.x, y = value.y, z = value.z;
+            const x = source.x, y = source.y, z = source.z;
             const rawData = matrix.rawData;
 
             const w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
@@ -139,12 +139,12 @@ namespace egret3d {
             return this;
         }
 
-        public applyDirection(matrix: Readonly<Matrix>, value?: Readonly<IVector3>) {
-            if (!value) {
-                value = this;
+        public applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>) {
+            if (!source) {
+                source = this;
             }
 
-            const x = value.x, y = value.y, z = value.z;
+            const x = source.x, y = source.y, z = source.z;
             const rawData = matrix.rawData;
 
             this.x = rawData[0] * x + rawData[4] * y + rawData[8] * z;
@@ -154,12 +154,12 @@ namespace egret3d {
             return this;
         }
 
-        public applyQuaternion(quaternion: Readonly<IVector4>, value?: Readonly<IVector3>) {
-            if (!value) {
-                value = this;
+        public applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>) {
+            if (!source) {
+                source = this;
             }
 
-            const x = value.x, y = value.y, z = value.z;
+            const x = source.x, y = source.y, z = source.z;
             const qx = quaternion.x, qy = quaternion.y, qz = quaternion.z, qw = quaternion.w;
             // calculate quat * vector
             const ix = qw * x + qy * z - qz * y;
@@ -174,12 +174,12 @@ namespace egret3d {
             return this;
         }
 
-        public normalize(value?: Readonly<IVector3>) {
-            if (!value) {
-                value = this;
+        public normalize(source?: Readonly<IVector3>) {
+            if (!source) {
+                source = this;
             }
 
-            let l = value.length;
+            let l = source.length;
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;
@@ -195,21 +195,21 @@ namespace egret3d {
             return this;
         }
 
-        public negate(value?: Readonly<IVector3>) {
-            if (!value) {
-                value = this;
+        public negate(source?: Readonly<IVector3>) {
+            if (!source) {
+                source = this;
             }
 
-            this.x = value.x * -1.00;
-            this.y = value.y * -1.00;
-            this.z = value.z * -1.00;
+            this.x = source.x * -1.00;
+            this.y = source.y * -1.00;
+            this.z = source.z * -1.00;
         }
 
-        public addScalar(add: number, value?: Readonly<IVector3>) {
-            if (value) {
-                this.x = value.x + add;
-                this.y = value.y + add;
-                this.z = value.z + add;
+        public addScalar(add: number, source?: Readonly<IVector3>) {
+            if (source) {
+                this.x = source.x + add;
+                this.y = source.y + add;
+                this.z = source.z + add;
             }
             else {
                 this.x += add;
@@ -250,11 +250,11 @@ namespace egret3d {
             return this;
         }
 
-        public multiplyScalar(scale: number, value?: Readonly<IVector3>) {
-            if (value) {
-                this.x = scale * value.x;
-                this.y = scale * value.y;
-                this.z = scale * value.z;
+        public multiplyScalar(scale: number, source?: Readonly<IVector3>) {
+            if (source) {
+                this.x = scale * source.x;
+                this.y = scale * source.y;
+                this.z = scale * source.z;
             }
             else {
                 this.x *= scale;
@@ -346,11 +346,15 @@ namespace egret3d {
             return this;
         }
 
-        public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>) {
+        public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>) {
+            if (!source) {
+                source = this;
+            }
+
             // assumes min < max, componentwise
-            this.x = Math.max(min.x, Math.min(max.x, this.x));
-            this.y = Math.max(min.y, Math.min(max.y, this.y));
-            this.z = Math.max(min.z, Math.min(max.z, this.z));
+            this.x = Math.max(min.x, Math.min(max.x, source.x));
+            this.y = Math.max(min.y, Math.min(max.y, source.y));
+            this.z = Math.max(min.z, Math.min(max.z, source.z));
 
             return this;
         }

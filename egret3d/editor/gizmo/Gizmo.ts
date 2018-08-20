@@ -226,17 +226,17 @@ namespace paper.editor {
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
         }
 
-        private static mvpMatrix: egret3d.Matrix = new egret3d.Matrix();
-        private static mMatrix: egret3d.Matrix = new egret3d.Matrix();
-        private static vMatrix: egret3d.Matrix = new egret3d.Matrix();
-        private static pMatrix: egret3d.Matrix = new egret3d.Matrix();
+        private static mvpMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static mMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static vMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static pMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
 
-        private static setMVPMatrix(m?: egret3d.Matrix) {
+        private static setMVPMatrix(m?: egret3d.Matrix4) {
             var asp = this.camera.context.viewPortPixel.w / this.camera.context.viewPortPixel.h;
             this.camera.calcViewMatrix(this.vMatrix);
             this.camera.calcProjectMatrix(asp, this.pMatrix);
             this.mvpMatrix.multiply(this.pMatrix, this.vMatrix);
-            m = m || new egret3d.Matrix();
+            m = m || new egret3d.Matrix4();
             this.mMatrix.copy(m);
             this.mvpMatrix.multiply(this.mMatrix);
         }
@@ -418,7 +418,7 @@ namespace paper.editor {
             this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
         }
 
-        public static DrawArrow(m: egret3d.Matrix, color: number[], fixSize?: boolean) {
+        public static DrawArrow(m: egret3d.Matrix4, color: number[], fixSize?: boolean) {
             if (!this.enabled) return;
 
             let gl = this.webgl;
@@ -437,22 +437,22 @@ namespace paper.editor {
             gl.drawArrays(gl.TRIANGLES, 2, 24);
         }
 
-        private static xArrowMMatrix = new egret3d.Matrix();
-        private static yArrowMMatrix = egret3d.Matrix.create([
+        private static xArrowMMatrix = new egret3d.Matrix4();
+        private static yArrowMMatrix = egret3d.Matrix4.create([
             0, 1, 0, 0,
             -1, 0, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1
         ]);
-        private static zArrowMMatrix = egret3d.Matrix.create([
+        private static zArrowMMatrix = egret3d.Matrix4.create([
             0, 0, 1, 0,
             0, 1, 0, 0,
             -1, 0, 0, 0,
             0, 0, 0, 1
         ]);
 
-        private static helpMat: egret3d.Matrix = new egret3d.Matrix();
-        private static helpMat1: egret3d.Matrix = new egret3d.Matrix();
+        private static helpMat: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static helpMat1: egret3d.Matrix4 = new egret3d.Matrix4();
         public static DrawArrowXYZ(transform: egret3d.Transform) {
             console.log("now drawXYZ", transform)
             let worldMat = Gizmo.helpMat;
@@ -464,7 +464,7 @@ namespace paper.editor {
             worldMat.multiply(this.zArrowMMatrix);
             Gizmo.DrawArrow(worldMat, [0.0, 0.0, 1.0, 1.0], true);
         }
-        private static getWorldMatrixWithoutScale(transform: egret3d.Transform, fixScale: number, out: egret3d.Matrix) {
+        private static getWorldMatrixWithoutScale(transform: egret3d.Transform, fixScale: number, out: egret3d.Matrix4) {
             out.identity();
             let p = transform.getPosition();
             let r = transform.getRotation();
@@ -475,7 +475,7 @@ namespace paper.editor {
             let matS = this.helpMat1;
             // egret3d.Quaternion.toMatrix(r, out);
             out.fromRotation(r);
-            matS.formScale(sca, sca, sca);
+            matS.fromScale(sca, sca, sca);
 
             out.multiply(matS);
             out.rawData[12] = p.x;

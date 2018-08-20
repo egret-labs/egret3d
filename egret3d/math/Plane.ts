@@ -75,30 +75,30 @@ namespace egret3d {
             return this;
         }
 
+        public normalize(source?: Readonly<Plane>) {
+            if (!source) {
+                source = this;
+            }
+
+            this.constant = source.constant * (1.0 / source.normal.length);
+            this.normal.normalize(source.normal);
+
+            return this;
+        }
+
+        public negate(source?: Readonly<Plane>) {
+            if (!source) {
+                source = this;
+            }
+
+            this.constant = source.constant * -1.0;
+            this.normal.negate(source.normal);
+
+            return this;
+        }
+
         public getDistance(value: Readonly<IVector3>) {
             return this.normal.dot(value) + this.constant;
-        }
-
-        public normalize(value?: Readonly<Plane>) {
-            if (!value) {
-                value = this;
-            }
-
-            this.constant = value.constant * (1.0 / value.normal.length);
-            this.normal.normalize(value.normal);
-
-            return this;
-        }
-
-        public negate(value?: Readonly<Plane>) {
-            if (!value) {
-                value = this;
-            }
-
-            this.constant = value.constant * -1.0;
-            this.normal.negate(value.normal);
-
-            return this;
         }
     }
 }

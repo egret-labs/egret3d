@@ -13,12 +13,12 @@ namespace egret3d {
     const helpVec3_7: Vector3 = new Vector3();
     // const helpVec3_8: Vector3 = new Vector3();
 
-    const helpMat4_1: Matrix = new Matrix();
-    const helpMat4_2: Matrix = new Matrix();
-    const helpMat4_3: Matrix = new Matrix();
-    const helpMat4_4: Matrix = new Matrix();
-    const helpMat4_5: Matrix = new Matrix();
-    const helpMat4_6: Matrix = new Matrix();
+    const helpMat4_1: Matrix4 = new Matrix4();
+    const helpMat4_2: Matrix4 = new Matrix4();
+    const helpMat4_3: Matrix4 = new Matrix4();
+    const helpMat4_4: Matrix4 = new Matrix4();
+    const helpMat4_5: Matrix4 = new Matrix4();
+    const helpMat4_6: Matrix4 = new Matrix4();
 
     export const enum SkinnedMeshRendererEventType {
         Mesh = "mesh",
@@ -115,7 +115,7 @@ namespace egret3d {
         private _joints: Float32Array | null = null;
         private _weights: Float32Array | null = null;
 
-        private _getMatByIndex(index: number, out: Matrix) {
+        private _getMatByIndex(index: number, out: Matrix4) {
             const mesh = this._mesh;
             if (!mesh) {
                 return null;

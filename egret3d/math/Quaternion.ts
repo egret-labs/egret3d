@@ -26,7 +26,7 @@ namespace egret3d {
             return Quaternion.create(this.x, this.y, this.z, this.w);
         }
 
-        public fromMatrix(matrix: Readonly<Matrix>) {
+        public fromMatrix(matrix: Readonly<Matrix4>) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
 
             // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
@@ -139,13 +139,12 @@ namespace egret3d {
         /**
          * - 向量必须已归一化。
          */
-        public fromAxisAngle(axis: Readonly<IVector3>, angle: number) {
-            angle *= DEG_RAD;
+        public fromAxis(axis: Readonly<IVector3>, radian: number) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
 
             // assumes axis is normalized
 
-            const halfAngle = angle * 0.5, s = Math.sin(halfAngle);
+            const halfAngle = radian * 0.5, s = Math.sin(halfAngle);
             this.x = axis.x * s;
             this.y = axis.y * s;
             this.z = axis.z * s;
@@ -154,14 +153,14 @@ namespace egret3d {
             return this;
         }
 
-        public inverse(value?: Readonly<IVector4>) {
-            if (!value) {
-                value = this;
+        public inverse(source?: Readonly<IVector4>) {
+            if (!source) {
+                source = this;
             }
 
-            this.x = value.x * -1;
-            this.y = value.y * -1;
-            this.z = value.z * -1;
+            this.x = source.x * -1;
+            this.y = source.y * -1;
+            this.z = source.z * -1;
 
             return this;
         }
@@ -252,7 +251,7 @@ namespace egret3d {
             this.z = (z * ratioA + this.z * ratioB);
         }
 
-        public lookAt(eye: Vector3, target: Vector3): Quaternion {
+        public lookAt(eye: Vector3, target: Vector3) {
             const dir = _helpVector3A.subtract(target, eye).normalize();
             const dirxz = _helpVector3B.set(dir.x, 0.0, dir.z).normalize();
             const dirxz1 = _helpVector3C.set(dir.x, 0.0, dir.z);
@@ -289,5 +288,5 @@ namespace egret3d {
     const _helpVector3A = Vector3.create();
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
-    const _helpMatrix = Matrix.create();
+    const _helpMatrix = Matrix4.create();
 }

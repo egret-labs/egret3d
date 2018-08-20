@@ -42,7 +42,7 @@ namespace egret3d {
 
         private _dirtyRadius: boolean = true;
         private _dirtyCenter: boolean = true;
-        private _radius: number = 0.0;
+        private _boundingSphereRadius: number = 0.0;
         private readonly _minimum: Vector3 = Vector3.create(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
         private readonly _maximum: Vector3 = Vector3.create(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
         private readonly _center: Vector3 = Vector3.create();
@@ -107,32 +107,32 @@ namespace egret3d {
             return this;
         }
 
-        public applyMatrix4(matrix: Readonly<Matrix>, value?: Readonly<AABB>) {
-            if (!value) {
-                value = this;
+        public applyMatrix(value: Readonly<Matrix4>, source?: Readonly<AABB>) {
+            if (!source) {
+                source = this;
             }
 
             // transform of empty box is an empty box.
-            if (value.isEmpty) {
-                if (value !== this) {
-                    this.copy(value);
+            if (source.isEmpty) {
+                if (source !== this) {
+                    this.copy(source);
                 }
 
                 return this;
             }
 
-            const min = value.minimum;
-            const max = value.maximum;
+            const min = source.minimum;
+            const max = source.maximum;
 
             // NOTE: I am using a binary pattern to specify all 2^3 combinations below
-            _points[0].set(min.x, min.y, min.z).applyMatrix(matrix); // 000
-            _points[1].set(min.x, min.y, max.z).applyMatrix(matrix); // 001
-            _points[2].set(min.x, max.y, min.z).applyMatrix(matrix); // 010
-            _points[3].set(min.x, max.y, max.z).applyMatrix(matrix); // 011
-            _points[4].set(max.x, min.y, min.z).applyMatrix(matrix); // 100
-            _points[5].set(max.x, min.y, max.z).applyMatrix(matrix); // 101
-            _points[6].set(max.x, max.y, min.z).applyMatrix(matrix); // 110
-            _points[7].set(max.x, max.y, max.z).applyMatrix(matrix); // 111
+            _points[0].set(min.x, min.y, min.z).applyMatrix(value); // 000
+            _points[1].set(min.x, min.y, max.z).applyMatrix(value); // 001
+            _points[2].set(min.x, max.y, min.z).applyMatrix(value); // 010
+            _points[3].set(min.x, max.y, max.z).applyMatrix(value); // 011
+            _points[4].set(max.x, min.y, min.z).applyMatrix(value); // 100
+            _points[5].set(max.x, min.y, max.z).applyMatrix(value); // 101
+            _points[6].set(max.x, max.y, min.z).applyMatrix(value); // 110
+            _points[7].set(max.x, max.y, max.z).applyMatrix(value); // 111
 
             this.fromPoints(_points);
 
@@ -142,14 +142,21 @@ namespace egret3d {
         /**
          * 
          */
-        public add(value: Readonly<IVector3 | AABB>) {
+        public add(value: Readonly<IVector3 | AABB>, source?: Readonly<AABB>) {
+            if (!source) {
+                source = this;
+            }
+
+            const min = source.minimum;
+            const max = source.maximum;
+
             if (value instanceof AABB) {
-                this._minimum.min(value._minimum);
-                this._maximum.max(value._maximum);
+                this._minimum.min(value._minimum, min);
+                this._maximum.max(value._maximum, max);
             }
             else {
-                this._minimum.min(value as IVector3);
-                this._maximum.max(value as IVector3);
+                this._minimum.min(value as IVector3, min);
+                this._maximum.max(value as IVector3, max);
             }
 
             this._dirtyRadius = true;
@@ -160,14 +167,46 @@ namespace egret3d {
         /**
          * 
          */
-        public offset(value: number | Readonly<IVector3>) {
+        public expand(value: Readonly<IVector3> | number, source?: Readonly<AABB>) {
+            if (!source) {
+                source = this;
+            }
+
+            const min = source.minimum;
+            const max = source.maximum;
+
             if (typeof value === "number") {
-                this._minimum.addScalar(value);
-                this._maximum.addScalar(value);
+                this._minimum.addScalar(-value, min);
+                this._maximum.addScalar(value, max);
             }
             else {
-                this._minimum.add(value);
-                this._maximum.add(value);
+                this._minimum.subtract(value as IVector3, min);
+                this._maximum.add(value as IVector3, max);
+            }
+
+            this._dirtyRadius = true;
+            this._dirtyCenter = true;
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public offset(value: number | Readonly<IVector3>, source?: Readonly<AABB>) {
+            if (!source) {
+                source = this;
+            }
+
+            const min = source.minimum;
+            const max = source.maximum;
+
+            if (typeof value === "number") {
+                this._minimum.addScalar(value, min);
+                this._maximum.addScalar(value, max);
+            }
+            else {
+                this._minimum.add(value, min);
+                this._maximum.add(value, max);
             }
 
             this._dirtyRadius = true;
@@ -207,6 +246,14 @@ namespace egret3d {
                 ((value as IVector3).z > min.z) && ((value as IVector3).z < max.z);
         }
 
+        public getDistance(value: Readonly<IVector3>) {
+            return helpVector3A.clamp(this._minimum, this._maximum, value).subtract(value).length;
+        }
+
+        public clampPoints(value: Readonly<IVector3>, out: Vector3) {
+            return out.clamp(this._minimum, this._maximum, value);
+        }
+
         public get isEmpty() {
             // this is a more robust check for empty than ( volume <= 0 ) because volume can get positive with two negative axes
             return (this._maximum.x < this._minimum.x) || (this._maximum.y < this._minimum.y) || (this._maximum.z < this._minimum.z);
@@ -217,11 +264,11 @@ namespace egret3d {
         public get boundingSphereRadius() {
             if (this._dirtyRadius) {
                 helpVector3A.subtract(this._maximum, this._minimum).multiplyScalar(0.5);
-                this._radius = helpVector3A.length;
+                this._boundingSphereRadius = helpVector3A.length;
                 this._dirtyRadius = false;
             }
 
-            return this._radius;
+            return this._boundingSphereRadius;
         }
         /**
          * 
