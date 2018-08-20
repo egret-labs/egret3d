@@ -345,7 +345,7 @@ namespace egret3d {
             }
         }
 
-        setMatrix(id: string, value: Matrix) {
+        setMatrix(id: string, value: Matrix4) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value.rawData;

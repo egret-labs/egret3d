@@ -2,7 +2,7 @@ namespace egret3d {
     const _helpVector3A = Vector3.create();
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
-    const _helpMatrix = Matrix.create();
+    const _helpMatrix = Matrix4.create();
     const _helpRay = Ray.create();
 
     const _attributes: gltf.MeshAttributeType[] = [
@@ -119,7 +119,7 @@ namespace egret3d {
         /**
          * TODO
          */
-        public raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix>) {
+        public raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix4>) {
             _helpMatrix.inverse(worldMatrix);
             _helpRay.copy(ray);
             _helpRay.origin.applyMatrix(_helpMatrix);

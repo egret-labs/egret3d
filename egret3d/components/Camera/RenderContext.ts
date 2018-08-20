@@ -38,8 +38,8 @@ namespace egret3d {
         public spotLightArray: Float32Array = new Float32Array(0);
         public directShadowMatrix: Float32Array = new Float32Array(0);
         public spotShadowMatrix: Float32Array = new Float32Array(0);
-        public readonly matrix_m: Matrix = new Matrix();
-        public readonly matrix_mvp: Matrix = new Matrix();
+        public readonly matrix_m: Matrix4 = new Matrix4();
+        public readonly matrix_mvp: Matrix4 = new Matrix4();
         public readonly directShadowMaps: (WebGLTexture | null)[] = [];
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
@@ -53,10 +53,10 @@ namespace egret3d {
 
 
         // transforms
-        public readonly matrix_v: Matrix = new Matrix();
-        public readonly matrix_p: Matrix = new Matrix();
-        public readonly matrix_mv: Matrix = new Matrix();
-        public readonly matrix_vp: Matrix = new Matrix();
+        public readonly matrix_v: Matrix4 = new Matrix4();
+        public readonly matrix_p: Matrix4 = new Matrix4();
+        public readonly matrix_mv: Matrix4 = new Matrix4();
+        public readonly matrix_vp: Matrix4 = new Matrix4();
         //matrixNormal: paper.matrix = new paper.matrix();
 
         public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
@@ -67,7 +67,7 @@ namespace egret3d {
             this.version++;
         }
 
-        public updateCamera(camera: Camera, matrix: Matrix) {
+        public updateCamera(camera: Camera, matrix: Matrix4) {
             camera.calcViewPortPixel(this.viewPortPixel); // update viewport
 
             const asp = this.viewPortPixel.w / this.viewPortPixel.h;
@@ -262,7 +262,7 @@ namespace egret3d {
             this.version++;
         }
 
-        updateModel(matrix: Matrix) {
+        updateModel(matrix: Matrix4) {
             this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
             this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
             this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);

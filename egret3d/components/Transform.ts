@@ -1,7 +1,7 @@
 namespace egret3d {
     const _helpVector3 = Vector3.create();
     const _helpRotation = Quaternion.create();
-    const _helpMatrix = Matrix.create();
+    const _helpMatrix = Matrix4.create();
 
     /**
      * Transform Class
@@ -27,8 +27,8 @@ namespace egret3d {
          * @internal
          */
         public _worldMatrixDeterminant: number = 0.0;
-        private readonly _localMatrix: Matrix = Matrix.create();
-        private readonly _worldMatrix: Matrix = Matrix.create();
+        private readonly _localMatrix: Matrix4 = Matrix4.create();
+        private readonly _worldMatrix: Matrix4 = Matrix4.create();
 
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalPosition" })
@@ -453,7 +453,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getLocalMatrix(): Readonly<Matrix> {
+        public getLocalMatrix(): Readonly<Matrix4> {
             // if (this._dirtyLocalRS) {
             //     this._localMatrix.compose(this.localPosition, this.localRotation, this.localScale);
             //     this._dirtyLocalT = false;
@@ -709,7 +709,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getWorldMatrix(): Readonly<Matrix> {
+        public getWorldMatrix(): Readonly<Matrix4> {
             // if (this._dirtyWorldT || this._dirtyWorldRS) {
             //     const localMatrix = this.getLocalMatrix();
 

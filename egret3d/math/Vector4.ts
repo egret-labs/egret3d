@@ -82,12 +82,12 @@ namespace egret3d {
             return this;
         }
 
-        public normalize(value?: Readonly<IVector4>) {
-            if (!value) {
-                value = this;
+        public normalize(source?: Readonly<IVector4>) {
+            if (!source) {
+                source = this;
             }
 
-            let l = value.length;
+            let l = source.length;
 
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;

@@ -13,18 +13,15 @@ namespace paper {
      * @language zh_CN
      */
     export abstract class Asset extends BaseObject {
-        /**
-         * @deprecated
-         */
         private static readonly _assets: { [key: string]: Asset } = {};
         /**
-         * @deprecated
+         * @internal
          */
         public static register(asset: Asset) {
             this._assets[asset.name] = asset;
         }
         /**
-         * @deprecated
+         * 
          */
         public static find<T extends Asset>(name: string) {
             const result = this._assets[name]

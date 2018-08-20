@@ -83,6 +83,14 @@ namespace egret3d {
             return this;
         }
 
+        public applyMatrix(matrix: Readonly<Matrix4>) {
+            this.center.applyMatrix(matrix);
+            this.radius = this.radius * matrix.getMaxScaleOnAxis();
+
+            return this;
+
+        }
+
         public contains(value: Readonly<IVector3 | Sphere>) {
             if (value instanceof Sphere) {
                 const radiusDelta = this.radius - value.radius;
@@ -94,6 +102,24 @@ namespace egret3d {
             }
 
             return this.center.getSquaredDistance(value as IVector3) <= this.radius * this.radius;
+        }
+
+        public getDistance(value: Readonly<IVector3>) {
+            return this.center.getDistance(value) - this.radius;
+        }
+
+        public clampPoint(point: Readonly<IVector3>, out: Vector3) {
+            const squaredDistance = this.center.getSquaredDistance(point);
+
+            if (squaredDistance > (this.radius * this.radius)) {
+                out.subtract(this.center, point).normalize();
+                out.multiplyScalar(this.radius).add(this.center);
+            }
+            else {
+                out.copy(point);
+            }
+
+            return out;
         }
     }
 }
