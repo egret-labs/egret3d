@@ -65,12 +65,14 @@ namespace egret3d {
 
                 buffer.byteLength = vertexBufferView.byteLength;
                 this.buffers[0] = new Float32Array(vertexBufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
+                this._drawMode = drawMode;
 
                 if (indexCount > 0) { // Indices.
                     this.addSubMesh(indexCount, 0);
                 }
-
-                this._drawMode = drawMode;
+                else {
+                    this.config.meshes[0].primitives[0].material = 0;
+                }
 
                 this.initialize();
             }
