@@ -1,7 +1,7 @@
 //inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.ps
 #include <common>
-uniform sampler2D _MainTex;
-uniform vec4 _TintColor;
+uniform sampler2D map;
+uniform vec4 diffuse;
 varying float v_discard;
 varying vec4 v_color;
 varying vec2 v_texcoord;
@@ -20,5 +20,5 @@ void main()
 
 	if(v_discard!=0.0)
 		discard;
-	gl_FragColor*=texture2D(_MainTex,v_texcoord)*_TintColor*v_color*2.0;
+	gl_FragColor*=texture2D(map,v_texcoord)*diffuse*v_color*2.0;
 }

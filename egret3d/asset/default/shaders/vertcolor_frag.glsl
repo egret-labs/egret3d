@@ -1,5 +1,5 @@
 #include <common>
-uniform sampler2D _MainTex;                                                 
+uniform sampler2D map;                                                 
 varying lowp vec4 xlv_COLOR;                                                 
 varying highp vec2 xlv_TEXCOORD0;   
 void main() 
@@ -8,7 +8,7 @@ void main()
     mediump vec4 prev_2;
     lowp vec4 tmpvar_3;
 
-    tmpvar_3 = (texture2D(_MainTex, xlv_TEXCOORD0));
+    tmpvar_3 = (texture2D(map, xlv_TEXCOORD0));
     //prev_2 = tmpvar_3;
     //mediump vec4 tmpvar_4;
     //tmpvar_4 = mix(vec4(1.0, 1.0, 1.0, 1.0), prev_2, prev_2.wwww);

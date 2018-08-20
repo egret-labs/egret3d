@@ -6607,48 +6607,6 @@ declare namespace egret3d.ShaderLib {
         };
         "_isBuiltin": boolean;
     };
-    const depthpackage: {
-        "name": string;
-        "config": {
-            "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelViewProjectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
-        };
-        "_isBuiltin": boolean;
-    };
     const depth: {
         "name": string;
         "config": {
@@ -6883,7 +6841,7 @@ declare namespace egret3d.ShaderLib {
                                 "value": any[];
                                 "semantic": string;
                             };
-                            "_MainTex_ST": {
+                            "uvTransform": {
                                 "type": number;
                                 "value": number[];
                             };
@@ -6897,74 +6855,15 @@ declare namespace egret3d.ShaderLib {
                                 "value": any[];
                                 "semantic": string;
                             };
-                            "_MainColor": {
+                            "diffuse": {
                                 "type": number;
                                 "value": number[];
                             };
-                            "_MainTex": {
+                            "map": {
                                 "type": number;
                                 "value": any[];
                             };
                             "_AlphaCut": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
-        };
-        "_isBuiltin": boolean;
-    };
-    const distancepackage: {
-        "name": string;
-        "config": {
-            "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelViewProjectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "glstate_referencePosition": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "glstate_nearDistance": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "glstate_farDistance": {
                                 "type": number;
                                 "value": any[];
                             };
@@ -9237,13 +9136,13 @@ declare namespace egret3d.ShaderLib {
                                 "type": number;
                                 "value": any[];
                             };
-                            "_MainTex": {
+                            "map": {
                                 "type": number;
                                 "value": any[];
                             };
-                            "_TintColor": {
+                            "diffuse": {
                                 "type": number;
-                                "value": any[];
+                                "value": number[];
                             };
                         };
                         "states": {
@@ -10055,7 +9954,7 @@ declare namespace egret3d.ShaderLib {
                                 "type": number;
                                 "value": number[];
                             };
-                            "_MainTex": {
+                            "map": {
                                 "type": number;
                                 "value": any[];
                             };

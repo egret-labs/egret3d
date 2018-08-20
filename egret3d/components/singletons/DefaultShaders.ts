@@ -34,23 +34,32 @@ namespace egret3d {
         public static PARTICLE_ADDITIVE: GLTFAsset;
         public static PARTICLE_ADDITIVE_PREMYLTIPLY: GLTFAsset;
         public static PARTICLE_BLEND: GLTFAsset;
-        public static PARTICLE_BLEND_PREMYLTIPLY: GLTFAsset;
+        public static PARTICLE_BLEND_PREMYLTIPLY: GLTFAsset;        
 
-        public createBuildinShader(url: string, vertName: string, vertSource: string, fragName: string, fragSource: string, renderQueue: number) {
-            const asset = GLTFAsset.createShaderAsset(url);
+        private _createShaderAsset(template: any, renderQueue: number = RenderQueue.Geometry, name: string = null, defines?: string[]) {
+            const shader = JSON.parse(JSON.stringify(template)) as GLTFAsset;
+            const extensions = shader.config.extensions;
+            if (renderQueue) {
+                extensions.paper.renderQueue = RenderQueue.Geometry;
+            }
+            else {
+                extensions.paper.renderQueue = renderQueue;
+            }
+            if (name) {
+                shader.name = name;
+            }
 
-            const KHRExtensions = asset.config.extensions!.KHR_techniques_webgl!;
+            if (defines) {
+                const shaders = extensions.KHR_techniques_webgl.shaders;
+                for (const define of defines) {
+                    const defineStr = `#define ${define} \n`;
+                    shaders[0].uri = defineStr + shaders[0].uri;
+                    shaders[1].uri = defineStr + shaders[1].uri;
+                }
+            }
 
-            KHRExtensions.shaders.push({ type: gltf.ShaderStage.VERTEX_SHADER, name: vertName, uri: vertSource });
-            KHRExtensions.shaders.push({ type: gltf.ShaderStage.FRAGMENT_SHADER, name: fragName, uri: fragSource });
-            KHRExtensions.techniques.push({ attributes: {}, uniforms: {}, states: { enable: [], functions: {} } } as any);
-
-            asset.config.extensions!.paper = { renderQueue };
-
-            asset._isBuiltin = true;
-            paper.Asset.register(asset);
-
-            return asset;
+            paper.Asset.register(shader);
+            return shader;
         }
 
         private _setBlend(technique: gltf.Technique, blend: BlendModeEnum) {
@@ -135,32 +144,6 @@ namespace egret3d {
             }
         }
 
-        private _createShaderAsset(template: any, renderQueue: number = RenderQueue.Geometry, name: string = null, defines?: string[]) {
-            const shader = JSON.parse(JSON.stringify(template)) as GLTFAsset;
-            const extensions = shader.config.extensions;
-            if (renderQueue) {
-                extensions.paper.renderQueue = RenderQueue.Geometry;
-            }
-            else {
-                extensions.paper.renderQueue = renderQueue;
-            }
-            if (name) {
-                shader.name = name;
-            }
-
-            if (defines) {
-                const shaders = extensions.KHR_techniques_webgl.shaders;
-                for (const define of defines) {
-                    const defineStr = `#define ${define} \n`;
-                    shaders[0].uri = defineStr + shaders[0].uri;
-                    shaders[1].uri = defineStr + shaders[1].uri;
-                }
-            }
-
-            paper.Asset.register(shader);
-            return shader;
-        }
-
         public initialize() {
             {
                 const shader = this._createShaderAsset(egret3d.ShaderLib.depth, RenderQueue.Geometry, null, ["DEPTH_PACKING 3201"]);
@@ -209,7 +192,8 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Geometry, "buildin/diffuse.shader.gltf", ["USE_MAP"]);
+                //TODO 因为骨骼动画算法不一致，先保留
+                const shader = this._createShaderAsset(egret3d.ShaderLib.diffuse, RenderQueue.Geometry, "buildin/diffuse.shader.gltf");
 
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
@@ -220,18 +204,29 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Geometry, "buildin/diffuse_tintcolor.shader.gltf", ["USE_MAP"]);
+                const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Geometry, "buildin/meshbasic.shader.gltf", ["USE_MAP"]);
 
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
-                DefaultShaders.DIFFUSE_TINT_COLOR = shader;
+
+                DefaultShaders.DIFFUSE = shader;
             }
 
+            // {
+            //     const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Geometry, "buildin/diffuse_tintcolor.shader.gltf", ["USE_MAP"]);
+
+            //     shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+            //     const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
+            //     this._setDepth(technique, true, true);
+            //     this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+            //     this._setBlend(technique, BlendModeEnum.Close);
+            //     DefaultShaders.DIFFUSE_TINT_COLOR = shader;
+            // }
+
             {
-                const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Geometry, "buildin/diffuse_bothside.shader.gltf", ["USE_MAP"]);
+                const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Geometry, "buildin/meshbasic_doubleside.shader.gltf", ["USE_MAP"]);
 
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
@@ -251,27 +246,27 @@ namespace egret3d {
                 DefaultShaders.TRANSPARENT = shader;
             }
 
-            {
-                const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Transparent, "buildin/transparent_tintColor.shader.gltf", ["USE_MAP"]);
+            // {
+            //     const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Transparent, "buildin/transparent_tintColor.shader.gltf", ["USE_MAP"]);
 
-                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                this._setDepth(technique, true, false);
-                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-                this._setBlend(technique, BlendModeEnum.Add);
+            //     const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
+            //     this._setDepth(technique, true, false);
+            //     this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+            //     this._setBlend(technique, BlendModeEnum.Add);
 
-                DefaultShaders.TRANSPARENT_TINTCOLOR = shader;
-            }
+            //     DefaultShaders.TRANSPARENT_TINTCOLOR = shader;
+            // }
 
-            {
-                const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Transparent, "buildin/transparent_alphaCut.shader.gltf", ["USE_MAP"]);
+            // {
+            //     const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Transparent, "buildin/transparent_alphaCut.shader.gltf", ["USE_MAP"]);
 
-                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-                this._setBlend(technique, BlendModeEnum.Close);
+            //     const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
+            //     this._setDepth(technique, true, true);
+            //     this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+            //     this._setBlend(technique, BlendModeEnum.Close);
 
-                DefaultShaders.TRANSPARENT_ALPHACUT = shader;
-            }
+            //     DefaultShaders.TRANSPARENT_ALPHACUT = shader;
+            // }
 
             {
                 const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Transparent, "buildin/transparent_additive.shader.gltf", ["USE_MAP"]);
@@ -285,7 +280,7 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Transparent, "buildin/transparent_additive_bothside.shader.gltf", ["USE_MAP"]);
+                const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Transparent, "buildin/transparent_additive_doubleside.shader.gltf", ["USE_MAP"]);
 
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
@@ -296,7 +291,7 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Transparent, "buildin/transparent_bothside.shader.gltf", ["USE_MAP"]);
+                const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Transparent, "buildin/transparent_doubleside.shader.gltf", ["USE_MAP"]);
 
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
