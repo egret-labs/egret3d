@@ -4185,11 +4185,10 @@ declare namespace egret3d {
         static PARTICLE_ADDITIVE_PREMYLTIPLY: GLTFAsset;
         static PARTICLE_BLEND: GLTFAsset;
         static PARTICLE_BLEND_PREMYLTIPLY: GLTFAsset;
-        createBuildinShader(url: string, vertName: string, vertSource: string, fragName: string, fragSource: string, renderQueue: number): GLTFAsset;
+        private _createShaderAsset(template, renderQueue?, name?, defines?);
         private _setBlend(technique, blend);
         private _setCullFace(technique, cull, frontFace?, cullFace?);
         private _setDepth(technique, zTest, zWrite);
-        private _createShaderAsset(template, renderQueue?, name?, defines?);
         initialize(): void;
     }
 }
@@ -9707,213 +9706,6 @@ declare namespace egret3d.ShaderLib {
         };
         "_isBuiltin": boolean;
     };
-    const test1: {
-        "name": string;
-        "config": {
-            "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "uv2": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "uvTransform": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "refractionRatio": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "ambientLightColor": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "directionalLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "ltc_1": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "ltc_2": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "rectAreaLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "hemisphereLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "bindMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "bindMatrixInverse": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "boneTexture": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneTextureSize": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneMatrices[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "directionalShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "diffuse": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "emissive": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "alphaMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "aoMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "aoMapIntensity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "lightMap": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "lightMapIntensity": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "emissiveMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "reflectivity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "envMapIntensity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "envMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "flipEnvMap": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "maxMipLevel": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "directionalShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "specularMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "clippingPlanes[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
-        };
-        "_isBuiltin": boolean;
-    };
     const vertcolor: {
         "name": string;
         "config": {
@@ -10898,6 +10690,7 @@ declare namespace egret3d {
         id: number;
         program: WebGLProgram;
         attributes: WebGLActiveAttribute[];
+        contextUniforms: WebGLActiveUniform[];
         uniforms: WebGLActiveUniform[];
         constructor(webglProgram: WebGLProgram);
     }

@@ -37,7 +37,7 @@ namespace egret3d {
             const webgl = WebGLCapabilities.webgl;
 
             const uniforms = technique.uniforms;
-            const glUniforms = program.uniforms;
+            const glUniforms = program.contextUniforms;
             for (const glUniform of glUniforms) {
                 const uniform = uniforms[glUniform.name];
                 if (!uniform.semantic) {
@@ -484,7 +484,7 @@ namespace egret3d {
                 webgl.clearDepth(1.0);
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
-            
+
             Performance.endCounter("render");
         }
     }
