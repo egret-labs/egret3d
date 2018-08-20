@@ -38,11 +38,11 @@ namespace paper.editor {
         public onSet() {
 
         }
-        public abstract isPressed_local(ray: egret3d.Ray, selectedGameObjs: any)
-        public abstract wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any)
-        public abstract isPressed_world(ray: egret3d.Ray, selectedGameObjs: any)
-        public abstract wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any)
-        public abstract wasReleased()
+        public abstract isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[])
+        public abstract wasPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[])
+        public abstract isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[])
+        public abstract wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[])
+        public abstract wasReleased(selectedGameObj: GameObject[])
         public _checkIntersect(ray: egret3d.Ray) {
             const mesh = this.geo.getComponent(egret3d.MeshFilter).mesh
             const temp = mesh.raycast(ray, this.geo.transform.getWorldMatrix())
@@ -222,9 +222,9 @@ namespace paper.editor {
             }
 
         }
-        wasReleased() {
+        wasReleased(selectedGameObjs: GameObject[]) {
             if (this.selectedGeo) {
-                this.selectedGeo.wasReleased();
+                this.selectedGeo.wasReleased(selectedGameObjs);
                 for (let item of this.geos) {
                     item.changeColor('origin')
                 }

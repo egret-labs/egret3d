@@ -3029,11 +3029,11 @@ declare namespace paper.editor {
         protected _oldLocalScale: egret3d.Vector3;
         constructor();
         onSet(): void;
-        abstract isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract wasReleased(): any;
+        abstract isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract wasPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract wasReleased(selectedGameObj: GameObject[]): any;
         _checkIntersect(ray: egret3d.Ray): this;
         changeColor(color: string): void;
         protected _createAxis(color: egret3d.Vector4, type: number): GameObject;
@@ -3050,7 +3050,7 @@ declare namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selected: any): void;
         wasPressed_world(ray: egret3d.Ray, selected: any): any;
         isPressed_world(ray: egret3d.Ray, selected: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -7510,7 +7510,7 @@ declare namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -7521,7 +7521,7 @@ declare namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -7532,7 +7532,7 @@ declare namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -7543,7 +7543,7 @@ declare namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -7554,7 +7554,7 @@ declare namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -7565,7 +7565,7 @@ declare namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -8049,6 +8049,12 @@ declare namespace paper.editor {
     const icon_vert: string;
     const line_frag: string;
     const line_vert: string;
+}
+declare namespace egret3d {
+    class GizmoRenderSystem extends paper.BaseSystem {
+        private readonly _renderState;
+        onUpdate(): void;
+    }
 }
 declare namespace egret3d {
     /**

@@ -421,9 +421,9 @@ namespace egret3d {
         }
 
         public onUpdate() {
-            if (this._isEditorUpdate()) {
-                this._renderState.clearState();//编辑器走自己的渲染流程，状态需要清除一下
-            }
+            // if (this._isEditorUpdate()) {
+            //     this._renderState.clearState();//编辑器走自己的渲染流程，状态需要清除一下
+            // }
             Performance.startCounter("render");
             const renderState = this._renderState;
             const cameras = this._camerasAndLights.cameras;
@@ -476,21 +476,21 @@ namespace egret3d {
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
 
-            if (this._isEditorUpdate) {
-                // if (paper.editor.Editor.gizmo) {
+            // if (this._isEditorUpdate) {
+            //     // if (paper.editor.Editor.gizmo) {
 
 
-                // }
-                paper.editor.Gizmo.DrawCoord();
-                paper.editor.Gizmo.DrawLights();
-                paper.editor.Gizmo.DrawCameras();
+            //     // }
+            //     paper.editor.Gizmo.DrawCoord();
+            //     paper.editor.Gizmo.DrawLights();
+            //     paper.editor.Gizmo.DrawCameras();
 
-                // for (const key in this._cacheStateEnable) {
-                //     delete this._cacheStateEnable[key];
-                // }
-                // this._cacheProgram = undefined;
-                // this._cacheState = undefined;//???
-            }
+            //     // for (const key in this._cacheStateEnable) {
+            //     //     delete this._cacheStateEnable[key];
+            //     // }
+            //     // this._cacheProgram = undefined;
+            //     // this._cacheState = undefined;//???
+            // }
 
 
             Performance.endCounter("render");

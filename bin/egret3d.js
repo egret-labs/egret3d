@@ -5110,9 +5110,9 @@ var paper;
                     this.geo.transform.setRotation(0, 0, 0, 1);
                 }
             };
-            GeoContainer.prototype.wasReleased = function () {
+            GeoContainer.prototype.wasReleased = function (selectedGameObjs) {
                 if (this.selectedGeo) {
-                    this.selectedGeo.wasReleased();
+                    this.selectedGeo.wasReleased(selectedGameObjs);
                     for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
                         var item = _a[_i];
                         item.changeColor('origin');
@@ -19042,9 +19042,9 @@ var egret3d;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         };
         WebGLRenderSystem.prototype.onUpdate = function () {
-            if (this._isEditorUpdate()) {
-                this._renderState.clearState(); //编辑器走自己的渲染流程，状态需要清除一下
-            }
+            // if (this._isEditorUpdate()) {
+            //     this._renderState.clearState();//编辑器走自己的渲染流程，状态需要清除一下
+            // }
             egret3d.Performance.startCounter("render");
             var renderState = this._renderState;
             var cameras = this._camerasAndLights.cameras;
@@ -19095,18 +19095,18 @@ var egret3d;
                 webgl.clearDepth(1.0);
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
-            if (this._isEditorUpdate) {
-                // if (paper.editor.Editor.gizmo) {
-                // }
-                paper.editor.Gizmo.DrawCoord();
-                paper.editor.Gizmo.DrawLights();
-                paper.editor.Gizmo.DrawCameras();
-                // for (const key in this._cacheStateEnable) {
-                //     delete this._cacheStateEnable[key];
-                // }
-                // this._cacheProgram = undefined;
-                // this._cacheState = undefined;//???
-            }
+            // if (this._isEditorUpdate) {
+            //     // if (paper.editor.Editor.gizmo) {
+            //     // }
+            //     paper.editor.Gizmo.DrawCoord();
+            //     paper.editor.Gizmo.DrawLights();
+            //     paper.editor.Gizmo.DrawCameras();
+            //     // for (const key in this._cacheStateEnable) {
+            //     //     delete this._cacheStateEnable[key];
+            //     // }
+            //     // this._cacheProgram = undefined;
+            //     // this._cacheState = undefined;//???
+            // }
             egret3d.Performance.endCounter("render");
         };
         return WebGLRenderSystem;
@@ -19999,6 +19999,7 @@ var paper;
                         //
                         egret3d.CameraSystem,
                         egret3d.WebGLRenderSystem,
+                        egret3d.GizmoRenderSystem,
                         //
                         paper.DisableSystem,
                         egret3d.EndSystem
@@ -20893,7 +20894,7 @@ var paper;
                     (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
                 }
                 if (this.bindMouse.wasReleased(0)) {
-                    this.mainGeo.wasReleased();
+                    this.mainGeo.wasReleased(this.selectedGameObjs);
                 }
             };
             Controller.prototype.updateInLocalMode = function () {
@@ -21157,7 +21158,8 @@ var paper;
                 var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
                 parentMatrix = parentMatrix.inverse();
                 parentMatrix.transformNormal(position);
-                this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
             xAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
@@ -21189,11 +21191,17 @@ var paper;
                     var parentMatrix = obj.transform.parent.getWorldMatrix();
                     parentMatrix = parentMatrix.inverse();
                     parentMatrix.transformNormal(this._newPosition);
-                    this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            xAxis.prototype.wasReleased = function () { };
+            xAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_1 = selectedGameObjs; _i < selectedGameObjs_1.length; _i++) {
+                    var item = selectedGameObjs_1[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
             return xAxis;
         }(editor.BaseGeo));
         editor.xAxis = xAxis;
@@ -21262,7 +21270,8 @@ var paper;
                 parentMatrix = parentMatrix.inverse();
                 parentMatrix.transformNormal(position);
                 egret3d.Vector3.copy(position, this._ctrlPos);
-                this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
             xyAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
@@ -21297,11 +21306,17 @@ var paper;
                     var parentMatrix = obj.transform.parent.getWorldMatrix();
                     parentMatrix = parentMatrix.inverse();
                     parentMatrix.transformNormal(this._newPosition);
-                    this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            xyAxis.prototype.wasReleased = function () { };
+            xyAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_2 = selectedGameObjs; _i < selectedGameObjs_2.length; _i++) {
+                    var item = selectedGameObjs_2[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
             return xyAxis;
         }(editor.BaseGeo));
         editor.xyAxis = xyAxis;
@@ -21370,7 +21385,8 @@ var paper;
                 parentMatrix = parentMatrix.inverse();
                 parentMatrix.transformNormal(position);
                 egret3d.Vector3.copy(position, this._ctrlPos);
-                this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
             xzAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
@@ -21405,11 +21421,17 @@ var paper;
                     var parentMatrix = obj.transform.parent.getWorldMatrix();
                     parentMatrix = parentMatrix.inverse();
                     parentMatrix.transformNormal(this._newPosition);
-                    this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            xzAxis.prototype.wasReleased = function () { };
+            xzAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_3 = selectedGameObjs; _i < selectedGameObjs_3.length; _i++) {
+                    var item = selectedGameObjs_3[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
             return xzAxis;
         }(editor.BaseGeo));
         editor.xzAxis = xzAxis;
@@ -21478,7 +21500,8 @@ var paper;
                 parentMatrix = parentMatrix.inverse();
                 parentMatrix.transformNormal(position);
                 egret3d.Vector3.copy(position, this._ctrlPos);
-                this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
             yzAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
@@ -21513,11 +21536,17 @@ var paper;
                     var parentMatrix = obj.transform.parent.getWorldMatrix();
                     parentMatrix = parentMatrix.inverse();
                     parentMatrix.transformNormal(this._newPosition);
-                    this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            yzAxis.prototype.wasReleased = function () { };
+            yzAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_4 = selectedGameObjs; _i < selectedGameObjs_4.length; _i++) {
+                    var item = selectedGameObjs_4[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
             return yzAxis;
         }(editor.BaseGeo));
         editor.yzAxis = yzAxis;
@@ -21568,7 +21597,8 @@ var paper;
                 var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
                 parentMatrix = parentMatrix.inverse();
                 parentMatrix.transformNormal(position);
-                this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
             yAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
@@ -21600,11 +21630,17 @@ var paper;
                     var parentMatrix = obj.transform.parent.getWorldMatrix();
                     parentMatrix = parentMatrix.inverse();
                     parentMatrix.transformNormal(this._newPosition);
-                    this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            yAxis.prototype.wasReleased = function () { return; };
+            yAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_5 = selectedGameObjs; _i < selectedGameObjs_5.length; _i++) {
+                    var item = selectedGameObjs_5[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
             return yAxis;
         }(editor.BaseGeo));
         editor.yAxis = yAxis;
@@ -21655,7 +21691,8 @@ var paper;
                 var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
                 parentMatrix = parentMatrix.inverse();
                 parentMatrix.transformNormal(position);
-                this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
             zAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 egret3d.Vector3.set(0, 0, 0, this._dragOffset);
@@ -21688,11 +21725,17 @@ var paper;
                     var parentMatrix = obj.transform.parent.getWorldMatrix();
                     parentMatrix = parentMatrix.inverse();
                     parentMatrix.transformNormal(this._newPosition);
-                    this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            zAxis.prototype.wasReleased = function () { return; };
+            zAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_6 = selectedGameObjs; _i < selectedGameObjs_6.length; _i++) {
+                    var item = selectedGameObjs_6[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
             return zAxis;
         }(editor.BaseGeo));
         editor.zAxis = zAxis;
@@ -24882,6 +24925,26 @@ var paper;
         editor.line_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n        }";
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    var GizmoRenderSystem = (function (_super) {
+        __extends(GizmoRenderSystem, _super);
+        function GizmoRenderSystem() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._renderState = egret3d.WebGLRenderState.getInstance(egret3d.WebGLRenderState);
+            return _this;
+        }
+        GizmoRenderSystem.prototype.onUpdate = function () {
+            this._renderState.clearState(); //编辑器走自己的渲染流程，状态需要清除一下
+            paper.editor.Gizmo.DrawCoord();
+            paper.editor.Gizmo.DrawLights();
+            paper.editor.Gizmo.DrawCameras();
+        };
+        return GizmoRenderSystem;
+    }(paper.BaseSystem));
+    egret3d.GizmoRenderSystem = GizmoRenderSystem;
+    __reflect(GizmoRenderSystem.prototype, "egret3d.GizmoRenderSystem");
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
