@@ -13,6 +13,8 @@ namespace egret3d {
     //TODO 运行时DrawCall排序优化使用
     let _hashCode: number = 0;
 
+    let _compatible:{[key:string]:string} = {"_MainColor":"diffuse","_MainTex":"map", "_MainTex_ST":"uvTransform"};
+
     /**
     * 材质资源
     */
@@ -176,9 +178,19 @@ namespace egret3d {
             const gltfUnifromMap = this._glTFMaterial.extensions.KHR_techniques_webgl.values!;
             const uniformMap = this._glTFTechnique.uniforms;
             //使用Shader替换Material中没有默认值的Uniform
-            for (const key in gltfUnifromMap) {
+            for (let key in gltfUnifromMap) {
+                let value = gltfUnifromMap[key];
+                if(key in _compatible){
+                    key = _compatible[key];
+                    if(key === "diffuse"){
+                        (value as any).length = 3;
+                    }
+                    else if(key === "uvTransform"){
+                        const old = value.concat();
+                        value = [old[0], 0, 0, 0, old[1], 0, old[2], old[3], 1];
+                    }
+                }
                 if (uniformMap[key]) {
-                    const value = gltfUnifromMap[key];
                     if (Array.isArray(value)) {
                         uniformMap[key].value = value.concat();
                     }

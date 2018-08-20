@@ -10,7 +10,6 @@ uniform int u_scalingMode;
 uniform vec3 u_positionScale;
 uniform vec3 u_sizeScale;
 uniform mat4 viewProjectionMatrix;
-uniform vec4 _MainTex_ST;  
 
 #ifdef STRETCHEDBILLBOARD
 	uniform vec3 cameraPosition;

@@ -37,7 +37,7 @@ void main()
 	#include <particle_affector>
 	gl_Position=viewProjectionMatrix*vec4(center,1.0);
 	v_color = computeColor(startColor, t);
-	v_texcoord =computeUV(uv * _MainTex_ST.xy + _MainTex_ST.zw, t);
+	v_texcoord =computeUV(uv, t);
 	v_discard=0.0;
 }
 

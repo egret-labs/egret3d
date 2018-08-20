@@ -135,206 +135,35 @@ namespace egret3d {
             }
         }
 
-        private _createColorShaderTemplate(url: string, renderQueue: RenderQueue) {
-            const shader = this.createBuildinShader(url, "color_vs", ShaderLib.materialcolor_vert, "color_fs", ShaderLib.line_frag, renderQueue);
+        private _createShaderAsset(template: any, renderQueue: number = RenderQueue.Geometry, name: string = null, defines?: string[]) {
+            const shader = JSON.parse(JSON.stringify(template)) as GLTFAsset;
+            const extensions = shader.config.extensions;
+            if (renderQueue) {
+                extensions.paper.renderQueue = RenderQueue.Geometry;
+            }
+            else {
+                extensions.paper.renderQueue = renderQueue;
+            }
+            if (name) {
+                shader.name = name;
+            }
 
-            const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-            technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
+            if (defines) {
+                const shaders = extensions.KHR_techniques_webgl.shaders;
+                for (const define of defines) {
+                    const defineStr = `#define ${define} \n`;
+                    shaders[0].uri = defineStr + shaders[0].uri;
+                    shaders[1].uri = defineStr + shaders[1].uri;
+                }
+            }
 
-            technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
-            technique.uniforms["_Color"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };//TODO
-
-            return shader;
-        }
-
-        private _createMeshLambertShaderTemplate(url: string, renderQueue: RenderQueue) {
-            const shader = this.createBuildinShader(url, "meshlambert_vs", "#define USE_MAP \n" + ShaderLib.meshlambert_vert, "meshlambert_fs", "#define USE_MAP \n" + ShaderLib.meshlambert_frag, renderQueue);
-            const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-
-            technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
-            technique.attributes["normal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
-            technique.attributes["uv"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["uv2"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_1 };
-            technique.attributes["color"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
-            technique.attributes["morphTarget0"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_0 };
-            technique.attributes["morphTarget1"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_1 };
-            technique.attributes["morphTarget2"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_2 };
-            technique.attributes["morphTarget3"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_3 };
-            technique.attributes["morphTarget4"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_4 };
-            technique.attributes["morphTarget5"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_5 };
-            technique.attributes["morphTarget6"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_6 };
-            technique.attributes["morphTarget7"] = { semantic: gltf.AttributeSemanticType.MORPHTARGET_7 };
-            technique.attributes["morphNormal0"] = { semantic: gltf.AttributeSemanticType.MORPHNORMAL_0 };
-            technique.attributes["morphNormal1"] = { semantic: gltf.AttributeSemanticType.MORPHNORMAL_1 };
-            technique.attributes["morphNormal2"] = { semantic: gltf.AttributeSemanticType.MORPHNORMAL_2 };
-            technique.attributes["morphNormal3"] = { semantic: gltf.AttributeSemanticType.MORPHNORMAL_3 };
-            technique.attributes["skinIndex"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
-            technique.attributes["skinWeight"] = { semantic: gltf.AttributeSemanticType.WEIGHTS_0 };
-
-            technique.uniforms["modelMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODEL, value: [] };
-            technique.uniforms["modelViewMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEW, value: [] };
-            technique.uniforms["projectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.PROJECTION, value: [] };
-            technique.uniforms["viewMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.VIEW, value: [] };
-            technique.uniforms["normalMatrix"] = { type: gltf.UniformType.FLOAT_MAT3, semantic: gltf.UniformSemanticType.MODELVIEWINVERSE, value: [] };
-            technique.uniforms["cameraPosition"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_POS, value: [] };
-
-            technique.uniforms["ambientLightColor"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._AMBIENTLIGHTCOLOR, value: [0, 0, 0] };
-            technique.uniforms["directionalLights[0]"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._DIRECTLIGHTS, value: [] };//
-            technique.uniforms["pointLights[0]"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._POINTLIGHTS, value: [] };//
-            technique.uniforms["spotLights[0]"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._SPOTLIGHTS, value: [] };//
-            // technique.uniforms["ltc_1"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType.MODEL, value: [] };
-            // technique.uniforms["ltc_2"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType.MODEL, value: [] };
-            // technique.uniforms["rectAreaLights"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType.MODEL, value: [] };//
-            // technique.uniforms["hemisphereLights"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType.MODEL, value: [] };//
-
-            technique.uniforms["bindMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._BINDMATRIX, value: [] };
-            technique.uniforms["bindMatrixInverse"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._BINDMATRIXINVERSE, value: [] };
-            // technique.uniforms["boneTexture"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._BONETEXTURE, value: [] };
-            // technique.uniforms["boneTextureSize"] = { type: gltf.UniformType.INT, semantic: gltf.UniformSemanticType._BONETEXTURESIZE, value: [] };
-            technique.uniforms["boneMatrices"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._BONEMATRIX, value: [] };
-
-            technique.uniforms["directionalShadowMatrix[0]"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._DIRECTIONSHADOWMAT, value: [] };
-            technique.uniforms["spotShadowMatrix[0]"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._SPOTSHADOWMAT, value: [] };
-            technique.uniforms["pointShadowMatrix[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._POINTSHADOWMAT, value: [] };
-            technique.uniforms["directionalShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._DIRECTIONSHADOWMAP, value: [] };
-            technique.uniforms["spotShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._SPOTSHADOWMAP, value: [] };
-            technique.uniforms["pointShadowMap[0]"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._POINTSHADOWMAT, value: [] };
-            technique.uniforms["lightMap"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._LIGHTMAPTEX, value: [] };
-            technique.uniforms["lightMapIntensity"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPINTENSITY, value: [] };
-
-            technique.uniforms["uvTransform"] = { type: gltf.UniformType.FLOAT_MAT3, value: [1, 0, 0, 0, 1, 0, 0, 0, 1] };
-            technique.uniforms["refractionRatio"] = { type: gltf.UniformType.FLOAT, value: 0 };
-            technique.uniforms["diffuse"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
-            technique.uniforms["emissive"] = { type: gltf.UniformType.FLOAT_VEC3, value: [0, 0, 0] };
-            technique.uniforms["opacity"] = { type: gltf.UniformType.FLOAT, value: 1 };
-            technique.uniforms["map"] = { type: gltf.UniformType.SAMPLER_2D, value: egret3d.DefaultTextures.GRAY };
-            technique.uniforms["alphaMap"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
-            technique.uniforms["aoMap"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
-            technique.uniforms["aoMapIntensity"] = { type: gltf.UniformType.FLOAT, value: 1 };
-            technique.uniforms["emissiveMap"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
-            technique.uniforms["reflectivity"] = { type: gltf.UniformType.FLOAT, value: 0 };
-            technique.uniforms["envMapIntensity"] = { type: gltf.UniformType.FLOAT, value: 1 };
-            // technique.uniforms["envMap"] = { type: gltf.UniformType.SAMPLER_CUBE, value: [] };
-            // technique.uniforms["envMap"] = { type: gltf.UniformType.SAMPLER_2D, value: [] };
-            technique.uniforms["flipEnvMap"] = { type: gltf.UniformType.FLOAT, value: 1 };
-            technique.uniforms["maxMipLevel"] = { type: gltf.UniformType.INT, value: 0 };
-            technique.uniforms["specularMap"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
-            technique.uniforms["clippingPlanes"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
-
-
-            return shader;
-        }
-
-        private _createDiffuseShaderTemplate(url: string, renderQueue: RenderQueue) {
-            const shader = this.createBuildinShader(url, "diffuse_vs", ShaderLib.diffuse_vert, "diffuse_fs", ShaderLib.diffuse_frag, renderQueue);
-            const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-
-            technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
-            technique.attributes["uv"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["uv2"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_1 };
-            technique.attributes["skinIndex"] = { semantic: gltf.AttributeSemanticType.JOINTS_0 };
-            technique.attributes["skinWeight"] = { semantic: gltf.AttributeSemanticType.WEIGHTS_0 };
-
-            technique.uniforms["lightMapOffset"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._LIGHTMAPOFFSET, value: [] };//TODO
-            technique.uniforms["lightMapUV"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPUV, value: {} };//TODO
-            technique.uniforms["lightMap"] = { type: gltf.UniformType.SAMPLER_2D, semantic: gltf.UniformSemanticType._LIGHTMAPTEX, value: {} };
-            technique.uniforms["lightMapIntensity"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._LIGHTMAPINTENSITY, value: 1.0 };
-            technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
-            technique.uniforms["glstate_vec4_bones[0]"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._BONESVEC4, value: [] };//TODO
-
-            technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: egret3d.DefaultTextures.GRAY };
-            technique.uniforms["_MainColor"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 1, 1] };
-            technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 0, 0] };
-            technique.uniforms["_AlphaCut"] = { type: gltf.UniformType.FLOAT, value: 0 };
-
-            return shader;
-        }
-
-        private _createParticleShaderTemplate(url: string, renderQueue: RenderQueue) {
-            const shader = this.createBuildinShader(url, "particle_vs", ShaderLib.particlesystem_vert, "particle_fs", ShaderLib.particlesystem_frag, renderQueue);
-
-            const technique = shader.config!.extensions!.KHR_techniques_webgl!.techniques[0];
-            technique.attributes["corner"] = { semantic: gltf.AttributeSemanticType._CORNER };
-            technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
-            technique.attributes["color"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
-            technique.attributes["uv"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-            technique.attributes["startPosition"] = { semantic: gltf.AttributeSemanticType._START_POSITION };
-            technique.attributes["startVelocity"] = { semantic: gltf.AttributeSemanticType._START_VELOCITY };
-            technique.attributes["startColor"] = { semantic: gltf.AttributeSemanticType._START_COLOR };
-            technique.attributes["startSize"] = { semantic: gltf.AttributeSemanticType._START_SIZE };
-            technique.attributes["startRotation"] = { semantic: gltf.AttributeSemanticType._START_ROTATION };
-            technique.attributes["time"] = { semantic: gltf.AttributeSemanticType._TIME };
-            technique.attributes["random0"] = { semantic: gltf.AttributeSemanticType._RANDOM0 };
-            technique.attributes["random1"] = { semantic: gltf.AttributeSemanticType._RANDOM1 };
-            technique.attributes["startWorldPosition"] = { semantic: gltf.AttributeSemanticType._WORLD_POSITION };
-            technique.attributes["startWorldRotation"] = { semantic: gltf.AttributeSemanticType._WORLD_ROTATION };
-
-            technique.uniforms["viewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType._VIEWPROJECTION, value: [] };
-            technique.uniforms["cameraPosition"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_POS, value: [] };
-            technique.uniforms["cameraForward"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_FORWARD, value: [] };
-            technique.uniforms["cameraUp"] = { type: gltf.UniformType.FLOAT_VEC3, semantic: gltf.UniformSemanticType._CAMERA_UP, value: [] };
-
-            technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: egret3d.DefaultTextures.GRAY };
-            technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_VEC4, value: [1, 1, 0, 0] };
-            technique.uniforms["_TintColor"] = { type: gltf.UniformType.FLOAT_VEC4, value: [0.5, 0.5, 0.5, 0.5] };
-            technique.uniforms["u_currentTime"] = { type: gltf.UniformType.FLOAT, value: 0 };
-            technique.uniforms["u_gravity"] = { type: gltf.UniformType.FLOAT_VEC3, value: [0, 0, 0] };
-            technique.uniforms["u_worldPosition"] = { type: gltf.UniformType.FLOAT_VEC3, value: [0, 0, 0] };
-            technique.uniforms["u_worldRotation"] = { type: gltf.UniformType.FLOAT_VEC4, value: [0, 0, 0, 1] };
-            technique.uniforms["u_startRotation3D"] = { type: gltf.UniformType.BOOL, value: false };
-            technique.uniforms["u_scalingMode"] = { type: gltf.UniformType.INT, value: 0 };
-            technique.uniforms["u_positionScale"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
-            technique.uniforms["u_sizeScale"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
-            technique.uniforms["u_lengthScale"] = { type: gltf.UniformType.FLOAT, value: [1, 1, 1] };
-            technique.uniforms["u_speeaScale"] = { type: gltf.UniformType.FLOAT, value: [1, 1, 1] };
-            technique.uniforms["u_simulationSpace"] = { type: gltf.UniformType.INT, value: 0 };
-            technique.uniforms["u_spaceType"] = { type: gltf.UniformType.INT, value: 0 };
-            technique.uniforms["u_velocityConst"] = { type: gltf.UniformType.FLOAT_VEC3, value: [1, 1, 1] };
-            technique.uniforms["u_velocityCurveX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_velocityCurveY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_velocityCurveZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_velocityConstMax"] = { type: gltf.UniformType.FLOAT_VEC3, value: [] };
-            technique.uniforms["u_velocityCurveMaxX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_velocityCurveMaxY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_velocityCurveMaxZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_colorGradient[0]"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
-            technique.uniforms["u_alphaGradient[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_colorGradientMax[0]"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
-            technique.uniforms["u_alphaGradientMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_sizeCurve[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_sizeCurveMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_sizeCurveX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_sizeCurveY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_sizeCurveZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_sizeCurveMaxX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_sizeCurveMaxY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_sizeCurveMaxZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_rotationConst"] = { type: gltf.UniformType.FLOAT, value: 0 };
-            technique.uniforms["u_rotationConstMax"] = { type: gltf.UniformType.FLOAT, value: 0 };
-            technique.uniforms["u_rotationCurve[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_rotationCurveMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_rotationConstSeprarate"] = { type: gltf.UniformType.FLOAT_VEC3, value: [] };
-            technique.uniforms["u_rotationConstMaxSeprarate"] = { type: gltf.UniformType.FLOAT_VEC3, value: [] };
-            technique.uniforms["u_rotationCurveX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_rotationCurveY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_rotationCurveZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_rotationCurveW[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_rotationCurveMaxX[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_rotationCurveMaxY[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_rotationCurveMaxZ[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_rotationCurveMaxW[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_cycles"] = { type: gltf.UniformType.FLOAT, value: {} };
-            technique.uniforms["u_subUV"] = { type: gltf.UniformType.FLOAT_VEC4, value: [] };
-            technique.uniforms["u_uvCurve[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-            technique.uniforms["u_uvCurveMax[0]"] = { type: gltf.UniformType.FLOAT_VEC2, value: [] };
-
+            paper.Asset.register(shader);
             return shader;
         }
 
         public initialize() {
             {
-                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.depthpackage)) as GLTFAsset;
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.depth, RenderQueue.Geometry, null, ["DEPTH_PACKING 3201"]);
 
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 //
@@ -347,25 +176,18 @@ namespace egret3d {
             }
 
             {
-                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.distancepackage)) as GLTFAsset;
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.distanceRGBA, RenderQueue.Geometry);
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-
-                technique.uniforms["glstate_referencePosition"] = { type: gltf.UniformType.FLOAT_VEC4, semantic: gltf.UniformSemanticType._REFERENCEPOSITION, value: [] };
-                technique.uniforms["glstate_nearDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._NEARDICTANCE, value: {} };
-                technique.uniforms["glstate_farDistance"] = { type: gltf.UniformType.FLOAT, semantic: gltf.UniformSemanticType._FARDISTANCE, value: {} };
 
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Close);
 
                 DefaultShaders.SHADOW_DISTANCE = shader;
-                paper.Asset.register(shader);
             }
 
             {
-                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.line)) as GLTFAsset;
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.line, RenderQueue.Geometry);
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
                 this._setDepth(technique, true, true);
@@ -373,12 +195,10 @@ namespace egret3d {
                 this._setBlend(technique, BlendModeEnum.Close);
 
                 DefaultShaders.LINE = shader;
-                paper.Asset.register(shader);
             }
 
             {
-                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.meshlambert)) as GLTFAsset;
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.meshlambert, RenderQueue.Geometry, null, ["USE_MAP"]);
 
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
@@ -386,12 +206,10 @@ namespace egret3d {
                 this._setBlend(technique, BlendModeEnum.Close);
 
                 DefaultShaders.MESHLAMBERT = shader;
-                paper.Asset.register(shader);
             }
 
             {
-                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.diffuse)) as GLTFAsset;
-                shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.meshbasic, RenderQueue.Geometry, "buildin/diffuse.shader.gltf", ["USE_MAP"]);
 
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
@@ -399,33 +217,32 @@ namespace egret3d {
                 this._setBlend(technique, BlendModeEnum.Close);
 
                 DefaultShaders.DIFFUSE = shader;
-                paper.Asset.register(shader);
             }
 
             {
-                const shader = JSON.parse(JSON.stringify(egret3d.ShaderLibs.diffuse)) as GLTFAsset;
-                shader.name = "buildin/diffuse_tintcolor.shader.gltf";
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.diffuse, RenderQueue.Geometry, "buildin/diffuse_tintcolor.shader.gltf");
+
                 shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
                 DefaultShaders.DIFFUSE_TINT_COLOR = shader;
-                paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/diffuse_tintcolor.shader.gltf", RenderQueue.Geometry);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.diffuse, RenderQueue.Geometry, "buildin/diffuse_tintcolor.shader.gltf");
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
                 DefaultShaders.DIFFUSE_TINT_COLOR = shader;
-                paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/diffuse_bothside.shader.gltf", RenderQueue.Geometry);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.diffuse, RenderQueue.Geometry, "buildin/diffuse_bothside.shader.gltf");
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, false);
@@ -434,7 +251,8 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.meshbasic, RenderQueue.Transparent, "buildin/transparent.shader.gltf", ["USE_MAP"]);
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
@@ -444,7 +262,8 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent_tintColor.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.diffuse, RenderQueue.Transparent, "buildin/transparent_tintColor.shader.gltf");
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
@@ -454,7 +273,8 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent_alphaCut.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.diffuse, RenderQueue.Transparent, "buildin/transparent_alphaCut.shader.gltf");
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
@@ -464,7 +284,8 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent_additive.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.diffuse, RenderQueue.Transparent, "buildin/transparent_additive.shader.gltf");
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
@@ -474,7 +295,8 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent_additive_bothside.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.diffuse, RenderQueue.Transparent, "buildin/transparent_additive_bothside.shader.gltf");
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, false);
@@ -484,7 +306,8 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createDiffuseShaderTemplate("buildin/transparent_bothside.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.diffuse, RenderQueue.Transparent, "buildin/transparent_bothside.shader.gltf");
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, false);
@@ -494,7 +317,7 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createColorShaderTemplate("buildin/gizmos.shader.gltf", RenderQueue.Overlay);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.line, RenderQueue.Overlay, "buildin/gizmos.shader.gltf");
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
                 this._setDepth(technique, false, false);
@@ -505,7 +328,7 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createColorShaderTemplate("buildin/materialcolor.shader.gltf", RenderQueue.Geometry);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.line, RenderQueue.Geometry, "buildin/materialcolor.shader.gltf");
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
 
                 this._setDepth(technique, true, true);
@@ -516,19 +339,9 @@ namespace egret3d {
             }
 
             {
-                const shader = this.createBuildinShader("buildin/vertcolor.shader.gltf", "vertcolor_vs", ShaderLib.vertcolor_vert, "vertcolor_fs", ShaderLib.vertcolor_frag, RenderQueue.Geometry);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.vertcolor, RenderQueue.Geometry);
 
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                technique.attributes["position"] = { semantic: gltf.AttributeSemanticType.POSITION };
-                technique.attributes["normal"] = { semantic: gltf.AttributeSemanticType.NORMAL };
-                technique.attributes["color"] = { semantic: gltf.AttributeSemanticType.COLOR_0 };
-                technique.attributes["uv"] = { semantic: gltf.AttributeSemanticType.TEXCOORD_0 };
-
-                technique.uniforms["modelViewProjectionMatrix"] = { type: gltf.UniformType.FLOAT_MAT4, semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION, value: [] };
-
-                technique.uniforms["_MainTex"] = { type: gltf.UniformType.SAMPLER_2D, value: {} };
-                technique.uniforms["_MainTex_ST"] = { type: gltf.UniformType.FLOAT_MAT4, value: {} };
-
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
@@ -537,9 +350,9 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.particlesystem, RenderQueue.Geometry, "buildin/particle.shader.gltf");
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                //
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Close);
@@ -548,9 +361,9 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle_additive.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.particlesystem, RenderQueue.Transparent, "buildin/particle_additive.shader.gltf");
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                //
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Add);
@@ -559,9 +372,9 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle_additive_premultiply.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.particlesystem, RenderQueue.Transparent, "buildin/particle_additive_premultiply.shader.gltf");
+
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                //
                 this._setDepth(technique, true, false);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Add_PreMultiply);
@@ -570,19 +383,17 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle_blend1.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.particlesystem, RenderQueue.Transparent, "buildin/particle_blend1.shader.gltf");
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-                //
+
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, false);
                 this._setBlend(technique, BlendModeEnum.Blend);
                 technique.states.functions!.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
-
-                paper.Asset.register(shader);
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle_blend.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.particlesystem, RenderQueue.Transparent, "buildin/particle_blend.shader.gltf");
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 //
                 this._setDepth(technique, true, false);
@@ -593,7 +404,7 @@ namespace egret3d {
             }
 
             {
-                const shader = this._createParticleShaderTemplate("buildin/particle_blend_premultiply.shader.gltf", RenderQueue.Transparent);
+                const shader = this._createShaderAsset(egret3d.ShaderLibs.particlesystem, RenderQueue.Transparent, "buildin/particle_blend_premultiply.shader.gltf");
                 const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
                 //
                 this._setDepth(technique, true, false);

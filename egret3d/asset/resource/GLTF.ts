@@ -722,17 +722,17 @@ declare namespace gltf {
         MORPHNORMAL_2 = "MORPHNORMAL_2",
         MORPHNORMAL_3 = "MORPHNORMAL_3",
 
-        _CORNER = "CORNER",
-        _START_POSITION = "START_POSITION",
-        _START_VELOCITY = "START_VELOCITY",
-        _START_COLOR = "START_COLOR",
-        _START_SIZE = "START_SIZE",
-        _START_ROTATION = "START_ROTATION",
-        _TIME = "TIME",
-        _RANDOM0 = "RANDOM0",
-        _RANDOM1 = "RANDOM1",
-        _WORLD_POSITION = "WORLD_POSITION",
-        _WORLD_ROTATION = "WORLD_ROTATION",
+        _CORNER = "_CORNER",
+        _START_POSITION = "_START_POSITION",
+        _START_VELOCITY = "_START_VELOCITY",
+        _START_COLOR = "_START_COLOR",
+        _START_SIZE = "_START_SIZE",
+        _START_ROTATION = "_START_ROTATION",
+        _TIME = "_TIME",
+        _RANDOM0 = "_RANDOM0",
+        _RANDOM1 = "_RANDOM1",
+        _WORLD_POSITION = "_WORLD_POSITION",
+        _WORLD_ROTATION = "_WORLD_ROTATION",
     }
 
     export const enum UniformSemanticType {
