@@ -21,10 +21,11 @@ namespace egret3d {
         //
         private readonly _filteredLights: BaseLight[] = [];
         private _cacheContextVersion: number = -1;
+        private _cacheSubMeshIndex: number = -1;
         private _cacheMaterialVerision: number = -1;
-        private _cacheContext: RenderContext | undefined;
-        private _cacheMaterial: Material | undefined;
-        private _cacheMesh: Mesh | undefined;
+        private _cacheContext: RenderContext | null = null;
+        private _cacheMesh: Mesh | null = null;
+        private _cacheMaterial: Material | null = null;
 
         private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
             const needUpdate = this._cacheContext !== context || this._cacheContextVersion !== context.version || forceUpdate;
@@ -259,12 +260,14 @@ namespace egret3d {
         }
 
         private _updateAttributes(program: GlProgram, mesh: Mesh, subMeshIndex: number, technique: gltf.Technique, forceUpdate: boolean) {
-            const needUpdate = this._cacheMesh !== mesh || forceUpdate;
+            const needUpdate = this._cacheSubMeshIndex !== subMeshIndex || this._cacheMesh !== mesh || forceUpdate;
             if (!needUpdate) {
                 return;
             }
 
+            this._cacheSubMeshIndex = subMeshIndex;
             this._cacheMesh = mesh;
+
             if (0 <= subMeshIndex && subMeshIndex < mesh.glTFMesh.primitives.length) {
                 const primitive = mesh.glTFMesh.primitives[subMeshIndex];
                 const gl = WebGLCapabilities.webgl;
