@@ -40,5 +40,5 @@ function compileShader(inputPath, outputPath, outputName, spaceName) {
 
 // exports.compileShader = compileShader;
 
-compileShader("egret3d/asset/default/shaders/", "egret3d/asset/default/", "ShaderLib", "egret3d");
+// compileShader("egret3d/asset/default/shaders/", "egret3d/asset/default/", "ShaderLib", "egret3d");
 compileShader("egret3d/asset/default/chunks/", "egret3d/asset/default/", "ShaderChunk", "egret3d");
