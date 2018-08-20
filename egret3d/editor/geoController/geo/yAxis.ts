@@ -45,7 +45,8 @@ namespace paper.editor {
             parentMatrix = parentMatrix.inverse()
             parentMatrix.transformNormal(position)
 
-            this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
+            selectedGameObjs[0].transform.setLocalPosition(position)
+            // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
         }
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any) {
             let len = selectedGameObjs.length;
@@ -82,12 +83,16 @@ namespace paper.editor {
                 parentMatrix = parentMatrix.inverse()
                 parentMatrix.transformNormal(this._newPosition)
 
-                this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
+                obj.transform.setLocalPosition(this._newPosition)
+                // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
             }
             egret3d.Vector3.copy(hit, this._dragOffset);
 
         }
-        wasReleased() { return }
-
+        wasReleased(selectedGameObjs: GameObject[]) {
+            for (let item of selectedGameObjs) {
+                this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+            }
+        }
     }
 }
