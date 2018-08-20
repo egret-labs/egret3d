@@ -32,7 +32,7 @@ namespace paper.editor {
                     if (this.bindKeyboard.isPressed('CONTROL')) {
                         if (pickInfo) {
                             let picked = pickInfo.transform.gameObject;
-                            if (picked.name !== "GizmoController_Ball" && picked.name !== "GizmoController_X" && picked.name !== "GizmoController_Y" && picked.name !== "GizmoController_Z"
+                            if (picked.name !== "GizmoController_YZ" && picked.name !== "GizmoController_XZ" && picked.name !== "GizmoController_XY" && picked.name !== "GizmoController_X" && picked.name !== "GizmoController_Y" && picked.name !== "GizmoController_Z"
                                 && picked.name !== "GizmoController_Rotate_X" && picked.name !== "GizmoController_Rotate_Y" && picked.name !== "GizmoController_Rotate_Z"
                                 && picked.name !== "GizmoController_Scale_X" && picked.name !== "GizmoController_Scale_Y" && picked.name !== "GizmoController_Scale_Z") {
                                 // 对GameObject的点选
@@ -57,7 +57,7 @@ namespace paper.editor {
                     } else {
                         if (pickInfo) {
                             let picked = pickInfo.transform.gameObject;
-                            if (picked.name !== "GizmoController_Ball" && picked.name !== "GizmoController_X" && picked.name !== "GizmoController_Y" && picked.name !== "GizmoController_Z"
+                            if (picked.name !== "GizmoController_YZ" && picked.name !== "GizmoController_XZ" && picked.name !== "GizmoController_XY" && picked.name !== "GizmoController_X" && picked.name !== "GizmoController_Y" && picked.name !== "GizmoController_Z"
                                 && picked.name !== "GizmoController_Rotate_X" && picked.name !== "GizmoController_Rotate_Y" && picked.name !== "GizmoController_Rotate_Z"
                                 && picked.name !== "GizmoController_Scale_X" && picked.name !== "GizmoController_Scale_Y" && picked.name !== "GizmoController_Scale_Z") {
                                 // 对GameObject的点选

@@ -48,7 +48,6 @@ namespace paper.editor {
             this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
         }
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any) {
-            egret3d.Vector3.set(0, 0, 0, this._dragOffset);
             let len = selectedGameObjs.length;
             let ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
             for (let i = 0; i < len; i++) {
