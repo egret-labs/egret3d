@@ -1,15 +1,15 @@
 namespace paper.editor {
-    export class xyAxis extends BaseGeo {
+    export class yzAxis extends BaseGeo {
         constructor() {
             super();
         }
         onSet() {
-            let xyPlane = this._createAxis(new egret3d.Vector4(1, 0.0, 0.0, 0.5), 3);
-            xyPlane.name = "GizmoController_XY";
+            let xyPlane = this._createAxis(new egret3d.Vector4(0.0, 1, 0.0, 0.5), 3);
+            xyPlane.name = "GizmoController_YZ";
             xyPlane.tag = "Editor";
             xyPlane.transform.setLocalScale(0.05, 0.05, 0.05);
-            xyPlane.transform.setLocalEulerAngles(90, 0, 0);
-            xyPlane.transform.setLocalPosition(0.2, 0.2, 0);
+            xyPlane.transform.setLocalEulerAngles(0, 0, 90);
+            xyPlane.transform.setLocalPosition(0.0, 0.2, 0.2);
             this.geo = xyPlane
         }
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any) {
@@ -22,7 +22,7 @@ namespace paper.editor {
             let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
             // let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
             let normal = this.forward
-            this._dragPlaneNormal.applyQuaternion(worldRotation, normal)
+            this._dragPlaneNormal.applyQuaternion(worldRotation, this.right)
             this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
 
@@ -41,7 +41,7 @@ namespace paper.editor {
             let worldOffset1 = new egret3d.Vector3();
             let worldOffset = new egret3d.Vector3();
             worldOffset.applyQuaternion(worldRotation, this.up)
-            worldOffset1.applyQuaternion(worldRotation, this.right);
+            worldOffset1.applyQuaternion(worldRotation, this.forward);
             let cosHit1 = egret3d.Vector3.dot(hit, worldOffset1);
             let cosHit = egret3d.Vector3.dot(hit, worldOffset)
             egret3d.Vector3.scale(worldOffset1, cosHit1);
@@ -78,7 +78,7 @@ namespace paper.editor {
             egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
 
             let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
-            let normal = this.forward
+            let normal = this.right
 
             egret3d.Vector3.copy(normal, this._dragPlaneNormal);
             this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);

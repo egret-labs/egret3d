@@ -5142,6 +5142,16 @@ declare namespace egret3d {
         onRemoveComponent(component: Animation): void;
     }
 }
+declare namespace egret3d.particle {
+    /**
+    * @internal
+    */
+    function createBatchMesh(renderer: ParticleRenderer, maxParticleCount: number): Mesh;
+    /**
+     * @internal
+     */
+    function generatePositionAndDirection(position: Vector3, direction: Vector3, shape: ShapeModule): void;
+}
 declare namespace paper {
     /**
      *
@@ -5234,343 +5244,6 @@ declare namespace paper {
         UserLayer11 = 3840,
     }
     function layerTest(cullingMask: CullingMask, layer: Layer): boolean;
-}
-declare namespace egret3d.particle {
-    const enum CurveMode {
-        Constant = 0,
-        Curve = 1,
-        TwoCurves = 2,
-        TwoConstants = 3,
-    }
-    const enum ColorGradientMode {
-        Color = 0,
-        Gradient = 1,
-        TwoColors = 2,
-        TwoGradients = 3,
-        RandomColor = 4,
-    }
-    const enum SimulationSpace {
-        Local = 0,
-        World = 1,
-        Custom = 2,
-    }
-    const enum ScalingMode {
-        Hierarchy = 0,
-        Local = 1,
-        Shape = 2,
-    }
-    const enum ShapeType {
-        None = -1,
-        Sphere = 0,
-        SphereShell = 1,
-        Hemisphere = 2,
-        HemisphereShell = 3,
-        Cone = 4,
-        Box = 5,
-        Mesh = 6,
-        ConeShell = 7,
-        ConeVolume = 8,
-        ConeVolumeShell = 9,
-        Circle = 10,
-        CircleEdge = 11,
-        SingleSidedEdge = 12,
-        MeshRenderer = 13,
-        SkinnedMeshRenderer = 14,
-        BoxShell = 15,
-        BoxEdge = 16,
-    }
-    const enum ShapeMultiModeValue {
-        Random = 0,
-        Loop = 1,
-        PingPong = 2,
-        BurstSpread = 3,
-    }
-    const enum AnimationType {
-        WholeSheet = 0,
-        SingleRow = 1,
-    }
-    const enum UVChannelFlags {
-        UV0 = 1,
-        UV1 = 2,
-        UV2 = 4,
-        UV3 = 8,
-    }
-    const enum GradientMode {
-        Blend = 0,
-        Fixed = 1,
-    }
-    class Keyframe implements paper.ISerializable {
-        time: number;
-        value: number;
-        serialize(): number[];
-        deserialize(element: any): this;
-        clone(source: Keyframe): void;
-    }
-    class AnimationCurve implements paper.ISerializable {
-        /**
-         * 功能与效率平衡长度取4
-         */
-        private readonly _keys;
-        private readonly _floatValues;
-        serialize(): number[][];
-        deserialize(element: any): this;
-        evaluate(t?: number): number;
-        readonly floatValues: Readonly<Float32Array>;
-        clone(source: AnimationCurve): void;
-    }
-    class GradientColorKey extends paper.BaseObject {
-        color: Color;
-        time: number;
-        deserialize(element: any): this;
-    }
-    class GradientAlphaKey extends paper.BaseObject {
-        alpha: number;
-        time: number;
-        deserialize(element: any): this;
-    }
-    class Gradient extends paper.BaseObject {
-        mode: GradientMode;
-        private readonly alphaKeys;
-        private readonly colorKeys;
-        private readonly _alphaValue;
-        private readonly _colorValue;
-        deserialize(element: any): this;
-        evaluate(t: number, out: Color): Color;
-        readonly alphaValues: Readonly<Float32Array>;
-        readonly colorValues: Readonly<Float32Array>;
-    }
-    class MinMaxCurve extends paper.BaseObject {
-        mode: CurveMode;
-        constant: number;
-        constantMin: number;
-        constantMax: number;
-        readonly curve: AnimationCurve;
-        readonly curveMin: AnimationCurve;
-        readonly curveMax: AnimationCurve;
-        deserialize(element: any): this;
-        evaluate(t?: number): number;
-        clone(source: MinMaxCurve): void;
-    }
-    class MinMaxGradient extends paper.BaseObject {
-        mode: ColorGradientMode;
-        readonly color: Color;
-        readonly colorMin: Color;
-        readonly colorMax: Color;
-        readonly gradient: Gradient;
-        readonly gradientMin: Gradient;
-        readonly gradientMax: Gradient;
-        deserialize(element: any): this;
-        evaluate(t: number, out: Color): Color;
-    }
-    class Burst implements paper.ISerializable {
-        time: number;
-        minCount: number;
-        maxCount: number;
-        cycleCount: number;
-        repeatInterval: number;
-        serialize(): number[];
-        deserialize(element: any): this;
-    }
-    abstract class ParticleSystemModule extends paper.BaseObject {
-        enable: boolean;
-        protected _comp: ParticleComponent;
-        constructor(comp: ParticleComponent);
-        /**
-         * @internal
-         */
-        initialize(): void;
-        deserialize(element: any): this;
-    }
-    class MainModule extends ParticleSystemModule {
-        duration: number;
-        loop: boolean;
-        readonly startDelay: MinMaxCurve;
-        readonly startLifetime: MinMaxCurve;
-        readonly startSpeed: MinMaxCurve;
-        readonly startSizeX: MinMaxCurve;
-        readonly startSizeY: MinMaxCurve;
-        readonly startSizeZ: MinMaxCurve;
-        /**
-         * @internal
-         */
-        _startRotation3D: boolean;
-        readonly startRotationX: MinMaxCurve;
-        readonly startRotationY: MinMaxCurve;
-        readonly startRotationZ: MinMaxCurve;
-        readonly startColor: MinMaxGradient;
-        readonly gravityModifier: MinMaxCurve;
-        /**
-         * @internal
-         */
-        _simulationSpace: SimulationSpace;
-        /**
-         * @internal
-         */
-        _scaleMode: ScalingMode;
-        playOnAwake: boolean;
-        /**
-         * @internal
-         */
-        _maxParticles: number;
-        deserialize(element: any): this;
-        startRotation3D: boolean;
-        simulationSpace: SimulationSpace;
-        scaleMode: ScalingMode;
-        maxParticles: number;
-    }
-    class EmissionModule extends ParticleSystemModule {
-        readonly rateOverTime: MinMaxCurve;
-        readonly bursts: Array<Burst>;
-        deserialize(element: any): this;
-    }
-    class ShapeModule extends ParticleSystemModule {
-        shapeType: ShapeType;
-        radius: number;
-        angle: number;
-        length: number;
-        readonly arcSpeed: MinMaxCurve;
-        arcMode: ShapeMultiModeValue;
-        radiusSpread: number;
-        radiusMode: ShapeMultiModeValue;
-        readonly box: egret3d.Vector3;
-        randomDirection: boolean;
-        spherizeDirection: boolean;
-        deserialize(element: any): this;
-        invalidUpdate(): void;
-        generatePositionAndDirection(position: Vector3, direction: Vector3): void;
-    }
-    class VelocityOverLifetimeModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        _mode: CurveMode;
-        /**
-         * @internal
-         */
-        _space: SimulationSpace;
-        /**
-         * @internal
-         */
-        readonly _x: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _y: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _z: MinMaxCurve;
-        deserialize(element: any): this;
-        mode: CurveMode;
-        space: SimulationSpace;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class ColorOverLifetimeModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        _color: MinMaxGradient;
-        deserialize(element: any): this;
-        color: Readonly<MinMaxGradient>;
-    }
-    class SizeOverLifetimeModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        _separateAxes: boolean;
-        /**
-         * @internal
-         */
-        readonly _size: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _x: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _y: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _z: MinMaxCurve;
-        deserialize(element: any): this;
-        separateAxes: boolean;
-        size: Readonly<MinMaxCurve>;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class RotationOverLifetimeModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        _separateAxes: boolean;
-        /**
-         * @internal
-         */
-        readonly _x: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _y: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _z: MinMaxCurve;
-        deserialize(element: any): this;
-        separateAxes: boolean;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class TextureSheetAnimationModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        _numTilesX: number;
-        /**
-         * @internal
-         */
-        _numTilesY: number;
-        /**
-         * @internal
-         */
-        _animation: AnimationType;
-        /**
-         * @internal
-         */
-        _useRandomRow: boolean;
-        /**
-         * @internal
-         */
-        readonly _frameOverTime: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _startFrame: MinMaxCurve;
-        /**
-         * @internal
-         */
-        _cycleCount: number;
-        /**
-         * @internal
-         */
-        _rowIndex: number;
-        private readonly _floatValues;
-        deserialize(element: any): this;
-        numTilesX: number;
-        numTilesY: number;
-        animation: AnimationType;
-        useRandomRow: boolean;
-        frameOverTime: Readonly<MinMaxCurve>;
-        startFrame: Readonly<MinMaxCurve>;
-        cycleCount: number;
-        rowIndex: number;
-        readonly floatValues: Readonly<Float32Array>;
-    }
 }
 declare namespace egret3d.particle {
     /**
@@ -7764,8 +7437,28 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class xyAxis extends BaseGeo {
         constructor();
-        private _dragPlaneNormal1;
-        private _dragOffset1;
+        onSet(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasReleased(): void;
+    }
+}
+declare namespace paper.editor {
+    class xzAxis extends BaseGeo {
+        constructor();
+        onSet(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasReleased(): void;
+    }
+}
+declare namespace paper.editor {
+    class yzAxis extends BaseGeo {
+        constructor();
         onSet(): void;
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
@@ -8319,12 +8012,339 @@ declare namespace egret3d {
     type RawScene = paper.RawScene;
 }
 declare namespace egret3d.particle {
-    /**
-    * @internal
-    */
-    function createBatchMesh(renderer: ParticleRenderer, maxParticleCount: number): Mesh;
-    /**
-     * @internal
-     */
-    function generatePositionAndDirection(position: Vector3, direction: Vector3, shape: ShapeModule): void;
+    const enum CurveMode {
+        Constant = 0,
+        Curve = 1,
+        TwoCurves = 2,
+        TwoConstants = 3,
+    }
+    const enum ColorGradientMode {
+        Color = 0,
+        Gradient = 1,
+        TwoColors = 2,
+        TwoGradients = 3,
+        RandomColor = 4,
+    }
+    const enum SimulationSpace {
+        Local = 0,
+        World = 1,
+        Custom = 2,
+    }
+    const enum ScalingMode {
+        Hierarchy = 0,
+        Local = 1,
+        Shape = 2,
+    }
+    const enum ShapeType {
+        None = -1,
+        Sphere = 0,
+        SphereShell = 1,
+        Hemisphere = 2,
+        HemisphereShell = 3,
+        Cone = 4,
+        Box = 5,
+        Mesh = 6,
+        ConeShell = 7,
+        ConeVolume = 8,
+        ConeVolumeShell = 9,
+        Circle = 10,
+        CircleEdge = 11,
+        SingleSidedEdge = 12,
+        MeshRenderer = 13,
+        SkinnedMeshRenderer = 14,
+        BoxShell = 15,
+        BoxEdge = 16,
+    }
+    const enum ShapeMultiModeValue {
+        Random = 0,
+        Loop = 1,
+        PingPong = 2,
+        BurstSpread = 3,
+    }
+    const enum AnimationType {
+        WholeSheet = 0,
+        SingleRow = 1,
+    }
+    const enum UVChannelFlags {
+        UV0 = 1,
+        UV1 = 2,
+        UV2 = 4,
+        UV3 = 8,
+    }
+    const enum GradientMode {
+        Blend = 0,
+        Fixed = 1,
+    }
+    class Keyframe implements paper.ISerializable {
+        time: number;
+        value: number;
+        serialize(): number[];
+        deserialize(element: any): this;
+        clone(source: Keyframe): void;
+    }
+    class AnimationCurve implements paper.ISerializable {
+        /**
+         * 功能与效率平衡长度取4
+         */
+        private readonly _keys;
+        private readonly _floatValues;
+        serialize(): number[][];
+        deserialize(element: any): this;
+        evaluate(t?: number): number;
+        readonly floatValues: Readonly<Float32Array>;
+        clone(source: AnimationCurve): void;
+    }
+    class GradientColorKey extends paper.BaseObject {
+        color: Color;
+        time: number;
+        deserialize(element: any): this;
+    }
+    class GradientAlphaKey extends paper.BaseObject {
+        alpha: number;
+        time: number;
+        deserialize(element: any): this;
+    }
+    class Gradient extends paper.BaseObject {
+        mode: GradientMode;
+        private readonly alphaKeys;
+        private readonly colorKeys;
+        private readonly _alphaValue;
+        private readonly _colorValue;
+        deserialize(element: any): this;
+        evaluate(t: number, out: Color): Color;
+        readonly alphaValues: Readonly<Float32Array>;
+        readonly colorValues: Readonly<Float32Array>;
+    }
+    class MinMaxCurve extends paper.BaseObject {
+        mode: CurveMode;
+        constant: number;
+        constantMin: number;
+        constantMax: number;
+        readonly curve: AnimationCurve;
+        readonly curveMin: AnimationCurve;
+        readonly curveMax: AnimationCurve;
+        deserialize(element: any): this;
+        evaluate(t?: number): number;
+        clone(source: MinMaxCurve): void;
+    }
+    class MinMaxGradient extends paper.BaseObject {
+        mode: ColorGradientMode;
+        readonly color: Color;
+        readonly colorMin: Color;
+        readonly colorMax: Color;
+        readonly gradient: Gradient;
+        readonly gradientMin: Gradient;
+        readonly gradientMax: Gradient;
+        deserialize(element: any): this;
+        evaluate(t: number, out: Color): Color;
+    }
+    class Burst implements paper.ISerializable {
+        time: number;
+        minCount: number;
+        maxCount: number;
+        cycleCount: number;
+        repeatInterval: number;
+        serialize(): number[];
+        deserialize(element: any): this;
+    }
+    abstract class ParticleSystemModule extends paper.BaseObject {
+        enable: boolean;
+        protected _comp: ParticleComponent;
+        constructor(comp: ParticleComponent);
+        /**
+         * @internal
+         */
+        initialize(): void;
+        deserialize(element: any): this;
+    }
+    class MainModule extends ParticleSystemModule {
+        duration: number;
+        loop: boolean;
+        readonly startDelay: MinMaxCurve;
+        readonly startLifetime: MinMaxCurve;
+        readonly startSpeed: MinMaxCurve;
+        readonly startSizeX: MinMaxCurve;
+        readonly startSizeY: MinMaxCurve;
+        readonly startSizeZ: MinMaxCurve;
+        /**
+         * @internal
+         */
+        _startRotation3D: boolean;
+        readonly startRotationX: MinMaxCurve;
+        readonly startRotationY: MinMaxCurve;
+        readonly startRotationZ: MinMaxCurve;
+        readonly startColor: MinMaxGradient;
+        readonly gravityModifier: MinMaxCurve;
+        /**
+         * @internal
+         */
+        _simulationSpace: SimulationSpace;
+        /**
+         * @internal
+         */
+        _scaleMode: ScalingMode;
+        playOnAwake: boolean;
+        /**
+         * @internal
+         */
+        _maxParticles: number;
+        deserialize(element: any): this;
+        startRotation3D: boolean;
+        simulationSpace: SimulationSpace;
+        scaleMode: ScalingMode;
+        maxParticles: number;
+    }
+    class EmissionModule extends ParticleSystemModule {
+        readonly rateOverTime: MinMaxCurve;
+        readonly bursts: Array<Burst>;
+        deserialize(element: any): this;
+    }
+    class ShapeModule extends ParticleSystemModule {
+        shapeType: ShapeType;
+        radius: number;
+        angle: number;
+        length: number;
+        readonly arcSpeed: MinMaxCurve;
+        arcMode: ShapeMultiModeValue;
+        radiusSpread: number;
+        radiusMode: ShapeMultiModeValue;
+        readonly box: egret3d.Vector3;
+        randomDirection: boolean;
+        spherizeDirection: boolean;
+        deserialize(element: any): this;
+        invalidUpdate(): void;
+        generatePositionAndDirection(position: Vector3, direction: Vector3): void;
+    }
+    class VelocityOverLifetimeModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
+        _mode: CurveMode;
+        /**
+         * @internal
+         */
+        _space: SimulationSpace;
+        /**
+         * @internal
+         */
+        readonly _x: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _y: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _z: MinMaxCurve;
+        deserialize(element: any): this;
+        mode: CurveMode;
+        space: SimulationSpace;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class ColorOverLifetimeModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
+        _color: MinMaxGradient;
+        deserialize(element: any): this;
+        color: Readonly<MinMaxGradient>;
+    }
+    class SizeOverLifetimeModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
+        _separateAxes: boolean;
+        /**
+         * @internal
+         */
+        readonly _size: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _x: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _y: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _z: MinMaxCurve;
+        deserialize(element: any): this;
+        separateAxes: boolean;
+        size: Readonly<MinMaxCurve>;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class RotationOverLifetimeModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
+        _separateAxes: boolean;
+        /**
+         * @internal
+         */
+        readonly _x: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _y: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _z: MinMaxCurve;
+        deserialize(element: any): this;
+        separateAxes: boolean;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class TextureSheetAnimationModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
+        _numTilesX: number;
+        /**
+         * @internal
+         */
+        _numTilesY: number;
+        /**
+         * @internal
+         */
+        _animation: AnimationType;
+        /**
+         * @internal
+         */
+        _useRandomRow: boolean;
+        /**
+         * @internal
+         */
+        readonly _frameOverTime: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _startFrame: MinMaxCurve;
+        /**
+         * @internal
+         */
+        _cycleCount: number;
+        /**
+         * @internal
+         */
+        _rowIndex: number;
+        private readonly _floatValues;
+        deserialize(element: any): this;
+        numTilesX: number;
+        numTilesY: number;
+        animation: AnimationType;
+        useRandomRow: boolean;
+        frameOverTime: Readonly<MinMaxCurve>;
+        startFrame: Readonly<MinMaxCurve>;
+        cycleCount: number;
+        rowIndex: number;
+        readonly floatValues: Readonly<Float32Array>;
+    }
 }

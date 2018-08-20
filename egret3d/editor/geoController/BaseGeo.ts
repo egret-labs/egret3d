@@ -136,7 +136,9 @@ namespace paper.editor {
                         let y = new yAxis
                         let z = new zAxis
                         let xy = new xyAxis
-                        this.geos.push(x, y, z, xy)
+                        let xz = new xzAxis
+                        let yz = new yzAxis
+                        this.geos.push(x, y, z, xy, xz, yz)
                     }
                     break;
                 case "rotation":
