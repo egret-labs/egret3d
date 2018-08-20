@@ -6586,6 +6586,10 @@ var paper;
              * @internal
              */
             _this._gameObjects = [];
+            /**
+             * 环境光
+             */
+            _this.ambientLightColor = new egret3d.Color(0.21, 0.22, 0.25, 1);
             _this.name = name;
             return _this;
         }
@@ -6761,6 +6765,9 @@ var paper;
         __decorate([
             paper.serializedField
         ], Scene.prototype, "extras", void 0);
+        __decorate([
+            paper.serializedField
+        ], Scene.prototype, "ambientLightColor", void 0);
         __decorate([
             paper.serializedField,
             paper.deserializedIgnore
@@ -8182,7 +8189,7 @@ var egret3d;
                 this._setDepth(technique, true, true);
                 this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
                 this._setBlend(technique, 0 /* Close */);
-                // DefaultShaders.DIFFUSE = shader;
+                DefaultShaders.DIFFUSE = shader;
             }
             // {
             //     const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Geometry, "buildin/diffuse_tintcolor.shader.gltf", ["USE_MAP"]);
@@ -9155,10 +9162,13 @@ var egret3d;
                 this.version++;
             }
         };
-        RenderContext.prototype.updateLights = function (lights) {
+        RenderContext.prototype.updateLights = function (lights, ambientLightColor) {
             var allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
-            var dirHelper = new egret3d.Vector3();
-            var dir = new egret3d.Vector3();
+            if (lights.length > 0) {
+                this.ambientLightColor[0] = ambientLightColor.r;
+                this.ambientLightColor[1] = ambientLightColor.g;
+                this.ambientLightColor[2] = ambientLightColor.b;
+            }
             for (var _i = 0, lights_1 = lights; _i < lights_1.length; _i++) {
                 var light = lights_1[_i];
                 if (light instanceof egret3d.DirectLight) {
@@ -9200,15 +9210,15 @@ var egret3d;
                 var light = lights_2[_a];
                 var lightArray = this.directLightArray;
                 var pos = light.gameObject.transform.getPosition();
-                dir.applyDirection(this.matrix_v, pos).normalize();
+                dirHelper.applyDirection(this.matrix_v, pos).normalize();
                 var offset = 0;
                 if (light.type === 1 /* Direction */) {
                     lightArray = this.directLightArray;
                     index = directLightIndex;
                     size = this.DIRECT_LIGHT_SIZE;
-                    lightArray[index * size + offset++] = dir.x;
-                    lightArray[index * size + offset++] = dir.y;
-                    lightArray[index * size + offset++] = dir.z;
+                    lightArray[index * size + offset++] = dirHelper.x;
+                    lightArray[index * size + offset++] = dirHelper.y;
+                    lightArray[index * size + offset++] = dirHelper.z;
                     lightArray[index * size + offset++] = light.color.r * light.intensity;
                     lightArray[index * size + offset++] = light.color.g * light.intensity;
                     lightArray[index * size + offset++] = light.color.b * light.intensity;
@@ -9233,9 +9243,9 @@ var egret3d;
                     lightArray[index * size + offset++] = pos.x;
                     lightArray[index * size + offset++] = pos.y;
                     lightArray[index * size + offset++] = pos.z;
-                    lightArray[index * size + offset++] = dir.x;
-                    lightArray[index * size + offset++] = dir.y;
-                    lightArray[index * size + offset++] = dir.z;
+                    lightArray[index * size + offset++] = dirHelper.x;
+                    lightArray[index * size + offset++] = dirHelper.y;
+                    lightArray[index * size + offset++] = dirHelper.z;
                     lightArray[index * size + offset++] = light.color.r * light.intensity;
                     lightArray[index * size + offset++] = light.color.g * light.intensity;
                     lightArray[index * size + offset++] = light.color.b * light.intensity;
@@ -9367,6 +9377,7 @@ var egret3d;
     }());
     egret3d.RenderContext = RenderContext;
     __reflect(RenderContext.prototype, "egret3d.RenderContext");
+    var dirHelper = new egret3d.Vector3();
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -19706,7 +19717,7 @@ var egret3d;
                         continue;
                     }
                     if (filteredLights.length > 0) {
-                        camera.context.updateLights(filteredLights); // TODO 性能优化
+                        camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientLightColor); // TODO 性能优化
                     }
                     if (camera.postQueues.length === 0) {
                         renderState.targetAndViewport(camera.viewport, camera.renderTarget);

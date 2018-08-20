@@ -108,10 +108,13 @@ namespace egret3d {
             }
         }
 
-        public updateLights(lights: ReadonlyArray<BaseLight>) {
+        public updateLights(lights: ReadonlyArray<BaseLight>, ambientLightColor: Color) {
             let allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
-            let dirHelper: Vector3 = new Vector3();
-            let dir: Vector3 = new Vector3();
+            if(lights.length > 0){
+                this.ambientLightColor[0] = ambientLightColor.r;
+                this.ambientLightColor[1] = ambientLightColor.g;
+                this.ambientLightColor[2] = ambientLightColor.b;
+            }
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
 
@@ -163,16 +166,16 @@ namespace egret3d {
             for (const light of lights) {
                 let lightArray = this.directLightArray;
                 const pos = light.gameObject.transform.getPosition();
-                dir.applyDirection(this.matrix_v, pos).normalize();
+                dirHelper.applyDirection(this.matrix_v, pos).normalize();
                 let offset = 0;
 
                 if (light.type === LightType.Direction) {
                     lightArray = this.directLightArray;
                     index = directLightIndex;
                     size = this.DIRECT_LIGHT_SIZE;
-                    lightArray[index * size + offset++] = dir.x;
-                    lightArray[index * size + offset++] = dir.y;
-                    lightArray[index * size + offset++] = dir.z;
+                    lightArray[index * size + offset++] = dirHelper.x;
+                    lightArray[index * size + offset++] = dirHelper.y;
+                    lightArray[index * size + offset++] = dirHelper.z;
 
                     lightArray[index * size + offset++] = light.color.r * light.intensity;
                     lightArray[index * size + offset++] = light.color.g * light.intensity;
@@ -203,9 +206,9 @@ namespace egret3d {
                     lightArray[index * size + offset++] = pos.y;
                     lightArray[index * size + offset++] = pos.z;
 
-                    lightArray[index * size + offset++] = dir.x;
-                    lightArray[index * size + offset++] = dir.y;
-                    lightArray[index * size + offset++] = dir.z;
+                    lightArray[index * size + offset++] = dirHelper.x;
+                    lightArray[index * size + offset++] = dirHelper.y;
+                    lightArray[index * size + offset++] = dirHelper.z;
 
                     lightArray[index * size + offset++] = light.color.r * light.intensity;
                     lightArray[index * size + offset++] = light.color.g * light.intensity;
@@ -359,4 +362,6 @@ namespace egret3d {
             }
         }
     }
+
+    let dirHelper: Vector3 = new Vector3();
 }

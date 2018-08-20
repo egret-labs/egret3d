@@ -3660,6 +3660,10 @@ declare namespace paper {
          * @internal
          */
         readonly _gameObjects: GameObject[];
+        /**
+         * 环境光
+         */
+        readonly ambientLightColor: egret3d.Color;
         private constructor();
         /**
          * @internal
@@ -4486,7 +4490,7 @@ declare namespace egret3d {
         readonly matrix_mv_inverse: Matrix3;
         updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number): void;
         updateCamera(camera: Camera, matrix: Matrix): void;
-        updateLights(lights: ReadonlyArray<BaseLight>): void;
+        updateLights(lights: ReadonlyArray<BaseLight>, ambientLightColor: Color): void;
         updateModel(matrix: Matrix): void;
         updateBones(data: Float32Array | null): void;
         readonly lightPosition: Float32Array;

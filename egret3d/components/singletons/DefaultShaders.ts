@@ -211,7 +211,7 @@ namespace egret3d {
                 this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
                 this._setBlend(technique, BlendModeEnum.Close);
 
-                // DefaultShaders.DIFFUSE = shader;
+                DefaultShaders.DIFFUSE = shader;
             }
 
             // {

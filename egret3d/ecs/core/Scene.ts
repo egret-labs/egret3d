@@ -67,7 +67,11 @@ namespace paper {
          * @internal
          */
         public readonly _gameObjects: GameObject[] = [];
-
+        /**
+         * 环境光
+         */
+        @paper.serializedField
+        public readonly ambientLightColor:egret3d.Color = new egret3d.Color(0.21, 0.22, 0.25, 1);
         private constructor(name: string) {
             super();
 

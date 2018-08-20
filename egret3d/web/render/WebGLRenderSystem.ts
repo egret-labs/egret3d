@@ -463,7 +463,7 @@ namespace egret3d {
                     }
                     
                     if (filteredLights.length > 0) {
-                        camera.context.updateLights(filteredLights); // TODO 性能优化
+                        camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientLightColor); // TODO 性能优化
                     }
 
                     if (camera.postQueues.length === 0) {

@@ -9,7 +9,6 @@ varying highp vec2 xlv_TEXCOORD0;
 
 void main() {
     #include <skinning_base_vert>
-    // xlv_TEXCOORD0 = uv.xy * uvTransform.xy + uvTransform.zw;
     xlv_TEXCOORD0 = ( uvTransform * vec3( uv.xy, 1 ) ).xy;
     #include <lightmap_vert>
     gl_Position = (modelViewProjectionMatrix * tmpVertex);
