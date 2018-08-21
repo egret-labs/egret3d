@@ -27,6 +27,7 @@
         "egret3d/math/Vector3.ts",
         "egret3d/math/Vector4.ts",
         "egret3d/math/Matrix.ts",
+        "egret3d/math/Matrix3.ts",
         "egret3d/math/Quaternion.ts",
         "egret3d/math/Plane.ts",
         "egret3d/math/Triangle.ts",

@@ -48,24 +48,36 @@ namespace egret3d {
     /**
      * extract uniforms
      */
-    function extractUniforms(gl: WebGLRenderingContext, program: GlProgram, ) {
+    function extractUniforms(gl: WebGLRenderingContext, program: GlProgram, technique: gltf.Technique) {
         const webglProgram = program.program;
         const totalUniforms = gl.getProgramParameter(webglProgram, gl.ACTIVE_UNIFORMS);
         //
+        const contextUniforms: WebGLActiveUniform[] = [];
         const uniforms: WebGLActiveUniform[] = [];
         for (let i = 0; i < totalUniforms; i++) {
             const uniformData = gl.getActiveUniform(webglProgram, i)!;
+            const tUniform = technique.uniforms[uniformData.name];
+            if (!tUniform) {
+                console.warn("缺少Uniform定义：" + uniformData.name);
+            }
             const location = gl.getUniformLocation(webglProgram, uniformData!.name)!;
 
-            uniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location });
+            if (tUniform.semantic) {
+                contextUniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location });
+            }
+            else {
+                uniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location });
+            }
         }
+
+        program.contextUniforms = contextUniforms;
         program.uniforms = uniforms;
     }
     /**
      * extract texUnits
      */
     function extractTexUnits(program: GlProgram) {
-        const activeUniforms = program.uniforms;
+        const activeUniforms: WebGLActiveUniform[] = program.contextUniforms.concat(program.uniforms);
         const samplerArrayKeys: string[] = [];
         const samplerKeys: string[] = [];
         //排序
@@ -319,7 +331,7 @@ namespace egret3d {
                 program = new GlProgram(webglProgram);
                 this.programMap[name] = program;
                 extractAttributes(webgl, program);
-                extractUniforms(webgl, program);
+                extractUniforms(webgl, program, technique);
                 extractTexUnits(program);
             }
             //

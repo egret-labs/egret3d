@@ -9,9 +9,10 @@ namespace egret3d {
         public update(camera: Camera, faceIndex: number) {
             camera.near = this.shadowCameraNear;
             camera.far = this.shadowCameraFar;
-            camera.size = this.shadowSize;
+            camera.size = this.shadowCameraSize;
             camera.fov = Math.PI * 0.25; //
-            camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
+            camera.opvalue = 0.0;
+            // camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
 
             super.update(camera, faceIndex);
         }

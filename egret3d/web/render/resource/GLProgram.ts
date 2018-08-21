@@ -29,6 +29,7 @@ namespace egret3d {
         public id = _hashCode++;
         public program: WebGLProgram;
         public attributes: WebGLActiveAttribute[] = [];
+        public contextUniforms:WebGLActiveUniform[] = [];
         public uniforms: WebGLActiveUniform[] = [];
 
         public constructor(webglProgram: WebGLProgram) {

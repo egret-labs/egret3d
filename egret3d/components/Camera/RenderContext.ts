@@ -1,12 +1,13 @@
 namespace egret3d {
 
-    let helpVec3_1: Vector3 = new Vector3();
-
     /**
      * 缓存场景通用数据
      * 包括矩阵信息，灯光，光照贴图，viewport尺寸等等
      */
     export class RenderContext {
+        public readonly DIRECT_LIGHT_SIZE: number = 12;
+        public readonly POINT_LIGHT_SIZE: number = 15;
+        public readonly SPOT_LIGHT_SIZE: number = 18;
         /**
          * 
          */
@@ -38,11 +39,13 @@ namespace egret3d {
         public spotLightArray: Float32Array = new Float32Array(0);
         public directShadowMatrix: Float32Array = new Float32Array(0);
         public spotShadowMatrix: Float32Array = new Float32Array(0);
+        public pointShadowMatrix: Float32Array = new Float32Array(0);//TODO
         public readonly matrix_m: Matrix4 = new Matrix4();
         public readonly matrix_mvp: Matrix4 = new Matrix4();
         public readonly directShadowMaps: (WebGLTexture | null)[] = [];
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
+        public readonly ambientLightColor: Float32Array = new Float32Array([0, 0, 0]);
 
         public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
 
@@ -57,7 +60,7 @@ namespace egret3d {
         public readonly matrix_p: Matrix4 = new Matrix4();
         public readonly matrix_mv: Matrix4 = new Matrix4();
         public readonly matrix_vp: Matrix4 = new Matrix4();
-        //matrixNormal: paper.matrix = new paper.matrix();
+        public readonly matrix_mv_inverse: Matrix3 = new Matrix3();//INVERS
 
         public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
             this.lightmap = texture;
@@ -105,8 +108,13 @@ namespace egret3d {
             }
         }
 
-        public updateLights(lights: ReadonlyArray<BaseLight>) {
+        public updateLights(lights: ReadonlyArray<BaseLight>, ambientLightColor: Color) {
             let allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
+            if (lights.length > 0) {
+                this.ambientLightColor[0] = ambientLightColor.r;
+                this.ambientLightColor[1] = ambientLightColor.g;
+                this.ambientLightColor[2] = ambientLightColor.b;
+            }
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
 
@@ -124,16 +132,16 @@ namespace egret3d {
             }
 
             // TODO
-            if (this.directLightArray.length !== directLightCount * 15) {
-                this.directLightArray = new Float32Array(directLightCount * 15);
+            if (this.directLightArray.length !== directLightCount * this.DIRECT_LIGHT_SIZE) {
+                this.directLightArray = new Float32Array(directLightCount * this.DIRECT_LIGHT_SIZE);
             }
 
-            if (this.pointLightArray.length !== pointLightCount * 19) {
-                this.pointLightArray = new Float32Array(pointLightCount * 19);
+            if (this.pointLightArray.length !== pointLightCount * this.POINT_LIGHT_SIZE) {
+                this.pointLightArray = new Float32Array(pointLightCount * this.POINT_LIGHT_SIZE);
             }
 
-            if (this.spotLightArray.length !== spotLightCount * 19) {
-                this.spotLightArray = new Float32Array(spotLightCount * 19);
+            if (this.spotLightArray.length !== spotLightCount * this.SPOT_LIGHT_SIZE) {
+                this.spotLightArray = new Float32Array(spotLightCount * this.SPOT_LIGHT_SIZE);
             }
 
             if (this.directShadowMatrix.length !== directLightCount * 16) {
@@ -157,53 +165,63 @@ namespace egret3d {
 
             for (const light of lights) {
                 let lightArray = this.directLightArray;
+                const pos = light.gameObject.transform.getPosition();
+                dirHelper.applyDirection(this.matrix_v, pos).normalize();
+                let offset = 0;
 
                 if (light.type === LightType.Direction) {
                     lightArray = this.directLightArray;
                     index = directLightIndex;
-                    size = 15;
+                    size = this.DIRECT_LIGHT_SIZE;
+                    lightArray[index * size + offset++] = dirHelper.x;
+                    lightArray[index * size + offset++] = dirHelper.y;
+                    lightArray[index * size + offset++] = dirHelper.z;
+
+                    lightArray[index * size + offset++] = light.color.r * light.intensity;
+                    lightArray[index * size + offset++] = light.color.g * light.intensity;
+                    lightArray[index * size + offset++] = light.color.b * light.intensity;
                 }
                 else if (light.type === LightType.Point) {
                     lightArray = this.pointLightArray;
                     index = pointLightIndex;
-                    size = 19;
+                    size = this.POINT_LIGHT_SIZE;
+
+                    lightArray[index * size + offset++] = pos.x;
+                    lightArray[index * size + offset++] = pos.y;
+                    lightArray[index * size + offset++] = pos.z;
+
+                    lightArray[index * size + offset++] = light.color.r * light.intensity;
+                    lightArray[index * size + offset++] = light.color.g * light.intensity;
+                    lightArray[index * size + offset++] = light.color.b * light.intensity;
+
+                    lightArray[index * size + offset++] = light.distance;
+                    lightArray[index * size + offset++] = light.decay;
                 }
                 else if (light.type === LightType.Spot) {
                     lightArray = this.spotLightArray;
                     index = spotLightIndex;
-                    size = 19;
-                }
+                    size = this.SPOT_LIGHT_SIZE;
 
-                let offset = 0;
+                    lightArray[index * size + offset++] = pos.x;
+                    lightArray[index * size + offset++] = pos.y;
+                    lightArray[index * size + offset++] = pos.z;
 
-                const pos = light.gameObject.transform.getPosition();
-                lightArray[index * size + offset++] = pos.x;
-                lightArray[index * size + offset++] = pos.y;
-                lightArray[index * size + offset++] = pos.z;
+                    lightArray[index * size + offset++] = dirHelper.x;
+                    lightArray[index * size + offset++] = dirHelper.y;
+                    lightArray[index * size + offset++] = dirHelper.z;
 
-                const dir = light.gameObject.transform.getForward(helpVec3_1);
-                lightArray[index * size + offset++] = dir.x;
-                lightArray[index * size + offset++] = dir.y;
-                lightArray[index * size + offset++] = dir.z;
+                    lightArray[index * size + offset++] = light.color.r * light.intensity;
+                    lightArray[index * size + offset++] = light.color.g * light.intensity;
+                    lightArray[index * size + offset++] = light.color.b * light.intensity;
 
-                lightArray[index * size + offset++] = light.color.r;
-                lightArray[index * size + offset++] = light.color.g;
-                lightArray[index * size + offset++] = light.color.b;
-
-                lightArray[index * size + offset++] = light.intensity;
-
-                if (light.type === LightType.Point || light.type === LightType.Spot) {
                     lightArray[index * size + offset++] = light.distance;
                     lightArray[index * size + offset++] = light.decay;
-                    if (light.type === LightType.Spot) {
-                        lightArray[index * size + offset++] = Math.cos(light.angle);
-                        lightArray[index * size + offset++] = Math.cos(light.angle * (1 - light.penumbra));
-                    }
+                    lightArray[index * size + offset++] = Math.cos(light.angle);
+                    lightArray[index * size + offset++] = Math.cos(light.angle * (1 - light.penumbra));
                 }
 
                 if (light.castShadows) {
                     lightArray[index * size + offset++] = 1;
-
                     if (light.type === LightType.Direction) {
                         lightArray[index * size + offset++] = light.shadowBias;
                         lightArray[index * size + offset++] = light.shadowRadius;
@@ -214,11 +232,12 @@ namespace egret3d {
                     }
                     else if (light.type === LightType.Point) {
                         lightArray[index * size + offset++] = light.shadowBias;
-                        lightArray[index * size + offset++] = light.shadowRadius
+                        lightArray[index * size + offset++] = light.shadowRadius;
+                        lightArray[index * size + offset++] = light.shadowSize;
+                        lightArray[index * size + offset++] = light.shadowSize;
                         lightArray[index * size + offset++] = light.shadowCameraNear;
                         lightArray[index * size + offset++] = light.shadowCameraFar;
-                        lightArray[index * size + offset++] = light.shadowSize
-                        lightArray[index * size + offset++] = light.shadowSize
+                        this.pointShadowMatrix.set(light.matrix.rawData, pointLightIndex * 16);
                         this.pointShadowMaps[pointLightIndex] = light.renderTarget.texture;
                     }
                     else if (light.type === LightType.Spot) {
@@ -235,12 +254,12 @@ namespace egret3d {
                     lightArray[index * size + offset++] = 0;
                     lightArray[index * size + offset++] = 0;
                     lightArray[index * size + offset++] = 0;
-                    lightArray[index * size + offset++] = 0;
-
                     if (light.type === LightType.Direction) {
                         this.directShadowMaps[directLightIndex] = null;
                     }
                     else if (light.type === LightType.Point) {
+                        lightArray[index * size + offset++] = 0;
+                        lightArray[index * size + offset++] = 0;
                         this.pointShadowMaps[pointLightIndex] = null;
                     }
                     else if (light.type === LightType.Spot) {
@@ -267,6 +286,9 @@ namespace egret3d {
             this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
             this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
 
+
+            this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
+
             this.version++;
         }
 
@@ -275,7 +297,7 @@ namespace egret3d {
 
             this.version++;
         }
-
+        //TODO废弃
         public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0, 1.0]);
         public lightShadowCameraNear: number = 0;
         public lightShadowCameraFar: number = 0;
@@ -322,22 +344,24 @@ namespace egret3d {
             }
 
             if (this.lightCount > 0) {
-                this.shaderContextDefine += "#define USE_LIGHT " + this.lightCount + "\n";
+                // this.shaderContextDefine += "#define USE_LIGHT " + this.lightCount + "\n";
 
                 if (this.directLightCount > 0) {
-                    this.shaderContextDefine += "#define USE_DIRECT_LIGHT " + this.directLightCount + "\n";
+                    this.shaderContextDefine += "#define NUM_DIR_LIGHTS " + this.directLightCount + "\n";
                 }
                 if (this.pointLightCount > 0) {
-                    this.shaderContextDefine += "#define USE_POINT_LIGHT " + this.pointLightCount + "\n";
+                    this.shaderContextDefine += "#define NUM_POINT_LIGHTS " + this.pointLightCount + "\n";
                 }
                 if (this.spotLightCount > 0) {
-                    this.shaderContextDefine += "#define USE_SPOT_LIGHT " + this.spotLightCount + "\n";
+                    this.shaderContextDefine += "#define NUM_SPOT_LIGHTS " + this.spotLightCount + "\n";
                 }
                 if (renderer.receiveShadows) {
-                    this.shaderContextDefine += "#define USE_SHADOW \n";
+                    this.shaderContextDefine += "#define USE_SHADOWMAP \n";
                     this.shaderContextDefine += "#define USE_PCF_SOFT_SHADOW \n";
                 }
             }
         }
     }
+
+    let dirHelper: Vector3 = new Vector3();
 }

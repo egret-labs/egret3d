@@ -1,11 +1,11 @@
 #include <common>
 #include <lightmap_pars_frag>
-uniform vec4 _MainColor;
-uniform sampler2D _MainTex;
+uniform vec3 diffuse;
+uniform sampler2D map;
 uniform lowp float _AlphaCut;
 varying highp vec2 xlv_TEXCOORD0;
 void main() {
-    lowp vec4 outColor = texture2D(_MainTex, xlv_TEXCOORD0) * _MainColor;
+    lowp vec4 outColor = texture2D(map, xlv_TEXCOORD0) * vec4(diffuse, 1.0);
     if(outColor.a < _AlphaCut)
         discard;
     #include <lightmap_frag>    

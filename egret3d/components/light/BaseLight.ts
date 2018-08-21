@@ -154,30 +154,35 @@ namespace egret3d {
          * 
          */
         @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.NUMBER)
+        public shadowCameraSize: number = 30;
+        /**
+         * 
+         */
+        @paper.serializedField
         @paper.editor.property(paper.editor.EditType.COLOR)
         public readonly color: Color = Color.create(1.0, 1.0, 1.0, 1.0);
         public readonly matrix: Matrix4 = Matrix4.create();
         public renderTarget: IRenderTarget;
-
+        public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
         protected _updateMatrix(camera: Camera) {
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             const matrix = this.matrix;
             matrix.set(
-                0.5, 0.0, 0.0, 0.5,
-                0.0, 0.5, 0.0, 0.5,
-                0.0, 0.0, 0.5, 0.5,
-                0.0, 0.0, 0.0, 1.0
+                0.5, 0.0, 0.0, 0.0,
+                0.0, 0.5, 0.0, 0.0,
+                0.0, 0.0, 0.5, 0.0,
+                0.5, 0.5, 0.5, 1.0
             );
 
-            camera.calcProjectMatrix(512 / 512, helpMatrixA);
-            helpMatrixB.inverse(this.gameObject.transform.getWorldMatrix());
-            matrix.multiply(helpMatrixA).multiply(helpMatrixB);
+            const context = camera.context;
+            context.updateCamera(camera, this.gameObject.transform.getWorldMatrix());
+            matrix.multiply(context.matrix_p).multiply(context.matrix_v);
         }
         /**
          * @internal
          */
         public update(camera: Camera, faceIndex: number) {
-            camera.opvalue = 1.0;
             camera.backgroundColor.set(1.0, 1.0, 1.0, 1.0);
             camera.clearOption_Color = true;
             camera.clearOption_Depth = true;

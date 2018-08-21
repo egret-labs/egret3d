@@ -12,6 +12,8 @@ namespace egret3d {
 
     //TODO 运行时DrawCall排序优化使用
     let _hashCode: number = 0;
+    //兼容老的Uniform键值
+    let _compatible: { [key: string]: string } = { "_MainColor": "diffuse", "_MainTex": "map", "_MainTex_ST": "uvTransform" };
 
     /**
     * 材质资源
@@ -176,9 +178,19 @@ namespace egret3d {
             const gltfUnifromMap = this._glTFMaterial.extensions.KHR_techniques_webgl.values!;
             const uniformMap = this._glTFTechnique.uniforms;
             //使用Shader替换Material中没有默认值的Uniform
-            for (const key in gltfUnifromMap) {
+            for (let key in gltfUnifromMap) {
+                let value = gltfUnifromMap[key];
+                if (key in _compatible) {
+                    key = _compatible[key];
+                    if (key === "diffuse") {
+                        (value as any).length = 3;
+                    }
+                    else if (key === "uvTransform") {
+                        const old = value.concat();
+                        value = [old[0], 0, 0, 0, old[1], 0, old[2], old[3], 1];
+                    }
+                }
                 if (uniformMap[key]) {
-                    const value = gltfUnifromMap[key];
                     if (Array.isArray(value)) {
                         uniformMap[key].value = value.concat();
                     }
@@ -319,6 +331,20 @@ namespace egret3d {
         }
 
         setVector4(id: string, value: Vector4) {
+            //兼容老键值
+            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms["uvTransform"]) {
+                id = "uvTransform";
+                console.warn("已废弃的键值_MainTex_ST，建议改为:uvTransform-Matrix3");
+                this._glTFTechnique.uniforms[id].value = [value.x, 0, 0, 0, value.y, 0, value.z, value.w, 1];
+                return;
+            }
+            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms["diffuse"]) {
+                id = "diffuse";
+                console.warn("已废弃的键值_MainColor、_Color，建议改为:diffuse-Vector3");
+                this._glTFTechnique.uniforms[id].value = [value.x, value.y, value.z];
+                return;
+            }
+
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value[0] !== value.x || uniform.value[1] !== value.y || uniform.value[2] !== value.z || uniform.value[3] !== value.w) {
@@ -335,6 +361,19 @@ namespace egret3d {
         }
 
         setVector4v(id: string, value: Float32Array | [number, number, number, number]) {
+            //兼容老键值
+            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms["uvTransform"]) {
+                id = "uvTransform";
+                console.warn("已废弃的键值_MainTex_ST，建议改为:uvTransform-Matrix3");
+                this._glTFTechnique.uniforms[id].value = [value[0], 0, 0, 0, value[1], 0, value[2], value[3], 1];;
+                return;
+            }
+            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms["diffuse"]) {
+                id = "diffuse";
+                console.warn("已废弃的键值_MainColor、_Color，建议改为:diffuse-Vector3");
+                this._glTFTechnique.uniforms[id].value = [value[0], value[1], value[2]];
+                return;
+            }
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
@@ -369,6 +408,11 @@ namespace egret3d {
 
         setTexture(id: string, value: egret3d.Texture) {
             value = value || egret3d.DefaultTextures.GRAY;
+            //兼容老键值
+            if (id === "_MainTex" && this._glTFTechnique.uniforms["map"]) {
+                id = "map";
+                console.warn("已废弃的键值_MainTex，建议改为:map");
+            }
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value) {
