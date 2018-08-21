@@ -15,6 +15,8 @@ namespace egret3d {
         // public static LAMBERT_NORMAL: Shader;
         public static MESHLAMBERT: GLTFAsset;
 
+        public static PHONG:GLTFAsset;
+
         public static SHADOW_DEPTH: GLTFAsset;
         public static SHADOW_DISTANCE: GLTFAsset;
         public static LINE: GLTFAsset;
@@ -189,6 +191,17 @@ namespace egret3d {
                 this._setBlend(technique, BlendModeEnum.Close);
 
                 DefaultShaders.MESHLAMBERT = shader;
+            }
+
+            {
+                const shader = this._createShaderAsset(egret3d.ShaderLib.meshphong, RenderQueue.Geometry, null, ["USE_MAP"]);
+
+                const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
+                this._setDepth(technique, true, true);
+                this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this._setBlend(technique, BlendModeEnum.Close);
+
+                DefaultShaders.PHONG = shader;
             }
 
             {
