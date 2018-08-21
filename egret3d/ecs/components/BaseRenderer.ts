@@ -27,14 +27,14 @@ namespace paper {
         protected _castShadows: boolean = false;
         @serializedField
         protected _lightmapIndex: number = -1;
-        protected readonly _boundingSphere: egret3d.Sphere = new egret3d.Sphere();
-        protected readonly _aabb: egret3d.AABB = new egret3d.AABB();
+        protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
+        protected readonly _aabb: egret3d.AABB = egret3d.AABB.create();
         @serializedField
         protected readonly _lightmapScaleOffset: Float32Array = new Float32Array([1.0, 1.0, 0.0, 0.0]);
 
         protected _recalculateSphere() {
             const worldMatrix = this.gameObject.transform.getWorldMatrix();
-            this._boundingSphere.copy(this._aabb.sphere);
+            this._boundingSphere.set(this._aabb.center, this._aabb.boundingSphereRadius);
             this._boundingSphere.center.applyMatrix(worldMatrix);
 
             worldMatrix.decompose(null, null, _helpVector3A);

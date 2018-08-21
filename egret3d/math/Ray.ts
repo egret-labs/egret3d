@@ -34,7 +34,7 @@ namespace egret3d {
     /**
      * 射线
      */
-    export class Ray {
+    export class Ray implements paper.IRelease<Ray>, paper.ISerializable {
 
         private static readonly _instances: Ray[] = [];
 
@@ -46,12 +46,12 @@ namespace egret3d {
             return new Ray().set(origin, direction);
         }
 
-        public static release(value: Ray) {
-            if (this._instances.indexOf(value) >= 0) {
-                return;
+        public release() {
+            if (Ray._instances.indexOf(this) >= 0) {
+                Ray._instances.push(this);
             }
 
-            this._instances.push(value);
+            return this;
         }
 
         /**
@@ -77,7 +77,7 @@ namespace egret3d {
 
         public deserialize(element: Readonly<[number, number, number, number, number, number]>) {
             this.origin.fromArray(element);
-            this.direction.fromArray(element);
+            this.direction.fromArray(element, 3);
 
             return this;
         }

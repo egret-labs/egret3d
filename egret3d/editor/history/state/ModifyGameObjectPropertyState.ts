@@ -27,13 +27,13 @@ namespace paper.editor{
             return false;
         }
 
-        private async modifyProperty(valueList: any[]) {
+        private modifyProperty(valueList: any[]) {
             let uuid:string = this.stateData.gameObjectUUid;
             let modifyObj = this.editorModel.getGameObjectByUUid(uuid);
             if (modifyObj !== null) {
                 valueList.forEach(async (propertyValue) => {
                     const { propName, copyValue, valueEditType } = propertyValue;
-                    let newValue = await this.editorModel.deserializeProperty(copyValue, valueEditType);
+                    let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
                     this.editorModel.setTargetProperty(propName, modifyObj, newValue);
                     this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
                 });

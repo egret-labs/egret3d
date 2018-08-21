@@ -207,7 +207,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public update(matrix: Readonly<Matrix>) {
+        public update(matrix: Readonly<Matrix4>) {
             matrix.decompose(this.center);
             this._directions[0].fromArray(matrix.rawData, 0);
             this._directions[0].fromArray(matrix.rawData, 4);
@@ -278,7 +278,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public caclWorldVectors(vectors: ReadonlyArray<Vector3>, matrix: Readonly<Matrix>) {
+        public caclWorldVectors(vectors: ReadonlyArray<Vector3>, matrix: Readonly<Matrix4>) {
             for (let i = 0; i < 8; ++i) {
                 matrix.transformVector3(this.vectors[i], vectors[i]);
             }

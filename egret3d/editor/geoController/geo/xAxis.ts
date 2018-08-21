@@ -18,7 +18,8 @@ namespace paper.editor {
             let worldPosition = selectedGameObjs[0].transform.getPosition();
 
             let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
-            let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
+            // let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
+            let normal = new egret3d.Vector3(0, ray.direction.y, ray.direction.z)
             this._dragPlaneNormal.applyQuaternion(worldRotation, normal)
 
             egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
@@ -31,6 +32,7 @@ namespace paper.editor {
             let worldPosition = selectedGameObjs[0].transform.getPosition();
 
             let hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+            console.log(hit)
             egret3d.Vector3.subtract(hit, this._dragOffset, hit);
             egret3d.Vector3.subtract(hit, worldPosition, hit);
             let worldOffset = new egret3d.Vector3;
@@ -44,14 +46,11 @@ namespace paper.editor {
             parentMatrix = parentMatrix.inverse()
             parentMatrix.transformNormal(position)
 
-            this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
+            selectedGameObjs[0].transform.setLocalPosition(position)
+            // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
 
         }
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any) {
-            egret3d.Vector3.set(0, 0, 0, this._dragOffset);
-            egret3d.Vector3.set(0, 0, 0, this._dragPlanePoint);
-            egret3d.Vector3.set(0, 0, 0, this._dragPlaneNormal);
-
             let len = selectedGameObjs.length;
             let ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
             for (let i = 0; i < len; i++) {
@@ -64,8 +63,8 @@ namespace paper.editor {
             let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
             let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
 
-            egret3d.Vector3.copy(this.up, this._dragPlaneNormal);
-            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
+            egret3d.Vector3.copy(normal, this._dragPlaneNormal);
+            this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
 
         }
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any) {
@@ -86,12 +85,17 @@ namespace paper.editor {
                 parentMatrix = parentMatrix.inverse()
                 parentMatrix.transformNormal(this._newPosition)
 
-                this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
+                obj.transform.setLocalPosition(this._newPosition)
+                // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
             }
             egret3d.Vector3.copy(hit, this._dragOffset);
 
         }
-        wasReleased() { }
+        wasReleased(selectedGameObjs: GameObject[]) {
+            for (let item of selectedGameObjs) {
+                this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+            }
+        }
 
     }
 }

@@ -508,7 +508,7 @@ namespace egret3d {
                 const rootGameObject = this._animationComponent.gameObject;
                 const transforms = rootGameObject.transform.getAllChildren();
                 const gameObjects: { [key: string]: paper.GameObject } = {};
-                gameObjects[rootGameObject.name] = rootGameObject;
+                gameObjects[rootGameObject.name] = gameObjects["__root__"] = rootGameObject;
 
                 for (const { gameObject } of transforms) {
                     gameObjects[gameObject.name] = gameObject;

@@ -2,7 +2,7 @@ namespace egret3d {
     const _helpVector3A = Vector3.create();
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
-    const _helpMatrix = Matrix.create();
+    const _helpMatrix = Matrix4.create();
     const _helpRay = Ray.create();
 
     const _attributes: gltf.MeshAttributeType[] = [
@@ -65,12 +65,14 @@ namespace egret3d {
 
                 buffer.byteLength = vertexBufferView.byteLength;
                 this.buffers[0] = new Float32Array(vertexBufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
+                this._drawMode = drawMode;
 
                 if (indexCount > 0) { // Indices.
                     this.addSubMesh(indexCount, 0);
                 }
-
-                this._drawMode = drawMode;
+                else {
+                    this.config.meshes[0].primitives[0].material = 0;
+                }
 
                 this.initialize();
             }
@@ -119,7 +121,7 @@ namespace egret3d {
         /**
          * TODO
          */
-        public raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix>) {
+        public raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix4>) {
             _helpMatrix.inverse(worldMatrix);
             _helpRay.copy(ray);
             _helpRay.origin.applyMatrix(_helpMatrix);

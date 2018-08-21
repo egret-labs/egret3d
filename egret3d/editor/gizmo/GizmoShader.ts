@@ -70,7 +70,7 @@ namespace paper.editor {
         //let gl = this.gl;
         //gl.uniform4f(gl.getUniformLocation(this.prg, name), value.r, value.g, value.b, value.a);
         //}
-        public setMatrix(name: string, value: egret3d.Matrix) {
+        public setMatrix(name: string, value: egret3d.Matrix4) {
             let gl = this.gl;
             gl.uniformMatrix4fv(gl.getUniformLocation(this.prg, name), false, value.rawData);
         }

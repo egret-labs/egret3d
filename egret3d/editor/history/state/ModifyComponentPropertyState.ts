@@ -32,7 +32,7 @@ namespace paper.editor{
             return false;
         }
 
-        private async modifyProperty(valueList: any[]): Promise<void> {
+        private modifyProperty(valueList: any[]) {
             const gameObjectUUid = this.stateData.gameObjUUid;
             const componentUUid = this.stateData.componentUUid;
             let gameObj: GameObject | null = this.editorModel.getGameObjectByUUid(gameObjectUUid);
@@ -42,7 +42,7 @@ namespace paper.editor{
                 if (modifyObj) {
                     valueList.forEach(async (propertyValue) => {
                         const { propName, copyValue, valueEditType } = propertyValue;
-                        let newValue = await this.editorModel.deserializeProperty(copyValue, valueEditType);
+                        let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
                         this.editorModel.setTargetProperty(propName, modifyObj, newValue);
                         this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
                     });

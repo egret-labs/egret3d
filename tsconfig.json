@@ -22,20 +22,21 @@
     "files": [
         "libs/egret.d.ts",
         "libs/resourcemanager.d.ts",
-        
         "egret3d/math/Math.ts",
         "egret3d/math/Vector2.ts",
         "egret3d/math/Vector3.ts",
         "egret3d/math/Vector4.ts",
         "egret3d/math/Matrix.ts",
         "egret3d/math/Quaternion.ts",
+        "egret3d/math/Plane.ts",
+        "egret3d/math/Triangle.ts",
         "egret3d/math/Rectangle.ts",
         "egret3d/math/Sphere.ts",
         "egret3d/math/AABB.ts",
         "egret3d/math/OBB.ts",
         "egret3d/math/Curve.ts",
         "egret3d/math/Color.ts",
-
+        "egret3d/ecs/core/InterFace.ts",
         "egret3d/ecs/core/Decorators.ts",
         "egret3d/ecs/core/Layer.ts",
         "egret3d/ecs/core/BaseObject.ts",
@@ -64,10 +65,8 @@
         "egret3d/ecs/systems/LateUpdateSystem.ts",
         "egret3d/ecs/systems/DisableSystem.ts",
         "egret3d/ecs/serialize/SerializeClassMap.ts",
-        "egret3d/ecs/serialize/ISerializable.ts",
         "egret3d/ecs/serialize/Deserialize.ts",
         "egret3d/ecs/serialize/Serialize.ts",
-        
         "egret3d/EventDispatcher.ts",
         "egret3d/systems/BeginSystem.ts",
         "egret3d/systems/EndSystem.ts",
@@ -118,7 +117,6 @@
         "egret3d/util/stream.ts",
         "egret3d/util/utils.ts",
         "egret3d/Stats.ts",
-
         "egret3d/web/input/InputManager.ts",
         "egret3d/web/input/KeyboardDevice.ts",
         "egret3d/web/input/MouseDevice.ts",
@@ -127,11 +125,9 @@
         "egret3d/web/render/resource/GLTexture.ts",
         "egret3d/web/render/resource/GLProgram.ts",
         "egret3d/web/render/WebGLRenderSystem.ts",
-
         "egret3d/components/StaticBatchingUtility.ts",
         "egret3d/Performance.ts",
         "egret3d/Profile.ts",
-
         "egret3d/editor/Editor.ts",
         "egret3d/editor/EditorDecorator.ts",
         "egret3d/editor/EditorModel.ts",
@@ -141,6 +137,8 @@
         "egret3d/editor/geoController/BaseGeo.ts",
         "egret3d/editor/geoController/geo/xAxis.ts",
         "egret3d/editor/geoController/geo/xyAxis.ts",
+        "egret3d/editor/geoController/geo/xzAxis.ts",
+        "egret3d/editor/geoController/geo/yzAxis.ts",
         "egret3d/editor/geoController/geo/yAxis.ts",
         "egret3d/editor/geoController/geo/zAxis.ts",
         "egret3d/editor/geoController/geo/xRot.ts",
@@ -172,7 +170,7 @@
         "egret3d/editor/gizmo/Gizmo.ts",
         "egret3d/editor/gizmo/GizmoShader.ts",
         "egret3d/editor/gizmo/GizmoShaderLibs.ts",
-
+        "egret3d/editor/gizmo/GizmoRenderSystem.ts",
         "egret3d/Deprecated.ts",
         "egret3d/RunEgret.ts"
     ]

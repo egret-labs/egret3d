@@ -23,7 +23,7 @@ namespace paper.editor{
             let editInfoList = editor.getEditInfo(target);
             valueList.forEach(async (propertyValue) => {
                 const { propName, copyValue, valueEditType } = propertyValue;
-                const newValue = await this.editorModel.deserializeProperty(copyValue, valueEditType);
+                const newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
                 this.editorModel.setTargetProperty(propName, target, newValue);
                 this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: newValue });
             });

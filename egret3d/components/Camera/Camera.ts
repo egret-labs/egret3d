@@ -8,9 +8,12 @@ namespace egret3d {
          * 当前主相机。
          */
         public static get main() {
-            const gameObject =
-                paper.Application.sceneManager.activeScene.findWithTag(paper.DefaultTags.MainCamera) ||
-                paper.GameObject.create(paper.DefaultNames.MainCamera, paper.DefaultTags.MainCamera);
+            let gameObject = paper.Application.sceneManager.activeScene.findWithTag(paper.DefaultTags.MainCamera);
+            if (!gameObject) {
+                gameObject = paper.GameObject.create(paper.DefaultNames.MainCamera, paper.DefaultTags.MainCamera);
+                gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);
+                gameObject.transform.lookAt(Vector3.ZERO);
+            }
 
             return gameObject.getOrAddComponent(Camera);
         }
@@ -97,8 +100,8 @@ namespace egret3d {
         @paper.serializedField
         private _far: number = 1000;
 
-        private readonly matProjP: Matrix = new Matrix;
-        private readonly matProjO: Matrix = new Matrix;
+        private readonly matProjP: Matrix4 = new Matrix4;
+        private readonly matProjO: Matrix4 = new Matrix4;
         private readonly frameVecs: Vector3[] = [
             new Vector3(),
             new Vector3(),
@@ -175,7 +178,7 @@ namespace egret3d {
         /**
          * 计算相机的 view matrix（视图矩阵）
          */
-        public calcViewMatrix(matrix: Matrix): Matrix {
+        public calcViewMatrix(matrix: Matrix4): Matrix4 {
             matrix.inverse(this.gameObject.transform.getWorldMatrix());
 
             return matrix;
@@ -184,13 +187,13 @@ namespace egret3d {
         /**
          * 计算相机的 project matrix（投影矩阵）
          */
-        public calcProjectMatrix(asp: number, matrix: Matrix): Matrix {
+        public calcProjectMatrix(asp: number, matrix: Matrix4): Matrix4 {
             if (this.opvalue > 0) {
-                Matrix.perspectiveProjectLH(this.fov, asp, this.near, this.far, this.matProjP);
+                Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this.matProjP);
             }
 
             if (this.opvalue < 1) {
-                Matrix.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this.matProjO);
+                Matrix4.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this.matProjO);
             }
 
             if (this.opvalue === 0.0) {
