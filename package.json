@@ -14,5 +14,8 @@
   },
   "author": "egret",
   "license": "ISC",
-  "devDependencies": {}
+  "devDependencies": {},
+  "dependencies": {
+    "fs-extra": "^7.0.0"
+  }
 }

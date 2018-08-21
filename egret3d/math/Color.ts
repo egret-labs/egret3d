@@ -1,8 +1,8 @@
 namespace egret3d {
 
     export class Color implements paper.IRelease<Color>, paper.ISerializable {
-        public static readonly WHITE: Readonly<Color> = Color.create(1.0, 1.0, 1.0, 1.0);
-        public static readonly BLACK: Readonly<Color> = Color.create(0.0, 0.0, 0.0, 1.0);
+        public static readonly WHITE: Readonly<Color> = new Color().set(1.0, 1.0, 1.0, 1.0);
+        public static readonly BLACK: Readonly<Color> = new Color().set(0.0, 0.0, 0.0, 1.0);
 
         private static readonly _instances: Color[] = [];
 
@@ -30,14 +30,10 @@ namespace egret3d {
 
         public a: number;
         /**
-         * @deprecated
-         * @private
+         * 请使用 `egret3d.Color.create()` 创建 egret3d.Color 实例。
+         * @see egret3d.Color.create()
          */
-        public constructor(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0) {
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;
+        private constructor() {
         }
 
         public serialize() {

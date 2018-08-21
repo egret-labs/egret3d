@@ -5,7 +5,7 @@ namespace egret3d {
      */
     export class MeshRenderer extends paper.BaseRenderer {
         @paper.serializedField
-        private readonly _materials: Material[] = [DefaultMaterials.DefaultDiffuse];
+        private readonly _materials: Material[] = [DefaultMaterials.MESH_BASIC];
 
         public uninitialize() {
             super.uninitialize();

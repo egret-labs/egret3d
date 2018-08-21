@@ -182,13 +182,13 @@ var paper;
             return _this;
         }
         /**
-         * @deprecated
+         * @internal
          */
         Asset.register = function (asset) {
             this._assets[asset.name] = asset;
         };
         /**
-         * @deprecated
+         *
          */
         Asset.find = function (name) {
             var result = this._assets[name];
@@ -197,9 +197,6 @@ var paper;
             }
             return result;
         };
-        /**
-         * @deprecated
-         */
         Asset._assets = {};
         return Asset;
     }(paper.BaseObject));
@@ -225,25 +222,25 @@ var egret3d;
             this.z = z;
         }
         Vector3.create = function (x, y, z) {
+            if (x === void 0) { x = 0.0; }
+            if (y === void 0) { y = 0.0; }
+            if (z === void 0) { z = 0.0; }
             if (this._instances.length > 0) {
                 return this._instances.pop().set(x, y, z);
             }
-            return new Vector3(x, y, z);
+            return new Vector3().set(x, y, z);
         };
-        Vector3.release = function (value) {
-            if (this._instances.indexOf(value) >= 0) {
-                return;
+        Vector3.prototype.release = function () {
+            if (Vector3._instances.indexOf(this) < 0) {
+                Vector3._instances.push(this);
             }
-            this._instances.push(value);
+            return this;
         };
         Vector3.prototype.serialize = function () {
             return [this.x, this.y, this.z];
         };
-        Vector3.prototype.deserialize = function (element) {
-            this.x = element[0];
-            this.y = element[1];
-            this.z = element[2];
-            return this;
+        Vector3.prototype.deserialize = function (value) {
+            return this.fromArray(value);
         };
         Vector3.prototype.copy = function (value) {
             this.x = value.x;
@@ -252,9 +249,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.clone = function () {
-            var value = Vector3.create();
-            value.copy(this);
-            return value;
+            return Vector3.create(this.x, this.y, this.z);
         };
         Vector3.prototype.equal = function (value, threshold) {
             if (threshold === void 0) { threshold = 0.000001; }
@@ -270,9 +265,6 @@ var egret3d;
             return true;
         };
         Vector3.prototype.set = function (x, y, z) {
-            if (x === void 0) { x = 0.0; }
-            if (y === void 0) { y = 0.0; }
-            if (z === void 0) { z = 0.0; }
             this.x = x;
             this.y = y;
             this.z = z;
@@ -285,11 +277,17 @@ var egret3d;
             this.z = value[offset + 2];
             return this;
         };
-        Vector3.prototype.applyMatrix = function (matrix, value) {
-            if (!value) {
-                value = this;
+        Vector3.prototype.fromPlaneProjection = function (plane, source) {
+            if (!source) {
+                source = this;
             }
-            var x = value.x, y = value.y, z = value.z;
+            return this.add(egret3d.helpVector3A.multiplyScalar(-plane.getDistance(source), plane.normal));
+        };
+        Vector3.prototype.applyMatrix = function (matrix, source) {
+            if (!source) {
+                source = this;
+            }
+            var x = source.x, y = source.y, z = source.z;
             var rawData = matrix.rawData;
             var w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
             this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
@@ -297,22 +295,22 @@ var egret3d;
             this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
             return this;
         };
-        Vector3.prototype.applyDirection = function (matrix, value) {
-            if (!value) {
-                value = this;
+        Vector3.prototype.applyDirection = function (matrix, source) {
+            if (!source) {
+                source = this;
             }
-            var x = value.x, y = value.y, z = value.z;
+            var x = source.x, y = source.y, z = source.z;
             var rawData = matrix.rawData;
             this.x = rawData[0] * x + rawData[4] * y + rawData[8] * z;
             this.y = rawData[1] * x + rawData[5] * y + rawData[9] * z;
             this.z = rawData[2] * x + rawData[6] * y + rawData[10] * z;
             return this;
         };
-        Vector3.prototype.applyQuaternion = function (quaternion, value) {
-            if (!value) {
-                value = this;
+        Vector3.prototype.applyQuaternion = function (quaternion, source) {
+            if (!source) {
+                source = this;
             }
-            var x = value.x, y = value.y, z = value.z;
+            var x = source.x, y = source.y, z = source.z;
             var qx = quaternion.x, qy = quaternion.y, qz = quaternion.z, qw = quaternion.w;
             // calculate quat * vector
             var ix = qw * x + qy * z - qz * y;
@@ -325,11 +323,11 @@ var egret3d;
             this.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
             return this;
         };
-        Vector3.prototype.normalize = function (value) {
-            if (!value) {
-                value = this;
+        Vector3.prototype.normalize = function (source) {
+            if (!source) {
+                source = this;
             }
-            var l = value.length;
+            var l = source.length;
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;
@@ -337,17 +335,25 @@ var egret3d;
                 this.z *= l;
             }
             else {
-                this.x = 1.0;
+                this.x = 0.0;
                 this.y = 0.0;
-                this.z = 0.0;
+                this.z = 1.0;
             }
             return this;
         };
-        Vector3.prototype.addScalar = function (add, value) {
-            if (value) {
-                this.x = value.x + add;
-                this.y = value.y + add;
-                this.z = value.z + add;
+        Vector3.prototype.negate = function (source) {
+            if (!source) {
+                source = this;
+            }
+            this.x = source.x * -1.00;
+            this.y = source.y * -1.00;
+            this.z = source.z * -1.00;
+        };
+        Vector3.prototype.addScalar = function (add, source) {
+            if (source) {
+                this.x = source.x + add;
+                this.y = source.y + add;
+                this.z = source.z + add;
             }
             else {
                 this.x += add;
@@ -382,11 +388,11 @@ var egret3d;
             }
             return this;
         };
-        Vector3.prototype.multiplyScalar = function (scale, value) {
-            if (value) {
-                this.x = scale * value.x;
-                this.y = scale * value.y;
-                this.z = scale * value.z;
+        Vector3.prototype.multiplyScalar = function (scale, source) {
+            if (source) {
+                this.x = scale * source.x;
+                this.y = scale * source.y;
+                this.z = scale * source.z;
             }
             else {
                 this.x *= scale;
@@ -428,15 +434,15 @@ var egret3d;
             this.z = x * valueB.y - y * valueB.x;
             return this;
         };
-        Vector3.prototype.lerp = function (v, valueA, valueB) {
+        Vector3.prototype.lerp = function (t, valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;
             }
-            var p = 1.0 - v;
-            this.x = valueA.x * p + valueB.x * v;
-            this.y = valueA.y * p + valueB.y * v;
-            this.z = valueA.z * p + valueB.z * v;
+            var p = 1.0 - t;
+            this.x = valueA.x * p + valueB.x * t;
+            this.y = valueA.y * p + valueB.y * t;
+            this.z = valueA.z * p + valueB.z * t;
             return this;
         };
         Vector3.prototype.min = function (valueA, valueB) {
@@ -459,12 +465,95 @@ var egret3d;
             this.z = Math.max(valueA.z, valueB.z);
             return this;
         };
+        Vector3.prototype.clamp = function (min, max, source) {
+            if (!source) {
+                source = this;
+            }
+            // assumes min < max, componentwise
+            this.x = Math.max(min.x, Math.min(max.x, source.x));
+            this.y = Math.max(min.y, Math.min(max.y, source.y));
+            this.z = Math.max(min.z, Math.min(max.z, source.z));
+            return this;
+        };
         Vector3.prototype.getDistance = function (valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;
             }
-            return helpVector.subtract(valueA, valueB).length;
+            return helpVector.subtract(valueB, valueA).length;
+        };
+        Vector3.prototype.getSquaredDistance = function (valueA, valueB) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+            return helpVector.subtract(valueB, valueA).squaredLength;
+        };
+        Vector3.prototype.closestToTriangle = function (triangle, value) {
+            if (!value) {
+                value = this;
+            }
+            var vab = egret3d.helpVector3A;
+            var vac = egret3d.helpVector3B;
+            var vbc = egret3d.helpVector3C;
+            var vap = egret3d.helpVector3D;
+            var vbp = egret3d.helpVector3E;
+            var vcp = egret3d.helpVector3F;
+            var a = triangle.a, b = triangle.b, c = triangle.c;
+            var v, w;
+            // algorithm thanks to Real-Time Collision Detection by Christer Ericson,
+            // published by Morgan Kaufmann Publishers, (c) 2005 Elsevier Inc.,
+            // under the accompanying license; see chapter 5.1.5 for detailed explanation.
+            // basically, we're distinguishing which of the voronoi regions of the triangle
+            // the point lies in with the minimum amount of redundant computation.
+            vab.subtract(b, a);
+            vac.subtract(c, a);
+            vap.subtract(value, a);
+            var d1 = vab.dot(vap);
+            var d2 = vac.dot(vap);
+            if (d1 <= 0 && d2 <= 0) {
+                // vertex region of A; barycentric coords (1, 0, 0)
+                return this.copy(a);
+            }
+            vbp.subtract(value, b);
+            var d3 = vab.dot(vbp);
+            var d4 = vac.dot(vbp);
+            if (d3 >= 0 && d4 <= d3) {
+                // vertex region of B; barycentric coords (0, 1, 0)
+                return this.copy(b);
+            }
+            var vc = d1 * d4 - d3 * d2;
+            if (vc <= 0 && d1 >= 0 && d3 <= 0) {
+                v = d1 / (d1 - d3);
+                // edge region of AB; barycentric coords (1-v, v, 0)
+                return this.multiplyScalar(v, vab).add(a);
+            }
+            vcp.subtract(value, c);
+            var d5 = vab.dot(vcp);
+            var d6 = vac.dot(vcp);
+            if (d6 >= 0 && d5 <= d6) {
+                // vertex region of C; barycentric coords (0, 0, 1)
+                return this.copy(c);
+            }
+            var vb = d5 * d2 - d1 * d6;
+            if (vb <= 0 && d2 >= 0 && d6 <= 0) {
+                w = d2 / (d2 - d6);
+                // edge region of AC; barycentric coords (1-w, 0, w)
+                return this.multiplyScalar(w, vac).add(a);
+            }
+            var va = d3 * d6 - d5 * d4;
+            if (va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0) {
+                vbc.subtract(c, b);
+                w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+                // edge region of BC; barycentric coords (0, 1-w, w)
+                return this.multiplyScalar(w, vbc).add(b); // edge region of BC
+            }
+            // face region
+            var denom = 1 / (va + vb + vc);
+            // u = va * denom
+            v = vb * denom;
+            w = vc * denom;
+            return this.add(a, vac.multiplyScalar(w).add(vab.multiplyScalar(v)));
         };
         Object.defineProperty(Vector3.prototype, "length", {
             get: function () {
@@ -473,7 +562,7 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Vector3.prototype, "sqrtLength", {
+        Object.defineProperty(Vector3.prototype, "squaredLength", {
             get: function () {
                 return this.x * this.x + this.y * this.y + this.z * this.z;
             },
@@ -621,7 +710,7 @@ var egret3d;
         return Vector3;
     }());
     egret3d.Vector3 = Vector3;
-    __reflect(Vector3.prototype, "egret3d.Vector3", ["egret3d.IVector3", "paper.ISerializable"]);
+    __reflect(Vector3.prototype, "egret3d.Vector3", ["egret3d.IVector3", "paper.IRelease", "paper.ISerializable"]);
     var helpVector = Vector3.create();
     egret3d.helpVector3A = Vector3.create();
     egret3d.helpVector3B = Vector3.create();
@@ -632,6 +721,935 @@ var egret3d;
     egret3d.helpVector3G = Vector3.create();
     egret3d.helpVector3H = Vector3.create();
 })(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var _array = [
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    ];
+    /**
+     *
+     */
+    var Matrix4 = (function () {
+        /**
+         * @deprecated
+         * @private
+         */
+        function Matrix4() {
+            /**
+             *
+             */
+            this.rawData = new Float32Array(_array);
+        }
+        /**
+         *
+         * @param rawData
+         * @param offset
+         */
+        Matrix4.create = function (rawData, offset) {
+            if (rawData === void 0) { rawData = null; }
+            if (offset === void 0) { offset = 0; }
+            if (this._instances.length > 0) {
+                return this._instances.pop();
+            }
+            var matrix = new Matrix4();
+            if (rawData) {
+                matrix.fromArray(rawData, offset);
+            }
+            return matrix;
+        };
+        /**
+         *
+         */
+        Matrix4.prototype.release = function () {
+            if (Matrix4._instances.indexOf(this) < 0) {
+                Matrix4._instances.push(this);
+            }
+            return this;
+        };
+        Matrix4.prototype.serialize = function () {
+            return this.rawData;
+        };
+        Matrix4.prototype.deserialize = function (value) {
+            return this.fromArray(value);
+        };
+        Matrix4.prototype.copy = function (value) {
+            this.fromArray(value.rawData);
+            return this;
+        };
+        Matrix4.prototype.clone = function () {
+            return Matrix4.create(this.rawData);
+        };
+        Matrix4.prototype.identity = function () {
+            this.rawData[0] = 1.0;
+            this.rawData[1] = 0.0;
+            this.rawData[2] = 0.0;
+            this.rawData[3] = 0.0;
+            this.rawData[4] = 0.0;
+            this.rawData[5] = 1.0;
+            this.rawData[6] = 0.0;
+            this.rawData[7] = 0.0;
+            this.rawData[8] = 0.0;
+            this.rawData[9] = 0.0;
+            this.rawData[10] = 1.0;
+            this.rawData[11] = 0.0;
+            this.rawData[12] = 0.0;
+            this.rawData[13] = 0.0;
+            this.rawData[14] = 0.0;
+            this.rawData[15] = 1.0;
+            return this;
+        };
+        Matrix4.prototype.set = function (n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44) {
+            var rawData = this.rawData;
+            rawData[0] = n11;
+            rawData[4] = n12;
+            rawData[8] = n13;
+            rawData[12] = n14;
+            rawData[1] = n21;
+            rawData[5] = n22;
+            rawData[9] = n23;
+            rawData[13] = n24;
+            rawData[2] = n31;
+            rawData[6] = n32;
+            rawData[10] = n33;
+            rawData[14] = n34;
+            rawData[3] = n41;
+            rawData[7] = n42;
+            rawData[11] = n43;
+            rawData[15] = n44;
+            return this;
+        };
+        Matrix4.prototype.fromArray = function (value, offset) {
+            if (offset === void 0) { offset = 0; }
+            for (var i = 0; i < 16; ++i) {
+                this.rawData[i] = value[i + offset];
+            }
+            return this;
+        };
+        Matrix4.prototype.fromTranslate = function (value, rotationAndScaleStays) {
+            if (rotationAndScaleStays === void 0) { rotationAndScaleStays = false; }
+            if (!rotationAndScaleStays) {
+                this.identity();
+            }
+            this.rawData[12] = value.x;
+            this.rawData[13] = value.y;
+            this.rawData[14] = value.z;
+            return this;
+        };
+        Matrix4.prototype.fromRotation = function (rotation, translateStays) {
+            if (translateStays === void 0) { translateStays = false; }
+            return this.compose(translateStays ? _helpVector3A.fromArray(this.rawData, 12) : egret3d.Vector3.ZERO, rotation, egret3d.Vector3.ONE);
+        };
+        Matrix4.prototype.fromEuler = function (value, order, translateStays) {
+            // http://www.mathworks.com/matlabcentral/fileexchange/
+            // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
+            //	content/SpinCalc.m
+            if (order === void 0) { order = 0 /* XYZ */; }
+            if (translateStays === void 0) { translateStays = false; }
+            var cos = Math.cos;
+            var sin = Math.sin;
+            var x = value.x, y = value.y, z = value.z;
+            var a = cos(x), b = sin(x);
+            var c = cos(y), d = sin(y);
+            var e = cos(z), f = sin(z);
+            var rawData = this.rawData;
+            switch (order) {
+                case 0 /* XYZ */: {
+                    var ae = a * e, af = a * f, be = b * e, bf = b * f;
+                    rawData[0] = c * e;
+                    rawData[4] = -c * f;
+                    rawData[8] = d;
+                    rawData[1] = af + be * d;
+                    rawData[5] = ae - bf * d;
+                    rawData[9] = -b * c;
+                    rawData[2] = bf - ae * d;
+                    rawData[6] = be + af * d;
+                    rawData[10] = a * c;
+                    break;
+                }
+                case 1 /* XZY */: {
+                    var ac_1 = a * c, ad_1 = a * d, bc_1 = b * c, bd_1 = b * d;
+                    rawData[0] = c * e;
+                    rawData[4] = -f;
+                    rawData[8] = d * e;
+                    rawData[1] = ac_1 * f + bd_1;
+                    rawData[5] = a * e;
+                    rawData[9] = ad_1 * f - bc_1;
+                    rawData[2] = bc_1 * f - ad_1;
+                    rawData[6] = b * e;
+                    rawData[10] = bd_1 * f + ac_1;
+                    break;
+                }
+                case 2 /* YXZ */: {
+                    var ce = c * e, cf = c * f, de = d * e, df = d * f;
+                    rawData[0] = ce + df * b;
+                    rawData[4] = de * b - cf;
+                    rawData[8] = a * d;
+                    rawData[1] = a * f;
+                    rawData[5] = a * e;
+                    rawData[9] = -b;
+                    rawData[2] = cf * b - de;
+                    rawData[6] = df + ce * b;
+                    rawData[10] = a * c;
+                    break;
+                }
+                case 3 /* YZX */: {
+                    var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
+                    rawData[0] = c * e;
+                    rawData[4] = bd - ac * f;
+                    rawData[8] = bc * f + ad;
+                    rawData[1] = f;
+                    rawData[5] = a * e;
+                    rawData[9] = -b * e;
+                    rawData[2] = -d * e;
+                    rawData[6] = ad * f + bc;
+                    rawData[10] = ac - bd * f;
+                    break;
+                }
+                case 4 /* ZXY */: {
+                    var ce = c * e, cf = c * f, de = d * e, df = d * f;
+                    rawData[0] = ce - df * b;
+                    rawData[4] = -a * f;
+                    rawData[8] = de + cf * b;
+                    rawData[1] = cf + de * b;
+                    rawData[5] = a * e;
+                    rawData[9] = df - ce * b;
+                    rawData[2] = -a * d;
+                    rawData[6] = b;
+                    rawData[10] = a * c;
+                    break;
+                }
+                case 5 /* ZYX */: {
+                    var ae = a * e, af = a * f, be = b * e, bf = b * f;
+                    rawData[0] = c * e;
+                    rawData[4] = be * d - af;
+                    rawData[8] = ae * d + bf;
+                    rawData[1] = c * f;
+                    rawData[5] = bf * d + ae;
+                    rawData[9] = af * d - be;
+                    rawData[2] = -d;
+                    rawData[6] = b * c;
+                    rawData[10] = a * c;
+                    break;
+                }
+            }
+            // bottom row
+            rawData[3] = 0.0;
+            rawData[7] = 0.0;
+            rawData[11] = 0.0;
+            if (!translateStays) {
+                // last column
+                rawData[12] = 0.0;
+                rawData[13] = 0.0;
+                rawData[14] = 0.0;
+                rawData[15] = 1.0;
+            }
+            return this;
+        };
+        Matrix4.prototype.fromScale = function (x, y, z, translateStays) {
+            if (translateStays === void 0) { translateStays = false; }
+            if (translateStays) {
+                _helpVector3A.fromArray(this.rawData, 12);
+            }
+            this.identity();
+            this.rawData[0] = x;
+            this.rawData[5] = y;
+            this.rawData[10] = z;
+            if (translateStays) {
+                this.rawData[12] = _helpVector3A.x;
+                this.rawData[13] = _helpVector3A.y;
+                this.rawData[14] = _helpVector3A.z;
+            }
+            return this;
+        };
+        Matrix4.prototype.fromAxis = function (axis, radian) {
+            if (radian === void 0) { radian = 0.0; }
+            // Based on http://www.gamedev.net/reference/articles/article1199.asp
+            var c = Math.cos(radian);
+            var s = Math.sin(radian);
+            var t = 1.0 - c;
+            var x = axis.x, y = axis.y, z = axis.z;
+            var tx = t * x, ty = t * y;
+            this.set(tx * x + c, tx * y - s * z, tx * z + s * y, 0.0, tx * y + s * z, ty * y + c, ty * z - s * x, 0.0, tx * z - s * y, ty * z + s * x, t * z * z + c, 0.0, 0.0, 0.0, 0.0, 1.0);
+            return this;
+        };
+        Matrix4.prototype.fromAxises = function (axisX, axisY, axisZ) {
+            this.set(axisX.x, axisY.x, axisZ.x, 0.0, axisX.y, axisY.y, axisZ.y, 0.0, axisX.z, axisY.z, axisZ.z, 0.0, 0.0, 0.0, 0.0, 1.0);
+            return this;
+        };
+        Matrix4.prototype.fromRotationX = function (radian) {
+            var c = Math.cos(radian), s = Math.sin(radian);
+            this.set(1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1);
+            return this;
+        };
+        Matrix4.prototype.fromRotationY = function (radian) {
+            var c = Math.cos(radian), s = Math.sin(radian);
+            this.set(c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1);
+            return this;
+        };
+        Matrix4.prototype.fromRotationZ = function (theta) {
+            var c = Math.cos(theta), s = Math.sin(theta);
+            this.set(c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            return this;
+        };
+        Matrix4.prototype.determinant = function () {
+            var rawData = this.rawData;
+            var n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
+            var n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
+            var n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
+            var n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
+            //TODO: make this more efficient
+            //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
+            return (n41 * (+n14 * n23 * n32
+                - n13 * n24 * n32
+                - n14 * n22 * n33
+                + n12 * n24 * n33
+                + n13 * n22 * n34
+                - n12 * n23 * n34) +
+                n42 * (+n11 * n23 * n34
+                    - n11 * n24 * n33
+                    + n14 * n21 * n33
+                    - n13 * n21 * n34
+                    + n13 * n24 * n31
+                    - n14 * n23 * n31) +
+                n43 * (+n11 * n24 * n32
+                    - n11 * n22 * n34
+                    - n14 * n21 * n32
+                    + n12 * n21 * n34
+                    + n14 * n22 * n31
+                    - n12 * n24 * n31) +
+                n44 * (-n13 * n22 * n31
+                    - n11 * n23 * n32
+                    + n11 * n22 * n33
+                    + n13 * n21 * n32
+                    - n12 * n21 * n33
+                    + n12 * n23 * n31));
+        };
+        Matrix4.prototype.compose = function (translation, rotation, scale) {
+            var rawData = this.rawData;
+            var x = rotation.x, y = rotation.y, z = rotation.z, w = rotation.w;
+            var x2 = x + x, y2 = y + y, z2 = z + z;
+            var xx = x * x2, xy = x * y2, xz = x * z2;
+            var yy = y * y2, yz = y * z2, zz = z * z2;
+            var wx = w * x2, wy = w * y2, wz = w * z2;
+            var sx = scale.x, sy = scale.y, sz = scale.z;
+            rawData[0] = (1.0 - (yy + zz)) * sx;
+            rawData[1] = (xy + wz) * sx;
+            rawData[2] = (xz - wy) * sx;
+            rawData[3] = 0.0;
+            rawData[4] = (xy - wz) * sy;
+            rawData[5] = (1.0 - (xx + zz)) * sy;
+            rawData[6] = (yz + wx) * sy;
+            rawData[7] = 0.0;
+            rawData[8] = (xz + wy) * sz;
+            rawData[9] = (yz - wx) * sz;
+            rawData[10] = (1.0 - (xx + yy)) * sz;
+            rawData[11] = 0.0;
+            rawData[12] = translation.x;
+            rawData[13] = translation.y;
+            rawData[14] = translation.z;
+            rawData[15] = 1.0;
+            return this;
+        };
+        Matrix4.prototype.decompose = function (translation, rotation, scale) {
+            if (translation === void 0) { translation = null; }
+            if (rotation === void 0) { rotation = null; }
+            if (scale === void 0) { scale = null; }
+            var rawData = this.rawData;
+            if (translation) {
+                translation.x = rawData[12];
+                translation.y = rawData[13];
+                translation.z = rawData[14];
+            }
+            if (rotation || scale) {
+                var sx = _helpVector3A.set(rawData[0], rawData[1], rawData[2]).length;
+                var sy = _helpVector3A.set(rawData[4], rawData[5], rawData[6]).length;
+                var sz = _helpVector3A.set(rawData[8], rawData[9], rawData[10]).length;
+                // if determine is negative, we need to invert one scale
+                var det = this.determinant();
+                if (det < 0.0)
+                    sx = -sx;
+                if (rotation) {
+                    // scale the rotation part
+                    _helpMatrix.copy(this);
+                    var invSX = 1.0 / sx;
+                    var invSY = 1.0 / sy;
+                    var invSZ = 1.0 / sz;
+                    _helpMatrix.rawData[0] *= invSX;
+                    _helpMatrix.rawData[1] *= invSX;
+                    _helpMatrix.rawData[2] *= invSX;
+                    _helpMatrix.rawData[4] *= invSY;
+                    _helpMatrix.rawData[5] *= invSY;
+                    _helpMatrix.rawData[6] *= invSY;
+                    _helpMatrix.rawData[8] *= invSZ;
+                    _helpMatrix.rawData[9] *= invSZ;
+                    _helpMatrix.rawData[10] *= invSZ;
+                    rotation.fromMatrix(_helpMatrix);
+                }
+                if (scale) {
+                    scale.x = sx;
+                    scale.y = sy;
+                    scale.z = sz;
+                }
+            }
+            return this;
+        };
+        Matrix4.prototype.transpose = function (source) {
+            if (!source) {
+                source = this;
+            }
+            var valueRawData = source.rawData;
+            var rawData = this.rawData;
+            var temp = 0.0;
+            temp = valueRawData[1];
+            rawData[1] = valueRawData[4];
+            rawData[4] = temp;
+            temp = valueRawData[2];
+            rawData[2] = valueRawData[8];
+            rawData[8] = temp;
+            temp = valueRawData[6];
+            rawData[6] = valueRawData[9];
+            rawData[9] = temp;
+            temp = valueRawData[3];
+            rawData[3] = valueRawData[12];
+            rawData[12] = temp;
+            temp = valueRawData[7];
+            rawData[7] = valueRawData[13];
+            rawData[13] = temp;
+            temp = valueRawData[11];
+            rawData[11] = valueRawData[14];
+            rawData[14] = temp;
+            return this;
+        };
+        Matrix4.prototype.inverse = function (source) {
+            if (!source) {
+                source = this;
+            }
+            var valueRawData = source.rawData;
+            var rawData = this.rawData;
+            var n11 = valueRawData[0], n21 = valueRawData[1], n31 = valueRawData[2], n41 = valueRawData[3], n12 = valueRawData[4], n22 = valueRawData[5], n32 = valueRawData[6], n42 = valueRawData[7], n13 = valueRawData[8], n23 = valueRawData[9], n33 = valueRawData[10], n43 = valueRawData[11], n14 = valueRawData[12], n24 = valueRawData[13], n34 = valueRawData[14], n44 = valueRawData[15], t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44, t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44, t13 = n13 * n24 * n42 - n14 * n23 * n42 + n14 * n22 * n43 - n12 * n24 * n43 - n13 * n22 * n44 + n12 * n23 * n44, t14 = n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34;
+            var det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
+            if (det === 0.0) {
+                console.warn("Cannot invert matrix, determinant is 0.");
+                return this.identity();
+            }
+            var detInv = 1.0 / det;
+            rawData[0] = t11 * detInv;
+            rawData[1] = (n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44) * detInv;
+            rawData[2] = (n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44) * detInv;
+            rawData[3] = (n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43) * detInv;
+            rawData[4] = t12 * detInv;
+            rawData[5] = (n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44) * detInv;
+            rawData[6] = (n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44) * detInv;
+            rawData[7] = (n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43) * detInv;
+            rawData[8] = t13 * detInv;
+            rawData[9] = (n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44) * detInv;
+            rawData[10] = (n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44) * detInv;
+            rawData[11] = (n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43) * detInv;
+            rawData[12] = t14 * detInv;
+            rawData[13] = (n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34) * detInv;
+            rawData[14] = (n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34) * detInv;
+            rawData[15] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) * detInv;
+            return this;
+        };
+        Matrix4.prototype.multiplyScalar = function (value, source) {
+            if (!source) {
+                source = this;
+            }
+            var sourceRawData = source.rawData;
+            var rawData = this.rawData;
+            rawData[0] = sourceRawData[0] * value;
+            rawData[1] = sourceRawData[1] * value;
+            rawData[2] = sourceRawData[2] * value;
+            rawData[3] = sourceRawData[3] * value;
+            rawData[4] = sourceRawData[4] * value;
+            rawData[5] = sourceRawData[5] * value;
+            rawData[6] = sourceRawData[6] * value;
+            rawData[7] = sourceRawData[7] * value;
+            rawData[8] = sourceRawData[8] * value;
+            rawData[9] = sourceRawData[9] * value;
+            rawData[10] = sourceRawData[10] * value;
+            rawData[11] = sourceRawData[11] * value;
+            rawData[12] = sourceRawData[12] * value;
+            rawData[13] = sourceRawData[13] * value;
+            rawData[14] = sourceRawData[14] * value;
+            rawData[15] = sourceRawData[15] * value;
+        };
+        Matrix4.prototype.multiply = function (valueA, valueB) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+            var ae = valueA.rawData;
+            var be = valueB.rawData;
+            var te = this.rawData;
+            var a11 = ae[0], a12 = ae[4], a13 = ae[8], a14 = ae[12];
+            var a21 = ae[1], a22 = ae[5], a23 = ae[9], a24 = ae[13];
+            var a31 = ae[2], a32 = ae[6], a33 = ae[10], a34 = ae[14];
+            var a41 = ae[3], a42 = ae[7], a43 = ae[11], a44 = ae[15];
+            var b11 = be[0], b12 = be[4], b13 = be[8], b14 = be[12];
+            var b21 = be[1], b22 = be[5], b23 = be[9], b24 = be[13];
+            var b31 = be[2], b32 = be[6], b33 = be[10], b34 = be[14];
+            var b41 = be[3], b42 = be[7], b43 = be[11], b44 = be[15];
+            te[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
+            te[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
+            te[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
+            te[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
+            te[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
+            te[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
+            te[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
+            te[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
+            te[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
+            te[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
+            te[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
+            te[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
+            te[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
+            te[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
+            te[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
+            te[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
+            return this;
+        };
+        Matrix4.prototype.premultiply = function (value) {
+            return this.multiply(value, this);
+        };
+        /**
+         * - 两点位置不重合。
+         * @param eye
+         * @param target
+         * @param up
+         */
+        Matrix4.prototype.lookAt = function (eye, target, up) {
+            var z = _helpVector3C.subtract(target, eye).normalize(); //right handle
+            var x = _helpVector3A.cross(up, z).normalize();
+            var y = _helpVector3B.cross(z, x);
+            var rawData = this.rawData;
+            rawData[0] = x.x;
+            rawData[4] = y.x;
+            rawData[8] = z.x;
+            rawData[1] = x.y;
+            rawData[5] = y.y;
+            rawData[9] = z.y;
+            rawData[2] = x.z;
+            rawData[6] = y.z;
+            rawData[10] = z.z;
+            return this;
+        };
+        Matrix4.prototype.getMaxScaleOnAxis = function () {
+            var rawData = this.rawData;
+            var scaleXSq = rawData[0] * rawData[0] + rawData[1] * rawData[1] + rawData[2] * rawData[2];
+            var scaleYSq = rawData[4] * rawData[4] + rawData[5] * rawData[5] + rawData[6] * rawData[6];
+            var scaleZSq = rawData[8] * rawData[8] + rawData[9] * rawData[9] + rawData[10] * rawData[10];
+            return Math.sqrt(Math.max(scaleXSq, scaleYSq, scaleZSq));
+        };
+        Matrix4.prototype.toEuler = function (value, order) {
+            if (order === void 0) { order = 0 /* XYZ */; }
+            // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
+            var rawData = this.rawData;
+            var m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];
+            var m21 = rawData[1], m22 = rawData[5], m23 = rawData[9];
+            var m31 = rawData[2], m32 = rawData[6], m33 = rawData[10];
+            switch (order) {
+                case 0 /* XYZ */: {
+                    value.y = Math.asin(egret3d.floatClamp(m13, -1.0, 1.0));
+                    if (Math.abs(m13) < 0.999999) {
+                        value.x = Math.atan2(-m23, m33);
+                        value.z = Math.atan2(-m12, m11);
+                    }
+                    else {
+                        value.x = Math.atan2(m32, m22);
+                        value.z = 0.0;
+                    }
+                    break;
+                }
+                case 1 /* XZY */: {
+                    value.z = Math.asin(-egret3d.floatClamp(m12, -1.0, 1.0));
+                    if (Math.abs(m12) < 0.999999) {
+                        value.x = Math.atan2(m32, m22);
+                        value.y = Math.atan2(m13, m11);
+                    }
+                    else {
+                        value.x = Math.atan2(-m23, m33);
+                        value.y = 0.0;
+                    }
+                    break;
+                }
+                case 2 /* YXZ */: {
+                    value.x = Math.asin(-egret3d.floatClamp(m23, -1.0, 1.0));
+                    if (Math.abs(m23) < 0.999999) {
+                        value.y = Math.atan2(m13, m33);
+                        value.z = Math.atan2(m21, m22);
+                    }
+                    else {
+                        value.y = Math.atan2(-m31, m11);
+                        value.z = 0.0;
+                    }
+                    break;
+                }
+                case 3 /* YZX */: {
+                    value.z = Math.asin(egret3d.floatClamp(m21, -1.0, 1.0));
+                    if (Math.abs(m21) < 0.999999) {
+                        value.x = Math.atan2(-m23, m22);
+                        value.y = Math.atan2(-m31, m11);
+                    }
+                    else {
+                        value.x = 0.0;
+                        value.y = Math.atan2(m13, m33);
+                    }
+                    break;
+                }
+                case 4 /* ZXY */: {
+                    value.x = Math.asin(egret3d.floatClamp(m32, -1.0, 1.0));
+                    if (Math.abs(m32) < 0.999999) {
+                        value.y = Math.atan2(-m31, m33);
+                        value.z = Math.atan2(-m12, m22);
+                    }
+                    else {
+                        value.y = 0.0;
+                        value.z = Math.atan2(m21, m11);
+                    }
+                    break;
+                }
+                case 5 /* ZYX */: {
+                    value.y = Math.asin(-egret3d.floatClamp(m31, -1.0, 1.0));
+                    if (Math.abs(m31) < 0.999999) {
+                        value.x = Math.atan2(m32, m33);
+                        value.z = Math.atan2(m21, m11);
+                    }
+                    else {
+                        value.x = 0.0;
+                        value.z = Math.atan2(-m12, m22);
+                    }
+                    break;
+                }
+            }
+            return value;
+        };
+        /**
+         * @deprecated
+         */
+        Matrix4.prototype.transformVector3 = function (value, out) {
+            var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]) + this.rawData[12];
+            var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]) + this.rawData[13];
+            var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]) + this.rawData[14];
+            var w = (value.x * this.rawData[3]) + (value.y * this.rawData[7]) + (value.z * this.rawData[11]) + this.rawData[15];
+            if (!out) {
+                out = value;
+            }
+            out.x = x / w;
+            out.y = y / w;
+            out.z = z / w;
+            return out;
+        };
+        /**
+         * @deprecated
+         */
+        Matrix4.prototype.transformNormal = function (value, out) {
+            var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]);
+            var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]);
+            var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]);
+            if (!out) {
+                out = value;
+            }
+            out.x = x;
+            out.y = y;
+            out.z = z;
+            return out;
+        };
+        /**
+         * @deprecated
+         */
+        Matrix4.prototype.scale = function (scaler) {
+            var rawData = this.rawData;
+            rawData[0] *= scaler;
+            rawData[1] *= scaler;
+            rawData[2] *= scaler;
+            rawData[3] *= scaler;
+            rawData[4] *= scaler;
+            rawData[5] *= scaler;
+            rawData[6] *= scaler;
+            rawData[7] *= scaler;
+            rawData[8] *= scaler;
+            rawData[9] *= scaler;
+            rawData[10] *= scaler;
+            rawData[11] *= scaler;
+            rawData[12] *= scaler;
+            rawData[13] *= scaler;
+            rawData[14] *= scaler;
+            rawData[15] *= scaler;
+            return this;
+        };
+        /**
+         * @deprecated
+         */
+        Matrix4.prototype.add = function (left, right) {
+            if (!right) {
+                right = left;
+                left = this;
+            }
+            this.rawData[0] = left.rawData[0] + right.rawData[0];
+            this.rawData[1] = left.rawData[1] + right.rawData[1];
+            this.rawData[2] = left.rawData[2] + right.rawData[2];
+            this.rawData[3] = left.rawData[3] + right.rawData[3];
+            this.rawData[4] = left.rawData[4] + right.rawData[4];
+            this.rawData[5] = left.rawData[5] + right.rawData[5];
+            this.rawData[6] = left.rawData[6] + right.rawData[6];
+            this.rawData[7] = left.rawData[7] + right.rawData[7];
+            this.rawData[8] = left.rawData[8] + right.rawData[8];
+            this.rawData[9] = left.rawData[9] + right.rawData[9];
+            this.rawData[10] = left.rawData[10] + right.rawData[10];
+            this.rawData[11] = left.rawData[11] + right.rawData[11];
+            this.rawData[12] = left.rawData[12] + right.rawData[12];
+            this.rawData[13] = left.rawData[13] + right.rawData[13];
+            this.rawData[14] = left.rawData[14] + right.rawData[14];
+            this.rawData[15] = left.rawData[15] + right.rawData[15];
+            return this;
+        };
+        /**
+         * @deprecated
+         */
+        Matrix4.prototype.lerp = function (v, left, right) {
+            var p = 1.0 - v;
+            for (var i = 0; i < 16; i++) {
+                this.rawData[i] = left.rawData[i] * p + right.rawData[i] * v;
+            }
+            return this;
+        };
+        /**
+         * @deprecated
+         */
+        Matrix4.perspectiveProjectLH = function (fov, aspect, znear, zfar, out) {
+            var tan = 1.0 / (Math.tan(fov * 0.5));
+            out.rawData[0] = tan / aspect;
+            out.rawData[1] = out.rawData[2] = out.rawData[3] = 0.0;
+            out.rawData[4] = out.rawData[6] = out.rawData[7] = 0.0;
+            out.rawData[5] = tan;
+            out.rawData[8] = out.rawData[9] = 0.0;
+            out.rawData[10] = (zfar + znear) / (zfar - znear);
+            out.rawData[11] = 1.0;
+            out.rawData[12] = out.rawData[13] = out.rawData[15] = 0.0;
+            out.rawData[14] = -2 * (znear * zfar) / (zfar - znear);
+            return out;
+        };
+        /**
+         * @deprecated
+         */
+        Matrix4.orthoProjectLH = function (width, height, znear, zfar, out) {
+            var hw = 2.0 / width;
+            var hh = 2.0 / height;
+            var id = 2.0 / (zfar - znear);
+            var nid = (znear + zfar) / (znear - zfar);
+            out.rawData[0] = hw;
+            out.rawData[1] = 0;
+            out.rawData[2] = 0;
+            out.rawData[3] = 0;
+            out.rawData[4] = 0;
+            out.rawData[5] = hh;
+            out.rawData[6] = 0;
+            out.rawData[7] = 0;
+            out.rawData[8] = 0;
+            out.rawData[9] = 0;
+            out.rawData[10] = id;
+            out.rawData[11] = 0;
+            out.rawData[12] = 0;
+            out.rawData[13] = 0;
+            out.rawData[14] = nid;
+            out.rawData[15] = 1;
+            return out;
+        };
+        Matrix4._instances = [];
+        return Matrix4;
+    }());
+    egret3d.Matrix4 = Matrix4;
+    __reflect(Matrix4.prototype, "egret3d.Matrix4", ["paper.IRelease", "paper.ISerializable"]);
+    var _helpVector3A = egret3d.Vector3.create();
+    var _helpVector3B = egret3d.Vector3.create();
+    var _helpVector3C = egret3d.Vector3.create();
+    var _helpMatrix = Matrix4.create();
+    egret3d.helpMatrixA = Matrix4.create();
+    egret3d.helpMatrixB = Matrix4.create();
+    egret3d.helpMatrixC = Matrix4.create();
+    egret3d.helpMatrixD = Matrix4.create();
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var Vector4 = (function () {
+        /**
+         * @deprecated
+         * @private
+         */
+        function Vector4(x, y, z, w) {
+            if (x === void 0) { x = 0.0; }
+            if (y === void 0) { y = 0.0; }
+            if (z === void 0) { z = 0.0; }
+            if (w === void 0) { w = 1.0; }
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+        }
+        Vector4.create = function (x, y, z, w) {
+            if (x === void 0) { x = 0.0; }
+            if (y === void 0) { y = 0.0; }
+            if (z === void 0) { z = 0.0; }
+            if (w === void 0) { w = 1.0; }
+            if (this._instances.length > 0) {
+                return this._instances.pop().set(x, y, z, w);
+            }
+            return new Vector4().set(x, y, z, w);
+        };
+        Vector4.prototype.release = function () {
+            if (Vector4._instances.indexOf(this) < 0) {
+                Vector4._instances.push(this);
+            }
+            return this;
+        };
+        Vector4.prototype.serialize = function () {
+            return [this.x, this.y, this.z, this.w];
+        };
+        Vector4.prototype.deserialize = function (element) {
+            this.x = element[0];
+            this.y = element[1];
+            this.z = element[2];
+            this.w = element[3];
+            return this;
+        };
+        Vector4.prototype.copy = function (value) {
+            return this.set(value.x, value.y, value.z, value.w);
+        };
+        Vector4.prototype.clone = function () {
+            return Vector4.create(this.x, this.y, this.z, this.w);
+        };
+        Vector4.prototype.set = function (x, y, z, w) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+            return this;
+        };
+        Vector4.prototype.fromArray = function (value, offset) {
+            if (offset === void 0) { offset = 0; }
+            this.x = value[offset];
+            this.y = value[offset + 1];
+            this.z = value[offset + 2];
+            this.w = value[offset + 3];
+            return this;
+        };
+        Vector4.prototype.normalize = function (source) {
+            if (!source) {
+                source = this;
+            }
+            var l = source.length;
+            if (l > egret3d.EPSILON) {
+                l = 1.0 / l;
+                this.x *= l;
+                this.y *= l;
+                this.z *= l;
+                this.w *= l;
+            }
+            else {
+                this.x = 0.0;
+                this.y = 0.0;
+                this.z = 0.0;
+                this.w = 1.0;
+            }
+            return this;
+        };
+        Object.defineProperty(Vector4.prototype, "length", {
+            get: function () {
+                return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Vector4.prototype, "squaredLength", {
+            get: function () {
+                return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Vector4._instances = [];
+        return Vector4;
+    }());
+    egret3d.Vector4 = Vector4;
+    __reflect(Vector4.prototype, "egret3d.Vector4", ["egret3d.IVector4", "egret3d.IVector3", "paper.IRelease", "paper.ISerializable"]);
+    egret3d.helpVector4A = new Vector4();
+    egret3d.helpVector4B = new Vector4();
+    egret3d.helpVector4C = new Vector4();
+    egret3d.helpVector4D = new Vector4();
+    egret3d.helpVector4E = new Vector4();
+    egret3d.helpVector4F = new Vector4();
+})(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     *
+     */
+    var BaseObjectAsset = (function (_super) {
+        __extends(BaseObjectAsset, _super);
+        function BaseObjectAsset() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._raw = null;
+            return _this;
+        }
+        /**
+         * @internal
+         */
+        BaseObjectAsset.prototype.$parse = function (json) {
+            this._raw = json;
+        };
+        BaseObjectAsset.prototype.dispose = function () {
+            if (this._isBuiltin) {
+                return;
+            }
+            this._raw = null;
+        };
+        BaseObjectAsset.prototype.caclByteLength = function () {
+            return 0;
+        };
+        return BaseObjectAsset;
+    }(paper.Asset));
+    paper.BaseObjectAsset = BaseObjectAsset;
+    __reflect(BaseObjectAsset.prototype, "paper.BaseObjectAsset");
+    /**
+     * scene asset
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 场景数据资源
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    var RawScene = (function (_super) {
+        __extends(RawScene, _super);
+        function RawScene() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        /**
+         * @internal
+         */
+        RawScene.prototype.createInstance = function (keepUUID) {
+            if (keepUUID === void 0) { keepUUID = false; }
+            if (!this._raw) {
+                return null;
+            }
+            var isEditor = paper.Application.isEditor && !paper.Application.isPlaying;
+            var deserializer = new paper.Deserializer();
+            var scene = deserializer.deserialize(this._raw, keepUUID);
+            if (scene && isEditor) {
+            }
+            return scene;
+        };
+        return RawScene;
+    }(BaseObjectAsset));
+    paper.RawScene = RawScene;
+    __reflect(RawScene.prototype, "paper.RawScene");
+})(paper || (paper = {}));
 var paper;
 (function (paper) {
     /**
@@ -743,6 +1761,16 @@ var paper;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(BaseComponent.prototype, "transform", {
+            /**
+             *
+             */
+            get: function () {
+                return this.gameObject.transform;
+            },
+            enumerable: true,
+            configurable: true
+        });
         /**
          * 是否在编辑模式拥有生命周期。
          */
@@ -778,846 +1806,442 @@ var paper;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
-    var Vector4 = (function () {
-        /**
-         * @deprecated
-         * @private
-         */
-        function Vector4(x, y, z, w) {
-            if (x === void 0) { x = 0.0; }
-            if (y === void 0) { y = 0.0; }
-            if (z === void 0) { z = 0.0; }
-            if (w === void 0) { w = 0.0; }
-            this.x = x;
-            this.y = y;
-            this.z = z;
-            this.w = w;
-        }
-        Vector4.prototype.serialize = function () {
-            return [this.x, this.y, this.z, this.w];
-        };
-        Vector4.prototype.deserialize = function (element) {
-            this.x = element[0];
-            this.y = element[1];
-            this.z = element[2];
-            this.w = element[3];
-            return this;
-        };
-        Vector4.prototype.copy = function (value) {
-            this.x = value.x;
-            this.y = value.y;
-            this.z = value.z;
-            this.w = value.w;
-            return this;
-        };
-        Vector4.prototype.clone = function () {
-            var value = new Vector4();
-            value.copy(this);
-            return value;
-        };
-        Vector4.prototype.set = function (x, y, z, w) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-            this.w = w;
-            return this;
-        };
-        Vector4.prototype.fromArray = function (value, offset) {
-            if (offset === void 0) { offset = 0; }
-            this.x = value[offset];
-            this.y = value[offset + 1];
-            this.z = value[offset + 2];
-            this.w = value[offset + 3];
-            return this;
-        };
-        Vector4.prototype.normalize = function (value) {
-            if (!value) {
-                value = this;
-            }
-            var l = value.length;
-            if (l > egret3d.EPSILON) {
-                l = 1.0 / l;
-                this.x *= l;
-                this.y *= l;
-                this.z *= l;
-                this.w *= l;
-            }
-            else {
-                this.x = 0.0;
-                this.y = 0.0;
-                this.z = 0.0;
-                this.w = 1.0;
-            }
-            return this;
-        };
-        Object.defineProperty(Vector4.prototype, "length", {
-            get: function () {
-                return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return Vector4;
-    }());
-    egret3d.Vector4 = Vector4;
-    __reflect(Vector4.prototype, "egret3d.Vector4", ["egret3d.IVector4", "paper.ISerializable"]);
-    egret3d.helpVector4A = new Vector4();
-    egret3d.helpVector4B = new Vector4();
-    egret3d.helpVector4C = new Vector4();
-    egret3d.helpVector4D = new Vector4();
-    egret3d.helpVector4E = new Vector4();
-    egret3d.helpVector4F = new Vector4();
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var _array = [
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
+    var _helpVector3A = new egret3d.Vector3();
+    var _helpVector3B = new egret3d.Vector3();
+    var _helpVector3C = new egret3d.Vector3();
+    var _helpVector3D = new egret3d.Vector3();
+    var _helpVector3E = new egret3d.Vector3();
+    var _helpVector3F = new egret3d.Vector3();
+    var _helpVector3G = new egret3d.Vector3();
+    var _helpVector3H = new egret3d.Vector3();
+    var _helpVectors = [
+        _helpVector3A,
+        _helpVector3B,
+        _helpVector3C,
+        _helpVector3D,
+        _helpVector3E,
+        _helpVector3F,
+        _helpVector3G,
+        _helpVector3H,
+    ];
+    var helpVec3_1 = new egret3d.Vector3();
+    var helpVec3_2 = new egret3d.Vector3();
+    var helpVec3_3 = new egret3d.Vector3();
+    var helpVec3_4 = new egret3d.Vector3();
+    var helpVec3_5 = new egret3d.Vector3();
+    var boxIndices = [
+        0, 1, 2, 3,
+        4, 5, 6, 7,
+        1, 3, 5, 7,
+        0, 2, 4, 6,
+        6, 2, 7, 3,
+        0, 4, 1, 5
     ];
     /**
-     *
+     * 射线
      */
-    var Matrix = (function () {
+    var Ray = (function () {
         /**
          * @deprecated
          * @private
          */
-        function Matrix() {
-            this.rawData = new Float32Array(_array);
+        function Ray(origin, direction) {
+            if (origin === void 0) { origin = egret3d.Vector3.ZERO; }
+            if (direction === void 0) { direction = egret3d.Vector3.RIGHT; }
+            /**
+             * 射线起始点
+             */
+            this.origin = egret3d.Vector3.create();
+            /**
+             * 射线的方向向量
+             */
+            this.direction = egret3d.Vector3.create();
+            this.origin.copy(origin);
+            this.direction.copy(direction);
         }
-        /**
-         *
-         * @param rawData
-         * @param offset
-         */
-        Matrix.create = function (rawData, offset) {
-            if (rawData === void 0) { rawData = null; }
-            if (offset === void 0) { offset = 0; }
+        Ray.create = function (origin, direction) {
+            if (origin === void 0) { origin = egret3d.Vector3.ZERO; }
+            if (direction === void 0) { direction = egret3d.Vector3.RIGHT; }
             if (this._instances.length > 0) {
-                return this._instances.pop();
+                return this._instances.pop().set(origin, direction);
             }
-            var matrix = new Matrix();
-            if (rawData) {
-                matrix.fromArray(rawData, offset);
-            }
-            return matrix;
+            return new Ray().set(origin, direction);
         };
-        /**
-         *
-         * @param value
-         */
-        Matrix.release = function (value) {
-            if (this._instances.indexOf(value) >= 0) {
-                return;
-            }
-            this._instances.push(value);
-        };
-        Matrix.prototype.copy = function (value) {
-            this.fromArray(value.rawData);
-            return this;
-        };
-        Matrix.prototype.clone = function () {
-            return Matrix.create(this.rawData);
-        };
-        Matrix.prototype.identity = function () {
-            this.rawData[0] = 1.0;
-            this.rawData[1] = 0.0;
-            this.rawData[2] = 0.0;
-            this.rawData[3] = 0.0;
-            this.rawData[4] = 0.0;
-            this.rawData[5] = 1.0;
-            this.rawData[6] = 0.0;
-            this.rawData[7] = 0.0;
-            this.rawData[8] = 0.0;
-            this.rawData[9] = 0.0;
-            this.rawData[10] = 1.0;
-            this.rawData[11] = 0.0;
-            this.rawData[12] = 0.0;
-            this.rawData[13] = 0.0;
-            this.rawData[14] = 0.0;
-            this.rawData[15] = 1.0;
-            return this;
-        };
-        Matrix.prototype.set = function (m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44) {
-            this.rawData[0] = m11;
-            this.rawData[1] = m12;
-            this.rawData[2] = m13;
-            this.rawData[3] = m14;
-            this.rawData[4] = m21;
-            this.rawData[5] = m22;
-            this.rawData[6] = m23;
-            this.rawData[7] = m24;
-            this.rawData[8] = m31;
-            this.rawData[9] = m32;
-            this.rawData[10] = m33;
-            this.rawData[11] = m34;
-            this.rawData[12] = m41;
-            this.rawData[13] = m42;
-            this.rawData[14] = m43;
-            this.rawData[15] = m44;
-            return this;
-        };
-        Matrix.prototype.fromArray = function (value, offset) {
-            if (offset === void 0) { offset = 0; }
-            for (var i = 0; i < 16; ++i) {
-                this.rawData[i] = value[i + offset];
+        Ray.prototype.release = function () {
+            if (Ray._instances.indexOf(this) >= 0) {
+                Ray._instances.push(this);
             }
             return this;
         };
-        Matrix.prototype.fromTranslate = function (value, rotationAndScaleStays) {
-            if (rotationAndScaleStays === void 0) { rotationAndScaleStays = false; }
-            if (!rotationAndScaleStays) {
-                this.identity();
-            }
-            this.rawData[12] = value.x;
-            this.rawData[13] = value.y;
-            this.rawData[14] = value.z;
+        Ray.prototype.serialize = function () {
+            return [this.origin.x, this.origin.y, this.origin.z, this.direction.x, this.direction.y, this.direction.z];
+        };
+        Ray.prototype.deserialize = function (element) {
+            this.origin.fromArray(element);
+            this.direction.fromArray(element, 3);
             return this;
         };
-        Matrix.prototype.fromRotation = function (rotation, translateStays) {
-            if (translateStays === void 0) { translateStays = false; }
-            return this.compose(translateStays ? _helpVector3A.fromArray(this.rawData, 12) : egret3d.Vector3.ZERO, rotation, egret3d.Vector3.ONE);
-        };
-        Matrix.prototype.fromEuler = function (value, order, translateStays) {
-            // http://www.mathworks.com/matlabcentral/fileexchange/
-            // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
-            //	content/SpinCalc.m
-            if (order === void 0) { order = 0 /* XYZ */; }
-            if (translateStays === void 0) { translateStays = false; }
-            var cos = Math.cos;
-            var sin = Math.sin;
-            var x = value.x, y = value.y, z = value.z;
-            var a = cos(x), b = sin(x);
-            var c = cos(y), d = sin(y);
-            var e = cos(z), f = sin(z);
-            var rawData = this.rawData;
-            switch (order) {
-                case 0 /* XYZ */: {
-                    var ae = a * e, af = a * f, be = b * e, bf = b * f;
-                    rawData[0] = c * e;
-                    rawData[4] = -c * f;
-                    rawData[8] = d;
-                    rawData[1] = af + be * d;
-                    rawData[5] = ae - bf * d;
-                    rawData[9] = -b * c;
-                    rawData[2] = bf - ae * d;
-                    rawData[6] = be + af * d;
-                    rawData[10] = a * c;
-                    break;
-                }
-                case 1 /* XZY */: {
-                    var ac_1 = a * c, ad_1 = a * d, bc_1 = b * c, bd_1 = b * d;
-                    rawData[0] = c * e;
-                    rawData[4] = -f;
-                    rawData[8] = d * e;
-                    rawData[1] = ac_1 * f + bd_1;
-                    rawData[5] = a * e;
-                    rawData[9] = ad_1 * f - bc_1;
-                    rawData[2] = bc_1 * f - ad_1;
-                    rawData[6] = b * e;
-                    rawData[10] = bd_1 * f + ac_1;
-                    break;
-                }
-                case 2 /* YXZ */: {
-                    var ce = c * e, cf = c * f, de = d * e, df = d * f;
-                    rawData[0] = ce + df * b;
-                    rawData[4] = de * b - cf;
-                    rawData[8] = a * d;
-                    rawData[1] = a * f;
-                    rawData[5] = a * e;
-                    rawData[9] = -b;
-                    rawData[2] = cf * b - de;
-                    rawData[6] = df + ce * b;
-                    rawData[10] = a * c;
-                    break;
-                }
-                case 3 /* YZX */: {
-                    var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
-                    rawData[0] = c * e;
-                    rawData[4] = bd - ac * f;
-                    rawData[8] = bc * f + ad;
-                    rawData[1] = f;
-                    rawData[5] = a * e;
-                    rawData[9] = -b * e;
-                    rawData[2] = -d * e;
-                    rawData[6] = ad * f + bc;
-                    rawData[10] = ac - bd * f;
-                    break;
-                }
-                case 4 /* ZXY */: {
-                    var ce = c * e, cf = c * f, de = d * e, df = d * f;
-                    rawData[0] = ce - df * b;
-                    rawData[4] = -a * f;
-                    rawData[8] = de + cf * b;
-                    rawData[1] = cf + de * b;
-                    rawData[5] = a * e;
-                    rawData[9] = df - ce * b;
-                    rawData[2] = -a * d;
-                    rawData[6] = b;
-                    rawData[10] = a * c;
-                    break;
-                }
-                case 5 /* ZYX */: {
-                    var ae = a * e, af = a * f, be = b * e, bf = b * f;
-                    rawData[0] = c * e;
-                    rawData[4] = be * d - af;
-                    rawData[8] = ae * d + bf;
-                    rawData[1] = c * f;
-                    rawData[5] = bf * d + ae;
-                    rawData[9] = af * d - be;
-                    rawData[2] = -d;
-                    rawData[6] = b * c;
-                    rawData[10] = a * c;
-                    break;
-                }
-            }
-            // bottom row
-            rawData[3] = 0.0;
-            rawData[7] = 0.0;
-            rawData[11] = 0.0;
-            if (!translateStays) {
-                // last column
-                rawData[12] = 0.0;
-                rawData[13] = 0.0;
-                rawData[14] = 0.0;
-                rawData[15] = 1.0;
-            }
+        Ray.prototype.copy = function (value) {
+            this.origin.copy(value.origin);
+            this.direction.copy(value.direction);
             return this;
         };
-        Matrix.prototype.formScale = function (x, y, z, translateStays) {
-            if (translateStays === void 0) { translateStays = false; }
-            if (translateStays) {
-                _helpVector3A.fromArray(this.rawData, 12);
-            }
-            this.identity();
-            this.rawData[0] = x;
-            this.rawData[5] = y;
-            this.rawData[10] = z;
-            if (translateStays) {
-                this.rawData[12] = _helpVector3A.x;
-                this.rawData[13] = _helpVector3A.y;
-                this.rawData[14] = _helpVector3A.z;
-            }
-            return this;
+        Ray.prototype.clone = function () {
+            return Ray.create(this.origin, this.direction);
         };
-        Matrix.prototype.determinant = function () {
-            var rawData = this.rawData;
-            var n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
-            var n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
-            var n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
-            var n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
-            //TODO: make this more efficient
-            //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
-            return (n41 * (+n14 * n23 * n32
-                - n13 * n24 * n32
-                - n14 * n22 * n33
-                + n12 * n24 * n33
-                + n13 * n22 * n34
-                - n12 * n23 * n34) +
-                n42 * (+n11 * n23 * n34
-                    - n11 * n24 * n33
-                    + n14 * n21 * n33
-                    - n13 * n21 * n34
-                    + n13 * n24 * n31
-                    - n14 * n23 * n31) +
-                n43 * (+n11 * n24 * n32
-                    - n11 * n22 * n34
-                    - n14 * n21 * n32
-                    + n12 * n21 * n34
-                    + n14 * n22 * n31
-                    - n12 * n24 * n31) +
-                n44 * (-n13 * n22 * n31
-                    - n11 * n23 * n32
-                    + n11 * n22 * n33
-                    + n13 * n21 * n32
-                    - n12 * n21 * n33
-                    + n12 * n23 * n31));
-        };
-        Matrix.prototype.compose = function (translation, rotation, scale) {
-            var rawData = this.rawData;
-            var x = rotation.x, y = rotation.y, z = rotation.z, w = rotation.w;
-            var x2 = x + x, y2 = y + y, z2 = z + z;
-            var xx = x * x2, xy = x * y2, xz = x * z2;
-            var yy = y * y2, yz = y * z2, zz = z * z2;
-            var wx = w * x2, wy = w * y2, wz = w * z2;
-            var sx = scale.x, sy = scale.y, sz = scale.z;
-            rawData[0] = (1.0 - (yy + zz)) * sx;
-            rawData[1] = (xy + wz) * sx;
-            rawData[2] = (xz - wy) * sx;
-            rawData[3] = 0.0;
-            rawData[4] = (xy - wz) * sy;
-            rawData[5] = (1.0 - (xx + zz)) * sy;
-            rawData[6] = (yz + wx) * sy;
-            rawData[7] = 0.0;
-            rawData[8] = (xz + wy) * sz;
-            rawData[9] = (yz - wx) * sz;
-            rawData[10] = (1.0 - (xx + yy)) * sz;
-            rawData[11] = 0.0;
-            rawData[12] = translation.x;
-            rawData[13] = translation.y;
-            rawData[14] = translation.z;
-            rawData[15] = 1.0;
-            return this;
-        };
-        Matrix.prototype.decompose = function (translation, rotation, scale) {
-            if (translation === void 0) { translation = null; }
-            if (rotation === void 0) { rotation = null; }
-            if (scale === void 0) { scale = null; }
-            var rawData = this.rawData;
-            if (translation) {
-                translation.x = rawData[12];
-                translation.y = rawData[13];
-                translation.z = rawData[14];
-            }
-            if (rotation || scale) {
-                var sx = _helpVector3A.set(rawData[0], rawData[1], rawData[2]).length;
-                var sy = _helpVector3A.set(rawData[4], rawData[5], rawData[6]).length;
-                var sz = _helpVector3A.set(rawData[8], rawData[9], rawData[10]).length;
-                // if determine is negative, we need to invert one scale
-                var det = this.determinant();
-                if (det < 0.0)
-                    sx = -sx;
-                if (rotation) {
-                    // scale the rotation part
-                    _helpMatrix.copy(this);
-                    var invSX = 1.0 / sx;
-                    var invSY = 1.0 / sy;
-                    var invSZ = 1.0 / sz;
-                    _helpMatrix.rawData[0] *= invSX;
-                    _helpMatrix.rawData[1] *= invSX;
-                    _helpMatrix.rawData[2] *= invSX;
-                    _helpMatrix.rawData[4] *= invSY;
-                    _helpMatrix.rawData[5] *= invSY;
-                    _helpMatrix.rawData[6] *= invSY;
-                    _helpMatrix.rawData[8] *= invSZ;
-                    _helpMatrix.rawData[9] *= invSZ;
-                    _helpMatrix.rawData[10] *= invSZ;
-                    rotation.fromMatrix(_helpMatrix);
-                }
-                if (scale) {
-                    scale.x = sx;
-                    scale.y = sy;
-                    scale.z = sz;
-                }
-            }
-            return this;
-        };
-        Matrix.prototype.transpose = function (value) {
-            if (!value) {
-                value = this;
-            }
-            var valueRawData = value.rawData;
-            var rawData = this.rawData;
-            var temp = 0.0;
-            temp = valueRawData[1];
-            rawData[1] = valueRawData[4];
-            rawData[4] = temp;
-            temp = valueRawData[2];
-            rawData[2] = valueRawData[8];
-            rawData[8] = temp;
-            temp = valueRawData[6];
-            rawData[6] = valueRawData[9];
-            rawData[9] = temp;
-            temp = valueRawData[3];
-            rawData[3] = valueRawData[12];
-            rawData[12] = temp;
-            temp = valueRawData[7];
-            rawData[7] = valueRawData[13];
-            rawData[13] = temp;
-            temp = valueRawData[11];
-            rawData[11] = valueRawData[14];
-            rawData[14] = temp;
-            return this;
-        };
-        Matrix.prototype.inverse = function (value) {
-            if (!value) {
-                value = this;
-            }
-            var valueRawData = value.rawData;
-            var rawData = this.rawData;
-            var n11 = valueRawData[0], n21 = valueRawData[1], n31 = valueRawData[2], n41 = valueRawData[3], n12 = valueRawData[4], n22 = valueRawData[5], n32 = valueRawData[6], n42 = valueRawData[7], n13 = valueRawData[8], n23 = valueRawData[9], n33 = valueRawData[10], n43 = valueRawData[11], n14 = valueRawData[12], n24 = valueRawData[13], n34 = valueRawData[14], n44 = valueRawData[15], t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44, t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44, t13 = n13 * n24 * n42 - n14 * n23 * n42 + n14 * n22 * n43 - n12 * n24 * n43 - n13 * n22 * n44 + n12 * n23 * n44, t14 = n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34;
-            var det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
-            if (det === 0.0) {
-                console.warn("Cannot invert matrix, determinant is 0.");
-                return this.identity();
-            }
-            var detInv = 1.0 / det;
-            rawData[0] = t11 * detInv;
-            rawData[1] = (n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44) * detInv;
-            rawData[2] = (n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44) * detInv;
-            rawData[3] = (n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43) * detInv;
-            rawData[4] = t12 * detInv;
-            rawData[5] = (n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44) * detInv;
-            rawData[6] = (n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44) * detInv;
-            rawData[7] = (n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43) * detInv;
-            rawData[8] = t13 * detInv;
-            rawData[9] = (n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44) * detInv;
-            rawData[10] = (n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44) * detInv;
-            rawData[11] = (n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43) * detInv;
-            rawData[12] = t14 * detInv;
-            rawData[13] = (n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34) * detInv;
-            rawData[14] = (n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34) * detInv;
-            rawData[15] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) * detInv;
-            return this;
-        };
-        Matrix.prototype.multiply = function (valueA, valueB) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
-            }
-            var ae = valueA.rawData;
-            var be = valueB.rawData;
-            var te = this.rawData;
-            var a11 = ae[0], a12 = ae[4], a13 = ae[8], a14 = ae[12];
-            var a21 = ae[1], a22 = ae[5], a23 = ae[9], a24 = ae[13];
-            var a31 = ae[2], a32 = ae[6], a33 = ae[10], a34 = ae[14];
-            var a41 = ae[3], a42 = ae[7], a43 = ae[11], a44 = ae[15];
-            var b11 = be[0], b12 = be[4], b13 = be[8], b14 = be[12];
-            var b21 = be[1], b22 = be[5], b23 = be[9], b24 = be[13];
-            var b31 = be[2], b32 = be[6], b33 = be[10], b34 = be[14];
-            var b41 = be[3], b42 = be[7], b43 = be[11], b44 = be[15];
-            te[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
-            te[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
-            te[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
-            te[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
-            te[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
-            te[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
-            te[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
-            te[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
-            te[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
-            te[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
-            te[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
-            te[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
-            te[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
-            te[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
-            te[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
-            te[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
-            return this;
-        };
-        Matrix.prototype.premultiply = function (value) {
-            return this.multiply(value, this);
-        };
-        /**
-         * - 两点位置不重合。
-         * @param eye
-         * @param target
-         * @param up
-         */
-        Matrix.prototype.lookAt = function (eye, target, up) {
-            var z = _helpVector3C.subtract(target, eye).normalize(); //right handle
-            var x = _helpVector3A.cross(up, z).normalize();
-            var y = _helpVector3B.cross(z, x);
-            var rawData = this.rawData;
-            rawData[0] = x.x;
-            rawData[4] = y.x;
-            rawData[8] = z.x;
-            rawData[1] = x.y;
-            rawData[5] = y.y;
-            rawData[9] = z.y;
-            rawData[2] = x.z;
-            rawData[6] = y.z;
-            rawData[10] = z.z;
-            return this;
-        };
-        Matrix.prototype.toEuler = function (value, order) {
-            if (order === void 0) { order = 0 /* XYZ */; }
-            // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
-            var rawData = this.rawData;
-            var m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];
-            var m21 = rawData[1], m22 = rawData[5], m23 = rawData[9];
-            var m31 = rawData[2], m32 = rawData[6], m33 = rawData[10];
-            switch (order) {
-                case 0 /* XYZ */: {
-                    value.y = Math.asin(egret3d.floatClamp(m13, -1.0, 1.0));
-                    if (Math.abs(m13) < 0.999999) {
-                        value.x = Math.atan2(-m23, m33);
-                        value.z = Math.atan2(-m12, m11);
-                    }
-                    else {
-                        value.x = Math.atan2(m32, m22);
-                        value.z = 0.0;
-                    }
-                    break;
-                }
-                case 1 /* XZY */: {
-                    value.z = Math.asin(-egret3d.floatClamp(m12, -1.0, 1.0));
-                    if (Math.abs(m12) < 0.999999) {
-                        value.x = Math.atan2(m32, m22);
-                        value.y = Math.atan2(m13, m11);
-                    }
-                    else {
-                        value.x = Math.atan2(-m23, m33);
-                        value.y = 0.0;
-                    }
-                    break;
-                }
-                case 2 /* YXZ */: {
-                    value.x = Math.asin(-egret3d.floatClamp(m23, -1.0, 1.0));
-                    if (Math.abs(m23) < 0.999999) {
-                        value.y = Math.atan2(m13, m33);
-                        value.z = Math.atan2(m21, m22);
-                    }
-                    else {
-                        value.y = Math.atan2(-m31, m11);
-                        value.z = 0.0;
-                    }
-                    break;
-                }
-                case 3 /* YZX */: {
-                    value.z = Math.asin(egret3d.floatClamp(m21, -1.0, 1.0));
-                    if (Math.abs(m21) < 0.999999) {
-                        value.x = Math.atan2(-m23, m22);
-                        value.y = Math.atan2(-m31, m11);
-                    }
-                    else {
-                        value.x = 0.0;
-                        value.y = Math.atan2(m13, m33);
-                    }
-                    break;
-                }
-                case 4 /* ZXY */: {
-                    value.x = Math.asin(egret3d.floatClamp(m32, -1.0, 1.0));
-                    if (Math.abs(m32) < 0.999999) {
-                        value.y = Math.atan2(-m31, m33);
-                        value.z = Math.atan2(-m12, m22);
-                    }
-                    else {
-                        value.y = 0.0;
-                        value.z = Math.atan2(m21, m11);
-                    }
-                    break;
-                }
-                case 5 /* ZYX */: {
-                    value.y = Math.asin(-egret3d.floatClamp(m31, -1.0, 1.0));
-                    if (Math.abs(m31) < 0.999999) {
-                        value.x = Math.atan2(m32, m33);
-                        value.z = Math.atan2(m21, m11);
-                    }
-                    else {
-                        value.x = 0.0;
-                        value.z = Math.atan2(-m12, m22);
-                    }
-                    break;
-                }
-            }
-            return value;
-        };
-        /**
-         * @deprecated
-         */
-        Matrix.prototype.transformVector3 = function (value, out) {
-            var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]) + this.rawData[12];
-            var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]) + this.rawData[13];
-            var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]) + this.rawData[14];
-            var w = (value.x * this.rawData[3]) + (value.y * this.rawData[7]) + (value.z * this.rawData[11]) + this.rawData[15];
-            if (!out) {
-                out = value;
-            }
-            out.x = x / w;
-            out.y = y / w;
-            out.z = z / w;
-            return out;
-        };
-        /**
-         * @deprecated
-         */
-        Matrix.prototype.transformNormal = function (value, out) {
-            var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]);
-            var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]);
-            var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]);
-            if (!out) {
-                out = value;
-            }
-            out.x = x;
-            out.y = y;
-            out.z = z;
-            return out;
-        };
-        /**
-         * @deprecated
-         */
-        Matrix.prototype.scale = function (scaler) {
-            var rawData = this.rawData;
-            rawData[0] *= scaler;
-            rawData[1] *= scaler;
-            rawData[2] *= scaler;
-            rawData[3] *= scaler;
-            rawData[4] *= scaler;
-            rawData[5] *= scaler;
-            rawData[6] *= scaler;
-            rawData[7] *= scaler;
-            rawData[8] *= scaler;
-            rawData[9] *= scaler;
-            rawData[10] *= scaler;
-            rawData[11] *= scaler;
-            rawData[12] *= scaler;
-            rawData[13] *= scaler;
-            rawData[14] *= scaler;
-            rawData[15] *= scaler;
+        Ray.prototype.set = function (origin, direction) {
+            this.origin.copy(origin);
+            this.direction.copy(direction);
             return this;
         };
         /**
-         * @deprecated
+         * 与aabb碰撞相交检测
          */
-        Matrix.prototype.add = function (left, right) {
-            if (!right) {
-                right = left;
-                left = this;
+        Ray.prototype.intersectAABB = function (aabb) {
+            return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
+        };
+        /**
+         * 与transform表示的plane碰撞相交检测，主要用于2d检测
+         * @param transform transform实例
+         */
+        Ray.prototype.intersectPlaneTransform = function (transform) {
+            var pickinfo = null;
+            var panelpoint = transform.getPosition();
+            var forward = helpVec3_1;
+            transform.getForward(forward);
+            var hitposition = this.intersectPlane(panelpoint, forward);
+            if (hitposition) {
+                pickinfo = new PickInfo();
+                pickinfo.hitposition = hitposition;
+                pickinfo.distance = egret3d.Vector3.getDistance(pickinfo.hitposition, this.origin);
             }
-            this.rawData[0] = left.rawData[0] + right.rawData[0];
-            this.rawData[1] = left.rawData[1] + right.rawData[1];
-            this.rawData[2] = left.rawData[2] + right.rawData[2];
-            this.rawData[3] = left.rawData[3] + right.rawData[3];
-            this.rawData[4] = left.rawData[4] + right.rawData[4];
-            this.rawData[5] = left.rawData[5] + right.rawData[5];
-            this.rawData[6] = left.rawData[6] + right.rawData[6];
-            this.rawData[7] = left.rawData[7] + right.rawData[7];
-            this.rawData[8] = left.rawData[8] + right.rawData[8];
-            this.rawData[9] = left.rawData[9] + right.rawData[9];
-            this.rawData[10] = left.rawData[10] + right.rawData[10];
-            this.rawData[11] = left.rawData[11] + right.rawData[11];
-            this.rawData[12] = left.rawData[12] + right.rawData[12];
-            this.rawData[13] = left.rawData[13] + right.rawData[13];
-            this.rawData[14] = left.rawData[14] + right.rawData[14];
-            this.rawData[15] = left.rawData[15] + right.rawData[15];
-            return this;
+            return pickinfo;
         };
-        /**
-         * @deprecated
-         */
-        Matrix.prototype.lerp = function (v, left, right) {
-            var p = 1.0 - v;
-            for (var i = 0; i < 16; i++) {
-                this.rawData[i] = left.rawData[i] * p + right.rawData[i] * v;
-            }
-            return this;
-        };
-        /**
-         * @deprecated
-         */
-        Matrix.perspectiveProjectLH = function (fov, aspect, znear, zfar, out) {
-            var tan = 1.0 / (Math.tan(fov * 0.5));
-            out.rawData[0] = tan / aspect;
-            out.rawData[1] = out.rawData[2] = out.rawData[3] = 0.0;
-            out.rawData[4] = out.rawData[6] = out.rawData[7] = 0.0;
-            out.rawData[5] = tan;
-            out.rawData[8] = out.rawData[9] = 0.0;
-            out.rawData[10] = (zfar + znear) / (zfar - znear);
-            out.rawData[11] = 1.0;
-            out.rawData[12] = out.rawData[13] = out.rawData[15] = 0.0;
-            out.rawData[14] = -2 * (znear * zfar) / (zfar - znear);
-            return out;
-        };
-        /**
-         * @deprecated
-         */
-        Matrix.orthoProjectLH = function (width, height, znear, zfar, out) {
-            var hw = 2.0 / width;
-            var hh = 2.0 / height;
-            var id = 2.0 / (zfar - znear);
-            var nid = (znear + zfar) / (znear - zfar);
-            out.rawData[0] = hw;
-            out.rawData[1] = 0;
-            out.rawData[2] = 0;
-            out.rawData[3] = 0;
-            out.rawData[4] = 0;
-            out.rawData[5] = hh;
-            out.rawData[6] = 0;
-            out.rawData[7] = 0;
-            out.rawData[8] = 0;
-            out.rawData[9] = 0;
-            out.rawData[10] = id;
-            out.rawData[11] = 0;
-            out.rawData[12] = 0;
-            out.rawData[13] = 0;
-            out.rawData[14] = nid;
-            out.rawData[15] = 1;
-            return out;
-        };
-        Matrix._instances = [];
-        return Matrix;
-    }());
-    egret3d.Matrix = Matrix;
-    __reflect(Matrix.prototype, "egret3d.Matrix");
-    var _helpVector3A = egret3d.Vector3.create();
-    var _helpVector3B = egret3d.Vector3.create();
-    var _helpVector3C = egret3d.Vector3.create();
-    var _helpMatrix = Matrix.create();
-    egret3d.helpMatrixA = Matrix.create();
-    egret3d.helpMatrixB = Matrix.create();
-    egret3d.helpMatrixC = Matrix.create();
-    egret3d.helpMatrixD = Matrix.create();
-})(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
-    /**
-     *
-     */
-    var BaseObjectAsset = (function (_super) {
-        __extends(BaseObjectAsset, _super);
-        function BaseObjectAsset() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._raw = null;
-            return _this;
-        }
-        /**
-         * @internal
-         */
-        BaseObjectAsset.prototype.$parse = function (json) {
-            this._raw = json;
-        };
-        BaseObjectAsset.prototype.dispose = function () {
-            if (this._isBuiltin) {
-                return;
-            }
-            this._raw = null;
-        };
-        BaseObjectAsset.prototype.caclByteLength = function () {
-            return 0;
-        };
-        return BaseObjectAsset;
-    }(paper.Asset));
-    paper.BaseObjectAsset = BaseObjectAsset;
-    __reflect(BaseObjectAsset.prototype, "paper.BaseObjectAsset");
-    /**
-     * scene asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 场景数据资源
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var RawScene = (function (_super) {
-        __extends(RawScene, _super);
-        function RawScene() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        /**
-         * @internal
-         */
-        RawScene.prototype.createInstance = function (keepUUID) {
-            if (keepUUID === void 0) { keepUUID = false; }
-            if (!this._raw) {
+        Ray.prototype.intersectPlane = function (planePoint, planeNormal) {
+            var vp1 = planeNormal.x;
+            var vp2 = planeNormal.y;
+            var vp3 = planeNormal.z;
+            var n1 = planePoint.x;
+            var n2 = planePoint.y;
+            var n3 = planePoint.z;
+            var v1 = this.direction.x;
+            var v2 = this.direction.y;
+            var v3 = this.direction.z;
+            var m1 = this.origin.x;
+            var m2 = this.origin.y;
+            var m3 = this.origin.z;
+            var vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
+            if (vpt === 0) {
                 return null;
             }
-            var isEditor = paper.Application.isEditor && !paper.Application.isPlaying;
-            var deserializer = new paper.Deserializer();
-            var scene = deserializer.deserialize(this._raw, keepUUID);
-            if (scene && isEditor) {
+            else {
+                var t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
+                return new egret3d.Vector3(m1 + v1 * t, m2 + v2 * t, m3 + v3 * t);
             }
-            return scene;
         };
-        return RawScene;
-    }(BaseObjectAsset));
-    paper.RawScene = RawScene;
-    __reflect(RawScene.prototype, "paper.RawScene");
-})(paper || (paper = {}));
+        /**
+         * 与最大最小点表示的box相交检测
+         * @param minimum 最小点
+         * @param maximum 最大点
+         * @version paper 1.0
+         */
+        Ray.prototype.intersectBoxMinMax = function (minimum, maximum) {
+            var d = 0.0;
+            var maxValue = Number.MAX_VALUE;
+            var inv;
+            var min;
+            var max;
+            var temp;
+            if (Math.abs(this.direction.x) < 0.0000001) {
+                if (this.origin.x < minimum.x || this.origin.x > maximum.x) {
+                    return false;
+                }
+            }
+            else {
+                inv = 1.0 / this.direction.x;
+                min = (minimum.x - this.origin.x) * inv;
+                max = (maximum.x - this.origin.x) * inv;
+                if (max === -Infinity) {
+                    max = Infinity;
+                }
+                if (min > max) {
+                    temp = min;
+                    min = max;
+                    max = temp;
+                }
+                d = Math.max(min, d);
+                maxValue = Math.min(max, maxValue);
+                if (d > maxValue) {
+                    return false;
+                }
+            }
+            if (Math.abs(this.direction.y) < 0.0000001) {
+                if (this.origin.y < minimum.y || this.origin.y > maximum.y) {
+                    return false;
+                }
+            }
+            else {
+                inv = 1.0 / this.direction.y;
+                min = (minimum.y - this.origin.y) * inv;
+                max = (maximum.y - this.origin.y) * inv;
+                if (max === -Infinity) {
+                    max = Infinity;
+                }
+                if (min > max) {
+                    temp = min;
+                    min = max;
+                    max = temp;
+                }
+                d = Math.max(min, d);
+                maxValue = Math.min(max, maxValue);
+                if (d > maxValue) {
+                    return false;
+                }
+            }
+            if (Math.abs(this.direction.z) < 0.0000001) {
+                if (this.origin.z < minimum.z || this.origin.z > maximum.z) {
+                    return false;
+                }
+            }
+            else {
+                inv = 1.0 / this.direction.z;
+                min = (minimum.z - this.origin.z) * inv;
+                max = (maximum.z - this.origin.z) * inv;
+                if (max === -Infinity) {
+                    max = Infinity;
+                }
+                if (min > max) {
+                    temp = min;
+                    min = max;
+                    max = temp;
+                }
+                d = Math.max(min, d);
+                maxValue = Math.min(max, maxValue);
+                if (d > maxValue) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        /**
+         * 与球相交检测
+         */
+        Ray.prototype.intersectsSphere = function (center, radius) {
+            var center_ori = helpVec3_1;
+            egret3d.Vector3.subtract(center, this.origin, center_ori);
+            var raydist = egret3d.Vector3.dot(this.direction, center_ori);
+            if (raydist < 0)
+                return false; // 到圆心的向量在方向向量上的投影为负，夹角不在-90与90之间
+            var orilen2 = egret3d.Vector3.getSqrLength(center_ori);
+            var rad2 = radius * radius;
+            if (orilen2 < rad2)
+                return true; // 射线起点在球里
+            var d = rad2 - (orilen2 - raydist * raydist);
+            if (d < 0)
+                return false;
+            return true;
+        };
+        /**
+         * 与三角形相交检测
+         */
+        Ray.prototype.intersectTriangle = function (p1, p2, p3, backfaceCulling) {
+            // // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
+            // const edge1 = helpVector3A;
+            // const edge2 = helpVector3B;
+            // const diff = helpVector3C;
+            // const normal = helpVector3D;
+            if (backfaceCulling === void 0) { backfaceCulling = false; }
+            // edge1.subtract(p2, p1);
+            // edge2.subtract(p3, p1);
+            // normal.cross(edge1, edge2);
+            // // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
+            // // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
+            // //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
+            // //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
+            // //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
+            // let DdN = this.direction.dot(normal);
+            // let sign = 1.0;
+            // if (DdN > 0.0) {
+            //     if (backfaceCulling) return null;
+            // }
+            // else if (DdN < 0.0) {
+            //     sign = -1.0;
+            //     DdN = -DdN;
+            // }
+            // else {
+            //     return null;
+            // }
+            // diff.subtract(this.origin, p1);
+            // const DdQxE2 = sign * this.direction.dot(edge2.cross(diff, edge2));
+            // // b1 < 0, no intersection
+            // if (DdQxE2 < 0.0) {
+            //     return null;
+            // }
+            // const DdE1xQ = sign * this.direction.dot(edge1.cross(diff));
+            // // b2 < 0, no intersection
+            // if (DdE1xQ < 0.0) {
+            //     return null;
+            // }
+            // // b1+b2 > 1, no intersection
+            // if (DdQxE2 + DdE1xQ > DdN) {
+            //     return null;
+            // }
+            // // Line intersects triangle, check if ray does.
+            // const QdN = - sign * diff.dot(normal);
+            // // t < 0, no intersection
+            // if (QdN < 0) {
+            //     return null;
+            // }
+            // const pickInfo = new PickInfo();
+            // pickInfo.distance = QdN / DdN;
+            // pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
+            // pickInfo.textureCoordA.x = DdQxE2;
+            // pickInfo.textureCoordA.y = DdE1xQ;
+            // return pickInfo;
+            // TODO
+            var edge1 = egret3d.helpVector3A;
+            var edge2 = egret3d.helpVector3B;
+            var pvec = egret3d.helpVector3C;
+            var tvec = egret3d.helpVector3D;
+            var qvec = egret3d.helpVector3E;
+            edge1.subtract(p2, p1);
+            edge2.subtract(p3, p1);
+            pvec.cross(this.direction, edge2);
+            var det = pvec.dot(edge1);
+            if (det === 0.0) {
+                return null;
+            }
+            var invdet = 1.0 / det;
+            tvec.subtract(this.origin, p1);
+            var bu = pvec.dot(tvec) * invdet;
+            if (bu < 0.0 || bu > 1.0) {
+                return null;
+            }
+            qvec.cross(tvec, edge1);
+            var bv = qvec.dot(this.direction) * invdet;
+            if (bv < 0.0 || bu + bv > 1.0) {
+                return null;
+            }
+            var pickInfo = new PickInfo();
+            pickInfo.distance = qvec.dot(edge2) * invdet;
+            pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
+            pickInfo.textureCoordA.x = bu;
+            pickInfo.textureCoordA.y = bv;
+            return pickInfo;
+        };
+        /**
+         * 获取射线拾取到的最近物体。
+         */
+        Ray.raycast = function (ray, isPickMesh, maxDistance, layerMask) {
+            if (isPickMesh === void 0) { isPickMesh = false; }
+            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
+            if (layerMask === void 0) { layerMask = 2 /* Default */ | 4 /* UI */; }
+            return this._doPick(ray, maxDistance, layerMask, false, isPickMesh);
+        };
+        /**
+         * 获取射线路径上的所有物体。
+         */
+        Ray.raycastAll = function (ray, isPickMesh, maxDistance, layerMask) {
+            if (isPickMesh === void 0) { isPickMesh = false; }
+            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
+            if (layerMask === void 0) { layerMask = 2 /* Default */ | 4 /* UI */; }
+            return this._doPick(ray, maxDistance, layerMask, true, isPickMesh);
+        };
+        Ray._doPick = function (ray, maxDistance, layerMask, pickAll, isPickMesh) {
+            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
+            if (pickAll === void 0) { pickAll = false; }
+            if (isPickMesh === void 0) { isPickMesh = false; }
+            var pickedList = [];
+            for (var _i = 0, _a = paper.Application.sceneManager.activeScene.getRootGameObjects(); _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.layer & layerMask) {
+                    if (isPickMesh) {
+                        this._pickMesh(ray, gameObject.transform, pickedList);
+                    }
+                    else {
+                        this._pickCollider(ray, gameObject.transform, pickedList);
+                    }
+                }
+            }
+            if (pickedList.length === 0) {
+                return null;
+            }
+            if (pickAll) {
+                return pickedList;
+            }
+            var index = 0;
+            for (var i = 1; i < pickedList.length; i++) {
+                if (pickedList[i].distance < pickedList[index].distance) {
+                    index = i;
+                }
+            }
+            return pickedList[index];
+        };
+        Ray._pickMesh = function (ray, transform, pickInfos) {
+            if (transform.gameObject.activeInHierarchy) {
+                var meshFilter = transform.gameObject.getComponent(egret3d.MeshFilter);
+                if (meshFilter) {
+                    var mesh = meshFilter.mesh;
+                    if (mesh) {
+                        var pickinfo = mesh.raycast(ray, transform.getWorldMatrix());
+                        if (pickinfo) {
+                            pickInfos.push(pickinfo);
+                            pickinfo.transform = transform;
+                        }
+                    }
+                }
+                else {
+                    var skinmesh = transform.gameObject.getComponent(egret3d.SkinnedMeshRenderer);
+                    if (skinmesh) {
+                        var pickinfo = skinmesh.intersects(ray);
+                        if (pickinfo) {
+                            pickInfos.push(pickinfo);
+                            pickinfo.transform = transform;
+                        }
+                    }
+                }
+            }
+            for (var _i = 0, _a = transform.children; _i < _a.length; _i++) {
+                var child = _a[_i];
+                this._pickMesh(ray, child, pickInfos);
+            }
+        };
+        Ray._pickCollider = function (ray, transform, pickInfos) {
+            if (transform.gameObject.activeInHierarchy) {
+                // const pickInfo = ray.intersectCollider(transform);
+                // if (pickInfo) {
+                //     pickInfos.push(pickInfo);
+                //     pickInfo.transform = transform;
+                // }
+            }
+            for (var _i = 0, _a = transform.children; _i < _a.length; _i++) {
+                var child = _a[_i];
+                this._pickCollider(ray, child, pickInfos);
+            }
+        };
+        Ray._instances = [];
+        return Ray;
+    }());
+    egret3d.Ray = Ray;
+    __reflect(Ray.prototype, "egret3d.Ray", ["paper.IRelease", "paper.ISerializable"]);
+    /**
+     * 场景拣选信息
+     */
+    var PickInfo = (function () {
+        function PickInfo() {
+            this.subMeshIndex = -1;
+            this.triangleIndex = -1;
+            this.distance = 0.0;
+            this.position = new egret3d.Vector3();
+            this.textureCoordA = new egret3d.Vector2();
+            this.textureCoordB = new egret3d.Vector2();
+            this.transform = null;
+        }
+        return PickInfo;
+    }());
+    egret3d.PickInfo = PickInfo;
+    __reflect(PickInfo.prototype, "egret3d.PickInfo");
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -1722,11 +2346,6 @@ var egret3d;
             };
             return config;
         };
-        GLTFAsset.createShaderAsset = function (name) {
-            var gltf = new GLTFAsset(name);
-            gltf.config = this.createGLTFExtensionsConfig();
-            return gltf;
-        };
         GLTFAsset.createTechnique = function (source) {
             var target = { name: source.name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } };
             for (var key in source.attributes) {
@@ -1735,12 +2354,12 @@ var egret3d;
             }
             for (var key in source.uniforms) {
                 var uniform = source.uniforms[key];
-                var value = {};
-                if (Array.isArray(uniform.value)) {
-                    value = uniform.value.concat();
-                }
-                else if (uniform.type === 35678 /* SAMPLER_2D */ && !(uniform.value instanceof egret3d.Texture)) {
+                var value = void 0;
+                if (uniform.type === 35678 /* SAMPLER_2D */ && !(uniform.value instanceof egret3d.Texture)) {
                     value = egret3d.DefaultTextures.GRAY;
+                }
+                else if (Array.isArray(uniform.value)) {
+                    value = uniform.value.concat();
                 }
                 else {
                     value = uniform.value;
@@ -2170,71 +2789,93 @@ var paper;
 var egret3d;
 (function (egret3d) {
     var Color = (function () {
-        function Color(r, g, b, a) {
+        /**
+         * 请使用 `egret3d.Color.create()` 创建 egret3d.Color 实例。
+         * @see egret3d.Color.create()
+         */
+        function Color() {
+        }
+        Color.create = function (r, g, b, a) {
             if (r === void 0) { r = 1.0; }
             if (g === void 0) { g = 1.0; }
             if (b === void 0) { b = 1.0; }
             if (a === void 0) { a = 1.0; }
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;
-        }
+            if (this._instances.length > 0) {
+                return this._instances.pop().set(r, g, b, a);
+            }
+            return new Color().set(r, g, b, a);
+        };
+        Color.prototype.release = function () {
+            if (Color._instances.indexOf(this) < 0) {
+                Color._instances.push(this);
+            }
+            return this;
+        };
         Color.prototype.serialize = function () {
             return [this.r, this.g, this.b, this.a];
         };
-        Color.prototype.deserialize = function (element) {
-            this.r = element[0];
-            this.g = element[1];
-            this.b = element[2];
-            this.a = element[3];
-            return this;
+        Color.prototype.deserialize = function (value) {
+            return this.fromArray(value);
+        };
+        Color.prototype.clone = function () {
+            return Color.create(this.r, this.g, this.b, this.a);
+        };
+        Color.prototype.copy = function (value) {
+            return this.set(value.r, value.g, value.b, value.a);
         };
         Color.prototype.set = function (r, g, b, a) {
-            if (r === void 0) { r = 1; }
-            if (g === void 0) { g = 1; }
-            if (b === void 0) { b = 1; }
-            if (a === void 0) { a = 1; }
             this.r = r;
             this.g = g;
             this.b = b;
             this.a = a;
             return this;
         };
-        Color.multiply = function (c1, c2, out) {
-            out.r = c1.r * c2.r;
-            out.g = c1.g * c2.g;
-            out.b = c1.b * c2.b;
-            out.a = c1.a * c2.a;
-            return out;
+        Color.prototype.fromArray = function (value, offset) {
+            if (offset === void 0) { offset = 0; }
+            this.r = value[0 + offset];
+            this.g = value[1 + offset];
+            this.b = value[2 + offset];
+            this.a = value[3 + offset];
         };
-        Color.scale = function (c, scaler) {
-            c.r = c.r * scaler;
-            c.g = c.g * scaler;
-            c.b = c.b * scaler;
-            c.a = c.a * scaler;
-            return c;
+        Color.prototype.multiply = function (valueA, valueB) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+            this.r = valueA.r * valueB.r;
+            this.g = valueA.g * valueB.g;
+            this.b = valueA.b * valueB.b;
+            this.a = valueA.a * valueB.a;
+            return this;
         };
-        Color.copy = function (c, out) {
-            out.r = c.r;
-            out.g = c.g;
-            out.b = c.b;
-            out.a = c.a;
-            return out;
+        Color.prototype.scale = function (value, source) {
+            if (!source) {
+                source = this;
+            }
+            this.r = source.r * value;
+            this.g = source.g * value;
+            this.b = source.b * value;
+            this.a = source.a * value;
+            return source;
         };
-        Color.lerp = function (c1, c2, value, out) {
-            out.a = value * (c2.a - c1.a) + c1.a;
-            out.r = value * (c2.r - c1.r) + c1.r;
-            out.g = value * (c2.g - c1.g) + c1.g;
-            out.b = value * (c2.b - c1.b) + c1.b;
-            return out;
+        Color.prototype.lerp = function (t, valueA, valueB) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+            this.r = t * (valueB.r - valueA.r) + valueA.r;
+            this.g = t * (valueB.g - valueA.g) + valueA.g;
+            this.b = t * (valueB.b - valueA.b) + valueA.b;
+            this.a = t * (valueB.a - valueA.a) + valueA.a;
+            return this;
         };
-        Color.WHITE = new Color(1.0, 1.0, 1.0, 1.0);
-        Color.BLACK = new Color(0.0, 0.0, 0.0, 1.0);
+        Color.WHITE = new Color().set(1.0, 1.0, 1.0, 1.0);
+        Color.BLACK = new Color().set(0.0, 0.0, 0.0, 1.0);
+        Color._instances = [];
         return Color;
     }());
     egret3d.Color = Color;
-    __reflect(Color.prototype, "egret3d.Color", ["paper.ISerializable"]);
+    __reflect(Color.prototype, "egret3d.Color", ["paper.IRelease", "paper.ISerializable"]);
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
@@ -2631,97 +3272,6 @@ var paper;
     paper.SceneManager = SceneManager;
     __reflect(SceneManager.prototype, "paper.SceneManager");
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     *
-     */
-    egret3d.RAD_DEG = 180.0 / Math.PI;
-    /**
-     *
-     */
-    egret3d.DEG_RAD = Math.PI / 180.0;
-    egret3d.EPSILON = 2.220446049250313e-16; // Number.EPSILON
-    function floatClamp(v, min, max) {
-        if (min === void 0) { min = 0.0; }
-        if (max === void 0) { max = 1.0; }
-        if (v < min)
-            return min;
-        else if (v > max)
-            return max;
-        else
-            return v;
-    }
-    egret3d.floatClamp = floatClamp;
-    function sign(value) {
-        value = +value; // convert to a number
-        if (value === 0 || isNaN(value))
-            return value;
-        return value > 0 ? 1 : -1;
-    }
-    egret3d.sign = sign;
-    function numberLerp(fromV, toV, v) {
-        return fromV * (1 - v) + toV * v;
-    }
-    egret3d.numberLerp = numberLerp;
-    function calPlaneLineIntersectPoint(planeVector, planePoint, lineVector, linePoint, out) {
-        var vp1 = planeVector.x;
-        var vp2 = planeVector.y;
-        var vp3 = planeVector.z;
-        var n1 = planePoint.x;
-        var n2 = planePoint.y;
-        var n3 = planePoint.z;
-        var v1 = lineVector.x;
-        var v2 = lineVector.y;
-        var v3 = lineVector.z;
-        var m1 = linePoint.x;
-        var m2 = linePoint.y;
-        var m3 = linePoint.z;
-        var vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
-        if (vpt === 0) {
-            out = null;
-        }
-        else {
-            var t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
-            out.x = m1 + v1 * t;
-            out.y = m2 + v2 * t;
-            out.z = m3 + v3 * t;
-        }
-        return out;
-    }
-    egret3d.calPlaneLineIntersectPoint = calPlaneLineIntersectPoint;
-    var helpVec3_1 = new egret3d.Vector3();
-    var helpVec3_2 = new egret3d.Vector3();
-    var helpVec3_3 = new egret3d.Vector3();
-    var helpVec3_4 = new egret3d.Vector3();
-    var helpVec3_5 = new egret3d.Vector3();
-    function getPointAlongCurve(curveStart, curveStartHandle, curveEnd, curveEndHandle, t, out, crease) {
-        if (crease === void 0) { crease = 0.3; }
-        var oneMinT = 1 - t;
-        var oneMinTPow3 = Math.pow(oneMinT, 3);
-        var oneMinTPow2 = Math.pow(oneMinT, 2);
-        var oneMinCrease = 1 - crease;
-        var tempt1 = helpVec3_1;
-        egret3d.Vector3.copy(curveStart, tempt1);
-        egret3d.Vector3.scale(tempt1, oneMinTPow3 * oneMinCrease);
-        var tempt2 = helpVec3_2;
-        egret3d.Vector3.copy(curveStartHandle, tempt2);
-        egret3d.Vector3.scale(tempt2, 3 * oneMinTPow2 * t * crease);
-        var tempt3 = helpVec3_3;
-        egret3d.Vector3.copy(curveEndHandle, tempt3);
-        egret3d.Vector3.scale(tempt3, 3 * oneMinT * Math.pow(t, 2) * crease);
-        var tempt4 = helpVec3_4;
-        egret3d.Vector3.copy(curveEnd, tempt4);
-        egret3d.Vector3.scale(tempt4, Math.pow(t, 3) * oneMinCrease);
-        var tempt5 = helpVec3_5;
-        egret3d.Vector3.add(tempt1, tempt2, tempt5);
-        egret3d.Vector3.add(tempt5, tempt3, tempt5);
-        egret3d.Vector3.add(tempt5, tempt4, tempt5);
-        egret3d.Vector3.copy(tempt5, out);
-        egret3d.Vector3.scale(out, 1 / (oneMinTPow3 * oneMinCrease + 3 * oneMinTPow2 * t * crease + 3 * oneMinT * Math.pow(t, 2) * crease + Math.pow(t, 3) * oneMinCrease));
-    }
-    egret3d.getPointAlongCurve = getPointAlongCurve;
-})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     ;
@@ -2790,14 +3340,14 @@ var paper;
             _this._receiveShadows = false;
             _this._castShadows = false;
             _this._lightmapIndex = -1;
-            _this._boundingSphere = new egret3d.Sphere();
-            _this._aabb = new egret3d.AABB();
+            _this._boundingSphere = egret3d.Sphere.create();
+            _this._aabb = egret3d.AABB.create();
             _this._lightmapScaleOffset = new Float32Array([1.0, 1.0, 0.0, 0.0]);
             return _this;
         }
         BaseRenderer.prototype._recalculateSphere = function () {
             var worldMatrix = this.gameObject.transform.getWorldMatrix();
-            this._boundingSphere.copy(this._aabb.sphere);
+            this._boundingSphere.set(this._aabb.center, this._aabb.boundingSphereRadius);
             this._boundingSphere.center.applyMatrix(worldMatrix);
             worldMatrix.decompose(null, null, _helpVector3A);
             this._boundingSphere.radius *= Math.max(Math.abs(_helpVector3A.x), Math.abs(_helpVector3A.y), Math.abs(_helpVector3A.z));
@@ -3300,8 +3850,8 @@ var egret3d;
             /**
              *
              */
-            _this.color = new egret3d.Color(1.0, 1.0, 1.0, 1.0);
-            _this.matrix = new egret3d.Matrix();
+            _this.color = egret3d.Color.create(1.0, 1.0, 1.0, 1.0);
+            _this.matrix = egret3d.Matrix4.create();
             _this.viewPortPixel = { x: 0, y: 0, w: 0, h: 0 };
             return _this;
         }
@@ -3499,39 +4049,236 @@ var egret3d;
     /**
      *
      */
+    egret3d.RAD_DEG = 180.0 / Math.PI;
+    /**
+     *
+     */
+    egret3d.DEG_RAD = Math.PI / 180.0;
+    /**
+     *
+     */
+    egret3d.EPSILON = 2.220446049250313e-16; // Number.EPSILON
+    function sign(value) {
+        if (value === 0 || value !== value) {
+            return value;
+        }
+        return value > 0 ? 1 : -1;
+    }
+    egret3d.sign = sign;
+    function floatClamp(v, min, max) {
+        if (min === void 0) { min = 0.0; }
+        if (max === void 0) { max = 1.0; }
+        if (v < min)
+            return min;
+        else if (v > max)
+            return max;
+        else
+            return v;
+    }
+    egret3d.floatClamp = floatClamp;
+    function numberLerp(fromV, toV, v) {
+        return fromV * (1 - v) + toV * v;
+    }
+    egret3d.numberLerp = numberLerp;
+    function getNormal(a, b, c, out) {
+        out.subtract(c, b);
+        egret3d.helpVector3A.subtract(a, b);
+        out.cross(egret3d.helpVector3A);
+        var squaredLength = out.squaredLength;
+        if (squaredLength > 0.0) {
+            return out.multiplyScalar(1.0 / Math.sqrt(squaredLength));
+        }
+        return out.set(0.0, 0.0, 1.0);
+    }
+    egret3d.getNormal = getNormal;
+    function calPlaneLineIntersectPoint(planeVector, planePoint, lineVector, linePoint, out) {
+        var vp1 = planeVector.x;
+        var vp2 = planeVector.y;
+        var vp3 = planeVector.z;
+        var n1 = planePoint.x;
+        var n2 = planePoint.y;
+        var n3 = planePoint.z;
+        var v1 = lineVector.x;
+        var v2 = lineVector.y;
+        var v3 = lineVector.z;
+        var m1 = linePoint.x;
+        var m2 = linePoint.y;
+        var m3 = linePoint.z;
+        var vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
+        if (vpt === 0) {
+            out = null;
+        }
+        else {
+            var t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
+            out.x = m1 + v1 * t;
+            out.y = m2 + v2 * t;
+            out.z = m3 + v3 * t;
+        }
+        return out;
+    }
+    egret3d.calPlaneLineIntersectPoint = calPlaneLineIntersectPoint;
+    function triangleIntersectsPlane() {
+    }
+    egret3d.triangleIntersectsPlane = triangleIntersectsPlane;
+    function satForAxes(axes) {
+        var v0 = egret3d.helpVector3A;
+        var v1 = egret3d.helpVector3B;
+        var v2 = egret3d.helpVector3C;
+        var extents = egret3d.helpVector3H;
+        var testAxis = egret3d.helpVector3A;
+        for (var i = 0, l = axes.length - 3; i <= l; i += 3) {
+            testAxis.fromArray(axes, i);
+            // project the aabb onto the seperating axis
+            var r = extents.x * Math.abs(testAxis.x) + extents.y * Math.abs(testAxis.y) + extents.z * Math.abs(testAxis.z);
+            // project all 3 vertices of the triangle onto the seperating axis
+            var p0 = v0.dot(testAxis);
+            var p1 = v1.dot(testAxis);
+            var p2 = v2.dot(testAxis);
+            // actual test, basically see if either of the most extreme of the triangle points intersects r
+            if (Math.max(-Math.max(p0, p1, p2), Math.min(p0, p1, p2)) > r) {
+                // points of the projected triangle are outside the projected half-length of the aabb
+                // the axis is seperating and we can exit
+                return false;
+            }
+        }
+        return true;
+    }
+    function triangleIntersectsAABB(triangle, aabb) {
+        if (aabb.isEmpty) {
+            return false;
+        }
+        var v0 = egret3d.helpVector3A;
+        var v1 = egret3d.helpVector3B;
+        var v2 = egret3d.helpVector3C;
+        // triangle edge vectors
+        var f0 = egret3d.helpVector3D;
+        var f1 = egret3d.helpVector3E;
+        var f2 = egret3d.helpVector3F;
+        var center = egret3d.helpVector3G;
+        var extents = egret3d.helpVector3H;
+        // compute box center and extents
+        extents.subtract(this.max, aabb.center);
+        // translate triangle to aabb origin
+        v0.subtract(triangle.a, center);
+        v1.subtract(triangle.b, center);
+        v2.subtract(triangle.c, center);
+        // compute edge vectors for triangle
+        f0.subtract(v1, v0);
+        f1.subtract(v2, v1);
+        f2.subtract(v0, v2);
+        // test against axes that are given by cross product combinations of the edges of the triangle and the edges of the aabb
+        // make an axis testing of each of the 3 sides of the aabb against each of the 3 sides of the triangle = 9 axis of separation
+        // axis_ij = u_i x f_j (u0, u1, u2 = face normals of aabb = x,y,z axes vectors since aabb is axis aligned)
+        var axes = [
+            0, -f0.z, f0.y, 0, -f1.z, f1.y, 0, -f2.z, f2.y,
+            f0.z, 0, -f0.x, f1.z, 0, -f1.x, f2.z, 0, -f2.x,
+            -f0.y, f0.x, 0, -f1.y, f1.x, 0, -f2.y, f2.x, 0
+        ];
+        if (!satForAxes(axes)) {
+            return false;
+        }
+        // test 3 face normals from the aabb
+        axes = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+        if (!satForAxes(axes)) {
+            return false;
+        }
+        // finally testing the face normal of the triangle
+        // use already existing triangle edge vectors here
+        egret3d.helpVector3A.cross(f0, f1);
+        axes = [egret3d.helpVector3A.x, egret3d.helpVector3A.y, egret3d.helpVector3A.z];
+        return satForAxes(axes);
+    }
+    egret3d.triangleIntersectsAABB = triangleIntersectsAABB;
+    function planeIntersectsAABB(plane, aabb) {
+        // We compute the minimum and maximum dot product values. If those values
+        // are on the same side (back or front) of the plane, then there is no intersection.
+        var vMin;
+        var vMax;
+        var min = aabb.minimum;
+        var max = aabb.maximum;
+        if (plane.normal.x > 0.0) {
+            vMin = plane.normal.x * min.x;
+            vMax = plane.normal.x * max.x;
+        }
+        else {
+            vMin = plane.normal.x * max.x;
+            vMax = plane.normal.x * min.x;
+        }
+        if (plane.normal.y > 0.0) {
+            vMin += plane.normal.y * min.y;
+            vMax += plane.normal.y * max.y;
+        }
+        else {
+            vMin += plane.normal.y * max.y;
+            vMax += plane.normal.y * min.y;
+        }
+        if (plane.normal.z > 0.0) {
+            vMin += plane.normal.z * min.z;
+            vMax += plane.normal.z * max.z;
+        }
+        else {
+            vMin += plane.normal.z * max.z;
+            vMax += plane.normal.z * min.z;
+        }
+        return vMin <= plane.constant && vMax >= plane.constant;
+    }
+    egret3d.planeIntersectsAABB = planeIntersectsAABB;
+    function planeIntersectsSphere(plane, sphere) {
+        return Math.abs(plane.getDistance(sphere.center)) <= sphere.radius;
+    }
+    egret3d.planeIntersectsSphere = planeIntersectsSphere;
+    function aabbIntersectsSphere(aabb, value) {
+        // Find the point on the AABB closest to the sphere center.
+        egret3d.helpVector3A.copy(value.center).clamp(aabb.minimum, aabb.maximum);
+        // If that point is inside the sphere, the AABB and sphere intersect.
+        return egret3d.helpVector3A.getSquaredDistance(value.center) <= (value.radius * value.radius);
+    }
+    egret3d.aabbIntersectsSphere = aabbIntersectsSphere;
+    function aabbIntersectsAABB(valueA, valueB) {
+        var minA = valueA.minimum;
+        var maxA = valueA.maximum;
+        var minB = valueB.minimum;
+        var maxB = valueB.maximum;
+        // using 6 splitting planes to rule out intersections.
+        return maxA.x < minB.x || minA.x > maxB.x ||
+            maxA.y < minB.y || minA.y > maxB.y ||
+            maxA.z < minB.z || minA.z > maxB.z ? false : true;
+    }
+    egret3d.aabbIntersectsAABB = aabbIntersectsAABB;
+    function sphereIntersectsSphere(valueA, valueB) {
+        var radiusSum = valueA.radius + valueB.radius;
+        return valueA.center.getSquaredDistance(valueB.center) <= (radiusSum * radiusSum);
+    }
+    egret3d.sphereIntersectsSphere = sphereIntersectsSphere;
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     *
+     */
     var Quaternion = (function (_super) {
         __extends(Quaternion, _super);
-        /**
-         * @deprecated
-         * @private
-         */
-        function Quaternion(x, y, z, w) {
-            if (x === void 0) { x = 0.0; }
-            if (y === void 0) { y = 0.0; }
-            if (z === void 0) { z = 0.0; }
-            if (w === void 0) { w = 1.0; }
-            return _super.call(this, x, y, z, w) || this;
+        function Quaternion() {
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         Quaternion.create = function (x, y, z, w) {
             if (x === void 0) { x = 0.0; }
             if (y === void 0) { y = 0.0; }
             if (z === void 0) { z = 0.0; }
             if (w === void 0) { w = 1.0; }
-            if (this._instances.length > 0) {
-                return this._instances.pop().set(x, y, z, w);
+            if (this._instancesQ.length > 0) {
+                return this._instancesQ.pop().set(x, y, z, w);
             }
-            return new Quaternion(x, y, z, w);
+            return new Quaternion().set(x, y, z, w);
         };
-        Quaternion.release = function (value) {
-            if (this._instances.indexOf(value) >= 0) {
-                return;
+        Quaternion.prototype.release = function () {
+            if (Quaternion._instancesQ.indexOf(this) < 0) {
+                Quaternion._instancesQ.push(this);
             }
-            this._instances.push(value);
+            return this;
         };
         Quaternion.prototype.clone = function () {
-            var value = new Quaternion();
-            value.copy(this);
-            return value;
+            return Quaternion.create(this.x, this.y, this.z, this.w);
         };
         Quaternion.prototype.fromMatrix = function (matrix) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
@@ -3629,24 +4376,23 @@ var egret3d;
         /**
          * - 向量必须已归一化。
          */
-        Quaternion.prototype.fromAxisAngle = function (axis, angle) {
-            angle *= egret3d.DEG_RAD;
+        Quaternion.prototype.fromAxis = function (axis, radian) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
             // assumes axis is normalized
-            var halfAngle = angle * 0.5, s = Math.sin(halfAngle);
+            var halfAngle = radian * 0.5, s = Math.sin(halfAngle);
             this.x = axis.x * s;
             this.y = axis.y * s;
             this.z = axis.z * s;
             this.w = Math.cos(halfAngle);
             return this;
         };
-        Quaternion.prototype.inverse = function (value) {
-            if (!value) {
-                value = this;
+        Quaternion.prototype.inverse = function (source) {
+            if (!source) {
+                source = this;
             }
-            this.x = value.x * -1;
-            this.y = value.y * -1;
-            this.z = value.z * -1;
+            this.x = source.x * -1;
+            this.y = source.y * -1;
+            this.z = source.z * -1;
             return this;
         };
         Quaternion.prototype.dot = function (value) {
@@ -3741,7 +4487,7 @@ var egret3d;
             if (order === void 0) { order = 0 /* XYZ */; }
             return _helpMatrix.fromRotation(this).toEuler(value, order);
         };
-        Quaternion._instances = [];
+        Quaternion._instancesQ = [];
         return Quaternion;
     }(egret3d.Vector4));
     egret3d.Quaternion = Quaternion;
@@ -3749,18 +4495,15 @@ var egret3d;
     var _helpVector3A = egret3d.Vector3.create();
     var _helpVector3B = egret3d.Vector3.create();
     var _helpVector3C = egret3d.Vector3.create();
-    var _helpMatrix = egret3d.Matrix.create();
+    var _helpMatrix = egret3d.Matrix4.create();
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    var helpVec3_1 = new egret3d.Vector3();
-    var helpVec3_2 = new egret3d.Vector3();
-    var helpVec3_3 = new egret3d.Vector3();
-    var helpVec3_4 = new egret3d.Vector3();
-    var helpVec3_5 = new egret3d.Vector3();
-    var helpVec3_6 = new egret3d.Vector3();
-    var helpVec3_7 = new egret3d.Vector3();
-    // const helpVec3_8: Vector3 = new Vector3();
+    var _helpVector3A = egret3d.Vector3.create();
+    var _helpVector3B = egret3d.Vector3.create();
+    var _helpVector3C = egret3d.Vector3.create();
+    var _helpMatrix = egret3d.Matrix4.create();
+    var _helpRay = egret3d.Ray.create();
     var _attributes = [
         "POSITION" /* POSITION */,
         "NORMAL" /* NORMAL */,
@@ -3818,10 +4561,13 @@ var egret3d;
                 }
                 buffer.byteLength = vertexBufferView.byteLength;
                 _this.buffers[0] = new Float32Array(vertexBufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
-                if (indexCount >= 0) {
+                _this._drawMode = drawMode;
+                if (indexCount > 0) {
                     _this.addSubMesh(indexCount, 0);
                 }
-                _this._drawMode = drawMode;
+                else {
+                    _this.config.meshes[0].primitives[0].material = 0;
+                }
                 _this.initialize();
             }
             return _this;
@@ -3862,61 +4608,68 @@ var egret3d;
             return value;
         };
         /**
-         *
+         * TODO
          */
-        BaseMesh.prototype.intersects = function (ray, matrix) {
+        BaseMesh.prototype.raycast = function (ray, worldMatrix) {
+            _helpMatrix.inverse(worldMatrix);
+            _helpRay.copy(ray);
+            _helpRay.origin.applyMatrix(_helpMatrix);
+            _helpRay.direction.applyDirection(_helpMatrix).normalize();
             var pickInfo = null; // TODO
-            var subMeshIndex = 0;
             for (var _i = 0, _a = this._glTFMesh.primitives; _i < _a.length; _i++) {
                 var primitive = _a[_i];
-                if (primitive.mode === 1 /* Lines */ ||
-                    primitive.mode === 2 /* LineLoop */ ||
-                    primitive.mode === 3 /* LineStrip */) {
-                }
-                else {
-                    if (primitive.indices === undefined) {
-                        // 不使用index TODO
-                    }
-                    else {
-                        var indices = this.getIndices(subMeshIndex);
-                        if (indices) {
-                            var t0 = helpVec3_1;
-                            var t1 = helpVec3_2;
-                            var t2 = helpVec3_3;
-                            var vertices = this.getVertices(subMeshIndex);
-                            for (var i = 0; i < indices.length; i += 3) {
-                                var p0 = helpVec3_4;
-                                var p1 = helpVec3_5;
-                                var p2 = helpVec3_6;
-                                var index = indices[i] * 3;
-                                egret3d.Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p0);
-                                index = indices[i + 1] * 3;
-                                egret3d.Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p1);
-                                index = indices[i + 2] * 3;
-                                egret3d.Vector3.set(vertices[index], vertices[index + 1], vertices[index + 2], p2);
-                                matrix.transformVector3(p0);
-                                matrix.transformVector3(p1);
-                                matrix.transformVector3(p2);
-                                var result = ray.intersectsTriangle(t0, t1, t2);
-                                if (result) {
-                                    if (result.distance < 0) {
-                                        continue;
-                                    }
-                                    if (!pickInfo || pickInfo.distance > result.distance) {
-                                        pickInfo = result;
-                                        pickInfo.triangleIndex = i / 3;
-                                        pickInfo.subMeshIndex = i;
-                                        var tdir = helpVec3_7;
-                                        egret3d.Vector3.copy(ray.direction, tdir);
-                                        egret3d.Vector3.scale(tdir, result.distance);
-                                        egret3d.Vector3.add(ray.origin, tdir, pickInfo.position);
+                switch (primitive.mode) {
+                    case 0 /* Points */:
+                        break;
+                    case 1 /* Lines */:
+                        break;
+                    case 2 /* LineLoop */:
+                        break;
+                    case 3 /* LineStrip */:
+                        break;
+                    case 6 /* TrianglesFan */:
+                        break;
+                    case 5 /* TrianglesStrip */:
+                        break;
+                    case 4 /* Triangles */:
+                    default: {
+                        if (primitive.indices === undefined) {
+                            // TODO
+                        }
+                        else {
+                            var subMeshIndex = 0;
+                            var vertexIndex = 0;
+                            var p0 = _helpVector3A;
+                            var p1 = _helpVector3B;
+                            var p2 = _helpVector3C;
+                            var vertices = this.getVertices();
+                            for (var _b = 0, _c = this._glTFMesh.primitives; _b < _c.length; _b++) {
+                                var _primitive = _c[_b];
+                                var indices = this.getIndices(subMeshIndex++);
+                                for (var i = 0, l = indices.length; i < l; i += 3) {
+                                    vertexIndex = indices[i] * 3;
+                                    p0.set(vertices[vertexIndex++], vertices[vertexIndex++], vertices[vertexIndex++]);
+                                    vertexIndex = indices[i + 1] * 3;
+                                    p1.set(vertices[vertexIndex++], vertices[vertexIndex++], vertices[vertexIndex++]);
+                                    vertexIndex = indices[i + 2] * 3;
+                                    p2.set(vertices[vertexIndex++], vertices[vertexIndex++], vertices[vertexIndex++]);
+                                    var result = _helpRay.intersectTriangle(p0, p1, p2);
+                                    if (result) {
+                                        if (result.distance < 0) {
+                                            continue;
+                                        }
+                                        if (!pickInfo || pickInfo.distance > result.distance) {
+                                            pickInfo = result;
+                                            pickInfo.subMeshIndex = subMeshIndex;
+                                            pickInfo.triangleIndex = i / 3; // TODO
+                                        }
                                     }
                                 }
                             }
                         }
+                        break;
                     }
                 }
-                subMeshIndex++;
             }
             return pickInfo;
         };
@@ -4281,7 +5034,7 @@ var paper;
             };
             BaseGeo.prototype._checkIntersect = function (ray) {
                 var mesh = this.geo.getComponent(egret3d.MeshFilter).mesh;
-                var temp = mesh.intersects(ray, this.geo.transform.getWorldMatrix());
+                var temp = mesh.raycast(ray, this.geo.transform.getWorldMatrix());
                 if (temp) {
                     return this;
                 }
@@ -4291,14 +5044,14 @@ var paper;
                     this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor];
                 }
                 else if (color == "yellow") {
-                    var mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                    mat.setVector4v("_Color", [0.9, 0.9, 0.7, 0.8]);
-                    this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
+                    // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                    // mat.setVector4v("_Color", [0.9, 0.9, 0.7, 0.8]);
+                    // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
                 }
                 else if (color == "grey") {
-                    var mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                    mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
-                    this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
+                    // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                    // mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
+                    // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
                 }
             };
             BaseGeo.prototype._createAxis = function (color, type) {
@@ -4319,9 +5072,9 @@ var paper;
                         break;
                 }
                 var renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
-                var mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
-                renderer.materials = [mat];
+                // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                // mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
+                // renderer.materials = [mat];
                 return gizmoAxis;
             };
             return BaseGeo;
@@ -4375,7 +5128,9 @@ var paper;
                             var y = new editor.yAxis;
                             var z = new editor.zAxis;
                             var xy = new editor.xyAxis;
-                            this.geos.push(x, y, z, xy);
+                            var xz = new editor.xzAxis;
+                            var yz = new editor.yzAxis;
+                            this.geos.push(x, y, z, xy, xz, yz);
                         }
                         break;
                     case "rotation":
@@ -4456,9 +5211,9 @@ var paper;
                     this.geo.transform.setRotation(0, 0, 0, 1);
                 }
             };
-            GeoContainer.prototype.wasReleased = function () {
+            GeoContainer.prototype.wasReleased = function (selectedGameObjs) {
                 if (this.selectedGeo) {
-                    this.selectedGeo.wasReleased();
+                    this.selectedGeo.wasReleased(selectedGameObjs);
                     for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
                         var item = _a[_i];
                         item.changeColor('origin');
@@ -4526,6 +5281,26 @@ var paper;
     /**
      *
      */
+    var MissingComponent = (function (_super) {
+        __extends(MissingComponent, _super);
+        function MissingComponent() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.missingObject = null;
+            return _this;
+        }
+        __decorate([
+            paper.serializedField
+        ], MissingComponent.prototype, "missingObject", void 0);
+        return MissingComponent;
+    }(paper.BaseComponent));
+    paper.MissingComponent = MissingComponent;
+    __reflect(MissingComponent.prototype, "paper.MissingComponent");
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    /**
+     *
+     */
     var Clock = (function (_super) {
         __extends(Clock, _super);
         function Clock() {
@@ -4547,7 +5322,7 @@ var paper;
         }
         Clock.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            this._lastTime = this._beginTime = Date.now() * 0.001;
+            this._beginTime = Date.now() * 0.001;
         };
         /**
          * @internal
@@ -4638,540 +5413,110 @@ var paper;
     paper.ContactColliders = ContactColliders;
     __reflect(ContactColliders.prototype, "paper.ContactColliders");
 })(paper || (paper = {}));
+var paper;
+(function (paper) {
+    /**
+     * 渲染排序
+     */
+    var RenderQueue;
+    (function (RenderQueue) {
+        RenderQueue[RenderQueue["Background"] = 1000] = "Background";
+        RenderQueue[RenderQueue["Geometry"] = 2000] = "Geometry";
+        RenderQueue[RenderQueue["AlphaTest"] = 2450] = "AlphaTest";
+        RenderQueue[RenderQueue["Transparent"] = 3000] = "Transparent";
+        RenderQueue[RenderQueue["Overlay"] = 4000] = "Overlay";
+    })(RenderQueue = paper.RenderQueue || (paper.RenderQueue = {}));
+    function layerTest(cullingMask, layer) {
+        return (cullingMask & layer) !== 0;
+    }
+    paper.layerTest = layerTest;
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
-    var _helpVector3 = egret3d.Vector3.create();
     /**
-     * aabb box
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * 引擎启动入口
      */
-    /**
-     * 轴对称包围盒
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var AABB = (function () {
-        /**
-         * build a aabb
-         * @param minimum min point
-         * @param maximum max point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 构建轴对称包围盒
-         * @param minimum 最小点
-         * @param maximum 最大点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        function AABB(minimum, maximum) {
-            this._dirtyRadius = true;
-            this._dirtyCenter = true;
-            this._minimum = egret3d.Vector3.create(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-            this._maximum = egret3d.Vector3.create(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-            this._sphere = new egret3d.Sphere();
-            if (minimum) {
-                this._minimum.copy(minimum);
-            }
-            if (maximum) {
-                this._maximum.copy(maximum);
-            }
-        }
-        /**
-         * copy
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 复制
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        AABB.prototype.copy = function (aabb) {
-            this._minimum.copy(aabb.minimum);
-            this._maximum.copy(aabb.maximum);
-            this._dirtyRadius = true;
-            this._dirtyCenter = true;
-            return this;
-        };
-        /**
-         * clone
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 克隆
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        AABB.prototype.clone = function () {
-            var value = new egret3d.AABB(this._minimum, this._maximum);
-            return value;
-        };
-        /**
-         * clear
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 清空
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        AABB.prototype.clear = function () {
-            this._minimum.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-            this._maximum.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-            this._dirtyCenter = true;
-            this._dirtyRadius = true;
-            return this;
-        };
-        /**
-         *
-         */
-        AABB.prototype.set = function (minimum, maximum) {
-            if (minimum === void 0) { minimum = null; }
-            if (maximum === void 0) { maximum = null; }
-            if (minimum && minimum !== this._minimum) {
-                this._minimum.copy(minimum);
-            }
-            if (maximum && maximum !== this._maximum) {
-                this._maximum.copy(maximum);
-            }
-            this._dirtyCenter = true;
-            this._dirtyRadius = true;
-            return this;
-        };
-        /**
-         *
-         */
-        AABB.prototype.add = function (value) {
-            if (value instanceof AABB) {
-                this._minimum.max(value._minimum);
-                this._maximum.max(value._maximum);
-            }
-            else {
-                this._minimum.max(value);
-                this._maximum.max(value);
-            }
-            this._dirtyRadius = true;
-            this._dirtyCenter = true;
-        };
-        /**
-         * check contains vector
-         * @param vector a world point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 检查是否包含点
-         * @param vector 世界坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        AABB.prototype.contains = function (vector) {
-            return (vector.x > this._minimum.x) && (vector.x < this._maximum.x) &&
-                (vector.y > this._minimum.y) && (vector.x < this._maximum.y) &&
-                (vector.z > this._minimum.z) && (vector.z < this._maximum.z);
-        };
-        /**
-         * intersect with aabb
-         * @param aabb aabb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 检查是否与aabb相交
-         * @param aabb 轴对称包围盒
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        AABB.prototype.intersectAABB = function (aabb) {
-            if (this._minimum.x > aabb._maximum.x)
-                return false;
-            if (this._maximum.x < aabb._minimum.x)
-                return false;
-            if (this._minimum.x > aabb._maximum.x)
-                return false;
-            if (this._maximum.x < aabb._minimum.x)
-                return false;
-            if (this._minimum.x > aabb._maximum.x)
-                return false;
-            if (this._maximum.x < aabb._minimum.x)
-                return false;
-            return true;
-        };
-        Object.defineProperty(AABB.prototype, "minimum", {
-            /**
-             *
-             */
-            get: function () {
-                return this._minimum;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(AABB.prototype, "maximum", {
-            /**
-             *
-             */
-            get: function () {
-                return this._maximum;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(AABB.prototype, "sphere", {
-            /**
-             * get center
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 获取中心点位置
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            get: function () {
-                if (this._dirtyCenter) {
-                    this._sphere.center.add(this._maximum, this._minimum).multiplyScalar(0.5);
-                    this._dirtyCenter = false;
-                }
-                if (this._dirtyRadius) {
-                    _helpVector3.subtract(this._maximum, this._minimum).multiplyScalar(0.5);
-                    this._sphere.radius = _helpVector3.length;
-                    this._dirtyRadius = false;
-                }
-                return this._sphere;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return AABB;
-    }());
-    egret3d.AABB = AABB;
-    __reflect(AABB.prototype, "egret3d.AABB");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var _helpVector3A = new egret3d.Vector3();
-    var _helpVector3B = new egret3d.Vector3();
-    /**
-     * obb box
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 定向包围盒
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var OBB = (function (_super) {
-        __extends(OBB, _super);
-        function OBB() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * center
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 包围盒中心
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            _this.center = new egret3d.Vector3();
-            /**
-             * size
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 包围盒各轴向长
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            _this.size = new egret3d.Vector3();
-            /**
-             * vectors
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 包围盒世界空间下各个点坐标
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            _this.vectors = [
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
+    function runEgret(options) {
+        if (options === void 0) { options = { antialias: false }; }
+        // TODO WebAssembly load
+        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
+        egret.Capabilities["renderMode" + ""] = "webgl";
+        var requiredOptions = getOptions(options);
+        var canvas = getMainCanvas(options);
+        //TODO
+        options.canvas = canvas;
+        options.option = requiredOptions;
+        options.webgl = canvas.getContext('webgl', options) || canvas.getContext("experimental-webgl", options);
+        egret3d.WebGLCapabilities.webgl = options.webgl;
+        egret3d.InputManager.init(canvas);
+        // DefaultTechnique.init();
+        egret3d.stage.init(canvas, requiredOptions);
+        if (!options.systems) {
+            options.systems = [
+                egret3d.BeginSystem,
+                paper.EnableSystem,
+                paper.StartSystem,
+                //
+                // oimo.PhysicsSystem,
+                //
+                paper.UpdateSystem,
+                //
+                egret3d.AnimationSystem,
+                //
+                paper.LateUpdateSystem,
+                //
+                egret3d.MeshRendererSystem,
+                egret3d.SkinnedMeshRendererSystem,
+                egret3d.particle.ParticleSystem,
+                egret3d.Egret2DRendererSystem,
+                //
+                egret3d.CameraSystem,
+                egret3d.WebGLRenderSystem,
+                //
+                paper.DisableSystem,
+                egret3d.EndSystem,
             ];
-            _this._directions = [
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-            ];
-            return _this;
         }
-        OBB.prototype._computeBoxExtents = function (axis, box, out) {
-            var p = egret3d.Vector3.dot(box.center, axis);
-            //
-            var r0 = Math.abs(egret3d.Vector3.dot(box._directions[0], axis)) * box.size.x * 0.5;
-            var r1 = Math.abs(egret3d.Vector3.dot(box._directions[1], axis)) * box.size.y * 0.5;
-            var r2 = Math.abs(egret3d.Vector3.dot(box._directions[2], axis)) * box.size.z * 0.5;
-            //
-            var r = r0 + r1 + r2;
-            out.x = p - r;
-            out.y = p + r;
-            return out;
-        };
-        OBB.prototype._axisOverlap = function (axis, a, b) {
-            var resultA = this._computeBoxExtents(axis, a, _helpVector3A);
-            var resultB = this._computeBoxExtents(axis, b, _helpVector3B);
-            return !(resultA.x > resultA.y || resultB.x > resultB.y);
-        };
-        /**
-         * clone a obb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 克隆一个obb
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        OBB.prototype.clone = function () {
-            var value = new OBB();
-            egret3d.Vector3.copy(this.center, value.center);
-            egret3d.Vector3.copy(this.center, value.size);
-            for (var key in this._directions) {
-                egret3d.Vector3.copy(this._directions[key], value._directions[key]);
-            }
-            return value;
-        };
-        /**
-         * build by min point and max point
-         * @param minimum min point
-         * @param maximum max point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 由最大最小点构建定向包围盒
-         * @param minimum 最小点坐标
-         * @param maximum 最大点坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        OBB.prototype.setByMaxMin = function (minimum, maximum) {
-            egret3d.Vector3.copy(minimum, this.vectors[0]);
-            egret3d.Vector3.copy(minimum, this.vectors[1]);
-            egret3d.Vector3.copy(minimum, this.vectors[2]);
-            egret3d.Vector3.copy(maximum, this.vectors[3]);
-            egret3d.Vector3.copy(minimum, this.vectors[4]);
-            egret3d.Vector3.copy(maximum, this.vectors[5]);
-            egret3d.Vector3.copy(maximum, this.vectors[6]);
-            egret3d.Vector3.copy(maximum, this.vectors[7]);
-            //
-            this.vectors[1].z = maximum.z;
-            this.vectors[2].x = maximum.x;
-            this.vectors[3].y = minimum.y;
-            this.vectors[4].y = maximum.y;
-            this.vectors[5].x = minimum.x;
-            this.vectors[6].z = minimum.z;
-            //
-            egret3d.Vector3.add(maximum, minimum, this.center);
-            egret3d.Vector3.scale(this.center, 0.5);
-            egret3d.Vector3.subtract(maximum, minimum, this.size);
-        };
-        /**
-         * build by center and size
-         * @param center center
-         * @param size size
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 由中心点和各轴向长度构建定向包围盒
-         * @param center 中心点坐标
-         * @param size 各轴向长度
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        OBB.prototype.setByCenterSize = function (center, size) {
-            egret3d.Vector3.copy(center, this.center);
-            egret3d.Vector3.copy(size, this.size);
-            //
-            var hsx = this.size.x * 0.5;
-            var hsy = this.size.y * 0.5;
-            var hsz = this.size.z * 0.5;
-            var cenx = this.center.x;
-            var ceny = this.center.y;
-            var cenz = this.center.z;
-            //
-            egret3d.Vector3.set(cenx - hsx, ceny - hsy, cenz - hsz, this.vectors[0]);
-            egret3d.Vector3.set(cenx - hsx, ceny - hsy, cenz + hsz, this.vectors[1]);
-            egret3d.Vector3.set(cenx + hsx, ceny - hsy, cenz - hsz, this.vectors[2]);
-            egret3d.Vector3.set(cenx + hsx, ceny - hsy, cenz + hsz, this.vectors[3]);
-            egret3d.Vector3.set(cenx - hsx, ceny + hsy, cenz - hsz, this.vectors[4]);
-            egret3d.Vector3.set(cenx - hsx, ceny + hsy, cenz + hsz, this.vectors[5]);
-            egret3d.Vector3.set(cenx + hsx, ceny + hsy, cenz - hsz, this.vectors[6]);
-            egret3d.Vector3.set(cenx + hsx, ceny + hsy, cenz + hsz, this.vectors[7]);
-        };
-        /**
-         * update by world matrix
-         * @param worldmatrix world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 刷新定向包围盒
-         * @param worldmatrix 世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        OBB.prototype.update = function (matrix) {
-            matrix.decompose(this.center);
-            this._directions[0].fromArray(matrix.rawData, 0);
-            this._directions[0].fromArray(matrix.rawData, 4);
-            this._directions[0].fromArray(matrix.rawData, 8);
-        };
-        /**
-         * intersect width obb
-         * @param value obb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * obb的碰撞检测
-         * @param value 待检测obb
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        OBB.prototype.intersects = function (value) {
-            var a = this;
-            var b = value;
-            //
-            if (!this._axisOverlap(a._directions[0], a, b))
-                return false;
-            if (!this._axisOverlap(a._directions[1], a, b))
-                return false;
-            if (!this._axisOverlap(a._directions[2], a, b))
-                return false;
-            if (!this._axisOverlap(b._directions[0], a, b))
-                return false;
-            if (!this._axisOverlap(b._directions[1], a, b))
-                return false;
-            if (!this._axisOverlap(b._directions[2], a, b))
-                return false;
-            var result = _helpVector3A;
-            egret3d.Vector3.cross(a._directions[0], b._directions[0], result);
-            if (!this._axisOverlap(result, a, b))
-                return false;
-            egret3d.Vector3.cross(a._directions[0], b._directions[1], result);
-            if (!this._axisOverlap(result, a, b))
-                return false;
-            egret3d.Vector3.cross(a._directions[0], b._directions[2], result);
-            if (!this._axisOverlap(result, a, b))
-                return false;
-            egret3d.Vector3.cross(a._directions[1], b._directions[0], result);
-            if (!this._axisOverlap(result, a, b))
-                return false;
-            egret3d.Vector3.cross(a._directions[1], b._directions[1], result);
-            if (!this._axisOverlap(result, a, b))
-                return false;
-            egret3d.Vector3.cross(a._directions[1], b._directions[2], result);
-            if (!this._axisOverlap(result, a, b))
-                return false;
-            egret3d.Vector3.cross(a._directions[2], b._directions[0], result);
-            if (!this._axisOverlap(result, a, b))
-                return false;
-            egret3d.Vector3.cross(a._directions[2], b._directions[1], result);
-            if (!this._axisOverlap(result, a, b))
-                return false;
-            egret3d.Vector3.cross(a._directions[2], b._directions[2], result);
-            if (!this._axisOverlap(result, a, b))
-                return false;
-            return true;
-        };
-        /**
-         * update vectors by world matrix
-         * @param vectors vectors
-         * @param matrix world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 计算世界空间下各点坐标
-         * @param vectors 结果数组
-         * @param matrix 物体的世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        OBB.prototype.caclWorldVectors = function (vectors, matrix) {
-            for (var i = 0; i < 8; ++i) {
-                matrix.transformVector3(this.vectors[i], vectors[i]);
-            }
-        };
-        OBB.prototype.deserialize = function (element) {
-            this.center.deserialize(element.center);
-            this.size.deserialize(element.size);
-            return this;
-        };
-        __decorate([
-            paper.serializedField
-        ], OBB.prototype, "center", void 0);
-        __decorate([
-            paper.serializedField
-        ], OBB.prototype, "size", void 0);
-        return OBB;
-    }(paper.BaseObject));
-    egret3d.OBB = OBB;
-    __reflect(OBB.prototype, "egret3d.OBB");
+        paper.Application.init(options);
+    }
+    egret3d.runEgret = runEgret;
+    function getMainCanvas(options) {
+        if (window.canvas) {
+            return window.canvas;
+        }
+        else if (options.canvas) {
+            return options.canvas;
+        }
+        else {
+            var div = document.getElementsByClassName("egret-player")[0];
+            var canvas = document.createElement("canvas");
+            div.appendChild(canvas);
+            return canvas;
+        }
+    }
+    function getOptions(options) {
+        if (window.canvas) {
+            return {
+                antialias: options.antialias,
+                antialiasSamples: 4,
+                contentWidth: options.contentWidth || 640,
+                contentHeight: options.contentHeight || 1136
+            };
+        }
+        else {
+            var div = document.getElementsByClassName("egret-player")[0];
+            return {
+                antialias: options.antialias,
+                antialiasSamples: 4,
+                contentWidth: parseInt(div.getAttribute("data-content-width")),
+                contentHeight: parseInt(div.getAttribute("data-content-height"))
+            };
+            ;
+        }
+    }
 })(egret3d || (egret3d = {}));
+window.paper = paper;
+window.egret3d = egret3d;
 var paper;
 (function (paper) {
     /**
@@ -5492,98 +5837,107 @@ var egret3d;
 (function (egret3d) {
     /**
      *
-     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
      */
-    var Curve3 = (function () {
-        function Curve3(points, nbPoints) {
-            this._beizerPoints = points;
-            this._bezierPointNum = nbPoints;
+    var Sphere = (function () {
+        function Sphere() {
+            /**
+             *
+             */
+            this.radius = 0.0;
+            /**
+             *
+             */
+            this.center = egret3d.Vector3.create();
         }
-        Object.defineProperty(Curve3.prototype, "beizerPoints", {
-            get: function () {
-                return this._beizerPoints;
-            },
-            set: function (value) {
-                this._beizerPoints = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Curve3.prototype, "bezierPointNum", {
-            get: function () {
-                return this._bezierPointNum;
-            },
-            set: function (value) {
-                this._bezierPointNum = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
         /**
-         * 线性贝塞尔曲线
+         *
+         * @param center
+         * @param radius
          */
-        Curve3.CreateLinearBezier = function (start, end, indices) {
-            indices = indices > 2 ? indices : 3;
-            var bez = new Array();
-            var equation = function (t, va10, va11) {
-                var res = (1.0 - t) * va10 + t * va11;
-                return res;
-            };
-            bez.push(start);
-            for (var i = 1; i <= indices; i++) {
-                bez.push(new egret3d.Vector3(equation(i / indices, start.x, end.x), equation(i / indices, start.y, start.y), equation(i / indices, start.z, start.z)));
+        Sphere.create = function (center, radius) {
+            if (center === void 0) { center = egret3d.Vector3.ZERO; }
+            if (radius === void 0) { radius = 0.0; }
+            if (this._instances.length > 0) {
+                return this._instances.pop();
             }
-            return new Curve3(bez, indices);
+            return new Sphere().set(center, radius);
         };
         /**
-         * 二次方贝塞尔曲线路径
-         * @param v0 起始点
-         * @param v1 选中的节点
-         * @param v2 结尾点
-         * @param nbPoints 将贝塞尔曲线拆分nbPoints段，一共有nbPoints + 1个点
+         *
          */
-        Curve3.CreateQuadraticBezier = function (v0, v1, v2, bezierPointNum) {
-            bezierPointNum = bezierPointNum > 2 ? bezierPointNum : 3;
-            var beizerPoint = new Array();
-            var equation = function (t, val0, val1, val2) {
-                var res = (1.0 - t) * (1.0 - t) * val0 + 2.0 * t * (1.0 - t) * val1 + t * t * val2;
-                return res;
-            };
-            for (var i = 1; i <= bezierPointNum; i++) {
-                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z)));
+        Sphere.prototype.release = function () {
+            if (Sphere._instances.indexOf(this) < 0) {
+                Sphere._instances.push(this);
             }
-            return new Curve3(beizerPoint, bezierPointNum);
+            return this;
         };
-        /**
-         * 三次方贝塞尔曲线路径
-         * @param v0
-         * @param v1
-         * @param v2
-         * @param v3
-         * @param nbPoints
-         */
-        Curve3.CreateCubicBezier = function (v0, v1, v2, v3, bezierPointNum) {
-            bezierPointNum = bezierPointNum > 3 ? bezierPointNum : 4;
-            var beizerPoint = new Array();
-            var equation = function (t, val0, val1, val2, val3) {
-                var res = (1.0 - t) * (1.0 - t) * (1.0 - t) * val0 + 3.0 * t * (1.0 - t) * (1.0 - t) * val1 + 3.0 * t * t * (1.0 - t) * val2 + t * t * t * val3;
-                return res;
-            };
-            for (var i = 1; i <= bezierPointNum; i++) {
-                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x, v3.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y, v3.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z, v3.z)));
+        Sphere.prototype.serialize = function () {
+            return [this.center.x, this.center.y, this.center.z, this.radius];
+        };
+        Sphere.prototype.deserialize = function (value) {
+            this.radius = value[3];
+            this.center.fromArray(value);
+            return this;
+        };
+        Sphere.prototype.clone = function () {
+            return Sphere.create(this.center, this.radius);
+        };
+        Sphere.prototype.copy = function (value) {
+            return this.set(value.center, value.radius);
+        };
+        Sphere.prototype.set = function (center, radius) {
+            this.radius = radius;
+            this.center.copy(center);
+            return this;
+        };
+        Sphere.prototype.fromPoints = function (points, center) {
+            if (center) {
+                this.center.copy(center);
             }
-            return new Curve3(beizerPoint, bezierPointNum);
+            else {
+                this.center.copy(egret3d.helpAABBA.fromPoints(points).center);
+            }
+            var maxRadiusSqrt = 0.0;
+            for (var i = 0, l = points.length; i < l; i++) {
+                maxRadiusSqrt = Math.max(maxRadiusSqrt, this.center.getDistance(points[i]));
+            }
+            this.radius = Math.sqrt(maxRadiusSqrt);
+            return this;
         };
-        /**
-         * 贝塞尔曲线上的点
-         */
-        Curve3.prototype.getPoints = function () {
-            return this._beizerPoints;
+        Sphere.prototype.applyMatrix = function (matrix) {
+            this.center.applyMatrix(matrix);
+            this.radius = this.radius * matrix.getMaxScaleOnAxis();
+            return this;
         };
-        return Curve3;
+        Sphere.prototype.contains = function (value) {
+            if (value instanceof Sphere) {
+                var radiusDelta = this.radius - value.radius;
+                if (radiusDelta >= 0.0) {
+                    this.center.getSquaredDistance(value.center) <= (radiusDelta * radiusDelta);
+                }
+                return false;
+            }
+            return this.center.getSquaredDistance(value) <= this.radius * this.radius;
+        };
+        Sphere.prototype.getDistance = function (value) {
+            return this.center.getDistance(value) - this.radius;
+        };
+        Sphere.prototype.clampPoint = function (point, out) {
+            var squaredDistance = this.center.getSquaredDistance(point);
+            if (squaredDistance > (this.radius * this.radius)) {
+                out.subtract(this.center, point).normalize();
+                out.multiplyScalar(this.radius).add(this.center);
+            }
+            else {
+                out.copy(point);
+            }
+            return out;
+        };
+        Sphere._instances = [];
+        return Sphere;
     }());
-    egret3d.Curve3 = Curve3;
-    __reflect(Curve3.prototype, "egret3d.Curve3");
+    egret3d.Sphere = Sphere;
+    __reflect(Sphere.prototype, "egret3d.Sphere", ["paper.IRelease", "paper.ISerializable"]);
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
@@ -6043,9 +6397,9 @@ var paper;
                     }
                     var classCodeOrName = source[KEY_CLASS];
                     if (KEY_ASSET in source) {
-                        var index = source.asset;
-                        if (index >= 0) {
-                            return paper.Asset.find(this.assets[index]);
+                        var assetIndex = source.asset;
+                        if (assetIndex >= 0) {
+                            return paper.Asset.find(this.assets[assetIndex]);
                         }
                         return null;
                     }
@@ -6103,7 +6457,11 @@ var paper;
         };
         Deserializer.prototype.getAssetOrComponent = function (source) {
             if (KEY_ASSET in source) {
-                return paper.Asset.find(this.assets[source.asset]);
+                var assetIndex = source.asset;
+                if (assetIndex >= 0) {
+                    return paper.Asset.find(this.assets[assetIndex]);
+                }
+                return null;
             }
             var uuid = source.uuid;
             return this.components[uuid] || this.objects[uuid];
@@ -6117,8 +6475,8 @@ var paper;
             if (target === void 0) { target = null; }
             if (data.assets) {
                 for (var _i = 0, _a = data.assets; _i < _a.length; _i++) {
-                    var asset = _a[_i];
-                    this.assets.push(asset);
+                    var assetName = _a[_i];
+                    this.assets.push(assetName);
                 }
             }
             this._keepUUID = keepUUID;
@@ -6150,10 +6508,13 @@ var paper;
                             var linkedID = extras.linkedID;
                             var prefab = extras.prefab;
                             if (prefab) {
-                                var assetName = this.assets[prefab.asset];
-                                target_1 = paper.Prefab.create(assetName, this._target);
-                                if (target_1) {
-                                    this._deserializers[source.uuid] = Deserializer._lastDeserializer;
+                                var assetIndex = prefab.asset;
+                                if (assetIndex >= 0) {
+                                    var assetName = this.assets[assetIndex];
+                                    target_1 = paper.Prefab.create(assetName, this._target);
+                                    if (target_1) {
+                                        this._deserializers[source.uuid] = Deserializer._lastDeserializer;
+                                    }
                                 }
                             }
                             else {
@@ -6557,226 +6918,301 @@ var paper;
         }
     }
 })(paper || (paper = {}));
-var paper;
-(function (paper) {
+var egret3d;
+(function (egret3d) {
+    var _points = [
+        egret3d.Vector3.create(),
+        egret3d.Vector3.create(),
+        egret3d.Vector3.create(),
+        egret3d.Vector3.create(),
+        egret3d.Vector3.create(),
+        egret3d.Vector3.create(),
+        egret3d.Vector3.create(),
+        egret3d.Vector3.create(),
+    ];
     /**
-     * 场景类
+     * aabb box
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    var Scene = (function (_super) {
-        __extends(Scene, _super);
-        function Scene(name) {
-            var _this = _super.call(this) || this;
-            /**
-             * lightmap强度
-             */
-            _this.lightmapIntensity = 1.0;
-            /**
-             * 场景名称。
-             */
-            _this.name = "";
-            /**
-             * 场景的light map列表。
-             */
-            _this.lightmaps = [];
-            /**
-             * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
-             */
-            _this.extras = paper.Application.isEditor && !paper.Application.isPlaying ? {} : undefined;
-            /**
-             * @internal
-             */
-            _this._gameObjects = [];
-            /**
-             * 环境光
-             */
-            _this.ambientLightColor = new egret3d.Color(0.21, 0.22, 0.25, 1);
-            _this.name = name;
-            return _this;
+    /**
+     * 轴对称包围盒
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    var AABB = (function () {
+        function AABB() {
+            this._dirtyRadius = true;
+            this._dirtyCenter = true;
+            this._boundingSphereRadius = 0.0;
+            this._minimum = egret3d.Vector3.create(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+            this._maximum = egret3d.Vector3.create(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+            this._center = egret3d.Vector3.create();
         }
-        /**
-         *
-         */
-        Scene.createEmpty = function (name, isActive) {
-            // const exScene = Application.sceneManager.getSceneByName(name);
-            // if (exScene) {
-            //     console.warn("The scene with the same name already exists.");
-            //     return exScene;
-            // }
-            if (name === void 0) { name = "NoName" /* NoName */; }
-            if (isActive === void 0) { isActive = true; }
-            var scene = new Scene(name);
-            paper.Application.sceneManager._addScene(scene, isActive);
-            return scene;
+        AABB.create = function (minimum, maximum) {
+            if (minimum === void 0) { minimum = null; }
+            if (maximum === void 0) { maximum = null; }
+            if (this._instances.length > 0) {
+                return this._instances.pop().set(minimum, maximum);
+            }
+            return new AABB().set(minimum, maximum);
+        };
+        AABB.prototype.release = function () {
+            if (AABB._instances.indexOf(this) < 0) {
+                AABB._instances.push(this);
+            }
+            return this;
+        };
+        AABB.prototype.serialize = function () {
+            return [this._minimum.x, this._minimum.y, this._minimum.z, this._maximum.x, this._maximum.y, this._maximum.z];
+        };
+        AABB.prototype.deserialize = function (value) {
+            return this.fromArray(value);
+        };
+        AABB.prototype.clone = function () {
+            return AABB.create(this.minimum, this.maximum);
+        };
+        AABB.prototype.copy = function (value) {
+            return this.set(value.minimum, value.maximum);
+        };
+        AABB.prototype.clear = function () {
+            this._minimum.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+            this._maximum.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+            this._dirtyCenter = true;
+            this._dirtyRadius = true;
+            return this;
         };
         /**
          *
          */
-        Scene.create = function (name, combineStaticObjects) {
-            if (combineStaticObjects === void 0) { combineStaticObjects = true; }
-            var exScene = paper.Application.sceneManager.getSceneByName(name);
-            if (exScene) {
-                console.warn("The scene with the same name already exists.");
-                return exScene;
+        AABB.prototype.set = function (minimum, maximum) {
+            if (minimum === void 0) { minimum = null; }
+            if (maximum === void 0) { maximum = null; }
+            if (minimum && minimum !== this._minimum) {
+                this._minimum.copy(minimum);
             }
-            var rawScene = paper.Asset.find(name);
-            if (rawScene) {
-                var scene = rawScene.createInstance();
-                if (scene) {
-                    if (combineStaticObjects && paper.Application.isPlaying) {
-                        egret3d.combine(scene.gameObjects);
-                    }
-                    return scene;
+            if (maximum && maximum !== this._maximum) {
+                this._maximum.copy(maximum);
+            }
+            this._dirtyCenter = true;
+            this._dirtyRadius = true;
+            return this;
+        };
+        AABB.prototype.fromArray = function (value, offset) {
+            if (offset === void 0) { offset = 0; }
+            this._minimum.fromArray(value, offset);
+            this._maximum.fromArray(value, offset + 3);
+            this._dirtyCenter = true;
+            this._dirtyRadius = true;
+        };
+        /**
+         *
+         */
+        AABB.prototype.fromPoints = function (value) {
+            this.clear();
+            for (var _i = 0, _a = value; _i < _a.length; _i++) {
+                var point = _a[_i];
+                this.add(point);
+            }
+            return this;
+        };
+        AABB.prototype.applyMatrix = function (value, source) {
+            if (!source) {
+                source = this;
+            }
+            // transform of empty box is an empty box.
+            if (source.isEmpty) {
+                if (source !== this) {
+                    this.copy(source);
                 }
+                return this;
             }
-            return null;
+            var min = source.minimum;
+            var max = source.maximum;
+            // NOTE: I am using a binary pattern to specify all 2^3 combinations below
+            _points[0].set(min.x, min.y, min.z).applyMatrix(value); // 000
+            _points[1].set(min.x, min.y, max.z).applyMatrix(value); // 001
+            _points[2].set(min.x, max.y, min.z).applyMatrix(value); // 010
+            _points[3].set(min.x, max.y, max.z).applyMatrix(value); // 011
+            _points[4].set(max.x, min.y, min.z).applyMatrix(value); // 100
+            _points[5].set(max.x, min.y, max.z).applyMatrix(value); // 101
+            _points[6].set(max.x, max.y, min.z).applyMatrix(value); // 110
+            _points[7].set(max.x, max.y, max.z).applyMatrix(value); // 111
+            this.fromPoints(_points);
+            return this;
         };
         /**
-         * @internal
+         *
          */
-        Scene.prototype._addGameObject = function (gameObject) {
-            if (this._gameObjects.indexOf(gameObject) < 0) {
-                this._gameObjects.push(gameObject);
+        AABB.prototype.add = function (value, source) {
+            if (!source) {
+                source = this;
+            }
+            var min = source.minimum;
+            var max = source.maximum;
+            if (value instanceof AABB) {
+                this._minimum.min(value._minimum, min);
+                this._maximum.max(value._maximum, max);
             }
             else {
-                console.debug("Add game object error.", gameObject.path);
+                this._minimum.min(value, min);
+                this._maximum.max(value, max);
             }
+            this._dirtyRadius = true;
+            this._dirtyCenter = true;
+            return this;
         };
         /**
-         * @internal
+         *
          */
-        Scene.prototype._removeGameObject = function (gameObject) {
-            var index = this._gameObjects.indexOf(gameObject);
-            if (index >= 0) {
-                this._gameObjects.splice(index, 1);
+        AABB.prototype.expand = function (value, source) {
+            if (!source) {
+                source = this;
+            }
+            var min = source.minimum;
+            var max = source.maximum;
+            if (typeof value === "number") {
+                this._minimum.addScalar(-value, min);
+                this._maximum.addScalar(value, max);
             }
             else {
-                console.debug("Remove game object error.", gameObject.path);
+                this._minimum.subtract(value, min);
+                this._maximum.add(value, max);
             }
+            this._dirtyRadius = true;
+            this._dirtyCenter = true;
+            return this;
         };
         /**
          *
          */
-        Scene.prototype.destroy = function () {
-            if (!paper.Application.sceneManager._removeScene(this)) {
-                return;
+        AABB.prototype.offset = function (value, source) {
+            if (!source) {
+                source = this;
             }
-            var i = this._gameObjects.length;
-            while (i--) {
-                var gameObject = this._gameObjects[i];
-                if (!gameObject || gameObject.transform.parent) {
-                    continue;
-                }
-                gameObject.destroy();
+            var min = source.minimum;
+            var max = source.maximum;
+            if (typeof value === "number") {
+                this._minimum.addScalar(value, min);
+                this._maximum.addScalar(value, max);
             }
-            this.lightmaps.length = 0;
-            this._gameObjects.length = 0;
+            else {
+                this._minimum.add(value, min);
+                this._maximum.add(value, max);
+            }
+            this._dirtyRadius = true;
+            this._dirtyCenter = true;
+            return this;
         };
         /**
-         *
+         * check contains vector
+         * @param value a world point
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        Scene.prototype.find = function (name) {
-            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.name === name) {
-                    return gameObject;
-                }
-            }
-            return null;
-        };
         /**
-         *
+         * 检查是否包含点
+         * @param value 世界坐标
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        Scene.prototype.findWithTag = function (tag) {
-            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.tag === tag) {
-                    return gameObject;
-                }
+        AABB.prototype.contains = function (value) {
+            var min = this._minimum;
+            var max = this._maximum;
+            if (value instanceof AABB) {
+                var vMin = value.minimum;
+                var vMax = value.maximum;
+                return min.x <= vMin.x && vMax.x <= max.x &&
+                    min.y <= vMin.y && vMax.y <= max.y &&
+                    min.z <= vMin.z && vMax.z <= max.z;
             }
-            return null;
+            return (value.x > min.x) && (value.x < max.x) &&
+                (value.y > min.y) && (value.x < max.y) &&
+                (value.z > min.z) && (value.z < max.z);
         };
-        /**
-         *
-         */
-        Scene.prototype.findGameObjectsWithTag = function (tag) {
-            var gameObjects = [];
-            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.tag === tag) {
-                    gameObjects.push(gameObject);
+        AABB.prototype.getDistance = function (value) {
+            return egret3d.helpVector3A.clamp(this._minimum, this._maximum, value).subtract(value).length;
+        };
+        AABB.prototype.clampPoints = function (value, out) {
+            return out.clamp(this._minimum, this._maximum, value);
+        };
+        Object.defineProperty(AABB.prototype, "isEmpty", {
+            get: function () {
+                // this is a more robust check for empty than ( volume <= 0 ) because volume can get positive with two negative axes
+                return (this._maximum.x < this._minimum.x) || (this._maximum.y < this._minimum.y) || (this._maximum.z < this._minimum.z);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(AABB.prototype, "boundingSphereRadius", {
+            /**
+             * Bounding sphere radius.
+             */
+            get: function () {
+                if (this._dirtyRadius) {
+                    egret3d.helpVector3A.subtract(this._maximum, this._minimum).multiplyScalar(0.5);
+                    this._boundingSphereRadius = egret3d.helpVector3A.length;
+                    this._dirtyRadius = false;
                 }
-            }
-            return gameObjects;
-        };
-        /**
-         * @internal
-         */
-        Scene.prototype.findWithUUID = function (uuid) {
-            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.uuid === uuid) {
-                    return gameObject;
-                }
-            }
-            return null;
-        };
-        /**
-         * 所有根实体。
-         */
-        Scene.prototype.getRootGameObjects = function () {
-            var gameObjects = [];
-            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (!gameObject.transform.parent) {
-                    gameObjects.push(gameObject);
-                }
-            }
-            return gameObjects;
-        };
-        Object.defineProperty(Scene.prototype, "gameObjectCount", {
+                return this._boundingSphereRadius;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(AABB.prototype, "minimum", {
             /**
              *
              */
             get: function () {
-                return this._gameObjects.length;
+                return this._minimum;
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Scene.prototype, "gameObjects", {
+        Object.defineProperty(AABB.prototype, "maximum", {
             /**
-             * 所有实体。
+             *
              */
             get: function () {
-                return this._gameObjects;
+                return this._maximum;
             },
             enumerable: true,
             configurable: true
         });
-        __decorate([
-            paper.serializedField
-        ], Scene.prototype, "lightmapIntensity", void 0);
-        __decorate([
-            paper.serializedField
-        ], Scene.prototype, "name", void 0);
-        __decorate([
-            paper.serializedField
-        ], Scene.prototype, "lightmaps", void 0);
-        __decorate([
-            paper.serializedField
-        ], Scene.prototype, "extras", void 0);
-        __decorate([
-            paper.serializedField
-        ], Scene.prototype, "ambientLightColor", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.deserializedIgnore
-        ], Scene.prototype, "gameObjects", null);
-        return Scene;
-    }(paper.BaseObject));
-    paper.Scene = Scene;
-    __reflect(Scene.prototype, "paper.Scene");
-})(paper || (paper = {}));
+        Object.defineProperty(AABB.prototype, "center", {
+            /**
+             * get center
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
+             */
+            /**
+             * 获取中心点位置
+             * @version paper 1.0
+             * @platform Web
+             * @language zh_CN
+             */
+            get: function () {
+                if (this._dirtyCenter) {
+                    this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);
+                    this._dirtyCenter = false;
+                }
+                return this._center;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        AABB._instances = [];
+        return AABB;
+    }());
+    egret3d.AABB = AABB;
+    __reflect(AABB.prototype, "egret3d.AABB", ["paper.IRelease", "paper.ISerializable"]);
+    egret3d.helpAABBA = AABB.create();
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -6790,7 +7226,6 @@ var egret3d;
         BeginSystem.prototype.onAwake = function () {
             this._globalGameObject.getOrAddComponent(egret3d.DefaultTextures);
             this._globalGameObject.getOrAddComponent(egret3d.DefaultMeshes);
-            this._globalGameObject.getOrAddComponent(egret3d.DefaultShaders);
             this._globalGameObject.getOrAddComponent(egret3d.DefaultMaterials);
             this._globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities);
             paper.Time = this._globalGameObject.getOrAddComponent(paper.Clock);
@@ -6830,68 +7265,9 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     *
-     */
-    var Pool = (function () {
-        function Pool() {
-            this._instances = [];
-        }
-        Pool.prototype.clear = function () {
-            this._instances.length = 0;
-        };
-        Pool.prototype.add = function (instanceOrInstances) {
-            if (Array.isArray(instanceOrInstances)) {
-                for (var _i = 0, instanceOrInstances_1 = instanceOrInstances; _i < instanceOrInstances_1.length; _i++) {
-                    var instance = instanceOrInstances_1[_i];
-                    if (this._instances.indexOf(instance) < 0) {
-                        this._instances.push(instance);
-                    }
-                }
-            }
-            else {
-                if (this._instances.indexOf(instanceOrInstances) < 0) {
-                    this._instances.push(instanceOrInstances);
-                }
-            }
-        };
-        Pool.prototype.remove = function (instanceOrInstances) {
-            if (Array.isArray(instanceOrInstances)) {
-                for (var _i = 0, instanceOrInstances_2 = instanceOrInstances; _i < instanceOrInstances_2.length; _i++) {
-                    var instance = instanceOrInstances_2[_i];
-                    var index = this._instances.indexOf(instance);
-                    if (index >= 0) {
-                        this._instances.splice(index, 1);
-                    }
-                }
-            }
-            else {
-                var index = this._instances.indexOf(instanceOrInstances);
-                if (index >= 0) {
-                    this._instances.splice(index, 1);
-                }
-            }
-        };
-        Pool.prototype.get = function () {
-            return this._instances.pop() || null;
-        };
-        Object.defineProperty(Pool.prototype, "instances", {
-            get: function () {
-                return this._instances;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return Pool;
-    }());
-    egret3d.Pool = Pool;
-    __reflect(Pool.prototype, "egret3d.Pool");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
     var _helpVector3 = egret3d.Vector3.create();
     var _helpRotation = egret3d.Quaternion.create();
-    var _helpMatrix = egret3d.Matrix.create();
+    var _helpMatrix = egret3d.Matrix4.create();
     /**
      * Transform Class
      * @version paper 1.0
@@ -6919,8 +7295,8 @@ var egret3d;
              * @internal
              */
             _this._worldMatrixDeterminant = 0.0;
-            _this._localMatrix = egret3d.Matrix.create();
-            _this._worldMatrix = egret3d.Matrix.create();
+            _this._localMatrix = egret3d.Matrix4.create();
+            _this._worldMatrix = egret3d.Matrix4.create();
             _this.localPosition = egret3d.Vector3.create();
             _this.localRotation = egret3d.Quaternion.create();
             _this._localEulerAngles = egret3d.Vector3.create();
@@ -7046,7 +7422,7 @@ var egret3d;
                 return;
             }
             if (worldPositionStays) {
-                egret3d.helpVector3A.copy(this.getPosition());
+                _helpVector3.copy(this.getPosition());
             }
             if (oldParent) {
                 oldParent._removeFromChildren(this);
@@ -7057,7 +7433,7 @@ var egret3d;
             this._parent = newParent;
             this._onParentChange(newParent, oldParent);
             if (worldPositionStays) {
-                this.setPosition(egret3d.helpVector3A);
+                this.setPosition(_helpVector3);
             }
         };
         Transform.prototype.getChildIndex = function (value) {
@@ -7293,7 +7669,7 @@ var egret3d;
             // if (!this._dirtyWorldT) {
             //     this._dirtify(true, true);
             // }
-            if (!this._dirtyWorld) {
+            if (!this._dirtyLocal) {
                 this._dirtify(true);
             }
         };
@@ -7330,7 +7706,7 @@ var egret3d;
             // if (!this._dirtyWorldRS) {
             //     this._dirtify(true, false);
             // }
-            if (!this._dirtyWorld) {
+            if (!this._dirtyLocal) {
                 this._dirtify(true);
             }
         };
@@ -7369,7 +7745,7 @@ var egret3d;
             // if (!this._dirtyWorldRS) {
             //     this._dirtify(true, false);
             // }
-            if (!this._dirtyWorld) {
+            if (!this._dirtyLocal) {
                 this._dirtify(true);
             }
         };
@@ -7406,7 +7782,7 @@ var egret3d;
             // if (!this._dirtyWorldRS) {
             //     this._dirtify(true, false);
             // }
-            if (!this._dirtyWorld) {
+            if (!this._dirtyLocal) {
                 this._dirtify(true);
             }
         };
@@ -7605,11 +7981,11 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    // const _attributesB: gltf.MeshAttributeType[] = [
-    //     gltf.MeshAttributeType.POSITION,
-    //     gltf.MeshAttributeType.NORMAL,
-    //     gltf.MeshAttributeType.TEXCOORD_0,
-    // ];
+    var _attributesB = [
+        "POSITION" /* POSITION */,
+        "NORMAL" /* NORMAL */,
+        "TEXCOORD_0" /* TEXCOORD_0 */,
+    ];
     /**
      *
      */
@@ -7623,7 +7999,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_quad.mash.glb";
+                mesh.name = "builtin/default_quad.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -7663,7 +8039,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_quad_particle.mash.glb";
+                mesh.name = "builtin/default_quad_particle.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD_PARTICLE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -7703,7 +8079,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_plan.mash.glb";
+                mesh.name = "builtin/default_plane.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PLANE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -7743,7 +8119,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(24, 36);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_cube.mash.glb";
+                mesh.name = "builtin/default_cube.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CUBE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -7886,9 +8262,9 @@ var egret3d;
                 ]);
             }
             {
-                var mesh = new egret3d.Mesh(24, 36);
+                var mesh = new egret3d.Mesh(16, 18);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_pyramid.mash.glb";
+                mesh.name = "builtin/default_pyramid.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -7987,6 +8363,169 @@ var egret3d;
                     12, 14, 13, 15, 14, 12
                 ]);
             }
+            {
+                var mesh = DefaultMeshes.createSphereCCW();
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/default_sphere.mash.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.SPHERE = mesh;
+            }
+            {
+                var mesh = DefaultMeshes.createCylinderCCW();
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/default_cylinder.mash.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.CYLINDER = mesh;
+            }
+        };
+        DefaultMeshes.createCylinderCCW = function (height, radius, segment) {
+            if (height === void 0) { height = 1.0; }
+            if (radius === void 0) { radius = 0.5; }
+            if (segment === void 0) { segment = 20; }
+            var index = 0;
+            var normal = new egret3d.Vector3(0.0, 1.0, 0.0);
+            var mesh = new egret3d.Mesh(4 * segment + 2, 3 * 4 * segment, _attributesB);
+            var vertices = mesh.getVertices();
+            var uvs = mesh.getUVs();
+            var normals = mesh.getNormals();
+            var indices = mesh.getIndices();
+            for (var s = 0; s < 4; s++) {
+                var y = (s < 2 ? 0.5 : -0.5) * height;
+                if (s === 3) {
+                    normal.x = 0.0;
+                    normal.y = -1.0;
+                    normal.z = 0.0;
+                }
+                for (var i = 0; i < segment; i++) {
+                    var r = i / segment * Math.PI * 2.0;
+                    var x = Math.sin(r);
+                    var z = Math.cos(r);
+                    if (s === 1 || s === 2) {
+                        normal.x = x;
+                        normal.y = 0.0;
+                        normal.z = z;
+                    }
+                    vertices[index * 3] = x * radius;
+                    vertices[index * 3 + 1] = y;
+                    vertices[index * 3 + 2] = z * radius;
+                    normals[index * 3] = normal.x;
+                    normals[index * 3 + 1] = normal.y;
+                    normals[index * 3 + 2] = normal.z;
+                    if (s === 0 || s === 3) {
+                        uvs[index * 2] = x * 0.5 + 0.5;
+                        uvs[index * 2 + 1] = z * 0.5 + 0.5;
+                    }
+                    else {
+                        uvs[index * 2] = i / segment;
+                        uvs[index * 2 + 1] = y < 0.0 ? 0.0 : 1.0;
+                    }
+                    index++;
+                }
+            }
+            // Top
+            vertices[index * 3] = 0.0;
+            vertices[index * 3 + 1] = 0.5 * height;
+            vertices[index * 3 + 2] = 0.0;
+            normals[index * 3] = normal.x;
+            normals[index * 3 + 1] = normal.y;
+            normals[index * 3 + 2] = normal.z;
+            mesh.setAttributes("POSITION" /* POSITION */, vertices);
+            mesh.setAttributes("NORMAL" /* NORMAL */, normals);
+            mesh.setAttributes("TEXCOORD_0" /* TEXCOORD_0 */, uvs);
+            index = 0;
+            var iTop = 4 * segment;
+            var iBottom = 4 * segment + 1;
+            mesh.setAttributes("POSITION" /* POSITION */, vertices);
+            mesh.setAttributes("NORMAL" /* NORMAL */, normals);
+            mesh.setAttributes("TEXCOORD_0" /* TEXCOORD_0 */, uvs);
+            for (var i = 0; i < segment; i++) {
+                // Top
+                indices[index++] = iTop;
+                indices[index++] = i === segment - 1 ? segment * 0 + 0 : segment * 0 + i + 1;
+                indices[index++] = segment * 0 + i + 0;
+                // Bottom
+                indices[index++] = iBottom;
+                indices[index++] = segment * 3 + i + 0;
+                indices[index++] = i === segment - 1 ? segment * 3 + 0 : segment * 3 + i + 1;
+                // Side
+                var t = segment * 1 + i;
+                var t2 = i === segment - 1 ? segment * 1 + 0 : segment * 1 + i + 1;
+                var b = segment * 2 + i;
+                var b2 = i === segment - 1 ? segment * 2 + 0 : segment * 2 + i + 1;
+                indices[index++] = t;
+                indices[index++] = t2;
+                indices[index++] = b;
+                indices[index++] = t2;
+                indices[index++] = b2;
+                indices[index++] = b;
+            }
+            return mesh;
+        };
+        DefaultMeshes.createSphereCCW = function (radius, widthSegments, heightSegments) {
+            if (radius === void 0) { radius = 0.5; }
+            if (widthSegments === void 0) { widthSegments = 24; }
+            if (heightSegments === void 0) { heightSegments = 12; }
+            widthSegments = Math.max(3, Math.floor(widthSegments));
+            heightSegments = Math.max(2, Math.floor(heightSegments));
+            var mesh = new egret3d.Mesh((widthSegments + 1) * (heightSegments + 1), widthSegments * heightSegments * 6 - 6, _attributesB);
+            //
+            var index = 0;
+            var vertex = new egret3d.Vector3();
+            var normal = new egret3d.Vector3();
+            var grid = new Array();
+            var vertices = [];
+            var normals = [];
+            var uvs = [];
+            for (var iy = 0; iy <= heightSegments; iy++) {
+                var verticesRow = new Array();
+                var v = iy / heightSegments;
+                for (var ix = 0; ix <= widthSegments; ix++) {
+                    var u = ix / widthSegments;
+                    // Vertex.
+                    vertex.x = -radius * Math.cos(u * Math.PI * 2) * Math.sin(v * Math.PI);
+                    vertex.y = radius * Math.cos(v * Math.PI);
+                    vertex.z = radius * Math.sin(u * Math.PI * 2) * Math.sin(v * Math.PI);
+                    vertices.push(vertex.x, vertex.y, vertex.z);
+                    // Normal.
+                    normal.x = vertex.x;
+                    normal.y = vertex.y;
+                    normal.z = vertex.z;
+                    var num = Math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+                    if (num > Number.MIN_VALUE) {
+                        normals.push(normal.x / num, normal.y / num, normal.z / num);
+                    }
+                    else {
+                        normals.push(0.0, 0.0, 0.0);
+                    }
+                    uvs.push(0, 1.0 - u, v);
+                    verticesRow.push(index++);
+                }
+                grid.push(verticesRow);
+            }
+            mesh.setAttributes("POSITION" /* POSITION */, vertices);
+            mesh.setAttributes("NORMAL" /* NORMAL */, normals);
+            mesh.setAttributes("TEXCOORD_0" /* TEXCOORD_0 */, uvs);
+            // Indices.
+            var tris = new Array();
+            for (var iy = 0; iy < heightSegments; iy++) {
+                for (var ix = 0; ix < widthSegments; ix++) {
+                    var a = grid[iy][ix + 1];
+                    var b = grid[iy][ix];
+                    var c = grid[iy + 1][ix];
+                    var d = grid[iy + 1][ix + 1];
+                    if (iy !== 0) {
+                        tris.push(a, d, b);
+                    }
+                    if (iy !== heightSegments - 1) {
+                        tris.push(b, d, c);
+                    }
+                }
+            }
+            var indices = mesh.getIndices();
+            for (var i = 0, l = tris.length; i < l; i++) {
+                indices[i] = tris[i];
+            }
+            return mesh;
         };
         return DefaultMeshes;
     }(paper.SingletonComponent));
@@ -7995,6 +8534,9 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    /**
+     *
+     */
     var DefaultTextures = (function (_super) {
         __extends(DefaultTextures, _super);
         function DefaultTextures() {
@@ -8002,19 +8544,19 @@ var egret3d;
         }
         DefaultTextures.prototype.initialize = function () {
             {
-                var texture = egret3d.GLTexture2D.createColorTexture("builtin/white.image.gltf", 255, 255, 255);
+                var texture = egret3d.GLTexture2D.createColorTexture("builtin/white.image.json", 255, 255, 255);
                 texture._isBuiltin = true;
                 DefaultTextures.WHITE = texture;
                 paper.Asset.register(texture);
             }
             {
-                var texture = egret3d.GLTexture2D.createColorTexture("builtin/gray.image.gltf", 128, 128, 128);
+                var texture = egret3d.GLTexture2D.createColorTexture("builtin/gray.image.json", 128, 128, 128);
                 texture._isBuiltin = true;
                 DefaultTextures.GRAY = texture;
                 paper.Asset.register(texture);
             }
             {
-                var texture = egret3d.GLTexture2D.createGridTexture("builtin/grid.image.gltf");
+                var texture = egret3d.GLTexture2D.createGridTexture("builtin/grid.image.json");
                 texture._isBuiltin = true;
                 DefaultTextures.GRID = texture;
                 paper.Asset.register(texture);
@@ -8030,357 +8572,91 @@ var egret3d;
     /**
      *
      */
-    var DefaultShaders = (function (_super) {
-        __extends(DefaultShaders, _super);
-        function DefaultShaders() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        DefaultShaders.prototype._createShaderAsset = function (template, renderQueue, name, defines) {
-            if (renderQueue === void 0) { renderQueue = egret3d.RenderQueue.Geometry; }
-            if (name === void 0) { name = null; }
-            var shader = JSON.parse(JSON.stringify(template));
-            var extensions = shader.config.extensions;
-            if (renderQueue) {
-                extensions.paper.renderQueue = egret3d.RenderQueue.Geometry;
-            }
-            else {
-                extensions.paper.renderQueue = renderQueue;
-            }
-            if (name) {
-                shader.name = name;
-            }
-            if (defines) {
-                var shaders = extensions.KHR_techniques_webgl.shaders;
-                for (var _i = 0, defines_1 = defines; _i < defines_1.length; _i++) {
-                    var define = defines_1[_i];
-                    var defineStr = "#define " + define + " \n";
-                    shaders[0].uri = defineStr + shaders[0].uri;
-                    shaders[1].uri = defineStr + shaders[1].uri;
-                }
-            }
-            paper.Asset.register(shader);
-            return shader;
-        };
-        DefaultShaders.prototype._setBlend = function (technique, blend) {
-            var funs = technique.states.functions;
-            var enables = technique.states.enable;
-            switch (blend) {
-                case 3 /* Add */:
-                    funs.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                    funs.blendFuncSeparate = [770 /* SRC_ALPHA */, 1 /* ONE */, 770 /* SRC_ALPHA */, 1 /* ONE */];
-                    break;
-                case 4 /* Add_PreMultiply */:
-                    funs.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                    funs.blendFuncSeparate = [1 /* ONE */, 1 /* ONE */, 1 /* ONE */, 1 /* ONE */];
-                    break;
-                case 1 /* Blend */:
-                    funs.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                    funs.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
-                    break;
-                case 2 /* Blend_PreMultiply */:
-                    funs.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
-                    funs.blendFuncSeparate = [1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */, 1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */];
-                    break;
-                default:
-                    delete funs.blendEquationSeparate;
-                    delete funs.blendFuncSeparate;
-                    break;
-            }
-            var index = enables.indexOf(3042 /* BLEND */);
-            if (blend === 0 /* Close */) {
-                if (index >= 0) {
-                    enables.splice(index, 1);
-                }
-            }
-            else {
-                if (index < 0) {
-                    enables.push(3042 /* BLEND */);
-                }
-            }
-        };
-        DefaultShaders.prototype._setCullFace = function (technique, cull, frontFace, cullFace) {
-            var funs = technique.states.functions;
-            var enables = technique.states.enable;
-            var index = enables.indexOf(2884 /* CULL_FACE */);
-            if (cull && frontFace && cullFace) {
-                funs.frontFace = [frontFace];
-                funs.cullFace = [cullFace];
-                if (index < 0) {
-                    enables.push(2884 /* CULL_FACE */);
-                }
-            }
-            else {
-                delete funs.frontFace;
-                delete funs.cullFace;
-                if (index >= 0) {
-                    enables.splice(index, 1);
-                }
-            }
-        };
-        DefaultShaders.prototype._setDepth = function (technique, zTest, zWrite) {
-            var funs = technique.states.functions;
-            var enables = technique.states.enable;
-            var index = enables.indexOf(2929 /* DEPTH_TEST */);
-            if (zTest) {
-                if (index < 0) {
-                    enables.push(2929 /* DEPTH_TEST */);
-                }
-                funs.depthFunc = [515 /* LEQUAL */];
-            }
-            else {
-                if (index >= 0) {
-                    enables.splice(index, 1);
-                }
-            }
-            if (zWrite) {
-                funs.depthMask = [true];
-            }
-            else {
-                funs.depthMask = [false];
-            }
-        };
-        DefaultShaders.prototype.initialize = function () {
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.depth, egret3d.RenderQueue.Geometry, null, ["DEPTH_PACKING 3201"]);
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                //
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 0 /* Close */);
-                DefaultShaders.SHADOW_DEPTH = shader;
-                paper.Asset.register(shader);
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.distanceRGBA, egret3d.RenderQueue.Geometry);
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 0 /* Close */);
-                DefaultShaders.SHADOW_DISTANCE = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.line, egret3d.RenderQueue.Geometry);
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
-                this._setBlend(technique, 0 /* Close */);
-                DefaultShaders.LINE = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.meshlambert, egret3d.RenderQueue.Geometry, null, ["USE_MAP"]);
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
-                this._setBlend(technique, 0 /* Close */);
-                DefaultShaders.MESHLAMBERT = shader;
-            }
-            {
-                //TODO 因为骨骼动画算法不一致，先保留
-                var shader = this._createShaderAsset(egret3d.ShaderLib.diffuse, egret3d.RenderQueue.Geometry, "buildin/diffuse.shader.gltf");
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
-                this._setBlend(technique, 0 /* Close */);
-                DefaultShaders.DIFFUSE = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, egret3d.RenderQueue.Geometry, "buildin/meshbasic.shader.gltf", ["USE_MAP"]);
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
-                this._setBlend(technique, 0 /* Close */);
-                DefaultShaders.DIFFUSE = shader;
-            }
-            // {
-            //     const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Geometry, "buildin/diffuse_tintcolor.shader.gltf", ["USE_MAP"]);
-            //     shader.config.extensions.paper.renderQueue = RenderQueue.Geometry;
-            //     const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-            //     this._setDepth(technique, true, true);
-            //     this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-            //     this._setBlend(technique, BlendModeEnum.Close);
-            //     DefaultShaders.DIFFUSE_TINT_COLOR = shader;
-            // }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, egret3d.RenderQueue.Geometry, "buildin/meshbasic_doubleside.shader.gltf", ["USE_MAP"]);
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 0 /* Close */);
-                DefaultShaders.DIFFUSE_BOTH_SIDE = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, egret3d.RenderQueue.Transparent, "buildin/transparent.shader.gltf", ["USE_MAP"]);
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, false);
-                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
-                this._setBlend(technique, 1 /* Blend */);
-                DefaultShaders.TRANSPARENT = shader;
-            }
-            // {
-            //     const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Transparent, "buildin/transparent_tintColor.shader.gltf", ["USE_MAP"]);
-            //     const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-            //     this._setDepth(technique, true, false);
-            //     this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-            //     this._setBlend(technique, BlendModeEnum.Add);
-            //     DefaultShaders.TRANSPARENT_TINTCOLOR = shader;
-            // }
-            // {
-            //     const shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, RenderQueue.Transparent, "buildin/transparent_alphaCut.shader.gltf", ["USE_MAP"]);
-            //     const technique = shader.config.extensions!.KHR_techniques_webgl!.techniques[0];
-            //     this._setDepth(technique, true, true);
-            //     this._setCullFace(technique, true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-            //     this._setBlend(technique, BlendModeEnum.Close);
-            //     DefaultShaders.TRANSPARENT_ALPHACUT = shader;
-            // }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, egret3d.RenderQueue.Transparent, "buildin/transparent_additive.shader.gltf", ["USE_MAP"]);
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, false);
-                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
-                this._setBlend(technique, 3 /* Add */);
-                DefaultShaders.TRANSPARENT_ADDITIVE = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, egret3d.RenderQueue.Transparent, "buildin/transparent_additive_doubleside.shader.gltf", ["USE_MAP"]);
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, false);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 3 /* Add */);
-                DefaultShaders.TRANSPARENT_ADDITIVE_BOTH_SIDE = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.meshbasic, egret3d.RenderQueue.Transparent, "buildin/transparent_doubleside.shader.gltf", ["USE_MAP"]);
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, false);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 1 /* Blend */);
-                DefaultShaders.TRANSPARENT_ADDITIVE_BOTH_SIDE = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.line, egret3d.RenderQueue.Overlay, "buildin/gizmos.shader.gltf");
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, false, false);
-                this._setCullFace(technique, true, 2305 /* CCW */);
-                this._setBlend(technique, 1 /* Blend */);
-                DefaultShaders.GIZMOS_COLOR = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.line, egret3d.RenderQueue.Geometry, "buildin/materialcolor.shader.gltf");
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 0 /* Close */);
-                DefaultShaders.MATERIAL_COLOR = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.vertcolor, egret3d.RenderQueue.Geometry);
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, true, 2305 /* CCW */, 1029 /* BACK */);
-                this._setBlend(technique, 0 /* Close */);
-                DefaultShaders.VERT_COLOR = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.particle, egret3d.RenderQueue.Geometry, "buildin/particle.shader.gltf");
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 0 /* Close */);
-                DefaultShaders.PARTICLE = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.particle, egret3d.RenderQueue.Transparent, "buildin/particle_additive.shader.gltf");
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, false);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 3 /* Add */);
-                DefaultShaders.PARTICLE_ADDITIVE = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.particle, egret3d.RenderQueue.Transparent, "buildin/particle_additive_premultiply.shader.gltf");
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, false);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 4 /* Add_PreMultiply */);
-                DefaultShaders.PARTICLE_ADDITIVE_PREMYLTIPLY = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.particle, egret3d.RenderQueue.Transparent, "buildin/particle_blend1.shader.gltf");
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                this._setDepth(technique, true, true);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 1 /* Blend */);
-                technique.states.functions.depthFunc = [514 /* EQUAL */]; //TODO
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.particle, egret3d.RenderQueue.Transparent, "buildin/particle_blend.shader.gltf");
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                //
-                this._setDepth(technique, true, false);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 1 /* Blend */);
-                DefaultShaders.PARTICLE_BLEND = shader;
-            }
-            {
-                var shader = this._createShaderAsset(egret3d.ShaderLib.particle, egret3d.RenderQueue.Transparent, "buildin/particle_blend_premultiply.shader.gltf");
-                var technique = shader.config.extensions.KHR_techniques_webgl.techniques[0];
-                //
-                this._setDepth(technique, true, false);
-                this._setCullFace(technique, false);
-                this._setBlend(technique, 2 /* Blend_PreMultiply */);
-                DefaultShaders.PARTICLE_BLEND_PREMYLTIPLY = shader;
-            }
-        };
-        return DefaultShaders;
-    }(paper.SingletonComponent));
-    egret3d.DefaultShaders = DefaultShaders;
-    __reflect(DefaultShaders.prototype, "egret3d.DefaultShaders");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     *
-     */
     var DefaultMaterials = (function (_super) {
         __extends(DefaultMaterials, _super);
         function DefaultMaterials() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
+        DefaultMaterials.prototype._createShaders = function () {
+            var shaders = egret3d.ShaderLib;
+            for (var k in shaders) {
+                var shader = new egret3d.GLTFAsset("builtin/" + k + ".shader.json");
+                shader.config = shaders[k];
+                shader._isBuiltin = true;
+                paper.Asset.register(shader);
+            }
+        };
+        DefaultMaterials.prototype._createMaterial = function (shaderName, name, renderQueue) {
+            var shader = paper.Asset.find(shaderName);
+            var material = new egret3d.Material(shader);
+            material.name = name;
+            material.renderQueue = renderQueue;
+            material._isBuiltin = true;
+            paper.Asset.register(material);
+            return material;
+        };
         DefaultMaterials.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            {
-                var material = new egret3d.Material(egret3d.DefaultShaders.DIFFUSE);
-                material.name = "builtin/default_diffuse.mat.gltf";
-                material._isBuiltin = true;
-                DefaultMaterials.DefaultDiffuse = material;
-            }
-            {
-                var material = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                material.name = "builtin/missing.mat.gltf";
-                material._isBuiltin = true;
-                material.setVector4v("_Color", new Float32Array([1.0, 0.0, 1.0, 1.0]));
-                DefaultMaterials.Missing = material;
-            }
-            {
-                var material = new egret3d.Material(egret3d.DefaultShaders.LINE);
-                material.name = "builtin/line.mat.gltf";
-                material._isBuiltin = true;
-                DefaultMaterials.Line = material;
-            }
-            {
-                var material = new egret3d.Material(egret3d.DefaultShaders.SHADOW_DEPTH);
-                material.name = "builtin/line.mat.gltf";
-                material._isBuiltin = true;
-                DefaultMaterials.ShadowDepth = material;
-            }
-            {
-                var material = new egret3d.Material(egret3d.DefaultShaders.LINE);
-                material.name = "builtin/line.mat.gltf";
-                material._isBuiltin = true;
-                DefaultMaterials.Line = material;
-            }
-            DefaultMaterials.ShadowDepth = new egret3d.Material(egret3d.DefaultShaders.SHADOW_DEPTH);
-            DefaultMaterials.ShadowDistance = new egret3d.Material(egret3d.DefaultShaders.SHADOW_DISTANCE);
+            // Create builtin shaders.
+            this._createShaders();
+            DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.shader.json", "builtin/meshbasic.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.MESH_BASIC_DOUBLESIDE = this._createMaterial("builtin/meshbasic.shader.json", "builtin/meshbasic_doubleside.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.MESH_LAMBERT = this._createMaterial("builtin/meshlambert.shader.json", "builtin/meshlambert.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.MESH_LAMBERT_DOUBLESIDE = this._createMaterial("builtin/meshlambert.shader.json", "builtin/meshlambert_doubleside.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.MESH_PHONG = this._createMaterial("builtin/meshphong.shader.json", "builtin/meshphong.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.MESH_PHONE_DOUBLESIDE = this._createMaterial("builtin/meshphong.shader.json", "builtin/meshphong_doubleside.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.MESH_PHYSICAL = this._createMaterial("builtin/meshphysical.shader.json", "builtin/meshphysical.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.MESH_PHYSICAL_DOUBLESIDE = this._createMaterial("builtin/meshphysical.shader.json", "builtin/meshphysical_doubleside.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.LINEDASHED = this._createMaterial("builtin/linedashed.shader.json", "builtin/linedashed.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */);
+            DefaultMaterials.VERTEX_COLOR = this._createMaterial("builtin/vertcolor.shader.json", "builtin/vertcolor.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */);
+            DefaultMaterials.MATERIAL_COLOR = this._createMaterial("builtin/meshbasic.shader.json", "builtin/materialcolor.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
+            DefaultMaterials.TRANSPARENT = this._createMaterial("builtin/meshbasic.shader.json", "builtin/transparent.mat.json", paper.RenderQueue.Transparent)
+                .setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(1 /* Blend */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.TRANSPARENT_DOUBLESIDE = this._createMaterial("builtin/meshbasic.shader.json", "builtin/transparent_doubleside.mat.json", paper.RenderQueue.Transparent)
+                .setDepth(true, false).setCullFace(false).setBlend(1 /* Blend */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.TRANSPARENT_ADDITIVE = this._createMaterial("builtin/meshbasic.shader.json", "builtin/transparent_additive.mat.json", paper.RenderQueue.Transparent)
+                .setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(3 /* Add */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createMaterial("builtin/meshbasic.shader.json", "builtin/transparent_additive_doubleside.mat.json", paper.RenderQueue.Transparent)
+                .setDepth(true, false).setCullFace(false).setBlend(3 /* Add */)
+                .addDefine("USE_MAP");
+            DefaultMaterials.PARTICLE = this._createMaterial("builtin/particle.shader.json", "builtin/particle.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
+            DefaultMaterials.PARTICLE_BLEND = this._createMaterial("builtin/particle.shader.json", "builtin/particle_blend.mat.json", paper.RenderQueue.Transparent)
+                .setDepth(true, false).setCullFace(false).setBlend(1 /* Blend */);
+            DefaultMaterials.PARTICLE_BLEND_PREMULTIPLY = this._createMaterial("builtin/particle.shader.json", "builtin/particle_blend_premultiply.mat.json", paper.RenderQueue.Transparent)
+                .setDepth(true, false).setCullFace(false).setBlend(2 /* Blend_PreMultiply */);
+            DefaultMaterials.PARTICLE_ADDITIVE = this._createMaterial("builtin/particle.shader.json", "builtin/particle_add.mat.json", paper.RenderQueue.Transparent)
+                .setDepth(true, false).setCullFace(false).setBlend(3 /* Add */);
+            DefaultMaterials.PARTICLE_ADDITIVE_PREMULTIPLY = this._createMaterial("builtin/particle.shader.json", "builtin/particle_add_premultiply.mat.json", paper.RenderQueue.Transparent)
+                .setDepth(true, false).setCullFace(false).setBlend(4 /* Add_PreMultiply */);
+            DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/depth.shader.json", "builtin/shadow_depth.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */).addDefine("DEPTH_PACKING 3201");
+            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/distanceRGBA.shader.json", "builtin/shadow_distance.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
+            DefaultMaterials.MISSING = this._createMaterial("builtin/meshbasic.shader.json", "builtin/missing.mat.json", paper.RenderQueue.Geometry)
+                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */).setVector3v("diffuse", new Float32Array([1.0, 0.0, 1.0]));
         };
         return DefaultMaterials;
     }(paper.SingletonComponent));
@@ -8518,7 +8794,7 @@ var egret3d;
                 if (visible) {
                     var objPos = drawTarget.transform.getPosition();
                     drawCall.zdist = objPos.getDistance(cameraPos);
-                    if (drawCall.material.renderQueue >= egret3d.RenderQueue.Transparent && drawCall.material.renderQueue < egret3d.RenderQueue.Overlay) {
+                    if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue < paper.RenderQueue.Overlay) {
                         this.transparentCalls.push(drawCall);
                     }
                     else {
@@ -8655,7 +8931,7 @@ var egret3d;
             /**
              * 背景色
              */
-            _this.backgroundColor = new egret3d.Color(0.13, 0.28, 0.51, 1);
+            _this.backgroundColor = egret3d.Color.create(0.13, 0.28, 0.51, 1);
             /**
              * 相机视窗
              */
@@ -8674,17 +8950,17 @@ var egret3d;
             _this.renderTarget = null;
             _this._near = 0.01;
             _this._far = 1000;
-            _this.matProjP = new egret3d.Matrix;
-            _this.matProjO = new egret3d.Matrix;
+            _this.matProjP = egret3d.Matrix4.create();
+            _this.matProjO = egret3d.Matrix4.create();
             _this.frameVecs = [
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3(),
-                new egret3d.Vector3()
+                egret3d.Vector3.create(),
+                egret3d.Vector3.create(),
+                egret3d.Vector3.create(),
+                egret3d.Vector3.create(),
+                egret3d.Vector3.create(),
+                egret3d.Vector3.create(),
+                egret3d.Vector3.create(),
+                egret3d.Vector3.create()
             ];
             return _this;
         }
@@ -8693,8 +8969,12 @@ var egret3d;
              * 当前主相机。
              */
             get: function () {
-                var gameObject = paper.Application.sceneManager.activeScene.findWithTag("MainCamera" /* MainCamera */) ||
-                    paper.GameObject.create("MainCamera" /* MainCamera */, "MainCamera" /* MainCamera */);
+                var gameObject = paper.Application.sceneManager.activeScene.findWithTag("MainCamera" /* MainCamera */);
+                if (!gameObject) {
+                    gameObject = paper.GameObject.create("MainCamera" /* MainCamera */, "MainCamera" /* MainCamera */);
+                    gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);
+                    gameObject.transform.lookAt(egret3d.Vector3.ZERO);
+                }
                 return gameObject.getOrAddComponent(Camera);
             },
             enumerable: true,
@@ -8765,10 +9045,10 @@ var egret3d;
          */
         Camera.prototype.calcProjectMatrix = function (asp, matrix) {
             if (this.opvalue > 0) {
-                egret3d.Matrix.perspectiveProjectLH(this.fov, asp, this.near, this.far, this.matProjP);
+                egret3d.Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this.matProjP);
             }
             if (this.opvalue < 1) {
-                egret3d.Matrix.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this.matProjO);
+                egret3d.Matrix4.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this.matProjO);
             }
             if (this.opvalue === 0.0) {
                 matrix.copy(this.matProjO);
@@ -9101,8 +9381,8 @@ var egret3d;
             this.directShadowMatrix = new Float32Array(0);
             this.spotShadowMatrix = new Float32Array(0);
             this.pointShadowMatrix = new Float32Array(0); //TODO
-            this.matrix_m = new egret3d.Matrix();
-            this.matrix_mvp = new egret3d.Matrix();
+            this.matrix_m = new egret3d.Matrix4();
+            this.matrix_mvp = new egret3d.Matrix4();
             this.directShadowMaps = [];
             this.pointShadowMaps = [];
             this.spotShadowMaps = [];
@@ -9113,10 +9393,10 @@ var egret3d;
             this.cameraForward = new Float32Array(3);
             this.cameraUp = new Float32Array(3);
             // transforms
-            this.matrix_v = new egret3d.Matrix();
-            this.matrix_p = new egret3d.Matrix();
-            this.matrix_mv = new egret3d.Matrix();
-            this.matrix_vp = new egret3d.Matrix();
+            this.matrix_v = new egret3d.Matrix4();
+            this.matrix_p = new egret3d.Matrix4();
+            this.matrix_mv = new egret3d.Matrix4();
+            this.matrix_vp = new egret3d.Matrix4();
             this.matrix_mv_inverse = new egret3d.Matrix3(); //INVERS
             //TODO废弃
             this.lightPosition = new Float32Array([0.0, 0.0, 0.0, 1.0]);
@@ -9661,12 +9941,12 @@ var egret;
                     offset = this.drawData(data, offset);
                     // 计算draw call
                     if (data.type == 6 /* ACT_BUFFER */) {
-                        this.activatedBuffer = data.buffer;
+                        this._activatedBuffer = data.buffer;
                         this.egretWebGLRenderContext.activatedBuffer = data.buffer;
                     }
                     if (data.type == 0 /* TEXTURE */ || data.type == 1 /* PUSH_MASK */ || data.type == 2 /* POP_MASK */) {
-                        if (this.activatedBuffer && this.activatedBuffer.$computeDrawCall) {
-                            this.activatedBuffer.$drawCalls++;
+                        if (this._activatedBuffer && this._activatedBuffer.$computeDrawCall) {
+                            this._activatedBuffer.$drawCalls++;
                         }
                     }
                 }
@@ -9734,8 +10014,8 @@ var egret;
                         this.onResize(data.width, data.height);
                         break;
                     case 5 /* CLEAR_COLOR */:
-                        if (this.activatedBuffer) {
-                            var target = this.activatedBuffer.rootRenderTarget;
+                        if (this._activatedBuffer) {
+                            var target = this._activatedBuffer.rootRenderTarget;
                             if (target.width != 0 || target.height != 0) {
                                 target.clear(true);
                             }
@@ -9745,7 +10025,7 @@ var egret;
                         this.activateBuffer(data.buffer, data.width, data.height);
                         break;
                     case 7 /* ENABLE_SCISSOR */:
-                        var buffer = this.activatedBuffer;
+                        var buffer = this._activatedBuffer;
                         if (buffer) {
                             if (buffer.rootRenderTarget) {
                                 buffer.rootRenderTarget.enabledStencil();
@@ -9754,7 +10034,7 @@ var egret;
                         }
                         break;
                     case 8 /* DISABLE_SCISSOR */:
-                        buffer = this.activatedBuffer;
+                        buffer = this._activatedBuffer;
                         if (buffer) {
                             buffer.disableScissor();
                         }
@@ -9909,7 +10189,7 @@ var egret;
             Renderer.prototype.drawPushMaskElements = function (data, offset) {
                 var gl = this.context;
                 var size = data.count * 3;
-                var buffer = this.activatedBuffer;
+                var buffer = this._activatedBuffer;
                 if (buffer) {
                     if (buffer.rootRenderTarget) {
                         buffer.rootRenderTarget.enabledStencil();
@@ -9937,7 +10217,7 @@ var egret;
             Renderer.prototype.drawPopMaskElements = function (data, offset) {
                 var gl = this.context;
                 var size = data.count * 3;
-                var buffer = this.activatedBuffer;
+                var buffer = this._activatedBuffer;
                 if (buffer) {
                     buffer.stencilHandleCount--;
                     if (buffer.stencilHandleCount == 0) {
@@ -10204,775 +10484,300 @@ var egret3d;
     egret3d.MatchWidthOrHeightAdapter = MatchWidthOrHeightAdapter;
     __reflect(MatchWidthOrHeightAdapter.prototype, "egret3d.MatchWidthOrHeightAdapter", ["egret3d.IScreenAdapter"]);
 })(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
+var egret3d;
+(function (egret3d) {
+    var _helpVector3A = new egret3d.Vector3();
+    var _helpVector3B = new egret3d.Vector3();
     /**
-     * 可以挂载Component的实体类。
+     * obb box
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    var GameObject = (function (_super) {
-        __extends(GameObject, _super);
-        /**
-         * @deprecated
-         */
-        function GameObject(name, tag, scene) {
-            if (name === void 0) { name = "NoName" /* NoName */; }
-            if (tag === void 0) { tag = "" /* Untagged */; }
-            if (scene === void 0) { scene = null; }
-            var _this = _super.call(this) || this;
+    /**
+     * 定向包围盒
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    var OBB = (function () {
+        function OBB() {
             /**
-             * 是否是静态，启用这个属性可以提升性能
+             * center
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
              */
-            _this.isStatic = false;
             /**
-             *
+             * 包围盒中心
+             * @version paper 1.0
+             * @platform Web
+             * @language zh_CN
              */
-            _this.hideFlags = 0 /* None */;
+            this.center = new egret3d.Vector3();
             /**
-             * 层级
+             * size
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
              */
-            _this.layer = 2 /* Default */;
             /**
-             * 名称
+             * 包围盒各轴向长
+             * @version paper 1.0
+             * @platform Web
+             * @language zh_CN
              */
-            _this.name = "";
+            this.size = new egret3d.Vector3();
             /**
-             * 标签
+             * vectors
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
              */
-            _this.tag = "";
             /**
-             * 变换组件
+             * 包围盒世界空间下各个点坐标
+             * @version paper 1.0
+             * @platform Web
+             * @language zh_CN
              */
-            _this.transform = null;
-            /**
-             *
-             */
-            _this.renderer = null;
-            /**
-             * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
-             */
-            _this.extras = paper.Application.isEditor && !paper.Application.isPlaying ? {} : undefined;
-            _this._activeSelf = true;
-            /**
-             * @internal
-             */
-            _this._activeInHierarchy = true;
-            /**
-             * @internal
-             */
-            _this._activeDirty = true;
-            _this._components = [];
-            _this._cachedComponents = [];
-            _this._scene = null;
-            _this.name = name;
-            _this.tag = tag;
-            //
-            _this._addToScene(scene || paper.Application.sceneManager.activeScene);
-            //
-            _this.addComponent(egret3d.Transform);
-            return _this;
+            this.vectors = [
+                new egret3d.Vector3(),
+                new egret3d.Vector3(),
+                new egret3d.Vector3(),
+                new egret3d.Vector3(),
+                new egret3d.Vector3(),
+                new egret3d.Vector3(),
+                new egret3d.Vector3(),
+                new egret3d.Vector3(),
+            ];
+            this._directions = [
+                new egret3d.Vector3(),
+                new egret3d.Vector3(),
+                new egret3d.Vector3(),
+            ];
         }
+        OBB.prototype._computeBoxExtents = function (axis, box, out) {
+            var p = egret3d.Vector3.dot(box.center, axis);
+            //
+            var r0 = Math.abs(egret3d.Vector3.dot(box._directions[0], axis)) * box.size.x * 0.5;
+            var r1 = Math.abs(egret3d.Vector3.dot(box._directions[1], axis)) * box.size.y * 0.5;
+            var r2 = Math.abs(egret3d.Vector3.dot(box._directions[2], axis)) * box.size.z * 0.5;
+            //
+            var r = r0 + r1 + r2;
+            out.x = p - r;
+            out.y = p + r;
+            return out;
+        };
+        OBB.prototype._axisOverlap = function (axis, a, b) {
+            var resultA = this._computeBoxExtents(axis, a, _helpVector3A);
+            var resultB = this._computeBoxExtents(axis, b, _helpVector3B);
+            return !(resultA.x > resultA.y || resultB.x > resultB.y);
+        };
         /**
-         * 创建 GameObject，并添加到当前场景中。
+         * clone a obb
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        GameObject.create = function (name, tag, scene) {
-            if (name === void 0) { name = "NoName" /* NoName */; }
-            if (tag === void 0) { tag = "" /* Untagged */; }
-            if (scene === void 0) { scene = null; }
-            var gameObect = new GameObject(name, tag, scene);
-            // gameObect.addComponent(egret3d.Transform);
-            // gameObect._addToScene(Application.sceneManager.activeScene);
-            return gameObect;
+        /**
+         * 克隆一个obb
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        OBB.prototype.clone = function () {
+            var value = new OBB();
+            egret3d.Vector3.copy(this.center, value.center);
+            egret3d.Vector3.copy(this.center, value.size);
+            for (var key in this._directions) {
+                egret3d.Vector3.copy(this._directions[key], value._directions[key]);
+            }
+            return value;
         };
-        GameObject.prototype._destroy = function () {
-            var destroySystem = paper.Application.systemManager.getSystem(paper.DisableSystem);
-            if (destroySystem) {
-                destroySystem.bufferGameObject(this);
-            }
-            for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
-                var child = _a[_i];
-                child.gameObject._destroy();
-            }
-            for (var _b = 0, _c = this._components; _b < _c.length; _b++) {
-                var component = _c[_b];
-                if (!component) {
-                    continue;
-                }
-                this._removeComponent(component, null);
-            }
-            this.transform = null;
-            this._components.length = 0;
-            this._scene._removeGameObject(this);
-            this._scene = null;
+        /**
+         * build by min point and max point
+         * @param minimum min point
+         * @param maximum max point
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 由最大最小点构建定向包围盒
+         * @param minimum 最小点坐标
+         * @param maximum 最大点坐标
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        OBB.prototype.setByMaxMin = function (minimum, maximum) {
+            egret3d.Vector3.copy(minimum, this.vectors[0]);
+            egret3d.Vector3.copy(minimum, this.vectors[1]);
+            egret3d.Vector3.copy(minimum, this.vectors[2]);
+            egret3d.Vector3.copy(maximum, this.vectors[3]);
+            egret3d.Vector3.copy(minimum, this.vectors[4]);
+            egret3d.Vector3.copy(maximum, this.vectors[5]);
+            egret3d.Vector3.copy(maximum, this.vectors[6]);
+            egret3d.Vector3.copy(maximum, this.vectors[7]);
+            //
+            this.vectors[1].z = maximum.z;
+            this.vectors[2].x = maximum.x;
+            this.vectors[3].y = minimum.y;
+            this.vectors[4].y = maximum.y;
+            this.vectors[5].x = minimum.x;
+            this.vectors[6].z = minimum.z;
+            //
+            egret3d.Vector3.add(maximum, minimum, this.center);
+            egret3d.Vector3.scale(this.center, 0.5);
+            egret3d.Vector3.subtract(maximum, minimum, this.size);
         };
-        GameObject.prototype._addToScene = function (value) {
-            if (this._scene) {
-                this._scene._removeGameObject(this);
-            }
-            this._scene = value;
-            this._scene._addGameObject(this);
+        /**
+         * build by center and size
+         * @param center center
+         * @param size size
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 由中心点和各轴向长度构建定向包围盒
+         * @param center 中心点坐标
+         * @param size 各轴向长度
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        OBB.prototype.setByCenterSize = function (center, size) {
+            egret3d.Vector3.copy(center, this.center);
+            egret3d.Vector3.copy(size, this.size);
+            //
+            var hsx = this.size.x * 0.5;
+            var hsy = this.size.y * 0.5;
+            var hsz = this.size.z * 0.5;
+            var cenx = this.center.x;
+            var ceny = this.center.y;
+            var cenz = this.center.z;
+            //
+            egret3d.Vector3.set(cenx - hsx, ceny - hsy, cenz - hsz, this.vectors[0]);
+            egret3d.Vector3.set(cenx - hsx, ceny - hsy, cenz + hsz, this.vectors[1]);
+            egret3d.Vector3.set(cenx + hsx, ceny - hsy, cenz - hsz, this.vectors[2]);
+            egret3d.Vector3.set(cenx + hsx, ceny - hsy, cenz + hsz, this.vectors[3]);
+            egret3d.Vector3.set(cenx - hsx, ceny + hsy, cenz - hsz, this.vectors[4]);
+            egret3d.Vector3.set(cenx - hsx, ceny + hsy, cenz + hsz, this.vectors[5]);
+            egret3d.Vector3.set(cenx + hsx, ceny + hsy, cenz - hsz, this.vectors[6]);
+            egret3d.Vector3.set(cenx + hsx, ceny + hsy, cenz + hsz, this.vectors[7]);
         };
-        GameObject.prototype._canRemoveComponent = function (value) {
-            if (value === this.transform) {
-                console.warn("Cannot remove the transform component from a game object.");
+        /**
+         * update by world matrix
+         * @param worldmatrix world matrix
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 刷新定向包围盒
+         * @param worldmatrix 世界矩阵
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        OBB.prototype.update = function (matrix) {
+            matrix.decompose(this.center);
+            this._directions[0].fromArray(matrix.rawData, 0);
+            this._directions[0].fromArray(matrix.rawData, 4);
+            this._directions[0].fromArray(matrix.rawData, 8);
+        };
+        /**
+         * intersect width obb
+         * @param value obb
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * obb的碰撞检测
+         * @param value 待检测obb
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        OBB.prototype.intersects = function (value) {
+            var a = this;
+            var b = value;
+            //
+            if (!this._axisOverlap(a._directions[0], a, b))
                 return false;
-            }
-            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                var component = _a[_i];
-                if (!component) {
-                    continue;
-                }
-                if (component.constructor === paper.GroupComponent) {
-                    component = component.components[0]; // 只检查第一个。
-                }
-                var requireComponents = component.constructor.requireComponents;
-                if (requireComponents && requireComponents.indexOf(value.constructor) >= 0) {
-                    console.warn("Cannot remove the " + egret.getQualifiedClassName(value) + " component from the game object (" + this.path + "), because it is required from the " + egret.getQualifiedClassName(component) + " component.");
-                    return false;
-                }
-            }
+            if (!this._axisOverlap(a._directions[1], a, b))
+                return false;
+            if (!this._axisOverlap(a._directions[2], a, b))
+                return false;
+            if (!this._axisOverlap(b._directions[0], a, b))
+                return false;
+            if (!this._axisOverlap(b._directions[1], a, b))
+                return false;
+            if (!this._axisOverlap(b._directions[2], a, b))
+                return false;
+            var result = _helpVector3A;
+            egret3d.Vector3.cross(a._directions[0], b._directions[0], result);
+            if (!this._axisOverlap(result, a, b))
+                return false;
+            egret3d.Vector3.cross(a._directions[0], b._directions[1], result);
+            if (!this._axisOverlap(result, a, b))
+                return false;
+            egret3d.Vector3.cross(a._directions[0], b._directions[2], result);
+            if (!this._axisOverlap(result, a, b))
+                return false;
+            egret3d.Vector3.cross(a._directions[1], b._directions[0], result);
+            if (!this._axisOverlap(result, a, b))
+                return false;
+            egret3d.Vector3.cross(a._directions[1], b._directions[1], result);
+            if (!this._axisOverlap(result, a, b))
+                return false;
+            egret3d.Vector3.cross(a._directions[1], b._directions[2], result);
+            if (!this._axisOverlap(result, a, b))
+                return false;
+            egret3d.Vector3.cross(a._directions[2], b._directions[0], result);
+            if (!this._axisOverlap(result, a, b))
+                return false;
+            egret3d.Vector3.cross(a._directions[2], b._directions[1], result);
+            if (!this._axisOverlap(result, a, b))
+                return false;
+            egret3d.Vector3.cross(a._directions[2], b._directions[2], result);
+            if (!this._axisOverlap(result, a, b))
+                return false;
             return true;
         };
-        GameObject.prototype._removeComponent = function (value, groupComponent) {
-            value.enabled = false;
-            value.gameObject = null;
-            if (value === this.renderer) {
-                this.renderer = null;
-            }
-            var destroySystem = paper.Application.systemManager.getSystem(paper.DisableSystem);
-            if (destroySystem) {
-                destroySystem.bufferComponent(value);
-            }
-            if (groupComponent) {
-                groupComponent._removeComponent(value);
-                if (groupComponent.components.length === 0) {
-                    this._removeComponent(groupComponent, null);
-                }
-            }
-            else if (value.constructor === paper.GroupComponent) {
-                groupComponent = value;
-                delete this._components[groupComponent.componentIndex];
-                for (var _i = 0, _a = groupComponent.components; _i < _a.length; _i++) {
-                    var componentInGroup = _a[_i];
-                    this._removeComponent(componentInGroup, groupComponent);
-                }
-            }
-            else {
-                delete this._components[value.constructor.__index];
-            }
-        };
-        GameObject.prototype._getComponentsInChildren = function (componentClass, child, components, isExtends) {
-            if (isExtends === void 0) { isExtends = false; }
-            for (var _i = 0, _a = child._components; _i < _a.length; _i++) {
-                var component = _a[_i];
-                if (!component) {
-                    continue;
-                }
-                if (component.constructor === paper.GroupComponent) {
-                    var groupComponent = component;
-                    if (isExtends ? groupComponent.components[0] instanceof componentClass : groupComponent.componentClass === componentClass) {
-                        for (var _b = 0, _c = groupComponent.components; _b < _c.length; _b++) {
-                            var componentInGroup = _c[_b];
-                            components.push(componentInGroup);
-                        }
-                    }
-                }
-                else if (isExtends ? component instanceof componentClass : component.constructor === componentClass) {
-                    components.push(component);
-                }
-            }
-            for (var _d = 0, _e = child.transform.children; _d < _e.length; _d++) {
-                var childOfChild = _e[_d];
-                this._getComponentsInChildren(componentClass, childOfChild.gameObject, components, isExtends);
-            }
-        };
-        GameObject.prototype._getComponent = function (componentClass) {
-            var componentIndex = componentClass.__index;
-            return componentIndex < 0 ? null : this._components[componentIndex];
-        };
         /**
-         * @internal
+         * update vectors by world matrix
+         * @param vectors vectors
+         * @param matrix world matrix
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        GameObject.prototype._activeInHierarchyDirty = function (prevActive) {
-            this._activeDirty = true;
-            var currentActive = this.activeInHierarchy;
-            if (currentActive !== prevActive) {
-                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                    var component = _a[_i];
-                    if (!component) {
-                        continue;
-                    }
-                    if (component.enabled) {
-                        paper.EventPool.dispatchEvent(currentActive ? "__enabled__" /* Enabled */ : "__disabled__" /* Disabled */, component);
-                    }
-                    if (component.constructor === paper.GroupComponent) {
-                        for (var _b = 0, _c = component.components; _b < _c.length; _b++) {
-                            var componentInGroup = _c[_b];
-                            if (componentInGroup.enabled) {
-                                paper.EventPool.dispatchEvent(currentActive ? "__enabled__" /* Enabled */ : "__disabled__" /* Disabled */, componentInGroup);
-                            }
-                        }
-                    }
-                }
-            }
-            for (var _d = 0, _e = this.transform.children; _d < _e.length; _d++) {
-                var child = _e[_d];
-                child.gameObject._activeInHierarchyDirty(prevActive);
-            }
-        };
         /**
-         *
+         * 计算世界空间下各点坐标
+         * @param vectors 结果数组
+         * @param matrix 物体的世界矩阵
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        GameObject.prototype.destroy = function () {
-            if (this.isDestroyed) {
-                console.warn("The game object (" + this.path + ") has been destroyed.");
-                return;
-            }
-            if (this === paper.Application.sceneManager.globalGameObject) {
-                console.warn("Cannot destroy global game object.");
-                return;
-            }
-            var parent = this.transform.parent;
-            if (parent) {
-                parent._children.splice(parent._children.indexOf(this.transform), 1);
-            }
-            this._destroy();
-        };
-        /**
-         *
-         */
-        GameObject.prototype.destroyChildren = function () {
-            if (this === paper.Application.sceneManager.globalGameObject) {
-                console.warn("Cannot destroy global game object.");
-                return;
-            }
-            var i = this.transform.children.length;
-            while (i--) {
-                this.transform.children[i].gameObject.destroy();
+        OBB.prototype.caclWorldVectors = function (vectors, matrix) {
+            for (var i = 0; i < 8; ++i) {
+                matrix.transformVector3(this.vectors[i], vectors[i]);
             }
         };
-        /**
-         * 添加组件。
-         */
-        GameObject.prototype.addComponent = function (componentClass, config) {
-            paper.registerClass(componentClass);
-            var componentIndex = componentClass.__index;
-            var existedComponent = this._components[componentIndex];
-            // disallowMultipleComponents.
-            if (!componentClass.allowMultiple && existedComponent) {
-                console.warn("Cannot add the " + egret.getQualifiedClassName(componentClass) + " component to the game object (" + this.path + ") again.");
-                return existedComponent;
-            }
-            // requireComponents.
-            if (componentClass.requireComponents) {
-                for (var _i = 0, _a = componentClass.requireComponents; _i < _a.length; _i++) {
-                    var requireComponentClass = _a[_i];
-                    this.getOrAddComponent(requireComponentClass);
-                }
-            }
-            // Linked reference.
-            var component = paper.BaseComponent.create(componentClass, this);
-            if (componentClass === egret3d.Transform) {
-                this.transform = component;
-            }
-            else if (component instanceof paper.BaseRenderer) {
-                this.renderer = component;
-            }
-            // Add component.
-            if (existedComponent) {
-                if (existedComponent.constructor === paper.GroupComponent) {
-                    existedComponent._addComponent(component);
-                }
-                else {
-                    paper.registerClass(paper.GroupComponent);
-                    var groupComponent = paper.BaseComponent.create(paper.GroupComponent, this);
-                    groupComponent.initialize();
-                    groupComponent.componentIndex = componentIndex;
-                    groupComponent.componentClass = componentClass;
-                    groupComponent._addComponent(existedComponent);
-                    groupComponent._addComponent(component);
-                    this._components[componentIndex] = groupComponent;
-                }
-            }
-            else {
-                this._components[componentIndex] = component;
-            }
-            if (config) {
-                component.initialize(config);
-            }
-            else {
-                component.initialize();
-            }
-            if (component.isActiveAndEnabled) {
-                paper.EventPool.dispatchEvent("__enabled__" /* Enabled */, component);
-            }
-            return component;
+        OBB.prototype.deserialize = function (element) {
+            this.center.deserialize(element.center);
+            this.size.deserialize(element.size);
+            return this;
         };
-        /**
-         * 移除组件。
-         */
-        GameObject.prototype.removeComponent = function (componentInstanceOrClass, isExtends) {
-            if (isExtends === void 0) { isExtends = false; }
-            if (componentInstanceOrClass instanceof paper.BaseComponent) {
-                if (!this._canRemoveComponent(componentInstanceOrClass)) {
-                    return;
-                }
-                this._removeComponent(componentInstanceOrClass, null);
-            }
-            else if (isExtends) {
-                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                    var component = _a[_i];
-                    if (!component) {
-                        continue;
-                    }
-                    var groupComponent = null;
-                    if (component.constructor === paper.GroupComponent) {
-                        groupComponent = component;
-                        component = groupComponent.components[0];
-                    }
-                    if (groupComponent) {
-                        if (!(groupComponent.components[0] instanceof componentInstanceOrClass) ||
-                            (groupComponent.components.length === 1 && !this._canRemoveComponent(groupComponent.components[0]))) {
-                            continue;
-                        }
-                    }
-                    else if (!(component instanceof componentInstanceOrClass) ||
-                        !this._canRemoveComponent(component)) {
-                        continue;
-                    }
-                    this._removeComponent(component, groupComponent);
-                }
-            }
-            else {
-                var component = this._getComponent(componentInstanceOrClass);
-                if (!component) {
-                    return;
-                }
-                var groupComponent = null;
-                if (component.constructor === paper.GroupComponent) {
-                    groupComponent = component;
-                    component = groupComponent.components[0];
-                }
-                if (groupComponent) {
-                    if (groupComponent.components.length === 1 && !this._canRemoveComponent(groupComponent.components[0])) {
-                        return;
-                    }
-                }
-                else if (!this._canRemoveComponent(component)) {
-                    return;
-                }
-                this._removeComponent(component, groupComponent);
-            }
-        };
-        /**
-         * 移除所有组件。
-         */
-        GameObject.prototype.removeAllComponents = function (componentClass, isExtends) {
-            if (isExtends === void 0) { isExtends = false; }
-            if (componentClass) {
-                if (isExtends) {
-                    for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                        var component = _a[_i];
-                        if (!component) {
-                            continue;
-                        }
-                        if (component.constructor === paper.GroupComponent) {
-                            var groupComponent = component;
-                            if (!(groupComponent.components[0] instanceof componentClass) ||
-                                !this._canRemoveComponent(groupComponent.components[0])) {
-                                continue;
-                            }
-                        }
-                        else if (!this._canRemoveComponent(component)) {
-                            continue;
-                        }
-                        this._removeComponent(component, null);
-                    }
-                }
-                else {
-                    var component = this._getComponent(componentClass);
-                    if (!component) {
-                        return;
-                    }
-                    if (component.constructor === paper.GroupComponent) {
-                        var groupComponent = component;
-                        if (!this._canRemoveComponent(groupComponent.components[0])) {
-                            return;
-                        }
-                    }
-                    else if (!this._canRemoveComponent(component)) {
-                        return;
-                    }
-                    this._removeComponent(component, null);
-                }
-            }
-            else {
-                for (var _b = 0, _c = this._components; _b < _c.length; _b++) {
-                    var component = _c[_b];
-                    if (!component || component.constructor === egret3d.Transform) {
-                        continue;
-                    }
-                    this._removeComponent(component, null);
-                }
-            }
-        };
-        /**
-         * 获取组件。
-         */
-        GameObject.prototype.getComponent = function (componentClass, isExtends) {
-            if (isExtends === void 0) { isExtends = false; }
-            if (isExtends) {
-                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                    var component_1 = _a[_i];
-                    if (!component_1) {
-                        continue;
-                    }
-                    if (component_1.constructor === paper.GroupComponent) {
-                        var groupComponent = component_1;
-                        if (groupComponent.components[0] instanceof componentClass) {
-                            return groupComponent.components[0];
-                        }
-                    }
-                    else if (component_1 instanceof componentClass) {
-                        return component_1;
-                    }
-                }
-                return null;
-            }
-            var componentClassIndex = componentClass.__index;
-            if (componentClassIndex < 0) {
-                return null;
-            }
-            var component = this._components[componentClassIndex];
-            if (!component) {
-                return null;
-            }
-            if (component.constructor === paper.GroupComponent) {
-                return component.components[0];
-            }
-            return component;
-        };
-        /**
-         *
-         */
-        GameObject.prototype.getComponents = function (componentClass, isExtends) {
-            if (isExtends === void 0) { isExtends = false; }
-            var components = [];
-            if (isExtends) {
-                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                    var component = _a[_i];
-                    if (!component) {
-                        continue;
-                    }
-                    if (component.constructor === paper.GroupComponent && component.components[0] instanceof componentClass) {
-                        for (var _b = 0, _c = component.components; _b < _c.length; _b++) {
-                            var componentInGroup = _c[_b];
-                            components.push(componentInGroup);
-                        }
-                    }
-                    else if (component instanceof componentClass) {
-                        components.push(component);
-                    }
-                }
-            }
-            else {
-                var component = this._getComponent(componentClass);
-                if (component) {
-                    if (component.constructor === paper.GroupComponent && component.components[0] instanceof componentClass) {
-                        for (var _d = 0, _e = component.components; _d < _e.length; _d++) {
-                            var componentInGroup = _e[_d];
-                            components.push(componentInGroup);
-                        }
-                    }
-                    else if (component instanceof componentClass) {
-                        components.push(component);
-                    }
-                }
-            }
-            return components;
-        };
-        /**
-         * 搜索自己和父节点中所有特定类型的组件
-         */
-        GameObject.prototype.getComponentInParent = function (componentClass, isExtends) {
-            if (isExtends === void 0) { isExtends = false; }
-            var result = null;
-            var parent = this.transform.parent;
-            while (!result && parent) {
-                result = parent.gameObject.getComponent(componentClass, isExtends); // 
-                parent = parent.parent;
-            }
-            return result;
-        };
-        /**
-         * 搜索自己和子节点中所有特定类型的组件
-         */
-        GameObject.prototype.getComponentsInChildren = function (componentClass, isExtends) {
-            if (isExtends === void 0) { isExtends = false; }
-            var components = [];
-            this._getComponentsInChildren(componentClass, this, components, isExtends);
-            return components;
-        };
-        /**
-         * 获取组件，如果未添加该组件，则添加该组件。
-         */
-        GameObject.prototype.getOrAddComponent = function (componentClass, isExtends) {
-            if (isExtends === void 0) { isExtends = false; }
-            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
-        };
-        /**
-         * 针对同级的组件发送消息
-         * @param methodName
-         * @param parameter``
-         */
-        GameObject.prototype.sendMessage = function (methodName, parameter, requireReceiver) {
-            if (requireReceiver === void 0) { requireReceiver = true; }
-            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                var component = _a[_i];
-                if (component && component.isActiveAndEnabled && component.constructor instanceof paper.Behaviour) {
-                    if (methodName in component) {
-                        component[methodName](parameter);
-                    }
-                    else if (requireReceiver) {
-                        console.warn(this.name, egret.getQualifiedClassName(component), methodName); // TODO
-                    }
-                }
-            }
-        };
-        /**
-         * 针对直接父级发送消息
-         * @param methodName
-         * @param parameter
-         */
-        GameObject.prototype.sendMessageUpwards = function (methodName, parameter, requireReceiver) {
-            if (requireReceiver === void 0) { requireReceiver = true; }
-            this.sendMessage(methodName, parameter, requireReceiver);
-            //
-            var parent = this.transform.parent;
-            if (parent && parent.gameObject.activeInHierarchy) {
-                parent.gameObject.sendMessage(methodName, parameter, requireReceiver);
-            }
-        };
-        /**
-         * 群发消息
-         * @param methodName
-         * @param parameter
-         */
-        GameObject.prototype.broadcastMessage = function (methodName, parameter, requireReceiver) {
-            if (requireReceiver === void 0) { requireReceiver = true; }
-            this.sendMessage(methodName, parameter, requireReceiver);
-            for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
-                var child = _a[_i];
-                if (child.gameObject.activeInHierarchy) {
-                    child.gameObject.broadcastMessage(methodName, parameter, requireReceiver);
-                }
-            }
-        };
-        Object.defineProperty(GameObject.prototype, "isDestroyed", {
-            /**
-             *
-             */
-            get: function () {
-                return !this._scene;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GameObject.prototype, "dontDestroy", {
-            /**
-             *
-             */
-            get: function () {
-                return this._scene === paper.Application.sceneManager.globalScene;
-            },
-            set: function (value) {
-                if (this.dontDestroy === value) {
-                    return;
-                }
-                if (this.transform.parent && this.transform.parent.gameObject.dontDestroy !== value) {
-                    this.transform.parent = null;
-                }
-                if (value) {
-                    this._addToScene(paper.Application.sceneManager.globalScene);
-                }
-                else {
-                    if (this === paper.Application.sceneManager.globalGameObject) {
-                        console.warn("Cannot change the `dontDestroy` value of the global game object.", this.name, this.uuid);
-                        return;
-                    }
-                    this._addToScene(paper.Application.sceneManager.activeScene);
-                }
-                for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
-                    var child = _a[_i];
-                    child.gameObject.dontDestroy = value;
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GameObject.prototype, "activeSelf", {
-            /**
-             * 当前GameObject对象自身激活状态
-             */
-            get: function () {
-                return this._activeSelf;
-            },
-            set: function (value) {
-                if (this._activeSelf === value) {
-                    return;
-                }
-                var parent = this.transform.parent;
-                if (!parent || parent.gameObject.activeInHierarchy) {
-                    var prevActive = this._activeSelf;
-                    this._activeSelf = value;
-                    this._activeInHierarchyDirty(prevActive);
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GameObject.prototype, "activeInHierarchy", {
-            /**
-             * 获取当前GameObject对象在场景中激活状态。
-             * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
-             */
-            get: function () {
-                if (this._activeDirty) {
-                    var parent_1 = this.transform.parent;
-                    if (!parent_1 || parent_1.gameObject.activeInHierarchy) {
-                        this._activeInHierarchy = this._activeSelf;
-                    }
-                    else {
-                        this._activeInHierarchy = false;
-                    }
-                    this._activeDirty = false;
-                }
-                return this._activeInHierarchy;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GameObject.prototype, "path", {
-            get: function () {
-                var path = this.name;
-                if (this.transform) {
-                    var parent_2 = this.transform.parent;
-                    while (parent_2) {
-                        path = parent_2.gameObject.name + "/" + path;
-                        parent_2 = parent_2.parent;
-                    }
-                    return this._scene.name + "/" + path;
-                }
-                return path;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GameObject.prototype, "components", {
-            /**
-             *
-             */
-            get: function () {
-                this._cachedComponents.length = 0;
-                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                    var component = _a[_i];
-                    if (!component) {
-                        continue;
-                    }
-                    if (component.constructor === paper.GroupComponent) {
-                        for (var _b = 0, _c = component.components; _b < _c.length; _b++) {
-                            var componentInGroup = _c[_b];
-                            this._cachedComponents.push(componentInGroup);
-                        }
-                    }
-                    else {
-                        this._cachedComponents.push(component);
-                    }
-                }
-                return this._cachedComponents;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GameObject.prototype, "parent", {
-            /**
-             *
-             */
-            get: function () {
-                return this.transform.parent ? this.transform.parent.gameObject : null;
-            },
-            set: function (gameObject) {
-                this.transform.parent = gameObject ? gameObject.transform : null;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GameObject.prototype, "scene", {
-            /**
-             * 获取物体所在场景实例。
-             */
-            get: function () {
-                return this._scene;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * @deprecated
-         * @see paper.Scene#find()
-         */
-        GameObject.find = function (name, scene) {
-            if (scene === void 0) { scene = null; }
-            return (scene || paper.Application.sceneManager.activeScene).find(name);
-        };
-        /**
-         * @deprecated
-         * @see paper.Scene#findWithTag()
-         */
-        GameObject.findWithTag = function (tag, scene) {
-            if (scene === void 0) { scene = null; }
-            return (scene || paper.Application.sceneManager.activeScene).findWithTag(tag);
-        };
-        /**
-         * @deprecated
-         * @see paper.Scene#findGameObjectsWithTag()
-         */
-        GameObject.findGameObjectsWithTag = function (tag, scene) {
-            if (scene === void 0) { scene = null; }
-            return (scene || paper.Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
-        };
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.CHECKBOX)
-        ], GameObject.prototype, "isStatic", void 0);
-        __decorate([
-            paper.serializedField
-        ], GameObject.prototype, "hideFlags", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.deserializedIgnore // TODO remove
-        ], GameObject.prototype, "layer", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(paper.editor.EditType.TEXT)
-        ], GameObject.prototype, "name", void 0);
-        __decorate([
-            paper.serializedField
-        ], GameObject.prototype, "tag", void 0);
-        __decorate([
-            paper.serializedField
-        ], GameObject.prototype, "extras", void 0);
-        __decorate([
-            paper.serializedField
-        ], GameObject.prototype, "_activeSelf", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.deserializedIgnore
-        ], GameObject.prototype, "components", null);
-        return GameObject;
-    }(paper.BaseObject));
-    paper.GameObject = GameObject;
-    __reflect(GameObject.prototype, "paper.GameObject");
-})(paper || (paper = {}));
+        return OBB;
+    }());
+    egret3d.OBB = OBB;
+    __reflect(OBB.prototype, "egret3d.OBB");
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -11122,7 +10927,7 @@ var egret3d;
         __extends(MeshRenderer, _super);
         function MeshRenderer() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._materials = [egret3d.DefaultMaterials.DefaultDiffuse];
+            _this._materials = [egret3d.DefaultMaterials.MESH_BASIC];
             return _this;
         }
         MeshRenderer.prototype.uninitialize = function () {
@@ -11226,7 +11031,6 @@ var egret3d;
                 return;
             }
             filter.mesh._createBuffer();
-            this._drawCalls.removeDrawCalls(renderer);
             this._drawCalls.renderers.push(renderer);
             //
             var subMeshIndex = 0;
@@ -11236,7 +11040,7 @@ var egret3d;
                     renderer: renderer,
                     subMeshIndex: subMeshIndex++,
                     mesh: filter.mesh,
-                    material: renderer.materials[primitive.material] || egret3d.DefaultMaterials.Missing,
+                    material: renderer.materials[primitive.material] || egret3d.DefaultMaterials.MISSING,
                     frustumTest: false,
                     zdist: -1,
                 };
@@ -11276,12 +11080,12 @@ var egret3d;
     var helpVec3_6 = new egret3d.Vector3();
     var helpVec3_7 = new egret3d.Vector3();
     // const helpVec3_8: Vector3 = new Vector3();
-    var helpMat4_1 = new egret3d.Matrix();
-    var helpMat4_2 = new egret3d.Matrix();
-    var helpMat4_3 = new egret3d.Matrix();
-    var helpMat4_4 = new egret3d.Matrix();
-    var helpMat4_5 = new egret3d.Matrix();
-    var helpMat4_6 = new egret3d.Matrix();
+    var helpMat4_1 = new egret3d.Matrix4();
+    var helpMat4_2 = new egret3d.Matrix4();
+    var helpMat4_3 = new egret3d.Matrix4();
+    var helpMat4_4 = new egret3d.Matrix4();
+    var helpMat4_5 = new egret3d.Matrix4();
+    var helpMat4_6 = new egret3d.Matrix4();
     /**
      * Skinned Mesh Renderer Component
      * @version paper 1.0
@@ -11561,7 +11365,7 @@ var egret3d;
                         mat00.transformVector3(p0, t0);
                         mat11.transformVector3(p1, t1);
                         mat22.transformVector3(p2, t2);
-                        var result = ray.intersectsTriangle(t0, t1, t2);
+                        var result = ray.intersectTriangle(t0, t1, t2);
                         if (result) {
                             if (result.distance < 0)
                                 continue;
@@ -11692,11 +11496,11 @@ var egret3d;
                 return;
             }
             var renderer = gameObject.renderer;
+            this._drawCalls.removeDrawCalls(renderer);
             if (!renderer.mesh || renderer.materials.length === 0) {
                 return;
             }
             renderer.mesh._createBuffer();
-            this._drawCalls.removeDrawCalls(renderer);
             this._drawCalls.renderers.push(renderer);
             //
             var subMeshIndex = 0;
@@ -11707,7 +11511,7 @@ var egret3d;
                     renderer: renderer,
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
-                    material: renderer.materials[primitive.material || 0] || egret3d.DefaultMaterials.Missing,
+                    material: renderer.materials[primitive.material || 0] || egret3d.DefaultMaterials.MISSING,
                     frustumTest: false,
                     zdist: -1,
                     boneData: renderer.boneBuffer,
@@ -12211,7 +12015,7 @@ var egret3d;
                 var rootGameObject = this._animationComponent.gameObject;
                 var transforms = rootGameObject.transform.getAllChildren();
                 var gameObjects = {};
-                gameObjects[rootGameObject.name] = rootGameObject;
+                gameObjects[rootGameObject.name] = gameObjects["__root__"] = rootGameObject;
                 for (var _a = 0, transforms_1 = transforms; _a < transforms_1.length; _a++) {
                     var gameObject = transforms_1[_a].gameObject;
                     gameObjects[gameObject.name] = gameObject;
@@ -12654,1376 +12458,586 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     * 引擎启动入口
-     */
-    function runEgret(options) {
-        if (options === void 0) { options = { antialias: false }; }
-        // TODO WebAssembly load
-        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
-        egret.Capabilities["renderMode" + ""] = "webgl";
-        var requiredOptions = getOptions(options);
-        var canvas = getMainCanvas(options);
-        //TODO
-        options.canvas = canvas;
-        options.option = requiredOptions;
-        options.webgl = canvas.getContext('webgl', options) || canvas.getContext("experimental-webgl", options);
-        egret3d.WebGLCapabilities.webgl = options.webgl;
-        egret3d.InputManager.init(canvas);
-        // DefaultTechnique.init();
-        egret3d.stage.init(canvas, requiredOptions);
-        if (!options.systems) {
-            options.systems = [
-                egret3d.BeginSystem,
-                paper.EnableSystem,
-                paper.StartSystem,
-                //
-                // oimo.PhysicsSystem,
-                //
-                paper.UpdateSystem,
-                //
-                egret3d.AnimationSystem,
-                //
-                paper.LateUpdateSystem,
-                //
-                egret3d.MeshRendererSystem,
-                egret3d.SkinnedMeshRendererSystem,
-                egret3d.particle.ParticleSystem,
-                egret3d.Egret2DRendererSystem,
-                //
-                egret3d.CameraSystem,
-                egret3d.WebGLRenderSystem,
-                //
-                paper.DisableSystem,
-                egret3d.EndSystem,
-            ];
-        }
-        paper.Application.init(options);
-    }
-    egret3d.runEgret = runEgret;
-    function getMainCanvas(options) {
-        if (window.canvas) {
-            return window.canvas;
-        }
-        else if (options.canvas) {
-            return options.canvas;
-        }
-        else {
-            var div = document.getElementsByClassName("egret-player")[0];
-            var canvas = document.createElement("canvas");
-            div.appendChild(canvas);
-            return canvas;
-        }
-    }
-    function getOptions(options) {
-        if (window.canvas) {
-            return {
-                antialias: options.antialias,
-                antialiasSamples: 4,
-                contentWidth: options.contentWidth || 640,
-                contentHeight: options.contentHeight || 1136
-            };
-        }
-        else {
-            var div = document.getElementsByClassName("egret-player")[0];
-            return {
-                antialias: options.antialias,
-                antialiasSamples: 4,
-                contentWidth: parseInt(div.getAttribute("data-content-width")),
-                contentHeight: parseInt(div.getAttribute("data-content-height"))
-            };
-            ;
-        }
-    }
-})(egret3d || (egret3d = {}));
-window.paper = paper;
-window.egret3d = egret3d;
-var egret3d;
-(function (egret3d) {
     var particle;
     (function (particle) {
-        var colorHelper1 = new egret3d.Color();
-        var colorHelper2 = new egret3d.Color();
-        var Keyframe = (function () {
-            function Keyframe() {
-            }
-            Keyframe.prototype.serialize = function () {
-                return [this.time, this.value];
-            };
-            Keyframe.prototype.deserialize = function (element) {
-                this.time = element[0];
-                this.value = element[1];
-                return this;
-            };
-            Keyframe.prototype.clone = function (source) {
-                this.time = source.time;
-                this.value = source.value;
-            };
-            return Keyframe;
-        }());
-        particle.Keyframe = Keyframe;
-        __reflect(Keyframe.prototype, "egret3d.particle.Keyframe", ["paper.ISerializable"]);
-        var AnimationCurve = (function () {
-            function AnimationCurve() {
-                /**
-                 * 功能与效率平衡长度取4
-                 */
-                this._keys = new Array();
-                this._floatValues = new Float32Array(8);
-            }
-            AnimationCurve.prototype.serialize = function () {
-                return this._keys.map(function (keyFrame) { return keyFrame.serialize(); });
-            };
-            AnimationCurve.prototype.deserialize = function (element) {
-                this._keys.length = 0;
-                for (var i = 0, l = element.length; i < l; i++) {
-                    var keyframe = new Keyframe();
-                    keyframe.deserialize(element[i]);
-                    this._keys.push(keyframe);
+        /**
+         * @private
+         * 渲染类型为Mesh的属性格式
+         */
+        var MeshShaderAttributeFormat = [
+            { key: "POSITION" /* POSITION */, type: "VEC3" /* VEC3 */ },
+            { key: "COLOR_0" /* COLOR_0 */, type: "VEC4" /* VEC4 */ },
+            { key: "TEXCOORD_0" /* TEXCOORD_0 */, type: "VEC2" /* VEC2 */ },
+            { key: "_START_POSITION" /* _START_POSITION */, type: "VEC3" /* VEC3 */ },
+            { key: "_START_VELOCITY" /* _START_VELOCITY */, type: "VEC3" /* VEC3 */ },
+            { key: "_START_COLOR" /* _START_COLOR */, type: "VEC4" /* VEC4 */ },
+            { key: "_START_SIZE" /* _START_SIZE */, type: "VEC3" /* VEC3 */ },
+            { key: "_START_ROTATION" /* _START_ROTATION */, type: "VEC3" /* VEC3 */ },
+            { key: "_TIME" /* _TIME */, type: "VEC2" /* VEC2 */ },
+            { key: "_RANDOM0" /* _RANDOM0 */, type: "VEC4" /* VEC4 */ },
+            { key: "_RANDOM1" /* _RANDOM1 */, type: "VEC4" /* VEC4 */ },
+            { key: "_WORLD_POSITION" /* _WORLD_POSITION */, type: "VEC3" /* VEC3 */ },
+            { key: "_WORLD_ROTATION" /* _WORLD_ROTATION */, type: "VEC4" /* VEC4 */ },
+        ];
+        /**
+         * @private
+         * 渲染类型为Billboard的属性格式
+         */
+        var BillboardShaderAttributeFormat = [
+            { key: "_CORNER" /* _CORNER */, type: "VEC2" /* VEC2 */ },
+            { key: "TEXCOORD_0" /* TEXCOORD_0 */, type: "VEC2" /* VEC2 */ },
+            { key: "_START_POSITION" /* _START_POSITION */, type: "VEC3" /* VEC3 */ },
+            { key: "_START_VELOCITY" /* _START_VELOCITY */, type: "VEC3" /* VEC3 */ },
+            { key: "_START_COLOR" /* _START_COLOR */, type: "VEC4" /* VEC4 */ },
+            { key: "_START_SIZE" /* _START_SIZE */, type: "VEC3" /* VEC3 */ },
+            { key: "_START_ROTATION" /* _START_ROTATION */, type: "VEC3" /* VEC3 */ },
+            { key: "_TIME" /* _TIME */, type: "VEC2" /* VEC2 */ },
+            { key: "_RANDOM0" /* _RANDOM0 */, type: "VEC4" /* VEC4 */ },
+            { key: "_RANDOM1" /* _RANDOM1 */, type: "VEC4" /* VEC4 */ },
+            { key: "_WORLD_POSITION" /* _WORLD_POSITION */, type: "VEC3" /* VEC3 */ },
+            { key: "_WORLD_ROTATION" /* _WORLD_ROTATION */, type: "VEC4" /* VEC4 */ },
+        ];
+        /**
+        * @internal
+        */
+        function createBatchMesh(renderer, maxParticleCount) {
+            var meshAttributes = [];
+            var meshAttributesType = {};
+            if (renderer._renderMode === 4 /* Mesh */) {
+                var mesh = renderer.mesh;
+                var orginIndexBuffer = mesh.getIndices();
+                var orginIndexBufferCount = orginIndexBuffer.length;
+                for (var _i = 0, MeshShaderAttributeFormat_1 = MeshShaderAttributeFormat; _i < MeshShaderAttributeFormat_1.length; _i++) {
+                    var attribute = MeshShaderAttributeFormat_1[_i];
+                    meshAttributes.push(attribute.key);
+                    meshAttributesType[attribute.key] = attribute.type;
                 }
-                return this;
-            };
-            AnimationCurve.prototype.evaluate = function (t) {
-                if (t === void 0) { t = 0; }
-                for (var i = 0, l = this._keys.length; i < l; i++) {
-                    var curKeyFrame = this._keys[i];
-                    if (curKeyFrame.time < t) {
-                        continue;
-                    }
-                    //
-                    var lastIndex = i === 0 ? 0 : i - 1;
-                    var lastKeyFrame = this._keys[lastIndex];
-                    var tt = (t - lastKeyFrame.time) / (curKeyFrame.time - lastKeyFrame.time);
-                    return egret3d.numberLerp(lastKeyFrame.value, curKeyFrame.value, tt);
-                }
-                throw "AnimationCurve: invalid t or keys.length is 0";
-            };
-            Object.defineProperty(AnimationCurve.prototype, "floatValues", {
-                get: function () {
-                    var res = this._floatValues;
-                    var offset = 0;
-                    for (var _i = 0, _a = this._keys; _i < _a.length; _i++) {
-                        var keyFrame = _a[_i];
-                        res[offset++] = keyFrame.time;
-                        res[offset++] = keyFrame.value;
-                    }
-                    return res;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            AnimationCurve.prototype.clone = function (source) {
-                this._keys.length = 0;
-                var sourceKeys = source._keys;
-                for (var i = 0, l = sourceKeys.length; i < l; i++) {
-                    var keyframe = new Keyframe();
-                    keyframe.time = sourceKeys[i].time;
-                    keyframe.value = sourceKeys[i].value;
-                    this._keys.push(keyframe);
-                }
-            };
-            return AnimationCurve;
-        }());
-        particle.AnimationCurve = AnimationCurve;
-        __reflect(AnimationCurve.prototype, "egret3d.particle.AnimationCurve", ["paper.ISerializable"]);
-        var GradientColorKey = (function (_super) {
-            __extends(GradientColorKey, _super);
-            function GradientColorKey() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.color = new egret3d.Color();
-                return _this;
-            }
-            GradientColorKey.prototype.deserialize = function (element) {
-                this.color.deserialize(element.color);
-                this.time = element.time;
-                return this;
-            };
-            __decorate([
-                paper.serializedField
-            ], GradientColorKey.prototype, "color", void 0);
-            __decorate([
-                paper.serializedField
-            ], GradientColorKey.prototype, "time", void 0);
-            return GradientColorKey;
-        }(paper.BaseObject));
-        particle.GradientColorKey = GradientColorKey;
-        __reflect(GradientColorKey.prototype, "egret3d.particle.GradientColorKey");
-        var GradientAlphaKey = (function (_super) {
-            __extends(GradientAlphaKey, _super);
-            function GradientAlphaKey() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            GradientAlphaKey.prototype.deserialize = function (element) {
-                this.alpha = element.alpha;
-                this.time = element.time;
-                return this;
-            };
-            __decorate([
-                paper.serializedField
-            ], GradientAlphaKey.prototype, "alpha", void 0);
-            __decorate([
-                paper.serializedField
-            ], GradientAlphaKey.prototype, "time", void 0);
-            return GradientAlphaKey;
-        }(paper.BaseObject));
-        particle.GradientAlphaKey = GradientAlphaKey;
-        __reflect(GradientAlphaKey.prototype, "egret3d.particle.GradientAlphaKey");
-        var Gradient = (function (_super) {
-            __extends(Gradient, _super);
-            function Gradient() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.mode = 0 /* Blend */;
-                _this.alphaKeys = new Array();
-                _this.colorKeys = new Array();
-                _this._alphaValue = new Float32Array(8);
-                _this._colorValue = new Float32Array(16);
-                return _this;
-            }
-            Gradient.prototype.deserialize = function (element) {
-                this.colorKeys.length = 0;
-                for (var i = 0, l = element.colorKeys.length; i < l; i++) {
-                    var color = new GradientColorKey();
-                    color.deserialize(element.colorKeys[i]);
-                    this.colorKeys.push(color);
-                }
+                var totalVertexCount = mesh.vertexCount * maxParticleCount;
+                var totalIndexCount = orginIndexBufferCount * maxParticleCount;
+                var batchMesh = new egret3d.Mesh(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType, 35048 /* Dynamic */);
                 //
-                this.alphaKeys.length = 0;
-                for (var i = 0, l = element.alphaKeys.length; i < l; i++) {
-                    var alpha = new GradientAlphaKey();
-                    alpha.deserialize(element.alphaKeys[i]);
-                    this.alphaKeys.push(alpha);
-                }
-                return this;
-            };
-            Gradient.prototype.evaluate = function (t, out) {
-                if (t === void 0) { t = 0; }
-                for (var i = 0, l = this.alphaKeys.length; i < l; i++) {
-                    var curKeyFrame = this.alphaKeys[i];
-                    if (curKeyFrame.time > t) {
-                        var lastIndex = i == 0 ? 0 : i - 1;
-                        var lastKeyFrame = this.alphaKeys[lastIndex];
-                        var tt = (t - lastKeyFrame.time) / (curKeyFrame.time - lastKeyFrame.time);
-                        out.a = egret3d.numberLerp(lastKeyFrame.alpha, curKeyFrame.alpha, tt);
-                        break;
+                var index = 0;
+                //提前填充
+                var orginPostionBuffer = mesh.getAttributes("POSITION" /* POSITION */);
+                var orginUVBuffer = mesh.getAttributes("TEXCOORD_0" /* TEXCOORD_0 */);
+                var orginColorBuffer = mesh.getAttributes("COLOR_0" /* COLOR_0 */);
+                var positionBuffer = batchMesh.getAttributes("POSITION" /* POSITION */);
+                var colorBuffer = batchMesh.getAttributes("COLOR_0" /* COLOR_0 */);
+                var uvBuffer = batchMesh.getAttributes("TEXCOORD_0" /* TEXCOORD_0 */);
+                for (var i = 0; i < totalVertexCount; i++) {
+                    var vector2Offset = i * 2;
+                    var vector3Offset = i * 3;
+                    var vector4Offset = i * 4;
+                    var orginVertexIndex = i % mesh.vertexCount;
+                    positionBuffer[vector3Offset] = orginPostionBuffer[orginVertexIndex * 3];
+                    positionBuffer[vector3Offset + 1] = orginPostionBuffer[orginVertexIndex * 3 + 1];
+                    positionBuffer[vector3Offset + 2] = orginPostionBuffer[orginVertexIndex * 3 + 2];
+                    if (orginUVBuffer) {
+                        uvBuffer[vector2Offset] = orginUVBuffer[orginVertexIndex * 2];
+                        uvBuffer[vector2Offset + 1] = orginUVBuffer[orginVertexIndex * 2 + 1];
+                    }
+                    if (orginColorBuffer) {
+                        colorBuffer[vector4Offset] = orginColorBuffer[orginVertexIndex * 4];
+                        colorBuffer[vector4Offset + 1] = orginColorBuffer[orginVertexIndex * 4 + 1];
+                        colorBuffer[vector4Offset + 2] = orginColorBuffer[orginVertexIndex * 4 + 2];
+                        colorBuffer[vector4Offset + 3] = orginColorBuffer[orginVertexIndex * 4 + 3];
+                    }
+                    else {
+                        colorBuffer[vector4Offset] = 1;
+                        colorBuffer[vector4Offset + 1] = 1;
+                        colorBuffer[vector4Offset + 2] = 1;
+                        colorBuffer[vector4Offset + 3] = 1;
                     }
                 }
-                for (var i = 0, l = this.colorKeys.length; i < l; i++) {
-                    var colorKey = this.colorKeys[i];
-                    if (colorKey.time > t) {
-                        var lastIndex = i == 0 ? 0 : i - 1;
-                        var lastKeyFrame = this.colorKeys[lastIndex];
-                        var tt = (t - lastKeyFrame.time) / (colorKey.time - lastKeyFrame.time);
-                        out.r = egret3d.numberLerp(lastKeyFrame.color.r, colorKey.color.r, tt);
-                        out.g = egret3d.numberLerp(lastKeyFrame.color.g, colorKey.color.g, tt);
-                        out.b = egret3d.numberLerp(lastKeyFrame.color.b, colorKey.color.b, tt);
-                        break;
+                var indexBuffer = batchMesh.getIndices();
+                for (var i = 0; i < maxParticleCount; i++) {
+                    var indexOffset = i * mesh.vertexCount;
+                    for (var j = 0; j < orginIndexBufferCount; j++) {
+                        indexBuffer[index++] = orginIndexBuffer[j] + indexOffset;
                     }
                 }
-                return out;
-            };
-            Object.defineProperty(Gradient.prototype, "alphaValues", {
-                get: function () {
-                    var res = this._alphaValue;
-                    var offset = 0;
-                    for (var _i = 0, _a = this.alphaKeys; _i < _a.length; _i++) {
-                        var alpha = _a[_i];
-                        res[offset++] = alpha.time;
-                        res[offset++] = alpha.alpha;
-                    }
-                    return res;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(Gradient.prototype, "colorValues", {
-                get: function () {
-                    var res = this._colorValue;
-                    var offset = 0;
-                    for (var _i = 0, _a = this.colorKeys; _i < _a.length; _i++) {
-                        var color = _a[_i];
-                        res[offset++] = color.time;
-                        res[offset++] = color.color.r;
-                        res[offset++] = color.color.g;
-                        res[offset++] = color.color.b;
-                    }
-                    return res;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            __decorate([
-                paper.serializedField
-            ], Gradient.prototype, "mode", void 0);
-            __decorate([
-                paper.serializedField
-            ], Gradient.prototype, "alphaKeys", void 0);
-            __decorate([
-                paper.serializedField
-            ], Gradient.prototype, "colorKeys", void 0);
-            return Gradient;
-        }(paper.BaseObject));
-        particle.Gradient = Gradient;
-        __reflect(Gradient.prototype, "egret3d.particle.Gradient");
-        var MinMaxCurve = (function (_super) {
-            __extends(MinMaxCurve, _super);
-            function MinMaxCurve() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.mode = 0 /* Constant */;
-                _this.curve = new AnimationCurve();
-                _this.curveMin = new AnimationCurve();
-                _this.curveMax = new AnimationCurve();
-                return _this;
+                return batchMesh;
             }
-            MinMaxCurve.prototype.deserialize = function (element) {
-                this.mode = element.mode;
-                this.constant = element.constant || 0;
-                this.constantMin = element.constantMin || 0;
-                this.constantMax = element.constantMax || 0;
-                element.curve && this.curve.deserialize(element.curve);
-                element.curveMin && this.curveMin.deserialize(element.curveMin);
-                element.curveMax && this.curveMax.deserialize(element.curveMax);
-                return this;
-            };
-            MinMaxCurve.prototype.evaluate = function (t) {
-                if (t === void 0) { t = 0; }
-                if (this.mode === 0 /* Constant */) {
-                    return this.constant;
+            else {
+                var orginIndexBuffer = [0, 2, 1, 0, 3, 2];
+                var orginIndexBufferCount = orginIndexBuffer.length;
+                for (var _a = 0, BillboardShaderAttributeFormat_1 = BillboardShaderAttributeFormat; _a < BillboardShaderAttributeFormat_1.length; _a++) {
+                    var attribute = BillboardShaderAttributeFormat_1[_a];
+                    meshAttributes.push(attribute.key);
+                    meshAttributesType[attribute.key] = attribute.type;
                 }
-                else if (this.mode === 3 /* TwoConstants */) {
-                    return (Math.random() * (this.constantMax - this.constantMin) + this.constantMin);
+                var vertexStride = 4;
+                var totalVertexCount = vertexStride * maxParticleCount;
+                var totalIndexCount = orginIndexBufferCount * maxParticleCount;
+                var batchMesh = new egret3d.Mesh(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType, 35048 /* Dynamic */);
+                var cornerBuffer = batchMesh.getAttributes("_CORNER" /* _CORNER */);
+                var uvBuffer = batchMesh.getAttributes("TEXCOORD_0" /* TEXCOORD_0 */);
+                for (var i = 0; i < totalVertexCount; i++) {
+                    var orginVertexIndex = i % vertexStride;
+                    var vector2Offset = i * 2;
+                    switch (orginVertexIndex) {
+                        case 0:
+                            cornerBuffer[vector2Offset] = -0.5;
+                            cornerBuffer[vector2Offset + 1] = -0.5;
+                            uvBuffer[vector2Offset] = 0.0;
+                            uvBuffer[vector2Offset + 1] = 1.0;
+                            break;
+                        case 1:
+                            cornerBuffer[vector2Offset] = 0.5;
+                            cornerBuffer[vector2Offset + 1] = -0.5;
+                            uvBuffer[vector2Offset] = 1.0;
+                            uvBuffer[vector2Offset + 1] = 1.0;
+                            break;
+                        case 2:
+                            cornerBuffer[vector2Offset] = 0.5;
+                            cornerBuffer[vector2Offset + 1] = 0.5;
+                            uvBuffer[vector2Offset] = 1.0;
+                            uvBuffer[vector2Offset + 1] = 0.0;
+                            break;
+                        case 3:
+                            cornerBuffer[vector2Offset] = -0.5;
+                            cornerBuffer[vector2Offset + 1] = 0.5;
+                            uvBuffer[vector2Offset] = 0.0;
+                            uvBuffer[vector2Offset + 1] = 0.0;
+                            break;
+                    }
                 }
-                else if (this.mode === 1 /* Curve */) {
-                    return this.curve.evaluate(t);
+                var indexBuffer = batchMesh.getIndices();
+                for (var i = 0; i < maxParticleCount; i++) {
+                    var indexOffset = i * 6;
+                    var firstVertex = i * vertexStride;
+                    var secondVertex = firstVertex + 2;
+                    indexBuffer[indexOffset + 0] = firstVertex;
+                    indexBuffer[indexOffset + 1] = secondVertex;
+                    indexBuffer[indexOffset + 2] = firstVertex + 1;
+                    indexBuffer[indexOffset + 3] = firstVertex;
+                    indexBuffer[indexOffset + 4] = firstVertex + 3;
+                    indexBuffer[indexOffset + 5] = secondVertex;
+                }
+                return batchMesh;
+            }
+        }
+        particle.createBatchMesh = createBatchMesh;
+        /**
+         * @internal
+         */
+        function generatePositionAndDirection(position, direction, shape) {
+            if (!shape.enable) {
+                position.x = position.y = position.z = 0;
+                direction.x = direction.y = 0;
+                direction.z = 1.0;
+                return;
+            }
+            //
+            switch (shape.shapeType) {
+                case 4 /* Cone */:
+                case 7 /* ConeShell */:
+                    {
+                        _generateConeParticlePosition(shape, position, direction);
+                    }
+                    break;
+                case 8 /* ConeVolume */:
+                case 9 /* ConeVolumeShell */:
+                    {
+                        _generateConeVolumeParticlePosition(shape, position, direction);
+                    }
+                    break;
+                case 5 /* Box */:
+                    {
+                        _generateBoxParticlePosition(shape, position, direction);
+                    }
+                    break;
+                case 0 /* Sphere */:
+                case 1 /* SphereShell */:
+                    {
+                        _generateSphereParticlePosition(shape, position, direction);
+                    }
+                    break;
+                case 10 /* Circle */:
+                    {
+                        _generateCircleParticlePosition(shape, position, direction);
+                    }
+                    break;
+                default:
+                    {
+                        position.x = position.y = position.z = 0;
+                        direction.x = direction.y = 0;
+                        direction.z = 1;
+                    }
+            }
+        }
+        particle.generatePositionAndDirection = generatePositionAndDirection;
+        function _randomPostionCircle(out) {
+            var angle = Math.random() * Math.PI * 2;
+            out.x = Math.cos(angle);
+            out.y = Math.sin(angle);
+        }
+        function _randomPositionInsideCircle(out) {
+            _randomPostionCircle(out);
+            var range = Math.pow(Math.random(), 0.5);
+            out.x = out.x * range;
+            out.y = out.y * range;
+        }
+        function _randomPositionArcCircle(arc, out) {
+            var angle = Math.random() * arc;
+            out.x = Math.cos(angle);
+            out.y = Math.sin(angle);
+        }
+        function _randomPositionInsideArcCircle(arc, out) {
+            _randomPositionArcCircle(arc, out);
+            var range = Math.pow(Math.random(), 0.5);
+            out.x = out.x * range;
+            out.y = out.y * range;
+        }
+        function _randomPositionSphere(out) {
+            var ranZ = Math.random() * 2 - 1.0;
+            var angle = Math.random() * Math.PI * 2;
+            var range = Math.sqrt(1.0 - ranZ * ranZ);
+            out.x = Math.cos(angle) * range;
+            out.y = Math.sin(angle) * range;
+            out.z = ranZ;
+        }
+        function _randomPositionInsideSphere(out) {
+            _randomPositionSphere(out);
+            var range = Math.pow(Math.random(), 1.0 / 3.0);
+            out.x = out.x * range;
+            out.y = out.y * range;
+            out.z = out.z * range;
+        }
+        function _generateConeParticlePosition(shape, position, direction) {
+            var temp = new egret3d.Vector3();
+            if (shape.shapeType == 4 /* Cone */) {
+                _randomPositionInsideCircle(temp);
+            }
+            else {
+                _randomPostionCircle(temp);
+            }
+            position.x = temp.x * shape.radius;
+            position.y = temp.y * shape.radius;
+            position.z = temp.z * shape.radius;
+            var angle = shape.angle * Math.PI / 180.0;
+            var sinValue = Math.sin(angle);
+            var cosValue = Math.cos(angle);
+            if (shape.randomDirection) {
+                _randomPositionInsideCircle(direction);
+                direction.x = direction.x * sinValue;
+                direction.y = direction.y * sinValue;
+                direction.z = cosValue;
+            }
+            else {
+                direction.x = temp.x * sinValue;
+                direction.y = temp.y * sinValue;
+                direction.z = cosValue;
+            }
+        }
+        function _generateConeVolumeParticlePosition(shape, position, direction) {
+            var temp = new egret3d.Vector3();
+            if (shape.shapeType == 8 /* ConeVolume */) {
+                _randomPositionInsideCircle(temp);
+            }
+            else {
+                _randomPostionCircle(temp);
+            }
+            position.x = temp.x * shape.radius;
+            position.y = temp.y * shape.radius;
+            position.z = 0;
+            var angle = shape.angle * Math.PI / 180.0;
+            var sinValue = Math.sin(angle);
+            var cosValue = Math.cos(angle);
+            direction.x = temp.x * sinValue;
+            direction.y = temp.y * sinValue;
+            direction.z = cosValue;
+            egret3d.Vector3.normalize(direction);
+            var len = Math.random() * shape.length;
+            direction.x = direction.x * len;
+            direction.y = direction.y * len;
+            direction.z = direction.z * len;
+            position.x += direction.x;
+            position.y += direction.y;
+            position.z += direction.z;
+            if (shape.randomDirection) {
+                _randomPositionSphere(direction);
+            }
+        }
+        function _generateBoxParticlePosition(shape, position, direction) {
+            position.x = shape.box.x * (Math.random() - 0.5);
+            position.y = shape.box.y * (Math.random() - 0.5);
+            position.z = shape.box.z * (Math.random() - 0.5);
+            if (shape.randomDirection) {
+                direction.x = 0.0;
+                direction.y = 0.0;
+                direction.z = 1.0;
+            }
+            else {
+                direction.x = 0.0;
+                direction.y = 0.0;
+                direction.z = 1.0;
+            }
+        }
+        function _generateSphereParticlePosition(shape, position, direction) {
+            var temp = new egret3d.Vector3();
+            if (!shape.spherizeDirection) {
+                if (shape.shapeType == 0 /* Sphere */) {
+                    _randomPositionInsideSphere(position);
                 }
                 else {
-                    var min = this.curveMin.evaluate(t);
-                    var max = this.curveMax.evaluate(t);
-                    return (Math.random() * (min - max) + min);
+                    _randomPositionSphere(position);
                 }
-            };
-            MinMaxCurve.prototype.clone = function (source) {
-                this.mode = source.mode;
-                this.constant = source.constant;
-                this.constantMin = source.constantMin;
-                this.constantMax = source.constantMax;
-                this.curve.clone(source.curve);
-                this.curveMin.clone(source.curveMin);
-                this.curveMax.clone(source.curveMax);
-            };
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "mode", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "constant", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "constantMin", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "constantMax", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "curve", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "curveMin", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "curveMax", void 0);
-            return MinMaxCurve;
-        }(paper.BaseObject));
-        particle.MinMaxCurve = MinMaxCurve;
-        __reflect(MinMaxCurve.prototype, "egret3d.particle.MinMaxCurve");
-        var MinMaxGradient = (function (_super) {
-            __extends(MinMaxGradient, _super);
-            function MinMaxGradient() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.mode = 1 /* Gradient */;
-                _this.color = new egret3d.Color();
-                _this.colorMin = new egret3d.Color();
-                _this.colorMax = new egret3d.Color();
-                _this.gradient = new Gradient();
-                _this.gradientMin = new Gradient();
-                _this.gradientMax = new Gradient();
-                return _this;
             }
-            MinMaxGradient.prototype.deserialize = function (element) {
-                // super.deserialize(element);
-                this.mode = element.mode;
-                if (element.color) {
-                    this.color.deserialize(element.color);
-                }
-                if (element.colorMin) {
-                    this.colorMin.deserialize(element.colorMin);
-                }
-                if (element.colorMax) {
-                    this.colorMax.deserialize(element.colorMax);
-                }
-                if (element.gradient) {
-                    this.gradient.deserialize(element.gradient);
-                }
-                if (element.gradientMin) {
-                    this.gradientMin.deserialize(element.gradientMin);
-                }
-                if (element.gradientMax) {
-                    this.gradientMax.deserialize(element.gradientMax);
-                }
-                return this;
-            };
-            MinMaxGradient.prototype.evaluate = function (t, out) {
-                if (t === void 0) { t = 0; }
-                if (this.mode === 0 /* Color */) {
-                    out.r = this.color.r;
-                    out.g = this.color.g;
-                    out.b = this.color.b;
-                    out.a = this.color.a;
-                }
-                else if (this.mode === 2 /* TwoColors */) {
-                    out.r = Math.random() * (this.colorMax.r - this.colorMin.r) + this.colorMin.r;
-                    out.g = Math.random() * (this.colorMax.g - this.colorMin.g) + this.colorMin.g;
-                    out.b = Math.random() * (this.colorMax.b - this.colorMin.b) + this.colorMin.b;
-                    out.a = Math.random() * (this.colorMax.a - this.colorMin.a) + this.colorMin.a;
-                }
-                else if (this.mode === 1 /* Gradient */) {
-                    return this.gradient.evaluate(t, out);
-                }
-                else if (this.mode === 3 /* TwoGradients */) {
-                    this.gradientMin.evaluate(t, colorHelper1);
-                    this.gradientMax.evaluate(t, colorHelper2);
-                    out.r = (Math.random() * (colorHelper1.r - colorHelper2.r) + colorHelper1.r);
-                    out.g = (Math.random() * (colorHelper1.g - colorHelper2.g) + colorHelper1.g);
-                    out.b = (Math.random() * (colorHelper1.b - colorHelper2.b) + colorHelper1.b);
-                    out.a = (Math.random() * (colorHelper1.a - colorHelper2.a) + colorHelper1.a);
-                }
-                else {
-                    out.r = Math.random();
-                    out.g = Math.random();
-                    out.b = Math.random();
-                    out.a = Math.random();
-                }
-                return out;
-            };
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "mode", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "color", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "colorMin", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "colorMax", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "gradient", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "gradientMin", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "gradientMax", void 0);
-            return MinMaxGradient;
-        }(paper.BaseObject));
-        particle.MinMaxGradient = MinMaxGradient;
-        __reflect(MinMaxGradient.prototype, "egret3d.particle.MinMaxGradient");
-        var Burst = (function () {
-            function Burst() {
+            position.x = position.x * shape.radius;
+            position.y = position.y * shape.radius;
+            position.z = position.z * shape.radius;
+            if (shape.randomDirection || shape.spherizeDirection) {
+                _randomPositionSphere(direction);
             }
-            Burst.prototype.serialize = function () {
-                return [this.time, this.minCount, this.maxCount, this.cycleCount, this.repeatInterval];
-            };
-            Burst.prototype.deserialize = function (element) {
-                this.time = element[0];
-                this.minCount = element[1];
-                this.maxCount = element[2];
-                this.cycleCount = element[3];
-                this.repeatInterval = element[4];
-                return this;
-            };
-            return Burst;
-        }());
-        particle.Burst = Burst;
-        __reflect(Burst.prototype, "egret3d.particle.Burst", ["paper.ISerializable"]);
-        var ParticleSystemModule = (function (_super) {
-            __extends(ParticleSystemModule, _super);
-            function ParticleSystemModule(comp) {
-                var _this = _super.call(this) || this;
-                _this.enable = false;
-                _this._comp = comp;
-                return _this;
+            else {
+                direction.x = position.x;
+                direction.y = position.y;
+                direction.z = position.z;
             }
+        }
+        function _generateCircleParticlePosition(shape, position, direction) {
+            var temp = new egret3d.Vector3();
+            if (shape.shapeType == 10 /* Circle */) {
+                _randomPositionInsideArcCircle(shape.radiusSpread, temp);
+            }
+            else {
+                _randomPositionArcCircle(shape.radiusSpread, temp);
+            }
+            position.x = -temp.x * shape.radius;
+            position.y = temp.y * shape.radius;
+            position.z = 0;
+            if (shape.randomDirection) {
+                _randomPositionSphere(direction);
+            }
+            else {
+                direction.x = position.x;
+                direction.y = position.y;
+                direction.z = position.z;
+            }
+        }
+    })(particle = egret3d.particle || (egret3d.particle = {}));
+})(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     * 场景类
+     */
+    var Scene = (function (_super) {
+        __extends(Scene, _super);
+        function Scene(name) {
+            var _this = _super.call(this) || this;
+            /**
+             * lightmap强度
+             */
+            _this.lightmapIntensity = 1.0;
+            /**
+             * 场景名称。
+             */
+            _this.name = "";
+            /**
+             * 场景的light map列表。
+             */
+            _this.lightmaps = [];
+            /**
+             * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+             */
+            _this.extras = paper.Application.isEditor && !paper.Application.isPlaying ? {} : undefined;
             /**
              * @internal
              */
-            ParticleSystemModule.prototype.initialize = function () { };
-            ParticleSystemModule.prototype.deserialize = function (element) {
-                this.enable = true;
-                return this;
-            };
-            __decorate([
-                paper.serializedField
-            ], ParticleSystemModule.prototype, "enable", void 0);
-            return ParticleSystemModule;
-        }(paper.BaseObject));
-        particle.ParticleSystemModule = ParticleSystemModule;
-        __reflect(ParticleSystemModule.prototype, "egret3d.particle.ParticleSystemModule");
-        var MainModule = (function (_super) {
-            __extends(MainModule, _super);
-            function MainModule() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.duration = 0.0;
-                _this.loop = false;
-                //
-                _this.startDelay = new MinMaxCurve();
-                //
-                _this.startLifetime = new MinMaxCurve();
-                //
-                _this.startSpeed = new MinMaxCurve();
-                //
-                _this.startSizeX = new MinMaxCurve();
-                _this.startSizeY = new MinMaxCurve();
-                _this.startSizeZ = new MinMaxCurve();
-                /**
-                 * @internal
-                 */
-                _this._startRotation3D = false;
-                _this.startRotationX = new MinMaxCurve();
-                _this.startRotationY = new MinMaxCurve();
-                _this.startRotationZ = new MinMaxCurve();
-                //
-                _this.startColor = new MinMaxGradient();
-                //
-                _this.gravityModifier = new MinMaxCurve(); //TODO
-                /**
-                 * @internal
-                 */
-                _this._simulationSpace = 0 /* Local */;
-                /**
-                 * @internal
-                 */
-                _this._scaleMode = 0 /* Hierarchy */;
-                //
-                _this.playOnAwake = false;
-                /**
-                 * @internal
-                 */
-                _this._maxParticles = 0;
-                return _this;
+            _this._gameObjects = [];
+            /**
+             * 环境光
+             */
+            _this.ambientLightColor = egret3d.Color.create(0.21, 0.22, 0.25, 1);
+            _this.name = name;
+            return _this;
+        }
+        /**
+         *
+         */
+        Scene.createEmpty = function (name, isActive) {
+            // const exScene = Application.sceneManager.getSceneByName(name);
+            // if (exScene) {
+            //     console.warn("The scene with the same name already exists.");
+            //     return exScene;
+            // }
+            if (name === void 0) { name = "NoName" /* NoName */; }
+            if (isActive === void 0) { isActive = true; }
+            var scene = new Scene(name);
+            paper.Application.sceneManager._addScene(scene, isActive);
+            return scene;
+        };
+        /**
+         *
+         */
+        Scene.create = function (name, combineStaticObjects) {
+            if (combineStaticObjects === void 0) { combineStaticObjects = true; }
+            var exScene = paper.Application.sceneManager.getSceneByName(name);
+            if (exScene) {
+                console.warn("The scene with the same name already exists.");
+                return exScene;
             }
-            MainModule.prototype.deserialize = function (element) {
-                _super.prototype.deserialize.call(this, element);
-                this.duration = element.duration;
-                this.loop = element.loop || element.looping; // TODO 兼容代码 looping。
-                this.startDelay.deserialize(element.startDelay);
-                this.startLifetime.deserialize(element.startLifetime);
-                this.startSpeed.deserialize(element.startSpeed);
-                this.startSizeX.deserialize(element.startSizeX);
-                this.startSizeY.deserialize(element.startSizeY);
-                this.startSizeZ.deserialize(element.startSizeZ);
-                this._startRotation3D = (element._startRotation3D || element.startRotation3D) || false;
-                this.startRotationX.deserialize(element.startRotationX);
-                this.startRotationY.deserialize(element.startRotationY);
-                this.startRotationZ.deserialize(element.startRotationZ);
-                this.startColor.deserialize(element.startColor);
-                this.gravityModifier.deserialize(element.gravityModifier);
-                this._simulationSpace = (element._simulationSpace || element.simulationSpace) || 0;
-                this._scaleMode = (element._scaleMode || element.scaleMode) || 0 /* Hierarchy */;
-                this.playOnAwake = element.playOnAwake;
-                this._maxParticles = (element._maxParticles || element.maxParticles) || 0;
-                return this;
-            };
-            Object.defineProperty(MainModule.prototype, "startRotation3D", {
-                get: function () {
-                    return this._startRotation3D;
-                },
-                set: function (value) {
-                    if (this._startRotation3D !== value) {
-                        this._startRotation3D = value;
-                        paper.EventPool.dispatchEvent("rotation3DChanged" /* StartRotation3DChanged */, this._comp);
+            var rawScene = paper.Asset.find(name);
+            if (rawScene) {
+                var scene = rawScene.createInstance();
+                if (scene) {
+                    if (combineStaticObjects && paper.Application.isPlaying) {
+                        egret3d.combine(scene.gameObjects);
                     }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(MainModule.prototype, "simulationSpace", {
-                get: function () {
-                    return this._simulationSpace;
-                },
-                set: function (value) {
-                    if (this._simulationSpace !== value) {
-                        this._simulationSpace = value;
-                        paper.EventPool.dispatchEvent("simulationSpace" /* SimulationSpaceChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(MainModule.prototype, "scaleMode", {
-                get: function () {
-                    return this._scaleMode;
-                },
-                set: function (value) {
-                    if (this._scaleMode !== value) {
-                        this._scaleMode = value;
-                        paper.EventPool.dispatchEvent("scaleMode" /* ScaleModeChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(MainModule.prototype, "maxParticles", {
-                get: function () {
-                    return this._maxParticles;
-                },
-                set: function (value) {
-                    if (this._maxParticles !== value) {
-                        this._maxParticles = value;
-                        paper.EventPool.dispatchEvent("maxParticles" /* MaxParticlesChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "duration", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "loop", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "startDelay", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "startLifetime", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "startSpeed", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "startSizeX", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "startSizeY", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "startSizeZ", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "_startRotation3D", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "startRotationX", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "startRotationY", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "startRotationZ", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "startColor", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "gravityModifier", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "_simulationSpace", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "_scaleMode", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "playOnAwake", void 0);
-            __decorate([
-                paper.serializedField
-            ], MainModule.prototype, "_maxParticles", void 0);
-            return MainModule;
-        }(ParticleSystemModule));
-        particle.MainModule = MainModule;
-        __reflect(MainModule.prototype, "egret3d.particle.MainModule");
-        var EmissionModule = (function (_super) {
-            __extends(EmissionModule, _super);
-            function EmissionModule() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.rateOverTime = new MinMaxCurve();
-                _this.bursts = new Array();
-                return _this;
-            }
-            EmissionModule.prototype.deserialize = function (element) {
-                _super.prototype.deserialize.call(this, element);
-                this.rateOverTime.deserialize(element.rateOverTime);
-                if (element.bursts) {
-                    this.bursts.length = 0;
-                    for (var i = 0, l = element.bursts.length; i < l; i++) {
-                        var burst = new Burst();
-                        burst.deserialize(element.bursts[i]);
-                        this.bursts.push(burst);
-                    }
+                    return scene;
                 }
-                return this;
-            };
-            __decorate([
-                paper.serializedField
-            ], EmissionModule.prototype, "rateOverTime", void 0);
-            __decorate([
-                paper.serializedField
-            ], EmissionModule.prototype, "bursts", void 0);
-            return EmissionModule;
-        }(ParticleSystemModule));
-        particle.EmissionModule = EmissionModule;
-        __reflect(EmissionModule.prototype, "egret3d.particle.EmissionModule");
-        var ShapeModule = (function (_super) {
-            __extends(ShapeModule, _super);
-            function ShapeModule() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.shapeType = 0 /* Sphere */;
-                _this.radius = 0.0;
-                _this.angle = 0.0;
-                _this.length = 0.0;
-                _this.arcSpeed = new MinMaxCurve();
-                _this.arcMode = 0 /* Random */;
-                _this.radiusMode = 0 /* Random */;
-                _this.box = new egret3d.Vector3();
-                _this.randomDirection = false;
-                _this.spherizeDirection = false;
-                return _this;
             }
-            ShapeModule.prototype.deserialize = function (element) {
-                _super.prototype.deserialize.call(this, element);
-                this.shapeType = element.shapeType;
-                this.radius = element.radius;
-                this.angle = element.angle;
-                this.length = element.length;
-                this.arcSpeed.deserialize(element.arcSpeed);
-                this.arcMode = element.arcMode;
-                this.radiusSpread = element.radiusSpread;
-                this.radiusMode = element.radiusMode;
-                this.box.deserialize(element.box);
-                this.randomDirection = element.randomDirection;
-                this.spherizeDirection = element.spherizeDirection;
-                return this;
-            };
-            ShapeModule.prototype.invalidUpdate = function () {
-                paper.EventPool.dispatchEvent("shapeChanged" /* ShapeChanged */, this._comp);
-            };
-            ShapeModule.prototype.generatePositionAndDirection = function (position, direction) {
-                particle.generatePositionAndDirection(position, direction, this);
-            };
-            __decorate([
-                paper.serializedField
-            ], ShapeModule.prototype, "shapeType", void 0);
-            __decorate([
-                paper.serializedField
-            ], ShapeModule.prototype, "radius", void 0);
-            __decorate([
-                paper.serializedField
-            ], ShapeModule.prototype, "angle", void 0);
-            __decorate([
-                paper.serializedField
-            ], ShapeModule.prototype, "length", void 0);
-            __decorate([
-                paper.serializedField
-            ], ShapeModule.prototype, "arcSpeed", void 0);
-            __decorate([
-                paper.serializedField
-            ], ShapeModule.prototype, "arcMode", void 0);
-            __decorate([
-                paper.serializedField
-            ], ShapeModule.prototype, "radiusSpread", void 0);
-            __decorate([
-                paper.serializedField
-            ], ShapeModule.prototype, "radiusMode", void 0);
-            __decorate([
-                paper.serializedField
-            ], ShapeModule.prototype, "box", void 0);
-            __decorate([
-                paper.serializedField
-            ], ShapeModule.prototype, "randomDirection", void 0);
-            __decorate([
-                paper.serializedField
-            ], ShapeModule.prototype, "spherizeDirection", void 0);
-            return ShapeModule;
-        }(ParticleSystemModule));
-        particle.ShapeModule = ShapeModule;
-        __reflect(ShapeModule.prototype, "egret3d.particle.ShapeModule");
-        var VelocityOverLifetimeModule = (function (_super) {
-            __extends(VelocityOverLifetimeModule, _super);
-            function VelocityOverLifetimeModule() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                /**
-                 * @internal
-                 */
-                _this._mode = 0 /* Constant */;
-                /**
-                 * @internal
-                 */
-                _this._space = 0 /* Local */;
-                /**
-                 * @internal
-                 */
-                _this._x = new MinMaxCurve();
-                /**
-                 * @internal
-                 */
-                _this._y = new MinMaxCurve();
-                /**
-                 * @internal
-                 */
-                _this._z = new MinMaxCurve();
-                return _this;
+            return null;
+        };
+        /**
+         * @internal
+         */
+        Scene.prototype._addGameObject = function (gameObject) {
+            if (this._gameObjects.indexOf(gameObject) < 0) {
+                this._gameObjects.push(gameObject);
             }
-            VelocityOverLifetimeModule.prototype.deserialize = function (element) {
-                _super.prototype.deserialize.call(this, element);
-                this._mode = (element._mode || element.mode) || 0 /* Constant */;
-                this._space = (element._space || element.space) || 0 /* Local */;
-                this._x.deserialize(element._x || element.x);
-                this._y.deserialize(element._y || element.y);
-                this._z.deserialize(element._z || element.z);
-                return this;
-            };
-            Object.defineProperty(VelocityOverLifetimeModule.prototype, "mode", {
-                get: function () {
-                    return this._mode;
-                },
-                set: function (value) {
-                    if (this._mode !== value) {
-                        this._mode = value;
-                        paper.EventPool.dispatchEvent("velocityChanged" /* VelocityChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(VelocityOverLifetimeModule.prototype, "space", {
-                get: function () {
-                    return this._space;
-                },
-                set: function (value) {
-                    if (this._space !== value) {
-                        this._space = value;
-                        paper.EventPool.dispatchEvent("velocityChanged" /* VelocityChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(VelocityOverLifetimeModule.prototype, "x", {
-                get: function () {
-                    return this._x;
-                },
-                set: function (value) {
-                    if (this._x !== value) {
-                        this._x.clone(value);
-                        paper.EventPool.dispatchEvent("velocityChanged" /* VelocityChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(VelocityOverLifetimeModule.prototype, "y", {
-                get: function () {
-                    return this._y;
-                },
-                set: function (value) {
-                    if (this._y !== value) {
-                        this._y.clone(value);
-                        paper.EventPool.dispatchEvent("velocityChanged" /* VelocityChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(VelocityOverLifetimeModule.prototype, "z", {
-                get: function () {
-                    return this._z;
-                },
-                set: function (value) {
-                    if (this._z !== value) {
-                        this._z.clone(value);
-                        paper.EventPool.dispatchEvent("velocityChanged" /* VelocityChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            __decorate([
-                paper.serializedField
-            ], VelocityOverLifetimeModule.prototype, "_mode", void 0);
-            __decorate([
-                paper.serializedField
-            ], VelocityOverLifetimeModule.prototype, "_space", void 0);
-            __decorate([
-                paper.serializedField
-            ], VelocityOverLifetimeModule.prototype, "_x", void 0);
-            __decorate([
-                paper.serializedField
-            ], VelocityOverLifetimeModule.prototype, "_y", void 0);
-            __decorate([
-                paper.serializedField
-            ], VelocityOverLifetimeModule.prototype, "_z", void 0);
-            return VelocityOverLifetimeModule;
-        }(ParticleSystemModule));
-        particle.VelocityOverLifetimeModule = VelocityOverLifetimeModule;
-        __reflect(VelocityOverLifetimeModule.prototype, "egret3d.particle.VelocityOverLifetimeModule");
-        var ColorOverLifetimeModule = (function (_super) {
-            __extends(ColorOverLifetimeModule, _super);
-            function ColorOverLifetimeModule() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                /**
-                 * @internal
-                 */
-                _this._color = new MinMaxGradient();
-                return _this;
+            else {
+                console.debug("Add game object error.", gameObject.path);
             }
-            ColorOverLifetimeModule.prototype.deserialize = function (element) {
-                _super.prototype.deserialize.call(this, element);
-                this._color.deserialize(element._color || element.color);
-                return this;
-            };
-            Object.defineProperty(ColorOverLifetimeModule.prototype, "color", {
-                get: function () {
-                    return this._color;
-                },
-                set: function (value) {
-                    if (this._color !== value) {
-                        this._color = value;
-                        paper.EventPool.dispatchEvent("colorChanged" /* ColorChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            __decorate([
-                paper.serializedField
-            ], ColorOverLifetimeModule.prototype, "_color", void 0);
-            return ColorOverLifetimeModule;
-        }(ParticleSystemModule));
-        particle.ColorOverLifetimeModule = ColorOverLifetimeModule;
-        __reflect(ColorOverLifetimeModule.prototype, "egret3d.particle.ColorOverLifetimeModule");
-        var SizeOverLifetimeModule = (function (_super) {
-            __extends(SizeOverLifetimeModule, _super);
-            function SizeOverLifetimeModule() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                /**
-                 * @internal
-                 */
-                _this._separateAxes = false;
-                /**
-                 * @internal
-                 */
-                _this._size = new MinMaxCurve();
-                /**
-                 * @internal
-                 */
-                _this._x = new MinMaxCurve();
-                /**
-                 * @internal
-                 */
-                _this._y = new MinMaxCurve();
-                /**
-                 * @internal
-                 */
-                _this._z = new MinMaxCurve();
-                return _this;
+        };
+        /**
+         * @internal
+         */
+        Scene.prototype._removeGameObject = function (gameObject) {
+            var index = this._gameObjects.indexOf(gameObject);
+            if (index >= 0) {
+                this._gameObjects.splice(index, 1);
             }
-            SizeOverLifetimeModule.prototype.deserialize = function (element) {
-                _super.prototype.deserialize.call(this, element);
-                this._separateAxes = (element._separateAxes || element.separateAxes) || false;
-                this._size.deserialize(element._size || element.size);
-                this._x.deserialize(element._x || element.x);
-                this._y.deserialize(element._y || element.y);
-                this._z.deserialize(element._z || element.z);
-                return this;
-            };
-            Object.defineProperty(SizeOverLifetimeModule.prototype, "separateAxes", {
-                get: function () {
-                    return this._separateAxes;
-                },
-                set: function (value) {
-                    if (this._separateAxes !== value) {
-                        this._separateAxes = value;
-                        paper.EventPool.dispatchEvent("sizeChanged" /* SizeChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(SizeOverLifetimeModule.prototype, "size", {
-                get: function () {
-                    return this._size;
-                },
-                set: function (value) {
-                    if (this._size !== value) {
-                        this._size.clone(value);
-                        paper.EventPool.dispatchEvent("sizeChanged" /* SizeChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(SizeOverLifetimeModule.prototype, "x", {
-                get: function () {
-                    return this._x;
-                },
-                set: function (value) {
-                    if (this._x !== value) {
-                        this._x.clone(value);
-                        paper.EventPool.dispatchEvent("sizeChanged" /* SizeChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(SizeOverLifetimeModule.prototype, "y", {
-                get: function () {
-                    return this._y;
-                },
-                set: function (value) {
-                    if (this._y !== value) {
-                        this._y.clone(value);
-                        paper.EventPool.dispatchEvent("sizeChanged" /* SizeChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(SizeOverLifetimeModule.prototype, "z", {
-                get: function () {
-                    return this._z;
-                },
-                set: function (value) {
-                    if (this._z !== value) {
-                        this._z.clone(value);
-                        paper.EventPool.dispatchEvent("sizeChanged" /* SizeChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            __decorate([
-                paper.serializedField
-            ], SizeOverLifetimeModule.prototype, "_separateAxes", void 0);
-            __decorate([
-                paper.serializedField
-            ], SizeOverLifetimeModule.prototype, "_size", void 0);
-            __decorate([
-                paper.serializedField
-            ], SizeOverLifetimeModule.prototype, "_x", void 0);
-            __decorate([
-                paper.serializedField
-            ], SizeOverLifetimeModule.prototype, "_y", void 0);
-            __decorate([
-                paper.serializedField
-            ], SizeOverLifetimeModule.prototype, "_z", void 0);
-            return SizeOverLifetimeModule;
-        }(ParticleSystemModule));
-        particle.SizeOverLifetimeModule = SizeOverLifetimeModule;
-        __reflect(SizeOverLifetimeModule.prototype, "egret3d.particle.SizeOverLifetimeModule");
-        var RotationOverLifetimeModule = (function (_super) {
-            __extends(RotationOverLifetimeModule, _super);
-            function RotationOverLifetimeModule() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                /**
-                 * @internal
-                 */
-                _this._x = new MinMaxCurve();
-                /**
-                 * @internal
-                 */
-                _this._y = new MinMaxCurve();
-                /**
-                 * @internal
-                 */
-                _this._z = new MinMaxCurve();
-                return _this;
+            else {
+                console.debug("Remove game object error.", gameObject.path);
             }
-            RotationOverLifetimeModule.prototype.deserialize = function (element) {
-                _super.prototype.deserialize.call(this, element);
-                this._separateAxes = (element._separateAxes || element.separateAxes) || false;
-                this._x.deserialize(element._x || element.x);
-                this._y.deserialize(element._y || element.y);
-                this._z.deserialize(element._z || element.z);
-                return this;
-            };
-            Object.defineProperty(RotationOverLifetimeModule.prototype, "separateAxes", {
-                get: function () {
-                    return this._separateAxes;
-                },
-                set: function (value) {
-                    if (this._separateAxes !== value) {
-                        this._separateAxes = value;
-                        paper.EventPool.dispatchEvent("rotationChanged" /* RotationChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(RotationOverLifetimeModule.prototype, "x", {
-                get: function () {
-                    return this._x;
-                },
-                set: function (value) {
-                    if (this._x !== value) {
-                        this._x.clone(value);
-                        paper.EventPool.dispatchEvent("rotationChanged" /* RotationChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(RotationOverLifetimeModule.prototype, "y", {
-                get: function () {
-                    return this._y;
-                },
-                set: function (value) {
-                    if (this._y !== value) {
-                        this._y.clone(value);
-                        paper.EventPool.dispatchEvent("rotationChanged" /* RotationChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(RotationOverLifetimeModule.prototype, "z", {
-                get: function () {
-                    return this._z;
-                },
-                set: function (value) {
-                    if (this._z !== value) {
-                        this._z.clone(value);
-                        paper.EventPool.dispatchEvent("rotationChanged" /* RotationChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            __decorate([
-                paper.serializedField
-            ], RotationOverLifetimeModule.prototype, "_separateAxes", void 0);
-            __decorate([
-                paper.serializedField
-            ], RotationOverLifetimeModule.prototype, "_x", void 0);
-            __decorate([
-                paper.serializedField
-            ], RotationOverLifetimeModule.prototype, "_y", void 0);
-            __decorate([
-                paper.serializedField
-            ], RotationOverLifetimeModule.prototype, "_z", void 0);
-            return RotationOverLifetimeModule;
-        }(ParticleSystemModule));
-        particle.RotationOverLifetimeModule = RotationOverLifetimeModule;
-        __reflect(RotationOverLifetimeModule.prototype, "egret3d.particle.RotationOverLifetimeModule");
-        var TextureSheetAnimationModule = (function (_super) {
-            __extends(TextureSheetAnimationModule, _super);
-            function TextureSheetAnimationModule() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                /**
-                 * @internal
-                 */
-                _this._animation = 0 /* WholeSheet */;
-                /**
-                 * @internal
-                 */
-                _this._frameOverTime = new MinMaxCurve();
-                /**
-                 * @internal
-                 */
-                _this._startFrame = new MinMaxCurve();
-                _this._floatValues = new Float32Array(4);
-                return _this;
+        };
+        /**
+         *
+         */
+        Scene.prototype.destroy = function () {
+            if (!paper.Application.sceneManager._removeScene(this)) {
+                return;
             }
-            TextureSheetAnimationModule.prototype.deserialize = function (element) {
-                _super.prototype.deserialize.call(this, element);
-                this._numTilesX = (element._numTilesX || element.numTilesX) || 0;
-                this._numTilesY = (element._numTilesY || element.numTilesY) || 0;
-                this._animation = (element._animation || element.animation) || 0 /* WholeSheet */;
-                this._useRandomRow = (element._useRandomRow || element.useRandomRow) || false;
-                this._frameOverTime.deserialize(element._frameOverTime || element.frameOverTime);
-                this._startFrame.deserialize(element._startFrame || element.startFrame);
-                this._cycleCount = (element._cycleCount || element.cycleCount) || 0;
-                this._rowIndex = (element._rowIndex || element.rowIndex) || 0;
-                return this;
-            };
-            Object.defineProperty(TextureSheetAnimationModule.prototype, "numTilesX", {
-                get: function () {
-                    return this._numTilesX;
-                },
-                set: function (value) {
-                    if (this._numTilesX !== value) {
-                        this._numTilesX = value;
-                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(TextureSheetAnimationModule.prototype, "numTilesY", {
-                get: function () {
-                    return this._numTilesY;
-                },
-                set: function (value) {
-                    if (this._numTilesY !== value) {
-                        this._numTilesY = value;
-                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(TextureSheetAnimationModule.prototype, "animation", {
-                get: function () {
-                    return this._animation;
-                },
-                set: function (value) {
-                    if (this._animation !== value) {
-                        this._animation = value;
-                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(TextureSheetAnimationModule.prototype, "useRandomRow", {
-                get: function () {
-                    return this._useRandomRow;
-                },
-                set: function (value) {
-                    if (this._useRandomRow !== value) {
-                        this._useRandomRow = value;
-                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(TextureSheetAnimationModule.prototype, "frameOverTime", {
-                get: function () {
-                    return this._frameOverTime;
-                },
-                set: function (value) {
-                    if (this._frameOverTime !== value) {
-                        this._frameOverTime.clone(value);
-                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(TextureSheetAnimationModule.prototype, "startFrame", {
-                get: function () {
-                    return this._startFrame;
-                },
-                set: function (value) {
-                    if (this._startFrame !== value) {
-                        this._startFrame.clone(value);
-                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(TextureSheetAnimationModule.prototype, "cycleCount", {
-                get: function () {
-                    return this._cycleCount;
-                },
-                set: function (value) {
-                    if (this._cycleCount !== value) {
-                        this._cycleCount = value;
-                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(TextureSheetAnimationModule.prototype, "rowIndex", {
-                get: function () {
-                    return this._rowIndex;
-                },
-                set: function (value) {
-                    if (this._rowIndex !== value) {
-                        this._rowIndex = value;
-                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(TextureSheetAnimationModule.prototype, "floatValues", {
-                get: function () {
-                    var res = this._floatValues;
-                    if (this.enable) {
-                        var subU = 1.0 / this._numTilesX;
-                        var subV = 1.0 / this._numTilesY;
-                        var startFrmaeCount = Math.floor(this._startFrame.constant);
-                        var startRow = 0;
-                        switch (this._animation) {
-                            case 1 /* SingleRow */:
-                                {
-                                    if (this._useRandomRow) {
-                                        startRow = Math.floor(Math.random() * this._numTilesY);
-                                    }
-                                    else {
-                                        startRow = this._rowIndex;
-                                    }
-                                    break;
-                                }
-                            case 0 /* WholeSheet */:
-                                {
-                                    startRow = Math.floor(startFrmaeCount / this._numTilesX);
-                                    break;
-                                }
-                        }
-                        var startCol = Math.floor(startFrmaeCount % this._numTilesX);
-                        res[0] = subU;
-                        res[1] = subV;
-                        res[2] = startCol * subU;
-                        res[3] = startRow * subV;
-                    }
-                    else {
-                        res[0] = 1.0;
-                        res[1] = 1.0;
-                        res[2] = 0.0;
-                        res[3] = 0.0;
-                    }
-                    return res;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            __decorate([
-                paper.serializedField
-            ], TextureSheetAnimationModule.prototype, "_numTilesX", void 0);
-            __decorate([
-                paper.serializedField
-            ], TextureSheetAnimationModule.prototype, "_numTilesY", void 0);
-            __decorate([
-                paper.serializedField
-            ], TextureSheetAnimationModule.prototype, "_animation", void 0);
-            __decorate([
-                paper.serializedField
-            ], TextureSheetAnimationModule.prototype, "_useRandomRow", void 0);
-            __decorate([
-                paper.serializedField
-            ], TextureSheetAnimationModule.prototype, "_frameOverTime", void 0);
-            __decorate([
-                paper.serializedField
-            ], TextureSheetAnimationModule.prototype, "_startFrame", void 0);
-            __decorate([
-                paper.serializedField
-            ], TextureSheetAnimationModule.prototype, "_cycleCount", void 0);
-            __decorate([
-                paper.serializedField
-            ], TextureSheetAnimationModule.prototype, "_rowIndex", void 0);
-            return TextureSheetAnimationModule;
-        }(ParticleSystemModule));
-        particle.TextureSheetAnimationModule = TextureSheetAnimationModule;
-        __reflect(TextureSheetAnimationModule.prototype, "egret3d.particle.TextureSheetAnimationModule");
-    })(particle = egret3d.particle || (egret3d.particle = {}));
-})(egret3d || (egret3d = {}));
+            var i = this._gameObjects.length;
+            while (i--) {
+                var gameObject = this._gameObjects[i];
+                if (!gameObject || gameObject.transform.parent) {
+                    continue;
+                }
+                gameObject.destroy();
+            }
+            this.lightmaps.length = 0;
+            this._gameObjects.length = 0;
+        };
+        /**
+         *
+         */
+        Scene.prototype.find = function (name) {
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.name === name) {
+                    return gameObject;
+                }
+            }
+            return null;
+        };
+        /**
+         *
+         */
+        Scene.prototype.findWithTag = function (tag) {
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.tag === tag) {
+                    return gameObject;
+                }
+            }
+            return null;
+        };
+        /**
+         *
+         */
+        Scene.prototype.findGameObjectsWithTag = function (tag) {
+            var gameObjects = [];
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.tag === tag) {
+                    gameObjects.push(gameObject);
+                }
+            }
+            return gameObjects;
+        };
+        /**
+         * @internal
+         */
+        Scene.prototype.findWithUUID = function (uuid) {
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (gameObject.uuid === uuid) {
+                    return gameObject;
+                }
+            }
+            return null;
+        };
+        /**
+         * 所有根实体。
+         */
+        Scene.prototype.getRootGameObjects = function () {
+            var gameObjects = [];
+            for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                if (!gameObject.transform.parent) {
+                    gameObjects.push(gameObject);
+                }
+            }
+            return gameObjects;
+        };
+        Object.defineProperty(Scene.prototype, "gameObjectCount", {
+            /**
+             *
+             */
+            get: function () {
+                return this._gameObjects.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Scene.prototype, "gameObjects", {
+            /**
+             * 所有实体。
+             */
+            get: function () {
+                return this._gameObjects;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        __decorate([
+            paper.serializedField
+        ], Scene.prototype, "lightmapIntensity", void 0);
+        __decorate([
+            paper.serializedField
+        ], Scene.prototype, "name", void 0);
+        __decorate([
+            paper.serializedField
+        ], Scene.prototype, "lightmaps", void 0);
+        __decorate([
+            paper.serializedField
+        ], Scene.prototype, "extras", void 0);
+        __decorate([
+            paper.serializedField
+        ], Scene.prototype, "ambientLightColor", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.deserializedIgnore
+        ], Scene.prototype, "gameObjects", null);
+        return Scene;
+    }(paper.BaseObject));
+    paper.Scene = Scene;
+    __reflect(Scene.prototype, "paper.Scene");
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     var particle;
@@ -14032,7 +13046,7 @@ var egret3d;
         var positionHelper = new egret3d.Vector3();
         var velocityHelper = new egret3d.Vector3();
         var startSizeHelper = new egret3d.Vector3();
-        var startColorHelper = new egret3d.Color();
+        var startColorHelper = egret3d.Color.create();
         var startRotationHelper = new egret3d.Vector3();
         var GRAVITY = new egret3d.Vector3(0, -9.81, 0); //TODO没有物理系统，暂时先放到这里
         /**
@@ -15173,6 +14187,7 @@ var egret3d;
                 var renderer = gameObject.getComponent(particle.ParticleRenderer);
                 //
                 this._onUpdateBatchMesh(component);
+                this._drawCalls.removeDrawCalls(renderer);
                 if (!renderer.batchMesh || !renderer.batchMaterial) {
                     return;
                 }
@@ -15180,8 +14195,8 @@ var egret3d;
                     console.error("ParticleSystem : error renderMode");
                 }
                 renderer.batchMesh._createBuffer();
-                this._drawCalls.removeDrawCalls(renderer);
                 this._drawCalls.renderers.push(renderer);
+                //
                 var subMeshIndex = 0;
                 for (var _i = 0, _a = renderer.batchMesh.glTFMesh.primitives; _i < _a.length; _i++) {
                     var _primitive = _a[_i];
@@ -15189,7 +14204,7 @@ var egret3d;
                         renderer: renderer,
                         subMeshIndex: subMeshIndex++,
                         mesh: renderer.batchMesh,
-                        material: renderer.batchMaterial || egret3d.DefaultMaterials.Missing,
+                        material: renderer.batchMaterial || egret3d.DefaultMaterials.MISSING,
                         frustumTest: false,
                         zdist: -1,
                     };
@@ -15666,343 +14681,870 @@ var egret3d;
     egret3d.WebGLRenderState = WebGLRenderState;
     __reflect(WebGLRenderState.prototype, "egret3d.WebGLRenderState");
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var _helpVector3A = new egret3d.Vector3();
-    var _helpVector3B = new egret3d.Vector3();
-    var _helpVector3C = new egret3d.Vector3();
-    var _helpVector3D = new egret3d.Vector3();
-    var _helpVector3E = new egret3d.Vector3();
-    var _helpVector3F = new egret3d.Vector3();
-    var _helpVector3G = new egret3d.Vector3();
-    var _helpVector3H = new egret3d.Vector3();
-    var _helpVectors = [
-        _helpVector3A,
-        _helpVector3B,
-        _helpVector3C,
-        _helpVector3D,
-        _helpVector3E,
-        _helpVector3F,
-        _helpVector3G,
-        _helpVector3H,
-    ];
-    var helpVec3_1 = new egret3d.Vector3();
-    var helpVec3_2 = new egret3d.Vector3();
-    var helpVec3_3 = new egret3d.Vector3();
-    var helpVec3_4 = new egret3d.Vector3();
-    var helpVec3_5 = new egret3d.Vector3();
-    var boxIndices = [
-        0, 1, 2, 3,
-        4, 5, 6, 7,
-        1, 3, 5, 7,
-        0, 2, 4, 6,
-        6, 2, 7, 3,
-        0, 4, 1, 5
-    ];
+var paper;
+(function (paper) {
     /**
-     * 射线
+     * 可以挂载Component的实体类。
      */
-    var Ray = (function () {
+    var GameObject = (function (_super) {
+        __extends(GameObject, _super);
         /**
-         * 构建一条射线
-         * @param origin 射线起点
-         * @param dir 射线方向
+         * @deprecated
          */
-        function Ray(origin, direction) {
-            this.origin = egret3d.Vector3.copy(origin, new egret3d.Vector3());
-            this.direction = egret3d.Vector3.copy(direction, new egret3d.Vector3());
+        function GameObject(name, tag, scene) {
+            if (name === void 0) { name = "NoName" /* NoName */; }
+            if (tag === void 0) { tag = "" /* Untagged */; }
+            if (scene === void 0) { scene = null; }
+            var _this = _super.call(this) || this;
+            /**
+             * 是否是静态，启用这个属性可以提升性能
+             */
+            _this.isStatic = false;
+            /**
+             *
+             */
+            _this.hideFlags = 0 /* None */;
+            /**
+             * 层级
+             */
+            _this.layer = 2 /* Default */;
+            /**
+             * 名称
+             */
+            _this.name = "";
+            /**
+             * 标签
+             */
+            _this.tag = "";
+            /**
+             * 变换组件
+             */
+            _this.transform = null;
+            /**
+             *
+             */
+            _this.renderer = null;
+            /**
+             * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+             */
+            _this.extras = paper.Application.isEditor && !paper.Application.isPlaying ? {} : undefined;
+            _this._activeSelf = true;
+            /**
+             * @internal
+             */
+            _this._activeInHierarchy = true;
+            /**
+             * @internal
+             */
+            _this._activeDirty = true;
+            _this._components = [];
+            _this._cachedComponents = [];
+            _this._scene = null;
+            _this.name = name;
+            _this.tag = tag;
+            //
+            _this._addToScene(scene || paper.Application.sceneManager.activeScene);
+            //
+            _this.addComponent(egret3d.Transform);
+            return _this;
         }
         /**
-         * 与aabb碰撞相交检测
+         * 创建 GameObject，并添加到当前场景中。
          */
-        Ray.prototype.intersectAABB = function (aabb) {
-            return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
+        GameObject.create = function (name, tag, scene) {
+            if (name === void 0) { name = "NoName" /* NoName */; }
+            if (tag === void 0) { tag = "" /* Untagged */; }
+            if (scene === void 0) { scene = null; }
+            var gameObect = new GameObject(name, tag, scene);
+            // gameObect.addComponent(egret3d.Transform);
+            // gameObect._addToScene(Application.sceneManager.activeScene);
+            return gameObect;
         };
-        /**
-         * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param transform transform实例
-         */
-        Ray.prototype.intersectPlaneTransform = function (transform) {
-            var pickinfo = null;
-            var panelpoint = transform.getPosition();
-            var forward = helpVec3_1;
-            transform.getForward(forward);
-            var hitposition = this.intersectPlane(panelpoint, forward);
-            if (hitposition) {
-                pickinfo = new PickInfo();
-                pickinfo.hitposition = hitposition;
-                pickinfo.distance = egret3d.Vector3.getDistance(pickinfo.hitposition, this.origin);
+        GameObject.prototype._destroy = function () {
+            var destroySystem = paper.Application.systemManager.getSystem(paper.DisableSystem);
+            if (destroySystem) {
+                destroySystem.bufferGameObject(this);
             }
-            return pickinfo;
+            for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
+                var child = _a[_i];
+                child.gameObject._destroy();
+            }
+            for (var _b = 0, _c = this._components; _b < _c.length; _b++) {
+                var component = _c[_b];
+                if (!component) {
+                    continue;
+                }
+                this._removeComponent(component, null);
+            }
+            this.transform = null;
+            this._components.length = 0;
+            this._scene._removeGameObject(this);
+            this._scene = null;
         };
-        Ray.prototype.intersectPlane = function (planePoint, planeNormal) {
-            var vp1 = planeNormal.x;
-            var vp2 = planeNormal.y;
-            var vp3 = planeNormal.z;
-            var n1 = planePoint.x;
-            var n2 = planePoint.y;
-            var n3 = planePoint.z;
-            var v1 = this.direction.x;
-            var v2 = this.direction.y;
-            var v3 = this.direction.z;
-            var m1 = this.origin.x;
-            var m2 = this.origin.y;
-            var m3 = this.origin.z;
-            var vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
-            if (vpt === 0) {
-                return null;
+        GameObject.prototype._addToScene = function (value) {
+            if (this._scene) {
+                this._scene._removeGameObject(this);
             }
-            else {
-                var t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
-                return new egret3d.Vector3(m1 + v1 * t, m2 + v2 * t, m3 + v3 * t);
-            }
+            this._scene = value;
+            this._scene._addGameObject(this);
         };
-        /**
-         * 与最大最小点表示的box相交检测
-         * @param minimum 最小点
-         * @param maximum 最大点
-         * @version paper 1.0
-         */
-        Ray.prototype.intersectBoxMinMax = function (minimum, maximum) {
-            var d = 0.0;
-            var maxValue = Number.MAX_VALUE;
-            var inv;
-            var min;
-            var max;
-            var temp;
-            if (Math.abs(this.direction.x) < 0.0000001) {
-                if (this.origin.x < minimum.x || this.origin.x > maximum.x) {
-                    return false;
-                }
-            }
-            else {
-                inv = 1.0 / this.direction.x;
-                min = (minimum.x - this.origin.x) * inv;
-                max = (maximum.x - this.origin.x) * inv;
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-            if (Math.abs(this.direction.y) < 0.0000001) {
-                if (this.origin.y < minimum.y || this.origin.y > maximum.y) {
-                    return false;
-                }
-            }
-            else {
-                inv = 1.0 / this.direction.y;
-                min = (minimum.y - this.origin.y) * inv;
-                max = (maximum.y - this.origin.y) * inv;
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-            if (Math.abs(this.direction.z) < 0.0000001) {
-                if (this.origin.z < minimum.z || this.origin.z > maximum.z) {
-                    return false;
-                }
-            }
-            else {
-                inv = 1.0 / this.direction.z;
-                min = (minimum.z - this.origin.z) * inv;
-                max = (maximum.z - this.origin.z) * inv;
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-            return true;
-        };
-        /**
-         * 与球相交检测
-         */
-        Ray.prototype.intersectsSphere = function (center, radius) {
-            var center_ori = helpVec3_1;
-            egret3d.Vector3.subtract(center, this.origin, center_ori);
-            var raydist = egret3d.Vector3.dot(this.direction, center_ori);
-            if (raydist < 0)
-                return false; // 到圆心的向量在方向向量上的投影为负，夹角不在-90与90之间
-            var orilen2 = egret3d.Vector3.getSqrLength(center_ori);
-            var rad2 = radius * radius;
-            if (orilen2 < rad2)
-                return true; // 射线起点在球里
-            var d = rad2 - (orilen2 - raydist * raydist);
-            if (d < 0)
+        GameObject.prototype._canRemoveComponent = function (value) {
+            if (value === this.transform) {
+                console.warn("Cannot remove the transform component from a game object.");
                 return false;
+            }
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                if (!component) {
+                    continue;
+                }
+                if (component.constructor === paper.GroupComponent) {
+                    component = component.components[0]; // 只检查第一个。
+                }
+                var requireComponents = component.constructor.requireComponents;
+                if (requireComponents && requireComponents.indexOf(value.constructor) >= 0) {
+                    console.warn("Cannot remove the " + egret.getQualifiedClassName(value) + " component from the game object (" + this.path + "), because it is required from the " + egret.getQualifiedClassName(component) + " component.");
+                    return false;
+                }
+            }
             return true;
         };
-        /**
-         * 与三角形相交检测
-         */
-        Ray.prototype.intersectsTriangle = function (vertex0, vertex1, vertex2) {
-            var _edge1 = helpVec3_1;
-            var _edge2 = helpVec3_2;
-            var _pvec = helpVec3_3;
-            var _tvec = helpVec3_4;
-            var _qvec = helpVec3_5;
-            egret3d.Vector3.subtract(vertex1, vertex0, _edge1);
-            egret3d.Vector3.subtract(vertex2, vertex0, _edge2);
-            egret3d.Vector3.cross(this.direction, _edge2, _pvec);
-            var det = egret3d.Vector3.dot(_edge1, _pvec);
-            if (det === 0) {
-                return null;
+        GameObject.prototype._removeComponent = function (value, groupComponent) {
+            value.enabled = false;
+            value.gameObject = null;
+            if (value === this.renderer) {
+                this.renderer = null;
             }
-            var invdet = 1 / det;
-            egret3d.Vector3.subtract(this.origin, vertex0, _tvec);
-            var bu = egret3d.Vector3.dot(_tvec, _pvec) * invdet;
-            if (bu < 0 || bu > 1.0) {
-                return null;
+            var destroySystem = paper.Application.systemManager.getSystem(paper.DisableSystem);
+            if (destroySystem) {
+                destroySystem.bufferComponent(value);
             }
-            egret3d.Vector3.cross(_tvec, _edge1, _qvec);
-            var bv = egret3d.Vector3.dot(this.direction, _qvec) * invdet;
-            if (bv < 0 || bu + bv > 1.0) {
-                return null;
-            }
-            var pickInfo = new PickInfo();
-            pickInfo.distance = egret3d.Vector3.dot(_edge2, _qvec) * invdet;
-            pickInfo.textureCoordA.x = bu;
-            pickInfo.textureCoordA.y = bv;
-            return pickInfo;
-        };
-        /**
-         * 获取射线拾取到的最近物体。
-         */
-        Ray.raycast = function (ray, isPickMesh, maxDistance, layerMask) {
-            if (isPickMesh === void 0) { isPickMesh = false; }
-            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
-            if (layerMask === void 0) { layerMask = 2 /* Default */ | 4 /* UI */; }
-            return this._doPick(ray, maxDistance, layerMask, false, isPickMesh);
-        };
-        /**
-         * 获取射线路径上的所有物体。
-         */
-        Ray.raycastAll = function (ray, isPickMesh, maxDistance, layerMask) {
-            if (isPickMesh === void 0) { isPickMesh = false; }
-            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
-            if (layerMask === void 0) { layerMask = 2 /* Default */ | 4 /* UI */; }
-            return this._doPick(ray, maxDistance, layerMask, true, isPickMesh);
-        };
-        Ray._doPick = function (ray, maxDistance, layerMask, pickAll, isPickMesh) {
-            if (maxDistance === void 0) { maxDistance = Number.MAX_VALUE; }
-            if (pickAll === void 0) { pickAll = false; }
-            if (isPickMesh === void 0) { isPickMesh = false; }
-            var pickedList = [];
-            for (var _i = 0, _a = paper.Application.sceneManager.activeScene.getRootGameObjects(); _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                if (gameObject.layer & layerMask) {
-                    if (isPickMesh) {
-                        this._pickMesh(ray, gameObject.transform, pickedList);
-                    }
-                    else {
-                        this._pickCollider(ray, gameObject.transform, pickedList);
-                    }
+            if (groupComponent) {
+                groupComponent._removeComponent(value);
+                if (groupComponent.components.length === 0) {
+                    this._removeComponent(groupComponent, null);
                 }
             }
-            if (pickedList.length === 0) {
-                return null;
-            }
-            if (pickAll) {
-                return pickedList;
-            }
-            var index = 0;
-            for (var i = 1; i < pickedList.length; i++) {
-                if (pickedList[i].distance < pickedList[index].distance) {
-                    index = i;
+            else if (value.constructor === paper.GroupComponent) {
+                groupComponent = value;
+                delete this._components[groupComponent.componentIndex];
+                for (var _i = 0, _a = groupComponent.components; _i < _a.length; _i++) {
+                    var componentInGroup = _a[_i];
+                    this._removeComponent(componentInGroup, groupComponent);
                 }
             }
-            return pickedList[index];
+            else {
+                delete this._components[value.constructor.__index];
+            }
         };
-        Ray._pickMesh = function (ray, transform, pickInfos) {
-            if (transform.gameObject.activeInHierarchy) {
-                var meshFilter = transform.gameObject.getComponent(egret3d.MeshFilter);
-                if (meshFilter) {
-                    var mesh = meshFilter.mesh;
-                    if (mesh) {
-                        var pickinfo = mesh.intersects(ray, transform.getWorldMatrix());
-                        if (pickinfo) {
-                            pickInfos.push(pickinfo);
-                            pickinfo.transform = transform;
+        GameObject.prototype._getComponentsInChildren = function (componentClass, child, components, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            for (var _i = 0, _a = child._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                if (!component) {
+                    continue;
+                }
+                if (component.constructor === paper.GroupComponent) {
+                    var groupComponent = component;
+                    if (isExtends ? groupComponent.components[0] instanceof componentClass : groupComponent.componentClass === componentClass) {
+                        for (var _b = 0, _c = groupComponent.components; _b < _c.length; _b++) {
+                            var componentInGroup = _c[_b];
+                            components.push(componentInGroup);
                         }
+                    }
+                }
+                else if (isExtends ? component instanceof componentClass : component.constructor === componentClass) {
+                    components.push(component);
+                }
+            }
+            for (var _d = 0, _e = child.transform.children; _d < _e.length; _d++) {
+                var childOfChild = _e[_d];
+                this._getComponentsInChildren(componentClass, childOfChild.gameObject, components, isExtends);
+            }
+        };
+        GameObject.prototype._getComponent = function (componentClass) {
+            var componentIndex = componentClass.__index;
+            return componentIndex < 0 ? null : this._components[componentIndex];
+        };
+        /**
+         * @internal
+         */
+        GameObject.prototype._activeInHierarchyDirty = function (prevActive) {
+            this._activeDirty = true;
+            var currentActive = this.activeInHierarchy;
+            if (currentActive !== prevActive) {
+                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    if (!component) {
+                        continue;
+                    }
+                    if (component.enabled) {
+                        paper.EventPool.dispatchEvent(currentActive ? "__enabled__" /* Enabled */ : "__disabled__" /* Disabled */, component);
+                    }
+                    if (component.constructor === paper.GroupComponent) {
+                        for (var _b = 0, _c = component.components; _b < _c.length; _b++) {
+                            var componentInGroup = _c[_b];
+                            if (componentInGroup.enabled) {
+                                paper.EventPool.dispatchEvent(currentActive ? "__enabled__" /* Enabled */ : "__disabled__" /* Disabled */, componentInGroup);
+                            }
+                        }
+                    }
+                }
+            }
+            for (var _d = 0, _e = this.transform.children; _d < _e.length; _d++) {
+                var child = _e[_d];
+                child.gameObject._activeInHierarchyDirty(prevActive);
+            }
+        };
+        /**
+         *
+         */
+        GameObject.prototype.destroy = function () {
+            if (this.isDestroyed) {
+                console.warn("The game object (" + this.path + ") has been destroyed.");
+                return;
+            }
+            if (this === paper.Application.sceneManager.globalGameObject) {
+                console.warn("Cannot destroy global game object.");
+                return;
+            }
+            var parent = this.transform.parent;
+            if (parent) {
+                parent._children.splice(parent._children.indexOf(this.transform), 1);
+            }
+            this._destroy();
+        };
+        /**
+         *
+         */
+        GameObject.prototype.destroyChildren = function () {
+            if (this === paper.Application.sceneManager.globalGameObject) {
+                console.warn("Cannot destroy global game object.");
+                return;
+            }
+            var i = this.transform.children.length;
+            while (i--) {
+                this.transform.children[i].gameObject.destroy();
+            }
+        };
+        /**
+         * 添加组件。
+         */
+        GameObject.prototype.addComponent = function (componentClass, config) {
+            paper.registerClass(componentClass);
+            var componentIndex = componentClass.__index;
+            var existedComponent = this._components[componentIndex];
+            // disallowMultipleComponents.
+            if (!componentClass.allowMultiple && existedComponent) {
+                console.warn("Cannot add the " + egret.getQualifiedClassName(componentClass) + " component to the game object (" + this.path + ") again.");
+                return existedComponent;
+            }
+            // requireComponents.
+            if (componentClass.requireComponents) {
+                for (var _i = 0, _a = componentClass.requireComponents; _i < _a.length; _i++) {
+                    var requireComponentClass = _a[_i];
+                    this.getOrAddComponent(requireComponentClass);
+                }
+            }
+            // Linked reference.
+            var component = paper.BaseComponent.create(componentClass, this);
+            if (componentClass === egret3d.Transform) {
+                this.transform = component;
+            }
+            else if (component instanceof paper.BaseRenderer) {
+                this.renderer = component;
+            }
+            // Add component.
+            if (existedComponent) {
+                if (existedComponent.constructor === paper.GroupComponent) {
+                    existedComponent._addComponent(component);
+                }
+                else {
+                    paper.registerClass(paper.GroupComponent);
+                    var groupComponent = paper.BaseComponent.create(paper.GroupComponent, this);
+                    groupComponent.initialize();
+                    groupComponent.componentIndex = componentIndex;
+                    groupComponent.componentClass = componentClass;
+                    groupComponent._addComponent(existedComponent);
+                    groupComponent._addComponent(component);
+                    this._components[componentIndex] = groupComponent;
+                }
+            }
+            else {
+                this._components[componentIndex] = component;
+            }
+            if (config) {
+                component.initialize(config);
+            }
+            else {
+                component.initialize();
+            }
+            if (component.isActiveAndEnabled) {
+                paper.EventPool.dispatchEvent("__enabled__" /* Enabled */, component);
+            }
+            return component;
+        };
+        /**
+         * 移除组件。
+         */
+        GameObject.prototype.removeComponent = function (componentInstanceOrClass, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            if (componentInstanceOrClass instanceof paper.BaseComponent) {
+                if (!this._canRemoveComponent(componentInstanceOrClass)) {
+                    return;
+                }
+                this._removeComponent(componentInstanceOrClass, null);
+            }
+            else if (isExtends) {
+                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    if (!component) {
+                        continue;
+                    }
+                    var groupComponent = null;
+                    if (component.constructor === paper.GroupComponent) {
+                        groupComponent = component;
+                        component = groupComponent.components[0];
+                    }
+                    if (groupComponent) {
+                        if (!(groupComponent.components[0] instanceof componentInstanceOrClass) ||
+                            (groupComponent.components.length === 1 && !this._canRemoveComponent(groupComponent.components[0]))) {
+                            continue;
+                        }
+                    }
+                    else if (!(component instanceof componentInstanceOrClass) ||
+                        !this._canRemoveComponent(component)) {
+                        continue;
+                    }
+                    this._removeComponent(component, groupComponent);
+                }
+            }
+            else {
+                var component = this._getComponent(componentInstanceOrClass);
+                if (!component) {
+                    return;
+                }
+                var groupComponent = null;
+                if (component.constructor === paper.GroupComponent) {
+                    groupComponent = component;
+                    component = groupComponent.components[0];
+                }
+                if (groupComponent) {
+                    if (groupComponent.components.length === 1 && !this._canRemoveComponent(groupComponent.components[0])) {
+                        return;
+                    }
+                }
+                else if (!this._canRemoveComponent(component)) {
+                    return;
+                }
+                this._removeComponent(component, groupComponent);
+            }
+        };
+        /**
+         * 移除所有组件。
+         */
+        GameObject.prototype.removeAllComponents = function (componentClass, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            if (componentClass) {
+                if (isExtends) {
+                    for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                        var component = _a[_i];
+                        if (!component) {
+                            continue;
+                        }
+                        if (component.constructor === paper.GroupComponent) {
+                            var groupComponent = component;
+                            if (!(groupComponent.components[0] instanceof componentClass) ||
+                                !this._canRemoveComponent(groupComponent.components[0])) {
+                                continue;
+                            }
+                        }
+                        else if (!this._canRemoveComponent(component)) {
+                            continue;
+                        }
+                        this._removeComponent(component, null);
                     }
                 }
                 else {
-                    var skinmesh = transform.gameObject.getComponent(egret3d.SkinnedMeshRenderer);
-                    if (skinmesh) {
-                        var pickinfo = skinmesh.intersects(ray);
-                        if (pickinfo) {
-                            pickInfos.push(pickinfo);
-                            pickinfo.transform = transform;
+                    var component = this._getComponent(componentClass);
+                    if (!component) {
+                        return;
+                    }
+                    if (component.constructor === paper.GroupComponent) {
+                        var groupComponent = component;
+                        if (!this._canRemoveComponent(groupComponent.components[0])) {
+                            return;
                         }
+                    }
+                    else if (!this._canRemoveComponent(component)) {
+                        return;
+                    }
+                    this._removeComponent(component, null);
+                }
+            }
+            else {
+                for (var _b = 0, _c = this._components; _b < _c.length; _b++) {
+                    var component = _c[_b];
+                    if (!component || component.constructor === egret3d.Transform) {
+                        continue;
+                    }
+                    this._removeComponent(component, null);
+                }
+            }
+        };
+        /**
+         * 获取组件。
+         */
+        GameObject.prototype.getComponent = function (componentClass, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            if (isExtends) {
+                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                    var component_1 = _a[_i];
+                    if (!component_1) {
+                        continue;
+                    }
+                    if (component_1.constructor === paper.GroupComponent) {
+                        var groupComponent = component_1;
+                        if (groupComponent.components[0] instanceof componentClass) {
+                            return groupComponent.components[0];
+                        }
+                    }
+                    else if (component_1 instanceof componentClass) {
+                        return component_1;
+                    }
+                }
+                return null;
+            }
+            var componentClassIndex = componentClass.__index;
+            if (componentClassIndex < 0) {
+                return null;
+            }
+            var component = this._components[componentClassIndex];
+            if (!component) {
+                return null;
+            }
+            if (component.constructor === paper.GroupComponent) {
+                return component.components[0];
+            }
+            return component;
+        };
+        /**
+         *
+         */
+        GameObject.prototype.getComponents = function (componentClass, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            var components = [];
+            if (isExtends) {
+                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    if (!component) {
+                        continue;
+                    }
+                    if (component.constructor === paper.GroupComponent && component.components[0] instanceof componentClass) {
+                        for (var _b = 0, _c = component.components; _b < _c.length; _b++) {
+                            var componentInGroup = _c[_b];
+                            components.push(componentInGroup);
+                        }
+                    }
+                    else if (component instanceof componentClass) {
+                        components.push(component);
                     }
                 }
             }
-            for (var _i = 0, _a = transform.children; _i < _a.length; _i++) {
-                var child = _a[_i];
-                this._pickMesh(ray, child, pickInfos);
+            else {
+                var component = this._getComponent(componentClass);
+                if (component) {
+                    if (component.constructor === paper.GroupComponent && component.components[0] instanceof componentClass) {
+                        for (var _d = 0, _e = component.components; _d < _e.length; _d++) {
+                            var componentInGroup = _e[_d];
+                            components.push(componentInGroup);
+                        }
+                    }
+                    else if (component instanceof componentClass) {
+                        components.push(component);
+                    }
+                }
+            }
+            return components;
+        };
+        /**
+         * 搜索自己和父节点中所有特定类型的组件
+         */
+        GameObject.prototype.getComponentInParent = function (componentClass, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            var result = null;
+            var parent = this.transform.parent;
+            while (!result && parent) {
+                result = parent.gameObject.getComponent(componentClass, isExtends); // 
+                parent = parent.parent;
+            }
+            return result;
+        };
+        /**
+         * 搜索自己和子节点中所有特定类型的组件
+         */
+        GameObject.prototype.getComponentsInChildren = function (componentClass, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            var components = [];
+            this._getComponentsInChildren(componentClass, this, components, isExtends);
+            return components;
+        };
+        /**
+         * 获取组件，如果未添加该组件，则添加该组件。
+         */
+        GameObject.prototype.getOrAddComponent = function (componentClass, isExtends) {
+            if (isExtends === void 0) { isExtends = false; }
+            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
+        };
+        /**
+         * 针对同级的组件发送消息
+         * @param methodName
+         * @param parameter``
+         */
+        GameObject.prototype.sendMessage = function (methodName, parameter, requireReceiver) {
+            if (requireReceiver === void 0) { requireReceiver = true; }
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                if (component && component.isActiveAndEnabled && component.constructor instanceof paper.Behaviour) {
+                    if (methodName in component) {
+                        component[methodName](parameter);
+                    }
+                    else if (requireReceiver) {
+                        console.warn(this.name, egret.getQualifiedClassName(component), methodName); // TODO
+                    }
+                }
             }
         };
-        Ray._pickCollider = function (ray, transform, pickInfos) {
-            if (transform.gameObject.activeInHierarchy) {
-                // const pickInfo = ray.intersectCollider(transform);
-                // if (pickInfo) {
-                //     pickInfos.push(pickInfo);
-                //     pickInfo.transform = transform;
-                // }
-            }
-            for (var _i = 0, _a = transform.children; _i < _a.length; _i++) {
-                var child = _a[_i];
-                this._pickCollider(ray, child, pickInfos);
+        /**
+         * 针对直接父级发送消息
+         * @param methodName
+         * @param parameter
+         */
+        GameObject.prototype.sendMessageUpwards = function (methodName, parameter, requireReceiver) {
+            if (requireReceiver === void 0) { requireReceiver = true; }
+            this.sendMessage(methodName, parameter, requireReceiver);
+            //
+            var parent = this.transform.parent;
+            if (parent && parent.gameObject.activeInHierarchy) {
+                parent.gameObject.sendMessage(methodName, parameter, requireReceiver);
             }
         };
-        return Ray;
-    }());
-    egret3d.Ray = Ray;
-    __reflect(Ray.prototype, "egret3d.Ray");
+        /**
+         * 群发消息
+         * @param methodName
+         * @param parameter
+         */
+        GameObject.prototype.broadcastMessage = function (methodName, parameter, requireReceiver) {
+            if (requireReceiver === void 0) { requireReceiver = true; }
+            this.sendMessage(methodName, parameter, requireReceiver);
+            for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
+                var child = _a[_i];
+                if (child.gameObject.activeInHierarchy) {
+                    child.gameObject.broadcastMessage(methodName, parameter, requireReceiver);
+                }
+            }
+        };
+        Object.defineProperty(GameObject.prototype, "isDestroyed", {
+            /**
+             *
+             */
+            get: function () {
+                return !this._scene;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameObject.prototype, "dontDestroy", {
+            /**
+             *
+             */
+            get: function () {
+                return this._scene === paper.Application.sceneManager.globalScene;
+            },
+            set: function (value) {
+                if (this.dontDestroy === value) {
+                    return;
+                }
+                if (this.transform.parent && this.transform.parent.gameObject.dontDestroy !== value) {
+                    this.transform.parent = null;
+                }
+                if (value) {
+                    this._addToScene(paper.Application.sceneManager.globalScene);
+                }
+                else {
+                    if (this === paper.Application.sceneManager.globalGameObject) {
+                        console.warn("Cannot change the `dontDestroy` value of the global game object.", this.name, this.uuid);
+                        return;
+                    }
+                    this._addToScene(paper.Application.sceneManager.activeScene);
+                }
+                for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
+                    var child = _a[_i];
+                    child.gameObject.dontDestroy = value;
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameObject.prototype, "activeSelf", {
+            /**
+             * 当前GameObject对象自身激活状态
+             */
+            get: function () {
+                return this._activeSelf;
+            },
+            set: function (value) {
+                if (this._activeSelf === value) {
+                    return;
+                }
+                var parent = this.transform.parent;
+                if (!parent || parent.gameObject.activeInHierarchy) {
+                    var prevActive = this._activeSelf;
+                    this._activeSelf = value;
+                    this._activeInHierarchyDirty(prevActive);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameObject.prototype, "activeInHierarchy", {
+            /**
+             * 获取当前GameObject对象在场景中激活状态。
+             * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
+             */
+            get: function () {
+                if (this._activeDirty) {
+                    var parent_1 = this.transform.parent;
+                    if (!parent_1 || parent_1.gameObject.activeInHierarchy) {
+                        this._activeInHierarchy = this._activeSelf;
+                    }
+                    else {
+                        this._activeInHierarchy = false;
+                    }
+                    this._activeDirty = false;
+                }
+                return this._activeInHierarchy;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameObject.prototype, "path", {
+            get: function () {
+                var path = this.name;
+                if (this.transform) {
+                    var parent_2 = this.transform.parent;
+                    while (parent_2) {
+                        path = parent_2.gameObject.name + "/" + path;
+                        parent_2 = parent_2.parent;
+                    }
+                    return this._scene.name + "/" + path;
+                }
+                return path;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameObject.prototype, "components", {
+            /**
+             *
+             */
+            get: function () {
+                this._cachedComponents.length = 0;
+                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    if (!component) {
+                        continue;
+                    }
+                    if (component.constructor === paper.GroupComponent) {
+                        for (var _b = 0, _c = component.components; _b < _c.length; _b++) {
+                            var componentInGroup = _c[_b];
+                            this._cachedComponents.push(componentInGroup);
+                        }
+                    }
+                    else {
+                        this._cachedComponents.push(component);
+                    }
+                }
+                return this._cachedComponents;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameObject.prototype, "parent", {
+            /**
+             *
+             */
+            get: function () {
+                return this.transform.parent ? this.transform.parent.gameObject : null;
+            },
+            set: function (gameObject) {
+                this.transform.parent = gameObject ? gameObject.transform : null;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameObject.prototype, "scene", {
+            /**
+             * 获取物体所在场景实例。
+             */
+            get: function () {
+                return this._scene;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * @deprecated
+         * @see paper.Scene#find()
+         */
+        GameObject.find = function (name, scene) {
+            if (scene === void 0) { scene = null; }
+            return (scene || paper.Application.sceneManager.activeScene).find(name);
+        };
+        /**
+         * @deprecated
+         * @see paper.Scene#findWithTag()
+         */
+        GameObject.findWithTag = function (tag, scene) {
+            if (scene === void 0) { scene = null; }
+            return (scene || paper.Application.sceneManager.activeScene).findWithTag(tag);
+        };
+        /**
+         * @deprecated
+         * @see paper.Scene#findGameObjectsWithTag()
+         */
+        GameObject.findGameObjectsWithTag = function (tag, scene) {
+            if (scene === void 0) { scene = null; }
+            return (scene || paper.Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
+        };
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.CHECKBOX)
+        ], GameObject.prototype, "isStatic", void 0);
+        __decorate([
+            paper.serializedField
+        ], GameObject.prototype, "hideFlags", void 0);
+        __decorate([
+            paper.serializedField
+        ], GameObject.prototype, "layer", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(paper.editor.EditType.TEXT)
+        ], GameObject.prototype, "name", void 0);
+        __decorate([
+            paper.serializedField
+        ], GameObject.prototype, "tag", void 0);
+        __decorate([
+            paper.serializedField
+        ], GameObject.prototype, "extras", void 0);
+        __decorate([
+            paper.serializedField
+        ], GameObject.prototype, "_activeSelf", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.deserializedIgnore
+        ], GameObject.prototype, "components", null);
+        return GameObject;
+    }(paper.BaseObject));
+    paper.GameObject = GameObject;
+    __reflect(GameObject.prototype, "paper.GameObject");
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
     /**
-     * 场景拣选信息
+     *
+     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
      */
-    var PickInfo = (function () {
-        function PickInfo() {
-            this.subMeshIndex = -1;
-            this.triangleIndex = -1;
-            this.distance = 0.0;
-            this.position = new egret3d.Vector3();
-            this.textureCoordA = new egret3d.Vector2();
-            this.textureCoordB = new egret3d.Vector2();
-            this.transform = null;
+    var Curve3 = (function () {
+        function Curve3(points, nbPoints) {
+            this._beizerPoints = points;
+            this._bezierPointNum = nbPoints;
         }
-        return PickInfo;
+        Object.defineProperty(Curve3.prototype, "beizerPoints", {
+            get: function () {
+                return this._beizerPoints;
+            },
+            set: function (value) {
+                this._beizerPoints = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Curve3.prototype, "bezierPointNum", {
+            get: function () {
+                return this._bezierPointNum;
+            },
+            set: function (value) {
+                this._bezierPointNum = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * 线性贝塞尔曲线
+         */
+        Curve3.CreateLinearBezier = function (start, end, indices) {
+            indices = indices > 2 ? indices : 3;
+            var bez = new Array();
+            var equation = function (t, va10, va11) {
+                var res = (1.0 - t) * va10 + t * va11;
+                return res;
+            };
+            bez.push(start);
+            for (var i = 1; i <= indices; i++) {
+                bez.push(new egret3d.Vector3(equation(i / indices, start.x, end.x), equation(i / indices, start.y, start.y), equation(i / indices, start.z, start.z)));
+            }
+            return new Curve3(bez, indices);
+        };
+        /**
+         * 二次方贝塞尔曲线路径
+         * @param v0 起始点
+         * @param v1 选中的节点
+         * @param v2 结尾点
+         * @param nbPoints 将贝塞尔曲线拆分nbPoints段，一共有nbPoints + 1个点
+         */
+        Curve3.CreateQuadraticBezier = function (v0, v1, v2, bezierPointNum) {
+            bezierPointNum = bezierPointNum > 2 ? bezierPointNum : 3;
+            var beizerPoint = new Array();
+            var equation = function (t, val0, val1, val2) {
+                var res = (1.0 - t) * (1.0 - t) * val0 + 2.0 * t * (1.0 - t) * val1 + t * t * val2;
+                return res;
+            };
+            for (var i = 1; i <= bezierPointNum; i++) {
+                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z)));
+            }
+            return new Curve3(beizerPoint, bezierPointNum);
+        };
+        /**
+         * 三次方贝塞尔曲线路径
+         * @param v0
+         * @param v1
+         * @param v2
+         * @param v3
+         * @param nbPoints
+         */
+        Curve3.CreateCubicBezier = function (v0, v1, v2, v3, bezierPointNum) {
+            bezierPointNum = bezierPointNum > 3 ? bezierPointNum : 4;
+            var beizerPoint = new Array();
+            var equation = function (t, val0, val1, val2, val3) {
+                var res = (1.0 - t) * (1.0 - t) * (1.0 - t) * val0 + 3.0 * t * (1.0 - t) * (1.0 - t) * val1 + 3.0 * t * t * (1.0 - t) * val2 + t * t * t * val3;
+                return res;
+            };
+            for (var i = 1; i <= bezierPointNum; i++) {
+                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x, v3.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y, v3.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z, v3.z)));
+            }
+            return new Curve3(beizerPoint, bezierPointNum);
+        };
+        /**
+         * 贝塞尔曲线上的点
+         */
+        Curve3.prototype.getPoints = function () {
+            return this._beizerPoints;
+        };
+        return Curve3;
     }());
-    egret3d.PickInfo = PickInfo;
-    __reflect(PickInfo.prototype, "egret3d.PickInfo");
+    egret3d.Curve3 = Curve3;
+    __reflect(Curve3.prototype, "egret3d.Curve3");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -16216,138 +15758,21 @@ var paper;
         EventPool.dispatchEvent = dispatchEvent;
     })(EventPool = paper.EventPool || (paper.EventPool = {}));
 })(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     *
-     */
-    var ECS = (function () {
-        function ECS() {
-            /**
-             *
-             */
-            this.version = "0.9.000";
-            /**
-             * 系统管理器。
-             */
-            this.systemManager = paper.SystemManager.getInstance();
-            /**
-             * 场景管理器。
-             */
-            this.sceneManager = paper.SceneManager.getInstance();
-            this._isEditor = false;
-            this._isFocused = false;
-            this._isPlaying = false;
-            this._isRunning = false;
-            this._bindUpdate = null;
-        }
-        /**
-         *
-         */
-        ECS.getInstance = function () {
-            if (!this._instance) {
-                this._instance = new ECS();
-            }
-            return this._instance;
-        };
-        ECS.prototype._update = function () {
-            if (this._isRunning) {
-                requestAnimationFrame(this._bindUpdate);
-            }
-            paper.Time && paper.Time.update();
-            paper.Group.update();
-            this.systemManager.update();
-        };
-        ECS.prototype.init = function (_a) {
-            var _b = _a === void 0 ? {} : _a, _c = _b.isEditor, isEditor = _c === void 0 ? false : _c, _d = _b.isPlaying, isPlaying = _d === void 0 ? true : _d, _e = _b.systems, systems = _e === void 0 ? [] : _e, _f = _b.option, option = _f === void 0 ? {} : _f, _g = _b.canvas, canvas = _g === void 0 ? {} : _g, _h = _b.webgl, webgl = _h === void 0 ? {} : _h;
-            this._isEditor = isEditor;
-            this._isPlaying = isPlaying;
-            this._option = option;
-            this._canvas = canvas;
-            this._webgl = webgl;
-            for (var _i = 0, systems_1 = systems; _i < systems_1.length; _i++) {
-                var systemClass = systems_1[_i];
-                this.systemManager.register(systemClass);
-            }
-            this.resume();
-        };
-        /**
-         *
-         */
-        ECS.prototype.pause = function () {
-            this._isRunning = false;
-        };
-        ECS.prototype.resume = function () {
-            if (this._isRunning) {
-                return;
-            }
-            this._isRunning = true;
-            if (!this._bindUpdate) {
-                this._bindUpdate = this._update.bind(this);
-            }
-            this._update();
-        };
-        ECS.prototype.callLater = function (callback) {
-            (this.systemManager.getSystem(paper.LateUpdateSystem)).callLater(callback);
-        };
-        Object.defineProperty(ECS.prototype, "isEditor", {
-            get: function () {
-                return this._isEditor;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ECS.prototype, "isFocused", {
-            get: function () {
-                return this._isFocused;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ECS.prototype, "isPlaying", {
-            get: function () {
-                return this._isPlaying;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ECS.prototype, "isRunning", {
-            get: function () {
-                return this._isRunning;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        ECS._instance = null;
-        return ECS;
-    }());
-    paper.ECS = ECS;
-    __reflect(ECS.prototype, "paper.ECS");
-    paper.Application = ECS.getInstance();
-})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-         * 渲染排序
-         */
-    var RenderQueue;
-    (function (RenderQueue) {
-        RenderQueue[RenderQueue["Background"] = 1000] = "Background";
-        RenderQueue[RenderQueue["Geometry"] = 2000] = "Geometry";
-        RenderQueue[RenderQueue["AlphaTest"] = 2450] = "AlphaTest";
-        RenderQueue[RenderQueue["Transparent"] = 3000] = "Transparent";
-        RenderQueue[RenderQueue["Overlay"] = 4000] = "Overlay";
-    })(RenderQueue = egret3d.RenderQueue || (egret3d.RenderQueue = {}));
     //TODO 运行时DrawCall排序优化使用
     var _hashCode = 0;
     //兼容老的Uniform键值
-    var _compatible = { "_MainColor": "diffuse", "_MainTex": "map", "_MainTex_ST": "uvTransform" };
+    // let _compatible: { [key: string]: string } = { "_MainColor": "diffuse", "_MainTex": "map", "_MainTex_ST": "uvTransform" };
     /**
-    * 材质资源
-    */
+     * 材质资源
+     */
     var Material = (function (_super) {
         __extends(Material, _super);
-        function Material(shader) {
+        /**
+         *
+         */
+        function Material(shaderOrMaterial) {
             var _this = _super.call(this) || this;
             /**
              *
@@ -16361,99 +15786,39 @@ var egret3d;
               * @internal
               */
             _this._version = 0;
-            _this._cacheDefines = '';
-            _this._textureRef = []; //TODO
-            _this._defines = new Array();
+            _this._cacheDefines = "";
+            _this._defines = [];
+            _this._textures = []; //TODO
             /**
-            * @internal
-            */
+             * @internal
+             */
+            _this._glTFShader = null;
             _this._glTFMaterial = null;
             /**
             * @internal
             */
             _this._glTFTechnique = null;
-            /**
-             * @internal
-             */
-            _this._glTFShader = null;
-            if (shader) {
-                _this._glTFShader = shader;
+            if (shaderOrMaterial) {
+                if (shaderOrMaterial instanceof Material) {
+                    _this._glTFShader = shaderOrMaterial.shader;
+                }
+                else {
+                    _this._glTFShader = shaderOrMaterial;
+                }
                 _this.config = egret3d.GLTFAsset.createGLTFExtensionsConfig();
                 _this.config.materials[0] = {
                     extensions: {
                         KHR_techniques_webgl: { technique: _this._glTFShader.name, values: {} },
-                        paper: { renderQueue: -1 }
+                        paper: { renderQueue: paper.RenderQueue.Geometry }
                     }
                 };
                 _this.initialize();
+                if (shaderOrMaterial instanceof Material) {
+                    _this.copy(shaderOrMaterial);
+                }
             }
             return _this;
         }
-        Material.prototype.dispose = function () {
-            if (this._isBuiltin) {
-                return;
-            }
-            this._glTFMaterial = null;
-            this._glTFTechnique = null;
-            this._glTFShader = null;
-            this._cacheDefines = "";
-            this._defines.length = 0;
-            for (var _i = 0, _a = this._textureRef; _i < _a.length; _i++) {
-                var tex = _a[_i];
-                tex.dispose();
-            }
-            this._textureRef.length = 0;
-            this._version++;
-            _super.prototype.dispose.call(this);
-        };
-        /**
-         * 克隆材质资源。
-         */
-        Material.prototype.clone = function () {
-            var mat = new Material(this._glTFShader);
-            mat.renderQueue = this.renderQueue;
-            var sourceUnifroms = this._glTFTechnique.uniforms;
-            var targetUniforms = mat._glTFTechnique.uniforms;
-            for (var key in sourceUnifroms) {
-                var uniform = sourceUnifroms[key];
-                var value = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value;
-                targetUniforms[key] = { type: uniform.type, semantic: uniform.semantic, value: value };
-            }
-            var sourceStates = this._glTFTechnique.states;
-            var targetStates = mat._glTFTechnique.states;
-            if (sourceStates.enable) {
-                targetStates.enable = sourceStates.enable.concat();
-            }
-            if (sourceStates.functions) {
-                if (!targetStates.functions) {
-                    targetStates.functions = {};
-                }
-                for (var fun in sourceStates.functions) {
-                    if (Array.isArray(sourceStates.functions[fun])) {
-                        targetStates.functions[fun] = sourceStates.functions[fun].concat();
-                    }
-                    else {
-                        targetStates.functions[fun] = sourceStates.functions[fun];
-                    }
-                }
-            }
-            return mat;
-        };
-        // public serialize() {
-        //     if (!this._glTFAsset.name) {
-        //         return null;
-        //     }
-        //     const target = paper.serializeStruct(this);
-        //     target._gltfMaterialIndex = this._glTFMaterialIndex;
-        //     target._glTFAsset = paper.serializeAsset(this._glTFAsset);
-        //     return target;
-        // }
-        // public deserialize(element: any) {
-        //     this._glTFMaterialIndex = element._glTFMaterialIndex;
-        //     this._glTFAsset = paper.getDeserializedAssetOrComponent(element._glTFAsset) as GLTFAsset;
-        //     this.initialize();
-        //     return this;
-        // }
         Material.prototype.initialize = function () {
             if (this._glTFMaterial) {
                 return;
@@ -16467,47 +15832,84 @@ var egret3d;
                     return;
                 }
             }
-            if (this._glTFMaterial.extensions.paper && this._glTFMaterial.extensions.paper.renderQueue !== -1) {
-                this.renderQueue = this._glTFMaterial.extensions.paper.renderQueue;
-            }
-            else {
-                this.renderQueue = this._glTFShader.config.extensions.paper.renderQueue;
-            }
-            //
-            var template = this._glTFShader.config.extensions.KHR_techniques_webgl.techniques[0];
-            this._glTFTechnique = egret3d.GLTFAsset.createTechnique(template);
-            var gltfUnifromMap = this._glTFMaterial.extensions.KHR_techniques_webgl.values;
-            var uniformMap = this._glTFTechnique.uniforms;
+            this.renderQueue = this._glTFMaterial.extensions.paper.renderQueue;
+            this._glTFTechnique = egret3d.GLTFAsset.createTechnique(this._glTFShader.config.extensions.KHR_techniques_webgl.techniques[0]);
+            var uniformValues = this._glTFMaterial.extensions.KHR_techniques_webgl.values;
+            var uniforms = this._glTFTechnique.uniforms;
             //使用Shader替换Material中没有默认值的Uniform
-            for (var key in gltfUnifromMap) {
-                var value = gltfUnifromMap[key];
-                if (key in _compatible) {
-                    key = _compatible[key];
-                    if (key === "diffuse") {
-                        value.length = 3;
-                    }
-                    else if (key === "uvTransform") {
-                        var old = value.concat();
-                        value = [old[0], 0, 0, 0, old[1], 0, old[2], old[3], 1];
-                    }
-                }
-                if (uniformMap[key]) {
+            for (var k in uniformValues) {
+                if (k in uniforms) {
+                    var value = uniformValues[k];
                     if (Array.isArray(value)) {
-                        uniformMap[key].value = value.concat();
+                        uniforms[k].value = value.concat();
                     }
                     else {
-                        uniformMap[key].value = value;
+                        uniforms[k].value = value;
                     }
                 }
             }
         };
+        Material.prototype.dispose = function (disposeChildren) {
+            if (this._isBuiltin) {
+                return;
+            }
+            if (disposeChildren) {
+                for (var _i = 0, _a = this._textures; _i < _a.length; _i++) {
+                    var texture = _a[_i];
+                    texture.dispose();
+                }
+            }
+            _super.prototype.dispose.call(this);
+            this._version++;
+            this._cacheDefines = "";
+            this._defines.length = 0;
+            this._textures.length = 0;
+            this._glTFMaterial = null;
+            this._glTFTechnique = null;
+            this._glTFShader = null;
+        };
+        Material.prototype.copy = function (value) {
+            this.renderQueue = value.renderQueue;
+            var sourceUniforms = value._glTFTechnique.uniforms;
+            var targetUniforms = this._glTFTechnique.uniforms;
+            for (var k in sourceUniforms) {
+                var uniform = sourceUniforms[k];
+                var value_5 = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value; // TODO TypeArray
+                targetUniforms[k] = { type: uniform.type, semantic: uniform.semantic, value: value_5 };
+            }
+            var sourceStates = value._glTFTechnique.states;
+            var targetStates = this._glTFTechnique.states;
+            if (sourceStates.enable) {
+                targetStates.enable = sourceStates.enable.concat();
+            }
+            if (sourceStates.functions) {
+                if (!targetStates.functions) {
+                    targetStates.functions = {};
+                }
+                for (var k in sourceStates.functions) {
+                    if (Array.isArray(sourceStates.functions[k])) {
+                        targetStates.functions[k] = sourceStates.functions[k].concat();
+                    }
+                    else {
+                        targetStates.functions[k] = sourceStates.functions[k];
+                    }
+                }
+            }
+            return this;
+        };
+        /**
+         * 克隆材质资源。
+         */
+        Material.prototype.clone = function () {
+            return new Material(this._glTFShader).copy(this);
+        };
         Material.prototype.addDefine = function (key) {
             if (this._defines.indexOf(key) < 0) {
                 this._defines.push(key);
-                //减少同样的宏定义因为顺序不同重新编译
                 this._defines.sort();
                 this._version++;
             }
+            return this;
         };
         Material.prototype.removeDefine = function (key) {
             var delIndex = this._defines.indexOf(key);
@@ -16515,6 +15917,7 @@ var egret3d;
                 this._defines.splice(delIndex, 1);
                 this._version++;
             }
+            return this;
         };
         Material.prototype.setBoolean = function (id, value) {
             var uniform = this._glTFTechnique.uniforms[id];
@@ -16527,6 +15930,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setInt = function (id, value) {
             var uniform = this._glTFTechnique.uniforms[id];
@@ -16539,6 +15943,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setIntv = function (id, value) {
             var uniform = this._glTFTechnique.uniforms[id];
@@ -16549,6 +15954,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setFloat = function (id, value) {
             var uniform = this._glTFTechnique.uniforms[id];
@@ -16561,6 +15967,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setFloatv = function (id, value) {
             var uniform = this._glTFTechnique.uniforms[id];
@@ -16571,6 +15978,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setVector2 = function (id, value) {
             var uniform = this._glTFTechnique.uniforms[id];
@@ -16584,6 +15992,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setVector2v = function (id, value) {
             var uniform = this._glTFTechnique.uniforms[id];
@@ -16594,6 +16003,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setVector3 = function (id, value) {
             var uniform = this._glTFTechnique.uniforms[id];
@@ -16608,6 +16018,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setVector3v = function (id, value) {
             var uniform = this._glTFTechnique.uniforms[id];
@@ -16618,6 +16029,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setVector4 = function (id, value) {
             //兼容老键值
@@ -16646,6 +16058,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setVector4v = function (id, value) {
             //兼容老键值
@@ -16670,6 +16083,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setMatrix = function (id, value) {
             var uniform = this._glTFTechnique.uniforms[id];
@@ -16680,6 +16094,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setMatrixv = function (id, value) {
             var uniform = this._glTFTechnique.uniforms[id];
@@ -16690,6 +16105,7 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            return this;
         };
         Material.prototype.setTexture = function (id, value) {
             value = value || egret3d.DefaultTextures.GRAY;
@@ -16701,9 +16117,9 @@ var egret3d;
             var uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value) {
-                    var index = this._textureRef.indexOf(uniform.value);
+                    var index = this._textures.indexOf(uniform.value);
                     if (index > -1) {
-                        this._textureRef.splice(index, 1);
+                        this._textures.splice(index, 1);
                     }
                 }
                 if (uniform.value !== value) {
@@ -16715,11 +16131,104 @@ var egret3d;
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
             if (value) {
-                this._textureRef.push(value);
+                this._textures.push(value);
             }
+            return this;
+        };
+        /**
+         *
+         * @param blend
+         */
+        Material.prototype.setBlend = function (blend) {
+            var functions = this._glTFTechnique.states.functions;
+            var enables = this._glTFTechnique.states.enable;
+            switch (blend) {
+                case 3 /* Add */:
+                    functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 1 /* ONE */, 770 /* SRC_ALPHA */, 1 /* ONE */];
+                    break;
+                case 4 /* Add_PreMultiply */:
+                    functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    functions.blendFuncSeparate = [1 /* ONE */, 1 /* ONE */, 1 /* ONE */, 1 /* ONE */];
+                    break;
+                case 1 /* Blend */:
+                    functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
+                    break;
+                case 2 /* Blend_PreMultiply */:
+                    functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    functions.blendFuncSeparate = [1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */, 1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */];
+                    break;
+                default:
+                    delete functions.blendEquationSeparate;
+                    delete functions.blendFuncSeparate;
+                    break;
+            }
+            var index = enables.indexOf(3042 /* BLEND */);
+            if (blend === 0 /* None */) {
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+            else {
+                if (index < 0) {
+                    enables.push(3042 /* BLEND */);
+                }
+            }
+            return this;
+        };
+        /**
+         *
+         */
+        Material.prototype.setCullFace = function (cull, frontFace, cullFace) {
+            var funs = this._glTFTechnique.states.functions;
+            var enables = this._glTFTechnique.states.enable;
+            var index = enables.indexOf(2884 /* CULL_FACE */);
+            if (cull && frontFace && cullFace) {
+                funs.frontFace = [frontFace];
+                funs.cullFace = [cullFace];
+                if (index < 0) {
+                    enables.push(2884 /* CULL_FACE */);
+                }
+            }
+            else {
+                delete funs.frontFace;
+                delete funs.cullFace;
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+            return this;
+        };
+        /**
+         *
+         */
+        Material.prototype.setDepth = function (zTest, zWrite) {
+            var funs = this._glTFTechnique.states.functions;
+            var enables = this._glTFTechnique.states.enable;
+            var index = enables.indexOf(2929 /* DEPTH_TEST */);
+            if (zTest) {
+                if (index < 0) {
+                    enables.push(2929 /* DEPTH_TEST */);
+                }
+                funs.depthFunc = [515 /* LEQUAL */];
+            }
+            else {
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+            if (zWrite) {
+                funs.depthMask = [true];
+            }
+            else {
+                funs.depthMask = [false];
+            }
+            return this;
         };
         Object.defineProperty(Material.prototype, "shaderDefine", {
             /**
+             * TODO
              * @internal
              */
             get: function () {
@@ -16733,6 +16242,13 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Material.prototype, "shader", {
+            get: function () {
+                return this._glTFShader;
+            },
+            enumerable: true,
+            configurable: true
+        });
         return Material;
     }(egret3d.GLTFAsset));
     egret3d.Material = Material;
@@ -16742,23 +16258,23 @@ var egret3d;
 (function (egret3d) {
     var ShaderLib;
     (function (ShaderLib) {
-        ShaderLib.cube = { "name": "buildin/cube.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "cube_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n\tgl_Position.z = gl_Position.w; // set z to camera.far\r\n\r\n}\r\n" }, { "name": "cube_frag", "type": 35632, "uri": "uniform samplerCube tCube;\r\nuniform float tFlip;\r\nuniform float opacity;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\nvoid main() {\r\n\r\n\tgl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );\r\n\tgl_FragColor.a *= opacity;\r\n\r\n}\r\n" }], "techniques": [{ "name": "cube", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "tCube": { "type": 35680, "value": [] }, "tFlip": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.depth = { "name": "buildin/depth.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "depth_vert", "type": 35633, "uri": "#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n}\r\n" }, { "name": "depth_frag", "type": 35632, "uri": "#if DEPTH_PACKING == 3200\r\n\r\n\tuniform float opacity;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tdiffuseColor.a = opacity;\r\n\r\n\t#endif\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tgl_FragColor = vec4( vec3( 1.0 - gl_FragCoord.z ), opacity );\r\n\r\n\t#elif DEPTH_PACKING == 3201\r\n\r\n\t\tgl_FragColor = packDepthToRGBA( gl_FragCoord.z );\r\n\r\n\t#endif\r\n\r\n}\r\n" }], "techniques": [{ "name": "depth", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.diffuse = { "name": "buildin/diffuse.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "diffuse_vert", "type": 35633, "uri": "#include <common>\r\n#include <skinning_pars_vert>\r\n#include <lightmap_pars_vert> \r\nattribute vec4 position;\r\nattribute vec4 uv;\r\nuniform highp mat4 modelViewProjectionMatrix;\r\nuniform highp mat3 uvTransform;  \r\nvarying highp vec2 xlv_TEXCOORD0;\r\n\r\nvoid main() {\r\n    #include <skinning_base_vert>\r\n    // xlv_TEXCOORD0 = uv.xy * uvTransform.xy + uvTransform.zw;\r\n    xlv_TEXCOORD0 = ( uvTransform * vec3( uv.xy, 1 ) ).xy;\r\n    #include <lightmap_vert>\r\n    gl_Position = (modelViewProjectionMatrix * tmpVertex);\r\n}" }, { "name": "diffuse_frag", "type": 35632, "uri": "#include <common>\r\n#include <lightmap_pars_frag>\r\nuniform vec3 diffuse;\r\nuniform sampler2D map;\r\nuniform lowp float _AlphaCut;\r\nvarying highp vec2 xlv_TEXCOORD0;\r\nvoid main() {\r\n    lowp vec4 outColor = texture2D(map, xlv_TEXCOORD0) * vec4(diffuse, 1.0);\r\n    if(outColor.a < _AlphaCut)\r\n        discard;\r\n    #include <lightmap_frag>    \r\n}" }], "techniques": [{ "name": "diffuse", "attributes": { "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" }, "position": { "semantic": "POSITION" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "glstate_vec4_bones[0]": { "type": 35666, "value": [], "semantic": "_BONESVEC4" }, "lightMapOffset": { "type": 35666, "value": [], "semantic": "_LIGHTMAPOFFSET" }, "lightMapUV": { "type": 5126, "value": [], "semantic": "_LIGHTMAPUV" }, "modelViewProjectionMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEWPROJECTION" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "map": { "type": 35678, "value": [] }, "_AlphaCut": { "type": 5126, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.distanceRGBA = { "name": "buildin/distanceRGBA.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "distanceRGBA_vert", "type": 35633, "uri": "#define DISTANCE\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvWorldPosition = worldPosition.xyz;\r\n\r\n}\r\n" }, { "name": "distanceRGBA_frag", "type": 35632, "uri": "#define DISTANCE\r\n\r\nuniform vec3 referencePosition;\r\nuniform float nearDistance;\r\nuniform float farDistance;\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main () {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\tfloat dist = length( vWorldPosition - referencePosition );\r\n\tdist = ( dist - nearDistance ) / ( farDistance - nearDistance );\r\n\tdist = saturate( dist ); // clamp to [ 0, 1 ]\r\n\r\n\tgl_FragColor = packDepthToRGBA( dist );\r\n\r\n}\r\n" }], "techniques": [{ "name": "distanceRGBA", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "referencePosition": { "type": 35665, "value": [], "semantic": "_REFERENCEPOSITION" }, "nearDistance": { "type": 5126, "value": [], "semantic": "_NEARDICTANCE" }, "farDistance": { "type": 5126, "value": [], "semantic": "_FARDISTANCE" }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.equirect = { "name": "buildin/equirect.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "equirect_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n}\r\n" }, { "name": "equirect_frag", "type": 35632, "uri": "uniform sampler2D tEquirect;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n\r\nvoid main() {\r\n\r\n\tvec3 direction = normalize( vWorldPosition );\r\n\r\n\tvec2 sampleUV;\r\n\r\n\tsampleUV.y = asin( clamp( direction.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\r\n\r\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\r\n\r\n\tgl_FragColor = texture2D( tEquirect, sampleUV );\r\n\r\n}\r\n" }], "techniques": [{ "name": "equirect", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "tEquirect": { "type": 35678, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.linedashed = { "name": "buildin/linedashed.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linedashed_vert", "type": 35633, "uri": "uniform float scale;\r\nattribute float lineDistance;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <color_vertex>\r\n\r\n\tvLineDistance = scale * lineDistance;\r\n\r\n\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\r\n\tgl_Position = projectionMatrix * mvPosition;\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "linedashed_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\nuniform float dashSize;\r\nuniform float totalSize;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tif ( mod( vLineDistance, totalSize ) > dashSize ) {\r\n\r\n\t\tdiscard;\r\n\r\n\t}\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <color_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb; // simple shader\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "linedashed", "attributes": { "lineDistance": { "semantic": "Unknown" }, "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "scale": { "type": 5126, "value": [] }, "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126, "value": [] }, "totalSize": { "type": 5126, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.line = { "name": "buildin/line.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "line_vert", "type": 35633, "uri": "#include <common>\r\nattribute vec4 position;\r\nattribute vec4 color;\r\nuniform highp mat4 modelViewProjectionMatrix;\r\nvarying lowp vec4 xlv_COLOR;\r\nvoid main() {\r\n    highp vec4 tmpvar_1;\r\n    tmpvar_1.w = 1.0;\r\n    tmpvar_1.xyz = position.xyz;\r\n    xlv_COLOR = color;\r\n    gl_Position = (modelViewProjectionMatrix * tmpvar_1);\r\n}" }, { "name": "line_frag", "type": 35632, "uri": "#include <common>\r\nvarying lowp vec4 xlv_COLOR;\r\nvoid main() {\r\n    gl_FragData[0] = xlv_COLOR;\r\n}" }], "techniques": [{ "name": "line", "attributes": { "position": { "semantic": "POSITION" }, "color": { "semantic": "COLOR_0" } }, "uniforms": { "modelViewProjectionMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEWPROJECTION" } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.meshbasic = { "name": "buildin/meshbasic.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshbasic_vert", "type": 35633, "uri": "#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_ENVMAP\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshbasic_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\r\n\t// accumulation (baked indirect lighting only)\r\n\t#ifdef USE_LIGHTMAP\r\n\r\n\t\treflectedLight.indirectDiffuse += texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\r\n\r\n\t#else\r\n\r\n\t\treflectedLight.indirectDiffuse += vec3( 1.0 );\r\n\r\n\t#endif\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\treflectedLight.indirectDiffuse *= diffuseColor.rgb;\r\n\r\n\tvec3 outgoingLight = reflectedLight.indirectDiffuse;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t// #include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshbasic", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.meshlambert = { "name": "buildin/meshlambert.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshlambert_vert", "type": 35633, "uri": "#define LAMBERT\r\nvarying vec3 vLightFront;\r\n\r\n#ifdef DOUBLE_SIDED\r\n\r\n\tvarying vec3 vLightBack;\r\n\r\n#endif\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_pars_maps>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <lights_lambert_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshlambert_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform float opacity;\r\n\r\nvarying vec3 vLightFront;\r\n\r\n#ifdef DOUBLE_SIDED\r\n\r\n\tvarying vec3 vLightBack;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_pars_maps>\r\n#include <fog_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <shadowmask_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\treflectedLight.indirectDiffuse = getAmbientLightIrradiance( ambientLightColor );\r\n\r\n\t#include <lightmap_fragment>\r\n\r\n\treflectedLight.indirectDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb );\r\n\r\n\t#ifdef DOUBLE_SIDED\r\n\r\n\t\treflectedLight.directDiffuse = ( gl_FrontFacing ) ? vLightFront : vLightBack;\r\n\r\n\t#else\r\n\r\n\t\treflectedLight.directDiffuse = vLightFront;\r\n\r\n\t#endif\r\n\r\n\treflectedLight.directDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb ) * getShadowMask();\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + totalEmissiveRadiance;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t// #include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshlambert", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.meshphong = { "name": "buildin/meshphong.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphong_vert", "type": 35633, "uri": "#define PHONG\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshphong_frag", "type": 35632, "uri": "#define PHONG\r\n\r\nuniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform vec3 specular;\r\nuniform float shininess;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <gradientmap_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_phong_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\t#include <lights_phong_fragment>\r\n\t#include <lights_fragment_begin>\r\n\t#include <lights_fragment_maps>\r\n\t#include <lights_fragment_end>\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshphong", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "refractionRatio": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "specular": { "type": 35665, "value": [] }, "shininess": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "gradientMap": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.meshphysical = { "name": "buildin/meshphysical.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphysical_vert", "type": 35633, "uri": "#define PHYSICAL\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshphysical_frag", "type": 35632, "uri": "#define PHYSICAL\r\n\r\nuniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform float roughness;\r\nuniform float metalness;\r\nuniform float opacity;\r\n\r\n#ifndef STANDARD\r\n\tuniform float clearCoat;\r\n\tuniform float clearCoatRoughness;\r\n#endif\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <bsdfs>\r\n#include <cube_uv_reflection_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <envmap_physical_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <lights_pars_begin>\r\n#include <lights_physical_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <roughnessmap_pars_fragment>\r\n#include <metalnessmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <roughnessmap_fragment>\r\n\t#include <metalnessmap_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\t#include <lights_physical_fragment>\r\n\t#include <lights_fragment_begin>\r\n\t#include <lights_fragment_maps>\r\n\t#include <lights_fragment_end>\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshphysical", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "roughness": { "type": 5126, "value": [] }, "metalness": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "clearCoat": { "type": 5126, "value": [] }, "clearCoatRoughness": { "type": 5126, "value": [] }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "refractionRatio": { "type": 5126, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] }, "roughnessMap": { "type": 35678, "value": [] }, "metalnessMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.normal = { "name": "buildin/normal.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "normal_vert", "type": 35633, "uri": "#define NORMAL\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvarying vec3 vViewPosition;\r\n\r\n#endif\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n#endif\r\n\r\n}\r\n" }, { "name": "normal_frag", "type": 35632, "uri": "#define NORMAL\r\n\r\nuniform float opacity;\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvarying vec3 vViewPosition;\r\n\r\n#endif\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\r\n\tgl_FragColor = vec4( packNormalToRGB( normal ), opacity );\r\n\r\n}\r\n" }], "techniques": [{ "name": "normal", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.particle = { "name": "buildin/particle.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "particle_vert", "type": 35633, "uri": "//inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.vs\r\n#include <common>\r\n#if defined(SPHERHBILLBOARD)||defined(STRETCHEDBILLBOARD)||defined(HORIZONTALBILLBOARD)||defined(VERTICALBILLBOARD)\r\n\tattribute vec2 corner;\r\n#endif\r\n#ifdef RENDERMESH\r\n\tattribute vec3 position;\r\n\tattribute vec4 color;\r\n#endif\r\nattribute vec2 uv;\r\nattribute vec3 startPosition;\r\nattribute vec3 startVelocity;\r\nattribute vec4 startColor;\r\nattribute vec3 startSize;\r\nattribute vec3 startRotation;\r\nattribute vec2 time;\r\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)||defined(ROTATIONTWOCONSTANTS)||defined(ROTATIONTWOCURVES)\r\n  attribute vec4 random0;\r\n#endif\r\n#if defined(TEXTURESHEETANIMATIONTWOCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\r\n  attribute vec4 random1;\r\n#endif\r\nattribute vec3 startWorldPosition;\r\nattribute vec4 startWorldRotation;\r\n\r\n#include <particle_common>\r\n\r\nvoid main()\r\n{\r\n\tfloat age = u_currentTime - time.y;\r\n\tfloat t = age/time.x;\r\n\tif(t>1.0){ \t\t\t\r\n\t\t\tv_discard=1.0;\r\n\t\t\treturn;\r\n  }\r\n\t  \r\n\t#include <particle_affector>\r\n\tgl_Position=viewProjectionMatrix*vec4(center,1.0);\r\n\tv_color = computeColor(startColor, t);\r\n\tv_texcoord =computeUV(uv, t);\r\n\tv_discard=0.0;\r\n}\r\n\r\n" }, { "name": "particle_frag", "type": 35632, "uri": "//inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.ps\r\n#include <common>\r\nuniform sampler2D map;\r\nuniform vec4 diffuse;\r\nvarying float v_discard;\r\nvarying vec4 v_color;\r\nvarying vec2 v_texcoord;\r\n\r\n#ifdef RENDERMODE_MESH\r\n\tvarying vec4 v_mesh_color;\r\n#endif\r\n\r\nvoid main()\r\n{\t\r\n\t#ifdef RENDERMODE_MESH\r\n\t\tgl_FragColor=v_mesh_color;\r\n\t#else\r\n\t\tgl_FragColor=vec4(1.0);\t\r\n\t#endif\r\n\r\n\tif(v_discard!=0.0)\r\n\t\tdiscard;\r\n\tgl_FragColor*=texture2D(map,v_texcoord)*diffuse*v_color*2.0;\r\n}" }], "techniques": [{ "name": "particle", "attributes": { "corner": { "semantic": "_CORNER" }, "position": { "semantic": "POSITION" }, "color": { "semantic": "COLOR_0" }, "uv": { "semantic": "TEXCOORD_0" }, "startPosition": { "semantic": "_START_POSITION" }, "startVelocity": { "semantic": "_START_VELOCITY" }, "startColor": { "semantic": "_START_COLOR" }, "startSize": { "semantic": "_START_SIZE" }, "startRotation": { "semantic": "_START_ROTATION" }, "time": { "semantic": "_TIME" }, "random0": { "semantic": "_RANDOM0" }, "random1": { "semantic": "_RANDOM1" }, "startWorldPosition": { "semantic": "_WORLD_POSITION" }, "startWorldRotation": { "semantic": "_WORLD_ROTATION" } }, "uniforms": { "u_currentTime": { "type": 5126, "value": [] }, "u_gravity": { "type": 35665, "value": [] }, "u_worldPosition": { "type": 35665, "value": [] }, "u_worldRotation": { "type": 35666, "value": [] }, "u_startRotation3D": { "type": 35670, "value": [] }, "u_scalingMode": { "type": 5124, "value": [] }, "u_positionScale": { "type": 35665, "value": [] }, "u_sizeScale": { "type": 35665, "value": [] }, "viewProjectionMatrix": { "type": 35676, "value": [], "semantic": "_VIEWPROJECTION" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "cameraForward": { "type": 35665, "value": [], "semantic": "_CAMERA_FORWARD" }, "cameraUp": { "type": 35665, "value": [], "semantic": "CAMERA_UP" }, "u_lengthScale": { "type": 5126, "value": [] }, "u_speeaScale": { "type": 5126, "value": [] }, "u_simulationSpace": { "type": 5124, "value": [] }, "u_spaceType": { "type": 5124, "value": [] }, "u_velocityConst": { "type": 35665, "value": [] }, "u_velocityCurveX[0]": { "type": 35664, "value": [] }, "u_velocityCurveY[0]": { "type": 35664, "value": [] }, "u_velocityCurveZ[0]": { "type": 35664, "value": [] }, "u_velocityConstMax": { "type": 35665, "value": [] }, "u_velocityCurveMaxX[0]": { "type": 35664, "value": [] }, "u_velocityCurveMaxY[0]": { "type": 35664, "value": [] }, "u_velocityCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_colorGradient[0]": { "type": 35666, "value": [] }, "u_alphaGradient[0]": { "type": 35664, "value": [] }, "u_colorGradientMax[0]": { "type": 35666, "value": [] }, "u_alphaGradientMax[0]": { "type": 35664, "value": [] }, "u_sizeCurve[0]": { "type": 35664, "value": [] }, "u_sizeCurveMax[0]": { "type": 35664, "value": [] }, "u_sizeCurveX[0]": { "type": 35664, "value": [] }, "u_sizeCurveY[0]": { "type": 35664, "value": [] }, "u_sizeCurveZ[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxX[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxY[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_rotationConst": { "type": 5126, "value": [] }, "u_rotationConstMax": { "type": 5126, "value": [] }, "u_rotationCurve[0]": { "type": 35664, "value": [] }, "u_rotationCurveMax[0]": { "type": 35664, "value": [] }, "u_rotationConstSeprarate": { "type": 35665, "value": [] }, "u_rotationConstMaxSeprarate": { "type": 35665, "value": [] }, "u_rotationCurveX[0]": { "type": 35664, "value": [] }, "u_rotationCurveY[0]": { "type": 35664, "value": [] }, "u_rotationCurveZ[0]": { "type": 35664, "value": [] }, "u_rotationCurveW[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxX[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxY[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxW[0]": { "type": 35664, "value": [] }, "u_cycles": { "type": 5126, "value": [] }, "u_subUV": { "type": 35666, "value": [] }, "u_uvCurve[0]": { "type": 35664, "value": [] }, "u_uvCurveMax[0]": { "type": 35664, "value": [] }, "map": { "type": 35678, "value": [] }, "diffuse": { "type": 35666, "value": [1, 1, 1] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.points = { "name": "buildin/points.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "points_vert", "type": 35633, "uri": "uniform float size;\r\nuniform float scale;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <color_vertex>\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <project_vertex>\r\n\r\n\tgl_PointSize = size;\r\n\r\n\t#ifdef USE_SIZEATTENUATION\r\n\r\n\t\tbool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\r\n\r\n\t\tif ( isPerspective ) gl_PointSize *= ( scale / - mvPosition.z );\r\n\r\n\t#endif\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "points_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <map_particle_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_particle_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "points", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "size": { "type": 5126, "value": [] }, "scale": { "type": 5126, "value": [] }, "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "map": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.shadow = { "name": "buildin/shadow.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "shadow_vert", "type": 35633, "uri": "\r\n#include <common2>\r\n#include <fog_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "shadow_frag", "type": 35632, "uri": "uniform vec3 color;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <fog_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <shadowmap_pars_fragment>\r\n#include <shadowmask_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\tgl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );\r\n\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "shadow", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "color": { "type": 35665, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.sprite = { "name": "buildin/sprite.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "sprite_vert", "type": 35633, "uri": "uniform float rotation;\r\nuniform vec2 center;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\tvec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );\r\n\r\n\tvec2 scale;\r\n\tscale.x = length( vec3( modelMatrix[ 0 ].x, modelMatrix[ 0 ].y, modelMatrix[ 0 ].z ) );\r\n\tscale.y = length( vec3( modelMatrix[ 1 ].x, modelMatrix[ 1 ].y, modelMatrix[ 1 ].z ) );\r\n\r\n\t#ifndef USE_SIZEATTENUATION\r\n\r\n\t\tbool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\r\n\r\n\t\tif ( isPerspective ) scale *= - mvPosition.z;\r\n\r\n\t#endif\r\n\r\n\tvec2 alignedPosition = ( position.xy - ( center - vec2( 0.5 ) ) ) * scale;\r\n\r\n\tvec2 rotatedPosition;\r\n\trotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;\r\n\trotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;\r\n\r\n\tmvPosition.xy += rotatedPosition;\r\n\r\n\tgl_Position = projectionMatrix * mvPosition;\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "sprite_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "sprite", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "rotation": { "type": 5126, "value": [] }, "center": { "type": 35664, "value": [] }, "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
-        ShaderLib.vertcolor = { "name": "buildin/vertcolor.shader.gltf", "config": { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "vertcolor_vert", "type": 35633, "uri": "#include <common>\r\nattribute vec4 position;   \r\nattribute vec4 normal;   \r\nattribute vec4 color;                  \r\nattribute vec4 uv;        \r\nuniform highp mat4 modelViewProjectionMatrix;   \r\nuniform highp vec4 _MainTex_ST;       \r\n\r\nvarying lowp vec4 xlv_COLOR;                \r\nvarying highp vec2 xlv_TEXCOORD0;   \r\n\r\nvoid main()                                     \r\n{                                               \r\n    highp vec4 tmpvar_1;                        \r\n    tmpvar_1.w = 1.0;                           \r\n    tmpvar_1.xyz = position.xyz;             \r\n    xlv_COLOR = color;                     \r\n    xlv_TEXCOORD0 = uv.xy * _MainTex_ST.xy + _MainTex_ST.zw;   \r\n\r\n    //xlv_COLOR.xyz =pos.xyz;\r\n    gl_Position = (modelViewProjectionMatrix * tmpvar_1);  \r\n}\r\n" }, { "name": "vertcolor_frag", "type": 35632, "uri": "#include <common>\r\nuniform sampler2D map;                                                 \r\nvarying lowp vec4 xlv_COLOR;                                                 \r\nvarying highp vec2 xlv_TEXCOORD0;   \r\nvoid main() \r\n{\r\n    lowp vec4 col_1;    \r\n    mediump vec4 prev_2;\r\n    lowp vec4 tmpvar_3;\r\n\r\n    tmpvar_3 = (texture2D(map, xlv_TEXCOORD0));\r\n    //prev_2 = tmpvar_3;\r\n    //mediump vec4 tmpvar_4;\r\n    //tmpvar_4 = mix(vec4(1.0, 1.0, 1.0, 1.0), prev_2, prev_2.wwww);\r\n    //col_1 = tmpvar_4;\r\n    //col_1.x = xlv_TEXCOORD0.x;\r\n    //col_1.y = xlv_TEXCOORD0.y;\r\n    gl_FragData[0] = tmpvar_3;\r\n}" }], "techniques": [{ "name": "vertcolor", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "color": { "semantic": "COLOR_0" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "modelViewProjectionMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEWPROJECTION" }, "_MainTex_ST": { "type": 35666, "value": [1, 1, 0, 0] }, "map": { "type": 35678, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] }, "_isBuiltin": true };
+        ShaderLib.cube = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "cube_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n\tgl_Position.z = gl_Position.w; // set z to camera.far\r\n\r\n}\r\n" }, { "name": "cube_frag", "type": 35632, "uri": "uniform samplerCube tCube;\r\nuniform float tFlip;\r\nuniform float opacity;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\nvoid main() {\r\n\r\n\tgl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );\r\n\tgl_FragColor.a *= opacity;\r\n\r\n}\r\n" }], "techniques": [{ "name": "cube", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "tCube": { "type": 35680, "value": [] }, "tFlip": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.depth = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "depth_vert", "type": 35633, "uri": "#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n}\r\n" }, { "name": "depth_frag", "type": 35632, "uri": "#if DEPTH_PACKING == 3200\r\n\r\n\tuniform float opacity;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tdiffuseColor.a = opacity;\r\n\r\n\t#endif\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tgl_FragColor = vec4( vec3( 1.0 - gl_FragCoord.z ), opacity );\r\n\r\n\t#elif DEPTH_PACKING == 3201\r\n\r\n\t\tgl_FragColor = packDepthToRGBA( gl_FragCoord.z );\r\n\r\n\t#endif\r\n\r\n}\r\n" }], "techniques": [{ "name": "depth", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.diffuse = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "diffuse_vert", "type": 35633, "uri": "#include <common>\r\n#include <skinning_pars_vert>\r\n#include <lightmap_pars_vert> \r\nattribute vec4 position;\r\nattribute vec4 uv;\r\nuniform highp mat4 modelViewProjectionMatrix;\r\nuniform highp mat3 uvTransform;  \r\nvarying highp vec2 xlv_TEXCOORD0;\r\n\r\nvoid main() {\r\n    #include <skinning_base_vert>\r\n    xlv_TEXCOORD0 = ( uvTransform * vec3( uv.xy, 1 ) ).xy;\r\n    #include <lightmap_vert>\r\n    gl_Position = (modelViewProjectionMatrix * tmpVertex);\r\n}" }, { "name": "diffuse_frag", "type": 35632, "uri": "#include <common>\r\n#include <lightmap_pars_frag>\r\nuniform vec3 diffuse;\r\nuniform sampler2D map;\r\nuniform lowp float _AlphaCut;\r\nvarying highp vec2 xlv_TEXCOORD0;\r\nvoid main() {\r\n    lowp vec4 outColor = texture2D(map, xlv_TEXCOORD0) * vec4(diffuse, 1.0);\r\n    if(outColor.a < _AlphaCut)\r\n        discard;\r\n    #include <lightmap_frag>    \r\n}" }], "techniques": [{ "name": "diffuse", "attributes": { "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" }, "position": { "semantic": "POSITION" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "glstate_vec4_bones[0]": { "type": 35666, "value": [], "semantic": "_BONESVEC4" }, "lightMapOffset": { "type": 35666, "value": [], "semantic": "_LIGHTMAPOFFSET" }, "lightMapUV": { "type": 5126, "value": [], "semantic": "_LIGHTMAPUV" }, "modelViewProjectionMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEWPROJECTION" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "map": { "type": 35678, "value": [] }, "_AlphaCut": { "type": 5126, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.distanceRGBA = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "distanceRGBA_vert", "type": 35633, "uri": "#define DISTANCE\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvWorldPosition = worldPosition.xyz;\r\n\r\n}\r\n" }, { "name": "distanceRGBA_frag", "type": 35632, "uri": "#define DISTANCE\r\n\r\nuniform vec3 referencePosition;\r\nuniform float nearDistance;\r\nuniform float farDistance;\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main () {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\tfloat dist = length( vWorldPosition - referencePosition );\r\n\tdist = ( dist - nearDistance ) / ( farDistance - nearDistance );\r\n\tdist = saturate( dist ); // clamp to [ 0, 1 ]\r\n\r\n\tgl_FragColor = packDepthToRGBA( dist );\r\n\r\n}\r\n" }], "techniques": [{ "name": "distanceRGBA", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "referencePosition": { "type": 35665, "value": [], "semantic": "_REFERENCEPOSITION" }, "nearDistance": { "type": 5126, "value": [], "semantic": "_NEARDICTANCE" }, "farDistance": { "type": 5126, "value": [], "semantic": "_FARDISTANCE" }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.equirect = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "equirect_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n}\r\n" }, { "name": "equirect_frag", "type": 35632, "uri": "uniform sampler2D tEquirect;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n\r\nvoid main() {\r\n\r\n\tvec3 direction = normalize( vWorldPosition );\r\n\r\n\tvec2 sampleUV;\r\n\r\n\tsampleUV.y = asin( clamp( direction.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\r\n\r\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\r\n\r\n\tgl_FragColor = texture2D( tEquirect, sampleUV );\r\n\r\n}\r\n" }], "techniques": [{ "name": "equirect", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "tEquirect": { "type": 35678, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.linedashed = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linedashed_vert", "type": 35633, "uri": "uniform float scale;\r\nattribute float lineDistance;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <color_vertex>\r\n\r\n\tvLineDistance = scale * lineDistance;\r\n\r\n\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\r\n\tgl_Position = projectionMatrix * mvPosition;\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "linedashed_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\nuniform float dashSize;\r\nuniform float totalSize;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tif ( mod( vLineDistance, totalSize ) > dashSize ) {\r\n\r\n\t\tdiscard;\r\n\r\n\t}\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <color_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb; // simple shader\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "linedashed", "attributes": { "lineDistance": { "semantic": "Unknown" }, "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "scale": { "type": 5126, "value": [] }, "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126, "value": [] }, "totalSize": { "type": 5126, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.line = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "line_vert", "type": 35633, "uri": "#include <common>\r\nattribute vec4 position;\r\nattribute vec4 color;\r\nuniform highp mat4 modelViewProjectionMatrix;\r\nvarying lowp vec4 xlv_COLOR;\r\nvoid main() {\r\n    highp vec4 tmpvar_1;\r\n    tmpvar_1.w = 1.0;\r\n    tmpvar_1.xyz = position.xyz;\r\n    xlv_COLOR = color;\r\n    gl_Position = (modelViewProjectionMatrix * tmpvar_1);\r\n}" }, { "name": "line_frag", "type": 35632, "uri": "#include <common>\r\nvarying lowp vec4 xlv_COLOR;\r\nvoid main() {\r\n    gl_FragData[0] = xlv_COLOR;\r\n}" }], "techniques": [{ "name": "line", "attributes": { "position": { "semantic": "POSITION" }, "color": { "semantic": "COLOR_0" } }, "uniforms": { "modelViewProjectionMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEWPROJECTION" } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.meshbasic = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshbasic_vert", "type": 35633, "uri": "#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_ENVMAP\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshbasic_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\r\n\t// accumulation (baked indirect lighting only)\r\n\t#ifdef USE_LIGHTMAP\r\n\r\n\t\treflectedLight.indirectDiffuse += texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\r\n\r\n\t#else\r\n\r\n\t\treflectedLight.indirectDiffuse += vec3( 1.0 );\r\n\r\n\t#endif\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\treflectedLight.indirectDiffuse *= diffuseColor.rgb;\r\n\r\n\tvec3 outgoingLight = reflectedLight.indirectDiffuse;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t// #include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshbasic", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.meshlambert = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshlambert_vert", "type": 35633, "uri": "#define LAMBERT\r\nvarying vec3 vLightFront;\r\n\r\n#ifdef DOUBLE_SIDED\r\n\r\n\tvarying vec3 vLightBack;\r\n\r\n#endif\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_pars_maps>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <lights_lambert_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshlambert_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform float opacity;\r\n\r\nvarying vec3 vLightFront;\r\n\r\n#ifdef DOUBLE_SIDED\r\n\r\n\tvarying vec3 vLightBack;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_pars_maps>\r\n#include <fog_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <shadowmask_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\treflectedLight.indirectDiffuse = getAmbientLightIrradiance( ambientLightColor );\r\n\r\n\t#include <lightmap_fragment>\r\n\r\n\treflectedLight.indirectDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb );\r\n\r\n\t#ifdef DOUBLE_SIDED\r\n\r\n\t\treflectedLight.directDiffuse = ( gl_FrontFacing ) ? vLightFront : vLightBack;\r\n\r\n\t#else\r\n\r\n\t\treflectedLight.directDiffuse = vLightFront;\r\n\r\n\t#endif\r\n\r\n\treflectedLight.directDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb ) * getShadowMask();\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + totalEmissiveRadiance;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t// #include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshlambert", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.meshphong = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphong_vert", "type": 35633, "uri": "#define PHONG\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshphong_frag", "type": 35632, "uri": "#define PHONG\r\n\r\nuniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform vec3 specular;\r\nuniform float shininess;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <gradientmap_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_phong_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\t#include <lights_phong_fragment>\r\n\t#include <lights_fragment_begin>\r\n\t#include <lights_fragment_maps>\r\n\t#include <lights_fragment_end>\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshphong", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "refractionRatio": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "specular": { "type": 35665, "value": [1, 1, 1] }, "shininess": { "type": 5126, "value": 1 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "gradientMap": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.meshphysical = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphysical_vert", "type": 35633, "uri": "#define PHYSICAL\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshphysical_frag", "type": 35632, "uri": "#define PHYSICAL\r\n\r\nuniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform float roughness;\r\nuniform float metalness;\r\nuniform float opacity;\r\n\r\n#ifndef STANDARD\r\n\tuniform float clearCoat;\r\n\tuniform float clearCoatRoughness;\r\n#endif\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <bsdfs>\r\n#include <cube_uv_reflection_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <envmap_physical_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <lights_pars_begin>\r\n#include <lights_physical_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <roughnessmap_pars_fragment>\r\n#include <metalnessmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <roughnessmap_fragment>\r\n\t#include <metalnessmap_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\t#include <lights_physical_fragment>\r\n\t#include <lights_fragment_begin>\r\n\t#include <lights_fragment_maps>\r\n\t#include <lights_fragment_end>\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshphysical", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "roughness": { "type": 5126, "value": [] }, "metalness": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "clearCoat": { "type": 5126, "value": [] }, "clearCoatRoughness": { "type": 5126, "value": [] }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "refractionRatio": { "type": 5126, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] }, "roughnessMap": { "type": 35678, "value": [] }, "metalnessMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.normal = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "normal_vert", "type": 35633, "uri": "#define NORMAL\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvarying vec3 vViewPosition;\r\n\r\n#endif\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n#endif\r\n\r\n}\r\n" }, { "name": "normal_frag", "type": 35632, "uri": "#define NORMAL\r\n\r\nuniform float opacity;\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvarying vec3 vViewPosition;\r\n\r\n#endif\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\r\n\tgl_FragColor = vec4( packNormalToRGB( normal ), opacity );\r\n\r\n}\r\n" }], "techniques": [{ "name": "normal", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.particle = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "particle_vert", "type": 35633, "uri": "//inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.vs\r\n#include <common>\r\n#if defined(SPHERHBILLBOARD)||defined(STRETCHEDBILLBOARD)||defined(HORIZONTALBILLBOARD)||defined(VERTICALBILLBOARD)\r\n\tattribute vec2 corner;\r\n#endif\r\n#ifdef RENDERMESH\r\n\tattribute vec3 position;\r\n\tattribute vec4 color;\r\n#endif\r\nattribute vec2 uv;\r\nattribute vec3 startPosition;\r\nattribute vec3 startVelocity;\r\nattribute vec4 startColor;\r\nattribute vec3 startSize;\r\nattribute vec3 startRotation;\r\nattribute vec2 time;\r\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)||defined(ROTATIONTWOCONSTANTS)||defined(ROTATIONTWOCURVES)\r\n  attribute vec4 random0;\r\n#endif\r\n#if defined(TEXTURESHEETANIMATIONTWOCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\r\n  attribute vec4 random1;\r\n#endif\r\nattribute vec3 startWorldPosition;\r\nattribute vec4 startWorldRotation;\r\n\r\n#include <particle_common>\r\n\r\nvoid main()\r\n{\r\n\tfloat age = u_currentTime - time.y;\r\n\tfloat t = age/time.x;\r\n\tif(t>1.0){ \t\t\t\r\n\t\t\tv_discard=1.0;\r\n\t\t\treturn;\r\n  }\r\n\t  \r\n\t#include <particle_affector>\r\n\tgl_Position=viewProjectionMatrix*vec4(center,1.0);\r\n\tv_color = computeColor(startColor, t);\r\n\tv_texcoord =computeUV(uv, t);\r\n\tv_discard=0.0;\r\n}\r\n\r\n" }, { "name": "particle_frag", "type": 35632, "uri": "//inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.ps\r\n#include <common>\r\nuniform sampler2D map;\r\nuniform vec4 diffuse;\r\nvarying float v_discard;\r\nvarying vec4 v_color;\r\nvarying vec2 v_texcoord;\r\n\r\n#ifdef RENDERMODE_MESH\r\n\tvarying vec4 v_mesh_color;\r\n#endif\r\n\r\nvoid main()\r\n{\t\r\n\t#ifdef RENDERMODE_MESH\r\n\t\tgl_FragColor=v_mesh_color;\r\n\t#else\r\n\t\tgl_FragColor=vec4(1.0);\t\r\n\t#endif\r\n\r\n\tif(v_discard!=0.0)\r\n\t\tdiscard;\r\n\tgl_FragColor*=texture2D(map,v_texcoord)*diffuse*v_color*2.0;\r\n}" }], "techniques": [{ "name": "particle", "attributes": { "corner": { "semantic": "_CORNER" }, "position": { "semantic": "POSITION" }, "color": { "semantic": "COLOR_0" }, "uv": { "semantic": "TEXCOORD_0" }, "startPosition": { "semantic": "_START_POSITION" }, "startVelocity": { "semantic": "_START_VELOCITY" }, "startColor": { "semantic": "_START_COLOR" }, "startSize": { "semantic": "_START_SIZE" }, "startRotation": { "semantic": "_START_ROTATION" }, "time": { "semantic": "_TIME" }, "random0": { "semantic": "_RANDOM0" }, "random1": { "semantic": "_RANDOM1" }, "startWorldPosition": { "semantic": "_WORLD_POSITION" }, "startWorldRotation": { "semantic": "_WORLD_ROTATION" } }, "uniforms": { "u_currentTime": { "type": 5126, "value": [] }, "u_gravity": { "type": 35665, "value": [] }, "u_worldPosition": { "type": 35665, "value": [] }, "u_worldRotation": { "type": 35666, "value": [] }, "u_startRotation3D": { "type": 35670, "value": [] }, "u_scalingMode": { "type": 5124, "value": [] }, "u_positionScale": { "type": 35665, "value": [] }, "u_sizeScale": { "type": 35665, "value": [] }, "viewProjectionMatrix": { "type": 35676, "value": [], "semantic": "_VIEWPROJECTION" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "cameraForward": { "type": 35665, "value": [], "semantic": "_CAMERA_FORWARD" }, "cameraUp": { "type": 35665, "value": [], "semantic": "CAMERA_UP" }, "u_lengthScale": { "type": 5126, "value": [] }, "u_speeaScale": { "type": 5126, "value": [] }, "u_simulationSpace": { "type": 5124, "value": [] }, "u_spaceType": { "type": 5124, "value": [] }, "u_velocityConst": { "type": 35665, "value": [] }, "u_velocityCurveX[0]": { "type": 35664, "value": [] }, "u_velocityCurveY[0]": { "type": 35664, "value": [] }, "u_velocityCurveZ[0]": { "type": 35664, "value": [] }, "u_velocityConstMax": { "type": 35665, "value": [] }, "u_velocityCurveMaxX[0]": { "type": 35664, "value": [] }, "u_velocityCurveMaxY[0]": { "type": 35664, "value": [] }, "u_velocityCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_colorGradient[0]": { "type": 35666, "value": [] }, "u_alphaGradient[0]": { "type": 35664, "value": [] }, "u_colorGradientMax[0]": { "type": 35666, "value": [] }, "u_alphaGradientMax[0]": { "type": 35664, "value": [] }, "u_sizeCurve[0]": { "type": 35664, "value": [] }, "u_sizeCurveMax[0]": { "type": 35664, "value": [] }, "u_sizeCurveX[0]": { "type": 35664, "value": [] }, "u_sizeCurveY[0]": { "type": 35664, "value": [] }, "u_sizeCurveZ[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxX[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxY[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_rotationConst": { "type": 5126, "value": [] }, "u_rotationConstMax": { "type": 5126, "value": [] }, "u_rotationCurve[0]": { "type": 35664, "value": [] }, "u_rotationCurveMax[0]": { "type": 35664, "value": [] }, "u_rotationConstSeprarate": { "type": 35665, "value": [] }, "u_rotationConstMaxSeprarate": { "type": 35665, "value": [] }, "u_rotationCurveX[0]": { "type": 35664, "value": [] }, "u_rotationCurveY[0]": { "type": 35664, "value": [] }, "u_rotationCurveZ[0]": { "type": 35664, "value": [] }, "u_rotationCurveW[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxX[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxY[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxW[0]": { "type": 35664, "value": [] }, "u_cycles": { "type": 5126, "value": [] }, "u_subUV": { "type": 35666, "value": [] }, "u_uvCurve[0]": { "type": 35664, "value": [] }, "u_uvCurveMax[0]": { "type": 35664, "value": [] }, "map": { "type": 35678, "value": [] }, "diffuse": { "type": 35666, "value": [1, 1, 1] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.points = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "points_vert", "type": 35633, "uri": "uniform float size;\r\nuniform float scale;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <color_vertex>\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <project_vertex>\r\n\r\n\tgl_PointSize = size;\r\n\r\n\t#ifdef USE_SIZEATTENUATION\r\n\r\n\t\tbool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\r\n\r\n\t\tif ( isPerspective ) gl_PointSize *= ( scale / - mvPosition.z );\r\n\r\n\t#endif\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "points_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <map_particle_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_particle_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "points", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "size": { "type": 5126, "value": [] }, "scale": { "type": 5126, "value": [] }, "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "map": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.shadow = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "shadow_vert", "type": 35633, "uri": "\r\n#include <common2>\r\n#include <fog_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "shadow_frag", "type": 35632, "uri": "uniform vec3 color;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <fog_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <shadowmap_pars_fragment>\r\n#include <shadowmask_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\tgl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );\r\n\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "shadow", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "color": { "type": 35665, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.sprite = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "sprite_vert", "type": 35633, "uri": "uniform float rotation;\r\nuniform vec2 center;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\tvec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );\r\n\r\n\tvec2 scale;\r\n\tscale.x = length( vec3( modelMatrix[ 0 ].x, modelMatrix[ 0 ].y, modelMatrix[ 0 ].z ) );\r\n\tscale.y = length( vec3( modelMatrix[ 1 ].x, modelMatrix[ 1 ].y, modelMatrix[ 1 ].z ) );\r\n\r\n\t#ifndef USE_SIZEATTENUATION\r\n\r\n\t\tbool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\r\n\r\n\t\tif ( isPerspective ) scale *= - mvPosition.z;\r\n\r\n\t#endif\r\n\r\n\tvec2 alignedPosition = ( position.xy - ( center - vec2( 0.5 ) ) ) * scale;\r\n\r\n\tvec2 rotatedPosition;\r\n\trotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;\r\n\trotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;\r\n\r\n\tmvPosition.xy += rotatedPosition;\r\n\r\n\tgl_Position = projectionMatrix * mvPosition;\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "sprite_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "sprite", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "rotation": { "type": 5126, "value": [] }, "center": { "type": 35664, "value": [] }, "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.vertcolor = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "vertcolor_vert", "type": 35633, "uri": "#include <common>\r\nattribute vec4 position;   \r\nattribute vec4 normal;   \r\nattribute vec4 color;                  \r\nattribute vec4 uv;        \r\nuniform highp mat4 modelViewProjectionMatrix;   \r\nuniform highp vec4 _MainTex_ST;       \r\n\r\nvarying lowp vec4 xlv_COLOR;                \r\nvarying highp vec2 xlv_TEXCOORD0;   \r\n\r\nvoid main()                                     \r\n{                                               \r\n    highp vec4 tmpvar_1;                        \r\n    tmpvar_1.w = 1.0;                           \r\n    tmpvar_1.xyz = position.xyz;             \r\n    xlv_COLOR = color;                     \r\n    xlv_TEXCOORD0 = uv.xy * _MainTex_ST.xy + _MainTex_ST.zw;   \r\n\r\n    //xlv_COLOR.xyz =pos.xyz;\r\n    gl_Position = (modelViewProjectionMatrix * tmpvar_1);  \r\n}\r\n" }, { "name": "vertcolor_frag", "type": 35632, "uri": "#include <common>\r\nuniform sampler2D map;                                                 \r\nvarying lowp vec4 xlv_COLOR;                                                 \r\nvarying highp vec2 xlv_TEXCOORD0;   \r\nvoid main() \r\n{\r\n    lowp vec4 col_1;    \r\n    mediump vec4 prev_2;\r\n    lowp vec4 tmpvar_3;\r\n\r\n    tmpvar_3 = (texture2D(map, xlv_TEXCOORD0));\r\n    //prev_2 = tmpvar_3;\r\n    //mediump vec4 tmpvar_4;\r\n    //tmpvar_4 = mix(vec4(1.0, 1.0, 1.0, 1.0), prev_2, prev_2.wwww);\r\n    //col_1 = tmpvar_4;\r\n    //col_1.x = xlv_TEXCOORD0.x;\r\n    //col_1.y = xlv_TEXCOORD0.y;\r\n    gl_FragData[0] = tmpvar_3;\r\n}" }], "techniques": [{ "name": "vertcolor", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "color": { "semantic": "COLOR_0" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "modelViewProjectionMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEWPROJECTION" }, "_MainTex_ST": { "type": 35666, "value": [1, 1, 0, 0] }, "map": { "type": 35678, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
     })(ShaderLib = egret3d.ShaderLib || (egret3d.ShaderLib = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -16772,7 +16288,7 @@ var egret3d;
         ShaderChunk.aomap_pars_fragment = "#ifdef USE_AOMAP\n\n uniform sampler2D aoMap;\n uniform float aoMapIntensity;\n\n#endif";
         ShaderChunk.beginnormal_vertex = "\nvec3 objectNormal = vec3( normal );\n";
         ShaderChunk.begin_vertex = "\nvec3 transformed = vec3( position );\n";
-        ShaderChunk.bsdfs = "// diffuse just use lambert\n\nvec3 BRDF_Diffuse_Lambert(vec3 diffuseColor) {\n    return RECIPROCAL_PI * diffuseColor;\n}\n\n// specular use Cook-Torrance microfacet model, http://ruh.li/GraphicsCookTorrance.html\n// About RECIPROCAL_PI: referenced by http://www.joshbarczak.com/blog/?p=272\n\nvec4 F_Schlick( const in vec4 specularColor, const in float dotLH ) {\n // Original approximation by Christophe Schlick '94\n float fresnel = pow( 1.0 - dotLH, 5.0 );\n\n // Optimized variant (presented by Epic at SIGGRAPH '13)\n // float fresnel = exp2( ( -5.55473 * dotLH - 6.98316 ) * dotLH );\n\n return ( 1.0 - specularColor ) * fresnel + specularColor;\n}\n\n// use blinn phong instead of phong\nfloat D_BlinnPhong( const in float shininess, const in float dotNH ) {\n    // ( shininess * 0.5 + 1.0 ), three.js do this, but why ???\n return RECIPROCAL_PI * ( shininess * 0.5 + 1.0 ) * pow( dotNH, shininess );\n}\n\nfloat G_BlinnPhong_Implicit( /* const in float dotNL, const in float dotNV */ ) {\n // geometry term is (n dot l)(n dot v) / 4(n dot l)(n dot v)\n return 0.25;\n}\n\nvec4 BRDF_Specular_BlinnPhong(vec4 specularColor, vec3 N, vec3 L, vec3 V, float shininess) {\n    vec3 H = normalize(L + V);\n\n    float dotNH = saturate(dot(N, H));\n    float dotLH = saturate(dot(L, H));\n\n    vec4 F = F_Schlick(specularColor, dotLH);\n\n    float G = G_BlinnPhong_Implicit( /* dotNL, dotNV */ );\n\n    float D = D_BlinnPhong(shininess, dotNH);\n\n    return F * G * D;\n}\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (33)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat D_GGX( const in float alpha, const in float dotNH ) {\n\n float a2 = pow2( alpha );\n\n float denom = pow2( dotNH ) * ( a2 - 1.0 ) + 1.0; // avoid alpha = 0 with dotNH = 1\n\n return RECIPROCAL_PI * a2 / pow2( denom );\n\n}\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (34)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat G_GGX_Smith( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n // geometry term = G(l)⋅G(v) / 4(n⋅l)(n⋅v)\n\n float a2 = pow2( alpha );\n\n float gl = dotNL + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n float gv = dotNV + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n\n return 1.0 / ( gl * gv );\n\n}\n\n// Moving Frostbite to Physically Based Rendering 2.0 - page 12, listing 2\n// http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr_v2.pdf\nfloat G_GGX_SmithCorrelated( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n float a2 = pow2( alpha );\n\n // dotNL and dotNV are explicitly swapped. This is not a mistake.\n float gv = dotNL * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n float gl = dotNV * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n\n return 0.5 / max( gv + gl, EPSILON );\n}\n\n// GGX Distribution, Schlick Fresnel, GGX-Smith Visibility\nvec4 BRDF_Specular_GGX(vec4 specularColor, vec3 N, vec3 L, vec3 V, float roughness) {\n\n float alpha = pow2( roughness ); // UE4's roughness\n\n vec3 H = normalize(L + V);\n\n float dotNL = saturate( dot(N, L) );\n float dotNV = saturate( dot(N, V) );\n float dotNH = saturate( dot(N, H) );\n float dotLH = saturate( dot(L, H) );\n\n vec4 F = F_Schlick( specularColor, dotLH );\n\n float G = G_GGX_SmithCorrelated( alpha, dotNL, dotNV );\n\n float D = D_GGX( alpha, dotNH );\n\n return F * G * D;\n\n}\n\n// ref: https://www.unrealengine.com/blog/physically-based-shading-on-mobile - environmentBRDF for GGX on mobile\nvec4 BRDF_Specular_GGX_Environment( const in vec3 N, const in vec3 V, const in vec4 specularColor, const in float roughness ) {\n\n float dotNV = saturate( dot( N, V ) );\n\n const vec4 c0 = vec4( - 1, - 0.0275, - 0.572, 0.022 );\n\n const vec4 c1 = vec4( 1, 0.0425, 1.04, - 0.04 );\n\n vec4 r = roughness * c0 + c1;\n\n float a004 = min( r.x * r.x, exp2( - 9.28 * dotNV ) ) * r.x + r.y;\n\n vec2 AB = vec2( -1.04, 1.04 ) * a004 + r.zw;\n\n return specularColor * AB.x + AB.y;\n\n}\n\n// source: http://simonstechblog.blogspot.ca/2011/12/microfacet-brdf.html\nfloat GGXRoughnessToBlinnExponent( const in float ggxRoughness ) {\n return ( 2.0 / pow2( ggxRoughness + 0.0001 ) - 2.0 );\n}\n\nfloat BlinnExponentToGGXRoughness( const in float blinnExponent ) {\n return sqrt( 2.0 / ( blinnExponent + 2.0 ) );\n}";
+        ShaderChunk.bsdfs = "float punctualLightIntensityToIrradianceFactor( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {\n\n if( decayExponent > 0.0 ) {\n\n#if defined ( PHYSICALLY_CORRECT_LIGHTS )\n\n  // based upon Frostbite 3 Moving to Physically-based Rendering\n  // page 32, equation 26: E[window1]\n  // https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf\n  // this is intended to be used on spot and point lights who are represented as luminous intensity\n  // but who must be converted to luminous irradiance for surface lighting calculation\n  float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );\n  float maxDistanceCutoffFactor = pow2( saturate( 1.0 - pow4( lightDistance / cutoffDistance ) ) );\n  return distanceFalloff * maxDistanceCutoffFactor;\n\n#else\n\n  return pow( saturate( -lightDistance / cutoffDistance + 1.0 ), decayExponent );\n\n#endif\n\n }\n\n return 1.0;\n\n}\n\nvec3 BRDF_Diffuse_Lambert( const in vec3 diffuseColor ) {\n\n return RECIPROCAL_PI * diffuseColor;\n\n} // validated\n\nvec3 F_Schlick( const in vec3 specularColor, const in float dotLH ) {\n\n // Original approximation by Christophe Schlick '94\n // float fresnel = pow( 1.0 - dotLH, 5.0 );\n\n // Optimized variant (presented by Epic at SIGGRAPH '13)\n // https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf\n float fresnel = exp2( ( -5.55473 * dotLH - 6.98316 ) * dotLH );\n\n return ( 1.0 - specularColor ) * fresnel + specularColor;\n\n} // validated\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (34)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat G_GGX_Smith( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n // geometry term (normalized) = G(l)⋅G(v) / 4(n⋅l)(n⋅v)\n // also see #12151\n\n float a2 = pow2( alpha );\n\n float gl = dotNL + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n float gv = dotNV + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n\n return 1.0 / ( gl * gv );\n\n} // validated\n\n// Moving Frostbite to Physically Based Rendering 3.0 - page 12, listing 2\n// https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf\nfloat G_GGX_SmithCorrelated( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n float a2 = pow2( alpha );\n\n // dotNL and dotNV are explicitly swapped. This is not a mistake.\n float gv = dotNL * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n float gl = dotNV * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n\n return 0.5 / max( gv + gl, EPSILON );\n\n}\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (33)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat D_GGX( const in float alpha, const in float dotNH ) {\n\n float a2 = pow2( alpha );\n\n float denom = pow2( dotNH ) * ( a2 - 1.0 ) + 1.0; // avoid alpha = 0 with dotNH = 1\n\n return RECIPROCAL_PI * a2 / pow2( denom );\n\n}\n\n// GGX Distribution, Schlick Fresnel, GGX-Smith Visibility\nvec3 BRDF_Specular_GGX( const in IncidentLight incidentLight, const in GeometricContext geometry, const in vec3 specularColor, const in float roughness ) {\n\n float alpha = pow2( roughness ); // UE4's roughness\n\n vec3 halfDir = normalize( incidentLight.direction + geometry.viewDir );\n\n float dotNL = saturate( dot( geometry.normal, incidentLight.direction ) );\n float dotNV = saturate( dot( geometry.normal, geometry.viewDir ) );\n float dotNH = saturate( dot( geometry.normal, halfDir ) );\n float dotLH = saturate( dot( incidentLight.direction, halfDir ) );\n\n vec3 F = F_Schlick( specularColor, dotLH );\n\n float G = G_GGX_SmithCorrelated( alpha, dotNL, dotNV );\n\n float D = D_GGX( alpha, dotNH );\n\n return F * ( G * D );\n\n} // validated\n\n// Rect Area Light\n\n// Real-Time Polygonal-Light Shading with Linearly Transformed Cosines\n// by Eric Heitz, Jonathan Dupuy, Stephen Hill and David Neubelt\n// code: https://github.com/selfshadow/ltc_code/\n\nvec2 LTC_Uv( const in vec3 N, const in vec3 V, const in float roughness ) {\n\n const float LUT_SIZE  = 64.0;\n const float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;\n const float LUT_BIAS  = 0.5 / LUT_SIZE;\n\n float dotNV = saturate( dot( N, V ) );\n\n // texture parameterized by sqrt( GGX alpha ) and sqrt( 1 - cos( theta ) )\n vec2 uv = vec2( roughness, sqrt( 1.0 - dotNV ) );\n\n uv = uv * LUT_SCALE + LUT_BIAS;\n\n return uv;\n\n}\n\nfloat LTC_ClippedSphereFormFactor( const in vec3 f ) {\n\n // Real-Time Area Lighting: a Journey from Research to Production (p.102)\n // An approximation of the form factor of a horizon-clipped rectangle.\n\n float l = length( f );\n\n return max( ( l * l + f.z ) / ( l + 1.0 ), 0.0 );\n\n}\n\nvec3 LTC_EdgeVectorFormFactor( const in vec3 v1, const in vec3 v2 ) {\n\n float x = dot( v1, v2 );\n\n float y = abs( x );\n\n // rational polynomial approximation to theta / sin( theta ) / 2PI\n float a = 0.8543985 + ( 0.4965155 + 0.0145206 * y ) * y;\n float b = 3.4175940 + ( 4.1616724 + y ) * y;\n float v = a / b;\n\n float theta_sintheta = ( x > 0.0 ) ? v : 0.5 * inversesqrt( max( 1.0 - x * x, 1e-7 ) ) - v;\n\n return cross( v1, v2 ) * theta_sintheta;\n\n}\n\nvec3 LTC_Evaluate( const in vec3 N, const in vec3 V, const in vec3 P, const in mat3 mInv, const in vec3 rectCoords[ 4 ] ) {\n\n // bail if point is on back side of plane of light\n // assumes ccw winding order of light vertices\n vec3 v1 = rectCoords[ 1 ] - rectCoords[ 0 ];\n vec3 v2 = rectCoords[ 3 ] - rectCoords[ 0 ];\n vec3 lightNormal = cross( v1, v2 );\n\n if( dot( lightNormal, P - rectCoords[ 0 ] ) < 0.0 ) return vec3( 0.0 );\n\n // construct orthonormal basis around N\n vec3 T1, T2;\n T1 = normalize( V - N * dot( V, N ) );\n T2 = - cross( N, T1 ); // negated from paper; possibly due to a different handedness of world coordinate system\n\n // compute transform\n mat3 mat = mInv * transposeMat3( mat3( T1, T2, N ) );\n\n // transform rect\n vec3 coords[ 4 ];\n coords[ 0 ] = mat * ( rectCoords[ 0 ] - P );\n coords[ 1 ] = mat * ( rectCoords[ 1 ] - P );\n coords[ 2 ] = mat * ( rectCoords[ 2 ] - P );\n coords[ 3 ] = mat * ( rectCoords[ 3 ] - P );\n\n // project rect onto sphere\n coords[ 0 ] = normalize( coords[ 0 ] );\n coords[ 1 ] = normalize( coords[ 1 ] );\n coords[ 2 ] = normalize( coords[ 2 ] );\n coords[ 3 ] = normalize( coords[ 3 ] );\n\n // calculate vector form factor\n vec3 vectorFormFactor = vec3( 0.0 );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 0 ], coords[ 1 ] );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 1 ], coords[ 2 ] );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 2 ], coords[ 3 ] );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 3 ], coords[ 0 ] );\n\n // adjust for horizon clipping\n float result = LTC_ClippedSphereFormFactor( vectorFormFactor );\n\n/*\n // alternate method of adjusting for horizon clipping (see referece)\n // refactoring required\n float len = length( vectorFormFactor );\n float z = vectorFormFactor.z / len;\n\n const float LUT_SIZE  = 64.0;\n const float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;\n const float LUT_BIAS  = 0.5 / LUT_SIZE;\n\n // tabulated horizon-clipped sphere, apparently...\n vec2 uv = vec2( z * 0.5 + 0.5, len );\n uv = uv * LUT_SCALE + LUT_BIAS;\n\n float scale = texture2D( ltc_2, uv ).w;\n\n float result = len * scale;\n*/\n\n return vec3( result );\n\n}\n\n// End Rect Area Light\n\n// ref: https://www.unrealengine.com/blog/physically-based-shading-on-mobile - environmentBRDF for GGX on mobile\nvec3 BRDF_Specular_GGX_Environment( const in GeometricContext geometry, const in vec3 specularColor, const in float roughness ) {\n\n float dotNV = saturate( dot( geometry.normal, geometry.viewDir ) );\n\n const vec4 c0 = vec4( - 1, - 0.0275, - 0.572, 0.022 );\n\n const vec4 c1 = vec4( 1, 0.0425, 1.04, - 0.04 );\n\n vec4 r = roughness * c0 + c1;\n\n float a004 = min( r.x * r.x, exp2( - 9.28 * dotNV ) ) * r.x + r.y;\n\n vec2 AB = vec2( -1.04, 1.04 ) * a004 + r.zw;\n\n return specularColor * AB.x + AB.y;\n\n} // validated\n\n\nfloat G_BlinnPhong_Implicit( /* const in float dotNL, const in float dotNV */ ) {\n\n // geometry term is (n dot l)(n dot v) / 4(n dot l)(n dot v)\n return 0.25;\n\n}\n\nfloat D_BlinnPhong( const in float shininess, const in float dotNH ) {\n\n return RECIPROCAL_PI * ( shininess * 0.5 + 1.0 ) * pow( dotNH, shininess );\n\n}\n\nvec3 BRDF_Specular_BlinnPhong( const in IncidentLight incidentLight, const in GeometricContext geometry, const in vec3 specularColor, const in float shininess ) {\n\n vec3 halfDir = normalize( incidentLight.direction + geometry.viewDir );\n\n //float dotNL = saturate( dot( geometry.normal, incidentLight.direction ) );\n //float dotNV = saturate( dot( geometry.normal, geometry.viewDir ) );\n float dotNH = saturate( dot( geometry.normal, halfDir ) );\n float dotLH = saturate( dot( incidentLight.direction, halfDir ) );\n\n vec3 F = F_Schlick( specularColor, dotLH );\n\n float G = G_BlinnPhong_Implicit( /* dotNL, dotNV */ );\n\n float D = D_BlinnPhong( shininess, dotNH );\n\n return F * ( G * D );\n\n} // validated\n\n// source: http://simonstechblog.blogspot.ca/2011/12/microfacet-brdf.html\nfloat GGXRoughnessToBlinnExponent( const in float ggxRoughness ) {\n return ( 2.0 / pow2( ggxRoughness + 0.0001 ) - 2.0 );\n}\n\nfloat BlinnExponentToGGXRoughness( const in float blinnExponent ) {\n return sqrt( 2.0 / ( blinnExponent + 2.0 ) );\n}\n";
         ShaderChunk.bumpMap_pars_frag = "#ifdef USE_BUMPMAP\n\n uniform sampler2D bumpMap;\n uniform float bumpScale;\n\n // Derivative maps - bump mapping unparametrized surfaces by Morten Mikkelsen\n // http://mmikkelsen3d.blogspot.sk/2011/07/derivative-maps.html\n\n // Evaluate the derivative of the height w.r.t. screen-space using forward differencing (listing 2)\n\n vec2 dHdxy_fwd(vec2 uv) {\n\n  vec2 dSTdx = dFdx( uv );\n  vec2 dSTdy = dFdy( uv );\n\n  float Hll = bumpScale * texture2D( bumpMap, uv ).x;\n  float dBx = bumpScale * texture2D( bumpMap, uv + dSTdx ).x - Hll;\n  float dBy = bumpScale * texture2D( bumpMap, uv + dSTdy ).x - Hll;\n\n  return vec2( dBx, dBy );\n\n }\n\n vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy) {\n\n  vec3 vSigmaX = dFdx( surf_pos );\n  vec3 vSigmaY = dFdy( surf_pos );\n  vec3 vN = surf_norm;  // normalized\n\n  vec3 R1 = cross( vSigmaY, vN );\n  vec3 R2 = cross( vN, vSigmaX );\n\n  float fDet = dot( vSigmaX, R1 );\n\n  vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );\n  return normalize( abs( fDet ) * surf_norm - vGrad );\n\n }\n\n#endif\n";
         ShaderChunk.bumpmap_pars_fragment = "#ifdef USE_BUMPMAP\n\n uniform sampler2D bumpMap;\n uniform float bumpScale;\n\n // Bump Mapping Unparametrized Surfaces on the GPU by Morten S. Mikkelsen\n // http://api.unrealengine.com/attachments/Engine/Rendering/LightingAndShadows/BumpMappingWithoutTangentSpace/mm_sfgrad_bump.pdf\n\n // Evaluate the derivative of the height w.r.t. screen-space using forward differencing (listing 2)\n\n vec2 dHdxy_fwd() {\n\n  vec2 dSTdx = dFdx( vUv );\n  vec2 dSTdy = dFdy( vUv );\n\n  float Hll = bumpScale * texture2D( bumpMap, vUv ).x;\n  float dBx = bumpScale * texture2D( bumpMap, vUv + dSTdx ).x - Hll;\n  float dBy = bumpScale * texture2D( bumpMap, vUv + dSTdy ).x - Hll;\n\n  return vec2( dBx, dBy );\n\n }\n\n vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy ) {\n\n  // Workaround for Adreno 3XX dFd*( vec3 ) bug. See #9988\n\n  vec3 vSigmaX = vec3( dFdx( surf_pos.x ), dFdx( surf_pos.y ), dFdx( surf_pos.z ) );\n  vec3 vSigmaY = vec3( dFdy( surf_pos.x ), dFdy( surf_pos.y ), dFdy( surf_pos.z ) );\n  vec3 vN = surf_norm;  // normalized\n\n  vec3 R1 = cross( vSigmaY, vN );\n  vec3 R2 = cross( vN, vSigmaX );\n\n  float fDet = dot( vSigmaX, R1 );\n\n  fDet *= ( float( gl_FrontFacing ) * 2.0 - 1.0 );\n\n  vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );\n  return normalize( abs( fDet ) * surf_norm - vGrad );\n\n }\n\n#endif\n";
         ShaderChunk.clipping_planes_fragment = "#if defined(NUM_CLIPPING_PLANES) && NUM_CLIPPING_PLANES > 0\n\n vec4 plane;\n\n // #pragma unroll_loop\n for ( int i = 0; i < UNION_CLIPPING_PLANES; i ++ ) {\n\n  plane = clippingPlanes[ i ];\n  if ( dot( vViewPosition, plane.xyz ) > plane.w ) discard;\n\n }\n\n #if UNION_CLIPPING_PLANES < NUM_CLIPPING_PLANES\n\n  bool clipped = true;\n\n  // #pragma unroll_loop\n  for ( int i = UNION_CLIPPING_PLANES; i < NUM_CLIPPING_PLANES; i ++ ) {\n\n   plane = clippingPlanes[ i ];\n   clipped = ( dot( vViewPosition, plane.xyz ) > plane.w ) && clipped;\n\n  }\n\n  if ( clipped ) discard;\n\n #endif\n\n#endif\n";
@@ -16793,7 +16309,7 @@ var egret3d;
         ShaderChunk.dithering_pars_fragment = "#if defined( DITHERING )\n\n // based on https://www.shadertoy.com/view/MslGR8\n vec3 dithering( vec3 color ) {\n  //Calculate grid position\n  float grid_position = rand( gl_FragCoord.xy );\n\n  //Shift the individual colors differently, thus making it even harder to see the dithering pattern\n  vec3 dither_shift_RGB = vec3( 0.25 / 255.0, -0.25 / 255.0, 0.25 / 255.0 );\n\n  //modify shift acording to grid position.\n  dither_shift_RGB = mix( 2.0 * dither_shift_RGB, -2.0 * dither_shift_RGB, grid_position );\n\n  //shift the color by dither_shift\n  return color + dither_shift_RGB;\n }\n\n#endif\n";
         ShaderChunk.emissivemap_fragment = "#ifdef USE_EMISSIVEMAP\n\n vec4 emissiveColor = texture2D( emissiveMap, vUv );\n\n emissiveColor.rgb = emissiveMapTexelToLinear( emissiveColor ).rgb;\n\n totalEmissiveRadiance *= emissiveColor.rgb;\n\n#endif\n";
         ShaderChunk.emissivemap_pars_fragment = "#ifdef USE_EMISSIVEMAP\n\n uniform sampler2D emissiveMap;\n\n#endif\n";
-        ShaderChunk.encodings_fragment = "  gl_FragColor = linearToOutputTexel( gl_FragColor );\n";
+        ShaderChunk.encodings_fragment = "  // gl_FragColor = linearToOutputTexel( gl_FragColor );\n";
         ShaderChunk.encodings_pars_fragment = "// For a discussion of what this is, please read this: http://lousodrome.net/blog/light/2013/05/26/gamma-correct-and-hdr-rendering-in-a-32-bits-buffer/\n\nvec4 LinearToLinear( in vec4 value ) {\n return value;\n}\n\nvec4 GammaToLinear( in vec4 value, in float gammaFactor ) {\n return vec4( pow( value.xyz, vec3( gammaFactor ) ), value.w );\n}\nvec4 LinearToGamma( in vec4 value, in float gammaFactor ) {\n return vec4( pow( value.xyz, vec3( 1.0 / gammaFactor ) ), value.w );\n}\n\nvec4 sRGBToLinear( in vec4 value ) {\n return vec4( mix( pow( value.rgb * 0.9478672986 + vec3( 0.0521327014 ), vec3( 2.4 ) ), value.rgb * 0.0773993808, vec3( lessThanEqual( value.rgb, vec3( 0.04045 ) ) ) ), value.w );\n}\nvec4 LinearTosRGB( in vec4 value ) {\n return vec4( mix( pow( value.rgb, vec3( 0.41666 ) ) * 1.055 - vec3( 0.055 ), value.rgb * 12.92, vec3( lessThanEqual( value.rgb, vec3( 0.0031308 ) ) ) ), value.w );\n}\n\nvec4 RGBEToLinear( in vec4 value ) {\n return vec4( value.rgb * exp2( value.a * 255.0 - 128.0 ), 1.0 );\n}\nvec4 LinearToRGBE( in vec4 value ) {\n float maxComponent = max( max( value.r, value.g ), value.b );\n float fExp = clamp( ceil( log2( maxComponent ) ), -128.0, 127.0 );\n return vec4( value.rgb / exp2( fExp ), ( fExp + 128.0 ) / 255.0 );\n//  return vec4( value.brg, ( 3.0 + 128.0 ) / 256.0 );\n}\n\n// reference: http://iwasbeingirony.blogspot.ca/2010/06/difference-between-rgbm-and-rgbd.html\nvec4 RGBMToLinear( in vec4 value, in float maxRange ) {\n return vec4( value.xyz * value.w * maxRange, 1.0 );\n}\nvec4 LinearToRGBM( in vec4 value, in float maxRange ) {\n float maxRGB = max( value.x, max( value.g, value.b ) );\n float M      = clamp( maxRGB / maxRange, 0.0, 1.0 );\n M            = ceil( M * 255.0 ) / 255.0;\n return vec4( value.rgb / ( M * maxRange ), M );\n}\n\n// reference: http://iwasbeingirony.blogspot.ca/2010/06/difference-between-rgbm-and-rgbd.html\nvec4 RGBDToLinear( in vec4 value, in float maxRange ) {\n return vec4( value.rgb * ( ( maxRange / 255.0 ) / value.a ), 1.0 );\n}\nvec4 LinearToRGBD( in vec4 value, in float maxRange ) {\n float maxRGB = max( value.x, max( value.g, value.b ) );\n float D      = max( maxRange / maxRGB, 1.0 );\n D            = min( floor( D ) / 255.0, 1.0 );\n return vec4( value.rgb * ( D * ( 255.0 / maxRange ) ), D );\n}\n\n// LogLuv reference: http://graphicrants.blogspot.ca/2009/04/rgbm-color-encoding.html\n\n// M matrix, for encoding\nconst mat3 cLogLuvM = mat3( 0.2209, 0.3390, 0.4184, 0.1138, 0.6780, 0.7319, 0.0102, 0.1130, 0.2969 );\nvec4 LinearToLogLuv( in vec4 value )  {\n vec3 Xp_Y_XYZp = value.rgb * cLogLuvM;\n Xp_Y_XYZp = max(Xp_Y_XYZp, vec3(1e-6, 1e-6, 1e-6));\n vec4 vResult;\n vResult.xy = Xp_Y_XYZp.xy / Xp_Y_XYZp.z;\n float Le = 2.0 * log2(Xp_Y_XYZp.y) + 127.0;\n vResult.w = fract(Le);\n vResult.z = (Le - (floor(vResult.w*255.0))/255.0)/255.0;\n return vResult;\n}\n\n// Inverse M matrix, for decoding\nconst mat3 cLogLuvInverseM = mat3( 6.0014, -2.7008, -1.7996, -1.3320, 3.1029, -5.7721, 0.3008, -1.0882, 5.6268 );\nvec4 LogLuvToLinear( in vec4 value ) {\n float Le = value.z * 255.0 + value.w;\n vec3 Xp_Y_XYZp;\n Xp_Y_XYZp.y = exp2((Le - 127.0) / 2.0);\n Xp_Y_XYZp.z = Xp_Y_XYZp.y / value.y;\n Xp_Y_XYZp.x = value.x * Xp_Y_XYZp.z;\n vec3 vRGB = Xp_Y_XYZp.rgb * cLogLuvInverseM;\n return vec4( max(vRGB, 0.0), 1.0 );\n}\n";
         ShaderChunk.envmap_fragment = "#ifdef USE_ENVMAP\n\n #if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\n  vec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );\n\n  // Transforming Normal Vectors with the Inverse Transformation\n  vec3 worldNormal = inverseTransformDirection( normal, viewMatrix );\n\n  #ifdef ENVMAP_MODE_REFLECTION\n\n   vec3 reflectVec = reflect( cameraToVertex, worldNormal );\n\n  #else\n\n   vec3 reflectVec = refract( cameraToVertex, worldNormal, refractionRatio );\n\n  #endif\n\n #else\n\n  vec3 reflectVec = vReflect;\n\n #endif\n\n #ifdef ENVMAP_TYPE_CUBE\n\n  vec4 envColor = textureCube( envMap, vec3( flipEnvMap * reflectVec.x, reflectVec.yz ) );\n\n #elif defined( ENVMAP_TYPE_EQUIREC )\n\n  vec2 sampleUV;\n\n  reflectVec = normalize( reflectVec );\n\n  sampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\n  sampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\n  vec4 envColor = texture2D( envMap, sampleUV );\n\n #elif defined( ENVMAP_TYPE_SPHERE )\n\n  reflectVec = normalize( reflectVec );\n\n  vec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0, 0.0, 1.0 ) );\n\n  vec4 envColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5 );\n\n #else\n\n  vec4 envColor = vec4( 0.0 );\n\n #endif\n\n envColor = envMapTexelToLinear( envColor );\n\n #ifdef ENVMAP_BLENDING_MULTIPLY\n\n  outgoingLight = mix( outgoingLight, outgoingLight * envColor.xyz, specularStrength * reflectivity );\n\n #elif defined( ENVMAP_BLENDING_MIX )\n\n  outgoingLight = mix( outgoingLight, envColor.xyz, specularStrength * reflectivity );\n\n #elif defined( ENVMAP_BLENDING_ADD )\n\n  outgoingLight += envColor.xyz * specularStrength * reflectivity;\n\n #endif\n\n#endif\n";
         ShaderChunk.envmap_pars_fragment = "#if defined( USE_ENVMAP ) || defined( PHYSICAL )\n uniform float reflectivity;\n uniform float envMapIntensity;\n#endif\n\n#ifdef USE_ENVMAP\n\n #if ! defined( PHYSICAL ) && ( defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) )\n  varying vec3 vWorldPosition;\n #endif\n\n #ifdef ENVMAP_TYPE_CUBE\n  uniform samplerCube envMap;\n #else\n  uniform sampler2D envMap;\n #endif\n uniform float flipEnvMap;\n uniform int maxMipLevel;\n\n #if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) || defined( PHYSICAL )\n  uniform float refractionRatio;\n #else\n  varying vec3 vReflect;\n #endif\n\n#endif\n";
@@ -16812,7 +16328,7 @@ var egret3d;
         ShaderChunk.lightmap_pars_fragment = "#ifdef USE_LIGHTMAP\n\n uniform sampler2D lightMap;\n uniform float lightMapIntensity;\n\n#endif";
         ShaderChunk.lightmap_pars_vert = "#ifdef LIGHTMAP\n    attribute vec4 uv2;\n    uniform highp vec4 lightMapOffset;\n    uniform lowp float lightMapUV;\n    varying highp vec2 xlv_TEXCOORD1;\n#endif";
         ShaderChunk.lightmap_vert = "#ifdef LIGHTMAP\n    highp vec2 beforelightUV = uv2.xy;\n    if(lightMapUV == 0.0)\n    {\n        beforelightUV = uv.xy;\n    }\n    highp float u = beforelightUV.x * lightMapOffset.x + lightMapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * lightMapOffset.y + lightMapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n#endif";
-        ShaderChunk.lights_fragment_begin = "/**\n * This is a template that can be used to light a material, it uses pluggable\n * RenderEquations (RE)for specific lighting scenarios.\n *\n * Instructions for use:\n * - Ensure that both RE_Direct, RE_IndirectDiffuse and RE_IndirectSpecular are defined\n * - If you have defined an RE_IndirectSpecular, you need to also provide a Material_LightProbeLOD. <---- ???\n * - Create a material parameter that is to be passed as the third parameter to your lighting functions.\n *\n * TODO:\n * - Add area light support.\n * - Add sphere light support.\n * - Add diffuse light probe (irradiance cubemap) support.\n */\n\nGeometricContext geometry;\n\ngeometry.position = - vViewPosition;\ngeometry.normal = normal;\ngeometry.viewDir = normalize( vViewPosition );\n\nIncidentLight directLight;\n\n#if ( NUM_POINT_LIGHTS > 0 ) && defined( RE_Direct )\n\n PointLight pointLight;\n\n #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  pointLight = pointLights[ i ];\n\n  getPointDirectLightIrradiance( pointLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( pointLight.shadow, directLight.visible ) ) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if ( NUM_SPOT_LIGHTS > 0 ) && defined( RE_Direct )\n\n SpotLight spotLight;\n\n #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\n  spotLight = spotLights[ i ];\n\n  getSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( spotLight.shadow, directLight.visible ) ) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if ( NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )\n\n DirectionalLight directionalLight;\n\n #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  directionalLight = directionalLights[ i ];\n\n  getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if ( NUM_RECT_AREA_LIGHTS > 0 ) && defined( RE_Direct_RectArea )\n\n RectAreaLight rectAreaLight;\n\n #pragma unroll_loop\n for ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\n  rectAreaLight = rectAreaLights[ i ];\n  RE_Direct_RectArea( rectAreaLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if defined( RE_IndirectDiffuse )\n\n vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );\n\n #if ( NUM_HEMI_LIGHTS > 0 )\n\n  #pragma unroll_loop\n  for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\n   irradiance += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry );\n\n  }\n\n #endif\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n vec3 radiance = vec3( 0.0 );\n vec3 clearCoatRadiance = vec3( 0.0 );\n\n#endif\n";
+        ShaderChunk.lights_fragment_begin = "/**\n * This is a template that can be used to light a material, it uses pluggable\n * RenderEquations (RE)for specific lighting scenarios.\n *\n * Instructions for use:\n * - Ensure that both RE_Direct, RE_IndirectDiffuse and RE_IndirectSpecular are defined\n * - If you have defined an RE_IndirectSpecular, you need to also provide a Material_LightProbeLOD. <---- ???\n * - Create a material parameter that is to be passed as the third parameter to your lighting functions.\n *\n * TODO:\n * - Add area light support.\n * - Add sphere light support.\n * - Add diffuse light probe (irradiance cubemap) support.\n */\n\nGeometricContext geometry;\n\ngeometry.position = - vViewPosition;\ngeometry.normal = normal;\ngeometry.viewDir = normalize( vViewPosition );\n\nIncidentLight directLight;\n\n#if (defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0 ) && defined( RE_Direct )\n\n PointLight pointLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  // pointLight = pointLights[ i ];\n  pointLight.position = vec3(pointLights[i* 15 + 0], pointLights[i * 15 + 1], pointLights[i * 15 + 2]);\n  pointLight.color = vec3(pointLights[i* 15 + 3], pointLights[i * 15 + 4], pointLights[i * 15 + 5]);\n  pointLight.distance = pointLights[i * 15 + 6];\n  pointLight.decay = pointLights[i * 15 + 7];\n\n  getPointDirectLightIrradiance( pointLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( pointLight.shadow, directLight.visible ) ) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0 ) && defined( RE_Direct )\n\n SpotLight spotLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\n  // spotLight = spotLights[ i ];\n  spotLight.position = vec3(spotLights[i * 18 + 0], spotLights[i * 18 + 1], spotLights[i * 18 + 2]);\n  spotLight.direction = vec3(spotLights[i * 18 + 3], spotLights[i * 18 + 4], spotLights[i * 18 + 5]);\n  spotLight.color = vec3(spotLights[i * 18 + 6], spotLights[i * 18 + 7], spotLights[i * 18 + 8]);\n  spotLight.distance = spotLights[i * 18 + 9];\n  spotLight.decay = spotLights[i * 18 + 10];\n  spotLight.coneCos = spotLights[i * 18 + 11];\n  spotLight.penumbraCos = spotLights[i * 18 + 12];\n  getSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( spotLight.shadow, directLight.visible ) ) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )\n\n DirectionalLight directionalLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  // directionalLight = directionalLights[ i ];\n  directionalLight.direction = vec3(directionalLights[i * 12 + 0], directionalLights[i * 12 + 1], directionalLights[i * 12 + 2]);\n  directionalLight.color = vec3(directionalLights[i * 12 + 3], directionalLights[i * 12 + 4], directionalLights[i * 12 + 5]);\n  getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_RECT_AREA_LIGHTS) &&  NUM_RECT_AREA_LIGHTS > 0 ) && defined( RE_Direct_RectArea )\n\n RectAreaLight rectAreaLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\n  rectAreaLight = rectAreaLights[ i ];\n  RE_Direct_RectArea( rectAreaLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if defined( RE_IndirectDiffuse )\n\n vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );\n\n #if (defined(NUM_HEMI_LIGHTS) &&  NUM_HEMI_LIGHTS > 0 )\n\n  // #pragma unroll_loop\n  for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\n   irradiance += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry );\n\n  }\n\n #endif\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n vec3 radiance = vec3( 0.0 );\n vec3 clearCoatRadiance = vec3( 0.0 );\n\n#endif\n";
         ShaderChunk.lights_fragment_end = "#if defined( RE_IndirectDiffuse )\n\n RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n RE_IndirectSpecular( radiance, clearCoatRadiance, geometry, material, reflectedLight );\n\n#endif\n";
         ShaderChunk.lights_fragment_maps = "#if defined( RE_IndirectDiffuse )\n\n #ifdef USE_LIGHTMAP\n\n  vec3 lightMapIrradiance = texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\n\n  #ifndef PHYSICALLY_CORRECT_LIGHTS\n\n   lightMapIrradiance *= PI; // factor of PI should not be present; included here to prevent breakage\n\n  #endif\n\n  irradiance += lightMapIrradiance;\n\n #endif\n\n #if defined( USE_ENVMAP ) && defined( PHYSICAL ) && defined( ENVMAP_TYPE_CUBE_UV )\n\n  irradiance += getLightProbeIndirectIrradiance( /*lightProbe,*/ geometry, maxMipLevel );\n\n #endif\n\n#endif\n\n#if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )\n\n radiance += getLightProbeIndirectRadiance( /*specularLightProbe,*/ geometry, Material_BlinnShininessExponent( material ), maxMipLevel );\n\n #ifndef STANDARD\n  clearCoatRadiance += getLightProbeIndirectRadiance( /*specularLightProbe,*/ geometry, Material_ClearCoat_BlinnShininessExponent( material ), maxMipLevel );\n #endif\n\n#endif\n";
         ShaderChunk.lights_lambert_vertex = "vec3 diffuse = vec3( 1.0 );\n\nGeometricContext geometry;\ngeometry.position = mvPosition.xyz;\ngeometry.normal = normalize( transformedNormal );\ngeometry.viewDir = normalize( -mvPosition.xyz );\n\nGeometricContext backGeometry;\nbackGeometry.position = geometry.position;\nbackGeometry.normal = -geometry.normal;\nbackGeometry.viewDir = geometry.viewDir;\n\nvLightFront = vec3( 0.0 );\n\n#ifdef DOUBLE_SIDED\n vLightBack = vec3( 0.0 );\n#endif\n\nIncidentLight directLight;\nfloat dotNL;\nvec3 directLightColor_Diffuse;\n\n#if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0\n PointLight pointLight;\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  pointLight.position = vec3(pointLights[i* 15 + 0], pointLights[i * 15 + 1], pointLights[i * 15 + 2]);\n  pointLight.color = vec3(pointLights[i* 15 + 3], pointLights[i * 15 + 4], pointLights[i * 15 + 5]);\n  pointLight.distance = pointLights[i * 15 + 6];\n  pointLight.decay = pointLights[i * 15 + 7];\n  getPointDirectLightIrradiance( pointLight, geometry, directLight );\n\n  dotNL = dot( geometry.normal, directLight.direction );\n  directLightColor_Diffuse = PI * directLight.color;\n\n  vLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\n  #endif\n\n }\n\n#endif\n\n#if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0\n SpotLight spotLight;\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n  spotLight.position = vec3(spotLights[i * 18 + 0], spotLights[i * 18 + 1], spotLights[i * 18 + 2]);\n  spotLight.direction = vec3(spotLights[i * 18 + 3], spotLights[i * 18 + 4], spotLights[i * 18 + 5]);\n  spotLight.color = vec3(spotLights[i * 18 + 6], spotLights[i * 18 + 7], spotLights[i * 18 + 8]);\n  spotLight.distance = spotLights[i * 18 + 9];\n  spotLight.decay = spotLights[i * 18 + 10];\n  spotLight.coneCos = spotLights[i * 18 + 11];\n  spotLight.penumbraCos = spotLights[i * 18 + 12];\n\n  getSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\n  dotNL = dot( geometry.normal, directLight.direction );\n  directLightColor_Diffuse = PI * directLight.color;\n\n  vLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\n  #endif\n }\n\n#endif\n\n/*\n#if NUM_RECT_AREA_LIGHTS > 0\n\n for ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\n  // TODO (abelnation): implement\n\n }\n\n#endif\n*/\n\n#if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0\n DirectionalLight directionalLight;\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  directionalLight.direction = vec3(directionalLights[i * 12 + 0], directionalLights[i * 12 + 1], directionalLights[i * 12 + 2]);\n  directionalLight.color = vec3(directionalLights[i * 12 + 3], directionalLights[i * 12 + 4], directionalLights[i * 12 + 5]);\n  getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\n  dotNL = dot( geometry.normal, directLight.direction );\n  directLightColor_Diffuse = PI * directLight.color;\n  // directLightColor_Diffuse = directLight.color;\n\n  vLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n  // vLightFront += directLightColor_Diffuse;\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\n  #endif\n\n }\n\n#endif\n\n#if defined(NUM_HEMI_LIGHTS) && NUM_HEMI_LIGHTS > 0\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\n  vLightFront += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry );\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += getHemisphereLightIrradiance( hemisphereLights[ i ], backGeometry );\n\n  #endif\n\n }\n\n#endif\n";
@@ -18703,7 +18219,6 @@ var egret3d;
             if (this._vbo) {
                 return;
             }
-            this._vbo = true;
             var vertexBufferViewAccessor = this.getAccessor(0);
             var vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), 5126 /* Float */);
             var webgl = egret3d.WebGLCapabilities.webgl;
@@ -18751,14 +18266,20 @@ var egret3d;
          *
          */
         Mesh.prototype.uploadVertexBuffer = function (uploadAttributes, offset, count) {
-            if (offset === void 0) { offset = 0; }
-            if (count === void 0) { count = 0; }
             if (!this._vbo) {
                 return;
             }
+            offset = offset || 0;
+            count = count || 0;
             var webgl = egret3d.WebGLCapabilities.webgl;
             var attributes = this._glTFMesh.primitives[0].attributes;
             webgl.bindBuffer(webgl.ARRAY_BUFFER, this._vbo);
+            if (!uploadAttributes) {
+                uploadAttributes = [];
+                for (var attributeName in this._glTFMesh.primitives[0].attributes) {
+                    uploadAttributes.push(attributeName);
+                }
+            }
             if (Array.isArray(uploadAttributes)) {
                 for (var _i = 0, uploadAttributes_1 = uploadAttributes; _i < uploadAttributes_1.length; _i++) {
                     var attributeName = uploadAttributes_1[_i];
@@ -19034,10 +18555,6 @@ var egret3d;
                 webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
             }
         }
-        RenderTarget.useNull = function () {
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-        };
         RenderTarget.prototype.use = function () { };
         RenderTarget.prototype.dispose = function () {
             if (this._texture != null) {
@@ -19161,7 +18678,7 @@ var egret3d;
             }
             else {
                 var i = (y * this.width + x) * 4;
-                return new egret3d.Color(this.data[i], this.data[i + 1], this.data[i + 2], this.data[i + 3]);
+                return egret3d.Color.create(this.data[i], this.data[i + 1], this.data[i + 2], this.data[i + 3]);
             }
         };
         return TextureReader;
@@ -19289,7 +18806,11 @@ var egret3d;
             //
             _this._filteredLights = [];
             _this._cacheContextVersion = -1;
+            _this._cacheSubMeshIndex = -1;
             _this._cacheMaterialVerision = -1;
+            _this._cacheContext = null;
+            _this._cacheMesh = null;
+            _this._cacheMaterial = null;
             return _this;
         }
         WebGLRenderSystem.prototype._updateContextUniforms = function (program, context, technique, forceUpdate) {
@@ -19533,10 +19054,11 @@ var egret3d;
             }
         };
         WebGLRenderSystem.prototype._updateAttributes = function (program, mesh, subMeshIndex, technique, forceUpdate) {
-            var needUpdate = this._cacheMesh !== mesh || forceUpdate;
+            var needUpdate = this._cacheSubMeshIndex !== subMeshIndex || this._cacheMesh !== mesh || forceUpdate;
             if (!needUpdate) {
                 return;
             }
+            this._cacheSubMeshIndex = subMeshIndex;
             this._cacheMesh = mesh;
             if (0 <= subMeshIndex && subMeshIndex < mesh.glTFMesh.primitives.length) {
                 var primitive = mesh.glTFMesh.primitives[subMeshIndex];
@@ -19674,7 +19196,7 @@ var egret3d;
                 drawCalls.shadowFrustumCulling(camera);
                 //
                 var shadowCalls = drawCalls.shadowCalls;
-                var shadowMaterial = light.type === 2 /* Point */ ? egret3d.DefaultMaterials.ShadowDistance : egret3d.DefaultMaterials.ShadowDepth;
+                var shadowMaterial = light.type === 2 /* Point */ ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
                 for (var _i = 0, shadowCalls_1 = shadowCalls; _i < shadowCalls_1.length; _i++) {
                     var drawCall = shadowCalls_1[_i];
                     //TODO, 现在不支持蒙皮动画阴影     
@@ -19750,9 +19272,9 @@ var egret3d;
     //最大允许合并的顶点数，超过就是下一批次
     egret3d.MAX_VERTEX_COUNT_PER_BUFFER = 50000;
     //
-    var helpVec3_1 = new egret3d.Vector3();
-    var helpVec3_2 = new egret3d.Vector3();
-    var helpInverseMatrix = new egret3d.Matrix();
+    var helpVec3_1 = egret3d.Vector3.create();
+    var helpVec3_2 = egret3d.Vector3.create();
+    var helpInverseMatrix = egret3d.Matrix4.create();
     //缓存已经校验过的对象，用于过滤
     var cacheInstances = [];
     var beforeCombineCount = 0;
@@ -20312,10 +19834,112 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
-    function layerTest(cullingMask, layer) {
-        return (cullingMask & layer) !== 0;
-    }
-    paper.layerTest = layerTest;
+    /**
+     *
+     */
+    var ECS = (function () {
+        function ECS() {
+            /**
+             *
+             */
+            this.version = "0.9.000";
+            /**
+             * 系统管理器。
+             */
+            this.systemManager = paper.SystemManager.getInstance();
+            /**
+             * 场景管理器。
+             */
+            this.sceneManager = paper.SceneManager.getInstance();
+            this._isEditor = false;
+            this._isFocused = false;
+            this._isPlaying = false;
+            this._isRunning = false;
+            this._bindUpdate = null;
+        }
+        /**
+         *
+         */
+        ECS.getInstance = function () {
+            if (!this._instance) {
+                this._instance = new ECS();
+            }
+            return this._instance;
+        };
+        ECS.prototype._update = function () {
+            if (this._isRunning) {
+                requestAnimationFrame(this._bindUpdate);
+            }
+            paper.Time && paper.Time.update();
+            paper.Group.update();
+            this.systemManager.update();
+        };
+        ECS.prototype.init = function (_a) {
+            var _b = _a === void 0 ? {} : _a, _c = _b.isEditor, isEditor = _c === void 0 ? false : _c, _d = _b.isPlaying, isPlaying = _d === void 0 ? true : _d, _e = _b.systems, systems = _e === void 0 ? [] : _e, _f = _b.option, option = _f === void 0 ? {} : _f, _g = _b.canvas, canvas = _g === void 0 ? {} : _g, _h = _b.webgl, webgl = _h === void 0 ? {} : _h;
+            this._isEditor = isEditor;
+            this._isPlaying = isPlaying;
+            this._option = option;
+            this._canvas = canvas;
+            this._webgl = webgl;
+            for (var _i = 0, systems_1 = systems; _i < systems_1.length; _i++) {
+                var systemClass = systems_1[_i];
+                this.systemManager.register(systemClass);
+            }
+            this.resume();
+        };
+        /**
+         *
+         */
+        ECS.prototype.pause = function () {
+            this._isRunning = false;
+        };
+        ECS.prototype.resume = function () {
+            if (this._isRunning) {
+                return;
+            }
+            this._isRunning = true;
+            if (!this._bindUpdate) {
+                this._bindUpdate = this._update.bind(this);
+            }
+            this._update();
+        };
+        ECS.prototype.callLater = function (callback) {
+            (this.systemManager.getSystem(paper.LateUpdateSystem)).callLater(callback);
+        };
+        Object.defineProperty(ECS.prototype, "isEditor", {
+            get: function () {
+                return this._isEditor;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ECS.prototype, "isFocused", {
+            get: function () {
+                return this._isFocused;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ECS.prototype, "isPlaying", {
+            get: function () {
+                return this._isPlaying;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ECS.prototype, "isRunning", {
+            get: function () {
+                return this._isRunning;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ECS._instance = null;
+        return ECS;
+    }());
+    paper.ECS = ECS;
+    __reflect(ECS.prototype, "paper.ECS");
+    paper.Application = ECS.getInstance();
 })(paper || (paper = {}));
 /// <reference path="./EventDispatcher.ts" />
 var paper;
@@ -20352,6 +19976,8 @@ var paper;
                                 paper.createUUID = editor.generateUuid;
                                 //初始化编辑环境
                                 this.initEditEnvironment();
+                                //允许重新加载
+                                RES.FEATURE_FLAG.FIX_DUPLICATE_LOAD = 0;
                                 //初始化资源
                                 return [4 /*yield*/, RES.loadConfig("resource/default.res.json", "resource/")];
                             case 1:
@@ -20475,8 +20101,6 @@ var paper;
                                 if (this.activeEditorModel) {
                                     this.activeEditorModel.scene.destroy();
                                 }
-                                //重置单例子
-                                RES['instance'] = null;
                                 //初始化资源
                                 return [4 /*yield*/, RES.loadConfig("resource/default.res.json", "resource/")];
                             case 1:
@@ -20551,6 +20175,7 @@ var paper;
                         //
                         egret3d.CameraSystem,
                         egret3d.WebGLRenderSystem,
+                        egret3d.GizmoRenderSystem,
                         //
                         paper.DisableSystem,
                         egret3d.EndSystem
@@ -20568,25 +20193,88 @@ var egret3d;
     /**
      *
      */
-    var Sphere = (function () {
-        function Sphere() {
+    var Plane = (function () {
+        function Plane() {
             /**
              *
              */
-            this.radius = 0.0;
+            this.constant = 0.0;
             /**
              *
              */
-            this.center = egret3d.Vector3.create();
+            this.normal = egret3d.Vector3.create();
         }
-        Sphere.prototype.copy = function (value) {
-            this.radius = value.radius;
-            this.center.copy(value.center);
+        /**
+         *
+         */
+        Plane.create = function (normal, constant) {
+            if (normal === void 0) { normal = egret3d.Vector3.ZERO; }
+            if (constant === void 0) { constant = 0.0; }
+            if (this._instances.length > 0) {
+                return this._instances.pop().set(normal, constant);
+            }
+            return new Plane().set(normal, constant);
         };
-        return Sphere;
+        Plane.prototype.release = function () {
+            if (Plane._instances.indexOf(this) < 0) {
+                Plane._instances.push(this);
+            }
+            return this;
+        };
+        Plane.prototype.serialize = function () {
+            return [this.normal.x, this.normal.y, this.normal.z, this.constant];
+        };
+        Plane.prototype.deserialize = function (value) {
+            this.constant = value[3];
+            this.normal.fromArray(value);
+            return this;
+        };
+        Plane.prototype.clone = function () {
+            return Plane.create(this.normal, this.constant);
+        };
+        Plane.prototype.copy = function (value) {
+            return this.set(value.normal, value.constant);
+        };
+        Plane.prototype.set = function (normal, constant) {
+            this.constant = constant;
+            this.normal.copy(normal);
+            return this;
+        };
+        Plane.prototype.fromPoint = function (value, normal) {
+            if (normal === void 0) { normal = egret3d.Vector3.UP; }
+            this.constant = -egret3d.helpVector3A.dot(normal, value);
+            this.normal.copy(normal);
+            return this;
+        };
+        Plane.prototype.fromPoints = function (valueA, valueB, valueC) {
+            var normal = egret3d.helpVector3A.subtract(valueC, valueB).cross(egret3d.helpVector3B.subtract(valueA, valueB)).normalize();
+            this.fromPoint(valueA, normal);
+            return this;
+        };
+        Plane.prototype.normalize = function (source) {
+            if (!source) {
+                source = this;
+            }
+            this.constant = source.constant * (1.0 / source.normal.length);
+            this.normal.normalize(source.normal);
+            return this;
+        };
+        Plane.prototype.negate = function (source) {
+            if (!source) {
+                source = this;
+            }
+            this.constant = source.constant * -1.0;
+            this.normal.negate(source.normal);
+            return this;
+        };
+        Plane.prototype.getDistance = function (value) {
+            return this.normal.dot(value) + this.constant;
+        };
+        Plane._instances = [];
+        return Plane;
     }());
-    egret3d.Sphere = Sphere;
-    __reflect(Sphere.prototype, "egret3d.Sphere");
+    egret3d.Plane = Plane;
+    __reflect(Plane.prototype, "egret3d.Plane", ["paper.IRelease", "paper.ISerializable"]);
 })(egret3d || (egret3d = {}));
 /// <reference path="./EventDispatcher.ts" />
 var paper;
@@ -20745,7 +20433,7 @@ var paper;
                 this.addState(state);
             };
             EditorModel.prototype.createPrefabState = function (prefab) {
-                var state = editor.CreatePrefabState.create({ prefab: prefab });
+                var state = editor.CreatePrefabState.create(prefab);
                 this.addState(state);
             };
             EditorModel.prototype.serializeProperty = function (value, editType) {
@@ -20764,18 +20452,16 @@ var paper;
                         var serializeData = value.serialize(value);
                         return { className: className, serializeData: serializeData };
                     case editor.EditType.SHADER:
-                        return value.url;
+                        return value.name;
                     case editor.EditType.LIST:
                         return value;
                     case editor.EditType.MATERIAL_ARRAY:
                         var data = value.map(function (item) {
-                            var url = item.url.substr(RES.config.config.resourceRoot.length, item.url.length);
-                            return { name: url, url: url };
+                            return { name: item.name, url: item.name };
                         });
                         return data;
                     case editor.EditType.MESH:
-                        var url = value.glTFAsset.url;
-                        url = url.substr(RES.config.config.resourceRoot.length, url.length);
+                        var url = value.name;
                         return url;
                     case editor.EditType.MATERIAL:
                     case editor.EditType.GAMEOBJECT:
@@ -20791,7 +20477,7 @@ var paper;
             };
             EditorModel.prototype.deserializeProperty = function (serializeData, editType) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var _a, clazz, target, url, asset, materials, _i, serializeData_1, matrial, asset_1, meshAsset, mesh;
+                    var _a, clazz, target, url, asset, materials, _i, serializeData_1, matrial, asset_1, meshAsset;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
@@ -20852,8 +20538,7 @@ var paper;
                             case 11: return [4 /*yield*/, RES.getResAsync(serializeData)];
                             case 12:
                                 meshAsset = _b.sent();
-                                mesh = new egret3d.Mesh(meshAsset, 0);
-                                return [2 /*return*/, mesh];
+                                return [2 /*return*/, meshAsset];
                             case 13:
                                 //TODO
                                 console.error("not supported!");
@@ -21466,7 +21151,7 @@ var paper;
                     (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
                 }
                 if (this.bindMouse.wasReleased(0)) {
-                    this.mainGeo.wasReleased();
+                    this.mainGeo.wasReleased(this.selectedGameObjs);
                 }
             };
             Controller.prototype.updateInLocalMode = function () {
@@ -21644,47 +21329,82 @@ var paper;
         __reflect(Controller.prototype, "paper.editor.Controller");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
-var paper;
-(function (paper) {
+var egret3d;
+(function (egret3d) {
     /**
-     * @internal
+     *
      */
-    var GroupComponent = (function (_super) {
-        __extends(GroupComponent, _super);
-        function GroupComponent() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.componentIndex = -1;
-            _this.componentClass = null;
-            _this._components = [];
-            return _this;
+    var Triangle = (function () {
+        function Triangle() {
+            this.a = egret3d.Vector3.create();
+            this.b = egret3d.Vector3.create();
+            this.c = egret3d.Vector3.create();
         }
-        /**
-         * @internal
-         */
-        GroupComponent.prototype._addComponent = function (component) {
-            this._components.push(component);
-        };
-        /**
-         * @internal
-         */
-        GroupComponent.prototype._removeComponent = function (component) {
-            var index = this._components.indexOf(component);
-            if (index >= 0) {
-                this._components.splice(1, 0);
+        Triangle.create = function (a, b, c) {
+            if (a === void 0) { a = egret3d.Vector3.ZERO; }
+            if (b === void 0) { b = egret3d.Vector3.ZERO; }
+            if (c === void 0) { c = egret3d.Vector3.ZERO; }
+            if (this._instances.length > 0) {
+                return this._instances.pop().set(a, b, c);
             }
+            return new Triangle().set(a, b, c);
         };
-        Object.defineProperty(GroupComponent.prototype, "components", {
-            get: function () {
-                return this._components;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return GroupComponent;
-    }(paper.BaseComponent));
-    paper.GroupComponent = GroupComponent;
-    __reflect(GroupComponent.prototype, "paper.GroupComponent");
-})(paper || (paper = {}));
+        Triangle.prototype.release = function () {
+            if (Triangle._instances.indexOf(this) < 0) {
+                Triangle._instances.push(this);
+            }
+            return this;
+        };
+        Triangle.prototype.serialize = function () {
+            return [
+                this.a.x, this.a.y, this.a.z,
+                this.b.x, this.b.y, this.b.z,
+                this.c.x, this.c.y, this.c.z,
+            ];
+        };
+        Triangle.prototype.deserialize = function (element) {
+            return this.fromArray(element);
+        };
+        Triangle.prototype.copy = function (value) {
+            return this.set(value.a, value.b, value.c);
+        };
+        Triangle.prototype.clone = function () {
+            return Triangle.create(this.a, this.b, this.c);
+        };
+        Triangle.prototype.set = function (a, b, c) {
+            if (a === void 0) { a = egret3d.Vector3.ZERO; }
+            if (b === void 0) { b = egret3d.Vector3.ZERO; }
+            if (c === void 0) { c = egret3d.Vector3.ZERO; }
+            this.a.copy(a);
+            this.b.copy(b);
+            this.c.copy(c);
+            return this;
+        };
+        Triangle.prototype.fromArray = function (value, offsetA, offsetB, offsetC) {
+            if (offsetA === void 0) { offsetA = 0; }
+            if (offsetB === void 0) { offsetB = -1; }
+            if (offsetC === void 0) { offsetC = -1; }
+            this.a.fromArray(value, offsetA);
+            this.b.fromArray(value, offsetB >= 0 ? offsetB : offsetA + 3);
+            this.c.fromArray(value, offsetC >= 0 ? offsetC : offsetA + 6);
+        };
+        Triangle.prototype.getCenter = function (value) {
+            return value.add(this.a, this.b).add(this.c).multiplyScalar(1.0 / 3.0);
+        };
+        Triangle.prototype.getNormal = function (value) {
+            return egret3d.getNormal(this.a, this.b, this.c, value);
+        };
+        Triangle.prototype.getArea = function () {
+            egret3d.helpVector3A.subtract(this.c, this.b);
+            egret3d.helpVector3B.subtract(this.a, this.b);
+            return egret3d.helpVector3A.cross(egret3d.helpVector3B).length * 0.5;
+        };
+        Triangle._instances = [];
+        return Triangle;
+    }());
+    egret3d.Triangle = Triangle;
+    __reflect(Triangle.prototype, "egret3d.Triangle", ["paper.IRelease", "paper.ISerializable"]);
+})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     var editor;
@@ -21707,8 +21427,11 @@ var paper;
                 this.canDrag = true;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                // let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
+                var normal = new egret3d.Vector3(0, ray.direction.y, ray.direction.z);
+                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
             };
@@ -21716,20 +21439,22 @@ var paper;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                console.log(hit);
                 egret3d.Vector3.subtract(hit, this._dragOffset, hit);
                 egret3d.Vector3.subtract(hit, worldPosition, hit);
-                var worldOffset;
+                var worldOffset = new egret3d.Vector3;
                 worldOffset.applyQuaternion(worldRotation, this.right);
                 var cosHit = egret3d.Vector3.dot(hit, worldOffset);
                 egret3d.Vector3.scale(worldOffset, cosHit);
                 var position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
                 egret3d.Vector3.copy(position, this._ctrlPos);
-                this.editorModel.setTransformProperty("position", position, selectedGameObjs[0].transform);
+                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                parentMatrix = parentMatrix.inverse();
+                parentMatrix.transformNormal(position);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
             xAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                egret3d.Vector3.set(0, 0, 0, this._dragOffset);
-                egret3d.Vector3.set(0, 0, 0, this._dragPlanePoint);
-                egret3d.Vector3.set(0, 0, 0, this._dragPlaneNormal);
                 var len = selectedGameObjs.length;
                 var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
                 for (var i = 0; i < len; i++) {
@@ -21738,14 +21463,16 @@ var paper;
                 }
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                egret3d.Vector3.copy(this.up, this._dragPlaneNormal);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y);
+                egret3d.Vector3.copy(normal, this._dragPlaneNormal);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             };
             xAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset;
+                var worldOffset = new egret3d.Vector3;
                 worldOffset = egret3d.Vector3.copy(this.right, this.helpVec3_1);
                 var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
                 egret3d.Vector3.scale(worldOffset, cosHit);
@@ -21754,11 +21481,20 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
-                    this.editorModel.setTransformProperty("position", this._newPosition, obj.transform);
+                    var parentMatrix = obj.transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(this._newPosition);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            xAxis.prototype.wasReleased = function () { };
+            xAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_1 = selectedGameObjs; _i < selectedGameObjs_1.length; _i++) {
+                    var item = selectedGameObjs_1[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
             return xAxis;
         }(editor.BaseGeo));
         editor.xAxis = xAxis;
@@ -21772,31 +21508,32 @@ var paper;
         var xyAxis = (function (_super) {
             __extends(xyAxis, _super);
             function xyAxis() {
-                var _this = _super.call(this) || this;
-                _this._dragPlaneNormal1 = new egret3d.Vector3();
-                _this._dragOffset1 = new egret3d.Vector3();
-                return _this;
+                return _super.call(this) || this;
             }
             xyAxis.prototype.onSet = function () {
-                var xAxis = this._createAxis(new egret3d.Vector4(1, 0.0, 0.0, 0.5), 3);
-                xAxis.name = "GizmoController_X";
-                xAxis.tag = "Editor";
-                xAxis.transform.setLocalScale(0.05, 0.05, 0.05);
-                xAxis.transform.setLocalEulerAngles(90, 0, 0);
-                xAxis.transform.setLocalPosition(0.2, 0.2, 0);
-                this.geo = xAxis;
+                var xyPlane = this._createAxis(new egret3d.Vector4(1, 0.0, 0.0, 0.5), 3);
+                xyPlane.name = "GizmoController_XY";
+                xyPlane.tag = "Editor";
+                xyPlane.transform.setLocalScale(0.05, 0.05, 0.05);
+                xyPlane.transform.setLocalEulerAngles(90, 0, 0);
+                xyPlane.transform.setLocalPosition(0.2, 0.2, 0);
+                this.geo = xyPlane;
             };
             xyAxis.prototype.wasPressed_local = function (ray, selectedGameObjs) {
                 this.canDrag = true;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                // let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
+                var normal = this.forward;
+                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                this._dragPlaneNormal1.applyQuaternion(worldRotation, this.forward);
-                this._dragOffset1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
-                egret3d.Vector3.subtract(this._dragOffset1, worldPosition, this._dragOffset1);
+                // let normal1 = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
+                // this._dragPlaneNormal1.applyQuaternion(worldRotation, normal1)
+                // this._dragOffset1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
+                // egret3d.Vector3.subtract(this._dragOffset1, worldPosition, this._dragOffset1);
             };
             xyAxis.prototype.isPressed_local = function (ray, selectedGameObjs) {
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
@@ -21804,26 +21541,32 @@ var paper;
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, this._dragOffset, hit);
                 egret3d.Vector3.subtract(hit, worldPosition, hit);
-                var worldOffset1;
+                var worldOffset1 = new egret3d.Vector3();
+                var worldOffset = new egret3d.Vector3();
+                worldOffset.applyQuaternion(worldRotation, this.up);
                 worldOffset1.applyQuaternion(worldRotation, this.right);
                 var cosHit1 = egret3d.Vector3.dot(hit, worldOffset1);
+                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
                 egret3d.Vector3.scale(worldOffset1, cosHit1);
-                var position = egret3d.Vector3.add(worldPosition, worldOffset1, this.helpVec3_2);
-                var hit1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
-                egret3d.Vector3.subtract(hit1, this._dragOffset, hit1);
-                egret3d.Vector3.subtract(hit1, worldPosition, hit1);
-                var worldOffset;
-                worldOffset.applyQuaternion(worldRotation, this.up);
-                var cosHit = egret3d.Vector3.dot(hit1, worldOffset);
                 egret3d.Vector3.scale(worldOffset, cosHit);
+                var position = egret3d.Vector3.add(worldPosition, worldOffset1, this.helpVec3_2);
                 position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
+                // let hit1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
+                // egret3d.Vector3.subtract(hit1, this._dragOffset, hit1);
+                // egret3d.Vector3.subtract(hit1, worldPosition, hit1);
+                // let worldOffset = new egret3d.Vector3();
+                // worldOffset.applyQuaternion(worldRotation, this.up);
+                // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
+                // egret3d.Vector3.scale(worldOffset, cosHit);
+                // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
+                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                parentMatrix = parentMatrix.inverse();
+                parentMatrix.transformNormal(position);
                 egret3d.Vector3.copy(position, this._ctrlPos);
-                this.editorModel.setTransformProperty("position", position, selectedGameObjs[0].transform);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
             xyAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                egret3d.Vector3.set(0, 0, 0, this._dragOffset);
-                egret3d.Vector3.set(0, 0, 0, this._dragPlanePoint);
-                egret3d.Vector3.set(0, 0, 0, this._dragPlaneNormal);
                 var len = selectedGameObjs.length;
                 var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
                 for (var i = 0; i < len; i++) {
@@ -21832,31 +21575,275 @@ var paper;
                 }
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                egret3d.Vector3.copy(this.up, this._dragPlaneNormal);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = this.forward;
+                egret3d.Vector3.copy(normal, this._dragPlaneNormal);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             };
             xyAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset;
-                worldOffset = egret3d.Vector3.copy(this.right, this.helpVec3_1);
-                var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
-                egret3d.Vector3.scale(worldOffset, cosHit);
-                egret3d.Vector3.add(this._ctrlPos, worldOffset, this._ctrlPos);
+                // let worldOffset = new egret3d.Vector3;
+                // let worldOffset1 = new egret3d.Vector3;
+                // worldOffset = egret3d.Vector3.copy(this.right, this.helpVec3_1);
+                // worldOffset1 = egret3d.Vector3.copy(this.up, this.helpVec3_1);
+                // let cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
+                // let cosHit1 = egret3d.Vector3.dot(this._delta, worldOffset1);
+                // egret3d.Vector3.scale(worldOffset, cosHit);
+                // egret3d.Vector3.scale(worldOffset1, cosHit1);
                 for (var i = 0; i < len; i++) {
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
-                    egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
-                    this.editorModel.setTransformProperty("position", this._newPosition, obj.transform);
+                    egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
+                    var parentMatrix = obj.transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(this._newPosition);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            xyAxis.prototype.wasReleased = function () { };
+            xyAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_2 = selectedGameObjs; _i < selectedGameObjs_2.length; _i++) {
+                    var item = selectedGameObjs_2[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
             return xyAxis;
         }(editor.BaseGeo));
         editor.xyAxis = xyAxis;
         __reflect(xyAxis.prototype, "paper.editor.xyAxis");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var xzAxis = (function (_super) {
+            __extends(xzAxis, _super);
+            function xzAxis() {
+                return _super.call(this) || this;
+            }
+            xzAxis.prototype.onSet = function () {
+                var xyPlane = this._createAxis(new egret3d.Vector4(0.0, 0.0, 1, 0.5), 3);
+                xyPlane.name = "GizmoController_XZ";
+                xyPlane.tag = "Editor";
+                xyPlane.transform.setLocalScale(0.05, 0.05, 0.05);
+                xyPlane.transform.setLocalEulerAngles(0, 90, 0);
+                xyPlane.transform.setLocalPosition(0.2, 0, 0.2);
+                this.geo = xyPlane;
+            };
+            xzAxis.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                this.canDrag = true;
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                // let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
+                var normal = this.forward;
+                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
+                // let normal1 = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
+                // this._dragPlaneNormal1.applyQuaternion(worldRotation, normal1)
+                // this._dragOffset1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
+                // egret3d.Vector3.subtract(this._dragOffset1, worldPosition, this._dragOffset1);
+            };
+            xzAxis.prototype.isPressed_local = function (ray, selectedGameObjs) {
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(hit, this._dragOffset, hit);
+                egret3d.Vector3.subtract(hit, worldPosition, hit);
+                var worldOffset1 = new egret3d.Vector3();
+                var worldOffset = new egret3d.Vector3();
+                worldOffset.applyQuaternion(worldRotation, this.right);
+                worldOffset1.applyQuaternion(worldRotation, this.forward);
+                var cosHit1 = egret3d.Vector3.dot(hit, worldOffset1);
+                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
+                egret3d.Vector3.scale(worldOffset1, cosHit1);
+                egret3d.Vector3.scale(worldOffset, cosHit);
+                var position = egret3d.Vector3.add(worldPosition, worldOffset1, this.helpVec3_2);
+                position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
+                // let hit1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
+                // egret3d.Vector3.subtract(hit1, this._dragOffset, hit1);
+                // egret3d.Vector3.subtract(hit1, worldPosition, hit1);
+                // let worldOffset = new egret3d.Vector3();
+                // worldOffset.applyQuaternion(worldRotation, this.up);
+                // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
+                // egret3d.Vector3.scale(worldOffset, cosHit);
+                // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
+                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                parentMatrix = parentMatrix.inverse();
+                parentMatrix.transformNormal(position);
+                egret3d.Vector3.copy(position, this._ctrlPos);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
+            };
+            xzAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = this.up;
+                egret3d.Vector3.copy(normal, this._dragPlaneNormal);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+            };
+            xzAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
+                // let worldOffset = new egret3d.Vector3;
+                // let worldOffset1 = new egret3d.Vector3;
+                // worldOffset = egret3d.Vector3.copy(this.right, this.helpVec3_1);
+                // worldOffset1 = egret3d.Vector3.copy(this.up, this.helpVec3_1);
+                // let cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
+                // let cosHit1 = egret3d.Vector3.dot(this._delta, worldOffset1);
+                // egret3d.Vector3.scale(worldOffset, cosHit);
+                // egret3d.Vector3.scale(worldOffset1, cosHit1);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    var lastPos = obj.transform.getPosition();
+                    egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
+                    var parentMatrix = obj.transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(this._newPosition);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
+                }
+                egret3d.Vector3.copy(hit, this._dragOffset);
+            };
+            xzAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_3 = selectedGameObjs; _i < selectedGameObjs_3.length; _i++) {
+                    var item = selectedGameObjs_3[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
+            return xzAxis;
+        }(editor.BaseGeo));
+        editor.xzAxis = xzAxis;
+        __reflect(xzAxis.prototype, "paper.editor.xzAxis");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var yzAxis = (function (_super) {
+            __extends(yzAxis, _super);
+            function yzAxis() {
+                return _super.call(this) || this;
+            }
+            yzAxis.prototype.onSet = function () {
+                var xyPlane = this._createAxis(new egret3d.Vector4(0.0, 1, 0.0, 0.5), 3);
+                xyPlane.name = "GizmoController_YZ";
+                xyPlane.tag = "Editor";
+                xyPlane.transform.setLocalScale(0.05, 0.05, 0.05);
+                xyPlane.transform.setLocalEulerAngles(0, 0, 90);
+                xyPlane.transform.setLocalPosition(0.0, 0.2, 0.2);
+                this.geo = xyPlane;
+            };
+            yzAxis.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                this.canDrag = true;
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                // let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
+                var normal = this.forward;
+                this._dragPlaneNormal.applyQuaternion(worldRotation, this.right);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
+                // let normal1 = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
+                // this._dragPlaneNormal1.applyQuaternion(worldRotation, normal1)
+                // this._dragOffset1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
+                // egret3d.Vector3.subtract(this._dragOffset1, worldPosition, this._dragOffset1);
+            };
+            yzAxis.prototype.isPressed_local = function (ray, selectedGameObjs) {
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(hit, this._dragOffset, hit);
+                egret3d.Vector3.subtract(hit, worldPosition, hit);
+                var worldOffset1 = new egret3d.Vector3();
+                var worldOffset = new egret3d.Vector3();
+                worldOffset.applyQuaternion(worldRotation, this.up);
+                worldOffset1.applyQuaternion(worldRotation, this.forward);
+                var cosHit1 = egret3d.Vector3.dot(hit, worldOffset1);
+                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
+                egret3d.Vector3.scale(worldOffset1, cosHit1);
+                egret3d.Vector3.scale(worldOffset, cosHit);
+                var position = egret3d.Vector3.add(worldPosition, worldOffset1, this.helpVec3_2);
+                position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
+                // let hit1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
+                // egret3d.Vector3.subtract(hit1, this._dragOffset, hit1);
+                // egret3d.Vector3.subtract(hit1, worldPosition, hit1);
+                // let worldOffset = new egret3d.Vector3();
+                // worldOffset.applyQuaternion(worldRotation, this.up);
+                // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
+                // egret3d.Vector3.scale(worldOffset, cosHit);
+                // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
+                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                parentMatrix = parentMatrix.inverse();
+                parentMatrix.transformNormal(position);
+                egret3d.Vector3.copy(position, this._ctrlPos);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
+            };
+            yzAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = this.right;
+                egret3d.Vector3.copy(normal, this._dragPlaneNormal);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+            };
+            yzAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
+                // let worldOffset = new egret3d.Vector3;
+                // let worldOffset1 = new egret3d.Vector3;
+                // worldOffset = egret3d.Vector3.copy(this.right, this.helpVec3_1);
+                // worldOffset1 = egret3d.Vector3.copy(this.up, this.helpVec3_1);
+                // let cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
+                // let cosHit1 = egret3d.Vector3.dot(this._delta, worldOffset1);
+                // egret3d.Vector3.scale(worldOffset, cosHit);
+                // egret3d.Vector3.scale(worldOffset1, cosHit1);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    var lastPos = obj.transform.getPosition();
+                    egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
+                    var parentMatrix = obj.transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(this._newPosition);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
+                }
+                egret3d.Vector3.copy(hit, this._dragOffset);
+            };
+            yzAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_4 = selectedGameObjs; _i < selectedGameObjs_4.length; _i++) {
+                    var item = selectedGameObjs_4[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
+            return yzAxis;
+        }(editor.BaseGeo));
+        editor.yzAxis = yzAxis;
+        __reflect(yzAxis.prototype, "paper.editor.yzAxis");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -21881,8 +21868,10 @@ var paper;
                 this.canDrag = true;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x);
+                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.forward);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
             };
@@ -21892,16 +21881,19 @@ var paper;
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, this._dragOffset, hit);
                 egret3d.Vector3.subtract(hit, worldPosition, hit);
-                var worldOffset;
-                this.helpVec3_1.applyQuaternion(worldRotation, this.up);
+                var worldOffset = new egret3d.Vector3;
+                worldOffset.applyQuaternion(worldRotation, this.up);
                 var cosHit = egret3d.Vector3.dot(hit, worldOffset);
                 egret3d.Vector3.scale(worldOffset, cosHit);
                 var position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
                 egret3d.Vector3.copy(position, this._ctrlPos);
-                this.editorModel.setTransformProperty("position", position, selectedGameObjs[0].transform);
+                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                parentMatrix = parentMatrix.inverse();
+                parentMatrix.transformNormal(position);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
             yAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                egret3d.Vector3.set(0, 0, 0, this._dragOffset);
                 var len = selectedGameObjs.length;
                 var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
                 for (var i = 0; i < len; i++) {
@@ -21911,13 +21903,15 @@ var paper;
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
                 egret3d.Vector3.copy(this.forward, this._dragPlaneNormal);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
             };
             yAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset;
+                var worldOffset = new egret3d.Vector3;
                 worldOffset = egret3d.Vector3.copy(this.up, this.helpVec3_1);
                 var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
                 egret3d.Vector3.scale(worldOffset, cosHit);
@@ -21926,11 +21920,20 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
-                    this.editorModel.setTransformProperty("position", this._newPosition, obj.transform);
+                    var parentMatrix = obj.transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(this._newPosition);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            yAxis.prototype.wasReleased = function () { return; };
+            yAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_5 = selectedGameObjs; _i < selectedGameObjs_5.length; _i++) {
+                    var item = selectedGameObjs_5[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
             return yAxis;
         }(editor.BaseGeo));
         editor.yAxis = yAxis;
@@ -21960,7 +21963,9 @@ var paper;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(pos.x + pos.y, pos.x + pos.y, 0);
+                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
             };
@@ -21970,13 +21975,17 @@ var paper;
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, this._dragOffset, hit);
                 egret3d.Vector3.subtract(hit, worldPosition, hit);
-                var worldOffset;
+                var worldOffset = new egret3d.Vector3;
                 worldOffset.applyQuaternion(worldRotation, this.forward);
                 var cosHit = egret3d.Vector3.dot(hit, worldOffset);
                 egret3d.Vector3.scale(worldOffset, cosHit);
                 var position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
                 egret3d.Vector3.copy(position, this._ctrlPos);
-                this.editorModel.setTransformProperty("position", position, selectedGameObjs[0].transform);
+                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                parentMatrix = parentMatrix.inverse();
+                parentMatrix.transformNormal(position);
+                selectedGameObjs[0].transform.setLocalPosition(position);
+                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
             zAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 egret3d.Vector3.set(0, 0, 0, this._dragOffset);
@@ -21989,13 +21998,15 @@ var paper;
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
                 egret3d.Vector3.copy(this.up, this._dragPlaneNormal);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
+                var normal = new egret3d.Vector3(pos.x + pos.y, pos.x + pos.y, 0);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
             };
             zAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset;
+                var worldOffset = new egret3d.Vector3;
                 worldOffset = egret3d.Vector3.copy(this.forward, this.helpVec3_1);
                 var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
                 egret3d.Vector3.scale(worldOffset, cosHit);
@@ -22004,11 +22015,20 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
-                    this.editorModel.setTransformProperty("position", this._newPosition, obj.transform);
+                    var parentMatrix = obj.transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(this._newPosition);
+                    obj.transform.setLocalPosition(this._newPosition);
+                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
                 egret3d.Vector3.copy(hit, this._dragOffset);
             };
-            zAxis.prototype.wasReleased = function () { return; };
+            zAxis.prototype.wasReleased = function (selectedGameObjs) {
+                for (var _i = 0, selectedGameObjs_6 = selectedGameObjs; _i < selectedGameObjs_6.length; _i++) {
+                    var item = selectedGameObjs_6[_i];
+                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
+                }
+            };
             return zAxis;
         }(editor.BaseGeo));
         editor.zAxis = zAxis;
@@ -22143,7 +22163,7 @@ var paper;
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, worldPosition, this._delta);
-                var worldOffset;
+                var worldOffset = new egret3d.Vector3;
                 var scale;
                 worldOffset.applyQuaternion(worldRotation, this.right);
                 var cosHit = egret3d.Vector3.dot(hit, worldOffset);
@@ -22173,7 +22193,7 @@ var paper;
             xScl.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset;
+                var worldOffset = new egret3d.Vector3;
                 var scale;
                 var len = selectedGameObjs.length;
                 worldOffset.applyQuaternion(this._ctrlRot, this.right);
@@ -22237,7 +22257,7 @@ var paper;
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, worldPosition, this._delta);
-                var worldOffset;
+                var worldOffset = new egret3d.Vector3;
                 var scale;
                 worldOffset.applyQuaternion(worldRotation, this.up);
                 var cosHit = egret3d.Vector3.dot(hit, worldOffset);
@@ -22267,7 +22287,7 @@ var paper;
             yScl.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset;
+                var worldOffset = new egret3d.Vector3;
                 var scale;
                 var len = selectedGameObjs.length;
                 worldOffset.applyQuaternion(this._ctrlRot, this.up);
@@ -22331,7 +22351,7 @@ var paper;
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, worldPosition, this._delta);
-                var worldOffset;
+                var worldOffset = new egret3d.Vector3;
                 var scale;
                 worldOffset.applyQuaternion(worldRotation, this.forward);
                 var cosHit = egret3d.Vector3.dot(hit, worldOffset);
@@ -22361,7 +22381,7 @@ var paper;
             zScl.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset;
+                var worldOffset = new egret3d.Vector3;
                 var scale;
                 var len = selectedGameObjs.length;
                 worldOffset.applyQuaternion(this._ctrlRot, this.forward);
@@ -22635,22 +22655,43 @@ var paper;
 var paper;
 (function (paper) {
     /**
-     *
+     * @internal
      */
-    var MissingComponent = (function (_super) {
-        __extends(MissingComponent, _super);
-        function MissingComponent() {
+    var GroupComponent = (function (_super) {
+        __extends(GroupComponent, _super);
+        function GroupComponent() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.missingObject = null;
+            _this.componentIndex = -1;
+            _this.componentClass = null;
+            _this._components = [];
             return _this;
         }
-        __decorate([
-            paper.serializedField
-        ], MissingComponent.prototype, "missingObject", void 0);
-        return MissingComponent;
+        /**
+         * @internal
+         */
+        GroupComponent.prototype._addComponent = function (component) {
+            this._components.push(component);
+        };
+        /**
+         * @internal
+         */
+        GroupComponent.prototype._removeComponent = function (component) {
+            var index = this._components.indexOf(component);
+            if (index >= 0) {
+                this._components.splice(1, 0);
+            }
+        };
+        Object.defineProperty(GroupComponent.prototype, "components", {
+            get: function () {
+                return this._components;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return GroupComponent;
     }(paper.BaseComponent));
-    paper.MissingComponent = MissingComponent;
-    __reflect(MissingComponent.prototype, "paper.MissingComponent");
+    paper.GroupComponent = GroupComponent;
+    __reflect(GroupComponent.prototype, "paper.GroupComponent");
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -22950,12 +22991,9 @@ var paper;
                     case 'cube':
                         obj = new paper.GameObject();
                         obj.name = "cube";
-                        var mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                        mat.setVector4v("_Color", [1, 0, 0, 1]);
                         var mesh = obj.addComponent(egret3d.MeshFilter);
                         mesh.mesh = egret3d.DefaultMeshes.CUBE;
                         var renderer = obj.addComponent(egret3d.MeshRenderer);
-                        renderer.materials = [mat];
                         break;
                 }
                 return obj;
@@ -23260,15 +23298,12 @@ var paper;
                     var componentId = this.stateData.cacheComponentId;
                     var gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObject) {
-                        for (var i = 0; i < gameObject.components.length; i++) {
-                            var comp = gameObject.components[i];
-                            if (comp.uuid === componentId) {
-                                gameObject.removeComponent(comp.constructor);
-                                break;
-                            }
+                        var component = this.editorModel.getComponentById(gameObject, componentId);
+                        if (component) {
+                            gameObject.removeComponent(component);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                         }
                     }
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                     return true;
                 }
                 return false;
@@ -23279,21 +23314,17 @@ var paper;
                     var compClzName = this.stateData.compClzName;
                     var gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (gameObject) {
-                        var addComponent = void 0;
                         if (this.stateData.serializeData) {
-                            var deserializer = new paper.Deserializer();
-                            addComponent = deserializer.deserialize(this.data.serializeData, true);
-                            //todo:
-                            // this.editorModel.addComponentToGameObject(gameObject, addComponent);
+                            new paper.Deserializer().deserialize(this.data.serializeData, true, false, gameObject);
                         }
                         else {
                             var compClz = egret.getDefinitionByName(compClzName);
-                            addComponent = gameObject.addComponent(compClz);
+                            var addComponent = gameObject.addComponent(compClz);
                             this.stateData.serializeData = paper.serialize(addComponent);
+                            this.stateData.cacheComponentId = addComponent.uuid;
                         }
-                        addComponent && (this.stateData.cacheComponentId = addComponent.uuid);
+                        this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                     }
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                     return true;
                 }
                 return false;
@@ -23336,17 +23367,10 @@ var paper;
             });
             RemoveComponentState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
-                    var serializeData = this.stateData.cacheSerializeData;
-                    var component = new paper.Deserializer().deserialize(serializeData, true);
-                    var gameObjectUUid = this.stateData.gameObjectUUid;
-                    if (component) {
-                        var gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
-                        if (gameObject) {
-                            component.gameObject = gameObject;
-                            //todo:
-                            // this.editorModel.addComponentToGameObject(gameObject, component);
-                            this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
-                        }
+                    var gameObject = this.editorModel.getGameObjectByUUid(this.stateData.gameObjectUUid);
+                    if (gameObject) {
+                        new paper.Deserializer().deserialize(this.stateData.cacheSerializeData, true, false, gameObject);
+                        this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                     }
                     return true;
                 }
@@ -23358,18 +23382,12 @@ var paper;
                     var componentUUid = this.stateData.componentUUid;
                     var obj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                     if (obj) {
-                        for (var i = 0; i < obj.components.length; i++) {
-                            var comp = obj.components[i];
-                            if (comp.uuid === componentUUid) {
-                                obj.removeComponent(comp.constructor);
-                                if (this.stateData.cacheSerializeData === undefined) {
-                                    this.stateData.cacheSerializeData = paper.serialize(comp);
-                                }
-                                break;
-                            }
+                        var component = this.editorModel.getComponentById(obj, componentUUid);
+                        if (component) {
+                            obj.removeComponent(component);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                         }
                     }
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                     return true;
                 }
                 return false;
@@ -24617,7 +24635,7 @@ var paper;
                         if (this.bindKeyboard.isPressed('CONTROL')) {
                             if (pickInfo) {
                                 var picked = pickInfo.transform.gameObject;
-                                if (picked.name !== "GizmoController_Ball" && picked.name !== "GizmoController_X" && picked.name !== "GizmoController_Y" && picked.name !== "GizmoController_Z"
+                                if (picked.name !== "GizmoController_YZ" && picked.name !== "GizmoController_XZ" && picked.name !== "GizmoController_XY" && picked.name !== "GizmoController_X" && picked.name !== "GizmoController_Y" && picked.name !== "GizmoController_Z"
                                     && picked.name !== "GizmoController_Rotate_X" && picked.name !== "GizmoController_Rotate_Y" && picked.name !== "GizmoController_Rotate_Z"
                                     && picked.name !== "GizmoController_Scale_X" && picked.name !== "GizmoController_Scale_Y" && picked.name !== "GizmoController_Scale_Z") {
                                     // 对GameObject的点选
@@ -24644,7 +24662,7 @@ var paper;
                         else {
                             if (pickInfo) {
                                 var picked = pickInfo.transform.gameObject;
-                                if (picked.name !== "GizmoController_Ball" && picked.name !== "GizmoController_X" && picked.name !== "GizmoController_Y" && picked.name !== "GizmoController_Z"
+                                if (picked.name !== "GizmoController_YZ" && picked.name !== "GizmoController_XZ" && picked.name !== "GizmoController_XY" && picked.name !== "GizmoController_X" && picked.name !== "GizmoController_Y" && picked.name !== "GizmoController_Z"
                                     && picked.name !== "GizmoController_Rotate_X" && picked.name !== "GizmoController_Rotate_Y" && picked.name !== "GizmoController_Rotate_Z"
                                     && picked.name !== "GizmoController_Scale_X" && picked.name !== "GizmoController_Scale_Y" && picked.name !== "GizmoController_Scale_Z") {
                                     // 对GameObject的点选
@@ -24673,8 +24691,8 @@ var paper;
             //TODO,描边
             PickGameObjectScript.prototype.setStroke = function (picked) {
                 var render = picked.getComponent(egret3d.MeshRenderer);
-                var mat = new egret3d.Material(egret3d.DefaultShaders.DIFFUSE_TINT_COLOR);
-                render.materials = [mat];
+                // let mat = new egret3d.Material(egret3d.DefaultShaders.DIFFUSE_TINT_COLOR)
+                render.materials = [egret3d.DefaultMaterials.MESH_BASIC.clone()];
                 console.log(render.materials);
             };
             PickGameObjectScript = __decorate([
@@ -24875,7 +24893,7 @@ var paper;
                 this.camera.calcViewMatrix(this.vMatrix);
                 this.camera.calcProjectMatrix(asp, this.pMatrix);
                 this.mvpMatrix.multiply(this.pMatrix, this.vMatrix);
-                m = m || new egret3d.Matrix();
+                m = m || new egret3d.Matrix4();
                 this.mMatrix.copy(m);
                 this.mvpMatrix.multiply(this.mMatrix);
             };
@@ -24918,6 +24936,16 @@ var paper;
                 var camerasAndLights = paper.Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
                 for (var _i = 0, _a = camerasAndLights.cameras; _i < _a.length; _i++) {
                     var camera = _a[_i];
+                    if (!camera.gameObject.getComponent(egret3d.MeshFilter) && camera.gameObject.name != "EditorCamera") {
+                        var obj = camera.gameObject;
+                        var mesh = obj.addComponent(egret3d.MeshFilter);
+                        mesh.mesh = egret3d.DefaultMeshes.CUBE;
+                        // let renderer = obj.addComponent(egret3d.MeshRenderer);
+                        // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                        // mat.setVector4v("_Color", [1, 0, 0, 1]);
+                        // renderer.materials = [mat];
+                        // obj.transform.setScale(0.6, 0.4, 0.4)
+                    }
                     Gizmo_1.DrawIcon("camera", camera.gameObject.transform.getPosition(), 30);
                     Gizmo_1.DrawCameraSquare(camera.gameObject, [1, 0, 0, 1]);
                     //Gizmo.DrawCameraSquare(this.cameraPool[i], [1.0, 0.0, 1.0, 1.0]);
@@ -25055,7 +25083,7 @@ var paper;
                 var matS = this.helpMat1;
                 // egret3d.Quaternion.toMatrix(r, out);
                 out.fromRotation(r);
-                matS.formScale(sca, sca, sca);
+                matS.fromScale(sca, sca, sca);
                 out.multiply(matS);
                 out.rawData[12] = p.x;
                 out.rawData[13] = p.y;
@@ -25083,31 +25111,31 @@ var paper;
                 }
             };
             Gizmo.enabled = false;
-            Gizmo.mvpMatrix = new egret3d.Matrix();
-            Gizmo.mMatrix = new egret3d.Matrix();
-            Gizmo.vMatrix = new egret3d.Matrix();
-            Gizmo.pMatrix = new egret3d.Matrix();
+            Gizmo.mvpMatrix = new egret3d.Matrix4();
+            Gizmo.mMatrix = new egret3d.Matrix4();
+            Gizmo.vMatrix = new egret3d.Matrix4();
+            Gizmo.pMatrix = new egret3d.Matrix4();
             Gizmo.helpVec31 = new egret3d.Vector3();
             Gizmo.helpVec32 = new egret3d.Vector3();
             Gizmo.helpVec33 = new egret3d.Vector3();
             Gizmo.helpVec34 = new egret3d.Vector3();
             Gizmo.helpVec35 = new egret3d.Vector3();
             Gizmo.helpVec36 = new egret3d.Vector3();
-            Gizmo.xArrowMMatrix = new egret3d.Matrix();
-            Gizmo.yArrowMMatrix = egret3d.Matrix.create([
+            Gizmo.xArrowMMatrix = new egret3d.Matrix4();
+            Gizmo.yArrowMMatrix = egret3d.Matrix4.create([
                 0, 1, 0, 0,
                 -1, 0, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1
             ]);
-            Gizmo.zArrowMMatrix = egret3d.Matrix.create([
+            Gizmo.zArrowMMatrix = egret3d.Matrix4.create([
                 0, 0, 1, 0,
                 0, 1, 0, 0,
                 -1, 0, 0, 0,
                 0, 0, 0, 1
             ]);
-            Gizmo.helpMat = new egret3d.Matrix();
-            Gizmo.helpMat1 = new egret3d.Matrix();
+            Gizmo.helpMat = new egret3d.Matrix4();
+            Gizmo.helpMat1 = new egret3d.Matrix4();
             Gizmo._imageLoadCount = 0;
             Gizmo.textures = {};
             Gizmo = Gizmo_1 = __decorate([
@@ -25213,6 +25241,30 @@ var paper;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
+    var GizmoRenderSystem = (function (_super) {
+        __extends(GizmoRenderSystem, _super);
+        function GizmoRenderSystem() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._renderState = egret3d.WebGLRenderState.getInstance(egret3d.WebGLRenderState);
+            return _this;
+        }
+        GizmoRenderSystem.prototype.onUpdate = function () {
+            this._renderState.clearState(); //编辑器走自己的渲染流程，状态需要清除一下
+            paper.editor.Gizmo.DrawCoord();
+            paper.editor.Gizmo.DrawLights();
+            paper.editor.Gizmo.DrawCameras();
+        };
+        return GizmoRenderSystem;
+    }(paper.BaseSystem));
+    egret3d.GizmoRenderSystem = GizmoRenderSystem;
+    __reflect(GizmoRenderSystem.prototype, "egret3d.GizmoRenderSystem");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * @deprecated
+     */
+    egret3d.Matrix = egret3d.Matrix4;
     /**
      * @deprecated
      */
@@ -25226,361 +25278,1285 @@ var egret3d;
 (function (egret3d) {
     var particle;
     (function (particle) {
-        /**
-         * @private
-         * 渲染类型为Mesh的属性格式
-         */
-        var MeshShaderAttributeFormat = [
-            { key: "POSITION" /* POSITION */, type: "VEC3" /* VEC3 */ },
-            { key: "COLOR_0" /* COLOR_0 */, type: "VEC4" /* VEC4 */ },
-            { key: "TEXCOORD_0" /* TEXCOORD_0 */, type: "VEC2" /* VEC2 */ },
-            { key: "_START_POSITION" /* _START_POSITION */, type: "VEC3" /* VEC3 */ },
-            { key: "_START_VELOCITY" /* _START_VELOCITY */, type: "VEC3" /* VEC3 */ },
-            { key: "_START_COLOR" /* _START_COLOR */, type: "VEC4" /* VEC4 */ },
-            { key: "_START_SIZE" /* _START_SIZE */, type: "VEC3" /* VEC3 */ },
-            { key: "_START_ROTATION" /* _START_ROTATION */, type: "VEC3" /* VEC3 */ },
-            { key: "_TIME" /* _TIME */, type: "VEC2" /* VEC2 */ },
-            { key: "_RANDOM0" /* _RANDOM0 */, type: "VEC4" /* VEC4 */ },
-            { key: "_RANDOM1" /* _RANDOM1 */, type: "VEC4" /* VEC4 */ },
-            { key: "_WORLD_POSITION" /* _WORLD_POSITION */, type: "VEC3" /* VEC3 */ },
-            { key: "_WORLD_ROTATION" /* _WORLD_ROTATION */, type: "VEC4" /* VEC4 */ },
-        ];
-        /**
-         * @private
-         * 渲染类型为Billboard的属性格式
-         */
-        var BillboardShaderAttributeFormat = [
-            { key: "_CORNER" /* _CORNER */, type: "VEC2" /* VEC2 */ },
-            { key: "TEXCOORD_0" /* TEXCOORD_0 */, type: "VEC2" /* VEC2 */ },
-            { key: "_START_POSITION" /* _START_POSITION */, type: "VEC3" /* VEC3 */ },
-            { key: "_START_VELOCITY" /* _START_VELOCITY */, type: "VEC3" /* VEC3 */ },
-            { key: "_START_COLOR" /* _START_COLOR */, type: "VEC4" /* VEC4 */ },
-            { key: "_START_SIZE" /* _START_SIZE */, type: "VEC3" /* VEC3 */ },
-            { key: "_START_ROTATION" /* _START_ROTATION */, type: "VEC3" /* VEC3 */ },
-            { key: "_TIME" /* _TIME */, type: "VEC2" /* VEC2 */ },
-            { key: "_RANDOM0" /* _RANDOM0 */, type: "VEC4" /* VEC4 */ },
-            { key: "_RANDOM1" /* _RANDOM1 */, type: "VEC4" /* VEC4 */ },
-            { key: "_WORLD_POSITION" /* _WORLD_POSITION */, type: "VEC3" /* VEC3 */ },
-            { key: "_WORLD_ROTATION" /* _WORLD_ROTATION */, type: "VEC4" /* VEC4 */ },
-        ];
-        /**
-        * @internal
-        */
-        function createBatchMesh(renderer, maxParticleCount) {
-            var meshAttributes = [];
-            var meshAttributesType = {};
-            if (renderer._renderMode === 4 /* Mesh */) {
-                var mesh = renderer.mesh;
-                var orginIndexBuffer = mesh.getIndices();
-                var orginIndexBufferCount = orginIndexBuffer.length;
-                for (var _i = 0, MeshShaderAttributeFormat_1 = MeshShaderAttributeFormat; _i < MeshShaderAttributeFormat_1.length; _i++) {
-                    var attribute = MeshShaderAttributeFormat_1[_i];
-                    meshAttributes.push(attribute.key);
-                    meshAttributesType[attribute.key] = attribute.type;
+        var colorHelper1 = egret3d.Color.create();
+        var colorHelper2 = egret3d.Color.create();
+        var Keyframe = (function () {
+            function Keyframe() {
+            }
+            Keyframe.prototype.serialize = function () {
+                return [this.time, this.value];
+            };
+            Keyframe.prototype.deserialize = function (element) {
+                this.time = element[0];
+                this.value = element[1];
+                return this;
+            };
+            Keyframe.prototype.clone = function (source) {
+                this.time = source.time;
+                this.value = source.value;
+            };
+            return Keyframe;
+        }());
+        particle.Keyframe = Keyframe;
+        __reflect(Keyframe.prototype, "egret3d.particle.Keyframe", ["paper.ISerializable"]);
+        var AnimationCurve = (function () {
+            function AnimationCurve() {
+                /**
+                 * 功能与效率平衡长度取4
+                 */
+                this._keys = new Array();
+                this._floatValues = new Float32Array(8);
+            }
+            AnimationCurve.prototype.serialize = function () {
+                return this._keys.map(function (keyFrame) { return keyFrame.serialize(); });
+            };
+            AnimationCurve.prototype.deserialize = function (element) {
+                this._keys.length = 0;
+                for (var i = 0, l = element.length; i < l; i++) {
+                    var keyframe = new Keyframe();
+                    keyframe.deserialize(element[i]);
+                    this._keys.push(keyframe);
                 }
-                var totalVertexCount = mesh.vertexCount * maxParticleCount;
-                var totalIndexCount = orginIndexBufferCount * maxParticleCount;
-                var batchMesh = new egret3d.Mesh(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType, 35048 /* Dynamic */);
+                return this;
+            };
+            AnimationCurve.prototype.evaluate = function (t) {
+                if (t === void 0) { t = 0; }
+                for (var i = 0, l = this._keys.length; i < l; i++) {
+                    var curKeyFrame = this._keys[i];
+                    if (curKeyFrame.time < t) {
+                        continue;
+                    }
+                    //
+                    var lastIndex = i === 0 ? 0 : i - 1;
+                    var lastKeyFrame = this._keys[lastIndex];
+                    var tt = (t - lastKeyFrame.time) / (curKeyFrame.time - lastKeyFrame.time);
+                    return egret3d.numberLerp(lastKeyFrame.value, curKeyFrame.value, tt);
+                }
+                throw "AnimationCurve: invalid t or keys.length is 0";
+            };
+            Object.defineProperty(AnimationCurve.prototype, "floatValues", {
+                get: function () {
+                    var res = this._floatValues;
+                    var offset = 0;
+                    for (var _i = 0, _a = this._keys; _i < _a.length; _i++) {
+                        var keyFrame = _a[_i];
+                        res[offset++] = keyFrame.time;
+                        res[offset++] = keyFrame.value;
+                    }
+                    return res;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            AnimationCurve.prototype.clone = function (source) {
+                this._keys.length = 0;
+                var sourceKeys = source._keys;
+                for (var i = 0, l = sourceKeys.length; i < l; i++) {
+                    var keyframe = new Keyframe();
+                    keyframe.time = sourceKeys[i].time;
+                    keyframe.value = sourceKeys[i].value;
+                    this._keys.push(keyframe);
+                }
+            };
+            return AnimationCurve;
+        }());
+        particle.AnimationCurve = AnimationCurve;
+        __reflect(AnimationCurve.prototype, "egret3d.particle.AnimationCurve", ["paper.ISerializable"]);
+        var GradientColorKey = (function (_super) {
+            __extends(GradientColorKey, _super);
+            function GradientColorKey() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.color = egret3d.Color.create();
+                return _this;
+            }
+            GradientColorKey.prototype.deserialize = function (element) {
+                this.color.deserialize(element.color);
+                this.time = element.time;
+                return this;
+            };
+            __decorate([
+                paper.serializedField
+            ], GradientColorKey.prototype, "time", void 0);
+            __decorate([
+                paper.serializedField
+            ], GradientColorKey.prototype, "color", void 0);
+            return GradientColorKey;
+        }(paper.BaseObject));
+        particle.GradientColorKey = GradientColorKey;
+        __reflect(GradientColorKey.prototype, "egret3d.particle.GradientColorKey");
+        var GradientAlphaKey = (function (_super) {
+            __extends(GradientAlphaKey, _super);
+            function GradientAlphaKey() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            GradientAlphaKey.prototype.deserialize = function (element) {
+                this.alpha = element.alpha;
+                this.time = element.time;
+                return this;
+            };
+            __decorate([
+                paper.serializedField
+            ], GradientAlphaKey.prototype, "alpha", void 0);
+            __decorate([
+                paper.serializedField
+            ], GradientAlphaKey.prototype, "time", void 0);
+            return GradientAlphaKey;
+        }(paper.BaseObject));
+        particle.GradientAlphaKey = GradientAlphaKey;
+        __reflect(GradientAlphaKey.prototype, "egret3d.particle.GradientAlphaKey");
+        var Gradient = (function (_super) {
+            __extends(Gradient, _super);
+            function Gradient() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.mode = 0 /* Blend */;
+                _this.alphaKeys = new Array();
+                _this.colorKeys = new Array();
+                _this._alphaValue = new Float32Array(8);
+                _this._colorValue = new Float32Array(16);
+                return _this;
+            }
+            Gradient.prototype.deserialize = function (element) {
+                this.colorKeys.length = 0;
+                for (var i = 0, l = element.colorKeys.length; i < l; i++) {
+                    var color = new GradientColorKey();
+                    color.deserialize(element.colorKeys[i]);
+                    this.colorKeys.push(color);
+                }
                 //
-                var index = 0;
-                //提前填充
-                var orginPostionBuffer = mesh.getAttributes("POSITION" /* POSITION */);
-                var orginUVBuffer = mesh.getAttributes("TEXCOORD_0" /* TEXCOORD_0 */);
-                var orginColorBuffer = mesh.getAttributes("COLOR_0" /* COLOR_0 */);
-                var positionBuffer = batchMesh.getAttributes("POSITION" /* POSITION */);
-                var colorBuffer = batchMesh.getAttributes("COLOR_0" /* COLOR_0 */);
-                var uvBuffer = batchMesh.getAttributes("TEXCOORD_0" /* TEXCOORD_0 */);
-                for (var i = 0; i < totalVertexCount; i++) {
-                    var vector2Offset = i * 2;
-                    var vector3Offset = i * 3;
-                    var vector4Offset = i * 4;
-                    var orginVertexIndex = i % mesh.vertexCount;
-                    positionBuffer[vector3Offset] = orginPostionBuffer[orginVertexIndex * 3];
-                    positionBuffer[vector3Offset + 1] = orginPostionBuffer[orginVertexIndex * 3 + 1];
-                    positionBuffer[vector3Offset + 2] = orginPostionBuffer[orginVertexIndex * 3 + 2];
-                    if (orginUVBuffer) {
-                        uvBuffer[vector2Offset] = orginUVBuffer[orginVertexIndex * 2];
-                        uvBuffer[vector2Offset + 1] = orginUVBuffer[orginVertexIndex * 2 + 1];
-                    }
-                    if (orginColorBuffer) {
-                        colorBuffer[vector4Offset] = orginColorBuffer[orginVertexIndex * 4];
-                        colorBuffer[vector4Offset + 1] = orginColorBuffer[orginVertexIndex * 4 + 1];
-                        colorBuffer[vector4Offset + 2] = orginColorBuffer[orginVertexIndex * 4 + 2];
-                        colorBuffer[vector4Offset + 3] = orginColorBuffer[orginVertexIndex * 4 + 3];
-                    }
-                    else {
-                        colorBuffer[vector4Offset] = 1;
-                        colorBuffer[vector4Offset + 1] = 1;
-                        colorBuffer[vector4Offset + 2] = 1;
-                        colorBuffer[vector4Offset + 3] = 1;
+                this.alphaKeys.length = 0;
+                for (var i = 0, l = element.alphaKeys.length; i < l; i++) {
+                    var alpha = new GradientAlphaKey();
+                    alpha.deserialize(element.alphaKeys[i]);
+                    this.alphaKeys.push(alpha);
+                }
+                return this;
+            };
+            Gradient.prototype.evaluate = function (t, out) {
+                if (t === void 0) { t = 0; }
+                for (var i = 0, l = this.alphaKeys.length; i < l; i++) {
+                    var curKeyFrame = this.alphaKeys[i];
+                    if (curKeyFrame.time > t) {
+                        var lastIndex = i == 0 ? 0 : i - 1;
+                        var lastKeyFrame = this.alphaKeys[lastIndex];
+                        var tt = (t - lastKeyFrame.time) / (curKeyFrame.time - lastKeyFrame.time);
+                        out.a = egret3d.numberLerp(lastKeyFrame.alpha, curKeyFrame.alpha, tt);
+                        break;
                     }
                 }
-                var indexBuffer = batchMesh.getIndices();
-                for (var i = 0; i < maxParticleCount; i++) {
-                    var indexOffset = i * mesh.vertexCount;
-                    for (var j = 0; j < orginIndexBufferCount; j++) {
-                        indexBuffer[index++] = orginIndexBuffer[j] + indexOffset;
+                for (var i = 0, l = this.colorKeys.length; i < l; i++) {
+                    var colorKey = this.colorKeys[i];
+                    if (colorKey.time > t) {
+                        var lastIndex = i == 0 ? 0 : i - 1;
+                        var lastKeyFrame = this.colorKeys[lastIndex];
+                        var tt = (t - lastKeyFrame.time) / (colorKey.time - lastKeyFrame.time);
+                        out.r = egret3d.numberLerp(lastKeyFrame.color.r, colorKey.color.r, tt);
+                        out.g = egret3d.numberLerp(lastKeyFrame.color.g, colorKey.color.g, tt);
+                        out.b = egret3d.numberLerp(lastKeyFrame.color.b, colorKey.color.b, tt);
+                        break;
                     }
                 }
-                return batchMesh;
+                return out;
+            };
+            Object.defineProperty(Gradient.prototype, "alphaValues", {
+                get: function () {
+                    var res = this._alphaValue;
+                    var offset = 0;
+                    for (var _i = 0, _a = this.alphaKeys; _i < _a.length; _i++) {
+                        var alpha = _a[_i];
+                        res[offset++] = alpha.time;
+                        res[offset++] = alpha.alpha;
+                    }
+                    return res;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Gradient.prototype, "colorValues", {
+                get: function () {
+                    var res = this._colorValue;
+                    var offset = 0;
+                    for (var _i = 0, _a = this.colorKeys; _i < _a.length; _i++) {
+                        var color = _a[_i];
+                        res[offset++] = color.time;
+                        res[offset++] = color.color.r;
+                        res[offset++] = color.color.g;
+                        res[offset++] = color.color.b;
+                    }
+                    return res;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], Gradient.prototype, "mode", void 0);
+            __decorate([
+                paper.serializedField
+            ], Gradient.prototype, "alphaKeys", void 0);
+            __decorate([
+                paper.serializedField
+            ], Gradient.prototype, "colorKeys", void 0);
+            return Gradient;
+        }(paper.BaseObject));
+        particle.Gradient = Gradient;
+        __reflect(Gradient.prototype, "egret3d.particle.Gradient");
+        var MinMaxCurve = (function (_super) {
+            __extends(MinMaxCurve, _super);
+            function MinMaxCurve() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.mode = 0 /* Constant */;
+                _this.curve = new AnimationCurve();
+                _this.curveMin = new AnimationCurve();
+                _this.curveMax = new AnimationCurve();
+                return _this;
             }
-            else {
-                var orginIndexBuffer = [0, 2, 1, 0, 3, 2];
-                var orginIndexBufferCount = orginIndexBuffer.length;
-                for (var _a = 0, BillboardShaderAttributeFormat_1 = BillboardShaderAttributeFormat; _a < BillboardShaderAttributeFormat_1.length; _a++) {
-                    var attribute = BillboardShaderAttributeFormat_1[_a];
-                    meshAttributes.push(attribute.key);
-                    meshAttributesType[attribute.key] = attribute.type;
+            MinMaxCurve.prototype.deserialize = function (element) {
+                this.mode = element.mode;
+                this.constant = element.constant || 0;
+                this.constantMin = element.constantMin || 0;
+                this.constantMax = element.constantMax || 0;
+                element.curve && this.curve.deserialize(element.curve);
+                element.curveMin && this.curveMin.deserialize(element.curveMin);
+                element.curveMax && this.curveMax.deserialize(element.curveMax);
+                return this;
+            };
+            MinMaxCurve.prototype.evaluate = function (t) {
+                if (t === void 0) { t = 0; }
+                if (this.mode === 0 /* Constant */) {
+                    return this.constant;
                 }
-                var vertexStride = 4;
-                var totalVertexCount = vertexStride * maxParticleCount;
-                var totalIndexCount = orginIndexBufferCount * maxParticleCount;
-                var batchMesh = new egret3d.Mesh(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType, 35048 /* Dynamic */);
-                var cornerBuffer = batchMesh.getAttributes("_CORNER" /* _CORNER */);
-                var uvBuffer = batchMesh.getAttributes("TEXCOORD_0" /* TEXCOORD_0 */);
-                for (var i = 0; i < totalVertexCount; i++) {
-                    var orginVertexIndex = i % vertexStride;
-                    var vector2Offset = i * 2;
-                    switch (orginVertexIndex) {
-                        case 0:
-                            cornerBuffer[vector2Offset] = -0.5;
-                            cornerBuffer[vector2Offset + 1] = -0.5;
-                            uvBuffer[vector2Offset] = 0.0;
-                            uvBuffer[vector2Offset + 1] = 1.0;
-                            break;
-                        case 1:
-                            cornerBuffer[vector2Offset] = 0.5;
-                            cornerBuffer[vector2Offset + 1] = -0.5;
-                            uvBuffer[vector2Offset] = 1.0;
-                            uvBuffer[vector2Offset + 1] = 1.0;
-                            break;
-                        case 2:
-                            cornerBuffer[vector2Offset] = 0.5;
-                            cornerBuffer[vector2Offset + 1] = 0.5;
-                            uvBuffer[vector2Offset] = 1.0;
-                            uvBuffer[vector2Offset + 1] = 0.0;
-                            break;
-                        case 3:
-                            cornerBuffer[vector2Offset] = -0.5;
-                            cornerBuffer[vector2Offset + 1] = 0.5;
-                            uvBuffer[vector2Offset] = 0.0;
-                            uvBuffer[vector2Offset + 1] = 0.0;
-                            break;
-                    }
+                else if (this.mode === 3 /* TwoConstants */) {
+                    return (Math.random() * (this.constantMax - this.constantMin) + this.constantMin);
                 }
-                var indexBuffer = batchMesh.getIndices();
-                for (var i = 0; i < maxParticleCount; i++) {
-                    var indexOffset = i * 6;
-                    var firstVertex = i * vertexStride;
-                    var secondVertex = firstVertex + 2;
-                    indexBuffer[indexOffset + 0] = firstVertex;
-                    indexBuffer[indexOffset + 1] = secondVertex;
-                    indexBuffer[indexOffset + 2] = firstVertex + 1;
-                    indexBuffer[indexOffset + 3] = firstVertex;
-                    indexBuffer[indexOffset + 4] = firstVertex + 3;
-                    indexBuffer[indexOffset + 5] = secondVertex;
-                }
-                return batchMesh;
-            }
-        }
-        particle.createBatchMesh = createBatchMesh;
-        /**
-         * @internal
-         */
-        function generatePositionAndDirection(position, direction, shape) {
-            if (!shape.enable) {
-                position.x = position.y = position.z = 0;
-                direction.x = direction.y = 0;
-                direction.z = 1.0;
-                return;
-            }
-            //
-            switch (shape.shapeType) {
-                case 4 /* Cone */:
-                case 7 /* ConeShell */:
-                    {
-                        _generateConeParticlePosition(shape, position, direction);
-                    }
-                    break;
-                case 8 /* ConeVolume */:
-                case 9 /* ConeVolumeShell */:
-                    {
-                        _generateConeVolumeParticlePosition(shape, position, direction);
-                    }
-                    break;
-                case 5 /* Box */:
-                    {
-                        _generateBoxParticlePosition(shape, position, direction);
-                    }
-                    break;
-                case 0 /* Sphere */:
-                case 1 /* SphereShell */:
-                    {
-                        _generateSphereParticlePosition(shape, position, direction);
-                    }
-                    break;
-                case 10 /* Circle */:
-                    {
-                        _generateCircleParticlePosition(shape, position, direction);
-                    }
-                    break;
-                default:
-                    {
-                        position.x = position.y = position.z = 0;
-                        direction.x = direction.y = 0;
-                        direction.z = 1;
-                    }
-            }
-        }
-        particle.generatePositionAndDirection = generatePositionAndDirection;
-        function _randomPostionCircle(out) {
-            var angle = Math.random() * Math.PI * 2;
-            out.x = Math.cos(angle);
-            out.y = Math.sin(angle);
-        }
-        function _randomPositionInsideCircle(out) {
-            _randomPostionCircle(out);
-            var range = Math.pow(Math.random(), 0.5);
-            out.x = out.x * range;
-            out.y = out.y * range;
-        }
-        function _randomPositionArcCircle(arc, out) {
-            var angle = Math.random() * arc;
-            out.x = Math.cos(angle);
-            out.y = Math.sin(angle);
-        }
-        function _randomPositionInsideArcCircle(arc, out) {
-            _randomPositionArcCircle(arc, out);
-            var range = Math.pow(Math.random(), 0.5);
-            out.x = out.x * range;
-            out.y = out.y * range;
-        }
-        function _randomPositionSphere(out) {
-            var ranZ = Math.random() * 2 - 1.0;
-            var angle = Math.random() * Math.PI * 2;
-            var range = Math.sqrt(1.0 - ranZ * ranZ);
-            out.x = Math.cos(angle) * range;
-            out.y = Math.sin(angle) * range;
-            out.z = ranZ;
-        }
-        function _randomPositionInsideSphere(out) {
-            _randomPositionSphere(out);
-            var range = Math.pow(Math.random(), 1.0 / 3.0);
-            out.x = out.x * range;
-            out.y = out.y * range;
-            out.z = out.z * range;
-        }
-        function _generateConeParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
-            if (shape.shapeType == 4 /* Cone */) {
-                _randomPositionInsideCircle(temp);
-            }
-            else {
-                _randomPostionCircle(temp);
-            }
-            position.x = temp.x * shape.radius;
-            position.y = temp.y * shape.radius;
-            position.z = temp.z * shape.radius;
-            var angle = shape.angle * Math.PI / 180.0;
-            var sinValue = Math.sin(angle);
-            var cosValue = Math.cos(angle);
-            if (shape.randomDirection) {
-                _randomPositionInsideCircle(direction);
-                direction.x = direction.x * sinValue;
-                direction.y = direction.y * sinValue;
-                direction.z = cosValue;
-            }
-            else {
-                direction.x = temp.x * sinValue;
-                direction.y = temp.y * sinValue;
-                direction.z = cosValue;
-            }
-        }
-        function _generateConeVolumeParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
-            if (shape.shapeType == 8 /* ConeVolume */) {
-                _randomPositionInsideCircle(temp);
-            }
-            else {
-                _randomPostionCircle(temp);
-            }
-            position.x = temp.x * shape.radius;
-            position.y = temp.y * shape.radius;
-            position.z = 0;
-            var angle = shape.angle * Math.PI / 180.0;
-            var sinValue = Math.sin(angle);
-            var cosValue = Math.cos(angle);
-            direction.x = temp.x * sinValue;
-            direction.y = temp.y * sinValue;
-            direction.z = cosValue;
-            egret3d.Vector3.normalize(direction);
-            var len = Math.random() * shape.length;
-            direction.x = direction.x * len;
-            direction.y = direction.y * len;
-            direction.z = direction.z * len;
-            position.x += direction.x;
-            position.y += direction.y;
-            position.z += direction.z;
-            if (shape.randomDirection) {
-                _randomPositionSphere(direction);
-            }
-        }
-        function _generateBoxParticlePosition(shape, position, direction) {
-            position.x = shape.box.x * (Math.random() - 0.5);
-            position.y = shape.box.y * (Math.random() - 0.5);
-            position.z = shape.box.z * (Math.random() - 0.5);
-            if (shape.randomDirection) {
-                direction.x = 0.0;
-                direction.y = 0.0;
-                direction.z = 1.0;
-            }
-            else {
-                direction.x = 0.0;
-                direction.y = 0.0;
-                direction.z = 1.0;
-            }
-        }
-        function _generateSphereParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
-            if (!shape.spherizeDirection) {
-                if (shape.shapeType == 0 /* Sphere */) {
-                    _randomPositionInsideSphere(position);
+                else if (this.mode === 1 /* Curve */) {
+                    return this.curve.evaluate(t);
                 }
                 else {
-                    _randomPositionSphere(position);
+                    var min = this.curveMin.evaluate(t);
+                    var max = this.curveMax.evaluate(t);
+                    return (Math.random() * (min - max) + min);
                 }
+            };
+            MinMaxCurve.prototype.clone = function (source) {
+                this.mode = source.mode;
+                this.constant = source.constant;
+                this.constantMin = source.constantMin;
+                this.constantMax = source.constantMax;
+                this.curve.clone(source.curve);
+                this.curveMin.clone(source.curveMin);
+                this.curveMax.clone(source.curveMax);
+            };
+            __decorate([
+                paper.serializedField
+            ], MinMaxCurve.prototype, "mode", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxCurve.prototype, "constant", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxCurve.prototype, "constantMin", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxCurve.prototype, "constantMax", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxCurve.prototype, "curve", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxCurve.prototype, "curveMin", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxCurve.prototype, "curveMax", void 0);
+            return MinMaxCurve;
+        }(paper.BaseObject));
+        particle.MinMaxCurve = MinMaxCurve;
+        __reflect(MinMaxCurve.prototype, "egret3d.particle.MinMaxCurve");
+        var MinMaxGradient = (function (_super) {
+            __extends(MinMaxGradient, _super);
+            function MinMaxGradient() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.mode = 1 /* Gradient */;
+                _this.color = egret3d.Color.create();
+                _this.colorMin = egret3d.Color.create();
+                _this.colorMax = egret3d.Color.create();
+                _this.gradient = new Gradient();
+                _this.gradientMin = new Gradient();
+                _this.gradientMax = new Gradient();
+                return _this;
             }
-            position.x = position.x * shape.radius;
-            position.y = position.y * shape.radius;
-            position.z = position.z * shape.radius;
-            if (shape.randomDirection || shape.spherizeDirection) {
-                _randomPositionSphere(direction);
+            MinMaxGradient.prototype.deserialize = function (element) {
+                // super.deserialize(element);
+                this.mode = element.mode;
+                if (element.color) {
+                    this.color.deserialize(element.color);
+                }
+                if (element.colorMin) {
+                    this.colorMin.deserialize(element.colorMin);
+                }
+                if (element.colorMax) {
+                    this.colorMax.deserialize(element.colorMax);
+                }
+                if (element.gradient) {
+                    this.gradient.deserialize(element.gradient);
+                }
+                if (element.gradientMin) {
+                    this.gradientMin.deserialize(element.gradientMin);
+                }
+                if (element.gradientMax) {
+                    this.gradientMax.deserialize(element.gradientMax);
+                }
+                return this;
+            };
+            MinMaxGradient.prototype.evaluate = function (t, out) {
+                if (t === void 0) { t = 0; }
+                if (this.mode === 0 /* Color */) {
+                    out.r = this.color.r;
+                    out.g = this.color.g;
+                    out.b = this.color.b;
+                    out.a = this.color.a;
+                }
+                else if (this.mode === 2 /* TwoColors */) {
+                    out.r = Math.random() * (this.colorMax.r - this.colorMin.r) + this.colorMin.r;
+                    out.g = Math.random() * (this.colorMax.g - this.colorMin.g) + this.colorMin.g;
+                    out.b = Math.random() * (this.colorMax.b - this.colorMin.b) + this.colorMin.b;
+                    out.a = Math.random() * (this.colorMax.a - this.colorMin.a) + this.colorMin.a;
+                }
+                else if (this.mode === 1 /* Gradient */) {
+                    return this.gradient.evaluate(t, out);
+                }
+                else if (this.mode === 3 /* TwoGradients */) {
+                    this.gradientMin.evaluate(t, colorHelper1);
+                    this.gradientMax.evaluate(t, colorHelper2);
+                    out.r = (Math.random() * (colorHelper1.r - colorHelper2.r) + colorHelper1.r);
+                    out.g = (Math.random() * (colorHelper1.g - colorHelper2.g) + colorHelper1.g);
+                    out.b = (Math.random() * (colorHelper1.b - colorHelper2.b) + colorHelper1.b);
+                    out.a = (Math.random() * (colorHelper1.a - colorHelper2.a) + colorHelper1.a);
+                }
+                else {
+                    out.r = Math.random();
+                    out.g = Math.random();
+                    out.b = Math.random();
+                    out.a = Math.random();
+                }
+                return out;
+            };
+            __decorate([
+                paper.serializedField
+            ], MinMaxGradient.prototype, "mode", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxGradient.prototype, "color", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxGradient.prototype, "colorMin", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxGradient.prototype, "colorMax", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxGradient.prototype, "gradient", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxGradient.prototype, "gradientMin", void 0);
+            __decorate([
+                paper.serializedField
+            ], MinMaxGradient.prototype, "gradientMax", void 0);
+            return MinMaxGradient;
+        }(paper.BaseObject));
+        particle.MinMaxGradient = MinMaxGradient;
+        __reflect(MinMaxGradient.prototype, "egret3d.particle.MinMaxGradient");
+        var Burst = (function () {
+            function Burst() {
             }
-            else {
-                direction.x = position.x;
-                direction.y = position.y;
-                direction.z = position.z;
+            Burst.prototype.serialize = function () {
+                return [this.time, this.minCount, this.maxCount, this.cycleCount, this.repeatInterval];
+            };
+            Burst.prototype.deserialize = function (element) {
+                this.time = element[0];
+                this.minCount = element[1];
+                this.maxCount = element[2];
+                this.cycleCount = element[3];
+                this.repeatInterval = element[4];
+                return this;
+            };
+            return Burst;
+        }());
+        particle.Burst = Burst;
+        __reflect(Burst.prototype, "egret3d.particle.Burst", ["paper.ISerializable"]);
+        var ParticleSystemModule = (function (_super) {
+            __extends(ParticleSystemModule, _super);
+            function ParticleSystemModule(comp) {
+                var _this = _super.call(this) || this;
+                _this.enable = false;
+                _this._comp = comp;
+                return _this;
             }
-        }
-        function _generateCircleParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
-            if (shape.shapeType == 10 /* Circle */) {
-                _randomPositionInsideArcCircle(shape.radiusSpread, temp);
+            /**
+             * @internal
+             */
+            ParticleSystemModule.prototype.initialize = function () { };
+            ParticleSystemModule.prototype.deserialize = function (element) {
+                this.enable = true;
+                return this;
+            };
+            __decorate([
+                paper.serializedField
+            ], ParticleSystemModule.prototype, "enable", void 0);
+            return ParticleSystemModule;
+        }(paper.BaseObject));
+        particle.ParticleSystemModule = ParticleSystemModule;
+        __reflect(ParticleSystemModule.prototype, "egret3d.particle.ParticleSystemModule");
+        var MainModule = (function (_super) {
+            __extends(MainModule, _super);
+            function MainModule() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.duration = 0.0;
+                _this.loop = false;
+                //
+                _this.startDelay = new MinMaxCurve();
+                //
+                _this.startLifetime = new MinMaxCurve();
+                //
+                _this.startSpeed = new MinMaxCurve();
+                //
+                _this.startSizeX = new MinMaxCurve();
+                _this.startSizeY = new MinMaxCurve();
+                _this.startSizeZ = new MinMaxCurve();
+                /**
+                 * @internal
+                 */
+                _this._startRotation3D = false;
+                _this.startRotationX = new MinMaxCurve();
+                _this.startRotationY = new MinMaxCurve();
+                _this.startRotationZ = new MinMaxCurve();
+                //
+                _this.startColor = new MinMaxGradient();
+                //
+                _this.gravityModifier = new MinMaxCurve(); //TODO
+                /**
+                 * @internal
+                 */
+                _this._simulationSpace = 0 /* Local */;
+                /**
+                 * @internal
+                 */
+                _this._scaleMode = 0 /* Hierarchy */;
+                //
+                _this.playOnAwake = false;
+                /**
+                 * @internal
+                 */
+                _this._maxParticles = 0;
+                return _this;
             }
-            else {
-                _randomPositionArcCircle(shape.radiusSpread, temp);
+            MainModule.prototype.deserialize = function (element) {
+                _super.prototype.deserialize.call(this, element);
+                this.duration = element.duration;
+                this.loop = element.loop || element.looping; // TODO 兼容代码 looping。
+                this.startDelay.deserialize(element.startDelay);
+                this.startLifetime.deserialize(element.startLifetime);
+                this.startSpeed.deserialize(element.startSpeed);
+                this.startSizeX.deserialize(element.startSizeX);
+                this.startSizeY.deserialize(element.startSizeY);
+                this.startSizeZ.deserialize(element.startSizeZ);
+                this._startRotation3D = (element._startRotation3D || element.startRotation3D) || false;
+                this.startRotationX.deserialize(element.startRotationX);
+                this.startRotationY.deserialize(element.startRotationY);
+                this.startRotationZ.deserialize(element.startRotationZ);
+                this.startColor.deserialize(element.startColor);
+                this.gravityModifier.deserialize(element.gravityModifier);
+                this._simulationSpace = (element._simulationSpace || element.simulationSpace) || 0;
+                this._scaleMode = (element._scaleMode || element.scaleMode) || 0 /* Hierarchy */;
+                this.playOnAwake = element.playOnAwake;
+                this._maxParticles = (element._maxParticles || element.maxParticles) || 0;
+                return this;
+            };
+            Object.defineProperty(MainModule.prototype, "startRotation3D", {
+                get: function () {
+                    return this._startRotation3D;
+                },
+                set: function (value) {
+                    if (this._startRotation3D !== value) {
+                        this._startRotation3D = value;
+                        paper.EventPool.dispatchEvent("rotation3DChanged" /* StartRotation3DChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MainModule.prototype, "simulationSpace", {
+                get: function () {
+                    return this._simulationSpace;
+                },
+                set: function (value) {
+                    if (this._simulationSpace !== value) {
+                        this._simulationSpace = value;
+                        paper.EventPool.dispatchEvent("simulationSpace" /* SimulationSpaceChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MainModule.prototype, "scaleMode", {
+                get: function () {
+                    return this._scaleMode;
+                },
+                set: function (value) {
+                    if (this._scaleMode !== value) {
+                        this._scaleMode = value;
+                        paper.EventPool.dispatchEvent("scaleMode" /* ScaleModeChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MainModule.prototype, "maxParticles", {
+                get: function () {
+                    return this._maxParticles;
+                },
+                set: function (value) {
+                    if (this._maxParticles !== value) {
+                        this._maxParticles = value;
+                        paper.EventPool.dispatchEvent("maxParticles" /* MaxParticlesChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "duration", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "loop", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "startDelay", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "startLifetime", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "startSpeed", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "startSizeX", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "startSizeY", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "startSizeZ", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "_startRotation3D", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "startRotationX", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "startRotationY", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "startRotationZ", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "startColor", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "gravityModifier", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "_simulationSpace", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "_scaleMode", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "playOnAwake", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "_maxParticles", void 0);
+            return MainModule;
+        }(ParticleSystemModule));
+        particle.MainModule = MainModule;
+        __reflect(MainModule.prototype, "egret3d.particle.MainModule");
+        var EmissionModule = (function (_super) {
+            __extends(EmissionModule, _super);
+            function EmissionModule() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.rateOverTime = new MinMaxCurve();
+                _this.bursts = new Array();
+                return _this;
             }
-            position.x = -temp.x * shape.radius;
-            position.y = temp.y * shape.radius;
-            position.z = 0;
-            if (shape.randomDirection) {
-                _randomPositionSphere(direction);
+            EmissionModule.prototype.deserialize = function (element) {
+                _super.prototype.deserialize.call(this, element);
+                this.rateOverTime.deserialize(element.rateOverTime);
+                if (element.bursts) {
+                    this.bursts.length = 0;
+                    for (var i = 0, l = element.bursts.length; i < l; i++) {
+                        var burst = new Burst();
+                        burst.deserialize(element.bursts[i]);
+                        this.bursts.push(burst);
+                    }
+                }
+                return this;
+            };
+            __decorate([
+                paper.serializedField
+            ], EmissionModule.prototype, "rateOverTime", void 0);
+            __decorate([
+                paper.serializedField
+            ], EmissionModule.prototype, "bursts", void 0);
+            return EmissionModule;
+        }(ParticleSystemModule));
+        particle.EmissionModule = EmissionModule;
+        __reflect(EmissionModule.prototype, "egret3d.particle.EmissionModule");
+        var ShapeModule = (function (_super) {
+            __extends(ShapeModule, _super);
+            function ShapeModule() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.shapeType = 0 /* Sphere */;
+                _this.radius = 0.0;
+                _this.angle = 0.0;
+                _this.length = 0.0;
+                _this.arcSpeed = new MinMaxCurve();
+                _this.arcMode = 0 /* Random */;
+                _this.radiusMode = 0 /* Random */;
+                _this.box = new egret3d.Vector3();
+                _this.randomDirection = false;
+                _this.spherizeDirection = false;
+                return _this;
             }
-            else {
-                direction.x = position.x;
-                direction.y = position.y;
-                direction.z = position.z;
+            ShapeModule.prototype.deserialize = function (element) {
+                _super.prototype.deserialize.call(this, element);
+                this.shapeType = element.shapeType;
+                this.radius = element.radius;
+                this.angle = element.angle;
+                this.length = element.length;
+                this.arcSpeed.deserialize(element.arcSpeed);
+                this.arcMode = element.arcMode;
+                this.radiusSpread = element.radiusSpread;
+                this.radiusMode = element.radiusMode;
+                this.box.deserialize(element.box);
+                this.randomDirection = element.randomDirection;
+                this.spherizeDirection = element.spherizeDirection;
+                return this;
+            };
+            ShapeModule.prototype.invalidUpdate = function () {
+                paper.EventPool.dispatchEvent("shapeChanged" /* ShapeChanged */, this._comp);
+            };
+            ShapeModule.prototype.generatePositionAndDirection = function (position, direction) {
+                particle.generatePositionAndDirection(position, direction, this);
+            };
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "shapeType", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "radius", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "angle", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "length", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "arcSpeed", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "arcMode", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "radiusSpread", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "radiusMode", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "box", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "randomDirection", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "spherizeDirection", void 0);
+            return ShapeModule;
+        }(ParticleSystemModule));
+        particle.ShapeModule = ShapeModule;
+        __reflect(ShapeModule.prototype, "egret3d.particle.ShapeModule");
+        var VelocityOverLifetimeModule = (function (_super) {
+            __extends(VelocityOverLifetimeModule, _super);
+            function VelocityOverLifetimeModule() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                /**
+                 * @internal
+                 */
+                _this._mode = 0 /* Constant */;
+                /**
+                 * @internal
+                 */
+                _this._space = 0 /* Local */;
+                /**
+                 * @internal
+                 */
+                _this._x = new MinMaxCurve();
+                /**
+                 * @internal
+                 */
+                _this._y = new MinMaxCurve();
+                /**
+                 * @internal
+                 */
+                _this._z = new MinMaxCurve();
+                return _this;
             }
-        }
+            VelocityOverLifetimeModule.prototype.deserialize = function (element) {
+                _super.prototype.deserialize.call(this, element);
+                this._mode = (element._mode || element.mode) || 0 /* Constant */;
+                this._space = (element._space || element.space) || 0 /* Local */;
+                this._x.deserialize(element._x || element.x);
+                this._y.deserialize(element._y || element.y);
+                this._z.deserialize(element._z || element.z);
+                return this;
+            };
+            Object.defineProperty(VelocityOverLifetimeModule.prototype, "mode", {
+                get: function () {
+                    return this._mode;
+                },
+                set: function (value) {
+                    if (this._mode !== value) {
+                        this._mode = value;
+                        paper.EventPool.dispatchEvent("velocityChanged" /* VelocityChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(VelocityOverLifetimeModule.prototype, "space", {
+                get: function () {
+                    return this._space;
+                },
+                set: function (value) {
+                    if (this._space !== value) {
+                        this._space = value;
+                        paper.EventPool.dispatchEvent("velocityChanged" /* VelocityChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(VelocityOverLifetimeModule.prototype, "x", {
+                get: function () {
+                    return this._x;
+                },
+                set: function (value) {
+                    if (this._x !== value) {
+                        this._x.clone(value);
+                        paper.EventPool.dispatchEvent("velocityChanged" /* VelocityChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(VelocityOverLifetimeModule.prototype, "y", {
+                get: function () {
+                    return this._y;
+                },
+                set: function (value) {
+                    if (this._y !== value) {
+                        this._y.clone(value);
+                        paper.EventPool.dispatchEvent("velocityChanged" /* VelocityChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(VelocityOverLifetimeModule.prototype, "z", {
+                get: function () {
+                    return this._z;
+                },
+                set: function (value) {
+                    if (this._z !== value) {
+                        this._z.clone(value);
+                        paper.EventPool.dispatchEvent("velocityChanged" /* VelocityChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], VelocityOverLifetimeModule.prototype, "_mode", void 0);
+            __decorate([
+                paper.serializedField
+            ], VelocityOverLifetimeModule.prototype, "_space", void 0);
+            __decorate([
+                paper.serializedField
+            ], VelocityOverLifetimeModule.prototype, "_x", void 0);
+            __decorate([
+                paper.serializedField
+            ], VelocityOverLifetimeModule.prototype, "_y", void 0);
+            __decorate([
+                paper.serializedField
+            ], VelocityOverLifetimeModule.prototype, "_z", void 0);
+            return VelocityOverLifetimeModule;
+        }(ParticleSystemModule));
+        particle.VelocityOverLifetimeModule = VelocityOverLifetimeModule;
+        __reflect(VelocityOverLifetimeModule.prototype, "egret3d.particle.VelocityOverLifetimeModule");
+        var ColorOverLifetimeModule = (function (_super) {
+            __extends(ColorOverLifetimeModule, _super);
+            function ColorOverLifetimeModule() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                /**
+                 * @internal
+                 */
+                _this._color = new MinMaxGradient();
+                return _this;
+            }
+            ColorOverLifetimeModule.prototype.deserialize = function (element) {
+                _super.prototype.deserialize.call(this, element);
+                this._color.deserialize(element._color || element.color);
+                return this;
+            };
+            Object.defineProperty(ColorOverLifetimeModule.prototype, "color", {
+                get: function () {
+                    return this._color;
+                },
+                set: function (value) {
+                    if (this._color !== value) {
+                        this._color = value;
+                        paper.EventPool.dispatchEvent("colorChanged" /* ColorChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], ColorOverLifetimeModule.prototype, "_color", void 0);
+            return ColorOverLifetimeModule;
+        }(ParticleSystemModule));
+        particle.ColorOverLifetimeModule = ColorOverLifetimeModule;
+        __reflect(ColorOverLifetimeModule.prototype, "egret3d.particle.ColorOverLifetimeModule");
+        var SizeOverLifetimeModule = (function (_super) {
+            __extends(SizeOverLifetimeModule, _super);
+            function SizeOverLifetimeModule() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                /**
+                 * @internal
+                 */
+                _this._separateAxes = false;
+                /**
+                 * @internal
+                 */
+                _this._size = new MinMaxCurve();
+                /**
+                 * @internal
+                 */
+                _this._x = new MinMaxCurve();
+                /**
+                 * @internal
+                 */
+                _this._y = new MinMaxCurve();
+                /**
+                 * @internal
+                 */
+                _this._z = new MinMaxCurve();
+                return _this;
+            }
+            SizeOverLifetimeModule.prototype.deserialize = function (element) {
+                _super.prototype.deserialize.call(this, element);
+                this._separateAxes = (element._separateAxes || element.separateAxes) || false;
+                this._size.deserialize(element._size || element.size);
+                this._x.deserialize(element._x || element.x);
+                this._y.deserialize(element._y || element.y);
+                this._z.deserialize(element._z || element.z);
+                return this;
+            };
+            Object.defineProperty(SizeOverLifetimeModule.prototype, "separateAxes", {
+                get: function () {
+                    return this._separateAxes;
+                },
+                set: function (value) {
+                    if (this._separateAxes !== value) {
+                        this._separateAxes = value;
+                        paper.EventPool.dispatchEvent("sizeChanged" /* SizeChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SizeOverLifetimeModule.prototype, "size", {
+                get: function () {
+                    return this._size;
+                },
+                set: function (value) {
+                    if (this._size !== value) {
+                        this._size.clone(value);
+                        paper.EventPool.dispatchEvent("sizeChanged" /* SizeChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SizeOverLifetimeModule.prototype, "x", {
+                get: function () {
+                    return this._x;
+                },
+                set: function (value) {
+                    if (this._x !== value) {
+                        this._x.clone(value);
+                        paper.EventPool.dispatchEvent("sizeChanged" /* SizeChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SizeOverLifetimeModule.prototype, "y", {
+                get: function () {
+                    return this._y;
+                },
+                set: function (value) {
+                    if (this._y !== value) {
+                        this._y.clone(value);
+                        paper.EventPool.dispatchEvent("sizeChanged" /* SizeChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SizeOverLifetimeModule.prototype, "z", {
+                get: function () {
+                    return this._z;
+                },
+                set: function (value) {
+                    if (this._z !== value) {
+                        this._z.clone(value);
+                        paper.EventPool.dispatchEvent("sizeChanged" /* SizeChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], SizeOverLifetimeModule.prototype, "_separateAxes", void 0);
+            __decorate([
+                paper.serializedField
+            ], SizeOverLifetimeModule.prototype, "_size", void 0);
+            __decorate([
+                paper.serializedField
+            ], SizeOverLifetimeModule.prototype, "_x", void 0);
+            __decorate([
+                paper.serializedField
+            ], SizeOverLifetimeModule.prototype, "_y", void 0);
+            __decorate([
+                paper.serializedField
+            ], SizeOverLifetimeModule.prototype, "_z", void 0);
+            return SizeOverLifetimeModule;
+        }(ParticleSystemModule));
+        particle.SizeOverLifetimeModule = SizeOverLifetimeModule;
+        __reflect(SizeOverLifetimeModule.prototype, "egret3d.particle.SizeOverLifetimeModule");
+        var RotationOverLifetimeModule = (function (_super) {
+            __extends(RotationOverLifetimeModule, _super);
+            function RotationOverLifetimeModule() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                /**
+                 * @internal
+                 */
+                _this._x = new MinMaxCurve();
+                /**
+                 * @internal
+                 */
+                _this._y = new MinMaxCurve();
+                /**
+                 * @internal
+                 */
+                _this._z = new MinMaxCurve();
+                return _this;
+            }
+            RotationOverLifetimeModule.prototype.deserialize = function (element) {
+                _super.prototype.deserialize.call(this, element);
+                this._separateAxes = (element._separateAxes || element.separateAxes) || false;
+                this._x.deserialize(element._x || element.x);
+                this._y.deserialize(element._y || element.y);
+                this._z.deserialize(element._z || element.z);
+                return this;
+            };
+            Object.defineProperty(RotationOverLifetimeModule.prototype, "separateAxes", {
+                get: function () {
+                    return this._separateAxes;
+                },
+                set: function (value) {
+                    if (this._separateAxes !== value) {
+                        this._separateAxes = value;
+                        paper.EventPool.dispatchEvent("rotationChanged" /* RotationChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(RotationOverLifetimeModule.prototype, "x", {
+                get: function () {
+                    return this._x;
+                },
+                set: function (value) {
+                    if (this._x !== value) {
+                        this._x.clone(value);
+                        paper.EventPool.dispatchEvent("rotationChanged" /* RotationChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(RotationOverLifetimeModule.prototype, "y", {
+                get: function () {
+                    return this._y;
+                },
+                set: function (value) {
+                    if (this._y !== value) {
+                        this._y.clone(value);
+                        paper.EventPool.dispatchEvent("rotationChanged" /* RotationChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(RotationOverLifetimeModule.prototype, "z", {
+                get: function () {
+                    return this._z;
+                },
+                set: function (value) {
+                    if (this._z !== value) {
+                        this._z.clone(value);
+                        paper.EventPool.dispatchEvent("rotationChanged" /* RotationChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], RotationOverLifetimeModule.prototype, "_separateAxes", void 0);
+            __decorate([
+                paper.serializedField
+            ], RotationOverLifetimeModule.prototype, "_x", void 0);
+            __decorate([
+                paper.serializedField
+            ], RotationOverLifetimeModule.prototype, "_y", void 0);
+            __decorate([
+                paper.serializedField
+            ], RotationOverLifetimeModule.prototype, "_z", void 0);
+            return RotationOverLifetimeModule;
+        }(ParticleSystemModule));
+        particle.RotationOverLifetimeModule = RotationOverLifetimeModule;
+        __reflect(RotationOverLifetimeModule.prototype, "egret3d.particle.RotationOverLifetimeModule");
+        var TextureSheetAnimationModule = (function (_super) {
+            __extends(TextureSheetAnimationModule, _super);
+            function TextureSheetAnimationModule() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                /**
+                 * @internal
+                 */
+                _this._animation = 0 /* WholeSheet */;
+                /**
+                 * @internal
+                 */
+                _this._frameOverTime = new MinMaxCurve();
+                /**
+                 * @internal
+                 */
+                _this._startFrame = new MinMaxCurve();
+                _this._floatValues = new Float32Array(4);
+                return _this;
+            }
+            TextureSheetAnimationModule.prototype.deserialize = function (element) {
+                _super.prototype.deserialize.call(this, element);
+                this._numTilesX = (element._numTilesX || element.numTilesX) || 0;
+                this._numTilesY = (element._numTilesY || element.numTilesY) || 0;
+                this._animation = (element._animation || element.animation) || 0 /* WholeSheet */;
+                this._useRandomRow = (element._useRandomRow || element.useRandomRow) || false;
+                this._frameOverTime.deserialize(element._frameOverTime || element.frameOverTime);
+                this._startFrame.deserialize(element._startFrame || element.startFrame);
+                this._cycleCount = (element._cycleCount || element.cycleCount) || 0;
+                this._rowIndex = (element._rowIndex || element.rowIndex) || 0;
+                return this;
+            };
+            Object.defineProperty(TextureSheetAnimationModule.prototype, "numTilesX", {
+                get: function () {
+                    return this._numTilesX;
+                },
+                set: function (value) {
+                    if (this._numTilesX !== value) {
+                        this._numTilesX = value;
+                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TextureSheetAnimationModule.prototype, "numTilesY", {
+                get: function () {
+                    return this._numTilesY;
+                },
+                set: function (value) {
+                    if (this._numTilesY !== value) {
+                        this._numTilesY = value;
+                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TextureSheetAnimationModule.prototype, "animation", {
+                get: function () {
+                    return this._animation;
+                },
+                set: function (value) {
+                    if (this._animation !== value) {
+                        this._animation = value;
+                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TextureSheetAnimationModule.prototype, "useRandomRow", {
+                get: function () {
+                    return this._useRandomRow;
+                },
+                set: function (value) {
+                    if (this._useRandomRow !== value) {
+                        this._useRandomRow = value;
+                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TextureSheetAnimationModule.prototype, "frameOverTime", {
+                get: function () {
+                    return this._frameOverTime;
+                },
+                set: function (value) {
+                    if (this._frameOverTime !== value) {
+                        this._frameOverTime.clone(value);
+                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TextureSheetAnimationModule.prototype, "startFrame", {
+                get: function () {
+                    return this._startFrame;
+                },
+                set: function (value) {
+                    if (this._startFrame !== value) {
+                        this._startFrame.clone(value);
+                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TextureSheetAnimationModule.prototype, "cycleCount", {
+                get: function () {
+                    return this._cycleCount;
+                },
+                set: function (value) {
+                    if (this._cycleCount !== value) {
+                        this._cycleCount = value;
+                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TextureSheetAnimationModule.prototype, "rowIndex", {
+                get: function () {
+                    return this._rowIndex;
+                },
+                set: function (value) {
+                    if (this._rowIndex !== value) {
+                        this._rowIndex = value;
+                        paper.EventPool.dispatchEvent("textureSheetChanged" /* TextureSheetChanged */, this._comp);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TextureSheetAnimationModule.prototype, "floatValues", {
+                get: function () {
+                    var res = this._floatValues;
+                    if (this.enable) {
+                        var subU = 1.0 / this._numTilesX;
+                        var subV = 1.0 / this._numTilesY;
+                        var startFrmaeCount = Math.floor(this._startFrame.constant);
+                        var startRow = 0;
+                        switch (this._animation) {
+                            case 1 /* SingleRow */:
+                                {
+                                    if (this._useRandomRow) {
+                                        startRow = Math.floor(Math.random() * this._numTilesY);
+                                    }
+                                    else {
+                                        startRow = this._rowIndex;
+                                    }
+                                    break;
+                                }
+                            case 0 /* WholeSheet */:
+                                {
+                                    startRow = Math.floor(startFrmaeCount / this._numTilesX);
+                                    break;
+                                }
+                        }
+                        var startCol = Math.floor(startFrmaeCount % this._numTilesX);
+                        res[0] = subU;
+                        res[1] = subV;
+                        res[2] = startCol * subU;
+                        res[3] = startRow * subV;
+                    }
+                    else {
+                        res[0] = 1.0;
+                        res[1] = 1.0;
+                        res[2] = 0.0;
+                        res[3] = 0.0;
+                    }
+                    return res;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.serializedField
+            ], TextureSheetAnimationModule.prototype, "_numTilesX", void 0);
+            __decorate([
+                paper.serializedField
+            ], TextureSheetAnimationModule.prototype, "_numTilesY", void 0);
+            __decorate([
+                paper.serializedField
+            ], TextureSheetAnimationModule.prototype, "_animation", void 0);
+            __decorate([
+                paper.serializedField
+            ], TextureSheetAnimationModule.prototype, "_useRandomRow", void 0);
+            __decorate([
+                paper.serializedField
+            ], TextureSheetAnimationModule.prototype, "_frameOverTime", void 0);
+            __decorate([
+                paper.serializedField
+            ], TextureSheetAnimationModule.prototype, "_startFrame", void 0);
+            __decorate([
+                paper.serializedField
+            ], TextureSheetAnimationModule.prototype, "_cycleCount", void 0);
+            __decorate([
+                paper.serializedField
+            ], TextureSheetAnimationModule.prototype, "_rowIndex", void 0);
+            return TextureSheetAnimationModule;
+        }(ParticleSystemModule));
+        particle.TextureSheetAnimationModule = TextureSheetAnimationModule;
+        __reflect(TextureSheetAnimationModule.prototype, "egret3d.particle.TextureSheetAnimationModule");
     })(particle = egret3d.particle || (egret3d.particle = {}));
 })(egret3d || (egret3d = {}));

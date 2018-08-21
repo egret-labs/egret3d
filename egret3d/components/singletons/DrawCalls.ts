@@ -102,7 +102,7 @@ namespace egret3d {
                 if (visible) {
                     const objPos = drawTarget.transform.getPosition();
                     drawCall.zdist = objPos.getDistance(cameraPos);
-                    if (drawCall.material.renderQueue >= RenderQueue.Transparent && drawCall.material.renderQueue < RenderQueue.Overlay) {
+                    if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue < paper.RenderQueue.Overlay) {
                         this.transparentCalls.push(drawCall);
                     }
                     else {

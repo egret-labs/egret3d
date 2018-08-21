@@ -91,16 +91,13 @@ declare namespace paper {
      * @language zh_CN
      */
     abstract class Asset extends BaseObject {
-        /**
-         * @deprecated
-         */
         private static readonly _assets;
         /**
-         * @deprecated
+         * @internal
          */
         static register(asset: Asset): void;
         /**
-         * @deprecated
+         *
          */
         static find<T extends Asset>(name: string): T;
         /**
@@ -137,7 +134,7 @@ declare namespace paper {
          * @platform Web
          * @language zh_CN
          */
-        abstract dispose(): void;
+        abstract dispose(disposeChildren?: boolean): void;
     }
 }
 declare namespace egret3d {
@@ -161,7 +158,7 @@ declare namespace egret3d {
     /**
      *
      */
-    class Vector3 implements IVector3, paper.ISerializable {
+    class Vector3 implements IVector3, paper.IRelease<Vector3>, paper.ISerializable {
         static readonly ZERO: Readonly<Vector3>;
         static readonly ONE: Readonly<Vector3>;
         static readonly UP: Readonly<Vector3>;
@@ -172,7 +169,7 @@ declare namespace egret3d {
         static readonly BACK: Readonly<Vector3>;
         private static readonly _instances;
         static create(x?: number, y?: number, z?: number): Vector3;
-        static release(value: Vector3): void;
+        release(): this;
         x: number;
         y: number;
         z: number;
@@ -182,29 +179,34 @@ declare namespace egret3d {
          */
         constructor(x?: number, y?: number, z?: number);
         serialize(): number[];
-        deserialize(element: Readonly<[number, number, number]>): this;
+        deserialize(value: Readonly<[number, number, number]>): this;
         copy(value: Readonly<IVector3>): this;
         clone(): Vector3;
         equal(value: Readonly<IVector3>, threshold?: number): boolean;
-        set(x?: number, y?: number, z?: number): this;
+        set(x: number, y: number, z: number): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        applyMatrix(matrix: Readonly<Matrix>, value?: Readonly<IVector3>): this;
-        applyDirection(matrix: Readonly<Matrix>, value?: Readonly<IVector3>): this;
-        applyQuaternion(quaternion: Readonly<IVector4>, value?: Readonly<IVector3>): this;
-        normalize(value?: Readonly<IVector3>): this;
-        addScalar(add: number, value?: Readonly<IVector3>): this;
+        fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>): this;
+        applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
+        applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
+        applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>): this;
+        normalize(source?: Readonly<IVector3>): this;
+        negate(source?: Readonly<IVector3>): void;
+        addScalar(add: number, source?: Readonly<IVector3>): this;
         add(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         subtract(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        multiplyScalar(scale: number, value?: Readonly<IVector3>): this;
+        multiplyScalar(scale: number, source?: Readonly<IVector3>): this;
         multiply(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         dot(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
         cross(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        lerp(v: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        lerp(t: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>): this;
         getDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
+        getSquaredDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
+        closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>): this;
         readonly length: number;
-        readonly sqrtLength: number;
+        readonly squaredLength: number;
         /**
          * @deprecated
          */
@@ -270,6 +272,165 @@ declare namespace egret3d {
     const helpVector3F: Vector3;
     const helpVector3G: Vector3;
     const helpVector3H: Vector3;
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    class Matrix4 implements paper.IRelease<Matrix4>, paper.ISerializable {
+        private static readonly _instances;
+        /**
+         *
+         * @param rawData
+         * @param offset
+         */
+        static create(rawData?: Readonly<ArrayLike<number>> | null, offset?: number): Matrix4;
+        /**
+         *
+         */
+        release(): this;
+        /**
+         *
+         */
+        readonly rawData: Float32Array;
+        /**
+         * @deprecated
+         * @private
+         */
+        constructor();
+        serialize(): Float32Array;
+        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
+        copy(value: Readonly<Matrix4>): this;
+        clone(): Matrix4;
+        identity(): this;
+        set(n11: number, n12: number, n13: number, n14: number, n21: number, n22: number, n23: number, n24: number, n31: number, n32: number, n33: number, n34: number, n41: number, n42: number, n43: number, n44: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays?: boolean): this;
+        fromRotation(rotation: Quaternion, translateStays?: boolean): this;
+        fromEuler(value: Readonly<IVector3>, order?: EulerOrder, translateStays?: boolean): this;
+        fromScale(x: number, y: number, z: number, translateStays?: boolean): this;
+        fromAxis(axis: Readonly<IVector3>, radian?: number): this;
+        fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>): this;
+        fromRotationX(radian: number): this;
+        fromRotationY(radian: number): this;
+        fromRotationZ(theta: any): this;
+        determinant(): number;
+        compose(translation: Vector3, rotation: Quaternion, scale: Vector3): this;
+        decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): this;
+        transpose(source?: Readonly<Matrix4>): this;
+        inverse(source?: Readonly<Matrix4>): this;
+        multiplyScalar(value: number, source?: Readonly<Matrix4>): void;
+        multiply(valueA: Matrix4, valueB?: Matrix4): this;
+        premultiply(value: Readonly<Matrix4>): this;
+        /**
+         * - 两点位置不重合。
+         * @param eye
+         * @param target
+         * @param up
+         */
+        lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): this;
+        getMaxScaleOnAxis(): number;
+        toEuler(value: Vector3, order?: EulerOrder): Vector3;
+        /**
+         * @deprecated
+         */
+        transformVector3(value: Vector3, out?: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        transformNormal(value: Vector3, out?: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        scale(scaler: number): this;
+        /**
+         * @deprecated
+         */
+        add(left: Matrix4, right?: Matrix4): this;
+        /**
+         * @deprecated
+         */
+        lerp(v: number, left: Matrix4, right: Matrix4): this;
+        /**
+         * @deprecated
+         */
+        static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix4): Matrix4;
+        /**
+         * @deprecated
+         */
+        static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4;
+    }
+    const helpMatrixA: Matrix4;
+    const helpMatrixB: Matrix4;
+    const helpMatrixC: Matrix4;
+    const helpMatrixD: Matrix4;
+}
+declare namespace egret3d {
+    interface IVector4 extends IVector3 {
+        w: number;
+        readonly length: number;
+    }
+    class Vector4 implements IVector4, paper.IRelease<Vector4>, paper.ISerializable {
+        private static readonly _instances;
+        static create(x?: number, y?: number, z?: number, w?: number): Vector4;
+        release(): this;
+        x: number;
+        y: number;
+        z: number;
+        w: number;
+        /**
+         * @deprecated
+         * @private
+         */
+        constructor(x?: number, y?: number, z?: number, w?: number);
+        serialize(): number[];
+        deserialize(element: Readonly<[number, number, number, number]>): this;
+        copy(value: Readonly<IVector4>): this;
+        clone(): Vector4;
+        set(x: number, y: number, z: number, w: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        normalize(source?: Readonly<IVector4>): this;
+        readonly length: number;
+        readonly squaredLength: number;
+    }
+    const helpVector4A: Vector4;
+    const helpVector4B: Vector4;
+    const helpVector4C: Vector4;
+    const helpVector4D: Vector4;
+    const helpVector4E: Vector4;
+    const helpVector4F: Vector4;
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class BaseObjectAsset extends Asset {
+        protected _raw: ISerializedData;
+        /**
+         * @internal
+         */
+        $parse(json: ISerializedData): void;
+        dispose(): void;
+        caclByteLength(): number;
+    }
+    /**
+     * scene asset
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 场景数据资源
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    class RawScene extends BaseObjectAsset {
+        /**
+         * @internal
+         */
+        createInstance(keepUUID?: boolean): Scene;
+    }
 }
 declare namespace paper {
     /**
@@ -373,153 +534,86 @@ declare namespace paper {
          * 组件在场景的激活状态。
          */
         readonly isActiveAndEnabled: boolean;
-    }
-}
-declare namespace egret3d {
-    interface IVector4 {
-        x: number;
-        y: number;
-        z: number;
-        w: number;
-        readonly length: number;
-    }
-    class Vector4 implements IVector4, paper.ISerializable {
-        x: number;
-        y: number;
-        z: number;
-        w: number;
         /**
-         * @deprecated
-         * @private
+         *
          */
-        constructor(x?: number, y?: number, z?: number, w?: number);
-        serialize(): number[];
-        deserialize(element: Readonly<[number, number, number, number]>): this;
-        copy(value: Readonly<IVector4>): this;
-        clone(): Vector4;
-        set(x: number, y: number, z: number, w: number): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        normalize(value?: Readonly<IVector4>): this;
-        readonly length: number;
+        readonly transform: egret3d.Transform;
     }
-    const helpVector4A: Vector4;
-    const helpVector4B: Vector4;
-    const helpVector4C: Vector4;
-    const helpVector4D: Vector4;
-    const helpVector4E: Vector4;
-    const helpVector4F: Vector4;
 }
 declare namespace egret3d {
     /**
-     *
+     * 射线
      */
-    class Matrix {
+    class Ray implements paper.IRelease<Ray>, paper.ISerializable {
         private static readonly _instances;
+        static create(origin?: Readonly<IVector3>, direction?: Readonly<IVector3>): Ray;
+        release(): this;
         /**
-         *
-         * @param rawData
-         * @param offset
+         * 射线起始点
          */
-        static create(rawData?: Readonly<ArrayLike<number>> | null, offset?: number): Matrix;
+        readonly origin: Vector3;
         /**
-         *
-         * @param value
+         * 射线的方向向量
          */
-        static release(value: Matrix): void;
-        readonly rawData: Float32Array;
+        readonly direction: Vector3;
         /**
          * @deprecated
          * @private
          */
-        constructor();
-        copy(value: Readonly<Matrix>): this;
-        clone(): Matrix;
-        identity(): this;
-        set(m11: number, m12: number, m13: number, m14: number, m21: number, m22: number, m23: number, m24: number, m31: number, m32: number, m33: number, m34: number, m41: number, m42: number, m43: number, m44: number): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays?: boolean): this;
-        fromRotation(rotation: Quaternion, translateStays?: boolean): this;
-        fromEuler(value: Readonly<IVector3>, order?: EulerOrder, translateStays?: boolean): this;
-        formScale(x: number, y: number, z: number, translateStays?: boolean): this;
-        determinant(): number;
-        compose(translation: Vector3, rotation: Quaternion, scale: Vector3): this;
-        decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): this;
-        transpose(value?: Readonly<Matrix>): this;
-        inverse(value?: Readonly<Matrix>): this;
-        multiply(valueA: Matrix, valueB?: Matrix): this;
-        premultiply(value: Readonly<Matrix>): this;
+        constructor(origin?: Readonly<IVector3>, direction?: Readonly<IVector3>);
+        serialize(): number[];
+        deserialize(element: Readonly<[number, number, number, number, number, number]>): this;
+        copy(value: Readonly<Ray>): this;
+        clone(): Ray;
+        set(origin: Readonly<IVector3>, direction: Readonly<IVector3>): this;
         /**
-         * - 两点位置不重合。
-         * @param eye
-         * @param target
-         * @param up
+         * 与aabb碰撞相交检测
          */
-        lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): this;
-        toEuler(value: Vector3, order?: EulerOrder): Vector3;
+        intersectAABB(aabb: AABB): boolean;
         /**
-         * @deprecated
+         * 与transform表示的plane碰撞相交检测，主要用于2d检测
+         * @param transform transform实例
          */
-        transformVector3(value: Vector3, out?: Vector3): Vector3;
+        intersectPlaneTransform(transform: Transform): PickInfo;
+        intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3;
         /**
-         * @deprecated
+         * 与最大最小点表示的box相交检测
+         * @param minimum 最小点
+         * @param maximum 最大点
+         * @version paper 1.0
          */
-        transformNormal(value: Vector3, out?: Vector3): Vector3;
+        intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean;
         /**
-         * @deprecated
+         * 与球相交检测
          */
-        scale(scaler: number): this;
+        intersectsSphere(center: Vector3, radius: number): boolean;
         /**
-         * @deprecated
+         * 与三角形相交检测
          */
-        add(left: Matrix, right?: Matrix): this;
+        intersectTriangle(p1: Vector3, p2: Vector3, p3: Vector3, backfaceCulling?: boolean): PickInfo | null;
         /**
-         * @deprecated
+         * 获取射线拾取到的最近物体。
          */
-        lerp(v: number, left: Matrix, right: Matrix): this;
+        static raycast(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo | null;
         /**
-         * @deprecated
+         * 获取射线路径上的所有物体。
          */
-        static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix): Matrix;
-        /**
-         * @deprecated
-         */
-        static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix): Matrix;
-    }
-    const helpMatrixA: Matrix;
-    const helpMatrixB: Matrix;
-    const helpMatrixC: Matrix;
-    const helpMatrixD: Matrix;
-}
-declare namespace paper {
-    /**
-     *
-     */
-    class BaseObjectAsset extends Asset {
-        protected _raw: ISerializedData;
-        /**
-         * @internal
-         */
-        $parse(json: ISerializedData): void;
-        dispose(): void;
-        caclByteLength(): number;
+        static raycastAll(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo[] | null;
+        private static _doPick(ray, maxDistance, layerMask, pickAll?, isPickMesh?);
+        private static _pickMesh(ray, transform, pickInfos);
+        private static _pickCollider(ray, transform, pickInfos);
     }
     /**
-     * scene asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * 场景拣选信息
      */
-    /**
-     * 场景数据资源
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class RawScene extends BaseObjectAsset {
-        /**
-         * @internal
-         */
-        createInstance(keepUUID?: boolean): Scene;
+    class PickInfo {
+        subMeshIndex: number;
+        triangleIndex: number;
+        distance: number;
+        readonly position: Vector3;
+        readonly textureCoordA: Vector2;
+        readonly textureCoordB: Vector2;
+        transform: Transform | null;
     }
 }
 declare namespace egret3d {
@@ -687,7 +781,6 @@ declare namespace egret3d {
          *
          */
         static createGLTFExtensionsConfig(): GLTF;
-        static createShaderAsset(name: string): GLTFAsset;
         static createTechnique(source: gltf.Technique): gltf.Technique;
         /**
          * Buffer 列表。
@@ -841,6 +934,13 @@ declare namespace gltf {
         DEPTH_TEST = 2929,
         POLYGON_OFFSET_FILL = 32823,
         SAMPLE_ALPHA_TO_COVERAGE = 32926,
+    }
+    const enum BlendMode {
+        None = 0,
+        Blend = 1,
+        Blend_PreMultiply = 2,
+        Add = 3,
+        Add_PreMultiply = 4,
     }
     const enum BlendEquation {
         FUNC_ADD = 32774,
@@ -1955,21 +2055,30 @@ declare namespace paper.editor {
     function getExtraInfo(classInstance: any): PropertyInfo[];
 }
 declare namespace egret3d {
-    class Color implements paper.ISerializable {
+    class Color implements paper.IRelease<Color>, paper.ISerializable {
         static readonly WHITE: Readonly<Color>;
         static readonly BLACK: Readonly<Color>;
+        private static readonly _instances;
+        static create(r?: number, g?: number, b?: number, a?: number): Color;
+        release(): this;
         r: number;
         g: number;
         b: number;
         a: number;
-        constructor(r?: number, g?: number, b?: number, a?: number);
+        /**
+         * 请使用 `egret3d.Color.create()` 创建 egret3d.Color 实例。
+         * @see egret3d.Color.create()
+         */
+        private constructor();
         serialize(): number[];
-        deserialize(element: Readonly<[number, number, number, number]>): this;
-        set(r?: number, g?: number, b?: number, a?: number): this;
-        static multiply(c1: Color, c2: Color, out: Color): Color;
-        static scale(c: Color, scaler: number): Color;
-        static copy(c: Color, out: Color): Color;
-        static lerp(c1: Color, c2: Color, value: number, out: Color): Color;
+        deserialize(value: Readonly<[number, number, number, number]>): void;
+        clone(): Color;
+        copy(value: Readonly<Color>): this;
+        set(r: number, g: number, b: number, a: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): void;
+        multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
+        scale(value: number, source?: Readonly<Color>): Readonly<Color>;
+        lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
     }
 }
 declare namespace paper {
@@ -2116,21 +2225,105 @@ declare namespace paper {
         getActiveScene(): Scene;
     }
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
      *
      */
-    const RAD_DEG: number;
+    interface IUUID {
+        /**
+         *
+         */
+        readonly uuid: string;
+    }
     /**
      *
      */
-    const DEG_RAD: number;
-    const EPSILON = 2.220446049250313e-16;
-    function floatClamp(v: number, min?: number, max?: number): number;
-    function sign(value: number): number;
-    function numberLerp(fromV: number, toV: number, v: number): number;
-    function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3;
-    function getPointAlongCurve(curveStart: Vector3, curveStartHandle: Vector3, curveEnd: Vector3, curveEndHandle: Vector3, t: number, out: Vector3, crease?: number): void;
+    interface IAssetReference {
+        /**
+         *
+         */
+        readonly asset: number;
+    }
+    /**
+     *
+     */
+    interface IClass {
+        /**
+         *
+         */
+        readonly class: string;
+    }
+    /**
+     *
+     */
+    interface IRelease<T extends IRelease<T>> {
+        /**
+         *
+         */
+        release(): T;
+        /**
+         *
+         */
+        clone(): T;
+        /**
+         *
+         */
+        copy(value: Readonly<T>): T;
+        /**
+         *
+         */
+        set(...args: any[]): T;
+    }
+    /**
+     *
+     */
+    interface ISerializedObject extends IUUID, IClass {
+        [key: string]: any | IUUID | IAssetReference;
+    }
+    /**
+     *
+     */
+    interface ISerializedStruct extends IClass {
+        [key: string]: any | IUUID | IAssetReference;
+    }
+    /**
+     * 序列化数据接口。
+     */
+    interface ISerializedData {
+        /**
+         *
+         */
+        version?: number;
+        /**
+         *
+         */
+        compatibleVersion?: number;
+        /**
+         * 所有资源。
+         */
+        readonly assets?: string[];
+        /**
+         * 所有实体。（至多含一个场景）
+         */
+        readonly objects?: ISerializedObject[];
+        /**
+         * 所有组件。
+         */
+        readonly components?: ISerializedObject[];
+    }
+    /**
+     * 自定义序列化接口。
+     */
+    interface ISerializable {
+        /**
+         *
+         */
+        serialize(): any;
+        /**
+         *
+         */
+        deserialize(element: any, data?: Deserializer): any;
+    }
 }
 declare namespace paper {
     /**
@@ -2587,7 +2780,7 @@ declare namespace egret3d {
          *
          */
         readonly color: Color;
-        readonly matrix: Matrix;
+        readonly matrix: Matrix4;
         renderTarget: IRenderTarget;
         readonly viewPortPixel: IRectangle;
         protected _updateMatrix(camera: Camera): void;
@@ -2631,28 +2824,49 @@ declare namespace egret3d {
     /**
      *
      */
+    const RAD_DEG: number;
+    /**
+     *
+     */
+    const DEG_RAD: number;
+    /**
+     *
+     */
+    const EPSILON = 2.220446049250313e-16;
+    function sign(value: number): number;
+    function floatClamp(v: number, min?: number, max?: number): number;
+    function numberLerp(fromV: number, toV: number, v: number): number;
+    function getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3): Vector3;
+    function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3;
+    function triangleIntersectsPlane(): void;
+    function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<AABB>): boolean;
+    function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<AABB>): boolean;
+    function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>): boolean;
+    function aabbIntersectsSphere(aabb: Readonly<AABB>, value: Readonly<Sphere>): boolean;
+    function aabbIntersectsAABB(valueA: Readonly<AABB>, valueB: Readonly<AABB>): boolean;
+    function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
+}
+declare namespace egret3d {
+    /**
+     *
+     */
     class Quaternion extends Vector4 {
-        private static readonly _instances;
+        private static readonly _instancesQ;
         static create(x?: number, y?: number, z?: number, w?: number): Quaternion;
-        static release(value: Quaternion): void;
-        /**
-         * @deprecated
-         * @private
-         */
-        constructor(x?: number, y?: number, z?: number, w?: number);
+        release(): this;
         clone(): Quaternion;
-        fromMatrix(matrix: Readonly<Matrix>): this;
+        fromMatrix(matrix: Readonly<Matrix4>): this;
         fromEuler(value: Readonly<IVector3>, order?: EulerOrder): this;
         /**
          * - 向量必须已归一化。
          */
-        fromAxisAngle(axis: Readonly<IVector3>, angle: number): this;
-        inverse(value?: Readonly<IVector4>): this;
+        fromAxis(axis: Readonly<IVector3>, radian: number): this;
+        inverse(source?: Readonly<IVector4>): this;
         dot(value: Readonly<IVector4>): number;
         multiply(valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
         premultiply(value: Readonly<IVector4>): this;
         lerp(t: number, valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
-        lookAt(eye: Vector3, target: Vector3): Quaternion;
+        lookAt(eye: Vector3, target: Vector3): this;
         toEuler(value: Vector3, order?: EulerOrder): Vector3;
     }
 }
@@ -2680,9 +2894,9 @@ declare namespace egret3d {
          */
         clone(): Mesh;
         /**
-         *
+         * TODO
          */
-        intersects(ray: Ray, matrix: Matrix): PickInfo;
+        raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix4>): PickInfo;
         /**
          *
          */
@@ -2730,7 +2944,7 @@ declare namespace egret3d {
         /**
          *
          */
-        abstract uploadVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset: number, count: number): void;
+        abstract uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number): void;
         /**
          *
          */
@@ -2857,11 +3071,11 @@ declare namespace paper.editor {
         protected _oldLocalScale: egret3d.Vector3;
         constructor();
         onSet(): void;
-        abstract isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract wasReleased(): any;
+        abstract isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract wasPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract wasReleased(selectedGameObj: GameObject[]): any;
         _checkIntersect(ray: egret3d.Ray): this;
         changeColor(color: string): void;
         protected _createAxis(color: egret3d.Vector4, type: number): GameObject;
@@ -2878,7 +3092,7 @@ declare namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selected: any): void;
         wasPressed_world(ray: egret3d.Ray, selected: any): any;
         isPressed_world(ray: egret3d.Ray, selected: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -2894,6 +3108,14 @@ declare namespace paper.editor {
         dispatchEditorModelEvent(type: string, data?: any): void;
         serialize(): any;
         deserialize(data: any): void;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class MissingComponent extends BaseComponent {
+        missingObject: any | null;
     }
 }
 declare namespace paper {
@@ -2945,297 +3167,136 @@ declare namespace paper {
         readonly end: any[];
     }
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     * aabb box
+     *
+     */
+    const enum HideFlags {
+        /**
+         *
+         */
+        None = 0,
+        /**
+         *
+         */
+        NotEditable = 1,
+        /**
+         *
+         */
+        Hide = 2,
+    }
+    /**
+     *
+     */
+    const enum DefaultNames {
+        NoName = "NoName",
+        Global = "Global",
+        MainCamera = "MainCamera",
+        EditorCamera = "EditorCamera",
+        Editor = "Editor",
+    }
+    /**
+     *
+     */
+    const enum DefaultTags {
+        Untagged = "",
+        Respawn = "Respawn",
+        Finish = "Finish",
+        EditorOnly = "EditorOnly",
+        MainCamera = "MainCamera",
+        Player = "Player",
+        GameController = "GameController",
+        Global = "Global",
+    }
+    /**
+     * 渲染排序
+     */
+    enum RenderQueue {
+        Background = 1000,
+        Geometry = 2000,
+        AlphaTest = 2450,
+        Transparent = 3000,
+        Overlay = 4000,
+    }
+    /**
+     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
+     * 这个属性可以实现相机的选择性剔除。
+     */
+    const enum Layer {
+        Default = 2,
+        UI = 4,
+        UserLayer1 = 8,
+        UserLayer2 = 16,
+        UserLayer3 = 32,
+        UserLayer4 = 64,
+        UserLayer5 = 128,
+        UserLayer6 = 240,
+        UserLayer7 = 256,
+        UserLayer8 = 512,
+        UserLayer9 = 1024,
+        UserLayer10 = 2048,
+        UserLayer11 = 3840,
+    }
+    /**
+     * culling mask
      * @version paper 1.0
      * @platform Web
      * @language en_US
      */
     /**
-     * 轴对称包围盒
+     * culling mask 枚举。
+     * 相机的cullingmask与renderer的renderLayer相匹配，才会执行渲染。否则将会被跳过。
+     * 这个属性可以实现相机的选择性剔除。
      * @version paper 1.0
      * @platform Web
-     * @language zh_CN
+     * @language
      */
-    class AABB {
-        private _dirtyRadius;
-        private _dirtyCenter;
-        private readonly _minimum;
-        private readonly _maximum;
-        private readonly _sphere;
-        /**
-         * build a aabb
-         * @param minimum min point
-         * @param maximum max point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 构建轴对称包围盒
-         * @param minimum 最小点
-         * @param maximum 最大点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        constructor(minimum?: Readonly<IVector3>, maximum?: Readonly<IVector3>);
-        /**
-         * copy
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 复制
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        copy(aabb: Readonly<AABB>): this;
-        /**
-         * clone
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 克隆
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        clone(): AABB;
-        /**
-         * clear
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 清空
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        clear(): this;
-        /**
-         *
-         */
-        set(minimum?: Readonly<IVector3> | null, maximum?: Readonly<IVector3> | null): this;
-        /**
-         *
-         */
-        add(value: Readonly<IVector3> | Readonly<AABB>): void;
-        /**
-         * check contains vector
-         * @param vector a world point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 检查是否包含点
-         * @param vector 世界坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        contains(vector: Readonly<IVector3>): boolean;
-        /**
-         * intersect with aabb
-         * @param aabb aabb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 检查是否与aabb相交
-         * @param aabb 轴对称包围盒
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        intersectAABB(aabb: AABB): boolean;
-        /**
-         *
-         */
-        readonly minimum: Readonly<Vector3>;
-        /**
-         *
-         */
-        readonly maximum: Readonly<Vector3>;
-        /**
-         * get center
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取中心点位置
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly sphere: Readonly<Sphere>;
+    const enum CullingMask {
+        Everything = 16777215,
+        Nothing = 1,
+        Default = 2,
+        UI = 4,
+        UserLayer1 = 8,
+        UserLayer2 = 16,
+        UserLayer3 = 32,
+        UserLayer4 = 64,
+        UserLayer5 = 128,
+        UserLayer6 = 240,
+        UserLayer7 = 256,
+        UserLayer8 = 512,
+        UserLayer9 = 1024,
+        UserLayer10 = 2048,
+        UserLayer11 = 3840,
     }
+    function layerTest(cullingMask: CullingMask, layer: Layer): boolean;
 }
 declare namespace egret3d {
+    type RunEgretOptions = {
+        antialias: boolean;
+        defaultScene?: string;
+        contentWidth?: number;
+        contentHeight?: number;
+        option?: RequiredRuntimeOptions;
+        canvas?: HTMLCanvasElement;
+        webgl?: WebGLRenderingContext;
+        isEditor?: boolean;
+        isPlaying?: boolean;
+        systems?: any[];
+    };
+    type RequiredRuntimeOptions = {
+        antialias: boolean;
+        contentWidth: number;
+        contentHeight: number;
+    };
     /**
-     * obb box
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * 引擎启动入口
      */
-    /**
-     * 定向包围盒
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class OBB extends paper.BaseObject {
-        /**
-         * center
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 包围盒中心
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly center: Vector3;
-        /**
-         * size
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 包围盒各轴向长
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly size: Vector3;
-        /**
-         * vectors
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 包围盒世界空间下各个点坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly vectors: Readonly<[Vector3, Vector3, Vector3, Vector3, Vector3, Vector3, Vector3, Vector3]>;
-        private readonly _directions;
-        private _computeBoxExtents(axis, box, out);
-        private _axisOverlap(axis, a, b);
-        /**
-         * clone a obb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 克隆一个obb
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        clone(): OBB;
-        /**
-         * build by min point and max point
-         * @param minimum min point
-         * @param maximum max point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 由最大最小点构建定向包围盒
-         * @param minimum 最小点坐标
-         * @param maximum 最大点坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        setByMaxMin(minimum: Readonly<Vector3>, maximum: Readonly<Vector3>): void;
-        /**
-         * build by center and size
-         * @param center center
-         * @param size size
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 由中心点和各轴向长度构建定向包围盒
-         * @param center 中心点坐标
-         * @param size 各轴向长度
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        setByCenterSize(center: Readonly<Vector3>, size: Readonly<Vector3>): void;
-        /**
-         * update by world matrix
-         * @param worldmatrix world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 刷新定向包围盒
-         * @param worldmatrix 世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        update(matrix: Readonly<Matrix>): void;
-        /**
-         * intersect width obb
-         * @param value obb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * obb的碰撞检测
-         * @param value 待检测obb
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        intersects(value: Readonly<OBB>): boolean;
-        /**
-         * update vectors by world matrix
-         * @param vectors vectors
-         * @param matrix world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 计算世界空间下各点坐标
-         * @param vectors 结果数组
-         * @param matrix 物体的世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        caclWorldVectors(vectors: ReadonlyArray<Vector3>, matrix: Readonly<Matrix>): void;
-        deserialize(element: {
-            center: [number, number, number];
-            size: [number, number, number];
-        }): this;
-    }
+    function runEgret(options?: RunEgretOptions): void;
+}
+interface Window {
+    canvas: HTMLCanvasElement;
+    paper: any;
+    egret3d: any;
 }
 declare namespace paper {
     /**
@@ -3340,45 +3401,38 @@ declare namespace paper {
 declare namespace egret3d {
     /**
      *
-     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
      */
-    class Curve3 {
+    class Sphere implements paper.IRelease<Sphere>, paper.ISerializable {
+        private static readonly _instances;
         /**
-        * 贝塞尔曲线上的，不包含第一个点
-        */
-        private _beizerPoints;
-        /**
-        * 贝塞尔曲线上所有的个数
-        */
-        private _bezierPointNum;
-        beizerPoints: egret3d.Vector3[];
-        bezierPointNum: number;
-        /**
-         * 线性贝塞尔曲线
+         *
+         * @param center
+         * @param radius
          */
-        static CreateLinearBezier(start: egret3d.Vector3, end: egret3d.Vector3, indices: number): Curve3;
+        static create(center?: Readonly<IVector3>, radius?: number): Sphere;
         /**
-         * 二次方贝塞尔曲线路径
-         * @param v0 起始点
-         * @param v1 选中的节点
-         * @param v2 结尾点
-         * @param nbPoints 将贝塞尔曲线拆分nbPoints段，一共有nbPoints + 1个点
+         *
          */
-        static CreateQuadraticBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, bezierPointNum: number): Curve3;
+        release(): this;
         /**
-         * 三次方贝塞尔曲线路径
-         * @param v0
-         * @param v1
-         * @param v2
-         * @param v3
-         * @param nbPoints
+         *
          */
-        static CreateCubicBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, v3: egret3d.Vector3, bezierPointNum: number): Curve3;
-        constructor(points: egret3d.Vector3[], nbPoints: number);
+        radius: number;
         /**
-         * 贝塞尔曲线上的点
+         *
          */
-        getPoints(): Vector3[];
+        readonly center: Vector3;
+        private constructor();
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number]>): this;
+        clone(): Sphere;
+        copy(value: Readonly<Sphere>): this;
+        set(center: Readonly<IVector3>, radius: number): this;
+        fromPoints(points: Readonly<ArrayLike<IVector3>>, center?: Readonly<IVector3>): this;
+        applyMatrix(matrix: Readonly<Matrix4>): this;
+        contains(value: Readonly<IVector3 | Sphere>): boolean;
+        getDistance(value: Readonly<IVector3>): number;
+        clampPoint(point: Readonly<IVector3>, out: Vector3): Vector3;
     }
 }
 declare namespace paper {
@@ -3482,85 +3536,6 @@ declare namespace paper {
     /**
      *
      */
-    interface IUUID {
-        /**
-         *
-         */
-        readonly uuid: string;
-    }
-    /**
-     *
-     */
-    interface IAssetReference {
-        /**
-         *
-         */
-        readonly asset: number;
-    }
-    /**
-     *
-     */
-    interface IClass {
-        /**
-         *
-         */
-        readonly class: string;
-    }
-    /**
-     *
-     */
-    interface ISerializedObject extends IUUID, IClass {
-        [key: string]: any | IUUID | IAssetReference;
-    }
-    /**
-     *
-     */
-    interface ISerializedStruct extends IClass {
-        [key: string]: any | IUUID | IAssetReference;
-    }
-    /**
-     * 序列化数据接口。
-     */
-    interface ISerializedData {
-        /**
-         *
-         */
-        version?: number;
-        /**
-         *
-         */
-        compatibleVersion?: number;
-        /**
-         * 所有资源。
-         */
-        readonly assets?: string[];
-        /**
-         * 所有实体。（至多含一个场景）
-         */
-        readonly objects?: ISerializedObject[];
-        /**
-         * 所有组件。
-         */
-        readonly components?: ISerializedObject[];
-    }
-    /**
-     * 自定义序列化接口。
-     */
-    interface ISerializable {
-        /**
-         *
-         */
-        serialize(): any;
-        /**
-         *
-         */
-        deserialize(element: any, data?: Deserializer): any;
-    }
-}
-declare namespace paper {
-    /**
-     *
-     */
     class Deserializer {
         /**
          * @internal
@@ -3613,7 +3588,7 @@ declare namespace paper {
     /**
      *
      */
-    function clone(object: GameObject): BaseComponent | GameObject | Scene;
+    function clone(object: GameObject): BaseComponent | Scene | GameObject;
     /**
      *
      */
@@ -3627,85 +3602,102 @@ declare namespace paper {
      */
     function serializeStruct(source: BaseObject): ISerializedStruct;
 }
-declare namespace paper {
+declare namespace egret3d {
     /**
-     * 场景类
+     * aabb box
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    class Scene extends BaseObject {
-        /**
-         *
-         */
-        static createEmpty(name?: string, isActive?: boolean): Scene;
-        /**
-         *
-         */
-        static create(name: string, combineStaticObjects?: boolean): Scene;
-        /**
-         * lightmap强度
-         */
-        lightmapIntensity: number;
-        /**
-         * 场景名称。
-         */
-        readonly name: string;
-        /**
-         * 场景的light map列表。
-         */
-        readonly lightmaps: egret3d.Texture[];
-        /**
-         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
-         */
-        extras?: any;
-        /**
-         * @internal
-         */
-        readonly _gameObjects: GameObject[];
-        /**
-         * 环境光
-         */
-        readonly ambientLightColor: egret3d.Color;
+    /**
+     * 轴对称包围盒
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    class AABB implements paper.IRelease<AABB>, paper.ISerializable {
+        private static readonly _instances;
+        static create(minimum?: Readonly<IVector3> | null, maximum?: Readonly<IVector3> | null): AABB;
+        release(): this;
+        private _dirtyRadius;
+        private _dirtyCenter;
+        private _boundingSphereRadius;
+        private readonly _minimum;
+        private readonly _maximum;
+        private readonly _center;
         private constructor();
-        /**
-         * @internal
-         */
-        _addGameObject(gameObject: GameObject): void;
-        /**
-         * @internal
-         */
-        _removeGameObject(gameObject: GameObject): void;
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number, number, number]>): void;
+        clone(): AABB;
+        copy(value: Readonly<AABB>): this;
+        clear(): this;
         /**
          *
          */
-        destroy(): void;
+        set(minimum?: Readonly<IVector3> | null, maximum?: Readonly<IVector3> | null): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): void;
         /**
          *
          */
-        find(name: string): GameObject;
+        fromPoints(value: Readonly<ArrayLike<IVector3>>): this;
+        applyMatrix(value: Readonly<Matrix4>, source?: Readonly<AABB>): this;
         /**
          *
          */
-        findWithTag(tag: string): GameObject;
+        add(value: Readonly<IVector3 | AABB>, source?: Readonly<AABB>): this;
         /**
          *
          */
-        findGameObjectsWithTag(tag: string): GameObject[];
-        /**
-         * @internal
-         */
-        findWithUUID(uuid: string): GameObject;
-        /**
-         * 所有根实体。
-         */
-        getRootGameObjects(): GameObject[];
+        expand(value: Readonly<IVector3> | number, source?: Readonly<AABB>): this;
         /**
          *
          */
-        readonly gameObjectCount: number;
+        offset(value: number | Readonly<IVector3>, source?: Readonly<AABB>): this;
         /**
-         * 所有实体。
+         * check contains vector
+         * @param value a world point
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        readonly gameObjects: ReadonlyArray<GameObject>;
+        /**
+         * 检查是否包含点
+         * @param value 世界坐标
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        contains(value: Readonly<IVector3 | AABB>): boolean;
+        getDistance(value: Readonly<IVector3>): number;
+        clampPoints(value: Readonly<IVector3>, out: Vector3): Vector3;
+        readonly isEmpty: boolean;
+        /**
+         * Bounding sphere radius.
+         */
+        readonly boundingSphereRadius: number;
+        /**
+         *
+         */
+        readonly minimum: Readonly<Vector3>;
+        /**
+         *
+         */
+        readonly maximum: Readonly<Vector3>;
+        /**
+         * get center
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取中心点位置
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        readonly center: Readonly<Vector3>;
     }
+    const helpAABBA: AABB;
 }
 declare namespace egret3d {
     /**
@@ -3722,19 +3714,6 @@ declare namespace egret3d {
      */
     class EndSystem extends paper.BaseSystem {
         onUpdate(deltaTime: number): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    class Pool<T> {
-        private readonly _instances;
-        clear(): void;
-        add(instanceOrInstances: T | (T[])): void;
-        remove(instanceOrInstances: T | (T[])): void;
-        get(): T;
-        readonly instances: T[];
     }
 }
 declare namespace egret3d {
@@ -3924,7 +3903,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        getLocalMatrix(): Readonly<Matrix>;
+        getLocalMatrix(): Readonly<Matrix4>;
         /**
          * get position
          * @version paper 1.0
@@ -4045,7 +4024,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        getWorldMatrix(): Readonly<Matrix>;
+        getWorldMatrix(): Readonly<Matrix4>;
         /**
          * x-axis towards in world space
          * @version paper 1.0
@@ -4144,55 +4123,27 @@ declare namespace egret3d {
         static CYLINDER: Mesh;
         static SPHERE: Mesh;
         initialize(): void;
-    }
-}
-declare namespace egret3d {
-    class DefaultTextures extends paper.SingletonComponent {
-        /**
-         *
-         */
-        static WHITE: GLTexture;
-        /**
-         *
-         */
-        static GRAY: GLTexture;
-        /**
-         *
-         */
-        static GRID: GLTexture;
-        initialize(): void;
+        static createCylinderCCW(height?: number, radius?: number, segment?: number): Mesh;
+        static createSphereCCW(radius?: number, widthSegments?: number, heightSegments?: number): Mesh;
     }
 }
 declare namespace egret3d {
     /**
      *
      */
-    class DefaultShaders extends paper.SingletonComponent {
-        static MESHLAMBERT: GLTFAsset;
-        static SHADOW_DEPTH: GLTFAsset;
-        static SHADOW_DISTANCE: GLTFAsset;
-        static LINE: GLTFAsset;
-        static DIFFUSE: GLTFAsset;
-        static DIFFUSE_TINT_COLOR: GLTFAsset;
-        static DIFFUSE_BOTH_SIDE: GLTFAsset;
-        static TRANSPARENT: GLTFAsset;
-        static TRANSPARENT_ALPHACUT: GLTFAsset;
-        static TRANSPARENT_TINTCOLOR: GLTFAsset;
-        static TRANSPARENT_ADDITIVE: GLTFAsset;
-        static TRANSPARENT_BOTH_SIDE: GLTFAsset;
-        static TRANSPARENT_ADDITIVE_BOTH_SIDE: GLTFAsset;
-        static GIZMOS_COLOR: GLTFAsset;
-        static MATERIAL_COLOR: GLTFAsset;
-        static VERT_COLOR: GLTFAsset;
-        static PARTICLE: GLTFAsset;
-        static PARTICLE_ADDITIVE: GLTFAsset;
-        static PARTICLE_ADDITIVE_PREMYLTIPLY: GLTFAsset;
-        static PARTICLE_BLEND: GLTFAsset;
-        static PARTICLE_BLEND_PREMYLTIPLY: GLTFAsset;
-        private _createShaderAsset(template, renderQueue?, name?, defines?);
-        private _setBlend(technique, blend);
-        private _setCullFace(technique, cull, frontFace?, cullFace?);
-        private _setDepth(technique, zTest, zWrite);
+    class DefaultTextures extends paper.SingletonComponent {
+        /**
+         *
+         */
+        static WHITE: Texture;
+        /**
+         *
+         */
+        static GRAY: Texture;
+        /**
+         *
+         */
+        static GRID: Texture;
         initialize(): void;
     }
 }
@@ -4201,11 +4152,31 @@ declare namespace egret3d {
      *
      */
     class DefaultMaterials extends paper.SingletonComponent {
-        static DefaultDiffuse: Material;
-        static Missing: Material;
-        static Line: Material;
-        static ShadowDepth: Material;
-        static ShadowDistance: Material;
+        static MESH_BASIC: Material;
+        static MESH_BASIC_DOUBLESIDE: Material;
+        static MESH_LAMBERT: Material;
+        static MESH_LAMBERT_DOUBLESIDE: Material;
+        static MESH_PHONG: Material;
+        static MESH_PHONE_DOUBLESIDE: Material;
+        static MESH_PHYSICAL: Material;
+        static MESH_PHYSICAL_DOUBLESIDE: Material;
+        static LINEDASHED: Material;
+        static VERTEX_COLOR: Material;
+        static MATERIAL_COLOR: Material;
+        static TRANSPARENT: Material;
+        static TRANSPARENT_DOUBLESIDE: Material;
+        static TRANSPARENT_ADDITIVE: Material;
+        static TRANSPARENT_ADDITIVE_DOUBLESIDE: Material;
+        static PARTICLE: Material;
+        static PARTICLE_BLEND: Material;
+        static PARTICLE_BLEND_PREMULTIPLY: Material;
+        static PARTICLE_ADDITIVE: Material;
+        static PARTICLE_ADDITIVE_PREMULTIPLY: Material;
+        static SHADOW_DEPTH: Material;
+        static SHADOW_DISTANCE: Material;
+        static MISSING: Material;
+        private _createShaders();
+        private _createMaterial(shaderName, name, renderQueue);
         initialize(): void;
     }
 }
@@ -4229,7 +4200,7 @@ declare namespace egret3d {
      */
     type DrawCall = {
         renderer: paper.BaseRenderer;
-        matrix?: Matrix;
+        matrix?: Matrix4;
         subMeshIndex: number;
         mesh: Mesh;
         material: Material;
@@ -4380,11 +4351,11 @@ declare namespace egret3d {
         /**
          * 计算相机的 view matrix（视图矩阵）
          */
-        calcViewMatrix(matrix: Matrix): Matrix;
+        calcViewMatrix(matrix: Matrix4): Matrix4;
         /**
          * 计算相机的 project matrix（投影矩阵）
          */
-        calcProjectMatrix(asp: number, matrix: Matrix): Matrix;
+        calcProjectMatrix(asp: number, matrix: Matrix4): Matrix4;
         /**
          * 计算相机视口像素rect
          */
@@ -4473,8 +4444,8 @@ declare namespace egret3d {
         directShadowMatrix: Float32Array;
         spotShadowMatrix: Float32Array;
         pointShadowMatrix: Float32Array;
-        readonly matrix_m: Matrix;
-        readonly matrix_mvp: Matrix;
+        readonly matrix_m: Matrix4;
+        readonly matrix_mvp: Matrix4;
         readonly directShadowMaps: (WebGLTexture | null)[];
         readonly pointShadowMaps: (WebGLTexture | null)[];
         readonly spotShadowMaps: (WebGLTexture | null)[];
@@ -4483,15 +4454,15 @@ declare namespace egret3d {
         readonly cameraPosition: Float32Array;
         readonly cameraForward: Float32Array;
         readonly cameraUp: Float32Array;
-        readonly matrix_v: Matrix;
-        readonly matrix_p: Matrix;
-        readonly matrix_mv: Matrix;
-        readonly matrix_vp: Matrix;
+        readonly matrix_v: Matrix4;
+        readonly matrix_p: Matrix4;
+        readonly matrix_mv: Matrix4;
+        readonly matrix_vp: Matrix4;
         readonly matrix_mv_inverse: Matrix3;
         updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number): void;
-        updateCamera(camera: Camera, matrix: Matrix): void;
+        updateCamera(camera: Camera, matrix: Matrix4): void;
         updateLights(lights: ReadonlyArray<BaseLight>, ambientLightColor: Color): void;
-        updateModel(matrix: Matrix): void;
+        updateModel(matrix: Matrix4): void;
         updateBones(data: Float32Array | null): void;
         readonly lightPosition: Float32Array;
         lightShadowCameraNear: number;
@@ -4587,9 +4558,9 @@ declare module egret.web {
         private constructor();
         beforeRender(): void;
         /**
-         *  执行目前缓存在命令列表里的命令并清空
+         * @internal
          */
-        activatedBuffer: WebGLRenderBuffer;
+        _activatedBuffer: WebGLRenderBuffer;
         $drawWebGL(): void;
         /**
          * 执行绘制命令
@@ -4804,184 +4775,160 @@ declare namespace egret3d {
         }): void;
     }
 }
-declare namespace paper {
+declare namespace egret3d {
     /**
-     *
+     * obb box
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    type GameObjectExtras = {
-        linkedID?: string;
-        rootID?: string;
-        prefab?: Prefab;
-    };
     /**
-     * 可以挂载Component的实体类。
+     * 定向包围盒
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
      */
-    class GameObject extends BaseObject {
+    class OBB {
         /**
-         * 创建 GameObject，并添加到当前场景中。
+         * center
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
         /**
-         * 是否是静态，启用这个属性可以提升性能
+         * 包围盒中心
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        isStatic: boolean;
+        readonly center: Vector3;
         /**
-         *
+         * size
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        hideFlags: HideFlags;
         /**
-         * 层级
+         * 包围盒各轴向长
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        layer: Layer;
+        readonly size: Vector3;
         /**
-         * 名称
+         * vectors
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        name: string;
         /**
-         * 标签
+         * 包围盒世界空间下各个点坐标
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        tag: string;
+        readonly vectors: Readonly<[Vector3, Vector3, Vector3, Vector3, Vector3, Vector3, Vector3, Vector3]>;
+        private readonly _directions;
+        private _computeBoxExtents(axis, box, out);
+        private _axisOverlap(axis, a, b);
         /**
-         * 变换组件
+         * clone a obb
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        transform: egret3d.Transform;
         /**
-         *
+         * 克隆一个obb
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        renderer: BaseRenderer | null;
+        clone(): OBB;
         /**
-         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+         * build by min point and max point
+         * @param minimum min point
+         * @param maximum max point
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        extras?: GameObjectExtras;
-        private _activeSelf;
         /**
-         * @internal
+         * 由最大最小点构建定向包围盒
+         * @param minimum 最小点坐标
+         * @param maximum 最大点坐标
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        _activeInHierarchy: boolean;
+        setByMaxMin(minimum: Readonly<Vector3>, maximum: Readonly<Vector3>): void;
         /**
-         * @internal
+         * build by center and size
+         * @param center center
+         * @param size size
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        _activeDirty: boolean;
-        private readonly _components;
-        private readonly _cachedComponents;
-        private _scene;
         /**
-         * @deprecated
+         * 由中心点和各轴向长度构建定向包围盒
+         * @param center 中心点坐标
+         * @param size 各轴向长度
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        constructor(name?: string, tag?: string, scene?: Scene | null);
-        private _destroy();
-        private _addToScene(value);
-        private _canRemoveComponent(value);
-        private _removeComponent(value, groupComponent);
-        private _getComponentsInChildren(componentClass, child, components, isExtends?);
-        private _getComponent(componentClass);
+        setByCenterSize(center: Readonly<Vector3>, size: Readonly<Vector3>): void;
         /**
-         * @internal
+         * update by world matrix
+         * @param worldmatrix world matrix
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        _activeInHierarchyDirty(prevActive: boolean): void;
         /**
-         *
+         * 刷新定向包围盒
+         * @param worldmatrix 世界矩阵
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        destroy(): void;
+        update(matrix: Readonly<Matrix4>): void;
         /**
-         *
+         * intersect width obb
+         * @param value obb
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        destroyChildren(): void;
         /**
-         * 添加组件。
+         * obb的碰撞检测
+         * @param value 待检测obb
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T;
+        intersects(value: Readonly<OBB>): boolean;
         /**
-         * 移除组件。
+         * update vectors by world matrix
+         * @param vectors vectors
+         * @param matrix world matrix
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends?: boolean): void;
         /**
-         * 移除所有组件。
+         * 计算世界空间下各点坐标
+         * @param vectors 结果数组
+         * @param matrix 物体的世界矩阵
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends?: boolean): void;
-        /**
-         * 获取组件。
-         */
-        getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
-        /**
-         *
-         */
-        getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
-        /**
-         * 搜索自己和父节点中所有特定类型的组件
-         */
-        getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
-        /**
-         * 搜索自己和子节点中所有特定类型的组件
-         */
-        getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
-        /**
-         * 获取组件，如果未添加该组件，则添加该组件。
-         */
-        getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
-        /**
-         * 针对同级的组件发送消息
-         * @param methodName
-         * @param parameter``
-         */
-        sendMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
-        /**
-         * 针对直接父级发送消息
-         * @param methodName
-         * @param parameter
-         */
-        sendMessageUpwards(methodName: string, parameter?: any, requireReceiver?: boolean): void;
-        /**
-         * 群发消息
-         * @param methodName
-         * @param parameter
-         */
-        broadcastMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
-        /**
-         *
-         */
-        readonly isDestroyed: boolean;
-        /**
-         *
-         */
-        dontDestroy: boolean;
-        /**
-         * 当前GameObject对象自身激活状态
-         */
-        activeSelf: boolean;
-        /**
-         * 获取当前GameObject对象在场景中激活状态。
-         * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
-         */
-        readonly activeInHierarchy: boolean;
-        readonly path: string;
-        /**
-         *
-         */
-        readonly components: ReadonlyArray<BaseComponent>;
-        /**
-         *
-         */
-        parent: GameObject | null;
-        /**
-         * 获取物体所在场景实例。
-         */
-        readonly scene: Scene;
-        /**
-         * @deprecated
-         * @see paper.Scene#find()
-         */
-        static find(name: string, scene?: Scene | null): GameObject;
-        /**
-         * @deprecated
-         * @see paper.Scene#findWithTag()
-         */
-        static findWithTag(tag: string, scene?: Scene | null): GameObject;
-        /**
-         * @deprecated
-         * @see paper.Scene#findGameObjectsWithTag()
-         */
-        static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
+        caclWorldVectors(vectors: ReadonlyArray<Vector3>, matrix: Readonly<Matrix4>): void;
+        deserialize(element: {
+            center: [number, number, number];
+            size: [number, number, number];
+        }): this;
     }
 }
 declare namespace egret3d {
@@ -5445,369 +5392,94 @@ declare namespace egret3d {
         onRemoveComponent(component: Animation): void;
     }
 }
-declare namespace egret3d {
-    type RunEgretOptions = {
-        antialias: boolean;
-        defaultScene?: string;
-        contentWidth?: number;
-        contentHeight?: number;
-        option?: RequiredRuntimeOptions;
-        canvas?: HTMLCanvasElement;
-        webgl?: WebGLRenderingContext;
-        isEditor?: boolean;
-        isPlaying?: boolean;
-        systems?: any[];
-    };
-    type RequiredRuntimeOptions = {
-        antialias: boolean;
-        contentWidth: number;
-        contentHeight: number;
-    };
-    /**
-     * 引擎启动入口
-     */
-    function runEgret(options?: RunEgretOptions): void;
-}
-interface Window {
-    canvas: HTMLCanvasElement;
-    paper: any;
-    egret3d: any;
-}
 declare namespace egret3d.particle {
-    const enum CurveMode {
-        Constant = 0,
-        Curve = 1,
-        TwoCurves = 2,
-        TwoConstants = 3,
-    }
-    const enum ColorGradientMode {
-        Color = 0,
-        Gradient = 1,
-        TwoColors = 2,
-        TwoGradients = 3,
-        RandomColor = 4,
-    }
-    const enum SimulationSpace {
-        Local = 0,
-        World = 1,
-        Custom = 2,
-    }
-    const enum ScalingMode {
-        Hierarchy = 0,
-        Local = 1,
-        Shape = 2,
-    }
-    const enum ShapeType {
-        None = -1,
-        Sphere = 0,
-        SphereShell = 1,
-        Hemisphere = 2,
-        HemisphereShell = 3,
-        Cone = 4,
-        Box = 5,
-        Mesh = 6,
-        ConeShell = 7,
-        ConeVolume = 8,
-        ConeVolumeShell = 9,
-        Circle = 10,
-        CircleEdge = 11,
-        SingleSidedEdge = 12,
-        MeshRenderer = 13,
-        SkinnedMeshRenderer = 14,
-        BoxShell = 15,
-        BoxEdge = 16,
-    }
-    const enum ShapeMultiModeValue {
-        Random = 0,
-        Loop = 1,
-        PingPong = 2,
-        BurstSpread = 3,
-    }
-    const enum AnimationType {
-        WholeSheet = 0,
-        SingleRow = 1,
-    }
-    const enum UVChannelFlags {
-        UV0 = 1,
-        UV1 = 2,
-        UV2 = 4,
-        UV3 = 8,
-    }
-    const enum GradientMode {
-        Blend = 0,
-        Fixed = 1,
-    }
-    class Keyframe implements paper.ISerializable {
-        time: number;
-        value: number;
-        serialize(): number[];
-        deserialize(element: any): this;
-        clone(source: Keyframe): void;
-    }
-    class AnimationCurve implements paper.ISerializable {
+    /**
+    * @internal
+    */
+    function createBatchMesh(renderer: ParticleRenderer, maxParticleCount: number): Mesh;
+    /**
+     * @internal
+     */
+    function generatePositionAndDirection(position: Vector3, direction: Vector3, shape: ShapeModule): void;
+}
+declare namespace paper {
+    /**
+     * 场景类
+     */
+    class Scene extends BaseObject {
         /**
-         * 功能与效率平衡长度取4
+         *
          */
-        private readonly _keys;
-        private readonly _floatValues;
-        serialize(): number[][];
-        deserialize(element: any): this;
-        evaluate(t?: number): number;
-        readonly floatValues: Readonly<Float32Array>;
-        clone(source: AnimationCurve): void;
-    }
-    class GradientColorKey extends paper.BaseObject {
-        color: Color;
-        time: number;
-        deserialize(element: any): this;
-    }
-    class GradientAlphaKey extends paper.BaseObject {
-        alpha: number;
-        time: number;
-        deserialize(element: any): this;
-    }
-    class Gradient extends paper.BaseObject {
-        mode: GradientMode;
-        private readonly alphaKeys;
-        private readonly colorKeys;
-        private readonly _alphaValue;
-        private readonly _colorValue;
-        deserialize(element: any): this;
-        evaluate(t: number, out: Color): Color;
-        readonly alphaValues: Readonly<Float32Array>;
-        readonly colorValues: Readonly<Float32Array>;
-    }
-    class MinMaxCurve extends paper.BaseObject {
-        mode: CurveMode;
-        constant: number;
-        constantMin: number;
-        constantMax: number;
-        readonly curve: AnimationCurve;
-        readonly curveMin: AnimationCurve;
-        readonly curveMax: AnimationCurve;
-        deserialize(element: any): this;
-        evaluate(t?: number): number;
-        clone(source: MinMaxCurve): void;
-    }
-    class MinMaxGradient extends paper.BaseObject {
-        mode: ColorGradientMode;
-        readonly color: Color;
-        readonly colorMin: Color;
-        readonly colorMax: Color;
-        readonly gradient: Gradient;
-        readonly gradientMin: Gradient;
-        readonly gradientMax: Gradient;
-        deserialize(element: any): this;
-        evaluate(t: number, out: Color): Color;
-    }
-    class Burst implements paper.ISerializable {
-        time: number;
-        minCount: number;
-        maxCount: number;
-        cycleCount: number;
-        repeatInterval: number;
-        serialize(): number[];
-        deserialize(element: any): this;
-    }
-    abstract class ParticleSystemModule extends paper.BaseObject {
-        enable: boolean;
-        protected _comp: ParticleComponent;
-        constructor(comp: ParticleComponent);
+        static createEmpty(name?: string, isActive?: boolean): Scene;
+        /**
+         *
+         */
+        static create(name: string, combineStaticObjects?: boolean): Scene;
+        /**
+         * lightmap强度
+         */
+        lightmapIntensity: number;
+        /**
+         * 场景名称。
+         */
+        readonly name: string;
+        /**
+         * 场景的light map列表。
+         */
+        readonly lightmaps: egret3d.Texture[];
+        /**
+         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+         */
+        extras?: any;
         /**
          * @internal
          */
-        initialize(): void;
-        deserialize(element: any): this;
-    }
-    class MainModule extends ParticleSystemModule {
-        duration: number;
-        loop: boolean;
-        readonly startDelay: MinMaxCurve;
-        readonly startLifetime: MinMaxCurve;
-        readonly startSpeed: MinMaxCurve;
-        readonly startSizeX: MinMaxCurve;
-        readonly startSizeY: MinMaxCurve;
-        readonly startSizeZ: MinMaxCurve;
+        readonly _gameObjects: GameObject[];
+        /**
+         * 环境光
+         */
+        readonly ambientLightColor: egret3d.Color;
+        private constructor();
         /**
          * @internal
          */
-        _startRotation3D: boolean;
-        readonly startRotationX: MinMaxCurve;
-        readonly startRotationY: MinMaxCurve;
-        readonly startRotationZ: MinMaxCurve;
-        readonly startColor: MinMaxGradient;
-        readonly gravityModifier: MinMaxCurve;
+        _addGameObject(gameObject: GameObject): void;
         /**
          * @internal
          */
-        _simulationSpace: SimulationSpace;
+        _removeGameObject(gameObject: GameObject): void;
+        /**
+         *
+         */
+        destroy(): void;
+        /**
+         *
+         */
+        find(name: string): GameObject;
+        /**
+         *
+         */
+        findWithTag(tag: string): GameObject;
+        /**
+         *
+         */
+        findGameObjectsWithTag(tag: string): GameObject[];
         /**
          * @internal
          */
-        _scaleMode: ScalingMode;
-        playOnAwake: boolean;
+        findWithUUID(uuid: string): GameObject;
         /**
-         * @internal
+         * 所有根实体。
          */
-        _maxParticles: number;
-        deserialize(element: any): this;
-        startRotation3D: boolean;
-        simulationSpace: SimulationSpace;
-        scaleMode: ScalingMode;
-        maxParticles: number;
-    }
-    class EmissionModule extends ParticleSystemModule {
-        readonly rateOverTime: MinMaxCurve;
-        readonly bursts: Array<Burst>;
-        deserialize(element: any): this;
-    }
-    class ShapeModule extends ParticleSystemModule {
-        shapeType: ShapeType;
-        radius: number;
-        angle: number;
-        length: number;
-        readonly arcSpeed: MinMaxCurve;
-        arcMode: ShapeMultiModeValue;
-        radiusSpread: number;
-        radiusMode: ShapeMultiModeValue;
-        readonly box: egret3d.Vector3;
-        randomDirection: boolean;
-        spherizeDirection: boolean;
-        deserialize(element: any): this;
-        invalidUpdate(): void;
-        generatePositionAndDirection(position: Vector3, direction: Vector3): void;
-    }
-    class VelocityOverLifetimeModule extends ParticleSystemModule {
+        getRootGameObjects(): GameObject[];
         /**
-         * @internal
+         *
          */
-        _mode: CurveMode;
+        readonly gameObjectCount: number;
         /**
-         * @internal
+         * 所有实体。
          */
-        _space: SimulationSpace;
-        /**
-         * @internal
-         */
-        readonly _x: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _y: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _z: MinMaxCurve;
-        deserialize(element: any): this;
-        mode: CurveMode;
-        space: SimulationSpace;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class ColorOverLifetimeModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        _color: MinMaxGradient;
-        deserialize(element: any): this;
-        color: Readonly<MinMaxGradient>;
-    }
-    class SizeOverLifetimeModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        _separateAxes: boolean;
-        /**
-         * @internal
-         */
-        readonly _size: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _x: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _y: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _z: MinMaxCurve;
-        deserialize(element: any): this;
-        separateAxes: boolean;
-        size: Readonly<MinMaxCurve>;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class RotationOverLifetimeModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        _separateAxes: boolean;
-        /**
-         * @internal
-         */
-        readonly _x: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _y: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _z: MinMaxCurve;
-        deserialize(element: any): this;
-        separateAxes: boolean;
-        x: Readonly<MinMaxCurve>;
-        y: Readonly<MinMaxCurve>;
-        z: Readonly<MinMaxCurve>;
-    }
-    class TextureSheetAnimationModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        _numTilesX: number;
-        /**
-         * @internal
-         */
-        _numTilesY: number;
-        /**
-         * @internal
-         */
-        _animation: AnimationType;
-        /**
-         * @internal
-         */
-        _useRandomRow: boolean;
-        /**
-         * @internal
-         */
-        readonly _frameOverTime: MinMaxCurve;
-        /**
-         * @internal
-         */
-        readonly _startFrame: MinMaxCurve;
-        /**
-         * @internal
-         */
-        _cycleCount: number;
-        /**
-         * @internal
-         */
-        _rowIndex: number;
-        private readonly _floatValues;
-        deserialize(element: any): this;
-        numTilesX: number;
-        numTilesY: number;
-        animation: AnimationType;
-        useRandomRow: boolean;
-        frameOverTime: Readonly<MinMaxCurve>;
-        startFrame: Readonly<MinMaxCurve>;
-        cycleCount: number;
-        rowIndex: number;
-        readonly floatValues: Readonly<Float32Array>;
+        readonly gameObjects: ReadonlyArray<GameObject>;
     }
 }
 declare namespace egret3d.particle {
@@ -6223,73 +5895,228 @@ declare namespace egret3d {
         cleanBuffer(clearOptColor: boolean, clearOptDepath: boolean, clearColor: Color): void;
     }
 }
+declare namespace paper {
+    /**
+     *
+     */
+    type GameObjectExtras = {
+        linkedID?: string;
+        rootID?: string;
+        prefab?: Prefab;
+    };
+    /**
+     * 可以挂载Component的实体类。
+     */
+    class GameObject extends BaseObject {
+        /**
+         * 创建 GameObject，并添加到当前场景中。
+         */
+        static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
+        /**
+         * 是否是静态，启用这个属性可以提升性能
+         */
+        isStatic: boolean;
+        /**
+         *
+         */
+        hideFlags: HideFlags;
+        /**
+         * 层级
+         */
+        layer: Layer;
+        /**
+         * 名称
+         */
+        name: string;
+        /**
+         * 标签
+         */
+        tag: string;
+        /**
+         * 变换组件
+         */
+        transform: egret3d.Transform;
+        /**
+         *
+         */
+        renderer: BaseRenderer | null;
+        /**
+         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+         */
+        extras?: GameObjectExtras;
+        private _activeSelf;
+        /**
+         * @internal
+         */
+        _activeInHierarchy: boolean;
+        /**
+         * @internal
+         */
+        _activeDirty: boolean;
+        private readonly _components;
+        private readonly _cachedComponents;
+        private _scene;
+        /**
+         * @deprecated
+         */
+        constructor(name?: string, tag?: string, scene?: Scene | null);
+        private _destroy();
+        private _addToScene(value);
+        private _canRemoveComponent(value);
+        private _removeComponent(value, groupComponent);
+        private _getComponentsInChildren(componentClass, child, components, isExtends?);
+        private _getComponent(componentClass);
+        /**
+         * @internal
+         */
+        _activeInHierarchyDirty(prevActive: boolean): void;
+        /**
+         *
+         */
+        destroy(): void;
+        /**
+         *
+         */
+        destroyChildren(): void;
+        /**
+         * 添加组件。
+         */
+        addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T;
+        /**
+         * 移除组件。
+         */
+        removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends?: boolean): void;
+        /**
+         * 移除所有组件。
+         */
+        removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends?: boolean): void;
+        /**
+         * 获取组件。
+         */
+        getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
+        /**
+         *
+         */
+        getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
+        /**
+         * 搜索自己和父节点中所有特定类型的组件
+         */
+        getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
+        /**
+         * 搜索自己和子节点中所有特定类型的组件
+         */
+        getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
+        /**
+         * 获取组件，如果未添加该组件，则添加该组件。
+         */
+        getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
+        /**
+         * 针对同级的组件发送消息
+         * @param methodName
+         * @param parameter``
+         */
+        sendMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
+        /**
+         * 针对直接父级发送消息
+         * @param methodName
+         * @param parameter
+         */
+        sendMessageUpwards(methodName: string, parameter?: any, requireReceiver?: boolean): void;
+        /**
+         * 群发消息
+         * @param methodName
+         * @param parameter
+         */
+        broadcastMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
+        /**
+         *
+         */
+        readonly isDestroyed: boolean;
+        /**
+         *
+         */
+        dontDestroy: boolean;
+        /**
+         * 当前GameObject对象自身激活状态
+         */
+        activeSelf: boolean;
+        /**
+         * 获取当前GameObject对象在场景中激活状态。
+         * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
+         */
+        readonly activeInHierarchy: boolean;
+        readonly path: string;
+        /**
+         *
+         */
+        readonly components: ReadonlyArray<BaseComponent>;
+        /**
+         *
+         */
+        parent: GameObject | null;
+        /**
+         * 获取物体所在场景实例。
+         */
+        readonly scene: Scene;
+        /**
+         * @deprecated
+         * @see paper.Scene#find()
+         */
+        static find(name: string, scene?: Scene | null): GameObject;
+        /**
+         * @deprecated
+         * @see paper.Scene#findWithTag()
+         */
+        static findWithTag(tag: string, scene?: Scene | null): GameObject;
+        /**
+         * @deprecated
+         * @see paper.Scene#findGameObjectsWithTag()
+         */
+        static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
+    }
+}
 declare namespace egret3d {
     /**
-     * 射线
+     *
+     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
      */
-    class Ray {
+    class Curve3 {
         /**
-         * 射线起始点
-         */
-        origin: Vector3;
+        * 贝塞尔曲线上的，不包含第一个点
+        */
+        private _beizerPoints;
         /**
-         * 射线的方向向量
-         */
-        direction: Vector3;
+        * 贝塞尔曲线上所有的个数
+        */
+        private _bezierPointNum;
+        beizerPoints: egret3d.Vector3[];
+        bezierPointNum: number;
         /**
-         * 构建一条射线
-         * @param origin 射线起点
-         * @param dir 射线方向
+         * 线性贝塞尔曲线
          */
-        constructor(origin: Vector3, direction: Vector3);
+        static CreateLinearBezier(start: egret3d.Vector3, end: egret3d.Vector3, indices: number): Curve3;
         /**
-         * 与aabb碰撞相交检测
+         * 二次方贝塞尔曲线路径
+         * @param v0 起始点
+         * @param v1 选中的节点
+         * @param v2 结尾点
+         * @param nbPoints 将贝塞尔曲线拆分nbPoints段，一共有nbPoints + 1个点
          */
-        intersectAABB(aabb: AABB): boolean;
+        static CreateQuadraticBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, bezierPointNum: number): Curve3;
         /**
-         * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param transform transform实例
+         * 三次方贝塞尔曲线路径
+         * @param v0
+         * @param v1
+         * @param v2
+         * @param v3
+         * @param nbPoints
          */
-        intersectPlaneTransform(transform: Transform): PickInfo;
-        intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3;
+        static CreateCubicBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, v3: egret3d.Vector3, bezierPointNum: number): Curve3;
+        constructor(points: egret3d.Vector3[], nbPoints: number);
         /**
-         * 与最大最小点表示的box相交检测
-         * @param minimum 最小点
-         * @param maximum 最大点
-         * @version paper 1.0
+         * 贝塞尔曲线上的点
          */
-        intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean;
-        /**
-         * 与球相交检测
-         */
-        intersectsSphere(center: Vector3, radius: number): boolean;
-        /**
-         * 与三角形相交检测
-         */
-        intersectsTriangle(vertex0: Vector3, vertex1: Vector3, vertex2: Vector3): PickInfo;
-        /**
-         * 获取射线拾取到的最近物体。
-         */
-        static raycast(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo | null;
-        /**
-         * 获取射线路径上的所有物体。
-         */
-        static raycastAll(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo[] | null;
-        private static _doPick(ray, maxDistance, layerMask, pickAll?, isPickMesh?);
-        private static _pickMesh(ray, transform, pickInfos);
-        private static _pickCollider(ray, transform, pickInfos);
-    }
-    /**
-     * 场景拣选信息
-     */
-    class PickInfo {
-        subMeshIndex: number;
-        triangleIndex: number;
-        distance: number;
-        readonly position: Vector3;
-        readonly textureCoordA: Vector2;
-        readonly textureCoordB: Vector2;
-        transform: Transform | null;
+        getPoints(): Vector3[];
     }
 }
 declare namespace egret3d {
@@ -6346,87 +6173,15 @@ declare namespace paper {
         function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any): void;
     }
 }
-declare type int = number;
-declare type uint = number;
-declare namespace paper {
-    /**
-     *
-     */
-    let Time: Clock;
-    /**
-     *
-     */
-    let Application: ECS;
-    /**
-     *
-     */
-    class ECS {
-        private static _instance;
-        /**
-         *
-         */
-        static getInstance(): ECS;
-        private constructor();
-        /**
-         *
-         */
-        readonly version: string;
-        /**
-         * 系统管理器。
-         */
-        readonly systemManager: SystemManager;
-        /**
-         * 场景管理器。
-         */
-        readonly sceneManager: SceneManager;
-        private _isEditor;
-        private _isFocused;
-        private _isPlaying;
-        private _isRunning;
-        private _bindUpdate;
-        _option: egret3d.RequiredRuntimeOptions;
-        _canvas: HTMLCanvasElement;
-        _webgl: WebGLRenderingContext;
-        private _update();
-        init({isEditor, isPlaying, systems, option, canvas, webgl}?: {
-            isEditor?: boolean;
-            isPlaying?: boolean;
-            systems?: (new () => BaseSystem)[];
-            option?: {};
-            canvas?: {};
-            webgl?: {};
-        }): void;
-        /**
-         *
-         */
-        pause(): void;
-        resume(): void;
-        callLater(callback: () => void): void;
-        readonly isEditor: boolean;
-        readonly isFocused: boolean;
-        readonly isPlaying: boolean;
-        readonly isRunning: boolean;
-    }
-}
 declare namespace egret3d {
     /**
-         * 渲染排序
-         */
-    enum RenderQueue {
-        Background = 1000,
-        Geometry = 2000,
-        AlphaTest = 2450,
-        Transparent = 3000,
-        Overlay = 4000,
-    }
-    /**
-    * 材质资源
-    */
+     * 材质资源
+     */
     class Material extends GLTFAsset {
         /**
          *
          */
-        renderQueue: RenderQueue | number;
+        renderQueue: paper.RenderQueue | number;
         /**
           * @internal
           */
@@ -6436,3338 +6191,3286 @@ declare namespace egret3d {
           */
         _version: number;
         private _cacheDefines;
-        private _textureRef;
         private readonly _defines;
+        private readonly _textures;
         /**
-        * @internal
-        */
-        _glTFMaterial: GLTFMaterial | null;
+         * @internal
+         */
+        _glTFShader: GLTFAsset;
+        private _glTFMaterial;
         /**
         * @internal
         */
         _glTFTechnique: gltf.Technique;
         /**
-         * @internal
+         *
          */
-        _glTFShader: GLTFAsset;
-        constructor(shader: GLTFAsset);
-        dispose(): void;
+        constructor(shaderOrMaterial: GLTFAsset | Material);
+        initialize(): void;
+        dispose(disposeChildren?: boolean): void;
+        copy(value: Material): this;
         /**
          * 克隆材质资源。
          */
         clone(): Material;
-        initialize(): void;
-        addDefine(key: string): void;
-        removeDefine(key: string): void;
-        setBoolean(id: string, value: boolean): void;
-        setInt(id: string, value: number): void;
-        setIntv(id: string, value: Float32Array): void;
-        setFloat(id: string, value: number): void;
-        setFloatv(id: string, value: Float32Array): void;
-        setVector2(id: string, value: Vector2): void;
-        setVector2v(id: string, value: Float32Array): void;
-        setVector3(id: string, value: Vector3): void;
-        setVector3v(id: string, value: Float32Array): void;
-        setVector4(id: string, value: Vector4): void;
-        setVector4v(id: string, value: Float32Array | [number, number, number, number]): void;
-        setMatrix(id: string, value: Matrix): void;
-        setMatrixv(id: string, value: Float32Array): void;
-        setTexture(id: string, value: egret3d.Texture): void;
+        addDefine(key: string): this;
+        removeDefine(key: string): this;
+        setBoolean(id: string, value: boolean): this;
+        setInt(id: string, value: number): this;
+        setIntv(id: string, value: Float32Array): this;
+        setFloat(id: string, value: number): this;
+        setFloatv(id: string, value: Float32Array): this;
+        setVector2(id: string, value: Vector2): this;
+        setVector2v(id: string, value: Float32Array): this;
+        setVector3(id: string, value: Vector3): this;
+        setVector3v(id: string, value: Float32Array): this;
+        setVector4(id: string, value: Vector4): this;
+        setVector4v(id: string, value: Float32Array | [number, number, number, number]): this;
+        setMatrix(id: string, value: Matrix4): this;
+        setMatrixv(id: string, value: Float32Array): this;
+        setTexture(id: string, value: egret3d.Texture): this;
         /**
+         *
+         * @param blend
+         */
+        setBlend(blend: gltf.BlendMode): this;
+        /**
+         *
+         */
+        setCullFace(cull: boolean, frontFace?: gltf.FrontFace, cullFace?: gltf.CullFace): this;
+        /**
+         *
+         */
+        setDepth(zTest: boolean, zWrite: boolean): this;
+        /**
+         * TODO
          * @internal
          */
         readonly shaderDefine: string;
+        readonly shader: GLTFAsset;
     }
 }
 declare namespace egret3d.ShaderLib {
     const cube: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "tCube": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "tFlip": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "tCube": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "tFlip": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const depth: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "uvTransform": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "displacementMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "displacementScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "displacementBias": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "morphTargetInfluences[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "bindMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "bindMatrixInverse": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "boneTexture": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneTextureSize": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneMatrices[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "logDepthBufFC": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "alphaMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "clippingPlanes[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "displacementMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "displacementScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "displacementBias": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "alphaMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const diffuse: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                            "uv2": {
-                                "semantic": string;
-                            };
-                            "position": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "glstate_vec4_bones[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "lightMapOffset": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "lightMapUV": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewProjectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "uvTransform": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "lightMap": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "lightMapIntensity": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "diffuse": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "_AlphaCut": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "uv2": {
+                            "semantic": string;
+                        };
+                        "position": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "glstate_vec4_bones[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "lightMapOffset": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "lightMapUV": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewProjectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "lightMap": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "lightMapIntensity": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "map": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "_AlphaCut": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const distanceRGBA: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "uvTransform": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "displacementMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "displacementScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "displacementBias": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "morphTargetInfluences[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "bindMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "bindMatrixInverse": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "boneTexture": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneTextureSize": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneMatrices[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "referencePosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "nearDistance": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "farDistance": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "alphaMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "clippingPlanes[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "displacementMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "displacementScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "displacementBias": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "referencePosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "nearDistance": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "farDistance": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "map": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "alphaMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const equirect: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "tEquirect": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "tEquirect": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const linedashed: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "lineDistance": {
-                                "semantic": string;
-                            };
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "scale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "logDepthBufFC": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "diffuse": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "dashSize": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "totalSize": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogColor": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogDensity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogNear": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogFar": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "clippingPlanes[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "lineDistance": {
+                            "semantic": string;
+                        };
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "scale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "dashSize": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "totalSize": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogColor": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogDensity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogNear": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogFar": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const line: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelViewProjectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelViewProjectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const meshbasic: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                            "uv2": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "uvTransform": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "refractionRatio": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "morphTargetInfluences[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "bindMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "bindMatrixInverse": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "boneTexture": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneTextureSize": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneMatrices[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "logDepthBufFC": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "diffuse": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "alphaMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "aoMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "aoMapIntensity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "lightMap": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "lightMapIntensity": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "reflectivity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "envMapIntensity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "envMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "flipEnvMap": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "maxMipLevel": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogColor": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogDensity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogNear": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogFar": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "specularMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "clippingPlanes[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "uv2": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "refractionRatio": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "alphaMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "aoMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "aoMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "lightMap": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "lightMapIntensity": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "reflectivity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "envMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "envMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "flipEnvMap": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "maxMipLevel": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogColor": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogDensity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogNear": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogFar": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "specularMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const meshlambert: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                            "uv2": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "uvTransform": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "refractionRatio": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "ambientLightColor": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "directionalLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "ltc_1": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "ltc_2": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "rectAreaLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "hemisphereLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "morphTargetInfluences[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "bindMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "bindMatrixInverse": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "boneTexture": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneTextureSize": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneMatrices[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "directionalShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "logDepthBufFC": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "diffuse": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "emissive": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "alphaMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "aoMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "aoMapIntensity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "lightMap": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "lightMapIntensity": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "emissiveMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "reflectivity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "envMapIntensity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "envMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "flipEnvMap": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "maxMipLevel": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogColor": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogDensity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogNear": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogFar": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "directionalShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "specularMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "clippingPlanes[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "uv2": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "refractionRatio": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "ambientLightColor": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "directionalLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "ltc_1": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "ltc_2": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "rectAreaLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "hemisphereLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "directionalShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "emissive": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "alphaMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "aoMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "aoMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "lightMap": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "lightMapIntensity": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "emissiveMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "reflectivity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "envMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "envMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "flipEnvMap": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "maxMipLevel": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogColor": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogDensity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogNear": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogFar": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "directionalShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "specularMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const meshphong: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                            "uv2": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "uvTransform": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "displacementMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "displacementScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "displacementBias": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "refractionRatio": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "morphTargetInfluences[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "bindMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "bindMatrixInverse": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "boneTexture": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneTextureSize": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneMatrices[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "directionalShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "logDepthBufFC": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "diffuse": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "emissive": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "specular": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "shininess": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "alphaMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "aoMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "aoMapIntensity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "lightMap": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "lightMapIntensity": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "emissiveMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "reflectivity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "envMapIntensity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "envMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "flipEnvMap": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "maxMipLevel": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "gradientMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogColor": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogDensity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogNear": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogFar": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "ambientLightColor": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "directionalLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "ltc_1": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "ltc_2": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "rectAreaLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "hemisphereLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "directionalShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "bumpMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "bumpScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "normalMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "normalScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "specularMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "clippingPlanes[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "uv2": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "displacementMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "displacementScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "displacementBias": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "refractionRatio": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "directionalShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "emissive": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "specular": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "shininess": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "alphaMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "aoMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "aoMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "lightMap": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "lightMapIntensity": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "emissiveMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "reflectivity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "envMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "envMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "flipEnvMap": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "maxMipLevel": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "gradientMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogColor": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogDensity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogNear": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogFar": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "ambientLightColor": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "directionalLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "ltc_1": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "ltc_2": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "rectAreaLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "hemisphereLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "directionalShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "bumpMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "bumpScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "normalMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "normalScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "specularMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const meshphysical: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                            "uv2": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "uvTransform": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "displacementMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "displacementScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "displacementBias": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "morphTargetInfluences[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "bindMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "bindMatrixInverse": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "boneTexture": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneTextureSize": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneMatrices[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "directionalShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "logDepthBufFC": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "diffuse": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "emissive": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "roughness": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "metalness": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "clearCoat": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "clearCoatRoughness": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "alphaMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "aoMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "aoMapIntensity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "lightMap": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "lightMapIntensity": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "emissiveMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "reflectivity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "envMapIntensity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "envMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "flipEnvMap": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "maxMipLevel": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "refractionRatio": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogColor": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogDensity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogNear": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogFar": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "ambientLightColor": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "directionalLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "ltc_1": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "ltc_2": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "rectAreaLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "hemisphereLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "directionalShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "bumpMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "bumpScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "normalMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "normalScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "roughnessMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "metalnessMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "clippingPlanes[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "uv2": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "displacementMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "displacementScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "displacementBias": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "directionalShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "emissive": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "roughness": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "metalness": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "clearCoat": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "clearCoatRoughness": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "map": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "alphaMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "aoMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "aoMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "lightMap": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "lightMapIntensity": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "emissiveMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "reflectivity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "envMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "envMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "flipEnvMap": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "maxMipLevel": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "refractionRatio": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogColor": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogDensity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogNear": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogFar": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "ambientLightColor": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "directionalLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "ltc_1": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "ltc_2": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "rectAreaLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "hemisphereLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "directionalShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "bumpMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "bumpScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "normalMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "normalScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "roughnessMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "metalnessMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const normal: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "uvTransform": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "displacementMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "displacementScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "displacementBias": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "morphTargetInfluences[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "bindMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "bindMatrixInverse": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "boneTexture": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneTextureSize": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "boneMatrices[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "logDepthBufFC": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "bumpMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "bumpScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "normalMap": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "normalScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "displacementMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "displacementScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "displacementBias": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "bumpMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "bumpScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "normalMap": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "normalScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const particle: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "corner": {
-                                "semantic": string;
-                            };
-                            "position": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "startPosition": {
-                                "semantic": string;
-                            };
-                            "startVelocity": {
-                                "semantic": string;
-                            };
-                            "startColor": {
-                                "semantic": string;
-                            };
-                            "startSize": {
-                                "semantic": string;
-                            };
-                            "startRotation": {
-                                "semantic": string;
-                            };
-                            "time": {
-                                "semantic": string;
-                            };
-                            "random0": {
-                                "semantic": string;
-                            };
-                            "random1": {
-                                "semantic": string;
-                            };
-                            "startWorldPosition": {
-                                "semantic": string;
-                            };
-                            "startWorldRotation": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "u_currentTime": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_gravity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_worldPosition": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_worldRotation": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_startRotation3D": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_scalingMode": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_positionScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_sizeScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "viewProjectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraForward": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraUp": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "u_lengthScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_speeaScale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_simulationSpace": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_spaceType": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_velocityConst": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_velocityCurveX[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_velocityCurveY[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_velocityCurveZ[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_velocityConstMax": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_velocityCurveMaxX[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_velocityCurveMaxY[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_velocityCurveMaxZ[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_colorGradient[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_alphaGradient[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_colorGradientMax[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_alphaGradientMax[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_sizeCurve[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_sizeCurveMax[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_sizeCurveX[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_sizeCurveY[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_sizeCurveZ[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_sizeCurveMaxX[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_sizeCurveMaxY[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_sizeCurveMaxZ[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationConst": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationConstMax": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationCurve[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationCurveMax[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationConstSeprarate": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationConstMaxSeprarate": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationCurveX[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationCurveY[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationCurveZ[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationCurveW[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationCurveMaxX[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationCurveMaxY[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationCurveMaxZ[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_rotationCurveMaxW[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_cycles": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_subUV": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_uvCurve[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "u_uvCurveMax[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "diffuse": {
-                                "type": number;
-                                "value": number[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "corner": {
+                            "semantic": string;
+                        };
+                        "position": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "startPosition": {
+                            "semantic": string;
+                        };
+                        "startVelocity": {
+                            "semantic": string;
+                        };
+                        "startColor": {
+                            "semantic": string;
+                        };
+                        "startSize": {
+                            "semantic": string;
+                        };
+                        "startRotation": {
+                            "semantic": string;
+                        };
+                        "time": {
+                            "semantic": string;
+                        };
+                        "random0": {
+                            "semantic": string;
+                        };
+                        "random1": {
+                            "semantic": string;
+                        };
+                        "startWorldPosition": {
+                            "semantic": string;
+                        };
+                        "startWorldRotation": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "u_currentTime": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_gravity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_worldPosition": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_worldRotation": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_startRotation3D": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_scalingMode": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_positionScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_sizeScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "viewProjectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraForward": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraUp": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "u_lengthScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_speeaScale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_simulationSpace": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_spaceType": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_velocityConst": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_velocityCurveX[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_velocityCurveY[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_velocityCurveZ[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_velocityConstMax": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_velocityCurveMaxX[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_velocityCurveMaxY[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_velocityCurveMaxZ[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_colorGradient[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_alphaGradient[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_colorGradientMax[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_alphaGradientMax[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_sizeCurve[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_sizeCurveMax[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_sizeCurveX[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_sizeCurveY[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_sizeCurveZ[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_sizeCurveMaxX[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_sizeCurveMaxY[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_sizeCurveMaxZ[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationConst": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationConstMax": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationCurve[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationCurveMax[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationConstSeprarate": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationConstMaxSeprarate": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationCurveX[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationCurveY[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationCurveZ[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationCurveW[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationCurveMaxX[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationCurveMaxY[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationCurveMaxZ[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_rotationCurveMaxW[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_cycles": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_subUV": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_uvCurve[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "u_uvCurveMax[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "map": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const points: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "size": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "scale": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "morphTargetInfluences[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "logDepthBufFC": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "diffuse": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "uvTransform": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogColor": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogDensity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogNear": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogFar": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "clippingPlanes[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "size": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "scale": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "map": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogColor": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogDensity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogNear": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogFar": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const shadow: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "directionalShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointShadowMatrix[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "color": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "fogColor": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogDensity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogNear": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogFar": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "ambientLightColor": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "directionalLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "ltc_1": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "ltc_2": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "rectAreaLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "hemisphereLights[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "directionalShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "spotShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "pointShadowMap[0]": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "directionalShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointShadowMatrix[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "color": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "fogColor": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogDensity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogNear": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogFar": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "ambientLightColor": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "directionalLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "ltc_1": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "ltc_2": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "rectAreaLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "hemisphereLights[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "directionalShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "spotShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "pointShadowMap[0]": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const sprite: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "morphTarget0": {
-                                "semantic": string;
-                            };
-                            "morphTarget1": {
-                                "semantic": string;
-                            };
-                            "morphTarget2": {
-                                "semantic": string;
-                            };
-                            "morphTarget3": {
-                                "semantic": string;
-                            };
-                            "morphNormal0": {
-                                "semantic": string;
-                            };
-                            "morphNormal1": {
-                                "semantic": string;
-                            };
-                            "morphNormal2": {
-                                "semantic": string;
-                            };
-                            "morphNormal3": {
-                                "semantic": string;
-                            };
-                            "morphTarget4": {
-                                "semantic": string;
-                            };
-                            "morphTarget5": {
-                                "semantic": string;
-                            };
-                            "morphTarget6": {
-                                "semantic": string;
-                            };
-                            "morphTarget7": {
-                                "semantic": string;
-                            };
-                            "skinIndex": {
-                                "semantic": string;
-                            };
-                            "skinWeight": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "rotation": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "center": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "modelMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "modelViewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "projectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "viewMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "normalMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "cameraPosition": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "uvTransform": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "logDepthBufFC": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "diffuse": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "opacity": {
-                                "type": number;
-                                "value": number;
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogColor": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogDensity": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogNear": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "fogFar": {
-                                "type": number;
-                                "value": any[];
-                            };
-                            "clippingPlanes[0]": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "rotation": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "center": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "modelMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogColor": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogDensity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogNear": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogFar": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
     const vertcolor: {
-        "name": string;
-        "config": {
+        "version": string;
+        "asset": {
             "version": string;
-            "asset": {
-                "version": string;
-            };
-            "extensions": {
-                "KHR_techniques_webgl": {
-                    "shaders": {
-                        "name": string;
-                        "type": number;
-                        "uri": string;
-                    }[];
-                    "techniques": {
-                        "name": string;
-                        "attributes": {
-                            "position": {
-                                "semantic": string;
-                            };
-                            "normal": {
-                                "semantic": string;
-                            };
-                            "color": {
-                                "semantic": string;
-                            };
-                            "uv": {
-                                "semantic": string;
-                            };
-                        };
-                        "uniforms": {
-                            "modelViewProjectionMatrix": {
-                                "type": number;
-                                "value": any[];
-                                "semantic": string;
-                            };
-                            "_MainTex_ST": {
-                                "type": number;
-                                "value": number[];
-                            };
-                            "map": {
-                                "type": number;
-                                "value": any[];
-                            };
-                        };
-                        "states": {
-                            "enable": any[];
-                            "functions": {};
-                        };
-                    }[];
-                };
-                "paper": {};
-            };
-            "extensionsRequired": string[];
-            "extensionsUsed": string[];
-            "materials": any[];
         };
-        "_isBuiltin": boolean;
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelViewProjectionMatrix": {
+                            "type": number;
+                            "value": any[];
+                            "semantic": string;
+                        };
+                        "_MainTex_ST": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "map": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
     };
 }
 declare namespace egret3d.ShaderChunk {
@@ -9778,7 +9481,7 @@ declare namespace egret3d.ShaderChunk {
     const aomap_pars_fragment = "#ifdef USE_AOMAP\n\n uniform sampler2D aoMap;\n uniform float aoMapIntensity;\n\n#endif";
     const beginnormal_vertex = "\nvec3 objectNormal = vec3( normal );\n";
     const begin_vertex = "\nvec3 transformed = vec3( position );\n";
-    const bsdfs = "// diffuse just use lambert\n\nvec3 BRDF_Diffuse_Lambert(vec3 diffuseColor) {\n    return RECIPROCAL_PI * diffuseColor;\n}\n\n// specular use Cook-Torrance microfacet model, http://ruh.li/GraphicsCookTorrance.html\n// About RECIPROCAL_PI: referenced by http://www.joshbarczak.com/blog/?p=272\n\nvec4 F_Schlick( const in vec4 specularColor, const in float dotLH ) {\n // Original approximation by Christophe Schlick '94\n float fresnel = pow( 1.0 - dotLH, 5.0 );\n\n // Optimized variant (presented by Epic at SIGGRAPH '13)\n // float fresnel = exp2( ( -5.55473 * dotLH - 6.98316 ) * dotLH );\n\n return ( 1.0 - specularColor ) * fresnel + specularColor;\n}\n\n// use blinn phong instead of phong\nfloat D_BlinnPhong( const in float shininess, const in float dotNH ) {\n    // ( shininess * 0.5 + 1.0 ), three.js do this, but why ???\n return RECIPROCAL_PI * ( shininess * 0.5 + 1.0 ) * pow( dotNH, shininess );\n}\n\nfloat G_BlinnPhong_Implicit( /* const in float dotNL, const in float dotNV */ ) {\n // geometry term is (n dot l)(n dot v) / 4(n dot l)(n dot v)\n return 0.25;\n}\n\nvec4 BRDF_Specular_BlinnPhong(vec4 specularColor, vec3 N, vec3 L, vec3 V, float shininess) {\n    vec3 H = normalize(L + V);\n\n    float dotNH = saturate(dot(N, H));\n    float dotLH = saturate(dot(L, H));\n\n    vec4 F = F_Schlick(specularColor, dotLH);\n\n    float G = G_BlinnPhong_Implicit( /* dotNL, dotNV */ );\n\n    float D = D_BlinnPhong(shininess, dotNH);\n\n    return F * G * D;\n}\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (33)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat D_GGX( const in float alpha, const in float dotNH ) {\n\n float a2 = pow2( alpha );\n\n float denom = pow2( dotNH ) * ( a2 - 1.0 ) + 1.0; // avoid alpha = 0 with dotNH = 1\n\n return RECIPROCAL_PI * a2 / pow2( denom );\n\n}\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (34)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat G_GGX_Smith( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n // geometry term = G(l)⋅G(v) / 4(n⋅l)(n⋅v)\n\n float a2 = pow2( alpha );\n\n float gl = dotNL + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n float gv = dotNV + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n\n return 1.0 / ( gl * gv );\n\n}\n\n// Moving Frostbite to Physically Based Rendering 2.0 - page 12, listing 2\n// http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr_v2.pdf\nfloat G_GGX_SmithCorrelated( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n float a2 = pow2( alpha );\n\n // dotNL and dotNV are explicitly swapped. This is not a mistake.\n float gv = dotNL * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n float gl = dotNV * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n\n return 0.5 / max( gv + gl, EPSILON );\n}\n\n// GGX Distribution, Schlick Fresnel, GGX-Smith Visibility\nvec4 BRDF_Specular_GGX(vec4 specularColor, vec3 N, vec3 L, vec3 V, float roughness) {\n\n float alpha = pow2( roughness ); // UE4's roughness\n\n vec3 H = normalize(L + V);\n\n float dotNL = saturate( dot(N, L) );\n float dotNV = saturate( dot(N, V) );\n float dotNH = saturate( dot(N, H) );\n float dotLH = saturate( dot(L, H) );\n\n vec4 F = F_Schlick( specularColor, dotLH );\n\n float G = G_GGX_SmithCorrelated( alpha, dotNL, dotNV );\n\n float D = D_GGX( alpha, dotNH );\n\n return F * G * D;\n\n}\n\n// ref: https://www.unrealengine.com/blog/physically-based-shading-on-mobile - environmentBRDF for GGX on mobile\nvec4 BRDF_Specular_GGX_Environment( const in vec3 N, const in vec3 V, const in vec4 specularColor, const in float roughness ) {\n\n float dotNV = saturate( dot( N, V ) );\n\n const vec4 c0 = vec4( - 1, - 0.0275, - 0.572, 0.022 );\n\n const vec4 c1 = vec4( 1, 0.0425, 1.04, - 0.04 );\n\n vec4 r = roughness * c0 + c1;\n\n float a004 = min( r.x * r.x, exp2( - 9.28 * dotNV ) ) * r.x + r.y;\n\n vec2 AB = vec2( -1.04, 1.04 ) * a004 + r.zw;\n\n return specularColor * AB.x + AB.y;\n\n}\n\n// source: http://simonstechblog.blogspot.ca/2011/12/microfacet-brdf.html\nfloat GGXRoughnessToBlinnExponent( const in float ggxRoughness ) {\n return ( 2.0 / pow2( ggxRoughness + 0.0001 ) - 2.0 );\n}\n\nfloat BlinnExponentToGGXRoughness( const in float blinnExponent ) {\n return sqrt( 2.0 / ( blinnExponent + 2.0 ) );\n}";
+    const bsdfs = "float punctualLightIntensityToIrradianceFactor( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {\n\n if( decayExponent > 0.0 ) {\n\n#if defined ( PHYSICALLY_CORRECT_LIGHTS )\n\n  // based upon Frostbite 3 Moving to Physically-based Rendering\n  // page 32, equation 26: E[window1]\n  // https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf\n  // this is intended to be used on spot and point lights who are represented as luminous intensity\n  // but who must be converted to luminous irradiance for surface lighting calculation\n  float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );\n  float maxDistanceCutoffFactor = pow2( saturate( 1.0 - pow4( lightDistance / cutoffDistance ) ) );\n  return distanceFalloff * maxDistanceCutoffFactor;\n\n#else\n\n  return pow( saturate( -lightDistance / cutoffDistance + 1.0 ), decayExponent );\n\n#endif\n\n }\n\n return 1.0;\n\n}\n\nvec3 BRDF_Diffuse_Lambert( const in vec3 diffuseColor ) {\n\n return RECIPROCAL_PI * diffuseColor;\n\n} // validated\n\nvec3 F_Schlick( const in vec3 specularColor, const in float dotLH ) {\n\n // Original approximation by Christophe Schlick '94\n // float fresnel = pow( 1.0 - dotLH, 5.0 );\n\n // Optimized variant (presented by Epic at SIGGRAPH '13)\n // https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf\n float fresnel = exp2( ( -5.55473 * dotLH - 6.98316 ) * dotLH );\n\n return ( 1.0 - specularColor ) * fresnel + specularColor;\n\n} // validated\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (34)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat G_GGX_Smith( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n // geometry term (normalized) = G(l)⋅G(v) / 4(n⋅l)(n⋅v)\n // also see #12151\n\n float a2 = pow2( alpha );\n\n float gl = dotNL + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n float gv = dotNV + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n\n return 1.0 / ( gl * gv );\n\n} // validated\n\n// Moving Frostbite to Physically Based Rendering 3.0 - page 12, listing 2\n// https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf\nfloat G_GGX_SmithCorrelated( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n float a2 = pow2( alpha );\n\n // dotNL and dotNV are explicitly swapped. This is not a mistake.\n float gv = dotNL * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n float gl = dotNV * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n\n return 0.5 / max( gv + gl, EPSILON );\n\n}\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (33)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat D_GGX( const in float alpha, const in float dotNH ) {\n\n float a2 = pow2( alpha );\n\n float denom = pow2( dotNH ) * ( a2 - 1.0 ) + 1.0; // avoid alpha = 0 with dotNH = 1\n\n return RECIPROCAL_PI * a2 / pow2( denom );\n\n}\n\n// GGX Distribution, Schlick Fresnel, GGX-Smith Visibility\nvec3 BRDF_Specular_GGX( const in IncidentLight incidentLight, const in GeometricContext geometry, const in vec3 specularColor, const in float roughness ) {\n\n float alpha = pow2( roughness ); // UE4's roughness\n\n vec3 halfDir = normalize( incidentLight.direction + geometry.viewDir );\n\n float dotNL = saturate( dot( geometry.normal, incidentLight.direction ) );\n float dotNV = saturate( dot( geometry.normal, geometry.viewDir ) );\n float dotNH = saturate( dot( geometry.normal, halfDir ) );\n float dotLH = saturate( dot( incidentLight.direction, halfDir ) );\n\n vec3 F = F_Schlick( specularColor, dotLH );\n\n float G = G_GGX_SmithCorrelated( alpha, dotNL, dotNV );\n\n float D = D_GGX( alpha, dotNH );\n\n return F * ( G * D );\n\n} // validated\n\n// Rect Area Light\n\n// Real-Time Polygonal-Light Shading with Linearly Transformed Cosines\n// by Eric Heitz, Jonathan Dupuy, Stephen Hill and David Neubelt\n// code: https://github.com/selfshadow/ltc_code/\n\nvec2 LTC_Uv( const in vec3 N, const in vec3 V, const in float roughness ) {\n\n const float LUT_SIZE  = 64.0;\n const float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;\n const float LUT_BIAS  = 0.5 / LUT_SIZE;\n\n float dotNV = saturate( dot( N, V ) );\n\n // texture parameterized by sqrt( GGX alpha ) and sqrt( 1 - cos( theta ) )\n vec2 uv = vec2( roughness, sqrt( 1.0 - dotNV ) );\n\n uv = uv * LUT_SCALE + LUT_BIAS;\n\n return uv;\n\n}\n\nfloat LTC_ClippedSphereFormFactor( const in vec3 f ) {\n\n // Real-Time Area Lighting: a Journey from Research to Production (p.102)\n // An approximation of the form factor of a horizon-clipped rectangle.\n\n float l = length( f );\n\n return max( ( l * l + f.z ) / ( l + 1.0 ), 0.0 );\n\n}\n\nvec3 LTC_EdgeVectorFormFactor( const in vec3 v1, const in vec3 v2 ) {\n\n float x = dot( v1, v2 );\n\n float y = abs( x );\n\n // rational polynomial approximation to theta / sin( theta ) / 2PI\n float a = 0.8543985 + ( 0.4965155 + 0.0145206 * y ) * y;\n float b = 3.4175940 + ( 4.1616724 + y ) * y;\n float v = a / b;\n\n float theta_sintheta = ( x > 0.0 ) ? v : 0.5 * inversesqrt( max( 1.0 - x * x, 1e-7 ) ) - v;\n\n return cross( v1, v2 ) * theta_sintheta;\n\n}\n\nvec3 LTC_Evaluate( const in vec3 N, const in vec3 V, const in vec3 P, const in mat3 mInv, const in vec3 rectCoords[ 4 ] ) {\n\n // bail if point is on back side of plane of light\n // assumes ccw winding order of light vertices\n vec3 v1 = rectCoords[ 1 ] - rectCoords[ 0 ];\n vec3 v2 = rectCoords[ 3 ] - rectCoords[ 0 ];\n vec3 lightNormal = cross( v1, v2 );\n\n if( dot( lightNormal, P - rectCoords[ 0 ] ) < 0.0 ) return vec3( 0.0 );\n\n // construct orthonormal basis around N\n vec3 T1, T2;\n T1 = normalize( V - N * dot( V, N ) );\n T2 = - cross( N, T1 ); // negated from paper; possibly due to a different handedness of world coordinate system\n\n // compute transform\n mat3 mat = mInv * transposeMat3( mat3( T1, T2, N ) );\n\n // transform rect\n vec3 coords[ 4 ];\n coords[ 0 ] = mat * ( rectCoords[ 0 ] - P );\n coords[ 1 ] = mat * ( rectCoords[ 1 ] - P );\n coords[ 2 ] = mat * ( rectCoords[ 2 ] - P );\n coords[ 3 ] = mat * ( rectCoords[ 3 ] - P );\n\n // project rect onto sphere\n coords[ 0 ] = normalize( coords[ 0 ] );\n coords[ 1 ] = normalize( coords[ 1 ] );\n coords[ 2 ] = normalize( coords[ 2 ] );\n coords[ 3 ] = normalize( coords[ 3 ] );\n\n // calculate vector form factor\n vec3 vectorFormFactor = vec3( 0.0 );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 0 ], coords[ 1 ] );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 1 ], coords[ 2 ] );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 2 ], coords[ 3 ] );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 3 ], coords[ 0 ] );\n\n // adjust for horizon clipping\n float result = LTC_ClippedSphereFormFactor( vectorFormFactor );\n\n/*\n // alternate method of adjusting for horizon clipping (see referece)\n // refactoring required\n float len = length( vectorFormFactor );\n float z = vectorFormFactor.z / len;\n\n const float LUT_SIZE  = 64.0;\n const float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;\n const float LUT_BIAS  = 0.5 / LUT_SIZE;\n\n // tabulated horizon-clipped sphere, apparently...\n vec2 uv = vec2( z * 0.5 + 0.5, len );\n uv = uv * LUT_SCALE + LUT_BIAS;\n\n float scale = texture2D( ltc_2, uv ).w;\n\n float result = len * scale;\n*/\n\n return vec3( result );\n\n}\n\n// End Rect Area Light\n\n// ref: https://www.unrealengine.com/blog/physically-based-shading-on-mobile - environmentBRDF for GGX on mobile\nvec3 BRDF_Specular_GGX_Environment( const in GeometricContext geometry, const in vec3 specularColor, const in float roughness ) {\n\n float dotNV = saturate( dot( geometry.normal, geometry.viewDir ) );\n\n const vec4 c0 = vec4( - 1, - 0.0275, - 0.572, 0.022 );\n\n const vec4 c1 = vec4( 1, 0.0425, 1.04, - 0.04 );\n\n vec4 r = roughness * c0 + c1;\n\n float a004 = min( r.x * r.x, exp2( - 9.28 * dotNV ) ) * r.x + r.y;\n\n vec2 AB = vec2( -1.04, 1.04 ) * a004 + r.zw;\n\n return specularColor * AB.x + AB.y;\n\n} // validated\n\n\nfloat G_BlinnPhong_Implicit( /* const in float dotNL, const in float dotNV */ ) {\n\n // geometry term is (n dot l)(n dot v) / 4(n dot l)(n dot v)\n return 0.25;\n\n}\n\nfloat D_BlinnPhong( const in float shininess, const in float dotNH ) {\n\n return RECIPROCAL_PI * ( shininess * 0.5 + 1.0 ) * pow( dotNH, shininess );\n\n}\n\nvec3 BRDF_Specular_BlinnPhong( const in IncidentLight incidentLight, const in GeometricContext geometry, const in vec3 specularColor, const in float shininess ) {\n\n vec3 halfDir = normalize( incidentLight.direction + geometry.viewDir );\n\n //float dotNL = saturate( dot( geometry.normal, incidentLight.direction ) );\n //float dotNV = saturate( dot( geometry.normal, geometry.viewDir ) );\n float dotNH = saturate( dot( geometry.normal, halfDir ) );\n float dotLH = saturate( dot( incidentLight.direction, halfDir ) );\n\n vec3 F = F_Schlick( specularColor, dotLH );\n\n float G = G_BlinnPhong_Implicit( /* dotNL, dotNV */ );\n\n float D = D_BlinnPhong( shininess, dotNH );\n\n return F * ( G * D );\n\n} // validated\n\n// source: http://simonstechblog.blogspot.ca/2011/12/microfacet-brdf.html\nfloat GGXRoughnessToBlinnExponent( const in float ggxRoughness ) {\n return ( 2.0 / pow2( ggxRoughness + 0.0001 ) - 2.0 );\n}\n\nfloat BlinnExponentToGGXRoughness( const in float blinnExponent ) {\n return sqrt( 2.0 / ( blinnExponent + 2.0 ) );\n}\n";
     const bumpMap_pars_frag = "#ifdef USE_BUMPMAP\n\n uniform sampler2D bumpMap;\n uniform float bumpScale;\n\n // Derivative maps - bump mapping unparametrized surfaces by Morten Mikkelsen\n // http://mmikkelsen3d.blogspot.sk/2011/07/derivative-maps.html\n\n // Evaluate the derivative of the height w.r.t. screen-space using forward differencing (listing 2)\n\n vec2 dHdxy_fwd(vec2 uv) {\n\n  vec2 dSTdx = dFdx( uv );\n  vec2 dSTdy = dFdy( uv );\n\n  float Hll = bumpScale * texture2D( bumpMap, uv ).x;\n  float dBx = bumpScale * texture2D( bumpMap, uv + dSTdx ).x - Hll;\n  float dBy = bumpScale * texture2D( bumpMap, uv + dSTdy ).x - Hll;\n\n  return vec2( dBx, dBy );\n\n }\n\n vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy) {\n\n  vec3 vSigmaX = dFdx( surf_pos );\n  vec3 vSigmaY = dFdy( surf_pos );\n  vec3 vN = surf_norm;  // normalized\n\n  vec3 R1 = cross( vSigmaY, vN );\n  vec3 R2 = cross( vN, vSigmaX );\n\n  float fDet = dot( vSigmaX, R1 );\n\n  vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );\n  return normalize( abs( fDet ) * surf_norm - vGrad );\n\n }\n\n#endif\n";
     const bumpmap_pars_fragment = "#ifdef USE_BUMPMAP\n\n uniform sampler2D bumpMap;\n uniform float bumpScale;\n\n // Bump Mapping Unparametrized Surfaces on the GPU by Morten S. Mikkelsen\n // http://api.unrealengine.com/attachments/Engine/Rendering/LightingAndShadows/BumpMappingWithoutTangentSpace/mm_sfgrad_bump.pdf\n\n // Evaluate the derivative of the height w.r.t. screen-space using forward differencing (listing 2)\n\n vec2 dHdxy_fwd() {\n\n  vec2 dSTdx = dFdx( vUv );\n  vec2 dSTdy = dFdy( vUv );\n\n  float Hll = bumpScale * texture2D( bumpMap, vUv ).x;\n  float dBx = bumpScale * texture2D( bumpMap, vUv + dSTdx ).x - Hll;\n  float dBy = bumpScale * texture2D( bumpMap, vUv + dSTdy ).x - Hll;\n\n  return vec2( dBx, dBy );\n\n }\n\n vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy ) {\n\n  // Workaround for Adreno 3XX dFd*( vec3 ) bug. See #9988\n\n  vec3 vSigmaX = vec3( dFdx( surf_pos.x ), dFdx( surf_pos.y ), dFdx( surf_pos.z ) );\n  vec3 vSigmaY = vec3( dFdy( surf_pos.x ), dFdy( surf_pos.y ), dFdy( surf_pos.z ) );\n  vec3 vN = surf_norm;  // normalized\n\n  vec3 R1 = cross( vSigmaY, vN );\n  vec3 R2 = cross( vN, vSigmaX );\n\n  float fDet = dot( vSigmaX, R1 );\n\n  fDet *= ( float( gl_FrontFacing ) * 2.0 - 1.0 );\n\n  vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );\n  return normalize( abs( fDet ) * surf_norm - vGrad );\n\n }\n\n#endif\n";
     const clipping_planes_fragment = "#if defined(NUM_CLIPPING_PLANES) && NUM_CLIPPING_PLANES > 0\n\n vec4 plane;\n\n // #pragma unroll_loop\n for ( int i = 0; i < UNION_CLIPPING_PLANES; i ++ ) {\n\n  plane = clippingPlanes[ i ];\n  if ( dot( vViewPosition, plane.xyz ) > plane.w ) discard;\n\n }\n\n #if UNION_CLIPPING_PLANES < NUM_CLIPPING_PLANES\n\n  bool clipped = true;\n\n  // #pragma unroll_loop\n  for ( int i = UNION_CLIPPING_PLANES; i < NUM_CLIPPING_PLANES; i ++ ) {\n\n   plane = clippingPlanes[ i ];\n   clipped = ( dot( vViewPosition, plane.xyz ) > plane.w ) && clipped;\n\n  }\n\n  if ( clipped ) discard;\n\n #endif\n\n#endif\n";
@@ -9799,7 +9502,7 @@ declare namespace egret3d.ShaderChunk {
     const dithering_pars_fragment = "#if defined( DITHERING )\n\n // based on https://www.shadertoy.com/view/MslGR8\n vec3 dithering( vec3 color ) {\n  //Calculate grid position\n  float grid_position = rand( gl_FragCoord.xy );\n\n  //Shift the individual colors differently, thus making it even harder to see the dithering pattern\n  vec3 dither_shift_RGB = vec3( 0.25 / 255.0, -0.25 / 255.0, 0.25 / 255.0 );\n\n  //modify shift acording to grid position.\n  dither_shift_RGB = mix( 2.0 * dither_shift_RGB, -2.0 * dither_shift_RGB, grid_position );\n\n  //shift the color by dither_shift\n  return color + dither_shift_RGB;\n }\n\n#endif\n";
     const emissivemap_fragment = "#ifdef USE_EMISSIVEMAP\n\n vec4 emissiveColor = texture2D( emissiveMap, vUv );\n\n emissiveColor.rgb = emissiveMapTexelToLinear( emissiveColor ).rgb;\n\n totalEmissiveRadiance *= emissiveColor.rgb;\n\n#endif\n";
     const emissivemap_pars_fragment = "#ifdef USE_EMISSIVEMAP\n\n uniform sampler2D emissiveMap;\n\n#endif\n";
-    const encodings_fragment = "  gl_FragColor = linearToOutputTexel( gl_FragColor );\n";
+    const encodings_fragment = "  // gl_FragColor = linearToOutputTexel( gl_FragColor );\n";
     const encodings_pars_fragment = "// For a discussion of what this is, please read this: http://lousodrome.net/blog/light/2013/05/26/gamma-correct-and-hdr-rendering-in-a-32-bits-buffer/\n\nvec4 LinearToLinear( in vec4 value ) {\n return value;\n}\n\nvec4 GammaToLinear( in vec4 value, in float gammaFactor ) {\n return vec4( pow( value.xyz, vec3( gammaFactor ) ), value.w );\n}\nvec4 LinearToGamma( in vec4 value, in float gammaFactor ) {\n return vec4( pow( value.xyz, vec3( 1.0 / gammaFactor ) ), value.w );\n}\n\nvec4 sRGBToLinear( in vec4 value ) {\n return vec4( mix( pow( value.rgb * 0.9478672986 + vec3( 0.0521327014 ), vec3( 2.4 ) ), value.rgb * 0.0773993808, vec3( lessThanEqual( value.rgb, vec3( 0.04045 ) ) ) ), value.w );\n}\nvec4 LinearTosRGB( in vec4 value ) {\n return vec4( mix( pow( value.rgb, vec3( 0.41666 ) ) * 1.055 - vec3( 0.055 ), value.rgb * 12.92, vec3( lessThanEqual( value.rgb, vec3( 0.0031308 ) ) ) ), value.w );\n}\n\nvec4 RGBEToLinear( in vec4 value ) {\n return vec4( value.rgb * exp2( value.a * 255.0 - 128.0 ), 1.0 );\n}\nvec4 LinearToRGBE( in vec4 value ) {\n float maxComponent = max( max( value.r, value.g ), value.b );\n float fExp = clamp( ceil( log2( maxComponent ) ), -128.0, 127.0 );\n return vec4( value.rgb / exp2( fExp ), ( fExp + 128.0 ) / 255.0 );\n//  return vec4( value.brg, ( 3.0 + 128.0 ) / 256.0 );\n}\n\n// reference: http://iwasbeingirony.blogspot.ca/2010/06/difference-between-rgbm-and-rgbd.html\nvec4 RGBMToLinear( in vec4 value, in float maxRange ) {\n return vec4( value.xyz * value.w * maxRange, 1.0 );\n}\nvec4 LinearToRGBM( in vec4 value, in float maxRange ) {\n float maxRGB = max( value.x, max( value.g, value.b ) );\n float M      = clamp( maxRGB / maxRange, 0.0, 1.0 );\n M            = ceil( M * 255.0 ) / 255.0;\n return vec4( value.rgb / ( M * maxRange ), M );\n}\n\n// reference: http://iwasbeingirony.blogspot.ca/2010/06/difference-between-rgbm-and-rgbd.html\nvec4 RGBDToLinear( in vec4 value, in float maxRange ) {\n return vec4( value.rgb * ( ( maxRange / 255.0 ) / value.a ), 1.0 );\n}\nvec4 LinearToRGBD( in vec4 value, in float maxRange ) {\n float maxRGB = max( value.x, max( value.g, value.b ) );\n float D      = max( maxRange / maxRGB, 1.0 );\n D            = min( floor( D ) / 255.0, 1.0 );\n return vec4( value.rgb * ( D * ( 255.0 / maxRange ) ), D );\n}\n\n// LogLuv reference: http://graphicrants.blogspot.ca/2009/04/rgbm-color-encoding.html\n\n// M matrix, for encoding\nconst mat3 cLogLuvM = mat3( 0.2209, 0.3390, 0.4184, 0.1138, 0.6780, 0.7319, 0.0102, 0.1130, 0.2969 );\nvec4 LinearToLogLuv( in vec4 value )  {\n vec3 Xp_Y_XYZp = value.rgb * cLogLuvM;\n Xp_Y_XYZp = max(Xp_Y_XYZp, vec3(1e-6, 1e-6, 1e-6));\n vec4 vResult;\n vResult.xy = Xp_Y_XYZp.xy / Xp_Y_XYZp.z;\n float Le = 2.0 * log2(Xp_Y_XYZp.y) + 127.0;\n vResult.w = fract(Le);\n vResult.z = (Le - (floor(vResult.w*255.0))/255.0)/255.0;\n return vResult;\n}\n\n// Inverse M matrix, for decoding\nconst mat3 cLogLuvInverseM = mat3( 6.0014, -2.7008, -1.7996, -1.3320, 3.1029, -5.7721, 0.3008, -1.0882, 5.6268 );\nvec4 LogLuvToLinear( in vec4 value ) {\n float Le = value.z * 255.0 + value.w;\n vec3 Xp_Y_XYZp;\n Xp_Y_XYZp.y = exp2((Le - 127.0) / 2.0);\n Xp_Y_XYZp.z = Xp_Y_XYZp.y / value.y;\n Xp_Y_XYZp.x = value.x * Xp_Y_XYZp.z;\n vec3 vRGB = Xp_Y_XYZp.rgb * cLogLuvInverseM;\n return vec4( max(vRGB, 0.0), 1.0 );\n}\n";
     const envmap_fragment = "#ifdef USE_ENVMAP\n\n #if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\n  vec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );\n\n  // Transforming Normal Vectors with the Inverse Transformation\n  vec3 worldNormal = inverseTransformDirection( normal, viewMatrix );\n\n  #ifdef ENVMAP_MODE_REFLECTION\n\n   vec3 reflectVec = reflect( cameraToVertex, worldNormal );\n\n  #else\n\n   vec3 reflectVec = refract( cameraToVertex, worldNormal, refractionRatio );\n\n  #endif\n\n #else\n\n  vec3 reflectVec = vReflect;\n\n #endif\n\n #ifdef ENVMAP_TYPE_CUBE\n\n  vec4 envColor = textureCube( envMap, vec3( flipEnvMap * reflectVec.x, reflectVec.yz ) );\n\n #elif defined( ENVMAP_TYPE_EQUIREC )\n\n  vec2 sampleUV;\n\n  reflectVec = normalize( reflectVec );\n\n  sampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\n  sampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\n  vec4 envColor = texture2D( envMap, sampleUV );\n\n #elif defined( ENVMAP_TYPE_SPHERE )\n\n  reflectVec = normalize( reflectVec );\n\n  vec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0, 0.0, 1.0 ) );\n\n  vec4 envColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5 );\n\n #else\n\n  vec4 envColor = vec4( 0.0 );\n\n #endif\n\n envColor = envMapTexelToLinear( envColor );\n\n #ifdef ENVMAP_BLENDING_MULTIPLY\n\n  outgoingLight = mix( outgoingLight, outgoingLight * envColor.xyz, specularStrength * reflectivity );\n\n #elif defined( ENVMAP_BLENDING_MIX )\n\n  outgoingLight = mix( outgoingLight, envColor.xyz, specularStrength * reflectivity );\n\n #elif defined( ENVMAP_BLENDING_ADD )\n\n  outgoingLight += envColor.xyz * specularStrength * reflectivity;\n\n #endif\n\n#endif\n";
     const envmap_pars_fragment = "#if defined( USE_ENVMAP ) || defined( PHYSICAL )\n uniform float reflectivity;\n uniform float envMapIntensity;\n#endif\n\n#ifdef USE_ENVMAP\n\n #if ! defined( PHYSICAL ) && ( defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) )\n  varying vec3 vWorldPosition;\n #endif\n\n #ifdef ENVMAP_TYPE_CUBE\n  uniform samplerCube envMap;\n #else\n  uniform sampler2D envMap;\n #endif\n uniform float flipEnvMap;\n uniform int maxMipLevel;\n\n #if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) || defined( PHYSICAL )\n  uniform float refractionRatio;\n #else\n  varying vec3 vReflect;\n #endif\n\n#endif\n";
@@ -9818,7 +9521,7 @@ declare namespace egret3d.ShaderChunk {
     const lightmap_pars_fragment = "#ifdef USE_LIGHTMAP\n\n uniform sampler2D lightMap;\n uniform float lightMapIntensity;\n\n#endif";
     const lightmap_pars_vert = "#ifdef LIGHTMAP\n    attribute vec4 uv2;\n    uniform highp vec4 lightMapOffset;\n    uniform lowp float lightMapUV;\n    varying highp vec2 xlv_TEXCOORD1;\n#endif";
     const lightmap_vert = "#ifdef LIGHTMAP\n    highp vec2 beforelightUV = uv2.xy;\n    if(lightMapUV == 0.0)\n    {\n        beforelightUV = uv.xy;\n    }\n    highp float u = beforelightUV.x * lightMapOffset.x + lightMapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * lightMapOffset.y + lightMapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n#endif";
-    const lights_fragment_begin = "/**\n * This is a template that can be used to light a material, it uses pluggable\n * RenderEquations (RE)for specific lighting scenarios.\n *\n * Instructions for use:\n * - Ensure that both RE_Direct, RE_IndirectDiffuse and RE_IndirectSpecular are defined\n * - If you have defined an RE_IndirectSpecular, you need to also provide a Material_LightProbeLOD. <---- ???\n * - Create a material parameter that is to be passed as the third parameter to your lighting functions.\n *\n * TODO:\n * - Add area light support.\n * - Add sphere light support.\n * - Add diffuse light probe (irradiance cubemap) support.\n */\n\nGeometricContext geometry;\n\ngeometry.position = - vViewPosition;\ngeometry.normal = normal;\ngeometry.viewDir = normalize( vViewPosition );\n\nIncidentLight directLight;\n\n#if ( NUM_POINT_LIGHTS > 0 ) && defined( RE_Direct )\n\n PointLight pointLight;\n\n #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  pointLight = pointLights[ i ];\n\n  getPointDirectLightIrradiance( pointLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( pointLight.shadow, directLight.visible ) ) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if ( NUM_SPOT_LIGHTS > 0 ) && defined( RE_Direct )\n\n SpotLight spotLight;\n\n #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\n  spotLight = spotLights[ i ];\n\n  getSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( spotLight.shadow, directLight.visible ) ) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if ( NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )\n\n DirectionalLight directionalLight;\n\n #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  directionalLight = directionalLights[ i ];\n\n  getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if ( NUM_RECT_AREA_LIGHTS > 0 ) && defined( RE_Direct_RectArea )\n\n RectAreaLight rectAreaLight;\n\n #pragma unroll_loop\n for ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\n  rectAreaLight = rectAreaLights[ i ];\n  RE_Direct_RectArea( rectAreaLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if defined( RE_IndirectDiffuse )\n\n vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );\n\n #if ( NUM_HEMI_LIGHTS > 0 )\n\n  #pragma unroll_loop\n  for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\n   irradiance += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry );\n\n  }\n\n #endif\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n vec3 radiance = vec3( 0.0 );\n vec3 clearCoatRadiance = vec3( 0.0 );\n\n#endif\n";
+    const lights_fragment_begin = "/**\n * This is a template that can be used to light a material, it uses pluggable\n * RenderEquations (RE)for specific lighting scenarios.\n *\n * Instructions for use:\n * - Ensure that both RE_Direct, RE_IndirectDiffuse and RE_IndirectSpecular are defined\n * - If you have defined an RE_IndirectSpecular, you need to also provide a Material_LightProbeLOD. <---- ???\n * - Create a material parameter that is to be passed as the third parameter to your lighting functions.\n *\n * TODO:\n * - Add area light support.\n * - Add sphere light support.\n * - Add diffuse light probe (irradiance cubemap) support.\n */\n\nGeometricContext geometry;\n\ngeometry.position = - vViewPosition;\ngeometry.normal = normal;\ngeometry.viewDir = normalize( vViewPosition );\n\nIncidentLight directLight;\n\n#if (defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0 ) && defined( RE_Direct )\n\n PointLight pointLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  // pointLight = pointLights[ i ];\n  pointLight.position = vec3(pointLights[i* 15 + 0], pointLights[i * 15 + 1], pointLights[i * 15 + 2]);\n  pointLight.color = vec3(pointLights[i* 15 + 3], pointLights[i * 15 + 4], pointLights[i * 15 + 5]);\n  pointLight.distance = pointLights[i * 15 + 6];\n  pointLight.decay = pointLights[i * 15 + 7];\n\n  getPointDirectLightIrradiance( pointLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( pointLight.shadow, directLight.visible ) ) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0 ) && defined( RE_Direct )\n\n SpotLight spotLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\n  // spotLight = spotLights[ i ];\n  spotLight.position = vec3(spotLights[i * 18 + 0], spotLights[i * 18 + 1], spotLights[i * 18 + 2]);\n  spotLight.direction = vec3(spotLights[i * 18 + 3], spotLights[i * 18 + 4], spotLights[i * 18 + 5]);\n  spotLight.color = vec3(spotLights[i * 18 + 6], spotLights[i * 18 + 7], spotLights[i * 18 + 8]);\n  spotLight.distance = spotLights[i * 18 + 9];\n  spotLight.decay = spotLights[i * 18 + 10];\n  spotLight.coneCos = spotLights[i * 18 + 11];\n  spotLight.penumbraCos = spotLights[i * 18 + 12];\n  getSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( spotLight.shadow, directLight.visible ) ) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )\n\n DirectionalLight directionalLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  // directionalLight = directionalLights[ i ];\n  directionalLight.direction = vec3(directionalLights[i * 12 + 0], directionalLights[i * 12 + 1], directionalLights[i * 12 + 2]);\n  directionalLight.color = vec3(directionalLights[i * 12 + 3], directionalLights[i * 12 + 4], directionalLights[i * 12 + 5]);\n  getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_RECT_AREA_LIGHTS) &&  NUM_RECT_AREA_LIGHTS > 0 ) && defined( RE_Direct_RectArea )\n\n RectAreaLight rectAreaLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\n  rectAreaLight = rectAreaLights[ i ];\n  RE_Direct_RectArea( rectAreaLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if defined( RE_IndirectDiffuse )\n\n vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );\n\n #if (defined(NUM_HEMI_LIGHTS) &&  NUM_HEMI_LIGHTS > 0 )\n\n  // #pragma unroll_loop\n  for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\n   irradiance += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry );\n\n  }\n\n #endif\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n vec3 radiance = vec3( 0.0 );\n vec3 clearCoatRadiance = vec3( 0.0 );\n\n#endif\n";
     const lights_fragment_end = "#if defined( RE_IndirectDiffuse )\n\n RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n RE_IndirectSpecular( radiance, clearCoatRadiance, geometry, material, reflectedLight );\n\n#endif\n";
     const lights_fragment_maps = "#if defined( RE_IndirectDiffuse )\n\n #ifdef USE_LIGHTMAP\n\n  vec3 lightMapIrradiance = texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\n\n  #ifndef PHYSICALLY_CORRECT_LIGHTS\n\n   lightMapIrradiance *= PI; // factor of PI should not be present; included here to prevent breakage\n\n  #endif\n\n  irradiance += lightMapIrradiance;\n\n #endif\n\n #if defined( USE_ENVMAP ) && defined( PHYSICAL ) && defined( ENVMAP_TYPE_CUBE_UV )\n\n  irradiance += getLightProbeIndirectIrradiance( /*lightProbe,*/ geometry, maxMipLevel );\n\n #endif\n\n#endif\n\n#if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )\n\n radiance += getLightProbeIndirectRadiance( /*specularLightProbe,*/ geometry, Material_BlinnShininessExponent( material ), maxMipLevel );\n\n #ifndef STANDARD\n  clearCoatRadiance += getLightProbeIndirectRadiance( /*specularLightProbe,*/ geometry, Material_ClearCoat_BlinnShininessExponent( material ), maxMipLevel );\n #endif\n\n#endif\n";
     const lights_lambert_vertex = "vec3 diffuse = vec3( 1.0 );\n\nGeometricContext geometry;\ngeometry.position = mvPosition.xyz;\ngeometry.normal = normalize( transformedNormal );\ngeometry.viewDir = normalize( -mvPosition.xyz );\n\nGeometricContext backGeometry;\nbackGeometry.position = geometry.position;\nbackGeometry.normal = -geometry.normal;\nbackGeometry.viewDir = geometry.viewDir;\n\nvLightFront = vec3( 0.0 );\n\n#ifdef DOUBLE_SIDED\n vLightBack = vec3( 0.0 );\n#endif\n\nIncidentLight directLight;\nfloat dotNL;\nvec3 directLightColor_Diffuse;\n\n#if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0\n PointLight pointLight;\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  pointLight.position = vec3(pointLights[i* 15 + 0], pointLights[i * 15 + 1], pointLights[i * 15 + 2]);\n  pointLight.color = vec3(pointLights[i* 15 + 3], pointLights[i * 15 + 4], pointLights[i * 15 + 5]);\n  pointLight.distance = pointLights[i * 15 + 6];\n  pointLight.decay = pointLights[i * 15 + 7];\n  getPointDirectLightIrradiance( pointLight, geometry, directLight );\n\n  dotNL = dot( geometry.normal, directLight.direction );\n  directLightColor_Diffuse = PI * directLight.color;\n\n  vLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\n  #endif\n\n }\n\n#endif\n\n#if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0\n SpotLight spotLight;\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n  spotLight.position = vec3(spotLights[i * 18 + 0], spotLights[i * 18 + 1], spotLights[i * 18 + 2]);\n  spotLight.direction = vec3(spotLights[i * 18 + 3], spotLights[i * 18 + 4], spotLights[i * 18 + 5]);\n  spotLight.color = vec3(spotLights[i * 18 + 6], spotLights[i * 18 + 7], spotLights[i * 18 + 8]);\n  spotLight.distance = spotLights[i * 18 + 9];\n  spotLight.decay = spotLights[i * 18 + 10];\n  spotLight.coneCos = spotLights[i * 18 + 11];\n  spotLight.penumbraCos = spotLights[i * 18 + 12];\n\n  getSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\n  dotNL = dot( geometry.normal, directLight.direction );\n  directLightColor_Diffuse = PI * directLight.color;\n\n  vLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\n  #endif\n }\n\n#endif\n\n/*\n#if NUM_RECT_AREA_LIGHTS > 0\n\n for ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\n  // TODO (abelnation): implement\n\n }\n\n#endif\n*/\n\n#if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0\n DirectionalLight directionalLight;\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  directionalLight.direction = vec3(directionalLights[i * 12 + 0], directionalLights[i * 12 + 1], directionalLights[i * 12 + 2]);\n  directionalLight.color = vec3(directionalLights[i * 12 + 3], directionalLights[i * 12 + 4], directionalLights[i * 12 + 5]);\n  getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\n  dotNL = dot( geometry.normal, directLight.direction );\n  directLightColor_Diffuse = PI * directLight.color;\n  // directLightColor_Diffuse = directLight.color;\n\n  vLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n  // vLightFront += directLightColor_Diffuse;\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\n  #endif\n\n }\n\n#endif\n\n#if defined(NUM_HEMI_LIGHTS) && NUM_HEMI_LIGHTS > 0\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\n  vLightFront += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry );\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += getHemisphereLightIrradiance( hemisphereLights[ i ], backGeometry );\n\n  #endif\n\n }\n\n#endif\n";
@@ -10565,7 +10268,7 @@ declare namespace egret3d {
         /**
          *
          */
-        uploadVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number): void;
+        uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number): void;
         /**
          *
          */
@@ -10622,7 +10325,6 @@ declare namespace egret3d {
         getReader(redOnly?: boolean): TextureReader;
     }
     abstract class RenderTarget implements IRenderTarget {
-        static useNull(): void;
         /**
          * @internal
          */
@@ -10717,10 +10419,11 @@ declare namespace egret3d {
         private readonly _lightCamera;
         private readonly _filteredLights;
         private _cacheContextVersion;
+        private _cacheSubMeshIndex;
         private _cacheMaterialVerision;
         private _cacheContext;
-        private _cacheMaterial;
         private _cacheMesh;
+        private _cacheMaterial;
         private _updateContextUniforms(program, context, technique, forceUpdate);
         private _updateUniforms(program, material, technique, forceUpdate);
         private _updateAttributes(program, mesh, subMeshIndex, technique, forceUpdate);
@@ -10808,98 +10511,67 @@ declare namespace egret3d {
         static test(): void;
     }
 }
+declare type int = number;
+declare type uint = number;
 declare namespace paper {
     /**
      *
      */
-    const enum HideFlags {
-        /**
-         *
-         */
-        None = 0,
-        /**
-         *
-         */
-        NotEditable = 1,
-        /**
-         *
-         */
-        Hide = 2,
-    }
+    let Time: Clock;
     /**
      *
      */
-    const enum DefaultNames {
-        NoName = "NoName",
-        Global = "Global",
-        MainCamera = "MainCamera",
-        EditorCamera = "EditorCamera",
-        Editor = "Editor",
-    }
+    let Application: ECS;
     /**
      *
      */
-    const enum DefaultTags {
-        Untagged = "",
-        Respawn = "Respawn",
-        Finish = "Finish",
-        EditorOnly = "EditorOnly",
-        MainCamera = "MainCamera",
-        Player = "Player",
-        GameController = "GameController",
-        Global = "Global",
+    class ECS {
+        private static _instance;
+        /**
+         *
+         */
+        static getInstance(): ECS;
+        private constructor();
+        /**
+         *
+         */
+        readonly version: string;
+        /**
+         * 系统管理器。
+         */
+        readonly systemManager: SystemManager;
+        /**
+         * 场景管理器。
+         */
+        readonly sceneManager: SceneManager;
+        private _isEditor;
+        private _isFocused;
+        private _isPlaying;
+        private _isRunning;
+        private _bindUpdate;
+        _option: egret3d.RequiredRuntimeOptions;
+        _canvas: HTMLCanvasElement;
+        _webgl: WebGLRenderingContext;
+        private _update();
+        init({isEditor, isPlaying, systems, option, canvas, webgl}?: {
+            isEditor?: boolean;
+            isPlaying?: boolean;
+            systems?: (new () => BaseSystem)[];
+            option?: {};
+            canvas?: {};
+            webgl?: {};
+        }): void;
+        /**
+         *
+         */
+        pause(): void;
+        resume(): void;
+        callLater(callback: () => void): void;
+        readonly isEditor: boolean;
+        readonly isFocused: boolean;
+        readonly isPlaying: boolean;
+        readonly isRunning: boolean;
     }
-    /**
-     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
-     * 这个属性可以实现相机的选择性剔除。
-     */
-    const enum Layer {
-        Default = 2,
-        UI = 4,
-        UserLayer1 = 8,
-        UserLayer2 = 16,
-        UserLayer3 = 32,
-        UserLayer4 = 64,
-        UserLayer5 = 128,
-        UserLayer6 = 240,
-        UserLayer7 = 256,
-        UserLayer8 = 512,
-        UserLayer9 = 1024,
-        UserLayer10 = 2048,
-        UserLayer11 = 3840,
-    }
-    /**
-     * culling mask
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * culling mask 枚举。
-     * 相机的cullingmask与renderer的renderLayer相匹配，才会执行渲染。否则将会被跳过。
-     * 这个属性可以实现相机的选择性剔除。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    const enum CullingMask {
-        Everything = 16777215,
-        Nothing = 1,
-        Default = 2,
-        UI = 4,
-        UserLayer1 = 8,
-        UserLayer2 = 16,
-        UserLayer3 = 32,
-        UserLayer4 = 64,
-        UserLayer5 = 128,
-        UserLayer6 = 240,
-        UserLayer7 = 256,
-        UserLayer8 = 512,
-        UserLayer9 = 1024,
-        UserLayer10 = 2048,
-        UserLayer11 = 3840,
-    }
-    function layerTest(cullingMask: CullingMask, layer: Layer): boolean;
 }
 declare namespace paper.editor {
     /**
@@ -10959,16 +10631,32 @@ declare namespace egret3d {
     /**
      *
      */
-    class Sphere {
+    class Plane implements paper.IRelease<Plane>, paper.ISerializable {
+        private static readonly _instances;
         /**
          *
          */
-        radius: number;
+        static create(normal?: Readonly<IVector3>, constant?: number): Plane;
+        release(): this;
         /**
          *
          */
-        readonly center: Vector3;
-        copy(value: Sphere): void;
+        constant: number;
+        /**
+         *
+         */
+        readonly normal: Vector3;
+        private constructor();
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number]>): this;
+        clone(): Plane;
+        copy(value: Readonly<Plane>): this;
+        set(normal: Readonly<IVector3>, constant: number): this;
+        fromPoint(value: Readonly<IVector3>, normal?: Readonly<IVector3>): this;
+        fromPoints(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>, valueC: Readonly<IVector3>): this;
+        normalize(source?: Readonly<Plane>): this;
+        negate(source?: Readonly<Plane>): this;
+        getDistance(value: Readonly<IVector3>): number;
     }
 }
 declare namespace paper.editor {
@@ -11146,23 +10834,27 @@ declare namespace paper.editor {
         private selectGameObjects(gameObjs);
     }
 }
-declare namespace paper {
+declare namespace egret3d {
     /**
-     * @internal
+     *
      */
-    class GroupComponent extends paper.BaseComponent {
-        componentIndex: number;
-        componentClass: ComponentClass<BaseComponent>;
-        private readonly _components;
-        /**
-         * @internal
-         */
-        _addComponent(component: BaseComponent): void;
-        /**
-         * @internal
-         */
-        _removeComponent(component: BaseComponent): void;
-        readonly components: ReadonlyArray<BaseComponent>;
+    class Triangle implements paper.IRelease<Triangle>, paper.ISerializable {
+        private static readonly _instances;
+        static create(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): Triangle;
+        release(): this;
+        readonly a: Vector3;
+        readonly b: Vector3;
+        readonly c: Vector3;
+        private constructor();
+        serialize(): number[];
+        deserialize(element: Readonly<[number, number, number, number, number, number, number, number, number]>): void;
+        copy(value: Readonly<Triangle>): this;
+        clone(): Triangle;
+        set(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offsetA?: number, offsetB?: number, offsetC?: number): void;
+        getCenter(value: Vector3): Vector3;
+        getNormal(value: Vector3): Vector3;
+        getArea(): number;
     }
 }
 declare namespace paper.editor {
@@ -11170,23 +10862,43 @@ declare namespace paper.editor {
         constructor();
         onSet(): void;
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
     class xyAxis extends BaseGeo {
         constructor();
-        private _dragPlaneNormal1;
-        private _dragOffset1;
         onSet(): void;
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
+    }
+}
+declare namespace paper.editor {
+    class xzAxis extends BaseGeo {
+        constructor();
+        onSet(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
+    }
+}
+declare namespace paper.editor {
+    class yzAxis extends BaseGeo {
+        constructor();
+        onSet(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -11197,7 +10909,7 @@ declare namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -11208,7 +10920,7 @@ declare namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -11359,10 +11071,21 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
-     *
+     * @internal
      */
-    class MissingComponent extends BaseComponent {
-        missingObject: any | null;
+    class GroupComponent extends paper.BaseComponent {
+        componentIndex: number;
+        componentClass: ComponentClass<BaseComponent>;
+        private readonly _components;
+        /**
+         * @internal
+         */
+        _addComponent(component: BaseComponent): void;
+        /**
+         * @internal
+         */
+        _removeComponent(component: BaseComponent): void;
+        readonly components: ReadonlyArray<BaseComponent>;
     }
 }
 declare namespace paper.editor {
@@ -11655,7 +11378,7 @@ declare namespace paper.editor {
         private static helpVec36;
         private static verticesCameraSquare;
         private static getCameraSquare(obj);
-        static DrawArrow(m: egret3d.Matrix, color: number[], fixSize?: boolean): void;
+        static DrawArrow(m: egret3d.Matrix4, color: number[], fixSize?: boolean): void;
         private static xArrowMMatrix;
         private static yArrowMMatrix;
         private static zArrowMMatrix;
@@ -11683,7 +11406,7 @@ declare namespace paper.editor {
         setVec3(name: string, value: egret3d.Vector3): void;
         setVec4(name: string, value: egret3d.Vector4): void;
         setColor(name: string, value: number[]): void;
-        setMatrix(name: string, value: egret3d.Matrix): void;
+        setMatrix(name: string, value: egret3d.Matrix4): void;
         setTexture(name: string, value: number): void;
     }
 }
@@ -11694,6 +11417,20 @@ declare namespace paper.editor {
     const line_vert: string;
 }
 declare namespace egret3d {
+    class GizmoRenderSystem extends paper.BaseSystem {
+        private readonly _renderState;
+        onUpdate(): void;
+    }
+}
+declare namespace egret3d {
+    /**
+     * @deprecated
+     */
+    type Matrix = Matrix4;
+    /**
+     * @deprecated
+     */
+    const Matrix: typeof Matrix4;
     /**
      * @deprecated
      */
@@ -11712,12 +11449,339 @@ declare namespace egret3d {
     type RawScene = paper.RawScene;
 }
 declare namespace egret3d.particle {
-    /**
-    * @internal
-    */
-    function createBatchMesh(renderer: ParticleRenderer, maxParticleCount: number): Mesh;
-    /**
-     * @internal
-     */
-    function generatePositionAndDirection(position: Vector3, direction: Vector3, shape: ShapeModule): void;
+    const enum CurveMode {
+        Constant = 0,
+        Curve = 1,
+        TwoCurves = 2,
+        TwoConstants = 3,
+    }
+    const enum ColorGradientMode {
+        Color = 0,
+        Gradient = 1,
+        TwoColors = 2,
+        TwoGradients = 3,
+        RandomColor = 4,
+    }
+    const enum SimulationSpace {
+        Local = 0,
+        World = 1,
+        Custom = 2,
+    }
+    const enum ScalingMode {
+        Hierarchy = 0,
+        Local = 1,
+        Shape = 2,
+    }
+    const enum ShapeType {
+        None = -1,
+        Sphere = 0,
+        SphereShell = 1,
+        Hemisphere = 2,
+        HemisphereShell = 3,
+        Cone = 4,
+        Box = 5,
+        Mesh = 6,
+        ConeShell = 7,
+        ConeVolume = 8,
+        ConeVolumeShell = 9,
+        Circle = 10,
+        CircleEdge = 11,
+        SingleSidedEdge = 12,
+        MeshRenderer = 13,
+        SkinnedMeshRenderer = 14,
+        BoxShell = 15,
+        BoxEdge = 16,
+    }
+    const enum ShapeMultiModeValue {
+        Random = 0,
+        Loop = 1,
+        PingPong = 2,
+        BurstSpread = 3,
+    }
+    const enum AnimationType {
+        WholeSheet = 0,
+        SingleRow = 1,
+    }
+    const enum UVChannelFlags {
+        UV0 = 1,
+        UV1 = 2,
+        UV2 = 4,
+        UV3 = 8,
+    }
+    const enum GradientMode {
+        Blend = 0,
+        Fixed = 1,
+    }
+    class Keyframe implements paper.ISerializable {
+        time: number;
+        value: number;
+        serialize(): number[];
+        deserialize(element: any): this;
+        clone(source: Keyframe): void;
+    }
+    class AnimationCurve implements paper.ISerializable {
+        /**
+         * 功能与效率平衡长度取4
+         */
+        private readonly _keys;
+        private readonly _floatValues;
+        serialize(): number[][];
+        deserialize(element: any): this;
+        evaluate(t?: number): number;
+        readonly floatValues: Readonly<Float32Array>;
+        clone(source: AnimationCurve): void;
+    }
+    class GradientColorKey extends paper.BaseObject {
+        time: number;
+        readonly color: Color;
+        deserialize(element: any): this;
+    }
+    class GradientAlphaKey extends paper.BaseObject {
+        alpha: number;
+        time: number;
+        deserialize(element: any): this;
+    }
+    class Gradient extends paper.BaseObject {
+        mode: GradientMode;
+        private readonly alphaKeys;
+        private readonly colorKeys;
+        private readonly _alphaValue;
+        private readonly _colorValue;
+        deserialize(element: any): this;
+        evaluate(t: number, out: Color): Color;
+        readonly alphaValues: Readonly<Float32Array>;
+        readonly colorValues: Readonly<Float32Array>;
+    }
+    class MinMaxCurve extends paper.BaseObject {
+        mode: CurveMode;
+        constant: number;
+        constantMin: number;
+        constantMax: number;
+        readonly curve: AnimationCurve;
+        readonly curveMin: AnimationCurve;
+        readonly curveMax: AnimationCurve;
+        deserialize(element: any): this;
+        evaluate(t?: number): number;
+        clone(source: MinMaxCurve): void;
+    }
+    class MinMaxGradient extends paper.BaseObject {
+        mode: ColorGradientMode;
+        readonly color: Color;
+        readonly colorMin: Color;
+        readonly colorMax: Color;
+        readonly gradient: Gradient;
+        readonly gradientMin: Gradient;
+        readonly gradientMax: Gradient;
+        deserialize(element: any): this;
+        evaluate(t: number, out: Color): Color;
+    }
+    class Burst implements paper.ISerializable {
+        time: number;
+        minCount: number;
+        maxCount: number;
+        cycleCount: number;
+        repeatInterval: number;
+        serialize(): number[];
+        deserialize(element: any): this;
+    }
+    abstract class ParticleSystemModule extends paper.BaseObject {
+        enable: boolean;
+        protected _comp: ParticleComponent;
+        constructor(comp: ParticleComponent);
+        /**
+         * @internal
+         */
+        initialize(): void;
+        deserialize(element: any): this;
+    }
+    class MainModule extends ParticleSystemModule {
+        duration: number;
+        loop: boolean;
+        readonly startDelay: MinMaxCurve;
+        readonly startLifetime: MinMaxCurve;
+        readonly startSpeed: MinMaxCurve;
+        readonly startSizeX: MinMaxCurve;
+        readonly startSizeY: MinMaxCurve;
+        readonly startSizeZ: MinMaxCurve;
+        /**
+         * @internal
+         */
+        _startRotation3D: boolean;
+        readonly startRotationX: MinMaxCurve;
+        readonly startRotationY: MinMaxCurve;
+        readonly startRotationZ: MinMaxCurve;
+        readonly startColor: MinMaxGradient;
+        readonly gravityModifier: MinMaxCurve;
+        /**
+         * @internal
+         */
+        _simulationSpace: SimulationSpace;
+        /**
+         * @internal
+         */
+        _scaleMode: ScalingMode;
+        playOnAwake: boolean;
+        /**
+         * @internal
+         */
+        _maxParticles: number;
+        deserialize(element: any): this;
+        startRotation3D: boolean;
+        simulationSpace: SimulationSpace;
+        scaleMode: ScalingMode;
+        maxParticles: number;
+    }
+    class EmissionModule extends ParticleSystemModule {
+        readonly rateOverTime: MinMaxCurve;
+        readonly bursts: Array<Burst>;
+        deserialize(element: any): this;
+    }
+    class ShapeModule extends ParticleSystemModule {
+        shapeType: ShapeType;
+        radius: number;
+        angle: number;
+        length: number;
+        readonly arcSpeed: MinMaxCurve;
+        arcMode: ShapeMultiModeValue;
+        radiusSpread: number;
+        radiusMode: ShapeMultiModeValue;
+        readonly box: egret3d.Vector3;
+        randomDirection: boolean;
+        spherizeDirection: boolean;
+        deserialize(element: any): this;
+        invalidUpdate(): void;
+        generatePositionAndDirection(position: Vector3, direction: Vector3): void;
+    }
+    class VelocityOverLifetimeModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
+        _mode: CurveMode;
+        /**
+         * @internal
+         */
+        _space: SimulationSpace;
+        /**
+         * @internal
+         */
+        readonly _x: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _y: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _z: MinMaxCurve;
+        deserialize(element: any): this;
+        mode: CurveMode;
+        space: SimulationSpace;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class ColorOverLifetimeModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
+        _color: MinMaxGradient;
+        deserialize(element: any): this;
+        color: Readonly<MinMaxGradient>;
+    }
+    class SizeOverLifetimeModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
+        _separateAxes: boolean;
+        /**
+         * @internal
+         */
+        readonly _size: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _x: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _y: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _z: MinMaxCurve;
+        deserialize(element: any): this;
+        separateAxes: boolean;
+        size: Readonly<MinMaxCurve>;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class RotationOverLifetimeModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
+        _separateAxes: boolean;
+        /**
+         * @internal
+         */
+        readonly _x: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _y: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _z: MinMaxCurve;
+        deserialize(element: any): this;
+        separateAxes: boolean;
+        x: Readonly<MinMaxCurve>;
+        y: Readonly<MinMaxCurve>;
+        z: Readonly<MinMaxCurve>;
+    }
+    class TextureSheetAnimationModule extends ParticleSystemModule {
+        /**
+         * @internal
+         */
+        _numTilesX: number;
+        /**
+         * @internal
+         */
+        _numTilesY: number;
+        /**
+         * @internal
+         */
+        _animation: AnimationType;
+        /**
+         * @internal
+         */
+        _useRandomRow: boolean;
+        /**
+         * @internal
+         */
+        readonly _frameOverTime: MinMaxCurve;
+        /**
+         * @internal
+         */
+        readonly _startFrame: MinMaxCurve;
+        /**
+         * @internal
+         */
+        _cycleCount: number;
+        /**
+         * @internal
+         */
+        _rowIndex: number;
+        private readonly _floatValues;
+        deserialize(element: any): this;
+        numTilesX: number;
+        numTilesY: number;
+        animation: AnimationType;
+        useRandomRow: boolean;
+        frameOverTime: Readonly<MinMaxCurve>;
+        startFrame: Readonly<MinMaxCurve>;
+        cycleCount: number;
+        rowIndex: number;
+        readonly floatValues: Readonly<Float32Array>;
+    }
 }

@@ -86,9 +86,9 @@ namespace paper.editor {
 
         //TODO,描边
         private setStroke(picked: GameObject) {
-            let render = picked.getComponent(egret3d.MeshRenderer)
-            let mat = new egret3d.Material(egret3d.DefaultShaders.DIFFUSE_TINT_COLOR)
-            render.materials = [mat]
+            let render = picked.getComponent(egret3d.MeshRenderer);
+            // let mat = new egret3d.Material(egret3d.DefaultShaders.DIFFUSE_TINT_COLOR)
+            render.materials = [egret3d.DefaultMaterials.MESH_BASIC.clone()];
             console.log(render.materials)
         }
     }

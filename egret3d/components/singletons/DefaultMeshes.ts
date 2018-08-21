@@ -24,7 +24,7 @@ namespace egret3d {
             { // QUAD.
                 const mesh = new Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_quad.mash.glb";
+                mesh.name = "builtin/default_quad.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
@@ -65,7 +65,7 @@ namespace egret3d {
             { // QUAD_PARTICLE.
                 const mesh = new Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_quad_particle.mash.glb";
+                mesh.name = "builtin/default_quad_particle.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD_PARTICLE = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
@@ -106,7 +106,7 @@ namespace egret3d {
             { // PLANE.
                 const mesh = new Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_plan.mash.glb";
+                mesh.name = "builtin/default_plane.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PLANE = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
@@ -147,7 +147,7 @@ namespace egret3d {
             { // CUBE.
                 const mesh = new Mesh(24, 36);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_cube.mash.glb";
+                mesh.name = "builtin/default_cube.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CUBE = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
@@ -293,7 +293,7 @@ namespace egret3d {
             { // PYRAMID.
                 const mesh = new Mesh(16, 18);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_pyramid.mash.glb";
+                mesh.name = "builtin/default_pyramid.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
@@ -393,18 +393,18 @@ namespace egret3d {
                 ]);
             }
 
-            {//SPHERE.
+            { // SPHERE.
                 const mesh = DefaultMeshes.createSphereCCW();
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_sphere.mash.glb";
+                mesh.name = "builtin/default_sphere.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.SPHERE = mesh;
             }
 
-            {//CYLINDER.
+            { // CYLINDER.
                 const mesh = DefaultMeshes.createCylinderCCW();
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_cylinder.mash.glb";
+                mesh.name = "builtin/default_cylinder.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CYLINDER = mesh;
             }
@@ -576,9 +576,6 @@ namespace egret3d {
             for (let i = 0, l = tris.length; i < l; i++) {
                 indices[i] = tris[i];
             }
-
-            mesh.uploadSubVertexBuffer(_attributesB);
-            mesh.uploadSubIndexBuffer();
 
             return mesh;
         }

@@ -243,13 +243,6 @@ namespace egret3d {
             return config;
         }
 
-        public static createShaderAsset(name: string) {
-            const gltf = new GLTFAsset(name);
-            gltf.config = this.createGLTFExtensionsConfig();
-
-            return gltf;
-        }
-
         public static createTechnique(source: gltf.Technique) {
             const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } };
             for (const key in source.attributes) {
@@ -259,12 +252,12 @@ namespace egret3d {
 
             for (const key in source.uniforms) {
                 const uniform = source.uniforms[key];
-                let value = {};
-                if (Array.isArray(uniform.value)) {
-                    value = uniform.value.concat();
-                }
-                else if (uniform.type === gltf.UniformType.SAMPLER_2D && !(uniform.value instanceof egret3d.Texture)) {
+                let value: any;
+                if (uniform.type === gltf.UniformType.SAMPLER_2D && !(uniform.value instanceof egret3d.Texture)) {
                     value = egret3d.DefaultTextures.GRAY;
+                }
+                else if (Array.isArray(uniform.value)) {
+                    value = uniform.value.concat();
                 }
                 else {
                     value = uniform.value;
@@ -650,6 +643,14 @@ declare namespace gltf {
         DEPTH_TEST = 2929,
         POLYGON_OFFSET_FILL = 32823,
         SAMPLE_ALPHA_TO_COVERAGE = 32926,
+    }
+
+    export const enum BlendMode {
+        None,
+        Blend,
+        Blend_PreMultiply,
+        Add,
+        Add_PreMultiply,
     }
 
     export const enum BlendEquation {

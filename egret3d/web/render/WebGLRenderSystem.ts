@@ -421,7 +421,7 @@ namespace egret3d {
                 drawCalls.shadowFrustumCulling(camera);
                 //
                 const shadowCalls = drawCalls.shadowCalls;
-                const shadowMaterial = light.type === LightType.Point ? egret3d.DefaultMaterials.ShadowDistance : egret3d.DefaultMaterials.ShadowDepth;
+                const shadowMaterial = light.type === LightType.Point ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
                 for (const drawCall of shadowCalls) {
                     //TODO, 现在不支持蒙皮动画阴影     
                     this._renderCall(context, drawCall, shadowMaterial);
@@ -464,7 +464,7 @@ namespace egret3d {
                     if (camera.gameObject.scene !== camerasScene) {
                         continue;
                     }
-                    
+
                     if (filteredLights.length > 0) {
                         camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientLightColor); // TODO 性能优化
                     }
