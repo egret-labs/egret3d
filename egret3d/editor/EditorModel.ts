@@ -139,7 +139,7 @@ namespace paper.editor {
         }
 
         public createPrefabState(prefab: any) {
-            const state = CreatePrefabState.create( prefab );
+            const state = CreatePrefabState.create(prefab);
             this.addState(state);
         }
 
@@ -183,7 +183,7 @@ namespace paper.editor {
             }
         }
 
-        public async deserializeProperty(serializeData: any, editType: editor.EditType): Promise<any> {
+        public deserializeProperty(serializeData: any, editType: editor.EditType) {
             switch (editType) {
                 case editor.EditType.NUMBER:
                 case editor.EditType.TEXT:
@@ -204,19 +204,19 @@ namespace paper.editor {
                     return target;
                 case editor.EditType.SHADER:
                     const url = serializeData;
-                    const asset = await RES.getResAsync(url);
+                    const asset = RES.getRes(url);
                     return asset;
                 case editor.EditType.LIST:
                     return serializeData;
                 case editor.EditType.MATERIAL_ARRAY:
                     const materials: egret3d.Material[] = [];
                     for (const matrial of serializeData) {
-                        const asset = await RES.getResAsync(matrial.url);
+                        const asset = RES.getRes(matrial.url);
                         materials.push(asset);
                     }
                     return materials;
                 case editor.EditType.MESH:
-                    let meshAsset = await RES.getResAsync(serializeData);
+                    let meshAsset = RES.getRes(serializeData);
                     return meshAsset;
                 case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
@@ -633,8 +633,8 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createRevertPrefabState(revertData:editor.revertData,revertPrefabInstanceId:string) {
-            let state = RevertPrefabInstanceState.create(revertData,revertPrefabInstanceId);
+        public createRevertPrefabState(revertData: editor.revertData, revertPrefabInstanceId: string) {
+            let state = RevertPrefabInstanceState.create(revertData, revertPrefabInstanceId);
             this.addState(state);
         }
 
@@ -656,15 +656,14 @@ namespace paper.editor {
             return result;
         }
 
-        public updateAsset(asset:Asset,prefabInstance:GameObject | null = null)
-        {
-            const refs = this.findAssetRefs(Application.sceneManager.activeScene,asset);
+        public updateAsset(asset: Asset, prefabInstance: GameObject | null = null) {
+            const refs = this.findAssetRefs(Application.sceneManager.activeScene, asset);
 
-            let serializeData:ISerializedData;
+            let serializeData: ISerializedData;
             if (asset instanceof Prefab) {
                 serializeData = paper.serialize(prefabInstance!);
 
-            }else{
+            } else {
 
             }
 
@@ -677,27 +676,27 @@ namespace paper.editor {
             this._cacheIds.length = 0;
         }
 
-        private _cacheIds:string[] = [];
+        private _cacheIds: string[] = [];
 
         private findAssetRefs(target: any, as: Asset, refs: any[] | null = null) {
             if (this._cacheIds.indexOf(target.uuid) >= 0) {
                 return;
             }
-        
+
             this._cacheIds.push(target.uuid);
-        
+
             refs = refs || [];
-        
+
             for (const key in target) {
                 const source = target[key];
                 if ((typeof source) === "object") {
                     this.findFromChildren(source, as, refs, target, key);
                 }
             }
-        
+
             return refs;
         }
-        
+
         private findFromChildren(source: any, as: Asset, refs: any[], parent: any, key: any) {
             if ((typeof source) !== "object") {
                 return;
@@ -709,20 +708,20 @@ namespace paper.editor {
                     this.findFromChildren(element, as, refs, source, index);
                 }
             }
-        
+
             if (source.constructor === Object) {
                 for (const key in source) {
                     const element = source[key];
                     this.findFromChildren(element, as, refs, source, key);
                 }
             }
-        
+
             if (source instanceof BaseObject) {
                 if (source instanceof Asset && source === as) {
                     refs.push({ p: parent, k: key });
                     return;
                 }
-        
+
                 this.findAssetRefs(source, as, refs);
             }
         }
@@ -733,12 +732,12 @@ namespace paper.editor {
                 if (gameObj.extras!.linkedID) {
                     objs.push(gameObj);
                 }
-            }
 
-            for (let index = 0; index < gameObj.transform.children.length; index++) {
-                const element = gameObj.transform.children[index];
-                const obj: paper.GameObject = element.gameObject;
-                this.getAllGameObjectsFromPrefabInstance(obj, objs);
+                for (let index = 0; index < gameObj.transform.children.length; index++) {
+                    const element = gameObj.transform.children[index];
+                    const obj: paper.GameObject = element.gameObject;
+                    this.getAllGameObjectsFromPrefabInstance(obj, objs);
+                }
             }
 
             return objs;
