@@ -69,7 +69,7 @@ namespace egret3d {
          * 背景色
          */
         @paper.serializedField
-        public readonly backgroundColor: Color = new Color(0.13, 0.28, 0.51, 1);
+        public readonly backgroundColor: Color = Color.create(0.13, 0.28, 0.51, 1);
 
 
         /**
@@ -100,17 +100,17 @@ namespace egret3d {
         @paper.serializedField
         private _far: number = 1000;
 
-        private readonly matProjP: Matrix4 = new Matrix4;
-        private readonly matProjO: Matrix4 = new Matrix4;
+        private readonly matProjP: Matrix4 = Matrix4.create();
+        private readonly matProjO: Matrix4 = Matrix4.create();
         private readonly frameVecs: Vector3[] = [
-            new Vector3(),
-            new Vector3(),
-            new Vector3(),
-            new Vector3(),
-            new Vector3(),
-            new Vector3(),
-            new Vector3(),
-            new Vector3()
+           Vector3.create(),
+           Vector3.create(),
+           Vector3.create(),
+           Vector3.create(),
+           Vector3.create(),
+           Vector3.create(),
+           Vector3.create(),
+           Vector3.create()
         ];
 
         /**

@@ -1,18 +1,39 @@
 namespace egret3d {
 
-    export class Color implements paper.ISerializable {
-         public static readonly WHITE: Readonly<Color> = new Color(1.0, 1.0, 1.0, 1.0);
-         public static readonly BLACK: Readonly<Color> = new Color(0.0, 0.0, 0.0, 1.0);
+    export class Color implements paper.IRelease<Color>, paper.ISerializable {
+        public static readonly WHITE: Readonly<Color> = Color.create(1.0, 1.0, 1.0, 1.0);
+        public static readonly BLACK: Readonly<Color> = Color.create(0.0, 0.0, 0.0, 1.0);
 
-        r: number;
+        private static readonly _instances: Color[] = [];
 
-        g: number;
+        public static create(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0) {
+            if (this._instances.length > 0) {
+                return this._instances.pop()!.set(r, g, b, a);
+            }
 
-        b: number;
+            return new Color().set(r, g, b, a);
+        }
 
-        a: number;
+        public release() {
+            if (Color._instances.indexOf(this) < 0) {
+                Color._instances.push(this);
+            }
 
-        constructor(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0) {
+            return this;
+        }
+
+        public r: number;
+
+        public g: number;
+
+        public b: number;
+
+        public a: number;
+        /**
+         * @deprecated
+         * @private
+         */
+        public constructor(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0) {
             this.r = r;
             this.g = g;
             this.b = b;
@@ -23,16 +44,19 @@ namespace egret3d {
             return [this.r, this.g, this.b, this.a];
         }
 
-        public deserialize(element: Readonly<[number, number, number, number]>) {
-            this.r = element[0];
-            this.g = element[1];
-            this.b = element[2];
-            this.a = element[3];
-
-            return this;
+        public deserialize(value: Readonly<[number, number, number, number]>) {
+            return this.fromArray(value);
         }
 
-        public set(r: number = 1, g: number = 1, b: number = 1, a: number = 1) {
+        public clone() {
+            return Color.create(this.r, this.g, this.b, this.a);
+        }
+
+        public copy(value: Readonly<Color>) {
+            return this.set(value.r, value.g, value.b, value.a);
+        }
+
+        public set(r: number, g: number, b: number, a: number) {
             this.r = r;
             this.g = g;
             this.b = b;
@@ -41,37 +65,52 @@ namespace egret3d {
             return this;
         }
 
-        public static multiply(c1: Color, c2: Color, out: Color): Color {
-            out.r = c1.r * c2.r;
-            out.g = c1.g * c2.g;
-            out.b = c1.b * c2.b;
-            out.a = c1.a * c2.a;
-            return out;
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+            this.r = value[0 + offset];
+            this.g = value[1 + offset];
+            this.b = value[2 + offset];
+            this.a = value[3 + offset];
         }
 
-        public static scale(c: Color, scaler: number): Color {
-            c.r = c.r * scaler;
-            c.g = c.g * scaler;
-            c.b = c.b * scaler;
-            c.a = c.a * scaler;
-            return c;
+        public multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            this.r = valueA.r * valueB.r;
+            this.g = valueA.g * valueB.g;
+            this.b = valueA.b * valueB.b;
+            this.a = valueA.a * valueB.a;
+
+            return this;
         }
 
-        public static copy(c: Color, out: Color): Color {
-            out.r = c.r;
-            out.g = c.g;
-            out.b = c.b;
-            out.a = c.a;
-            return out;
+        public scale(value: number, source?: Readonly<Color>) {
+            if (!source) {
+                source = this;
+            }
+
+            this.r = source.r * value;
+            this.g = source.g * value;
+            this.b = source.b * value;
+            this.a = source.a * value;
+
+            return source;
         }
 
-        public static lerp(c1: Color, c2: Color, value: number, out: Color): Color {
-            out.a = value * (c2.a - c1.a) + c1.a;
-            out.r = value * (c2.r - c1.r) + c1.r;
-            out.g = value * (c2.g - c1.g) + c1.g;
-            out.b = value * (c2.b - c1.b) + c1.b;
-            return out;
-        }
+        public lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
 
+            this.r = t * (valueB.r - valueA.r) + valueA.r;
+            this.g = t * (valueB.g - valueA.g) + valueA.g;
+            this.b = t * (valueB.b - valueA.b) + valueA.b;
+            this.a = t * (valueB.a - valueA.a) + valueA.a;
+
+            return this;
+        }
     }
 }

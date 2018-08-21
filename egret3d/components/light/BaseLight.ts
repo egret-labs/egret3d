@@ -155,8 +155,8 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.COLOR)
-        public readonly color: Color = new Color(1.0, 1.0, 1.0, 1.0);
-        public readonly matrix: Matrix4 = new Matrix4();
+        public readonly color: Color = Color.create(1.0, 1.0, 1.0, 1.0);
+        public readonly matrix: Matrix4 = Matrix4.create();
         public renderTarget: IRenderTarget;
 
         protected _updateMatrix(camera: Camera) {
