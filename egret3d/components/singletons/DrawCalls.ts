@@ -5,7 +5,7 @@ namespace egret3d {
      */
     export type DrawCall = {
         renderer: paper.BaseRenderer,
-        matrix?: Matrix,
+        matrix?: Matrix4,
 
         subMeshIndex: number,
         mesh: Mesh,

@@ -8,8 +8,9 @@ namespace egret3d {
     /**
      * 
      */
-    export class Matrix {
-        private static readonly _instances: Matrix[] = [];
+    export class Matrix4 implements paper.IRelease<Matrix4>, paper.ISerializable {
+
+        private static readonly _instances: Matrix4[] = [];
         /**
          * 
          * @param rawData 
@@ -20,7 +21,7 @@ namespace egret3d {
                 return this._instances.pop();
             }
 
-            const matrix = new Matrix();
+            const matrix = new Matrix4();
 
             if (rawData) {
                 matrix.fromArray(rawData, offset)
@@ -30,16 +31,17 @@ namespace egret3d {
         }
         /**
          * 
-         * @param value 
          */
-        public static release(value: Matrix) {
-            if (this._instances.indexOf(value) >= 0) {
-                return;
+        public release() {
+            if (Matrix4._instances.indexOf(this) < 0) {
+                Matrix4._instances.push(this);
             }
 
-            this._instances.push(value);
+            return this;
         }
-
+        /**
+         * 
+         */
         public readonly rawData: Float32Array = new Float32Array(_array);
         /**
          * @deprecated
@@ -48,14 +50,27 @@ namespace egret3d {
         public constructor() {
         }
 
-        public copy(value: Readonly<Matrix>) {
+        public serialize() {
+            return this.rawData;
+        }
+
+        public deserialize(value: Readonly<[
+            number, number, number, number,
+            number, number, number, number,
+            number, number, number, number,
+            number, number, number, number
+        ]>) {
+            return this.fromArray(value);
+        }
+
+        public copy(value: Readonly<Matrix4>) {
             this.fromArray(value.rawData);
 
             return this;
         }
 
         public clone() {
-            return Matrix.create(this.rawData);
+            return Matrix4.create(this.rawData);
         }
 
         public identity() {
@@ -83,30 +98,16 @@ namespace egret3d {
         }
 
         public set(
-            m11: number, m12: number, m13: number, m14: number,
-            m21: number, m22: number, m23: number, m24: number,
-            m31: number, m32: number, m33: number, m34: number,
-            m41: number, m42: number, m43: number, m44: number,
+            n11: number, n12: number, n13: number, n14: number,
+            n21: number, n22: number, n23: number, n24: number,
+            n31: number, n32: number, n33: number, n34: number,
+            n41: number, n42: number, n43: number, n44: number,
         ) {
-            this.rawData[0] = m11;
-            this.rawData[1] = m12;
-            this.rawData[2] = m13;
-            this.rawData[3] = m14;
-
-            this.rawData[4] = m21;
-            this.rawData[5] = m22;
-            this.rawData[6] = m23;
-            this.rawData[7] = m24;
-
-            this.rawData[8] = m31;
-            this.rawData[9] = m32;
-            this.rawData[10] = m33;
-            this.rawData[11] = m34;
-
-            this.rawData[12] = m41;
-            this.rawData[13] = m42;
-            this.rawData[14] = m43;
-            this.rawData[15] = m44;
+            const rawData = this.rawData;
+            rawData[0] = n11; rawData[4] = n12; rawData[8] = n13; rawData[12] = n14;
+            rawData[1] = n21; rawData[5] = n22; rawData[9] = n23; rawData[13] = n24;
+            rawData[2] = n31; rawData[6] = n32; rawData[10] = n33; rawData[14] = n34;
+            rawData[3] = n41; rawData[7] = n42; rawData[11] = n43; rawData[15] = n44;
 
             return this;
         }
@@ -270,7 +271,7 @@ namespace egret3d {
             return this;
         }
 
-        public formScale(x: number, y: number, z: number, translateStays: boolean = false) {
+        public fromScale(x: number, y: number, z: number, translateStays: boolean = false) {
             if (translateStays) {
                 _helpVector3A.fromArray(this.rawData, 12);
             }
@@ -286,6 +287,71 @@ namespace egret3d {
                 this.rawData[13] = _helpVector3A.y;
                 this.rawData[14] = _helpVector3A.z;
             }
+
+            return this;
+        }
+
+        public fromAxis(axis: Readonly<IVector3>, radian: number = 0.0) {
+            // Based on http://www.gamedev.net/reference/articles/article1199.asp
+            const c = Math.cos(radian);
+            const s = Math.sin(radian);
+            const t = 1.0 - c;
+            const x = axis.x, y = axis.y, z = axis.z;
+            const tx = t * x, ty = t * y;
+
+            this.set(
+                tx * x + c, tx * y - s * z, tx * z + s * y, 0.0,
+                tx * y + s * z, ty * y + c, ty * z - s * x, 0.0,
+                tx * z - s * y, ty * z + s * x, t * z * z + c, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            );
+
+            return this;
+        }
+
+        public fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>) {
+            this.set(
+                axisX.x, axisY.x, axisZ.x, 0.0,
+                axisX.y, axisY.y, axisZ.y, 0.0,
+                axisX.z, axisY.z, axisZ.z, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            );
+
+            return this;
+        }
+
+        public fromRotationX(radian: number) {
+            const c = Math.cos(radian), s = Math.sin(radian);
+            this.set(
+                1, 0, 0, 0,
+                0, c, - s, 0,
+                0, s, c, 0,
+                0, 0, 0, 1
+            );
+
+            return this;
+        }
+
+        public fromRotationY(radian: number) {
+            const c = Math.cos(radian), s = Math.sin(radian);
+            this.set(
+                c, 0, s, 0,
+                0, 1, 0, 0,
+                - s, 0, c, 0,
+                0, 0, 0, 1
+            );
+
+            return this;
+        }
+
+        public fromRotationZ(theta) {
+            const c = Math.cos(theta), s = Math.sin(theta);
+            this.set(
+                c, - s, 0, 0,
+                s, c, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            );
 
             return this;
         }
@@ -420,12 +486,12 @@ namespace egret3d {
             return this;
         }
 
-        public transpose(value?: Readonly<Matrix>) {
-            if (!value) {
-                value = this;
+        public transpose(source?: Readonly<Matrix4>) {
+            if (!source) {
+                source = this;
             }
 
-            const valueRawData = value.rawData;
+            const valueRawData = source.rawData;
             const rawData = this.rawData;
             let temp = 0.0;
 
@@ -440,12 +506,12 @@ namespace egret3d {
             return this;
         }
 
-        public inverse(value?: Readonly<Matrix>) {
-            if (!value) {
-                value = this;
+        public inverse(source?: Readonly<Matrix4>) {
+            if (!source) {
+                source = this;
             }
 
-            const valueRawData = value.rawData;
+            const valueRawData = source.rawData;
             const rawData = this.rawData;
             const n11 = valueRawData[0], n21 = valueRawData[1], n31 = valueRawData[2], n41 = valueRawData[3],
                 n12 = valueRawData[4], n22 = valueRawData[5], n32 = valueRawData[6], n42 = valueRawData[7],
@@ -490,7 +556,36 @@ namespace egret3d {
             return this;
         }
 
-        public multiply(valueA: Matrix, valueB?: Matrix) {
+        public multiplyScalar(value: number, source?: Readonly<Matrix4>) {
+            if (!source) {
+                source = this;
+            }
+
+            const sourceRawData = source.rawData;
+            const rawData = this.rawData;
+
+            rawData[0] = sourceRawData[0] * value;
+            rawData[1] = sourceRawData[1] * value;
+            rawData[2] = sourceRawData[2] * value;
+            rawData[3] = sourceRawData[3] * value;
+
+            rawData[4] = sourceRawData[4] * value;
+            rawData[5] = sourceRawData[5] * value;
+            rawData[6] = sourceRawData[6] * value;
+            rawData[7] = sourceRawData[7] * value;
+
+            rawData[8] = sourceRawData[8] * value;
+            rawData[9] = sourceRawData[9] * value;
+            rawData[10] = sourceRawData[10] * value;
+            rawData[11] = sourceRawData[11] * value;
+
+            rawData[12] = sourceRawData[12] * value;
+            rawData[13] = sourceRawData[13] * value;
+            rawData[14] = sourceRawData[14] * value;
+            rawData[15] = sourceRawData[15] * value;
+        }
+
+        public multiply(valueA: Matrix4, valueB?: Matrix4) {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;
@@ -533,7 +628,7 @@ namespace egret3d {
             return this;
         }
 
-        public premultiply(value: Readonly<Matrix>) {
+        public premultiply(value: Readonly<Matrix4>) {
             return this.multiply(value, this);
         }
         /**
@@ -553,6 +648,16 @@ namespace egret3d {
             rawData[2] = x.z; rawData[6] = y.z; rawData[10] = z.z;
 
             return this;
+        }
+
+        public getMaxScaleOnAxis() {
+            const rawData = this.rawData;
+
+            const scaleXSq = rawData[0] * rawData[0] + rawData[1] * rawData[1] + rawData[2] * rawData[2];
+            const scaleYSq = rawData[4] * rawData[4] + rawData[5] * rawData[5] + rawData[6] * rawData[6];
+            const scaleZSq = rawData[8] * rawData[8] + rawData[9] * rawData[9] + rawData[10] * rawData[10];
+
+            return Math.sqrt(Math.max(scaleXSq, scaleYSq, scaleZSq));
         }
 
         public toEuler(value: Vector3, order: EulerOrder = EulerOrder.XYZ) {
@@ -718,7 +823,7 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public add(left: Matrix, right?: Matrix) { // TODO
+        public add(left: Matrix4, right?: Matrix4) { // TODO
             if (!right) {
                 right = left;
                 left = this;
@@ -749,7 +854,7 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public lerp(v: number, left: Matrix, right: Matrix) { // TODO
+        public lerp(v: number, left: Matrix4, right: Matrix4) { // TODO
             const p = 1.0 - v;
             for (let i = 0; i < 16; i++) {
                 this.rawData[i] = left.rawData[i] * p + right.rawData[i] * v;
@@ -760,7 +865,7 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix): Matrix {
+        public static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix4): Matrix4 {
             let tan = 1.0 / (Math.tan(fov * 0.5));
             out.rawData[0] = tan / aspect;
             out.rawData[1] = out.rawData[2] = out.rawData[3] = 0.0;
@@ -780,7 +885,7 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix): Matrix {
+        public static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4 {
             let hw = 2.0 / width;
             let hh = 2.0 / height;
             let id = 2.0 / (zfar - znear);
@@ -813,10 +918,10 @@ namespace egret3d {
     const _helpVector3A = Vector3.create();
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
-    const _helpMatrix = Matrix.create();
+    const _helpMatrix = Matrix4.create();
 
-    export const helpMatrixA = Matrix.create();
-    export const helpMatrixB = Matrix.create();
-    export const helpMatrixC = Matrix.create();
-    export const helpMatrixD = Matrix.create();
+    export const helpMatrixA = Matrix4.create();
+    export const helpMatrixB = Matrix4.create();
+    export const helpMatrixC = Matrix4.create();
+    export const helpMatrixD = Matrix4.create();
 }

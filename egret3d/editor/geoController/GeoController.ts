@@ -55,7 +55,7 @@ namespace paper.editor {
                 (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
             }
             if (this.bindMouse.wasReleased(0)) {
-                this.mainGeo.wasReleased();
+                this.mainGeo.wasReleased(this.selectedGameObjs);
             }
 
         }
