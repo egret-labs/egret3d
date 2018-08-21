@@ -3,8 +3,8 @@ namespace paper.editor {
 
     export type ApplyData = {
         [linkedId: string]:{
-            addGameObjects?: { serializeData: any,cacheSerializeData?:{ [key: string]:ISerializedData[] } }[],
-            addComponents?: { serializeData: any,cacheSerializeData?:any }[],
+            addGameObjects?: { serializeData: any,id:string,cacheSerializeData?:{ [key: string]:ISerializedData[] } }[],
+            addComponents?: { serializeData: any,id:string,gameObjId:string,cacheSerializeData?:{[key:string]:ISerializedData} }[],
             modifyGameObjectPropertyList?: { newValueList: any[], preValueCopylist: any[] }[],
             modifyComponentPropertyList?: { componentId: string, newValueList: any[], preValueCopylist: any[] }[]
         }

@@ -1,15 +1,17 @@
 namespace paper.editor{
-    type CreatePrefabStateData = {prefab:paper.Prefab,cacheSerializeData?:any,cachePrefabUUid?:string}
+    type CreatePrefabStateData = {prefab:paper.Prefab,parentUUID?:string,cacheSerializeData?:any,cachePrefabUUid?:string}
 
     export class CreatePrefabState extends BaseState {
         public static toString(): string {
             return "[class common.CreatePrefabState]";
         }
 
-        public static create(prefab:any): CreatePrefabState | null {
+        public static create(prefab:Prefab,parent?:GameObject): CreatePrefabState | null {
             const state = new CreatePrefabState();
+            let parentUUID=parent?parent.uuid:undefined;
             let data:CreatePrefabStateData = {
-                prefab
+                prefab,
+                parentUUID
             }
             state.data = data;
             return state;
@@ -40,11 +42,12 @@ namespace paper.editor{
                 const prefab = this.stateData.prefab;
                 if (prefab) {
                     let instance:GameObject = this.stateData.prefab.createInstance();
-
-                    if (instance) {
-                        this.stateData.cachePrefabUUid = instance.uuid;
-                        this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS);
+                    this.stateData.cachePrefabUUid = instance.uuid;
+                    let parent=this.editorModel.getGameObjectByUUid(this.stateData.parentUUID);
+                    if(parent){
+                        instance.transform.parent=parent.transform;
                     }
+                    this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS);
                 }
 
                 return true;
