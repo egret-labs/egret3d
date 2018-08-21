@@ -23,8 +23,9 @@ namespace egret3d {
 
         public static PARTICLE: Material;
         public static PARTICLE_BLEND: Material;
-        public static PARTICLE_BLEND_PREMULTIPLY: Material;
         public static PARTICLE_ADDITIVE: Material;
+
+        public static PARTICLE_BLEND_PREMULTIPLY: Material;
         public static PARTICLE_ADDITIVE_PREMULTIPLY: Material;
 
         public static SHADOW_DEPTH: Material;

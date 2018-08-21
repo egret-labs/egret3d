@@ -19,8 +19,8 @@ namespace egret3d {
     export interface GLTFMaterial extends gltf.Material {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
-            paper?: {
-                renderQueue?: number;
+            paper: {
+                renderQueue: number;
             }
         }
     }
@@ -32,8 +32,7 @@ namespace egret3d {
         extensions: {
             KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
             paper?: {
-                shaders?: gltf.Shader[],
-                renderQueue?: number;
+                shaders?: gltf.Shader[], // TODO
             };
         };
         extensionsUsed: string[];
@@ -150,7 +149,7 @@ namespace egret3d {
          */
         private static _createConfig() {
             const config = {
-                version: "3",
+                version: "4",
                 asset: {
                     version: "2.0"
                 },

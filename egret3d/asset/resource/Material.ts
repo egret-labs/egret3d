@@ -28,7 +28,6 @@ namespace egret3d {
          * @internal
          */
         public _glTFShader: GLTFAsset = null!;
-        private _glTFMaterial: GLTFMaterial | null = null;
         /**
         * @internal
         */
@@ -64,25 +63,25 @@ namespace egret3d {
         }
 
         public initialize() {
-            if (this._glTFMaterial) {
+            if (this._glTFTechnique) {
                 return;
             }
 
-            this._glTFMaterial = this.config.materials![0] as GLTFMaterial;
+            const glTFMaterial = this.config.materials![0] as GLTFMaterial;
 
             if (!this._glTFShader) {
                 //不存在，那就从材质中获取
-                this._glTFShader = paper.Asset.find<GLTFAsset>(this._glTFMaterial.extensions.KHR_techniques_webgl.technique);
+                this._glTFShader = paper.Asset.find<GLTFAsset>(glTFMaterial.extensions.KHR_techniques_webgl.technique);
                 if (!this._glTFShader) {
                     console.error("材质中获取着色器错误");
                     return;
                 }
             }
 
-            this.renderQueue = this._glTFMaterial.extensions.paper.renderQueue!;
+            this.renderQueue = glTFMaterial.extensions.paper.renderQueue!;
             this._glTFTechnique = GLTFAsset.createTechnique(this._glTFShader.config.extensions.KHR_techniques_webgl!.techniques[0]);
 
-            const uniformValues = this._glTFMaterial.extensions.KHR_techniques_webgl.values!;
+            const uniformValues = glTFMaterial.extensions.KHR_techniques_webgl.values!;
             const uniforms = this._glTFTechnique.uniforms;
             //使用Shader替换Material中没有默认值的Uniform
             for (const k in uniformValues) {
@@ -97,6 +96,8 @@ namespace egret3d {
                     }
                 }
             }
+
+            // TODO add define.
         }
 
         public dispose(disposeChildren?: boolean) {
@@ -116,7 +117,6 @@ namespace egret3d {
             this._cacheDefines = "";
             this._defines.length = 0;
             this._textures.length = 0;
-            this._glTFMaterial = null!;
             this._glTFTechnique = null!;
             this._glTFShader = null!;
         }
@@ -543,6 +543,10 @@ namespace egret3d {
 
         public get shader() {
             return this._glTFShader;
+        }
+
+        public get glTFTechnique() {
+            return this._glTFTechnique;
         }
     }
 }
