@@ -138,8 +138,8 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createPrefabState(prefab: any) {
-            const state = CreatePrefabState.create( prefab );
+        public createPrefabState(prefab: Prefab, parent?: GameObject) {
+            const state = CreatePrefabState.create(prefab, parent);
             this.addState(state);
         }
 
@@ -231,7 +231,7 @@ namespace paper.editor {
             }
         }
 
-        public createGameObject(parentList: GameObject[], createType: string) {
+        public createGameObject(parentList: (GameObject | Scene)[], createType: string) {
             let state = CreateGameObjectState.create(parentList, createType);
             this.addState(state);
         }
@@ -633,8 +633,8 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createRevertPrefabState(revertData:editor.revertData,revertPrefabInstanceId:string) {
-            let state = RevertPrefabInstanceState.create(revertData,revertPrefabInstanceId);
+        public createRevertPrefabState(revertData: editor.revertData, revertPrefabInstanceId: string) {
+            let state = RevertPrefabInstanceState.create(revertData, revertPrefabInstanceId);
             this.addState(state);
         }
 
@@ -656,15 +656,14 @@ namespace paper.editor {
             return result;
         }
 
-        public updateAsset(asset:Asset,prefabInstance:GameObject | null = null)
-        {
-            const refs = this.findAssetRefs(Application.sceneManager.activeScene,asset);
+        public updateAsset(asset: Asset, prefabInstance: GameObject | null = null) {
+            const refs = this.findAssetRefs(Application.sceneManager.activeScene, asset);
 
-            let serializeData:ISerializedData;
+            let serializeData: ISerializedData;
             if (asset instanceof Prefab) {
                 serializeData = paper.serialize(prefabInstance!);
 
-            }else{
+            } else {
 
             }
 
@@ -677,27 +676,27 @@ namespace paper.editor {
             this._cacheIds.length = 0;
         }
 
-        private _cacheIds:string[] = [];
+        private _cacheIds: string[] = [];
 
         private findAssetRefs(target: any, as: Asset, refs: any[] | null = null) {
             if (this._cacheIds.indexOf(target.uuid) >= 0) {
                 return;
             }
-        
+
             this._cacheIds.push(target.uuid);
-        
+
             refs = refs || [];
-        
+
             for (const key in target) {
                 const source = target[key];
                 if ((typeof source) === "object") {
                     this.findFromChildren(source, as, refs, target, key);
                 }
             }
-        
+
             return refs;
         }
-        
+
         private findFromChildren(source: any, as: Asset, refs: any[], parent: any, key: any) {
             if ((typeof source) !== "object") {
                 return;
@@ -709,20 +708,20 @@ namespace paper.editor {
                     this.findFromChildren(element, as, refs, source, index);
                 }
             }
-        
+
             if (source.constructor === Object) {
                 for (const key in source) {
                     const element = source[key];
                     this.findFromChildren(element, as, refs, source, key);
                 }
             }
-        
+
             if (source instanceof BaseObject) {
                 if (source instanceof Asset && source === as) {
                     refs.push({ p: parent, k: key });
                     return;
                 }
-        
+
                 this.findAssetRefs(source, as, refs);
             }
         }
