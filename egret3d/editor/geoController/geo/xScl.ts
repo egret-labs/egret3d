@@ -10,6 +10,9 @@ namespace paper.editor {
             xScale.transform.setLocalScale(0.2, 0.2, 0.2);
             xScale.transform.setLocalPosition(2, 0, 0);
             this.geo = xScale
+
+
+
         }
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any) {
             let worldRotation = selectedGameObjs[0].transform.getRotation();

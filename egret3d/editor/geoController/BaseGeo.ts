@@ -21,7 +21,7 @@ namespace paper.editor {
         protected _delta: egret3d.Vector3 = new egret3d.Vector3();
         protected _newPosition: egret3d.Vector3 = new egret3d.Vector3();
         protected _ctrlPos: egret3d.Vector3 = new egret3d.Vector3();
-        protected _ctrlRot: egret3d.Quaternion = new egret3d.Quaternion();
+        public _ctrlRot: egret3d.Quaternion = new egret3d.Quaternion();
         protected _dragPlanePoint: egret3d.Vector3 = new egret3d.Vector3();
         protected _dragPlaneNormal: egret3d.Vector3 = new egret3d.Vector3();
         protected _initRotation = new egret3d.Quaternion();
@@ -53,14 +53,28 @@ namespace paper.editor {
                 this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor]
             }
             else if (color == "yellow") {
-                // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                // mat.setVector4v("_Color", [0.9, 0.9, 0.7, 0.8]);
-                // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
+                let mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone()
+
+                let color1 = new Float32Array([0.9, 0.9, 0.7])
+                let alpha = new Float32Array([0.3])
+                mat.setFloatv("opacity", alpha)
+                mat.setVector3v("diffuse", color1);
+
+                this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
             }
             else if (color == "grey") {
                 // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
                 // mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
                 // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
+                let mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone()
+
+                let color1 = new Float32Array([0.3, 0.3, 0.3])
+                let alpha = new Float32Array([0.4])
+                mat.setFloatv("opacity", alpha)
+                mat.setVector3v("diffuse", color1);
+
+                this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
+
             }
         }
 
@@ -73,7 +87,7 @@ namespace paper.editor {
                     mesh.mesh = egret3d.DefaultMeshes.CUBE;
                     break;
                 case 1:
-                    mesh.mesh = egret3d.DefaultMeshes.PYRAMID;
+                    mesh.mesh = this._createCircleLine();
                     break;
                 case 2:
                     mesh.mesh = egret3d.DefaultMeshes.CUBE;
@@ -83,10 +97,58 @@ namespace paper.editor {
                     break;
             }
             let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
-            // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-            // mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
-            // renderer.materials = [mat];
+
+            let mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+            let color1 = new Float32Array([color.x, color.y, color.z])
+            let alpha = new Float32Array([color.w])
+            let technique = mat.glTFTechnique
+
+            const funs = technique.states.functions;
+            const enables = technique.states.enable;
+            // const index = enables.indexOf(gltf.EnableState.DEPTH_TEST);
+
+            mat.setFloatv("opacity", alpha)
+            mat.setVector3v("diffuse", color1);
+            renderer.materials = [mat];
+
+            if (enables.indexOf(gltf.EnableState.DEPTH_TEST) >= 0) {
+                enables.splice(enables.indexOf(gltf.EnableState.DEPTH_TEST), 1);
+            }
+            if (enables.indexOf(gltf.EnableState.CULL_FACE) >= 0) {
+                enables.splice(enables.indexOf(gltf.EnableState.CULL_FACE), 1);
+            }
+            funs.depthMask = [false];
+            delete funs.frontFace;
+            delete funs.cullFace;
+            funs.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+            funs.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
             return gizmoAxis;
+        }
+
+        protected _createCircleLine() {
+            var vertexCount = 1;
+            var triangleFan = [];
+            var indices = [];
+            for (var angle = 0; angle <= 360; angle += 1) {
+                var x = Math.cos(angle / 180.0 * 3.14) / 1.03;
+                var y = Math.sin(angle / 180.0 * 3.14) / 1.03;
+                var z = 0.0;
+                triangleFan.push(x, y, z);
+
+                var x = Math.cos(angle / 180.0 * 3.14);
+                var y = Math.sin(angle / 180.0 * 3.14);
+                var z = 0.0;
+                triangleFan.push(x, y, z);
+                vertexCount++;
+            }
+            console.log(vertexCount)
+            for (var angle = 0; angle <= vertexCount * 2 - 3; angle += 1) {
+                indices.push(angle, angle + 1, angle + 2);
+            }
+            var mesh = new egret3d.Mesh(vertexCount * 2, (vertexCount * 2 - 3) * 3);
+            mesh.setIndices(indices);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, triangleFan)
+            return mesh
         }
     }
 
@@ -184,6 +246,7 @@ namespace paper.editor {
             if (this.selectedGeo) {
                 this.selectedGeo.isPressed_local(ray, selected)
                 this.geo.transform.setLocalPosition(selected[0].transform.getPosition())
+                this.geo.transform.setLocalRotation(selected[0].transform.getRotation())
             }
         }
         wasPressed_world(ray: egret3d.Ray, selected: any) {
@@ -216,8 +279,11 @@ namespace paper.editor {
                     egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
                 }
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                if (this.selectedGeo._ctrlRot) {
+                    this._ctrlRot.copy(this.selectedGeo._ctrlRot)
+                    this.geo.transform.setRotation(this._ctrlRot);
+                }
                 this.geo.transform.setPosition(ctrlPos);
-                this.geo.transform.setRotation(0, 0, 0, 1);
 
             }
 

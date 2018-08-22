@@ -637,8 +637,8 @@ declare namespace egret3d {
     interface GLTFMaterial extends gltf.Material {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
-            paper?: {
-                renderQueue?: number;
+            paper: {
+                renderQueue: number;
             };
         };
     }
@@ -651,7 +651,6 @@ declare namespace egret3d {
             KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
             paper?: {
                 shaders?: gltf.Shader[];
-                renderQueue?: number;
             };
         };
         extensionsUsed: string[];
@@ -3064,7 +3063,7 @@ declare namespace paper.editor {
         protected _delta: egret3d.Vector3;
         protected _newPosition: egret3d.Vector3;
         protected _ctrlPos: egret3d.Vector3;
-        protected _ctrlRot: egret3d.Quaternion;
+        _ctrlRot: egret3d.Quaternion;
         protected _dragPlanePoint: egret3d.Vector3;
         protected _dragPlaneNormal: egret3d.Vector3;
         protected _initRotation: egret3d.Quaternion;
@@ -3079,6 +3078,7 @@ declare namespace paper.editor {
         _checkIntersect(ray: egret3d.Ray): this;
         changeColor(color: string): void;
         protected _createAxis(color: egret3d.Vector4, type: number): GameObject;
+        protected _createCircleLine(): egret3d.Mesh;
     }
     class GeoContainer extends BaseGeo {
         private geos;
@@ -4169,8 +4169,8 @@ declare namespace egret3d {
         static TRANSPARENT_ADDITIVE_DOUBLESIDE: Material;
         static PARTICLE: Material;
         static PARTICLE_BLEND: Material;
-        static PARTICLE_BLEND_PREMULTIPLY: Material;
         static PARTICLE_ADDITIVE: Material;
+        static PARTICLE_BLEND_PREMULTIPLY: Material;
         static PARTICLE_ADDITIVE_PREMULTIPLY: Material;
         static SHADOW_DEPTH: Material;
         static SHADOW_DISTANCE: Material;
@@ -6197,7 +6197,6 @@ declare namespace egret3d {
          * @internal
          */
         _glTFShader: GLTFAsset;
-        private _glTFMaterial;
         /**
         * @internal
         */
@@ -6248,6 +6247,7 @@ declare namespace egret3d {
          */
         readonly shaderDefine: string;
         readonly shader: GLTFAsset;
+        readonly glTFTechnique: gltf.Technique;
     }
 }
 declare namespace egret3d.ShaderLib {
@@ -10712,10 +10712,10 @@ declare namespace paper.editor {
         createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any;
         createAddComponentToPrefab(serializeData: any, gameObjIds: string[]): void;
         createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]): void;
-        createPrefabState(prefab: any): void;
+        createPrefabState(prefab: Prefab, parent?: GameObject): void;
         serializeProperty(value: any, editType: editor.EditType): any;
-        deserializeProperty(serializeData: any, editType: editor.EditType): Promise<any>;
-        createGameObject(parentList: GameObject[], createType: string): void;
+        deserializeProperty(serializeData: any, editType: editor.EditType): any;
+        createGameObject(parentList: (GameObject | Scene)[], createType: string): void;
         addComponent(gameObjectUUid: string, compClzName: string): void;
         removeComponent(gameObjectUUid: string, componentUUid: string): void;
         getComponentById(gameObject: GameObject, componentId: string): BaseComponent | null;
@@ -10864,7 +10864,7 @@ declare namespace paper.editor {
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
@@ -10927,10 +10927,10 @@ declare namespace paper.editor {
     class xRot extends BaseGeo {
         constructor();
         onSet(): void;
-        wasPressed_local(): void;
-        isPressed_local(): void;
-        wasPressed_world(): void;
-        isPressed_world(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(): void;
     }
 }
@@ -10938,10 +10938,10 @@ declare namespace paper.editor {
     class yRot extends BaseGeo {
         constructor();
         onSet(): void;
-        wasPressed_local(): void;
-        isPressed_local(): void;
-        wasPressed_world(): void;
-        isPressed_world(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(): void;
     }
 }
@@ -10949,10 +10949,10 @@ declare namespace paper.editor {
     class zRot extends BaseGeo {
         constructor();
         onSet(): void;
-        wasPressed_local(): void;
-        isPressed_local(): void;
-        wasPressed_world(): void;
-        isPressed_world(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(): void;
     }
 }
@@ -10997,13 +10997,18 @@ declare namespace paper.editor {
         [linkedId: string]: {
             addGameObjects?: {
                 serializeData: any;
+                id: string;
                 cacheSerializeData?: {
                     [key: string]: ISerializedData[];
                 };
             }[];
             addComponents?: {
                 serializeData: any;
-                cacheSerializeData?: any;
+                id: string;
+                gameObjId: string;
+                cacheSerializeData?: {
+                    [key: string]: ISerializedData;
+                };
             }[];
             modifyGameObjectPropertyList?: {
                 newValueList: any[];
@@ -11124,7 +11129,7 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class CreateGameObjectState extends BaseState {
         static toString(): string;
-        static create(parentList: GameObject[], createType: string): CreateGameObjectState | null;
+        static create(parentList: (GameObject | Scene)[], createType: string): CreateGameObjectState | null;
         infos: {
             parentUUID: string;
             serializeData: any;
@@ -11220,7 +11225,7 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class CreatePrefabState extends BaseState {
         static toString(): string;
-        static create(prefab: any): CreatePrefabState | null;
+        static create(prefab: Prefab, parent?: GameObject): CreatePrefabState | null;
         private readonly stateData;
         undo(): boolean;
         redo(): boolean;
@@ -11250,13 +11255,17 @@ declare namespace paper.editor {
         undo(): boolean;
         getAllUUidFromGameObject(gameObj: paper.GameObject, uuids?: string[] | null): string[];
         setLinkedId(gameObj: GameObject, ids: string[]): void;
+        clearLinkedId(gameObj: GameObject): void;
         protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
-        private modifyPrefabGameObjectPropertyValues(linkedId, prefabObj, valueList);
-        modifyPrefabComponentPropertyValues(linkedId: string, componentUUid: string, tempObj: GameObject, valueList: any[]): Promise<void>;
+        private modifyPrefabGameObjectPropertyValues(linkedId, tempObj, valueList);
+        modifyPrefabComponentPropertyValues(linkedId: string, componentUUid: string, tempObj: GameObject, valueList: any[]): void;
         setGameObjectPrefabRootId(gameObj: GameObject, rootID: string): void;
         getGameObjectsByLinkedId(linkedId: string, filterApplyRootId: string): GameObject[];
         getGameObjectByLinkedId(gameObj: paper.GameObject, linkedID: string): GameObject;
+        getGameObjectByUUid(gameObj: GameObject, uuid: string): GameObject;
         redo(): boolean;
+        private clearGameObjectExtrasInfo(gameObj);
+        private clearExtrasFromSerilizeData(data);
     }
 }
 declare namespace paper.editor {
@@ -11270,7 +11279,7 @@ declare namespace paper.editor {
         undo(): boolean;
         protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
         private modifyPrefabGameObjectPropertyValues(gameObj, valueList);
-        modifyPrefabComponentPropertyValues(gameObj: GameObject, componentUUid: string, valueList: any[]): Promise<void>;
+        modifyPrefabComponentPropertyValues(gameObj: GameObject, componentUUid: string, valueList: any[]): void;
         redo(): boolean;
     }
 }

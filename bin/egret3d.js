@@ -2266,7 +2266,7 @@ var egret3d;
          */
         GLTFAsset._createConfig = function () {
             var config = {
-                version: "3",
+                version: "4",
                 asset: {
                     version: "2.0"
                 },
@@ -5044,14 +5044,23 @@ var paper;
                     this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor];
                 }
                 else if (color == "yellow") {
-                    // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                    // mat.setVector4v("_Color", [0.9, 0.9, 0.7, 0.8]);
-                    // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
+                    var mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone();
+                    var color1 = new Float32Array([0.9, 0.9, 0.7]);
+                    var alpha = new Float32Array([0.3]);
+                    mat.setFloatv("opacity", alpha);
+                    mat.setVector3v("diffuse", color1);
+                    this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
                 }
                 else if (color == "grey") {
                     // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
                     // mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
                     // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
+                    var mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone();
+                    var color1 = new Float32Array([0.3, 0.3, 0.3]);
+                    var alpha = new Float32Array([0.4]);
+                    mat.setFloatv("opacity", alpha);
+                    mat.setVector3v("diffuse", color1);
+                    this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
                 }
             };
             BaseGeo.prototype._createAxis = function (color, type) {
@@ -5062,7 +5071,7 @@ var paper;
                         mesh.mesh = egret3d.DefaultMeshes.CUBE;
                         break;
                     case 1:
-                        mesh.mesh = egret3d.DefaultMeshes.PYRAMID;
+                        mesh.mesh = this._createCircleLine();
                         break;
                     case 2:
                         mesh.mesh = egret3d.DefaultMeshes.CUBE;
@@ -5072,10 +5081,52 @@ var paper;
                         break;
                 }
                 var renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
-                // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                // mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
-                // renderer.materials = [mat];
+                var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+                var color1 = new Float32Array([color.x, color.y, color.z]);
+                var alpha = new Float32Array([color.w]);
+                var technique = mat.glTFTechnique;
+                var funs = technique.states.functions;
+                var enables = technique.states.enable;
+                // const index = enables.indexOf(gltf.EnableState.DEPTH_TEST);
+                mat.setFloatv("opacity", alpha);
+                mat.setVector3v("diffuse", color1);
+                renderer.materials = [mat];
+                if (enables.indexOf(2929 /* DEPTH_TEST */) >= 0) {
+                    enables.splice(enables.indexOf(2929 /* DEPTH_TEST */), 1);
+                }
+                if (enables.indexOf(2884 /* CULL_FACE */) >= 0) {
+                    enables.splice(enables.indexOf(2884 /* CULL_FACE */), 1);
+                }
+                funs.depthMask = [false];
+                delete funs.frontFace;
+                delete funs.cullFace;
+                funs.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                funs.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
                 return gizmoAxis;
+            };
+            BaseGeo.prototype._createCircleLine = function () {
+                var vertexCount = 1;
+                var triangleFan = [];
+                var indices = [];
+                for (var angle = 0; angle <= 360; angle += 1) {
+                    var x = Math.cos(angle / 180.0 * 3.14) / 1.03;
+                    var y = Math.sin(angle / 180.0 * 3.14) / 1.03;
+                    var z = 0.0;
+                    triangleFan.push(x, y, z);
+                    var x = Math.cos(angle / 180.0 * 3.14);
+                    var y = Math.sin(angle / 180.0 * 3.14);
+                    var z = 0.0;
+                    triangleFan.push(x, y, z);
+                    vertexCount++;
+                }
+                console.log(vertexCount);
+                for (var angle = 0; angle <= vertexCount * 2 - 3; angle += 1) {
+                    indices.push(angle, angle + 1, angle + 2);
+                }
+                var mesh = new egret3d.Mesh(vertexCount * 2, (vertexCount * 2 - 3) * 3);
+                mesh.setIndices(indices);
+                mesh.setAttributes("POSITION" /* POSITION */, triangleFan);
+                return mesh;
             };
             return BaseGeo;
         }());
@@ -5176,6 +5227,7 @@ var paper;
                 if (this.selectedGeo) {
                     this.selectedGeo.isPressed_local(ray, selected);
                     this.geo.transform.setLocalPosition(selected[0].transform.getPosition());
+                    this.geo.transform.setLocalRotation(selected[0].transform.getRotation());
                 }
             };
             GeoContainer.prototype.wasPressed_world = function (ray, selected) {
@@ -5207,8 +5259,11 @@ var paper;
                         egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
                     }
                     ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                    if (this.selectedGeo._ctrlRot) {
+                        this._ctrlRot.copy(this.selectedGeo._ctrlRot);
+                        this.geo.transform.setRotation(this._ctrlRot);
+                    }
                     this.geo.transform.setPosition(ctrlPos);
-                    this.geo.transform.setRotation(0, 0, 0, 1);
                 }
             };
             GeoContainer.prototype.wasReleased = function (selectedGameObjs) {
@@ -15793,7 +15848,6 @@ var egret3d;
              * @internal
              */
             _this._glTFShader = null;
-            _this._glTFMaterial = null;
             /**
             * @internal
             */
@@ -15820,21 +15874,21 @@ var egret3d;
             return _this;
         }
         Material.prototype.initialize = function () {
-            if (this._glTFMaterial) {
+            if (this._glTFTechnique) {
                 return;
             }
-            this._glTFMaterial = this.config.materials[0];
+            var glTFMaterial = this.config.materials[0];
             if (!this._glTFShader) {
                 //不存在，那就从材质中获取
-                this._glTFShader = paper.Asset.find(this._glTFMaterial.extensions.KHR_techniques_webgl.technique);
+                this._glTFShader = paper.Asset.find(glTFMaterial.extensions.KHR_techniques_webgl.technique);
                 if (!this._glTFShader) {
                     console.error("材质中获取着色器错误");
                     return;
                 }
             }
-            this.renderQueue = this._glTFMaterial.extensions.paper.renderQueue;
+            this.renderQueue = glTFMaterial.extensions.paper.renderQueue;
             this._glTFTechnique = egret3d.GLTFAsset.createTechnique(this._glTFShader.config.extensions.KHR_techniques_webgl.techniques[0]);
-            var uniformValues = this._glTFMaterial.extensions.KHR_techniques_webgl.values;
+            var uniformValues = glTFMaterial.extensions.KHR_techniques_webgl.values;
             var uniforms = this._glTFTechnique.uniforms;
             //使用Shader替换Material中没有默认值的Uniform
             for (var k in uniformValues) {
@@ -15848,6 +15902,7 @@ var egret3d;
                     }
                 }
             }
+            // TODO add define.
         };
         Material.prototype.dispose = function (disposeChildren) {
             if (this._isBuiltin) {
@@ -15864,7 +15919,6 @@ var egret3d;
             this._cacheDefines = "";
             this._defines.length = 0;
             this._textures.length = 0;
-            this._glTFMaterial = null;
             this._glTFTechnique = null;
             this._glTFShader = null;
         };
@@ -16245,6 +16299,13 @@ var egret3d;
         Object.defineProperty(Material.prototype, "shader", {
             get: function () {
                 return this._glTFShader;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Material.prototype, "glTFTechnique", {
+            get: function () {
+                return this._glTFTechnique;
             },
             enumerable: true,
             configurable: true
@@ -20432,8 +20493,8 @@ var paper;
                 var state = editor.ModifyAssetPropertyState.create(assetUrl, newValueList, preValueCopylist);
                 this.addState(state);
             };
-            EditorModel.prototype.createPrefabState = function (prefab) {
-                var state = editor.CreatePrefabState.create(prefab);
+            EditorModel.prototype.createPrefabState = function (prefab, parent) {
+                var state = editor.CreatePrefabState.create(prefab, parent);
                 this.addState(state);
             };
             EditorModel.prototype.serializeProperty = function (value, editType) {
@@ -20476,78 +20537,52 @@ var paper;
                 }
             };
             EditorModel.prototype.deserializeProperty = function (serializeData, editType) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var _a, clazz, target, url, asset, materials, _i, serializeData_1, matrial, asset_1, meshAsset;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
-                            case 0:
-                                _a = editType;
-                                switch (_a) {
-                                    case editor.EditType.NUMBER: return [3 /*break*/, 1];
-                                    case editor.EditType.TEXT: return [3 /*break*/, 1];
-                                    case editor.EditType.CHECKBOX: return [3 /*break*/, 1];
-                                    case editor.EditType.VECTOR2: return [3 /*break*/, 2];
-                                    case editor.EditType.VECTOR3: return [3 /*break*/, 2];
-                                    case editor.EditType.VECTOR4: return [3 /*break*/, 2];
-                                    case editor.EditType.QUATERNION: return [3 /*break*/, 2];
-                                    case editor.EditType.COLOR: return [3 /*break*/, 2];
-                                    case editor.EditType.RECT: return [3 /*break*/, 2];
-                                    case editor.EditType.SHADER: return [3 /*break*/, 3];
-                                    case editor.EditType.LIST: return [3 /*break*/, 5];
-                                    case editor.EditType.MATERIAL_ARRAY: return [3 /*break*/, 6];
-                                    case editor.EditType.MESH: return [3 /*break*/, 11];
-                                    case editor.EditType.MATERIAL: return [3 /*break*/, 13];
-                                    case editor.EditType.GAMEOBJECT: return [3 /*break*/, 13];
-                                    case editor.EditType.TRANSFROM: return [3 /*break*/, 13];
-                                    case editor.EditType.SOUND: return [3 /*break*/, 13];
-                                    case editor.EditType.ARRAY: return [3 /*break*/, 13];
-                                }
-                                return [3 /*break*/, 14];
-                            case 1: return [2 /*return*/, serializeData];
-                            case 2:
-                                clazz = egret.getDefinitionByName(serializeData.className);
-                                target = null;
-                                if (clazz) {
-                                    target = new clazz();
-                                    target.deserialize(serializeData.serializeData);
-                                }
-                                return [2 /*return*/, target];
-                            case 3:
-                                url = serializeData;
-                                return [4 /*yield*/, RES.getResAsync(url)];
-                            case 4:
-                                asset = _b.sent();
-                                return [2 /*return*/, asset];
-                            case 5: return [2 /*return*/, serializeData];
-                            case 6:
-                                materials = [];
-                                _i = 0, serializeData_1 = serializeData;
-                                _b.label = 7;
-                            case 7:
-                                if (!(_i < serializeData_1.length)) return [3 /*break*/, 10];
-                                matrial = serializeData_1[_i];
-                                return [4 /*yield*/, RES.getResAsync(matrial.url)];
-                            case 8:
-                                asset_1 = _b.sent();
-                                materials.push(asset_1);
-                                _b.label = 9;
-                            case 9:
-                                _i++;
-                                return [3 /*break*/, 7];
-                            case 10: return [2 /*return*/, materials];
-                            case 11: return [4 /*yield*/, RES.getResAsync(serializeData)];
-                            case 12:
-                                meshAsset = _b.sent();
-                                return [2 /*return*/, meshAsset];
-                            case 13:
-                                //TODO
-                                console.error("not supported!");
-                                return [2 /*return*/, null];
-                            case 14: return [3 /*break*/, 15];
-                            case 15: return [2 /*return*/];
+                switch (editType) {
+                    case editor.EditType.NUMBER:
+                    case editor.EditType.TEXT:
+                    case editor.EditType.CHECKBOX:
+                        return serializeData;
+                    case editor.EditType.VECTOR2:
+                    case editor.EditType.VECTOR3:
+                    case editor.EditType.VECTOR4:
+                    case editor.EditType.QUATERNION:
+                    case editor.EditType.COLOR:
+                    case editor.EditType.RECT:
+                        var clazz = egret.getDefinitionByName(serializeData.className);
+                        var target = null;
+                        if (clazz) {
+                            target = new clazz();
+                            target.deserialize(serializeData.serializeData);
                         }
-                    });
-                });
+                        return target;
+                    case editor.EditType.SHADER:
+                        var url = serializeData;
+                        var asset = RES.getRes(url);
+                        return asset;
+                    case editor.EditType.LIST:
+                        return serializeData;
+                    case editor.EditType.MATERIAL_ARRAY:
+                        var materials = [];
+                        for (var _i = 0, serializeData_1 = serializeData; _i < serializeData_1.length; _i++) {
+                            var matrial = serializeData_1[_i];
+                            var asset_1 = RES.getRes(matrial.url);
+                            materials.push(asset_1);
+                        }
+                        return materials;
+                    case editor.EditType.MESH:
+                        var meshAsset = RES.getRes(serializeData);
+                        return meshAsset;
+                    case editor.EditType.MATERIAL:
+                    case editor.EditType.GAMEOBJECT:
+                    case editor.EditType.TRANSFROM:
+                    case editor.EditType.SOUND:
+                    case editor.EditType.ARRAY:
+                        //TODO
+                        console.error("not supported!");
+                        return null;
+                    default:
+                        break;
+                }
             };
             EditorModel.prototype.createGameObject = function (parentList, createType) {
                 var state = editor.CreateGameObjectState.create(parentList, createType);
@@ -21033,11 +21068,11 @@ var paper;
                     if (gameObj.extras.linkedID) {
                         objs.push(gameObj);
                     }
-                }
-                for (var index = 0; index < gameObj.transform.children.length; index++) {
-                    var element = gameObj.transform.children[index];
-                    var obj = element.gameObject;
-                    this.getAllGameObjectsFromPrefabInstance(obj, objs);
+                    for (var index = 0; index < gameObj.transform.children.length; index++) {
+                        var element = gameObj.transform.children[index];
+                        var obj = element.gameObject;
+                        this.getAllGameObjectsFromPrefabInstance(obj, objs);
+                    }
                 }
                 return objs;
             };
@@ -21427,10 +21462,9 @@ var paper;
                 this.canDrag = true;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                // let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
-                var normal = new egret3d.Vector3(0, ray.direction.y, ray.direction.z);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
+                var normal = new egret3d.Vector3;
+                normal.applyQuaternion(worldRotation, this.up);
+                this._dragPlaneNormal = new egret3d.Vector3(normal.x, ray.direction.y, ray.direction.z);
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
@@ -21448,9 +21482,11 @@ var paper;
                 egret3d.Vector3.scale(worldOffset, cosHit);
                 var position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
                 egret3d.Vector3.copy(position, this._ctrlPos);
-                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
-                parentMatrix = parentMatrix.inverse();
-                parentMatrix.transformNormal(position);
+                if (selectedGameObjs[0].transform.parent) {
+                    var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(position);
+                }
                 selectedGameObjs[0].transform.setLocalPosition(position);
                 // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
@@ -21481,9 +21517,11 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
-                    var parentMatrix = obj.transform.parent.getWorldMatrix();
-                    parentMatrix = parentMatrix.inverse();
-                    parentMatrix.transformNormal(this._newPosition);
+                    if (obj.transform.parent) {
+                        var parentMatrix = obj.transform.parent.getWorldMatrix();
+                        parentMatrix = parentMatrix.inverse();
+                        parentMatrix.transformNormal(this._newPosition);
+                    }
                     obj.transform.setLocalPosition(this._newPosition);
                     // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
@@ -21559,9 +21597,11 @@ var paper;
                 // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
                 // egret3d.Vector3.scale(worldOffset, cosHit);
                 // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
-                parentMatrix = parentMatrix.inverse();
-                parentMatrix.transformNormal(position);
+                if (selectedGameObjs[0].transform.parent) {
+                    var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(position);
+                }
                 egret3d.Vector3.copy(position, this._ctrlPos);
                 selectedGameObjs[0].transform.setLocalPosition(position);
                 // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
@@ -21596,9 +21636,11 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
-                    var parentMatrix = obj.transform.parent.getWorldMatrix();
-                    parentMatrix = parentMatrix.inverse();
-                    parentMatrix.transformNormal(this._newPosition);
+                    if (obj.transform.parent) {
+                        var parentMatrix = obj.transform.parent.getWorldMatrix();
+                        parentMatrix = parentMatrix.inverse();
+                        parentMatrix.transformNormal(this._newPosition);
+                    }
                     obj.transform.setLocalPosition(this._newPosition);
                     // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
@@ -21674,9 +21716,11 @@ var paper;
                 // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
                 // egret3d.Vector3.scale(worldOffset, cosHit);
                 // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
-                parentMatrix = parentMatrix.inverse();
-                parentMatrix.transformNormal(position);
+                if (selectedGameObjs[0].transform.parent) {
+                    var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(position);
+                }
                 egret3d.Vector3.copy(position, this._ctrlPos);
                 selectedGameObjs[0].transform.setLocalPosition(position);
                 // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
@@ -21711,9 +21755,11 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
-                    var parentMatrix = obj.transform.parent.getWorldMatrix();
-                    parentMatrix = parentMatrix.inverse();
-                    parentMatrix.transformNormal(this._newPosition);
+                    if (obj.transform.parent) {
+                        var parentMatrix = obj.transform.parent.getWorldMatrix();
+                        parentMatrix = parentMatrix.inverse();
+                        parentMatrix.transformNormal(this._newPosition);
+                    }
                     obj.transform.setLocalPosition(this._newPosition);
                     // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
@@ -21789,9 +21835,11 @@ var paper;
                 // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
                 // egret3d.Vector3.scale(worldOffset, cosHit);
                 // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
-                parentMatrix = parentMatrix.inverse();
-                parentMatrix.transformNormal(position);
+                if (selectedGameObjs[0].transform.parent) {
+                    var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(position);
+                }
                 egret3d.Vector3.copy(position, this._ctrlPos);
                 selectedGameObjs[0].transform.setLocalPosition(position);
                 // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
@@ -21826,9 +21874,11 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
-                    var parentMatrix = obj.transform.parent.getWorldMatrix();
-                    parentMatrix = parentMatrix.inverse();
-                    parentMatrix.transformNormal(this._newPosition);
+                    if (obj.transform.parent) {
+                        var parentMatrix = obj.transform.parent.getWorldMatrix();
+                        parentMatrix = parentMatrix.inverse();
+                        parentMatrix.transformNormal(this._newPosition);
+                    }
                     obj.transform.setLocalPosition(this._newPosition);
                     // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
@@ -21887,9 +21937,11 @@ var paper;
                 egret3d.Vector3.scale(worldOffset, cosHit);
                 var position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
                 egret3d.Vector3.copy(position, this._ctrlPos);
-                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
-                parentMatrix = parentMatrix.inverse();
-                parentMatrix.transformNormal(position);
+                if (selectedGameObjs[0].transform.parent) {
+                    var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(position);
+                }
                 selectedGameObjs[0].transform.setLocalPosition(position);
                 // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
@@ -21920,9 +21972,11 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
-                    var parentMatrix = obj.transform.parent.getWorldMatrix();
-                    parentMatrix = parentMatrix.inverse();
-                    parentMatrix.transformNormal(this._newPosition);
+                    if (obj.transform.parent) {
+                        var parentMatrix = obj.transform.parent.getWorldMatrix();
+                        parentMatrix = parentMatrix.inverse();
+                        parentMatrix.transformNormal(this._newPosition);
+                    }
                     obj.transform.setLocalPosition(this._newPosition);
                     // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
@@ -21981,9 +22035,11 @@ var paper;
                 egret3d.Vector3.scale(worldOffset, cosHit);
                 var position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
                 egret3d.Vector3.copy(position, this._ctrlPos);
-                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
-                parentMatrix = parentMatrix.inverse();
-                parentMatrix.transformNormal(position);
+                if (selectedGameObjs[0].transform.parent) {
+                    var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(position);
+                }
                 selectedGameObjs[0].transform.setLocalPosition(position);
                 // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
             };
@@ -22015,9 +22071,11 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
-                    var parentMatrix = obj.transform.parent.getWorldMatrix();
-                    parentMatrix = parentMatrix.inverse();
-                    parentMatrix.transformNormal(this._newPosition);
+                    if (obj.transform.parent) {
+                        var parentMatrix = obj.transform.parent.getWorldMatrix();
+                        parentMatrix = parentMatrix.inverse();
+                        parentMatrix.transformNormal(this._newPosition);
+                    }
                     obj.transform.setLocalPosition(this._newPosition);
                     // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
@@ -22045,20 +22103,64 @@ var paper;
                 return _super.call(this) || this;
             }
             xRot.prototype.onSet = function () {
-                var xRotate = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.5), 1);
+                var xRotate = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.8), 1);
                 xRotate.name = "GizmoController_Rotate_X";
                 xRotate.tag = "Editor";
-                xRotate.transform.setLocalScale(3, 3, 3);
-                xRotate.transform.setLocalEulerAngles(0, 0, -90);
+                xRotate.transform.setLocalScale(2, 2, 2);
+                xRotate.transform.setLocalEulerAngles(90, 0, 0);
                 this.geo = xRotate;
             };
-            xRot.prototype.wasPressed_local = function () {
+            xRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var lastX = egret3d.InputManager.mouse.position.x;
+                this.helpVec3_1.set(lastX, lastY, 0);
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
             };
-            xRot.prototype.isPressed_local = function () {
+            xRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var rot = selectedGameObjs[0].transform.getRotation();
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                this.helpQuat_2.normalize();
+                this.helpVec3_1.set(lastX, lastY, 0);
+                selectedGameObjs[0].transform.setLocalRotation(this.helpQuat_2);
+                // this.editorModel.setTransformProperty("rotation", this.helpQuat_2, selectedGameObjs[0].transform);
             };
-            xRot.prototype.wasPressed_world = function () {
+            xRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var len = selectedGameObjs.length;
+                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                var ctrlRot = this.geo.transform.parent.getRotation();
+                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.up);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                this.helpVec3_1.set(lastX, lastY, 0);
+                this._ctrlRot = ctrlRot;
             };
-            xRot.prototype.isPressed_world = function () {
+            xRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this._ctrlRot.premultiply(this.helpQuat_1);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    var rot = obj.transform.getRotation();
+                    this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                    this.helpQuat_2.normalize();
+                    obj.transform.setLocalRotation(this.helpQuat_2);
+                }
+                this.helpVec3_1.set(lastX, lastY, 0);
             };
             xRot.prototype.wasReleased = function () { return; };
             return xRot;
@@ -22077,20 +22179,64 @@ var paper;
                 return _super.call(this) || this;
             }
             yRot.prototype.onSet = function () {
-                var yRotate = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.5), 1);
+                var yRotate = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.8), 1);
                 yRotate.name = "GizmoController_Rotate_Y";
                 yRotate.tag = "Editor";
-                yRotate.transform.setLocalScale(3, 0.05, 3);
-                yRotate.transform.setLocalEulerAngles(0, 0, 0);
+                yRotate.transform.setLocalScale(2, 2, 2);
+                yRotate.transform.setLocalEulerAngles(90, 90, 0);
                 this.geo = yRotate;
             };
-            yRot.prototype.wasPressed_local = function () {
+            yRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                this.helpVec3_1.set(lastX, lastY, 0);
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                this._dragPlaneNormal.applyQuaternion(worldRotation, this.right);
             };
-            yRot.prototype.isPressed_local = function () {
+            yRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var rot = selectedGameObjs[0].transform.getRotation();
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                this.helpQuat_2.normalize();
+                this.helpVec3_1.set(lastX, lastY, 0);
+                selectedGameObjs[0].transform.setLocalRotation(this.helpQuat_2);
+                // this.editorModel.setTransformProperty("rotation", this.helpQuat_2, selectedGameObjs[0].transform);
             };
-            yRot.prototype.wasPressed_world = function () {
+            yRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var len = selectedGameObjs.length;
+                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                var ctrlRot = this.geo.transform.parent.getRotation();
+                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.right);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                this.helpVec3_1.set(lastX, lastY, 0);
+                this._ctrlRot = ctrlRot;
             };
-            yRot.prototype.isPressed_world = function () {
+            yRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this._ctrlRot.premultiply(this.helpQuat_1);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    var rot = obj.transform.getRotation();
+                    this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                    this.helpQuat_2.normalize();
+                    obj.transform.setLocalRotation(this.helpQuat_2);
+                }
+                this.helpVec3_1.set(lastX, lastY, 0);
             };
             yRot.prototype.wasReleased = function () { return; };
             return yRot;
@@ -22109,20 +22255,64 @@ var paper;
                 return _super.call(this) || this;
             }
             zRot.prototype.onSet = function () {
-                var zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.5), 1);
+                var zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.8), 1);
                 zRotate.name = "GizmoController_Rotate_Z";
                 zRotate.tag = "Editor";
-                zRotate.transform.setLocalEulerAngles(90, 0, 0);
-                zRotate.transform.setLocalScale(3, 0.05, 3);
+                zRotate.transform.setLocalEulerAngles(0, 0, 0);
+                zRotate.transform.setLocalScale(2, 2, 2);
                 this.geo = zRotate;
             };
-            zRot.prototype.wasPressed_local = function () {
+            zRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                this.helpVec3_1.set(lastX, lastY, 0);
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                this._dragPlaneNormal.applyQuaternion(worldRotation, this.forward);
             };
-            zRot.prototype.isPressed_local = function () {
+            zRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var rot = selectedGameObjs[0].transform.getRotation();
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                this.helpQuat_2.normalize();
+                this.helpVec3_1.set(lastX, lastY, 0);
+                selectedGameObjs[0].transform.setLocalRotation(this.helpQuat_2);
+                // this.editorModel.setTransformProperty("rotation", this.helpQuat_2, selectedGameObjs[0].transform);
             };
-            zRot.prototype.wasPressed_world = function () {
+            zRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var len = selectedGameObjs.length;
+                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                var ctrlRot = this.geo.transform.parent.getRotation();
+                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.forward);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                this.helpVec3_1.set(lastX, lastY, 0);
+                this._ctrlRot = ctrlRot;
             };
-            zRot.prototype.isPressed_world = function () {
+            zRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this._ctrlRot.premultiply(this.helpQuat_1);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    var rot = obj.transform.getRotation();
+                    this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                    this.helpQuat_2.normalize();
+                    obj.transform.setLocalRotation(this.helpQuat_2);
+                }
+                this.helpVec3_1.set(lastX, lastY, 0);
             };
             zRot.prototype.wasReleased = function () { return; };
             return zRot;
@@ -22797,32 +22987,21 @@ var paper;
                 return false;
             };
             ModifyGameObjectPropertyState.prototype.modifyProperty = function (valueList) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var _this = this;
-                    var uuid, modifyObj;
-                    return __generator(this, function (_a) {
-                        uuid = this.stateData.gameObjectUUid;
-                        modifyObj = this.editorModel.getGameObjectByUUid(uuid);
-                        if (modifyObj !== null) {
-                            valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                                var propName, copyValue, valueEditType, newValue;
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0:
-                                            propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                            return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
-                                        case 1:
-                                            newValue = _a.sent();
-                                            this.editorModel.setTargetProperty(propName, modifyObj, newValue);
-                                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
-                                            return [2 /*return*/];
-                                    }
-                                });
-                            }); });
-                        }
-                        return [2 /*return*/];
-                    });
-                });
+                var _this = this;
+                var uuid = this.stateData.gameObjectUUid;
+                var modifyObj = this.editorModel.getGameObjectByUUid(uuid);
+                if (modifyObj !== null) {
+                    valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
+                        var propName, copyValue, valueEditType, newValue;
+                        return __generator(this, function (_a) {
+                            propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                            newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                            this.editorModel.setTargetProperty(propName, modifyObj, newValue);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
+                            return [2 /*return*/];
+                        });
+                    }); });
+                }
             };
             ModifyGameObjectPropertyState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
@@ -22876,36 +23055,26 @@ var paper;
                 return false;
             };
             ModifyComponentPropertyState.prototype.modifyProperty = function (valueList) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var _this = this;
-                    var gameObjectUUid, componentUUid, gameObj, modifyObj;
-                    return __generator(this, function (_a) {
-                        gameObjectUUid = this.stateData.gameObjUUid;
-                        componentUUid = this.stateData.componentUUid;
-                        gameObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
-                        if (gameObj) {
-                            modifyObj = this.editorModel.getComponentById(gameObj, componentUUid);
-                            if (modifyObj) {
-                                valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                                    var propName, copyValue, valueEditType, newValue;
-                                    return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0:
-                                                propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                                return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
-                                            case 1:
-                                                newValue = _a.sent();
-                                                this.editorModel.setTargetProperty(propName, modifyObj, newValue);
-                                                this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
-                                                return [2 /*return*/];
-                                        }
-                                    });
-                                }); });
-                            }
-                        }
-                        return [2 /*return*/];
-                    });
-                });
+                var _this = this;
+                var gameObjectUUid = this.stateData.gameObjUUid;
+                var componentUUid = this.stateData.componentUUid;
+                var gameObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
+                var modifyObj;
+                if (gameObj) {
+                    modifyObj = this.editorModel.getComponentById(gameObj, componentUUid);
+                    if (modifyObj) {
+                        valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
+                            var propName, copyValue, valueEditType, newValue;
+                            return __generator(this, function (_a) {
+                                propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                                newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                                this.editorModel.setTargetProperty(propName, modifyObj, newValue);
+                                this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
+                                return [2 /*return*/];
+                            });
+                        }); });
+                    }
+                }
             };
             ModifyComponentPropertyState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
@@ -23532,16 +23701,11 @@ var paper;
                                 valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
                                     var propName, copyValue, valueEditType, newValue;
                                     return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0:
-                                                propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                                return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
-                                            case 1:
-                                                newValue = _a.sent();
-                                                this.editorModel.setTargetProperty(propName, target, newValue);
-                                                this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: newValue });
-                                                return [2 /*return*/];
-                                        }
+                                        propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                                        newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                                        this.editorModel.setTargetProperty(propName, target, newValue);
+                                        this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: newValue });
+                                        return [2 /*return*/];
                                     });
                                 }); });
                                 return [2 /*return*/];
@@ -23583,10 +23747,12 @@ var paper;
             CreatePrefabState.toString = function () {
                 return "[class common.CreatePrefabState]";
             };
-            CreatePrefabState.create = function (prefab) {
+            CreatePrefabState.create = function (prefab, parent) {
                 var state = new CreatePrefabState();
+                var parentUUID = parent ? parent.uuid : undefined;
                 var data = {
-                    prefab: prefab
+                    prefab: prefab,
+                    parentUUID: parentUUID
                 };
                 state.data = data;
                 return state;
@@ -23617,10 +23783,12 @@ var paper;
                     var prefab = this.stateData.prefab;
                     if (prefab) {
                         var instance = this.stateData.prefab.createInstance();
-                        if (instance) {
-                            this.stateData.cachePrefabUUid = instance.uuid;
-                            this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS);
+                        this.stateData.cachePrefabUUid = instance.uuid;
+                        var parent_6 = this.editorModel.getGameObjectByUUid(this.stateData.parentUUID);
+                        if (parent_6) {
+                            instance.transform.parent = parent_6.transform;
                         }
+                        this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS);
                     }
                     return true;
                 }
@@ -23763,6 +23931,8 @@ var paper;
                     applyData: applyData,
                     cachePrefabSerializedData: cachePrefabSerializedData
                 };
+                data.cacheGameObjetsIds = [];
+                data.cacheComponentsIds = {};
                 state.data = data;
                 return state;
             };
@@ -23775,51 +23945,70 @@ var paper;
             });
             ApplyPrefabInstanceState.prototype.undo = function () {
                 if (_super.prototype.undo.call(this)) {
-                    //delete new gameobjs
-                    if (this.stateData.cacheGameObjetsIds && this.stateData.cacheGameObjetsIds.length > 0) {
-                        var objs = editor.Editor.activeEditorModel.getGameObjectsByUUids(this.stateData.cacheGameObjetsIds);
-                        objs.forEach(function (obj) { return obj.destroy(); });
-                        this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS);
-                    }
-                    //delete new components
-                    if (this.stateData.cacheComponentsIds && this.stateData.cacheComponentsIds) {
-                        for (var key in this.stateData.cacheComponentsIds) {
-                            if (this.stateData.cacheComponentsIds.hasOwnProperty(key)) {
-                                var gameObj = editor.Editor.activeEditorModel.getGameObjectByUUid(key);
-                                var componentsIds = this.stateData.cacheComponentsIds[key];
-                                if (gameObj !== null) {
-                                    for (var i = gameObj.components.length - 1; i >= 0; i--) {
-                                        var comp = gameObj.components[i];
-                                        if (componentsIds.indexOf(comp.uuid) >= 0) {
-                                            gameObj.removeComponent(comp.constructor);
-                                        }
+                    var applyGameObject = editor.Editor.activeEditorModel.getGameObjectByUUid(this.stateData.applyPrefabRootId);
+                    var objects = paper.Application.sceneManager.activeScene.gameObjects;
+                    for (var index = objects.length - 1; index >= 0; index--) {
+                        if (this.stateData.cacheGameObjetsIds.length === 0 && Object.keys(this.stateData.cacheComponentsIds).length === 0) {
+                            break;
+                        }
+                        var gameObj = objects[index];
+                        var gIndex = this.stateData.cacheGameObjetsIds.indexOf(gameObj.uuid);
+                        if (gIndex >= 0) {
+                            gameObj.destroy();
+                            this.stateData.cacheGameObjetsIds.splice(gIndex, 1);
+                        }
+                        else if (this.stateData.cacheComponentsIds[gameObj.uuid] && this.stateData.cacheComponentsIds[gameObj.uuid].length > 0) {
+                            var comIds = this.stateData.cacheComponentsIds[gameObj.uuid];
+                            for (var comIndex = gameObj.components.length - 1; comIndex >= 0; comIndex--) {
+                                var com = gameObj.components[comIndex];
+                                var cIndex = comIds.indexOf(com.uuid);
+                                if (cIndex >= 0) {
+                                    gameObj.removeComponent(com);
+                                    comIds.splice(cIndex, 1);
+                                    if (comIds.length === 0) {
+                                        delete this.stateData.cacheComponentsIds[gameObj.uuid];
                                     }
                                 }
                             }
                         }
-                        this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
                     }
-                    //reset property
                     var tempPrefabObject = this.stateData.prefab.createInstance(paper.Application.sceneManager.globalScene, true);
-                    var allGameObjects = editor.Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(tempPrefabObject);
-                    for (var _i = 0, _a = allGameObjects; _i < _a.length; _i++) {
-                        var gameObj = _a[_i];
-                        if (!(this.stateData.applyData[gameObj.extras.linkedID])) {
-                            continue;
+                    for (var linkedId in this.stateData.applyData) {
+                        var applyData = this.stateData.applyData[linkedId];
+                        if (applyData.addGameObjects && applyData.addGameObjects.length > 0) {
+                            for (var index = 0; index < applyData.addGameObjects.length; index++) {
+                                var obj = applyData.addGameObjects[index];
+                                var originalObj = this.getGameObjectByUUid(applyGameObject, obj.id);
+                                if (originalObj) {
+                                    this.clearLinkedId(originalObj);
+                                }
+                            }
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
                         }
-                        var applyData = this.stateData.applyData[gameObj.extras.linkedID];
-                        //modify gameobject property
+                        if (applyData.addComponent && applyData.addComponents.length > 0) {
+                            for (var index = 0; index < applyData.addComponents.length; index++) {
+                                var element = applyData.addComponents[index];
+                                var id = element.id, gameObjId = element.gameObjId;
+                                var originalObj = this.getGameObjectByUUid(applyGameObject, gameObjId.id);
+                                if (originalObj) {
+                                    var originalComponent = editor.Editor.activeEditorModel.getComponentById(originalObj, id);
+                                    if (originalComponent) {
+                                        originalComponent.extras = {};
+                                    }
+                                }
+                            }
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
+                        }
                         if (applyData.modifyGameObjectPropertyList && applyData.modifyGameObjectPropertyList.length > 0) {
-                            for (var _b = 0, _c = applyData.modifyGameObjectPropertyList; _b < _c.length; _b++) {
-                                var obj = _c[_b];
-                                this.modifyPrefabGameObjectPropertyValues(gameObj.extras.linkedID, tempPrefabObject, obj.preValueCopylist);
+                            for (var _i = 0, _a = applyData.modifyGameObjectPropertyList; _i < _a.length; _i++) {
+                                var obj = _a[_i];
+                                this.modifyPrefabGameObjectPropertyValues(linkedId, tempPrefabObject, obj.preValueCopylist);
                             }
                         }
-                        //modify componet property
                         if (applyData.modifyComponentPropertyList && applyData.modifyComponentPropertyList.length > 0) {
-                            for (var _d = 0, _e = applyData.modifyComponentPropertyList; _d < _e.length; _d++) {
-                                var obj = _e[_d];
-                                this.modifyPrefabComponentPropertyValues(gameObj.extras.linkedID, obj.componentId, tempPrefabObject, obj.preValueCopylist);
+                            for (var _b = 0, _c = applyData.modifyComponentPropertyList; _b < _c.length; _b++) {
+                                var obj = _c[_b];
+                                this.modifyPrefabComponentPropertyValues(linkedId, obj.componentId, tempPrefabObject, obj.preValueCopylist);
                             }
                         }
                     }
@@ -23837,104 +24026,96 @@ var paper;
                 if (gameObj) {
                     uuids = uuids || [];
                     uuids.push(gameObj.uuid);
-                }
-                for (var index = 0; index < gameObj.transform.children.length; index++) {
-                    var element = gameObj.transform.children[index];
-                    var obj = element.gameObject;
-                    this.getAllUUidFromGameObject(obj, uuids);
+                    for (var _i = 0, _a = gameObj.components; _i < _a.length; _i++) {
+                        var com = _a[_i];
+                        uuids.push(com.uuid);
+                    }
+                    for (var index = 0; index < gameObj.transform.children.length; index++) {
+                        var element = gameObj.transform.children[index];
+                        var obj = element.gameObject;
+                        this.getAllUUidFromGameObject(obj, uuids);
+                    }
                 }
                 return uuids;
             };
             ApplyPrefabInstanceState.prototype.setLinkedId = function (gameObj, ids) {
-                var linkedId = ids.shift();
-                if (linkedId === undefined) {
-                    throw new Error("setLinkedId");
-                }
                 if (gameObj) {
+                    var linkedId = ids.shift();
+                    if (linkedId === undefined) {
+                        console.error("linkedId error");
+                    }
                     gameObj.extras.linkedID = linkedId;
+                    for (var _i = 0, _a = gameObj.components; _i < _a.length; _i++) {
+                        var com = _a[_i];
+                        linkedId = ids.shift();
+                        if (linkedId === undefined) {
+                            console.error("linkedId error");
+                        }
+                        com.extras.linkedID = linkedId;
+                    }
+                    for (var index = 0; index < gameObj.transform.children.length; index++) {
+                        var element = gameObj.transform.children[index];
+                        var obj = element.gameObject;
+                        this.setLinkedId(obj, ids);
+                    }
                 }
-                for (var index = 0; index < gameObj.transform.children.length; index++) {
-                    var element = gameObj.transform.children[index];
-                    var obj = element.gameObject;
-                    this.setLinkedId(obj, ids);
+            };
+            ApplyPrefabInstanceState.prototype.clearLinkedId = function (gameObj) {
+                if (gameObj) {
+                    gameObj.extras = {};
+                    for (var index = 0; index < gameObj.transform.children.length; index++) {
+                        var element = gameObj.transform.children[index];
+                        var obj = element.gameObject;
+                        this.clearLinkedId(obj);
+                    }
                 }
             };
             ApplyPrefabInstanceState.prototype.dispathPropertyEvent = function (modifyObj, propName, newValue) {
                 this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
             };
-            ApplyPrefabInstanceState.prototype.modifyPrefabGameObjectPropertyValues = function (linkedId, prefabObj, valueList) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var _this = this;
-                    var objects;
-                    return __generator(this, function (_a) {
-                        objects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
-                        valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                            var _this = this;
-                            var propName, copyValue, valueEditType, newValue;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                        return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
-                                    case 1:
-                                        newValue = _a.sent();
-                                        objects.forEach(function (object) {
-                                            if (paper.equal(object[propName], prefabObj[propName])) {
-                                                _this.editorModel.setTargetProperty(propName, object, newValue);
-                                                _this.dispathPropertyEvent(object, propName, newValue);
-                                            }
-                                        });
-                                        this.editorModel.setTargetProperty(propName, prefabObj, newValue);
-                                        return [2 /*return*/];
-                                }
-                            });
-                        }); });
-                        return [2 /*return*/];
+            ApplyPrefabInstanceState.prototype.modifyPrefabGameObjectPropertyValues = function (linkedId, tempObj, valueList) {
+                var _this = this;
+                var prefabObj = this.getGameObjectByLinkedId(tempObj, linkedId);
+                var objects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
+                valueList.forEach(function (propertyValue) {
+                    var propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                    var newValue = _this.editorModel.deserializeProperty(copyValue, valueEditType);
+                    objects.forEach(function (object) {
+                        if (paper.equal(object[propName], prefabObj[propName])) {
+                            _this.editorModel.setTargetProperty(propName, object, newValue);
+                            _this.dispathPropertyEvent(object, propName, newValue);
+                        }
                     });
+                    _this.editorModel.setTargetProperty(propName, prefabObj, newValue);
                 });
+                this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
             };
             ApplyPrefabInstanceState.prototype.modifyPrefabComponentPropertyValues = function (linkedId, componentUUid, tempObj, valueList) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var _this = this;
-                    var prefabObj, objects, _loop_1, k;
-                    return __generator(this, function (_a) {
-                        prefabObj = this.getGameObjectByLinkedId(tempObj, linkedId);
-                        objects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
-                        _loop_1 = function (k) {
-                            var prefabComp = prefabObj.components[k];
-                            if (prefabComp.uuid === componentUUid) {
-                                valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                                    var _this = this;
-                                    var propName, copyValue, valueEditType, newValue;
-                                    return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0:
-                                                propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                                return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
-                                            case 1:
-                                                newValue = _a.sent();
-                                                objects.forEach(function (object) {
-                                                    var objectComp = _this.editorModel.getComponentByAssetId(object, prefabComp.extras.linkedID);
-                                                    if (objectComp !== null) {
-                                                        if (paper.equal(objectComp[propName], prefabComp[propName])) {
-                                                            _this.editorModel.setTargetProperty(propName, objectComp, newValue);
-                                                            _this.dispathPropertyEvent(objectComp, propName, newValue);
-                                                        }
-                                                    }
-                                                });
-                                                this.editorModel.setTargetProperty(propName, prefabComp, newValue);
-                                                return [2 /*return*/];
-                                        }
-                                    });
-                                }); });
-                            }
-                        };
-                        for (k = 0; k < prefabObj.components.length; k++) {
-                            _loop_1(k);
-                        }
-                        return [2 /*return*/];
-                    });
-                });
+                var _this = this;
+                var prefabObj = this.getGameObjectByLinkedId(tempObj, linkedId);
+                var objects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
+                var _loop_1 = function (k) {
+                    var prefabComp = prefabObj.components[k];
+                    if (prefabComp.uuid === componentUUid) {
+                        valueList.forEach(function (propertyValue) {
+                            var propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                            var newValue = _this.editorModel.deserializeProperty(copyValue, valueEditType);
+                            objects.forEach(function (object) {
+                                var objectComp = _this.editorModel.getComponentByAssetId(object, prefabComp.extras.linkedID);
+                                if (objectComp !== null) {
+                                    if (paper.equal(objectComp[propName], prefabComp[propName])) {
+                                        _this.editorModel.setTargetProperty(propName, objectComp, newValue);
+                                        _this.dispathPropertyEvent(objectComp, propName, newValue);
+                                    }
+                                }
+                            });
+                            _this.editorModel.setTargetProperty(propName, prefabComp, newValue);
+                        });
+                    }
+                };
+                for (var k = 0; k < prefabObj.components.length; k++) {
+                    _loop_1(k);
+                }
             };
             ApplyPrefabInstanceState.prototype.setGameObjectPrefabRootId = function (gameObj, rootID) {
                 if (gameObj.extras.prefab == undefined) {
@@ -23958,7 +24139,7 @@ var paper;
                 return result;
             };
             ApplyPrefabInstanceState.prototype.getGameObjectByLinkedId = function (gameObj, linkedID) {
-                if (!gameObj || !linkedID) {
+                if (!gameObj) {
                     return null;
                 }
                 var result;
@@ -23970,7 +24151,26 @@ var paper;
                     var element = gameObj.transform.children[index];
                     var obj = element.gameObject;
                     result = this.getGameObjectByLinkedId(obj, linkedID);
-                    if (result || result === null) {
+                    if (result) {
+                        break;
+                    }
+                }
+                return result;
+            };
+            ApplyPrefabInstanceState.prototype.getGameObjectByUUid = function (gameObj, uuid) {
+                if (!gameObj) {
+                    return null;
+                }
+                var result;
+                if (gameObj.uuid === uuid) {
+                    result = gameObj;
+                    return gameObj;
+                }
+                for (var index = 0; index < gameObj.transform.children.length; index++) {
+                    var element = gameObj.transform.children[index];
+                    var obj = element.gameObject;
+                    result = this.getGameObjectByUUid(obj, uuid);
+                    if (result) {
                         break;
                     }
                 }
@@ -23980,18 +24180,17 @@ var paper;
                 if (_super.prototype.redo.call(this)) {
                     var tempPrefabObject = this.stateData.prefab.createInstance(paper.Application.sceneManager.globalScene, true);
                     var allGameObjects = editor.Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(tempPrefabObject);
+                    var applyGameObject = editor.Editor.activeEditorModel.getGameObjectByUUid(this.stateData.applyPrefabRootId);
                     for (var _i = 0, _a = allGameObjects; _i < _a.length; _i++) {
                         var gameObj = _a[_i];
                         if (!(this.stateData.applyData[gameObj.extras.linkedID])) {
                             continue;
                         }
                         var applyData = this.stateData.applyData[gameObj.extras.linkedID];
-                        //add new gameobjects
                         if (applyData.addGameObjects && applyData.addGameObjects.length > 0) {
                             for (var index = 0; index < applyData.addGameObjects.length; index++) {
                                 var obj = applyData.addGameObjects[index];
                                 var ids = [];
-                                //add to prefab
                                 var newObj = void 0;
                                 if (this.firstRedo) {
                                     newObj = new paper.Deserializer().deserialize(obj.serializeData, false, false, paper.Application.sceneManager.globalScene);
@@ -24005,10 +24204,8 @@ var paper;
                                     var cacheData = obj.cacheSerializeData[gameObj.uuid][index];
                                     newObj = new paper.Deserializer().deserialize(cacheData, true, false, paper.Application.sceneManager.globalScene);
                                     newObj.parent = gameObj;
-                                    "";
+                                    ids = this.getAllUUidFromGameObject(newObj);
                                 }
-                                this.stateData.cacheGameObjetsIds = [];
-                                //add to instances
                                 var linkedId = gameObj.extras.linkedID;
                                 var instanceGameObjects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
                                 for (var _b = 0, instanceGameObjects_1 = instanceGameObjects; _b < instanceGameObjects_1.length; _b++) {
@@ -24032,40 +24229,102 @@ var paper;
                                         this.stateData.cacheGameObjetsIds.push(addObj.uuid);
                                     }
                                 }
+                                var originalGameObj = this.getGameObjectByUUid(applyGameObject, obj.id);
+                                if (originalGameObj) {
+                                    this.setGameObjectPrefabRootId(originalGameObj, this.stateData.applyPrefabRootId);
+                                    this.setLinkedId(originalGameObj, ids.concat());
+                                }
                             }
-                            this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, []);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS);
                         }
-                        //add newcomponents                                         
                         if (applyData.addComponents && applyData.addComponents.length > 0) {
                             for (var _c = 0, _d = applyData.addComponents; _c < _d.length; _c++) {
                                 var obj = _d[_c];
+                                var newComponent = void 0;
+                                if (this.firstRedo) {
+                                    newComponent = new paper.Deserializer().deserialize(obj.serializeData, false, false, gameObj);
+                                    obj.cacheSerializeData = Object.create(null);
+                                    obj.cacheSerializeData[gameObj.uuid] = paper.serialize(newComponent);
+                                }
+                                else {
+                                    var cacheData = obj.cacheSerializeData[gameObj.uuid];
+                                    newComponent = new paper.Deserializer().deserialize(cacheData, true, false, gameObj);
+                                }
+                                var linkedId = gameObj.extras.linkedID;
+                                var instanceGameObjects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
+                                for (var _e = 0, instanceGameObjects_2 = instanceGameObjects; _e < instanceGameObjects_2.length; _e++) {
+                                    var instanceGameObject = instanceGameObjects_2[_e];
+                                    var addComponent = void 0;
+                                    if (this.firstRedo) {
+                                        addComponent = new paper.Deserializer().deserialize(obj.serializeData, false, false, instanceGameObject);
+                                        addComponent.extras.linkedID = newComponent.uuid;
+                                        obj.cacheSerializeData[instanceGameObject.uuid] = paper.serialize(addComponent);
+                                    }
+                                    else {
+                                        var cacheData = obj.cacheSerializeData[instanceGameObject.uuid];
+                                        addComponent = new paper.Deserializer().deserialize(cacheData, true, false, instanceGameObject);
+                                    }
+                                    this.stateData.cacheComponentsIds[instanceGameObject.uuid] = this.stateData.cacheComponentsIds[instanceGameObject.uuid] || [];
+                                    if (addComponent) {
+                                        this.stateData.cacheComponentsIds[instanceGameObject.uuid].push(addComponent.uuid);
+                                    }
+                                }
+                                var originalGameObj = this.getGameObjectByUUid(applyGameObject, obj.gameObjId);
+                                if (originalGameObj) {
+                                    var originalComponent = editor.Editor.activeEditorModel.getComponentById(originalGameObj, obj.id);
+                                    originalComponent.extras.linkedID = newComponent.uuid;
+                                }
                             }
                             this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                         }
-                        //modify gameobject property
                         if (applyData.modifyGameObjectPropertyList && applyData.modifyGameObjectPropertyList.length > 0) {
-                            for (var _e = 0, _f = applyData.modifyGameObjectPropertyList; _e < _f.length; _e++) {
-                                var obj = _f[_e];
+                            for (var _f = 0, _g = applyData.modifyGameObjectPropertyList; _f < _g.length; _f++) {
+                                var obj = _g[_f];
                                 this.modifyPrefabGameObjectPropertyValues(gameObj.extras.linkedID, tempPrefabObject, obj.newValueList);
                             }
                         }
-                        //modify componet property
                         if (applyData.modifyComponentPropertyList && applyData.modifyComponentPropertyList.length > 0) {
-                            for (var _g = 0, _h = applyData.modifyComponentPropertyList; _g < _h.length; _g++) {
-                                var obj = _h[_g];
+                            for (var _h = 0, _j = applyData.modifyComponentPropertyList; _h < _j.length; _h++) {
+                                var obj = _j[_h];
                                 this.modifyPrefabComponentPropertyValues(gameObj.extras.linkedID, obj.componentId, tempPrefabObject, obj.newValueList);
                             }
                         }
                     }
-                    //update prefab serilizeData
-                    // (this.stateData.prefab as any)._raw = paper.serialize(tempPrefabObject);
-                    //save asset
+                    this.clearGameObjectExtrasInfo(tempPrefabObject);
+                    this.stateData.prefab._raw = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.SAVE_ASSET, this.stateData.prefab.name);
                     tempPrefabObject.destroy();
                     this.firstRedo = false;
                     return true;
                 }
                 return false;
+            };
+            ApplyPrefabInstanceState.prototype.clearGameObjectExtrasInfo = function (gameObj) {
+                if (gameObj) {
+                    delete gameObj.extras;
+                    for (var _i = 0, _a = gameObj.components; _i < _a.length; _i++) {
+                        var comp = _a[_i];
+                        delete comp.extras;
+                    }
+                    for (var index = 0; index < gameObj.transform.children.length; index++) {
+                        var element = gameObj.transform.children[index];
+                        var obj = element.gameObject;
+                        this.clearGameObjectExtrasInfo(obj);
+                    }
+                }
+            };
+            ApplyPrefabInstanceState.prototype.clearExtrasFromSerilizeData = function (data) {
+                var objects = data.objects;
+                var components = data.components;
+                for (var _i = 0, objects_2 = objects; _i < objects_2.length; _i++) {
+                    var obj = objects_2[_i];
+                    delete obj["extras"];
+                }
+                for (var _a = 0, components_5 = components; _a < components_5.length; _a++) {
+                    var comp = components_5[_a];
+                    delete comp["extras"];
+                }
+                return data;
             };
             return ApplyPrefabInstanceState;
         }(editor.BaseState));
@@ -24119,17 +24378,23 @@ var paper;
                             this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS);
                         }
                         if (revertData.revertComponents && revertData.revertComponents.length > 0) {
+                            for (var _c = 0, _d = revertData.revertComponents; _c < _d.length; _c++) {
+                                var com = _d[_c];
+                                var serializeData = com.serializeData;
+                                new paper.Deserializer().deserialize(serializeData, true, false, gameObj);
+                            }
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
                         }
                         if (revertData.modifyGameObjectPropertyList && revertData.modifyGameObjectPropertyList.length > 0) {
-                            for (var _c = 0, _d = revertData.modifyGameObjectPropertyList; _c < _d.length; _c++) {
-                                var obj = _d[_c];
+                            for (var _e = 0, _f = revertData.modifyGameObjectPropertyList; _e < _f.length; _e++) {
+                                var obj = _f[_e];
                                 var preValueCopylist = obj.newValueList;
                                 this.modifyPrefabGameObjectPropertyValues(gameObj, preValueCopylist);
                             }
                         }
                         if (revertData.modifyComponentPropertyList && revertData.modifyComponentPropertyList.length > 0) {
-                            for (var _e = 0, _f = revertData.modifyComponentPropertyList; _e < _f.length; _e++) {
-                                var obj = _f[_e];
+                            for (var _g = 0, _h = revertData.modifyComponentPropertyList; _g < _h.length; _g++) {
+                                var obj = _h[_g];
                                 var componentId = obj.componentId, preValueCopylist = obj.preValueCopylist;
                                 this.modifyPrefabComponentPropertyValues(gameObj, componentId, preValueCopylist);
                             }
@@ -24143,59 +24408,38 @@ var paper;
                 this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
             };
             RevertPrefabInstanceState.prototype.modifyPrefabGameObjectPropertyValues = function (gameObj, valueList) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var _this = this;
+                var _this = this;
+                valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
+                    var propName, copyValue, valueEditType, newValue;
                     return __generator(this, function (_a) {
+                        propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                        newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                        this.editorModel.setTargetProperty(propName, gameObj, newValue);
+                        this.dispathPropertyEvent(gameObj, propName, newValue);
+                        return [2 /*return*/];
+                    });
+                }); });
+            };
+            RevertPrefabInstanceState.prototype.modifyPrefabComponentPropertyValues = function (gameObj, componentUUid, valueList) {
+                var _this = this;
+                var _loop_2 = function (k) {
+                    var prefabComp = gameObj.components[k];
+                    if (prefabComp.uuid === componentUUid) {
                         valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
                             var propName, copyValue, valueEditType, newValue;
                             return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                        return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
-                                    case 1:
-                                        newValue = _a.sent();
-                                        this.editorModel.setTargetProperty(propName, gameObj, newValue);
-                                        this.dispathPropertyEvent(gameObj, propName, newValue);
-                                        return [2 /*return*/];
-                                }
+                                propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                                newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                                this.editorModel.setTargetProperty(propName, prefabComp, newValue);
+                                this.dispathPropertyEvent(prefabComp, propName, newValue);
+                                return [2 /*return*/];
                             });
                         }); });
-                        return [2 /*return*/];
-                    });
-                });
-            };
-            RevertPrefabInstanceState.prototype.modifyPrefabComponentPropertyValues = function (gameObj, componentUUid, valueList) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var _this = this;
-                    var _loop_2, k;
-                    return __generator(this, function (_a) {
-                        _loop_2 = function (k) {
-                            var prefabComp = gameObj.components[k];
-                            if (prefabComp.uuid === componentUUid) {
-                                valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                                    var propName, copyValue, valueEditType, newValue;
-                                    return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0:
-                                                propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                                return [4 /*yield*/, this.editorModel.deserializeProperty(copyValue, valueEditType)];
-                                            case 1:
-                                                newValue = _a.sent();
-                                                this.editorModel.setTargetProperty(propName, prefabComp, newValue);
-                                                this.dispathPropertyEvent(prefabComp, propName, newValue);
-                                                return [2 /*return*/];
-                                        }
-                                    });
-                                }); });
-                            }
-                        };
-                        for (k = 0; k < gameObj.components.length; k++) {
-                            _loop_2(k);
-                        }
-                        return [2 /*return*/];
-                    });
-                });
+                    }
+                };
+                for (var k = 0; k < gameObj.components.length; k++) {
+                    _loop_2(k);
+                }
             };
             RevertPrefabInstanceState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
