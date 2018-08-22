@@ -1,36 +1,5 @@
 namespace egret3d {
-
-    const _helpVector3A = new Vector3();
-    const _helpVector3B = new Vector3();
-    const _helpVector3C = new Vector3();
-    const _helpVector3D = new Vector3();
-    const _helpVector3E = new Vector3();
-    const _helpVector3F = new Vector3();
-    const _helpVector3G = new Vector3();
-    const _helpVector3H = new Vector3();
-    const _helpVectors = [
-        _helpVector3A,
-        _helpVector3B,
-        _helpVector3C,
-        _helpVector3D,
-        _helpVector3E,
-        _helpVector3F,
-        _helpVector3G,
-        _helpVector3H,
-    ];
     let helpVec3_1: Vector3 = new Vector3();
-    let helpVec3_2: Vector3 = new Vector3();
-    let helpVec3_3: Vector3 = new Vector3();
-    let helpVec3_4: Vector3 = new Vector3();
-    let helpVec3_5: Vector3 = new Vector3();
-    const boxIndices = [
-        0, 1, 2, 3,
-        4, 5, 6, 7,
-        1, 3, 5, 7,
-        0, 2, 4, 6,
-        6, 2, 7, 3,
-        0, 4, 1, 5
-    ];
     /**
      * 射线
      */
@@ -75,11 +44,8 @@ namespace egret3d {
             return [this.origin.x, this.origin.y, this.origin.z, this.direction.x, this.direction.y, this.direction.z];
         }
 
-        public deserialize(element: Readonly<[number, number, number, number, number, number]>) {
-            this.origin.fromArray(element);
-            this.direction.fromArray(element, 3);
-
-            return this;
+        public deserialize(value: Readonly<[number, number, number, number, number, number]>) {
+            return this.fromArray(value);
         }
 
         public copy(value: Readonly<Ray>) {
@@ -99,6 +65,30 @@ namespace egret3d {
 
             return this;
         }
+
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+            this.origin.fromArray(value);
+            this.direction.fromArray(value, 3);
+
+            return this;
+        }
+
+        public getSquaredDistance(value: Readonly<IVector3>): number {
+            const directionDistance = helpVector3A.subtract(value, this.origin).dot(this.direction);
+            // point behind the ray
+            if (directionDistance < 0.0) {
+                return this.origin.getSquaredDistance(value);
+            }
+
+            helpVector3A.multiplyScalar(directionDistance, this.direction).add(this.origin);
+
+            return helpVector3A.getSquaredDistance(value);
+        }
+
+        public getDistance(value: Readonly<IVector3>): number {
+            return Math.sqrt(this.getSquaredDistance(value));
+        }
+
         /**
          * 与aabb碰撞相交检测
          */
@@ -239,29 +229,6 @@ namespace egret3d {
             }
             return true;
         }
-
-        /**
-         * 与球相交检测
-         */
-        public intersectsSphere(center: Vector3, radius: number): boolean {
-            let center_ori = helpVec3_1;
-            Vector3.subtract(center, this.origin, center_ori);
-            let raydist = Vector3.dot(this.direction, center_ori);
-
-            if (raydist < 0) return false; // 到圆心的向量在方向向量上的投影为负，夹角不在-90与90之间
-
-            let orilen2 = Vector3.getSqrLength(center_ori);
-
-            let rad2 = radius * radius;
-
-            if (orilen2 < rad2) return true; // 射线起点在球里
-
-            let d = rad2 - (orilen2 - raydist * raydist);
-            if (d < 0) return false;
-
-            return true;
-        }
-
         /**
          * 与三角形相交检测
          */
@@ -366,7 +333,27 @@ namespace egret3d {
 
             return pickInfo;
         }
+        /**
+         * 与球相交检测
+         */
+        public intersectsSphere(center: Vector3, radius: number): boolean {
+            let center_ori = helpVec3_1;
+            Vector3.subtract(center, this.origin, center_ori);
+            let raydist = Vector3.dot(this.direction, center_ori);
 
+            if (raydist < 0) return false; // 到圆心的向量在方向向量上的投影为负，夹角不在-90与90之间
+
+            let orilen2 = Vector3.getSqrLength(center_ori);
+
+            let rad2 = radius * radius;
+
+            if (orilen2 < rad2) return true; // 射线起点在球里
+
+            let d = rad2 - (orilen2 - raydist * raydist);
+            if (d < 0) return false;
+
+            return true;
+        }
         /**
          * 获取射线拾取到的最近物体。
          */

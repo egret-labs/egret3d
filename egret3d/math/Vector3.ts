@@ -359,22 +359,12 @@ namespace egret3d {
             return this;
         }
 
-        public getDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
-            }
-
-            return helpVector.subtract(valueB, valueA).length;
+        public getSquaredDistance(value: Readonly<IVector3>): number {
+            return helpVector.subtract(value, this).squaredLength;
         }
 
-        public getSquaredDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
-            }
-
-            return helpVector.subtract(valueB, valueA).squaredLength;
+        public getDistance(value: Readonly<IVector3>): number {
+            return helpVector.subtract(value, this).length;
         }
 
         public closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>) {

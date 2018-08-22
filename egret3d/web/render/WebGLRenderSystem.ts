@@ -360,10 +360,10 @@ namespace egret3d {
             const renderState = this._renderState;
             //Program
             const program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
-            //State
-            renderState.updateState(technique.states);
             //Use Program
             const force = renderState.useProgram(program);
+            //State
+            renderState.updateState(technique.states);
             //Uniform
             this._updateContextUniforms(program, context, technique, force);
             this._updateUniforms(program, material, technique, force);

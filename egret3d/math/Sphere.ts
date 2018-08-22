@@ -17,9 +17,7 @@ namespace egret3d {
 
             return new Sphere().set(center, radius);
         }
-        /**
-         * 
-         */
+
         public release() {
             if (Sphere._instances.indexOf(this) < 0) {
                 Sphere._instances.push(this);
@@ -36,8 +34,7 @@ namespace egret3d {
          */
         public readonly center: Vector3 = Vector3.create();
 
-        private constructor() {
-        }
+        private constructor() { }
 
         public serialize() {
             return [this.center.x, this.center.y, this.center.z, this.radius];
