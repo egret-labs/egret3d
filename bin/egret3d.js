@@ -5044,7 +5044,7 @@ var paper;
                     this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor];
                 }
                 else if (color == "yellow") {
-                    var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+                    var mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone();
                     var color1 = new Float32Array([0.9, 0.9, 0.7]);
                     var alpha = new Float32Array([0.3]);
                     mat.setFloatv("opacity", alpha);
@@ -5055,7 +5055,7 @@ var paper;
                     // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
                     // mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
                     // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
-                    var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+                    var mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone();
                     var color1 = new Float32Array([0.3, 0.3, 0.3]);
                     var alpha = new Float32Array([0.4]);
                     mat.setFloatv("opacity", alpha);
@@ -5084,9 +5084,24 @@ var paper;
                 var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
                 var color1 = new Float32Array([color.x, color.y, color.z]);
                 var alpha = new Float32Array([color.w]);
+                var technique = mat.glTFTechnique;
+                var funs = technique.states.functions;
+                var enables = technique.states.enable;
+                // const index = enables.indexOf(gltf.EnableState.DEPTH_TEST);
                 mat.setFloatv("opacity", alpha);
                 mat.setVector3v("diffuse", color1);
                 renderer.materials = [mat];
+                if (enables.indexOf(2929 /* DEPTH_TEST */) >= 0) {
+                    enables.splice(enables.indexOf(2929 /* DEPTH_TEST */), 1);
+                }
+                if (enables.indexOf(2884 /* CULL_FACE */) >= 0) {
+                    enables.splice(enables.indexOf(2884 /* CULL_FACE */), 1);
+                }
+                funs.depthMask = [false];
+                delete funs.frontFace;
+                delete funs.cullFace;
+                funs.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                funs.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
                 return gizmoAxis;
             };
             BaseGeo.prototype._createCircleLine = function () {
@@ -5212,6 +5227,7 @@ var paper;
                 if (this.selectedGeo) {
                     this.selectedGeo.isPressed_local(ray, selected);
                     this.geo.transform.setLocalPosition(selected[0].transform.getPosition());
+                    this.geo.transform.setLocalRotation(selected[0].transform.getRotation());
                 }
             };
             GeoContainer.prototype.wasPressed_world = function (ray, selected) {
@@ -5243,8 +5259,11 @@ var paper;
                         egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
                     }
                     ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                    if (this.selectedGeo._ctrlRot) {
+                        this._ctrlRot.copy(this.selectedGeo._ctrlRot);
+                        this.geo.transform.setRotation(this._ctrlRot);
+                    }
                     this.geo.transform.setPosition(ctrlPos);
-                    this.geo.transform.setRotation(0, 0, 0, 1);
                 }
             };
             GeoContainer.prototype.wasReleased = function (selectedGameObjs) {
@@ -22092,37 +22111,56 @@ var paper;
                 this.geo = xRotate;
             };
             xRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var lastX = egret3d.InputManager.mouse.position.x;
+                this.helpVec3_1.set(lastX, lastY, 0);
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var temp = new egret3d.Vector3(egret3d.InputManager.mouse.position.x, egret3d.InputManager.mouse.position.y, 0);
-                this.helpVec3_1.copy(temp);
-                // egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                // this._dragPlaneNormal.applyQuaternion(worldRotation, this.right)
-                // this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                // egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                worldRotation.copy(this._initRotation);
+                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
             };
             xRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                var move = new egret3d.Vector3;
-                move.z = 0;
-                move.x = (egret3d.InputManager.mouse.position.x - this.helpVec3_1.x) / 10;
-                move.y = -(egret3d.InputManager.mouse.position.y - this.helpVec3_1.y) / 10;
-                egret3d.Vector3.subtract(hit, worldPosition, hit);
-                var cosHitOffset = egret3d.Vector3.dot(egret3d.Vector3.normalize(hit), egret3d.Vector3.normalize(this._dragOffset));
-                egret3d.Vector3.cross(this._dragOffset, hit, this.helpVec3_1);
-                var theta = egret3d.Vector3.dot(this.helpVec3_1, this._dragPlaneNormal) >= 0 ? Math.acos(cosHitOffset) : -Math.acos(cosHitOffset);
-                var cos = Math.cos(theta * 0.5), sin = Math.sin(theta * 0.5);
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var rot = selectedGameObjs[0].transform.getRotation();
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
                 this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
-                this.helpQuat_2.multiply(this.helpQuat_1, this._initRotation);
-                this._ctrlRot.copy(this.helpQuat_2);
+                this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                this.helpQuat_2.normalize();
+                this.helpVec3_1.set(lastX, lastY, 0);
                 selectedGameObjs[0].transform.setLocalRotation(this.helpQuat_2);
                 // this.editorModel.setTransformProperty("rotation", this.helpQuat_2, selectedGameObjs[0].transform);
             };
-            xRot.prototype.wasPressed_world = function () {
+            xRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var len = selectedGameObjs.length;
+                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                var ctrlRot = this.geo.transform.parent.getRotation();
+                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.up);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                this.helpVec3_1.set(lastX, lastY, 0);
+                this._ctrlRot = ctrlRot;
             };
-            xRot.prototype.isPressed_world = function () {
+            xRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this._ctrlRot.premultiply(this.helpQuat_1);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    var rot = obj.transform.getRotation();
+                    this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                    this.helpQuat_2.normalize();
+                    obj.transform.setLocalRotation(this.helpQuat_2);
+                }
+                this.helpVec3_1.set(lastX, lastY, 0);
             };
             xRot.prototype.wasReleased = function () { return; };
             return xRot;
@@ -22148,13 +22186,57 @@ var paper;
                 yRotate.transform.setLocalEulerAngles(90, 90, 0);
                 this.geo = yRotate;
             };
-            yRot.prototype.wasPressed_local = function () {
+            yRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                this.helpVec3_1.set(lastX, lastY, 0);
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                this._dragPlaneNormal.applyQuaternion(worldRotation, this.right);
             };
-            yRot.prototype.isPressed_local = function () {
+            yRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var rot = selectedGameObjs[0].transform.getRotation();
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                this.helpQuat_2.normalize();
+                this.helpVec3_1.set(lastX, lastY, 0);
+                selectedGameObjs[0].transform.setLocalRotation(this.helpQuat_2);
+                // this.editorModel.setTransformProperty("rotation", this.helpQuat_2, selectedGameObjs[0].transform);
             };
-            yRot.prototype.wasPressed_world = function () {
+            yRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var len = selectedGameObjs.length;
+                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                var ctrlRot = this.geo.transform.parent.getRotation();
+                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.right);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                this.helpVec3_1.set(lastX, lastY, 0);
+                this._ctrlRot = ctrlRot;
             };
-            yRot.prototype.isPressed_world = function () {
+            yRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this._ctrlRot.premultiply(this.helpQuat_1);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    var rot = obj.transform.getRotation();
+                    this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                    this.helpQuat_2.normalize();
+                    obj.transform.setLocalRotation(this.helpQuat_2);
+                }
+                this.helpVec3_1.set(lastX, lastY, 0);
             };
             yRot.prototype.wasReleased = function () { return; };
             return yRot;
@@ -22180,13 +22262,57 @@ var paper;
                 zRotate.transform.setLocalScale(2, 2, 2);
                 this.geo = zRotate;
             };
-            zRot.prototype.wasPressed_local = function () {
+            zRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                this.helpVec3_1.set(lastX, lastY, 0);
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                this._dragPlaneNormal.applyQuaternion(worldRotation, this.forward);
             };
-            zRot.prototype.isPressed_local = function () {
+            zRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var rot = selectedGameObjs[0].transform.getRotation();
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                this.helpQuat_2.normalize();
+                this.helpVec3_1.set(lastX, lastY, 0);
+                selectedGameObjs[0].transform.setLocalRotation(this.helpQuat_2);
+                // this.editorModel.setTransformProperty("rotation", this.helpQuat_2, selectedGameObjs[0].transform);
             };
-            zRot.prototype.wasPressed_world = function () {
+            zRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var len = selectedGameObjs.length;
+                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
+                var ctrlRot = this.geo.transform.parent.getRotation();
+                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.forward);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
+                }
+                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                this.helpVec3_1.set(lastX, lastY, 0);
+                this._ctrlRot = ctrlRot;
             };
-            zRot.prototype.isPressed_world = function () {
+            zRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
+                var len = selectedGameObjs.length;
+                var lastX = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.x;
+                var delta = lastY - this.helpVec3_1.y;
+                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this._ctrlRot.premultiply(this.helpQuat_1);
+                for (var i = 0; i < len; i++) {
+                    var obj = selectedGameObjs[i];
+                    var rot = obj.transform.getRotation();
+                    this.helpQuat_2.multiply(this.helpQuat_1, rot);
+                    this.helpQuat_2.normalize();
+                    obj.transform.setLocalRotation(this.helpQuat_2);
+                }
+                this.helpVec3_1.set(lastX, lastY, 0);
             };
             zRot.prototype.wasReleased = function () { return; };
             return zRot;

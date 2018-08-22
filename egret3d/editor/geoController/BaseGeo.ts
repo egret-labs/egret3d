@@ -21,7 +21,7 @@ namespace paper.editor {
         protected _delta: egret3d.Vector3 = new egret3d.Vector3();
         protected _newPosition: egret3d.Vector3 = new egret3d.Vector3();
         protected _ctrlPos: egret3d.Vector3 = new egret3d.Vector3();
-        protected _ctrlRot: egret3d.Quaternion = new egret3d.Quaternion();
+        public _ctrlRot: egret3d.Quaternion = new egret3d.Quaternion();
         protected _dragPlanePoint: egret3d.Vector3 = new egret3d.Vector3();
         protected _dragPlaneNormal: egret3d.Vector3 = new egret3d.Vector3();
         protected _initRotation = new egret3d.Quaternion();
@@ -53,7 +53,7 @@ namespace paper.editor {
                 this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor]
             }
             else if (color == "yellow") {
-                let mat = egret3d.DefaultMaterials.LINEDASHED.clone()
+                let mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone()
 
                 let color1 = new Float32Array([0.9, 0.9, 0.7])
                 let alpha = new Float32Array([0.3])
@@ -66,7 +66,7 @@ namespace paper.editor {
                 // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
                 // mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
                 // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
-                let mat = egret3d.DefaultMaterials.LINEDASHED.clone()
+                let mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone()
 
                 let color1 = new Float32Array([0.3, 0.3, 0.3])
                 let alpha = new Float32Array([0.4])
@@ -97,12 +97,31 @@ namespace paper.editor {
                     break;
             }
             let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
+
             let mat = egret3d.DefaultMaterials.LINEDASHED.clone();
             let color1 = new Float32Array([color.x, color.y, color.z])
             let alpha = new Float32Array([color.w])
+            let technique = mat.glTFTechnique
+
+            const funs = technique.states.functions;
+            const enables = technique.states.enable;
+            // const index = enables.indexOf(gltf.EnableState.DEPTH_TEST);
+
             mat.setFloatv("opacity", alpha)
             mat.setVector3v("diffuse", color1);
             renderer.materials = [mat];
+
+            if (enables.indexOf(gltf.EnableState.DEPTH_TEST) >= 0) {
+                enables.splice(enables.indexOf(gltf.EnableState.DEPTH_TEST), 1);
+            }
+            if (enables.indexOf(gltf.EnableState.CULL_FACE) >= 0) {
+                enables.splice(enables.indexOf(gltf.EnableState.CULL_FACE), 1);
+            }
+            funs.depthMask = [false];
+            delete funs.frontFace;
+            delete funs.cullFace;
+            funs.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+            funs.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
             return gizmoAxis;
         }
 
@@ -227,6 +246,7 @@ namespace paper.editor {
             if (this.selectedGeo) {
                 this.selectedGeo.isPressed_local(ray, selected)
                 this.geo.transform.setLocalPosition(selected[0].transform.getPosition())
+                this.geo.transform.setLocalRotation(selected[0].transform.getRotation())
             }
         }
         wasPressed_world(ray: egret3d.Ray, selected: any) {
@@ -259,8 +279,11 @@ namespace paper.editor {
                     egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
                 }
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
+                if (this.selectedGeo._ctrlRot) {
+                    this._ctrlRot.copy(this.selectedGeo._ctrlRot)
+                    this.geo.transform.setRotation(this._ctrlRot);
+                }
                 this.geo.transform.setPosition(ctrlPos);
-                this.geo.transform.setRotation(0, 0, 0, 1);
 
             }
 

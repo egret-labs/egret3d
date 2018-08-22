@@ -3063,7 +3063,7 @@ declare namespace paper.editor {
         protected _delta: egret3d.Vector3;
         protected _newPosition: egret3d.Vector3;
         protected _ctrlPos: egret3d.Vector3;
-        protected _ctrlRot: egret3d.Quaternion;
+        _ctrlRot: egret3d.Quaternion;
         protected _dragPlanePoint: egret3d.Vector3;
         protected _dragPlaneNormal: egret3d.Vector3;
         protected _initRotation: egret3d.Quaternion;
@@ -10929,8 +10929,8 @@ declare namespace paper.editor {
         onSet(): void;
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasPressed_world(): void;
-        isPressed_world(): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(): void;
     }
 }
@@ -10938,10 +10938,10 @@ declare namespace paper.editor {
     class yRot extends BaseGeo {
         constructor();
         onSet(): void;
-        wasPressed_local(): void;
-        isPressed_local(): void;
-        wasPressed_world(): void;
-        isPressed_world(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(): void;
     }
 }
@@ -10949,10 +10949,10 @@ declare namespace paper.editor {
     class zRot extends BaseGeo {
         constructor();
         onSet(): void;
-        wasPressed_local(): void;
-        isPressed_local(): void;
-        wasPressed_world(): void;
-        isPressed_world(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(): void;
     }
 }
