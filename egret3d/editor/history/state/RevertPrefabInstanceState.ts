@@ -46,7 +46,12 @@ namespace paper.editor {
                     }
 
                     if (revertData.revertComponents && revertData.revertComponents.length > 0) {
-                        
+                        for (const com of revertData.revertComponents) {
+                            const {serializeData} = com;
+                            new Deserializer().deserialize(serializeData,true,false,gameObj);
+                        }
+
+                        this.dispatchEditorModelEvent(EditorModelEvent.ADD_COMPONENT);
                     }
 
                     if (revertData.modifyGameObjectPropertyList && revertData.modifyGameObjectPropertyList.length > 0) {
@@ -74,22 +79,22 @@ namespace paper.editor {
             this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
         }
 
-        private async modifyPrefabGameObjectPropertyValues(gameObj: GameObject, valueList: any[]): Promise<void> {
+        private modifyPrefabGameObjectPropertyValues(gameObj: GameObject, valueList: any[]) {
             valueList.forEach(async (propertyValue) => {
                 const { propName, copyValue, valueEditType } = propertyValue;
-                let newValue = await this.editorModel.deserializeProperty(copyValue, valueEditType);
+                let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
                 this.editorModel.setTargetProperty(propName, gameObj, newValue);
                 this.dispathPropertyEvent(gameObj, propName, newValue);
             });
         }
 
-        public async modifyPrefabComponentPropertyValues(gameObj: GameObject, componentUUid: string, valueList: any[]): Promise<void> {
+        public modifyPrefabComponentPropertyValues(gameObj: GameObject, componentUUid: string, valueList: any[]) {
             for (let k: number = 0; k < gameObj.components.length; k++) {
                 let prefabComp = gameObj.components[k];
                 if (prefabComp.uuid === componentUUid) {
                     valueList.forEach(async (propertyValue) => {
                         const { propName, copyValue, valueEditType } = propertyValue;
-                        let newValue = await this.editorModel.deserializeProperty(copyValue, valueEditType);
+                        let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
                         this.editorModel.setTargetProperty(propName, prefabComp, newValue);
                         this.dispathPropertyEvent(prefabComp, propName, newValue);
                     })
@@ -139,7 +144,6 @@ namespace paper.editor {
                             this.modifyPrefabGameObjectPropertyValues(gameObj, newValueList);
                         }
                     }
-
 
                     if (revertData.modifyComponentPropertyList && revertData.modifyComponentPropertyList.length > 0) {
                         for (const obj of revertData.modifyComponentPropertyList) {

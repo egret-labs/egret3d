@@ -9,9 +9,13 @@
   },
   "scripts": {
     "build": "egret build && node script/report.js",
-    "build-shader": "node script/shaderCompiler.js"
+    "build-shader": "node script/shaderCompiler.js",
+    "generate-shader": "node script/shaderGenerate.js"
   },
   "author": "egret",
   "license": "ISC",
-  "devDependencies": {}
+  "devDependencies": {},
+  "dependencies": {
+    "fs-extra": "^7.0.0"
+  }
 }

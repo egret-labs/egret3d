@@ -1,26 +1,18 @@
 namespace egret3d {
-    /**
-         * 渲染排序
-         */
-    export enum RenderQueue {
-        Background = 1000,
-        Geometry = 2000,
-        AlphaTest = 2450,
-        Transparent = 3000,
-        Overlay = 4000
-    }
-
     //TODO 运行时DrawCall排序优化使用
     let _hashCode: number = 0;
+    //兼容老的Uniform键值
+    // let _compatible: { [key: string]: string } = { "_MainColor": "diffuse", "_MainTex": "map", "_MainTex_ST": "uvTransform" };
 
     /**
-    * 材质资源
-    */
+     * 材质资源
+     */
     export class Material extends GLTFAsset {
         /**
          * 
          */
-        public renderQueue: RenderQueue | number = -1;
+        public renderQueue: paper.RenderQueue | number = -1;
+
         /**
           * @internal
           */
@@ -29,82 +21,121 @@ namespace egret3d {
           * @internal
           */
         public _version: number = 0;
-
-        private _cacheDefines: string = '';
-        private _textureRef: Texture[] = [];//TODO
-        private readonly _defines: Array<string> = new Array();
-        /**
-        * @internal
-        */
-        public _glTFMaterial: GLTFMaterial | null = null;
-        /**
-        * @internal
-        */
-        public _glTFTechnique: gltf.Technique = null as any;
+        private _cacheDefines: string = "";
+        private readonly _defines: Array<string> = [];
+        private readonly _textures: Texture[] = [];//TODO
         /**
          * @internal
          */
-        public _glTFShader: GLTFAsset = null as any;
-
-        public constructor(shader: GLTFAsset) {
+        public _glTFShader: GLTFAsset = null!;
+        /**
+        * @internal
+        */
+        public _glTFTechnique: gltf.Technique = null!;
+        /**
+         * 
+         */
+        public constructor(shaderOrMaterial: GLTFAsset | Material) {
             super();
 
-            if (shader) { // Custom.
-                this._glTFShader = shader;
+            if (shaderOrMaterial) { // Custom.
+                if (shaderOrMaterial instanceof Material) {
+                    this._glTFShader = shaderOrMaterial.shader;
+                }
+                else {
+                    this._glTFShader = shaderOrMaterial;
+                }
 
                 this.config = GLTFAsset.createGLTFExtensionsConfig();
                 this.config.materials![0] = {
                     extensions: {
                         KHR_techniques_webgl: { technique: this._glTFShader.name, values: {} },
-                        paper: { renderQueue: -1 }
+                        paper: { renderQueue: paper.RenderQueue.Geometry }
                     }
                 } as GLTFMaterial;
 
                 this.initialize();
+
+                if (shaderOrMaterial instanceof Material) {
+                    this.copy(shaderOrMaterial);
+                }
             }
         }
 
-        public dispose() {
+        public initialize() {
+            if (this._glTFTechnique) {
+                return;
+            }
+
+            const glTFMaterial = this.config.materials![0] as GLTFMaterial;
+
+            if (!this._glTFShader) {
+                //不存在，那就从材质中获取
+                this._glTFShader = paper.Asset.find<GLTFAsset>(glTFMaterial.extensions.KHR_techniques_webgl.technique);
+                if (!this._glTFShader) {
+                    console.error("材质中获取着色器错误");
+                    return;
+                }
+            }
+
+            this.renderQueue = glTFMaterial.extensions.paper.renderQueue!;
+            this._glTFTechnique = GLTFAsset.createTechnique(this._glTFShader.config.extensions.KHR_techniques_webgl!.techniques[0]);
+
+            const uniformValues = glTFMaterial.extensions.KHR_techniques_webgl.values!;
+            const uniforms = this._glTFTechnique.uniforms;
+            //使用Shader替换Material中没有默认值的Uniform
+            for (const k in uniformValues) {
+                if (k in uniforms) {
+                    const value = uniformValues[k];
+
+                    if (Array.isArray(value)) {
+                        uniforms[k].value = value.concat();
+                    }
+                    else {
+                        uniforms[k].value = value;
+                    }
+                }
+            }
+
+            // TODO add define.
+        }
+
+        public dispose(disposeChildren?: boolean) {
             if (this._isBuiltin) {
                 return;
             }
 
-            this._glTFMaterial = null!;
-            this._glTFTechnique = null!;
-            this._glTFShader = null!;
-
-            this._cacheDefines = "";
-            this._defines.length = 0;
-
-            for (const tex of this._textureRef) {
-                tex.dispose();
+            if (disposeChildren) {
+                for (const texture of this._textures) {
+                    texture.dispose();
+                }
             }
-
-            this._textureRef.length = 0;
-
-            this._version++;
 
             super.dispose();
+
+            this._version++;
+            this._cacheDefines = "";
+            this._defines.length = 0;
+            this._textures.length = 0;
+            this._glTFTechnique = null!;
+            this._glTFShader = null!;
         }
 
-        /**
-         * 克隆材质资源。
-         */
-        public clone(): Material {
-            const mat: Material = new Material(this._glTFShader);
+        public copy(value: Material) {
+            this.renderQueue = value.renderQueue;
 
-            mat.renderQueue = this.renderQueue;
+            const sourceUniforms = value._glTFTechnique.uniforms;
+            const targetUniforms = this._glTFTechnique.uniforms;
 
-            const sourceUnifroms = this._glTFTechnique.uniforms;
-            const targetUniforms = mat._glTFTechnique.uniforms;
-            for (const key in sourceUnifroms) {
-                const uniform = sourceUnifroms[key];
-                const value = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value;
-                targetUniforms[key] = { type: uniform.type, semantic: uniform.semantic, value };
+            for (const k in sourceUniforms) {
+                const uniform = sourceUniforms[k];
+                const value = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value; // TODO TypeArray
+                targetUniforms[k] = { type: uniform.type, semantic: uniform.semantic, value };
             }
 
-            const sourceStates = this._glTFTechnique.states;
-            const targetStates = mat._glTFTechnique.states;
+            const sourceStates = value._glTFTechnique.states;
+            const targetStates = this._glTFTechnique.states;
+
             if (sourceStates.enable) {
                 targetStates.enable = sourceStates.enable.concat();
             }
@@ -113,97 +144,44 @@ namespace egret3d {
                 if (!targetStates.functions) {
                     targetStates.functions = {};
                 }
-                for (const fun in sourceStates.functions) {
-                    if (Array.isArray(sourceStates.functions[fun])) {
-                        targetStates.functions[fun] = sourceStates.functions[fun].concat();
+
+                for (const k in sourceStates.functions) {
+                    if (Array.isArray(sourceStates.functions[k])) {
+                        targetStates.functions[k] = sourceStates.functions[k].concat();
                     }
                     else {
-                        targetStates.functions[fun] = sourceStates.functions[fun];
+                        targetStates.functions[k] = sourceStates.functions[k];
                     }
                 }
             }
 
-            return mat;
+            return this;
+        }
+        /**
+         * 克隆材质资源。
+         */
+        public clone(): Material {
+            return new Material(this._glTFShader).copy(this);
         }
 
-        // public serialize() {
-        //     if (!this._glTFAsset.name) {
-        //         return null;
-        //     }
-
-        //     const target = paper.serializeStruct(this);
-        //     target._gltfMaterialIndex = this._glTFMaterialIndex;
-        //     target._glTFAsset = paper.serializeAsset(this._glTFAsset);
-
-        //     return target;
-        // }
-
-        // public deserialize(element: any) {
-        //     this._glTFMaterialIndex = element._glTFMaterialIndex;
-        //     this._glTFAsset = paper.getDeserializedAssetOrComponent(element._glTFAsset) as GLTFAsset;
-
-        //     this.initialize();
-
-        //     return this;
-        // }
-
-        public initialize() {
-            if (this._glTFMaterial) {
-                return;
-            }
-
-            this._glTFMaterial = this.config.materials![0] as GLTFMaterial;
-
-            if (!this._glTFShader) {
-                //不存在，那就从材质中获取
-                this._glTFShader = paper.Asset.find<GLTFAsset>(this._glTFMaterial.extensions.KHR_techniques_webgl.technique);
-                if (!this._glTFShader) {
-                    console.error("材质中获取着色器错误");
-                    return;
-                }
-            }
-
-            if (this._glTFMaterial.extensions.paper && this._glTFMaterial.extensions.paper.renderQueue !== -1) {
-                this.renderQueue = this._glTFMaterial.extensions.paper.renderQueue!;
-            }
-            else {
-                this.renderQueue = this._glTFShader.config.extensions.paper!.renderQueue!;
-            }
-            //
-            const template = this._glTFShader.config.extensions.KHR_techniques_webgl!.techniques[0];
-            this._glTFTechnique = GLTFAsset.createTechnique(template);
-
-            const gltfUnifromMap = this._glTFMaterial.extensions.KHR_techniques_webgl.values!;
-            const uniformMap = this._glTFTechnique.uniforms;
-            //使用Shader替换Material中没有默认值的Uniform
-            for (const key in gltfUnifromMap) {
-                if (uniformMap[key]) {
-                    const value = gltfUnifromMap[key];
-                    if (Array.isArray(value)) {
-                        uniformMap[key].value = value.concat();
-                    }
-                    else {
-                        uniformMap[key].value = value;
-                    }
-                }
-            }
-        }
-
-        addDefine(key: string) {
+        public addDefine(key: string) {
             if (this._defines.indexOf(key) < 0) {
                 this._defines.push(key);
-                //减少同样的宏定义因为顺序不同重新编译
                 this._defines.sort();
                 this._version++;
             }
+
+            return this;
         }
 
-        removeDefine(key: string) {
+        public removeDefine(key: string) {
             const delIndex = this._defines.indexOf(key);
             if (delIndex >= 0) {
                 this._defines.splice(delIndex, 1);
                 this._version++;
             }
+
+            return this;
         }
         setBoolean(id: string, value: boolean) {
             let uniform = this._glTFTechnique.uniforms[id];
@@ -217,6 +195,7 @@ namespace egret3d {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
 
+            return this;
         }
 
         setInt(id: string, value: number) {
@@ -230,6 +209,8 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setIntv(id: string, value: Float32Array) {
@@ -241,6 +222,8 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setFloat(id: string, value: number) {
@@ -254,6 +237,8 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setFloatv(id: string, value: Float32Array) {
@@ -265,6 +250,8 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setVector2(id: string, value: Vector2) {
@@ -279,6 +266,8 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setVector2v(id: string, value: Float32Array) {
@@ -290,6 +279,8 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setVector3(id: string, value: Vector3) {
@@ -305,6 +296,8 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setVector3v(id: string, value: Float32Array) {
@@ -316,9 +309,25 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setVector4(id: string, value: Vector4) {
+            //兼容老键值
+            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms["uvTransform"]) {
+                id = "uvTransform";
+                console.warn("已废弃的键值_MainTex_ST，建议改为:uvTransform-Matrix3");
+                this._glTFTechnique.uniforms[id].value = [value.x, 0, 0, 0, value.y, 0, value.z, value.w, 1];
+                return;
+            }
+            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms["diffuse"]) {
+                id = "diffuse";
+                console.warn("已废弃的键值_MainColor、_Color，建议改为:diffuse-Vector3");
+                this._glTFTechnique.uniforms[id].value = [value.x, value.y, value.z];
+                return;
+            }
+
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value[0] !== value.x || uniform.value[1] !== value.y || uniform.value[2] !== value.z || uniform.value[3] !== value.w) {
@@ -332,9 +341,24 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setVector4v(id: string, value: Float32Array | [number, number, number, number]) {
+            //兼容老键值
+            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms["uvTransform"]) {
+                id = "uvTransform";
+                console.warn("已废弃的键值_MainTex_ST，建议改为:uvTransform-Matrix3");
+                this._glTFTechnique.uniforms[id].value = [value[0], 0, 0, 0, value[1], 0, value[2], value[3], 1];;
+                return;
+            }
+            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms["diffuse"]) {
+                id = "diffuse";
+                console.warn("已废弃的键值_MainColor、_Color，建议改为:diffuse-Vector3");
+                this._glTFTechnique.uniforms[id].value = [value[0], value[1], value[2]];
+                return;
+            }
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
@@ -343,6 +367,8 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setMatrix(id: string, value: Matrix4) {
@@ -354,6 +380,8 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setMatrixv(id: string, value: Float32Array) {
@@ -365,16 +393,23 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
         }
 
         setTexture(id: string, value: egret3d.Texture) {
             value = value || egret3d.DefaultTextures.GRAY;
+            //兼容老键值
+            if (id === "_MainTex" && this._glTFTechnique.uniforms["map"]) {
+                id = "map";
+                console.warn("已废弃的键值_MainTex，建议改为:map");
+            }
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value) {
-                    let index = this._textureRef.indexOf(uniform.value);
+                    let index = this._textures.indexOf(uniform.value);
                     if (index > -1) {
-                        this._textureRef.splice(index, 1);
+                        this._textures.splice(index, 1);
                     }
                 }
                 if (uniform.value !== value) {
@@ -387,10 +422,114 @@ namespace egret3d {
             }
 
             if (value) {
-                this._textureRef.push(value);
+                this._textures.push(value);
             }
+
+            return this;
         }
         /**
+         * 
+         * @param blend 
+         */
+        public setBlend(blend: gltf.BlendMode) {
+            const functions = this._glTFTechnique.states.functions!;
+            const enables = this._glTFTechnique.states.enable!;
+
+            switch (blend) {
+                case gltf.BlendMode.Add:
+                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
+                    break;
+
+                case gltf.BlendMode.Add_PreMultiply:
+                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE];
+                    break;
+
+                case gltf.BlendMode.Blend:
+                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                    break;
+
+                case gltf.BlendMode.Blend_PreMultiply:
+                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA];
+                    break;
+
+                default:
+                    delete functions.blendEquationSeparate;
+                    delete functions.blendFuncSeparate;
+                    break;
+            }
+
+            const index = enables.indexOf(gltf.EnableState.BLEND);
+            if (blend === gltf.BlendMode.None) {
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+            else {
+                if (index < 0) {
+                    enables.push(gltf.EnableState.BLEND);
+                }
+            }
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public setCullFace(cull: boolean, frontFace?: gltf.FrontFace, cullFace?: gltf.CullFace) {
+            const funs = this._glTFTechnique.states.functions!;
+            const enables = this._glTFTechnique.states.enable!;
+            const index = enables.indexOf(gltf.EnableState.CULL_FACE);
+            if (cull && frontFace && cullFace) {
+                funs.frontFace = [frontFace];
+                funs.cullFace = [cullFace];
+                if (index < 0) {
+                    enables.push(gltf.EnableState.CULL_FACE);
+                }
+            }
+            else {
+                delete funs.frontFace;
+                delete funs.cullFace;
+
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public setDepth(zTest: boolean, zWrite: boolean) {
+            const funs = this._glTFTechnique.states.functions!;
+            const enables = this._glTFTechnique.states.enable!;
+            const index = enables.indexOf(gltf.EnableState.DEPTH_TEST);
+            if (zTest) {
+                if (index < 0) {
+                    enables.push(gltf.EnableState.DEPTH_TEST);
+                }
+                funs.depthFunc = [gltf.DepthFunc.LEQUAL];
+            }
+            else {
+                if (index >= 0) {
+                    enables.splice(index, 1);
+                }
+            }
+            if (zWrite) {
+                funs.depthMask = [true];
+            }
+            else {
+                funs.depthMask = [false];
+            }
+
+            return this;
+        }
+        /**
+         * TODO
          * @internal
          */
         public get shaderDefine(): string {
@@ -398,7 +537,16 @@ namespace egret3d {
             for (const key of this._defines) {
                 this._cacheDefines += "#define " + key + " \n";
             }
+
             return this._cacheDefines;
+        }
+
+        public get shader() {
+            return this._glTFShader;
+        }
+
+        public get glTFTechnique() {
+            return this._glTFTechnique;
         }
     }
 }

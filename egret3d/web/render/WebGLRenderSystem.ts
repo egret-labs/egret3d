@@ -21,10 +21,11 @@ namespace egret3d {
         //
         private readonly _filteredLights: BaseLight[] = [];
         private _cacheContextVersion: number = -1;
+        private _cacheSubMeshIndex: number = -1;
         private _cacheMaterialVerision: number = -1;
-        private _cacheContext: RenderContext | undefined;
-        private _cacheMaterial: Material | undefined;
-        private _cacheMesh: Mesh | undefined;
+        private _cacheContext: RenderContext | null = null;
+        private _cacheMesh: Mesh | null = null;
+        private _cacheMaterial: Material | null = null;
 
         private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
             const needUpdate = this._cacheContext !== context || this._cacheContextVersion !== context.version || forceUpdate;
@@ -37,7 +38,7 @@ namespace egret3d {
             const webgl = WebGLCapabilities.webgl;
 
             const uniforms = technique.uniforms;
-            const glUniforms = program.uniforms;
+            const glUniforms = program.contextUniforms;
             for (const glUniform of glUniforms) {
                 const uniform = uniforms[glUniform.name];
                 if (!uniform.semantic) {
@@ -53,6 +54,12 @@ namespace egret3d {
                         break;
                     case gltf.UniformSemanticType.PROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_p.rawData);
+                        break;
+                    case gltf.UniformSemanticType.MODELVIEW:
+                        webgl.uniformMatrix4fv(location, false, context.matrix_mv.rawData);
+                        break;
+                    case gltf.UniformSemanticType.MODELVIEWINVERSE:
+                        webgl.uniformMatrix3fv(location, false, context.matrix_mv_inverse.rawData);
                         break;
                     case gltf.UniformSemanticType._VIEWPROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_vp.rawData);
@@ -87,11 +94,17 @@ namespace egret3d {
                             webgl.uniform1fv(location, context.spotLightArray);
                         }
                         break;
+                    case gltf.UniformSemanticType._AMBIENTLIGHTCOLOR:
+                        webgl.uniform3fv(location, context.ambientLightColor);
+                        break;
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.directShadowMatrix);
                         break;
                     case gltf.UniformSemanticType._SPOTSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.spotShadowMatrix);
+                        break;
+                    case gltf.UniformSemanticType._POINTSHADOWMAT:
+                        webgl.uniformMatrix4fv(location, false, context.pointShadowMatrix);
                         break;
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAP:
                         const directShadowLen = context.directShadowMaps.length;
@@ -172,6 +185,9 @@ namespace egret3d {
                     case gltf.UniformSemanticType._FARDISTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraFar);
                         break;
+                    default:
+                        console.warn("不识别的Uniform语义:" + uniform.semantic);
+                        break;
                 }
             }
         }
@@ -197,7 +213,7 @@ namespace egret3d {
                 const value = uniform.value;
                 switch (uniform.type) {
                     case gltf.UniformType.BOOL:
-                    case gltf.UniformType.Int:
+                    case gltf.UniformType.INT:
                         if (glUniform.size > 1) {
                             webgl.uniform1iv(location, value);
                         }
@@ -259,12 +275,14 @@ namespace egret3d {
         }
 
         private _updateAttributes(program: GlProgram, mesh: Mesh, subMeshIndex: number, technique: gltf.Technique, forceUpdate: boolean) {
-            const needUpdate = this._cacheMesh !== mesh || forceUpdate;
+            const needUpdate = this._cacheSubMeshIndex !== subMeshIndex || this._cacheMesh !== mesh || forceUpdate;
             if (!needUpdate) {
                 return;
             }
 
+            this._cacheSubMeshIndex = subMeshIndex;
             this._cacheMesh = mesh;
+
             if (0 <= subMeshIndex && subMeshIndex < mesh.glTFMesh.primitives.length) {
                 const primitive = mesh.glTFMesh.primitives[subMeshIndex];
                 const gl = WebGLCapabilities.webgl;
@@ -393,20 +411,17 @@ namespace egret3d {
             const drawCalls = this._drawCalls;
             const faceCount = light.type === LightType.Point ? 6 : 1;
             const renderState = this._renderState;
-
             for (let i = 0; i < faceCount; ++i) {
-                (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
-                light.update(camera, i);
                 const context = camera.context;
-                context.updateCamera(camera, light.matrix);
-                context.updateLightDepth(light);
+                light.update(camera, i);
 
+                (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
                 renderState.targetAndViewport(camera.viewport, light.renderTarget);
                 renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                 drawCalls.shadowFrustumCulling(camera);
                 //
                 const shadowCalls = drawCalls.shadowCalls;
-                const shadowMaterial = light.type === LightType.Point ? egret3d.DefaultMaterials.ShadowDistance : egret3d.DefaultMaterials.ShadowDepth;
+                const shadowMaterial = light.type === LightType.Point ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
                 for (const drawCall of shadowCalls) {
                     //TODO, 现在不支持蒙皮动画阴影     
                     this._renderCall(context, drawCall, shadowMaterial);
@@ -418,9 +433,6 @@ namespace egret3d {
         }
 
         public onUpdate() {
-            // if (this._isEditorUpdate()) {
-            //     this._renderState.clearState();//编辑器走自己的渲染流程，状态需要清除一下
-            // }
             Performance.startCounter("render");
             const renderState = this._renderState;
             const cameras = this._camerasAndLights.cameras;
@@ -435,11 +447,14 @@ namespace egret3d {
 
             if (lights.length > 0) {
                 for (const light of lights) {
-                    if (!light.castShadows || light.gameObject.scene !== lightsScene) {
+                    if (light.gameObject.scene !== lightsScene) {
                         continue;
                     }
 
                     filteredLights.push(light);
+                    if (!light.castShadows) {
+                        continue;
+                    }
                     this._renderLightShadow(light);
                 }
             }
@@ -451,7 +466,7 @@ namespace egret3d {
                     }
 
                     if (filteredLights.length > 0) {
-                        camera.context.updateLights(filteredLights); // TODO 性能优化
+                        camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientLightColor); // TODO 性能优化
                     }
 
                     if (camera.postQueues.length === 0) {
@@ -472,23 +487,6 @@ namespace egret3d {
                 webgl.clearDepth(1.0);
                 webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             }
-
-            // if (this._isEditorUpdate) {
-            //     // if (paper.editor.Editor.gizmo) {
-
-
-            //     // }
-            //     paper.editor.Gizmo.DrawCoord();
-            //     paper.editor.Gizmo.DrawLights();
-            //     paper.editor.Gizmo.DrawCameras();
-
-            //     // for (const key in this._cacheStateEnable) {
-            //     //     delete this._cacheStateEnable[key];
-            //     // }
-            //     // this._cacheProgram = undefined;
-            //     // this._cacheState = undefined;//???
-            // }
-
 
             Performance.endCounter("render");
         }

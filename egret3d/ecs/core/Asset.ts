@@ -71,6 +71,6 @@ namespace paper {
          * @platform Web
          * @language zh_CN
          */
-        public abstract dispose(): void;
+        public abstract dispose(disposeChildren?: boolean): void;
     }
 }

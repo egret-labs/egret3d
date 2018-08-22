@@ -53,14 +53,14 @@ namespace paper.editor {
                 this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor]
             }
             else if (color == "yellow") {
-                let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                mat.setVector4v("_Color", [0.9, 0.9, 0.7, 0.8]);
-                this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
+                // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                // mat.setVector4v("_Color", [0.9, 0.9, 0.7, 0.8]);
+                // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
             }
             else if (color == "grey") {
-                let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
-                this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
+                // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                // mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
+                // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
             }
         }
 
@@ -83,9 +83,9 @@ namespace paper.editor {
                     break;
             }
             let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
-            let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-            mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
-            renderer.materials = [mat];
+            // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+            // mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
+            // renderer.materials = [mat];
             return gizmoAxis;
         }
 
