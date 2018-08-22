@@ -10819,6 +10819,7 @@ declare namespace paper.editor {
         editorModel: EditorModel;
         private geoCtrlMode;
         private geoCtrlType;
+        private coord;
         constructor();
         onUpdate(): void;
         private updateInLocalMode();
@@ -10832,6 +10833,7 @@ declare namespace paper.editor {
         private changeEditType(type);
         private addEventListener();
         private selectGameObjects(gameObjs);
+        private drawCoord();
     }
 }
 declare namespace egret3d {
@@ -11341,6 +11343,7 @@ declare namespace paper.editor {
         clearSelected(): void;
         onUpdate(delta: number): any;
         private setStroke(picked);
+        private intersectWithCameraAndLight(ray);
     }
 }
 declare namespace paper.editor {

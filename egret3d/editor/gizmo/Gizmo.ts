@@ -99,42 +99,7 @@ namespace paper.editor {
             let gl = Gizmo.webgl;
             let prg = Gizmo.glProgram_line;
 
-            // var dis1;
-            // var delta;
-            // dis1 = egret3d.Vector3.getLength(this.gameObject.transform.getLocalPosition());
-            // delta = (dis1 - this._oldTransform) / 20;
-            // this._oldTransform = egret3d.Vector3.getLength(this.gameObject.transform.getLocalPosition());
-
-            // Gizmo.coordVertexBuffer = gl.createBuffer();
-            // let bia = -0.05;
-
-            // this.nrLine = this.nrLine + delta
             let nrLine = this.nrLine
-            // console.log(nrLine)
-            // for (let i = 0, len = 2 * nrLine + 1; i < len; i++) {
-            //     i = i + dis1;
-            //     Gizmo.verticesCoord[6 * i] = -nrLine + i;
-            //     Gizmo.verticesCoord[6 * i + 1] = bia;
-            //     Gizmo.verticesCoord[6 * i + 2] = -nrLine;
-            //     Gizmo.verticesCoord[6 * i + 3] = -nrLine + i;
-            //     Gizmo.verticesCoord[6 * i + 4] = bia;
-            //     Gizmo.verticesCoord[6 * i + 5] = nrLine;
-
-            //     Gizmo.verticesCoord[6 * len + 6 * i] = -nrLine;
-            //     Gizmo.verticesCoord[6 * len + 6 * i + 1] = bia;
-            //     Gizmo.verticesCoord[6 * len + 6 * i + 2] = -nrLine + i;
-            //     Gizmo.verticesCoord[6 * len + 6 * i + 3] = nrLine;
-            //     Gizmo.verticesCoord[6 * len + 6 * i + 4] = bia;
-            //     Gizmo.verticesCoord[6 * len + 6 * i + 5] = -nrLine + i;
-            //     i = i - dis1
-            // }
-            // Gizmo.verticesCoord = Gizmo.verticesCoord.concat([0, -nrLine, 0, 0, nrLine, 0]);
-            // gl.bindBuffer(gl.ARRAY_BUFFER, Gizmo.coordVertexBuffer);
-            // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(Gizmo.verticesCoord), gl.STATIC_DRAW);
-
-
-
-
             if (!this.enabled) return;
             gl.enable(gl.DEPTH_TEST);
 
@@ -288,16 +253,16 @@ namespace paper.editor {
             const camerasAndLights = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
 
             for (const camera of camerasAndLights.cameras) {
-                if (!camera.gameObject.getComponent(egret3d.MeshFilter) && camera.gameObject.name != "EditorCamera") {
-                    let obj = camera.gameObject
-                    let mesh = obj.addComponent(egret3d.MeshFilter)
-                    mesh.mesh = egret3d.DefaultMeshes.CUBE
-                    // let renderer = obj.addComponent(egret3d.MeshRenderer);
-                    // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                    // mat.setVector4v("_Color", [1, 0, 0, 1]);
-                    // renderer.materials = [mat];
-                    // obj.transform.setScale(0.6, 0.4, 0.4)
-                }
+                // if (!camera.gameObject.getComponent(egret3d.MeshFilter) && camera.gameObject.name != "EditorCamera") {
+                //     let obj = camera.gameObject
+                //     let mesh = obj.addComponent(egret3d.MeshFilter)
+                //     mesh.mesh = egret3d.DefaultMeshes.CUBE
+                //     // let renderer = obj.addComponent(egret3d.MeshRenderer);
+                //     // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                //     // mat.setVector4v("_Color", [1, 0, 0, 1]);
+                //     // renderer.materials = [mat];
+                //     // obj.transform.setScale(0.6, 0.4, 0.4)
+                // }
 
                 Gizmo.DrawIcon("camera", camera.gameObject.transform.getPosition(), 30);
                 Gizmo.DrawCameraSquare(camera.gameObject, [1, 0, 0, 1])
