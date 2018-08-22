@@ -5044,14 +5044,23 @@ var paper;
                     this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor];
                 }
                 else if (color == "yellow") {
-                    // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                    // mat.setVector4v("_Color", [0.9, 0.9, 0.7, 0.8]);
-                    // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
+                    var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+                    var color1 = new Float32Array([0.9, 0.9, 0.7]);
+                    var alpha = new Float32Array([0.3]);
+                    mat.setFloatv("opacity", alpha);
+                    mat.setVector3v("diffuse", color1);
+                    this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
                 }
                 else if (color == "grey") {
                     // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
                     // mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
                     // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
+                    var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+                    var color1 = new Float32Array([0.3, 0.3, 0.3]);
+                    var alpha = new Float32Array([0.4]);
+                    mat.setFloatv("opacity", alpha);
+                    mat.setVector3v("diffuse", color1);
+                    this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
                 }
             };
             BaseGeo.prototype._createAxis = function (color, type) {
@@ -5072,9 +5081,12 @@ var paper;
                         break;
                 }
                 var renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
-                // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                // mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
-                // renderer.materials = [mat];
+                var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+                var color1 = new Float32Array([color.x, color.y, color.z]);
+                var alpha = new Float32Array([color.w]);
+                mat.setFloatv("opacity", alpha);
+                mat.setVector3v("diffuse", color1);
+                renderer.materials = [mat];
                 return gizmoAxis;
             };
             BaseGeo.prototype._createCircleLine = function () {
@@ -21566,9 +21578,11 @@ var paper;
                 // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
                 // egret3d.Vector3.scale(worldOffset, cosHit);
                 // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
-                parentMatrix = parentMatrix.inverse();
-                parentMatrix.transformNormal(position);
+                if (selectedGameObjs[0].transform.parent) {
+                    var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(position);
+                }
                 egret3d.Vector3.copy(position, this._ctrlPos);
                 selectedGameObjs[0].transform.setLocalPosition(position);
                 // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
@@ -21603,9 +21617,11 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
-                    var parentMatrix = obj.transform.parent.getWorldMatrix();
-                    parentMatrix = parentMatrix.inverse();
-                    parentMatrix.transformNormal(this._newPosition);
+                    if (obj.transform.parent) {
+                        var parentMatrix = obj.transform.parent.getWorldMatrix();
+                        parentMatrix = parentMatrix.inverse();
+                        parentMatrix.transformNormal(this._newPosition);
+                    }
                     obj.transform.setLocalPosition(this._newPosition);
                     // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
@@ -21681,9 +21697,11 @@ var paper;
                 // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
                 // egret3d.Vector3.scale(worldOffset, cosHit);
                 // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
-                parentMatrix = parentMatrix.inverse();
-                parentMatrix.transformNormal(position);
+                if (selectedGameObjs[0].transform.parent) {
+                    var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(position);
+                }
                 egret3d.Vector3.copy(position, this._ctrlPos);
                 selectedGameObjs[0].transform.setLocalPosition(position);
                 // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
@@ -21718,9 +21736,11 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
-                    var parentMatrix = obj.transform.parent.getWorldMatrix();
-                    parentMatrix = parentMatrix.inverse();
-                    parentMatrix.transformNormal(this._newPosition);
+                    if (obj.transform.parent) {
+                        var parentMatrix = obj.transform.parent.getWorldMatrix();
+                        parentMatrix = parentMatrix.inverse();
+                        parentMatrix.transformNormal(this._newPosition);
+                    }
                     obj.transform.setLocalPosition(this._newPosition);
                     // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
@@ -21796,9 +21816,11 @@ var paper;
                 // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
                 // egret3d.Vector3.scale(worldOffset, cosHit);
                 // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
-                parentMatrix = parentMatrix.inverse();
-                parentMatrix.transformNormal(position);
+                if (selectedGameObjs[0].transform.parent) {
+                    var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
+                    parentMatrix = parentMatrix.inverse();
+                    parentMatrix.transformNormal(position);
+                }
                 egret3d.Vector3.copy(position, this._ctrlPos);
                 selectedGameObjs[0].transform.setLocalPosition(position);
                 // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
@@ -21833,9 +21855,11 @@ var paper;
                     var obj = selectedGameObjs[i];
                     var lastPos = obj.transform.getPosition();
                     egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
-                    var parentMatrix = obj.transform.parent.getWorldMatrix();
-                    parentMatrix = parentMatrix.inverse();
-                    parentMatrix.transformNormal(this._newPosition);
+                    if (obj.transform.parent) {
+                        var parentMatrix = obj.transform.parent.getWorldMatrix();
+                        parentMatrix = parentMatrix.inverse();
+                        parentMatrix.transformNormal(this._newPosition);
+                    }
                     obj.transform.setLocalPosition(this._newPosition);
                     // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
                 }
