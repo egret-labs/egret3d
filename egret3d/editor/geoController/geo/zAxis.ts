@@ -38,10 +38,11 @@ namespace paper.editor {
             egret3d.Vector3.scale(worldOffset, cosHit);
             let position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
             egret3d.Vector3.copy(position, this._ctrlPos);
-            let parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix()
-            parentMatrix = parentMatrix.inverse()
-            parentMatrix.transformNormal(position)
-
+            if (selectedGameObjs[0].transform.parent) {
+                let parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix()
+                parentMatrix = parentMatrix.inverse()
+                parentMatrix.transformNormal(position)
+            }
             selectedGameObjs[0].transform.setLocalPosition(position)
             // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
         }
@@ -77,9 +78,11 @@ namespace paper.editor {
                 let lastPos = obj.transform.getPosition();
                 egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
 
-                let parentMatrix = obj.transform.parent.getWorldMatrix()
-                parentMatrix = parentMatrix.inverse()
-                parentMatrix.transformNormal(this._newPosition)
+                if (obj.transform.parent) {
+                    let parentMatrix = obj.transform.parent.getWorldMatrix()
+                    parentMatrix = parentMatrix.inverse()
+                    parentMatrix.transformNormal(this._newPosition)
+                }
 
                 obj.transform.setLocalPosition(this._newPosition)
                 // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);

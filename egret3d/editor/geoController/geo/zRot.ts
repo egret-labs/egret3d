@@ -4,11 +4,11 @@ namespace paper.editor {
             super();
         }
         onSet() {
-            let zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.5), 1);
+            let zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.8), 1);
             zRotate.name = "GizmoController_Rotate_Z";
             zRotate.tag = "Editor";
-            zRotate.transform.setLocalEulerAngles(90, 0, 0);
-            zRotate.transform.setLocalScale(3, 0.05, 3);
+            zRotate.transform.setLocalEulerAngles(0, 0, 0);
+            zRotate.transform.setLocalScale(2, 2, 2);
             this.geo = zRotate
         }
         wasPressed_local() {

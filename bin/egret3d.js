@@ -182,13 +182,13 @@ var paper;
             return _this;
         }
         /**
-         * @deprecated
+         * @internal
          */
         Asset.register = function (asset) {
             this._assets[asset.name] = asset;
         };
         /**
-         * @deprecated
+         *
          */
         Asset.find = function (name) {
             var result = this._assets[name];
@@ -197,9 +197,6 @@ var paper;
             }
             return result;
         };
-        /**
-         * @deprecated
-         */
         Asset._assets = {};
         return Asset;
     }(paper.BaseObject));
@@ -280,17 +277,17 @@ var egret3d;
             this.z = value[offset + 2];
             return this;
         };
-        Vector3.prototype.fromPlaneProjection = function (plane, value) {
-            if (!value) {
-                value = this;
+        Vector3.prototype.fromPlaneProjection = function (plane, source) {
+            if (!source) {
+                source = this;
             }
-            return this.add(egret3d.helpVector3A.multiplyScalar(-plane.getDistance(value), plane.normal));
+            return this.add(egret3d.helpVector3A.multiplyScalar(-plane.getDistance(source), plane.normal));
         };
-        Vector3.prototype.applyMatrix = function (matrix, value) {
-            if (!value) {
-                value = this;
+        Vector3.prototype.applyMatrix = function (matrix, source) {
+            if (!source) {
+                source = this;
             }
-            var x = value.x, y = value.y, z = value.z;
+            var x = source.x, y = source.y, z = source.z;
             var rawData = matrix.rawData;
             var w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
             this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
@@ -298,22 +295,22 @@ var egret3d;
             this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
             return this;
         };
-        Vector3.prototype.applyDirection = function (matrix, value) {
-            if (!value) {
-                value = this;
+        Vector3.prototype.applyDirection = function (matrix, source) {
+            if (!source) {
+                source = this;
             }
-            var x = value.x, y = value.y, z = value.z;
+            var x = source.x, y = source.y, z = source.z;
             var rawData = matrix.rawData;
             this.x = rawData[0] * x + rawData[4] * y + rawData[8] * z;
             this.y = rawData[1] * x + rawData[5] * y + rawData[9] * z;
             this.z = rawData[2] * x + rawData[6] * y + rawData[10] * z;
             return this;
         };
-        Vector3.prototype.applyQuaternion = function (quaternion, value) {
-            if (!value) {
-                value = this;
+        Vector3.prototype.applyQuaternion = function (quaternion, source) {
+            if (!source) {
+                source = this;
             }
-            var x = value.x, y = value.y, z = value.z;
+            var x = source.x, y = source.y, z = source.z;
             var qx = quaternion.x, qy = quaternion.y, qz = quaternion.z, qw = quaternion.w;
             // calculate quat * vector
             var ix = qw * x + qy * z - qz * y;
@@ -326,11 +323,11 @@ var egret3d;
             this.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
             return this;
         };
-        Vector3.prototype.normalize = function (value) {
-            if (!value) {
-                value = this;
+        Vector3.prototype.normalize = function (source) {
+            if (!source) {
+                source = this;
             }
-            var l = value.length;
+            var l = source.length;
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;
@@ -344,19 +341,19 @@ var egret3d;
             }
             return this;
         };
-        Vector3.prototype.negate = function (value) {
-            if (!value) {
-                value = this;
+        Vector3.prototype.negate = function (source) {
+            if (!source) {
+                source = this;
             }
-            this.x = value.x * -1.00;
-            this.y = value.y * -1.00;
-            this.z = value.z * -1.00;
+            this.x = source.x * -1.00;
+            this.y = source.y * -1.00;
+            this.z = source.z * -1.00;
         };
-        Vector3.prototype.addScalar = function (add, value) {
-            if (value) {
-                this.x = value.x + add;
-                this.y = value.y + add;
-                this.z = value.z + add;
+        Vector3.prototype.addScalar = function (add, source) {
+            if (source) {
+                this.x = source.x + add;
+                this.y = source.y + add;
+                this.z = source.z + add;
             }
             else {
                 this.x += add;
@@ -391,11 +388,11 @@ var egret3d;
             }
             return this;
         };
-        Vector3.prototype.multiplyScalar = function (scale, value) {
-            if (value) {
-                this.x = scale * value.x;
-                this.y = scale * value.y;
-                this.z = scale * value.z;
+        Vector3.prototype.multiplyScalar = function (scale, source) {
+            if (source) {
+                this.x = scale * source.x;
+                this.y = scale * source.y;
+                this.z = scale * source.z;
             }
             else {
                 this.x *= scale;
@@ -468,11 +465,14 @@ var egret3d;
             this.z = Math.max(valueA.z, valueB.z);
             return this;
         };
-        Vector3.prototype.clamp = function (min, max) {
+        Vector3.prototype.clamp = function (min, max, source) {
+            if (!source) {
+                source = this;
+            }
             // assumes min < max, componentwise
-            this.x = Math.max(min.x, Math.min(max.x, this.x));
-            this.y = Math.max(min.y, Math.min(max.y, this.y));
-            this.z = Math.max(min.z, Math.min(max.z, this.z));
+            this.x = Math.max(min.x, Math.min(max.x, source.x));
+            this.y = Math.max(min.y, Math.min(max.y, source.y));
+            this.z = Math.max(min.z, Math.min(max.z, source.z));
             return this;
         };
         Vector3.prototype.getDistance = function (valueA, valueB) {
@@ -732,12 +732,12 @@ var egret3d;
     /**
      *
      */
-    var Matrix = (function () {
+    var Matrix4 = (function () {
         /**
          * @deprecated
          * @private
          */
-        function Matrix() {
+        function Matrix4() {
             /**
              *
              */
@@ -748,13 +748,13 @@ var egret3d;
          * @param rawData
          * @param offset
          */
-        Matrix.create = function (rawData, offset) {
+        Matrix4.create = function (rawData, offset) {
             if (rawData === void 0) { rawData = null; }
             if (offset === void 0) { offset = 0; }
             if (this._instances.length > 0) {
                 return this._instances.pop();
             }
-            var matrix = new Matrix();
+            var matrix = new Matrix4();
             if (rawData) {
                 matrix.fromArray(rawData, offset);
             }
@@ -763,26 +763,26 @@ var egret3d;
         /**
          *
          */
-        Matrix.prototype.release = function () {
-            if (Matrix._instances.indexOf(this) < 0) {
-                Matrix._instances.push(this);
+        Matrix4.prototype.release = function () {
+            if (Matrix4._instances.indexOf(this) < 0) {
+                Matrix4._instances.push(this);
             }
             return this;
         };
-        Matrix.prototype.serialize = function () {
+        Matrix4.prototype.serialize = function () {
             return this.rawData;
         };
-        Matrix.prototype.deserialize = function (value) {
+        Matrix4.prototype.deserialize = function (value) {
             return this.fromArray(value);
         };
-        Matrix.prototype.copy = function (value) {
+        Matrix4.prototype.copy = function (value) {
             this.fromArray(value.rawData);
             return this;
         };
-        Matrix.prototype.clone = function () {
-            return Matrix.create(this.rawData);
+        Matrix4.prototype.clone = function () {
+            return Matrix4.create(this.rawData);
         };
-        Matrix.prototype.identity = function () {
+        Matrix4.prototype.identity = function () {
             this.rawData[0] = 1.0;
             this.rawData[1] = 0.0;
             this.rawData[2] = 0.0;
@@ -801,33 +801,34 @@ var egret3d;
             this.rawData[15] = 1.0;
             return this;
         };
-        Matrix.prototype.set = function (m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44) {
-            this.rawData[0] = m11;
-            this.rawData[1] = m12;
-            this.rawData[2] = m13;
-            this.rawData[3] = m14;
-            this.rawData[4] = m21;
-            this.rawData[5] = m22;
-            this.rawData[6] = m23;
-            this.rawData[7] = m24;
-            this.rawData[8] = m31;
-            this.rawData[9] = m32;
-            this.rawData[10] = m33;
-            this.rawData[11] = m34;
-            this.rawData[12] = m41;
-            this.rawData[13] = m42;
-            this.rawData[14] = m43;
-            this.rawData[15] = m44;
+        Matrix4.prototype.set = function (n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44) {
+            var rawData = this.rawData;
+            rawData[0] = n11;
+            rawData[4] = n12;
+            rawData[8] = n13;
+            rawData[12] = n14;
+            rawData[1] = n21;
+            rawData[5] = n22;
+            rawData[9] = n23;
+            rawData[13] = n24;
+            rawData[2] = n31;
+            rawData[6] = n32;
+            rawData[10] = n33;
+            rawData[14] = n34;
+            rawData[3] = n41;
+            rawData[7] = n42;
+            rawData[11] = n43;
+            rawData[15] = n44;
             return this;
         };
-        Matrix.prototype.fromArray = function (value, offset) {
+        Matrix4.prototype.fromArray = function (value, offset) {
             if (offset === void 0) { offset = 0; }
             for (var i = 0; i < 16; ++i) {
                 this.rawData[i] = value[i + offset];
             }
             return this;
         };
-        Matrix.prototype.fromTranslate = function (value, rotationAndScaleStays) {
+        Matrix4.prototype.fromTranslate = function (value, rotationAndScaleStays) {
             if (rotationAndScaleStays === void 0) { rotationAndScaleStays = false; }
             if (!rotationAndScaleStays) {
                 this.identity();
@@ -837,11 +838,11 @@ var egret3d;
             this.rawData[14] = value.z;
             return this;
         };
-        Matrix.prototype.fromRotation = function (rotation, translateStays) {
+        Matrix4.prototype.fromRotation = function (rotation, translateStays) {
             if (translateStays === void 0) { translateStays = false; }
             return this.compose(translateStays ? _helpVector3A.fromArray(this.rawData, 12) : egret3d.Vector3.ZERO, rotation, egret3d.Vector3.ONE);
         };
-        Matrix.prototype.fromEuler = function (value, order, translateStays) {
+        Matrix4.prototype.fromEuler = function (value, order, translateStays) {
             // http://www.mathworks.com/matlabcentral/fileexchange/
             // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
             //	content/SpinCalc.m
@@ -947,7 +948,7 @@ var egret3d;
             }
             return this;
         };
-        Matrix.prototype.formScale = function (x, y, z, translateStays) {
+        Matrix4.prototype.fromScale = function (x, y, z, translateStays) {
             if (translateStays === void 0) { translateStays = false; }
             if (translateStays) {
                 _helpVector3A.fromArray(this.rawData, 12);
@@ -963,7 +964,37 @@ var egret3d;
             }
             return this;
         };
-        Matrix.prototype.determinant = function () {
+        Matrix4.prototype.fromAxis = function (axis, radian) {
+            if (radian === void 0) { radian = 0.0; }
+            // Based on http://www.gamedev.net/reference/articles/article1199.asp
+            var c = Math.cos(radian);
+            var s = Math.sin(radian);
+            var t = 1.0 - c;
+            var x = axis.x, y = axis.y, z = axis.z;
+            var tx = t * x, ty = t * y;
+            this.set(tx * x + c, tx * y - s * z, tx * z + s * y, 0.0, tx * y + s * z, ty * y + c, ty * z - s * x, 0.0, tx * z - s * y, ty * z + s * x, t * z * z + c, 0.0, 0.0, 0.0, 0.0, 1.0);
+            return this;
+        };
+        Matrix4.prototype.fromAxises = function (axisX, axisY, axisZ) {
+            this.set(axisX.x, axisY.x, axisZ.x, 0.0, axisX.y, axisY.y, axisZ.y, 0.0, axisX.z, axisY.z, axisZ.z, 0.0, 0.0, 0.0, 0.0, 1.0);
+            return this;
+        };
+        Matrix4.prototype.fromRotationX = function (radian) {
+            var c = Math.cos(radian), s = Math.sin(radian);
+            this.set(1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1);
+            return this;
+        };
+        Matrix4.prototype.fromRotationY = function (radian) {
+            var c = Math.cos(radian), s = Math.sin(radian);
+            this.set(c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1);
+            return this;
+        };
+        Matrix4.prototype.fromRotationZ = function (theta) {
+            var c = Math.cos(theta), s = Math.sin(theta);
+            this.set(c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            return this;
+        };
+        Matrix4.prototype.determinant = function () {
             var rawData = this.rawData;
             var n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
             var n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
@@ -996,7 +1027,7 @@ var egret3d;
                     - n12 * n21 * n33
                     + n12 * n23 * n31));
         };
-        Matrix.prototype.compose = function (translation, rotation, scale) {
+        Matrix4.prototype.compose = function (translation, rotation, scale) {
             var rawData = this.rawData;
             var x = rotation.x, y = rotation.y, z = rotation.z, w = rotation.w;
             var x2 = x + x, y2 = y + y, z2 = z + z;
@@ -1022,7 +1053,7 @@ var egret3d;
             rawData[15] = 1.0;
             return this;
         };
-        Matrix.prototype.decompose = function (translation, rotation, scale) {
+        Matrix4.prototype.decompose = function (translation, rotation, scale) {
             if (translation === void 0) { translation = null; }
             if (rotation === void 0) { rotation = null; }
             if (scale === void 0) { scale = null; }
@@ -1065,11 +1096,11 @@ var egret3d;
             }
             return this;
         };
-        Matrix.prototype.transpose = function (value) {
-            if (!value) {
-                value = this;
+        Matrix4.prototype.transpose = function (source) {
+            if (!source) {
+                source = this;
             }
-            var valueRawData = value.rawData;
+            var valueRawData = source.rawData;
             var rawData = this.rawData;
             var temp = 0.0;
             temp = valueRawData[1];
@@ -1092,11 +1123,11 @@ var egret3d;
             rawData[14] = temp;
             return this;
         };
-        Matrix.prototype.inverse = function (value) {
-            if (!value) {
-                value = this;
+        Matrix4.prototype.inverse = function (source) {
+            if (!source) {
+                source = this;
             }
-            var valueRawData = value.rawData;
+            var valueRawData = source.rawData;
             var rawData = this.rawData;
             var n11 = valueRawData[0], n21 = valueRawData[1], n31 = valueRawData[2], n41 = valueRawData[3], n12 = valueRawData[4], n22 = valueRawData[5], n32 = valueRawData[6], n42 = valueRawData[7], n13 = valueRawData[8], n23 = valueRawData[9], n33 = valueRawData[10], n43 = valueRawData[11], n14 = valueRawData[12], n24 = valueRawData[13], n34 = valueRawData[14], n44 = valueRawData[15], t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44, t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44, t13 = n13 * n24 * n42 - n14 * n23 * n42 + n14 * n22 * n43 - n12 * n24 * n43 - n13 * n22 * n44 + n12 * n23 * n44, t14 = n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34;
             var det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
@@ -1123,7 +1154,30 @@ var egret3d;
             rawData[15] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) * detInv;
             return this;
         };
-        Matrix.prototype.multiply = function (valueA, valueB) {
+        Matrix4.prototype.multiplyScalar = function (value, source) {
+            if (!source) {
+                source = this;
+            }
+            var sourceRawData = source.rawData;
+            var rawData = this.rawData;
+            rawData[0] = sourceRawData[0] * value;
+            rawData[1] = sourceRawData[1] * value;
+            rawData[2] = sourceRawData[2] * value;
+            rawData[3] = sourceRawData[3] * value;
+            rawData[4] = sourceRawData[4] * value;
+            rawData[5] = sourceRawData[5] * value;
+            rawData[6] = sourceRawData[6] * value;
+            rawData[7] = sourceRawData[7] * value;
+            rawData[8] = sourceRawData[8] * value;
+            rawData[9] = sourceRawData[9] * value;
+            rawData[10] = sourceRawData[10] * value;
+            rawData[11] = sourceRawData[11] * value;
+            rawData[12] = sourceRawData[12] * value;
+            rawData[13] = sourceRawData[13] * value;
+            rawData[14] = sourceRawData[14] * value;
+            rawData[15] = sourceRawData[15] * value;
+        };
+        Matrix4.prototype.multiply = function (valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;
@@ -1157,7 +1211,7 @@ var egret3d;
             te[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
             return this;
         };
-        Matrix.prototype.premultiply = function (value) {
+        Matrix4.prototype.premultiply = function (value) {
             return this.multiply(value, this);
         };
         /**
@@ -1166,7 +1220,7 @@ var egret3d;
          * @param target
          * @param up
          */
-        Matrix.prototype.lookAt = function (eye, target, up) {
+        Matrix4.prototype.lookAt = function (eye, target, up) {
             var z = _helpVector3C.subtract(target, eye).normalize();
             var x = _helpVector3A.cross(up, z).normalize();
             var y = _helpVector3B.cross(z, x);
@@ -1182,7 +1236,14 @@ var egret3d;
             rawData[10] = z.z;
             return this;
         };
-        Matrix.prototype.toEuler = function (value, order) {
+        Matrix4.prototype.getMaxScaleOnAxis = function () {
+            var rawData = this.rawData;
+            var scaleXSq = rawData[0] * rawData[0] + rawData[1] * rawData[1] + rawData[2] * rawData[2];
+            var scaleYSq = rawData[4] * rawData[4] + rawData[5] * rawData[5] + rawData[6] * rawData[6];
+            var scaleZSq = rawData[8] * rawData[8] + rawData[9] * rawData[9] + rawData[10] * rawData[10];
+            return Math.sqrt(Math.max(scaleXSq, scaleYSq, scaleZSq));
+        };
+        Matrix4.prototype.toEuler = function (value, order) {
             if (order === void 0) { order = 0 /* XYZ */; }
             // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
             var rawData = this.rawData;
@@ -1268,7 +1329,7 @@ var egret3d;
         /**
          * @deprecated
          */
-        Matrix.prototype.transformVector3 = function (value, out) {
+        Matrix4.prototype.transformVector3 = function (value, out) {
             var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]) + this.rawData[12];
             var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]) + this.rawData[13];
             var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]) + this.rawData[14];
@@ -1284,7 +1345,7 @@ var egret3d;
         /**
          * @deprecated
          */
-        Matrix.prototype.transformNormal = function (value, out) {
+        Matrix4.prototype.transformNormal = function (value, out) {
             var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]);
             var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]);
             var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]);
@@ -1299,7 +1360,7 @@ var egret3d;
         /**
          * @deprecated
          */
-        Matrix.prototype.scale = function (scaler) {
+        Matrix4.prototype.scale = function (scaler) {
             var rawData = this.rawData;
             rawData[0] *= scaler;
             rawData[1] *= scaler;
@@ -1322,7 +1383,7 @@ var egret3d;
         /**
          * @deprecated
          */
-        Matrix.prototype.add = function (left, right) {
+        Matrix4.prototype.add = function (left, right) {
             if (!right) {
                 right = left;
                 left = this;
@@ -1348,7 +1409,7 @@ var egret3d;
         /**
          * @deprecated
          */
-        Matrix.prototype.lerp = function (v, left, right) {
+        Matrix4.prototype.lerp = function (v, left, right) {
             var p = 1.0 - v;
             for (var i = 0; i < 16; i++) {
                 this.rawData[i] = left.rawData[i] * p + right.rawData[i] * v;
@@ -1358,7 +1419,7 @@ var egret3d;
         /**
          * @deprecated
          */
-        Matrix.perspectiveProjectLH = function (fov, aspect, znear, zfar, out) {
+        Matrix4.perspectiveProjectLH = function (fov, aspect, znear, zfar, out) {
             var tan = 1.0 / (Math.tan(fov * 0.5));
             out.rawData[0] = tan / aspect;
             out.rawData[1] = out.rawData[2] = out.rawData[3] = 0.0;
@@ -1374,7 +1435,7 @@ var egret3d;
         /**
          * @deprecated
          */
-        Matrix.orthoProjectLH = function (width, height, znear, zfar, out) {
+        Matrix4.orthoProjectLH = function (width, height, znear, zfar, out) {
             var hw = 2.0 / width;
             var hh = 2.0 / height;
             var id = 2.0 / (zfar - znear);
@@ -1397,19 +1458,19 @@ var egret3d;
             out.rawData[15] = 1;
             return out;
         };
-        Matrix._instances = [];
-        return Matrix;
+        Matrix4._instances = [];
+        return Matrix4;
     }());
-    egret3d.Matrix = Matrix;
-    __reflect(Matrix.prototype, "egret3d.Matrix", ["paper.IRelease", "paper.ISerializable"]);
+    egret3d.Matrix4 = Matrix4;
+    __reflect(Matrix4.prototype, "egret3d.Matrix4", ["paper.IRelease", "paper.ISerializable"]);
     var _helpVector3A = egret3d.Vector3.create();
     var _helpVector3B = egret3d.Vector3.create();
     var _helpVector3C = egret3d.Vector3.create();
-    var _helpMatrix = Matrix.create();
-    egret3d.helpMatrixA = Matrix.create();
-    egret3d.helpMatrixB = Matrix.create();
-    egret3d.helpMatrixC = Matrix.create();
-    egret3d.helpMatrixD = Matrix.create();
+    var _helpMatrix = Matrix4.create();
+    egret3d.helpMatrixA = Matrix4.create();
+    egret3d.helpMatrixB = Matrix4.create();
+    egret3d.helpMatrixC = Matrix4.create();
+    egret3d.helpMatrixD = Matrix4.create();
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -1475,11 +1536,11 @@ var egret3d;
             this.w = value[offset + 3];
             return this;
         };
-        Vector4.prototype.normalize = function (value) {
-            if (!value) {
-                value = this;
+        Vector4.prototype.normalize = function (source) {
+            if (!source) {
+                source = this;
             }
-            var l = value.length;
+            var l = source.length;
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;
@@ -3760,7 +3821,7 @@ var egret3d;
              *
              */
             _this.color = new egret3d.Color(1.0, 1.0, 1.0, 1.0);
-            _this.matrix = new egret3d.Matrix();
+            _this.matrix = new egret3d.Matrix4();
             return _this;
         }
         BaseLight.prototype._updateMatrix = function (camera) {
@@ -4128,8 +4189,12 @@ var egret3d;
         return vMin <= plane.constant && vMax >= plane.constant;
     }
     egret3d.planeIntersectsAABB = planeIntersectsAABB;
+    function planeIntersectsSphere(plane, sphere) {
+        return Math.abs(plane.getDistance(sphere.center)) <= sphere.radius;
+    }
+    egret3d.planeIntersectsSphere = planeIntersectsSphere;
     function aabbIntersectsSphere(aabb, value) {
-        // Find the point on the AABB closest to the sphere center.s
+        // Find the point on the AABB closest to the sphere center.
         egret3d.helpVector3A.copy(value.center).clamp(aabb.minimum, aabb.maximum);
         // If that point is inside the sphere, the AABB and sphere intersect.
         return egret3d.helpVector3A.getSquaredDistance(value.center) <= (value.radius * value.radius);
@@ -4277,24 +4342,23 @@ var egret3d;
         /**
          * - 向量必须已归一化。
          */
-        Quaternion.prototype.fromAxisAngle = function (axis, angle) {
-            angle *= egret3d.DEG_RAD;
+        Quaternion.prototype.fromAxis = function (axis, radian) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
             // assumes axis is normalized
-            var halfAngle = angle * 0.5, s = Math.sin(halfAngle);
+            var halfAngle = radian * 0.5, s = Math.sin(halfAngle);
             this.x = axis.x * s;
             this.y = axis.y * s;
             this.z = axis.z * s;
             this.w = Math.cos(halfAngle);
             return this;
         };
-        Quaternion.prototype.inverse = function (value) {
-            if (!value) {
-                value = this;
+        Quaternion.prototype.inverse = function (source) {
+            if (!source) {
+                source = this;
             }
-            this.x = value.x * -1;
-            this.y = value.y * -1;
-            this.z = value.z * -1;
+            this.x = source.x * -1;
+            this.y = source.y * -1;
+            this.z = source.z * -1;
             return this;
         };
         Quaternion.prototype.dot = function (value) {
@@ -4397,14 +4461,14 @@ var egret3d;
     var _helpVector3A = egret3d.Vector3.create();
     var _helpVector3B = egret3d.Vector3.create();
     var _helpVector3C = egret3d.Vector3.create();
-    var _helpMatrix = egret3d.Matrix.create();
+    var _helpMatrix = egret3d.Matrix4.create();
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     var _helpVector3A = egret3d.Vector3.create();
     var _helpVector3B = egret3d.Vector3.create();
     var _helpVector3C = egret3d.Vector3.create();
-    var _helpMatrix = egret3d.Matrix.create();
+    var _helpMatrix = egret3d.Matrix4.create();
     var _helpRay = egret3d.Ray.create();
     var _attributes = [
         "POSITION" /* POSITION */,
@@ -4961,7 +5025,7 @@ var paper;
                         mesh.mesh = egret3d.DefaultMeshes.CUBE;
                         break;
                     case 1:
-                        mesh.mesh = egret3d.DefaultMeshes.PYRAMID;
+                        mesh.mesh = this._createCircleLine();
                         break;
                     case 2:
                         mesh.mesh = egret3d.DefaultMeshes.CUBE;
@@ -4975,6 +5039,30 @@ var paper;
                 mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
                 renderer.materials = [mat];
                 return gizmoAxis;
+            };
+            BaseGeo.prototype._createCircleLine = function () {
+                var vertexCount = 1;
+                var triangleFan = [];
+                var indices = [];
+                for (var angle = 0; angle <= 360; angle += 1) {
+                    var x = Math.cos(angle / 180.0 * 3.14) / 1.03;
+                    var y = Math.sin(angle / 180.0 * 3.14) / 1.03;
+                    var z = 0.0;
+                    triangleFan.push(x, y, z);
+                    var x = Math.cos(angle / 180.0 * 3.14);
+                    var y = Math.sin(angle / 180.0 * 3.14);
+                    var z = 0.0;
+                    triangleFan.push(x, y, z);
+                    vertexCount++;
+                }
+                console.log(vertexCount);
+                for (var angle = 0; angle <= vertexCount * 2 - 3; angle += 1) {
+                    indices.push(angle, angle + 1, angle + 2);
+                }
+                var mesh = new egret3d.Mesh(vertexCount * 2, (vertexCount * 2 - 3) * 3);
+                mesh.setIndices(indices);
+                mesh.setAttributes("POSITION" /* POSITION */, triangleFan);
+                return mesh;
             };
             return BaseGeo;
         }());
@@ -5363,6 +5451,11 @@ var egret3d;
             this.radius = Math.sqrt(maxRadiusSqrt);
             return this;
         };
+        Sphere.prototype.applyMatrix = function (matrix) {
+            this.center.applyMatrix(matrix);
+            this.radius = this.radius * matrix.getMaxScaleOnAxis();
+            return this;
+        };
         Sphere.prototype.contains = function (value) {
             if (value instanceof Sphere) {
                 var radiusDelta = this.radius - value.radius;
@@ -5372,6 +5465,20 @@ var egret3d;
                 return false;
             }
             return this.center.getSquaredDistance(value) <= this.radius * this.radius;
+        };
+        Sphere.prototype.getDistance = function (value) {
+            return this.center.getDistance(value) - this.radius;
+        };
+        Sphere.prototype.clampPoint = function (point, out) {
+            var squaredDistance = this.center.getSquaredDistance(point);
+            if (squaredDistance > (this.radius * this.radius)) {
+                out.subtract(this.center, point).normalize();
+                out.multiplyScalar(this.radius).add(this.center);
+            }
+            else {
+                out.copy(point);
+            }
+            return out;
         };
         Sphere._instances = [];
         return Sphere;
@@ -5407,7 +5514,7 @@ var egret3d;
         function AABB() {
             this._dirtyRadius = true;
             this._dirtyCenter = true;
-            this._radius = 0.0;
+            this._boundingSphereRadius = 0.0;
             this._minimum = egret3d.Vector3.create(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
             this._maximum = egret3d.Vector3.create(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
             this._center = egret3d.Vector3.create();
@@ -5474,42 +5581,47 @@ var egret3d;
             }
             return this;
         };
-        AABB.prototype.applyMatrix4 = function (matrix, value) {
-            if (!value) {
-                value = this;
+        AABB.prototype.applyMatrix = function (value, source) {
+            if (!source) {
+                source = this;
             }
             // transform of empty box is an empty box.
-            if (value.isEmpty) {
-                if (value !== this) {
-                    this.copy(value);
+            if (source.isEmpty) {
+                if (source !== this) {
+                    this.copy(source);
                 }
                 return this;
             }
-            var min = value.minimum;
-            var max = value.maximum;
+            var min = source.minimum;
+            var max = source.maximum;
             // NOTE: I am using a binary pattern to specify all 2^3 combinations below
-            _points[0].set(min.x, min.y, min.z).applyMatrix(matrix); // 000
-            _points[1].set(min.x, min.y, max.z).applyMatrix(matrix); // 001
-            _points[2].set(min.x, max.y, min.z).applyMatrix(matrix); // 010
-            _points[3].set(min.x, max.y, max.z).applyMatrix(matrix); // 011
-            _points[4].set(max.x, min.y, min.z).applyMatrix(matrix); // 100
-            _points[5].set(max.x, min.y, max.z).applyMatrix(matrix); // 101
-            _points[6].set(max.x, max.y, min.z).applyMatrix(matrix); // 110
-            _points[7].set(max.x, max.y, max.z).applyMatrix(matrix); // 111
+            _points[0].set(min.x, min.y, min.z).applyMatrix(value); // 000
+            _points[1].set(min.x, min.y, max.z).applyMatrix(value); // 001
+            _points[2].set(min.x, max.y, min.z).applyMatrix(value); // 010
+            _points[3].set(min.x, max.y, max.z).applyMatrix(value); // 011
+            _points[4].set(max.x, min.y, min.z).applyMatrix(value); // 100
+            _points[5].set(max.x, min.y, max.z).applyMatrix(value); // 101
+            _points[6].set(max.x, max.y, min.z).applyMatrix(value); // 110
+            _points[7].set(max.x, max.y, max.z).applyMatrix(value); // 111
             this.fromPoints(_points);
             return this;
         };
         /**
          *
          */
-        AABB.prototype.add = function (value) {
+        AABB.prototype.add = function (value, source) {
+            if (!source) {
+                source = this;
+            }
+            var min = source.minimum;
+            var max = source.maximum;
             if (value instanceof AABB) {
-                this._minimum.min(value._minimum);
-                this._maximum.max(value._maximum);
+                this._minimum.min(value._minimum, min);
+                this._maximum.max(value._maximum, max);
             }
             else {
-                this._minimum.min(value);
-                this._maximum.max(value);
+                this._minimum.min(value, min);
+                this._maximum.max(value, max);
             }
             this._dirtyRadius = true;
             this._dirtyCenter = true;
@@ -5518,14 +5630,40 @@ var egret3d;
         /**
          *
          */
-        AABB.prototype.offset = function (value) {
+        AABB.prototype.expand = function (value, source) {
+            if (!source) {
+                source = this;
+            }
+            var min = source.minimum;
+            var max = source.maximum;
             if (typeof value === "number") {
-                this._minimum.addScalar(value);
-                this._maximum.addScalar(value);
+                this._minimum.addScalar(-value, min);
+                this._maximum.addScalar(value, max);
             }
             else {
-                this._minimum.add(value);
-                this._maximum.add(value);
+                this._minimum.subtract(value, min);
+                this._maximum.add(value, max);
+            }
+            this._dirtyRadius = true;
+            this._dirtyCenter = true;
+            return this;
+        };
+        /**
+         *
+         */
+        AABB.prototype.offset = function (value, source) {
+            if (!source) {
+                source = this;
+            }
+            var min = source.minimum;
+            var max = source.maximum;
+            if (typeof value === "number") {
+                this._minimum.addScalar(value, min);
+                this._maximum.addScalar(value, max);
+            }
+            else {
+                this._minimum.add(value, min);
+                this._maximum.add(value, max);
             }
             this._dirtyRadius = true;
             this._dirtyCenter = true;
@@ -5559,6 +5697,12 @@ var egret3d;
                 (value.y > min.y) && (value.x < max.y) &&
                 (value.z > min.z) && (value.z < max.z);
         };
+        AABB.prototype.getDistance = function (value) {
+            return egret3d.helpVector3A.clamp(this._minimum, this._maximum, value).subtract(value).length;
+        };
+        AABB.prototype.clampPoints = function (value, out) {
+            return out.clamp(this._minimum, this._maximum, value);
+        };
         Object.defineProperty(AABB.prototype, "isEmpty", {
             get: function () {
                 // this is a more robust check for empty than ( volume <= 0 ) because volume can get positive with two negative axes
@@ -5574,10 +5718,10 @@ var egret3d;
             get: function () {
                 if (this._dirtyRadius) {
                     egret3d.helpVector3A.subtract(this._maximum, this._minimum).multiplyScalar(0.5);
-                    this._radius = egret3d.helpVector3A.length;
+                    this._boundingSphereRadius = egret3d.helpVector3A.length;
                     this._dirtyRadius = false;
                 }
-                return this._radius;
+                return this._boundingSphereRadius;
             },
             enumerable: true,
             configurable: true
@@ -7373,7 +7517,7 @@ var egret3d;
 (function (egret3d) {
     var _helpVector3 = egret3d.Vector3.create();
     var _helpRotation = egret3d.Quaternion.create();
-    var _helpMatrix = egret3d.Matrix.create();
+    var _helpMatrix = egret3d.Matrix4.create();
     /**
      * Transform Class
      * @version paper 1.0
@@ -7401,8 +7545,8 @@ var egret3d;
              * @internal
              */
             _this._worldMatrixDeterminant = 0.0;
-            _this._localMatrix = egret3d.Matrix.create();
-            _this._worldMatrix = egret3d.Matrix.create();
+            _this._localMatrix = egret3d.Matrix4.create();
+            _this._worldMatrix = egret3d.Matrix4.create();
             _this.localPosition = egret3d.Vector3.create();
             _this.localRotation = egret3d.Quaternion.create();
             _this._localEulerAngles = egret3d.Vector3.create();
@@ -9287,8 +9431,8 @@ var egret3d;
             _this.renderTarget = null;
             _this._near = 0.01;
             _this._far = 1000;
-            _this.matProjP = new egret3d.Matrix;
-            _this.matProjO = new egret3d.Matrix;
+            _this.matProjP = new egret3d.Matrix4;
+            _this.matProjO = new egret3d.Matrix4;
             _this.frameVecs = [
                 new egret3d.Vector3(),
                 new egret3d.Vector3(),
@@ -9382,10 +9526,10 @@ var egret3d;
          */
         Camera.prototype.calcProjectMatrix = function (asp, matrix) {
             if (this.opvalue > 0) {
-                egret3d.Matrix.perspectiveProjectLH(this.fov, asp, this.near, this.far, this.matProjP);
+                egret3d.Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this.matProjP);
             }
             if (this.opvalue < 1) {
-                egret3d.Matrix.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this.matProjO);
+                egret3d.Matrix4.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this.matProjO);
             }
             if (this.opvalue === 0.0) {
                 matrix.copy(this.matProjO);
@@ -9715,8 +9859,8 @@ var egret3d;
             this.spotLightArray = new Float32Array(0);
             this.directShadowMatrix = new Float32Array(0);
             this.spotShadowMatrix = new Float32Array(0);
-            this.matrix_m = new egret3d.Matrix();
-            this.matrix_mvp = new egret3d.Matrix();
+            this.matrix_m = new egret3d.Matrix4();
+            this.matrix_mvp = new egret3d.Matrix4();
             this.directShadowMaps = [];
             this.pointShadowMaps = [];
             this.spotShadowMaps = [];
@@ -9726,10 +9870,10 @@ var egret3d;
             this.cameraForward = new Float32Array(3);
             this.cameraUp = new Float32Array(3);
             // transforms
-            this.matrix_v = new egret3d.Matrix();
-            this.matrix_p = new egret3d.Matrix();
-            this.matrix_mv = new egret3d.Matrix();
-            this.matrix_vp = new egret3d.Matrix();
+            this.matrix_v = new egret3d.Matrix4();
+            this.matrix_p = new egret3d.Matrix4();
+            this.matrix_mv = new egret3d.Matrix4();
+            this.matrix_vp = new egret3d.Matrix4();
             this.lightPosition = new Float32Array([0.0, 0.0, 0.0, 1.0]);
             this.lightShadowCameraNear = 0;
             this.lightShadowCameraFar = 0;
@@ -11312,12 +11456,12 @@ var egret3d;
     var helpVec3_6 = new egret3d.Vector3();
     var helpVec3_7 = new egret3d.Vector3();
     // const helpVec3_8: Vector3 = new Vector3();
-    var helpMat4_1 = new egret3d.Matrix();
-    var helpMat4_2 = new egret3d.Matrix();
-    var helpMat4_3 = new egret3d.Matrix();
-    var helpMat4_4 = new egret3d.Matrix();
-    var helpMat4_5 = new egret3d.Matrix();
-    var helpMat4_6 = new egret3d.Matrix();
+    var helpMat4_1 = new egret3d.Matrix4();
+    var helpMat4_2 = new egret3d.Matrix4();
+    var helpMat4_3 = new egret3d.Matrix4();
+    var helpMat4_4 = new egret3d.Matrix4();
+    var helpMat4_5 = new egret3d.Matrix4();
+    var helpMat4_6 = new egret3d.Matrix4();
     /**
      * Skinned Mesh Renderer Component
      * @version paper 1.0
@@ -12247,7 +12391,7 @@ var egret3d;
                 var rootGameObject = this._animationComponent.gameObject;
                 var transforms = rootGameObject.transform.getAllChildren();
                 var gameObjects = {};
-                gameObjects[rootGameObject.name] = rootGameObject;
+                gameObjects[rootGameObject.name] = gameObjects["__root__"] = rootGameObject;
                 for (var _a = 0, transforms_1 = transforms; _a < transforms_1.length; _a++) {
                     var gameObject = transforms_1[_a].gameObject;
                     gameObjects[gameObject.name] = gameObject;
@@ -15513,24 +15657,24 @@ var egret3d;
             this.fromPoint(valueA, normal);
             return this;
         };
+        Plane.prototype.normalize = function (source) {
+            if (!source) {
+                source = this;
+            }
+            this.constant = source.constant * (1.0 / source.normal.length);
+            this.normal.normalize(source.normal);
+            return this;
+        };
+        Plane.prototype.negate = function (source) {
+            if (!source) {
+                source = this;
+            }
+            this.constant = source.constant * -1.0;
+            this.normal.negate(source.normal);
+            return this;
+        };
         Plane.prototype.getDistance = function (value) {
             return this.normal.dot(value) + this.constant;
-        };
-        Plane.prototype.normalize = function (value) {
-            if (!value) {
-                value = this;
-            }
-            this.constant = value.constant * (1.0 / value.normal.length);
-            this.normal.normalize(value.normal);
-            return this;
-        };
-        Plane.prototype.negate = function (value) {
-            if (!value) {
-                value = this;
-            }
-            this.constant = value.constant * -1.0;
-            this.normal.negate(value.normal);
-            return this;
         };
         Plane._instances = [];
         return Plane;
@@ -19121,7 +19265,7 @@ var egret3d;
     //
     var helpVec3_1 = egret3d.Vector3.create();
     var helpVec3_2 = egret3d.Vector3.create();
-    var helpInverseMatrix = egret3d.Matrix.create();
+    var helpInverseMatrix = egret3d.Matrix4.create();
     //缓存已经校验过的对象，用于过滤
     var cacheInstances = [];
     var beforeCombineCount = 0;
@@ -21135,9 +21279,9 @@ var paper;
                 this.canDrag = true;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                var normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
+                var normal = new egret3d.Vector3;
+                normal.applyQuaternion(worldRotation, this.up);
+                this._dragPlaneNormal = new egret3d.Vector3(normal.x, ray.direction.y, ray.direction.z);
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
@@ -21752,16 +21896,35 @@ var paper;
                 return _super.call(this) || this;
             }
             xRot.prototype.onSet = function () {
-                var xRotate = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.5), 1);
+                var xRotate = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.8), 1);
                 xRotate.name = "GizmoController_Rotate_X";
                 xRotate.tag = "Editor";
-                xRotate.transform.setLocalScale(3, 3, 3);
-                xRotate.transform.setLocalEulerAngles(0, 0, -90);
+                xRotate.transform.setLocalScale(2, 2, 2);
+                xRotate.transform.setLocalEulerAngles(90, 0, 0);
                 this.geo = xRotate;
             };
-            xRot.prototype.wasPressed_local = function () {
+            xRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+                this._dragPlaneNormal.applyQuaternion(worldRotation, this.right);
+                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
+                worldRotation.copy(this._initRotation);
             };
-            xRot.prototype.isPressed_local = function () {
+            xRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
+                var worldPosition = selectedGameObjs[0].transform.getPosition();
+                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
+                egret3d.Vector3.subtract(hit, worldPosition, hit);
+                var cosHitOffset = egret3d.Vector3.dot(egret3d.Vector3.normalize(hit), egret3d.Vector3.normalize(this._dragOffset));
+                egret3d.Vector3.cross(this._dragOffset, hit, this.helpVec3_1);
+                var theta = egret3d.Vector3.dot(this.helpVec3_1, this._dragPlaneNormal) >= 0 ? Math.acos(cosHitOffset) : -Math.acos(cosHitOffset);
+                var cos = Math.cos(theta * 0.5), sin = Math.sin(theta * 0.5);
+                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
+                this.helpQuat_2.multiply(this.helpQuat_1, this._initRotation);
+                this._ctrlRot.copy(this.helpQuat_2);
+                selectedGameObjs[0].transform.setLocalRotation(this.helpQuat_2);
+                // this.editorModel.setTransformProperty("rotation", this.helpQuat_2, selectedGameObjs[0].transform);
             };
             xRot.prototype.wasPressed_world = function () {
             };
@@ -21784,11 +21947,11 @@ var paper;
                 return _super.call(this) || this;
             }
             yRot.prototype.onSet = function () {
-                var yRotate = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.5), 1);
+                var yRotate = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.8), 1);
                 yRotate.name = "GizmoController_Rotate_Y";
                 yRotate.tag = "Editor";
-                yRotate.transform.setLocalScale(3, 0.05, 3);
-                yRotate.transform.setLocalEulerAngles(0, 0, 0);
+                yRotate.transform.setLocalScale(2, 2, 2);
+                yRotate.transform.setLocalEulerAngles(90, 90, 0);
                 this.geo = yRotate;
             };
             yRot.prototype.wasPressed_local = function () {
@@ -21816,11 +21979,11 @@ var paper;
                 return _super.call(this) || this;
             }
             zRot.prototype.onSet = function () {
-                var zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.5), 1);
+                var zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.8), 1);
                 zRotate.name = "GizmoController_Rotate_Z";
                 zRotate.tag = "Editor";
-                zRotate.transform.setLocalEulerAngles(90, 0, 0);
-                zRotate.transform.setLocalScale(3, 0.05, 3);
+                zRotate.transform.setLocalEulerAngles(0, 0, 0);
+                zRotate.transform.setLocalScale(2, 2, 2);
                 this.geo = zRotate;
             };
             zRot.prototype.wasPressed_local = function () {
@@ -24579,7 +24742,7 @@ var paper;
                 this.camera.calcViewMatrix(this.vMatrix);
                 this.camera.calcProjectMatrix(asp, this.pMatrix);
                 this.mvpMatrix.multiply(this.pMatrix, this.vMatrix);
-                m = m || new egret3d.Matrix();
+                m = m || new egret3d.Matrix4();
                 this.mMatrix.copy(m);
                 this.mvpMatrix.multiply(this.mMatrix);
             };
@@ -24769,7 +24932,7 @@ var paper;
                 var matS = this.helpMat1;
                 // egret3d.Quaternion.toMatrix(r, out);
                 out.fromRotation(r);
-                matS.formScale(sca, sca, sca);
+                matS.fromScale(sca, sca, sca);
                 out.multiply(matS);
                 out.rawData[12] = p.x;
                 out.rawData[13] = p.y;
@@ -24797,31 +24960,31 @@ var paper;
                 }
             };
             Gizmo.enabled = false;
-            Gizmo.mvpMatrix = new egret3d.Matrix();
-            Gizmo.mMatrix = new egret3d.Matrix();
-            Gizmo.vMatrix = new egret3d.Matrix();
-            Gizmo.pMatrix = new egret3d.Matrix();
+            Gizmo.mvpMatrix = new egret3d.Matrix4();
+            Gizmo.mMatrix = new egret3d.Matrix4();
+            Gizmo.vMatrix = new egret3d.Matrix4();
+            Gizmo.pMatrix = new egret3d.Matrix4();
             Gizmo.helpVec31 = new egret3d.Vector3();
             Gizmo.helpVec32 = new egret3d.Vector3();
             Gizmo.helpVec33 = new egret3d.Vector3();
             Gizmo.helpVec34 = new egret3d.Vector3();
             Gizmo.helpVec35 = new egret3d.Vector3();
             Gizmo.helpVec36 = new egret3d.Vector3();
-            Gizmo.xArrowMMatrix = new egret3d.Matrix();
-            Gizmo.yArrowMMatrix = egret3d.Matrix.create([
+            Gizmo.xArrowMMatrix = new egret3d.Matrix4();
+            Gizmo.yArrowMMatrix = egret3d.Matrix4.create([
                 0, 1, 0, 0,
                 -1, 0, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1
             ]);
-            Gizmo.zArrowMMatrix = egret3d.Matrix.create([
+            Gizmo.zArrowMMatrix = egret3d.Matrix4.create([
                 0, 0, 1, 0,
                 0, 1, 0, 0,
                 -1, 0, 0, 0,
                 0, 0, 0, 1
             ]);
-            Gizmo.helpMat = new egret3d.Matrix();
-            Gizmo.helpMat1 = new egret3d.Matrix();
+            Gizmo.helpMat = new egret3d.Matrix4();
+            Gizmo.helpMat1 = new egret3d.Matrix4();
             Gizmo._imageLoadCount = 0;
             Gizmo.textures = {};
             Gizmo = Gizmo_1 = __decorate([
@@ -24947,6 +25110,10 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    /**
+     * @deprecated
+     */
+    egret3d.Matrix = egret3d.Matrix4;
     /**
      * @deprecated
      */

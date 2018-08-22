@@ -91,16 +91,13 @@ declare namespace paper {
      * @language zh_CN
      */
     abstract class Asset extends BaseObject {
-        /**
-         * @deprecated
-         */
         private static readonly _assets;
         /**
-         * @deprecated
+         * @internal
          */
         static register(asset: Asset): void;
         /**
-         * @deprecated
+         *
          */
         static find<T extends Asset>(name: string): T;
         /**
@@ -188,23 +185,23 @@ declare namespace egret3d {
         equal(value: Readonly<IVector3>, threshold?: number): boolean;
         set(x: number, y: number, z: number): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        fromPlaneProjection(plane: Readonly<Plane>, value?: Readonly<IVector3>): this;
-        applyMatrix(matrix: Readonly<Matrix>, value?: Readonly<IVector3>): this;
-        applyDirection(matrix: Readonly<Matrix>, value?: Readonly<IVector3>): this;
-        applyQuaternion(quaternion: Readonly<IVector4>, value?: Readonly<IVector3>): this;
-        normalize(value?: Readonly<IVector3>): this;
-        negate(value?: Readonly<IVector3>): void;
-        addScalar(add: number, value?: Readonly<IVector3>): this;
+        fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>): this;
+        applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
+        applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
+        applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>): this;
+        normalize(source?: Readonly<IVector3>): this;
+        negate(source?: Readonly<IVector3>): void;
+        addScalar(add: number, source?: Readonly<IVector3>): this;
         add(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         subtract(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        multiplyScalar(scale: number, value?: Readonly<IVector3>): this;
+        multiplyScalar(scale: number, source?: Readonly<IVector3>): this;
         multiply(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         dot(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
         cross(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         lerp(t: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        clamp(min: Readonly<IVector3>, max: Readonly<IVector3>): this;
+        clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>): this;
         getDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
         getSquaredDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
         closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>): this;
@@ -280,14 +277,14 @@ declare namespace egret3d {
     /**
      *
      */
-    class Matrix implements paper.IRelease<Matrix>, paper.ISerializable {
+    class Matrix4 implements paper.IRelease<Matrix4>, paper.ISerializable {
         private static readonly _instances;
         /**
          *
          * @param rawData
          * @param offset
          */
-        static create(rawData?: Readonly<ArrayLike<number>> | null, offset?: number): Matrix;
+        static create(rawData?: Readonly<ArrayLike<number>> | null, offset?: number): Matrix4;
         /**
          *
          */
@@ -303,22 +300,28 @@ declare namespace egret3d {
         constructor();
         serialize(): Float32Array;
         deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
-        copy(value: Readonly<Matrix>): this;
-        clone(): Matrix;
+        copy(value: Readonly<Matrix4>): this;
+        clone(): Matrix4;
         identity(): this;
-        set(m11: number, m12: number, m13: number, m14: number, m21: number, m22: number, m23: number, m24: number, m31: number, m32: number, m33: number, m34: number, m41: number, m42: number, m43: number, m44: number): this;
+        set(n11: number, n12: number, n13: number, n14: number, n21: number, n22: number, n23: number, n24: number, n31: number, n32: number, n33: number, n34: number, n41: number, n42: number, n43: number, n44: number): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays?: boolean): this;
         fromRotation(rotation: Quaternion, translateStays?: boolean): this;
         fromEuler(value: Readonly<IVector3>, order?: EulerOrder, translateStays?: boolean): this;
-        formScale(x: number, y: number, z: number, translateStays?: boolean): this;
+        fromScale(x: number, y: number, z: number, translateStays?: boolean): this;
+        fromAxis(axis: Readonly<IVector3>, radian?: number): this;
+        fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>): this;
+        fromRotationX(radian: number): this;
+        fromRotationY(radian: number): this;
+        fromRotationZ(theta: any): this;
         determinant(): number;
         compose(translation: Vector3, rotation: Quaternion, scale: Vector3): this;
         decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): this;
-        transpose(value?: Readonly<Matrix>): this;
-        inverse(value?: Readonly<Matrix>): this;
-        multiply(valueA: Matrix, valueB?: Matrix): this;
-        premultiply(value: Readonly<Matrix>): this;
+        transpose(source?: Readonly<Matrix4>): this;
+        inverse(source?: Readonly<Matrix4>): this;
+        multiplyScalar(value: number, source?: Readonly<Matrix4>): void;
+        multiply(valueA: Matrix4, valueB?: Matrix4): this;
+        premultiply(value: Readonly<Matrix4>): this;
         /**
          * - 两点位置不重合。
          * @param eye
@@ -326,6 +329,7 @@ declare namespace egret3d {
          * @param up
          */
         lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): this;
+        getMaxScaleOnAxis(): number;
         toEuler(value: Vector3, order?: EulerOrder): Vector3;
         /**
          * @deprecated
@@ -342,24 +346,24 @@ declare namespace egret3d {
         /**
          * @deprecated
          */
-        add(left: Matrix, right?: Matrix): this;
+        add(left: Matrix4, right?: Matrix4): this;
         /**
          * @deprecated
          */
-        lerp(v: number, left: Matrix, right: Matrix): this;
+        lerp(v: number, left: Matrix4, right: Matrix4): this;
         /**
          * @deprecated
          */
-        static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix): Matrix;
+        static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix4): Matrix4;
         /**
          * @deprecated
          */
-        static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix): Matrix;
+        static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4;
     }
-    const helpMatrixA: Matrix;
-    const helpMatrixB: Matrix;
-    const helpMatrixC: Matrix;
-    const helpMatrixD: Matrix;
+    const helpMatrixA: Matrix4;
+    const helpMatrixB: Matrix4;
+    const helpMatrixC: Matrix4;
+    const helpMatrixD: Matrix4;
 }
 declare namespace egret3d {
     interface IVector4 extends IVector3 {
@@ -385,7 +389,7 @@ declare namespace egret3d {
         clone(): Vector4;
         set(x: number, y: number, z: number, w: number): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        normalize(value?: Readonly<IVector4>): this;
+        normalize(source?: Readonly<IVector4>): this;
         readonly length: number;
         readonly squaredLength: number;
     }
@@ -2740,7 +2744,7 @@ declare namespace egret3d {
          *
          */
         readonly color: Color;
-        readonly matrix: Matrix;
+        readonly matrix: Matrix4;
         renderTarget: IRenderTarget;
         protected _updateMatrix(camera: Camera): void;
         /**
@@ -2800,6 +2804,7 @@ declare namespace egret3d {
     function triangleIntersectsPlane(): void;
     function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<AABB>): boolean;
     function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<AABB>): boolean;
+    function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>): boolean;
     function aabbIntersectsSphere(aabb: Readonly<AABB>, value: Readonly<Sphere>): boolean;
     function aabbIntersectsAABB(valueA: Readonly<AABB>, valueB: Readonly<AABB>): boolean;
     function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
@@ -2813,18 +2818,18 @@ declare namespace egret3d {
         static create(x?: number, y?: number, z?: number, w?: number): Quaternion;
         release(): this;
         clone(): Quaternion;
-        fromMatrix(matrix: Readonly<Matrix>): this;
+        fromMatrix(matrix: Readonly<Matrix4>): this;
         fromEuler(value: Readonly<IVector3>, order?: EulerOrder): this;
         /**
          * - 向量必须已归一化。
          */
-        fromAxisAngle(axis: Readonly<IVector3>, angle: number): this;
-        inverse(value?: Readonly<IVector4>): this;
+        fromAxis(axis: Readonly<IVector3>, radian: number): this;
+        inverse(source?: Readonly<IVector4>): this;
         dot(value: Readonly<IVector4>): number;
         multiply(valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
         premultiply(value: Readonly<IVector4>): this;
         lerp(t: number, valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
-        lookAt(eye: Vector3, target: Vector3): Quaternion;
+        lookAt(eye: Vector3, target: Vector3): this;
         toEuler(value: Vector3, order?: EulerOrder): Vector3;
     }
 }
@@ -2854,7 +2859,7 @@ declare namespace egret3d {
         /**
          * TODO
          */
-        raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix>): PickInfo;
+        raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix4>): PickInfo;
         /**
          *
          */
@@ -3037,6 +3042,7 @@ declare namespace paper.editor {
         _checkIntersect(ray: egret3d.Ray): this;
         changeColor(color: string): void;
         protected _createAxis(color: egret3d.Vector4, type: number): GameObject;
+        protected _createCircleLine(): egret3d.Mesh;
     }
     class GeoContainer extends BaseGeo {
         private geos;
@@ -3148,7 +3154,10 @@ declare namespace egret3d {
         copy(value: Readonly<Sphere>): this;
         set(center: Readonly<IVector3>, radius: number): this;
         fromPoints(points: Readonly<ArrayLike<IVector3>>, center?: Readonly<IVector3>): this;
+        applyMatrix(matrix: Readonly<Matrix4>): this;
         contains(value: Readonly<IVector3 | Sphere>): boolean;
+        getDistance(value: Readonly<IVector3>): number;
+        clampPoint(point: Readonly<IVector3>, out: Vector3): Vector3;
     }
 }
 declare namespace egret3d {
@@ -3170,7 +3179,7 @@ declare namespace egret3d {
         release(): this;
         private _dirtyRadius;
         private _dirtyCenter;
-        private _radius;
+        private _boundingSphereRadius;
         private readonly _minimum;
         private readonly _maximum;
         private readonly _center;
@@ -3188,15 +3197,19 @@ declare namespace egret3d {
          *
          */
         fromPoints(value: Readonly<ArrayLike<IVector3>>): this;
-        applyMatrix4(matrix: Readonly<Matrix>, value?: Readonly<AABB>): this;
+        applyMatrix(value: Readonly<Matrix4>, source?: Readonly<AABB>): this;
         /**
          *
          */
-        add(value: Readonly<IVector3 | AABB>): this;
+        add(value: Readonly<IVector3 | AABB>, source?: Readonly<AABB>): this;
         /**
          *
          */
-        offset(value: number | Readonly<IVector3>): this;
+        expand(value: Readonly<IVector3> | number, source?: Readonly<AABB>): this;
+        /**
+         *
+         */
+        offset(value: number | Readonly<IVector3>, source?: Readonly<AABB>): this;
         /**
          * check contains vector
          * @param value a world point
@@ -3212,6 +3225,8 @@ declare namespace egret3d {
          * @language zh_CN
          */
         contains(value: Readonly<IVector3 | AABB>): boolean;
+        getDistance(value: Readonly<IVector3>): number;
+        clampPoints(value: Readonly<IVector3>, out: Vector3): Vector3;
         readonly isEmpty: boolean;
         /**
          * Bounding sphere radius.
@@ -3458,7 +3473,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        update(matrix: Readonly<Matrix>): void;
+        update(matrix: Readonly<Matrix4>): void;
         /**
          * intersect width obb
          * @param value obb
@@ -3490,7 +3505,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        caclWorldVectors(vectors: ReadonlyArray<Vector3>, matrix: Readonly<Matrix>): void;
+        caclWorldVectors(vectors: ReadonlyArray<Vector3>, matrix: Readonly<Matrix4>): void;
         deserialize(element: {
             center: [number, number, number];
             size: [number, number, number];
@@ -3912,7 +3927,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        getLocalMatrix(): Readonly<Matrix>;
+        getLocalMatrix(): Readonly<Matrix4>;
         /**
          * get position
          * @version paper 1.0
@@ -4033,7 +4048,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        getWorldMatrix(): Readonly<Matrix>;
+        getWorldMatrix(): Readonly<Matrix4>;
         /**
          * x-axis towards in world space
          * @version paper 1.0
@@ -4221,7 +4236,7 @@ declare namespace egret3d {
      */
     type DrawCall = {
         renderer: paper.BaseRenderer;
-        matrix?: Matrix;
+        matrix?: Matrix4;
         subMeshIndex: number;
         mesh: Mesh;
         material: Material;
@@ -4372,11 +4387,11 @@ declare namespace egret3d {
         /**
          * 计算相机的 view matrix（视图矩阵）
          */
-        calcViewMatrix(matrix: Matrix): Matrix;
+        calcViewMatrix(matrix: Matrix4): Matrix4;
         /**
          * 计算相机的 project matrix（投影矩阵）
          */
-        calcProjectMatrix(asp: number, matrix: Matrix): Matrix;
+        calcProjectMatrix(asp: number, matrix: Matrix4): Matrix4;
         /**
          * 计算相机视口像素rect
          */
@@ -4461,8 +4476,8 @@ declare namespace egret3d {
         spotLightArray: Float32Array;
         directShadowMatrix: Float32Array;
         spotShadowMatrix: Float32Array;
-        readonly matrix_m: Matrix;
-        readonly matrix_mvp: Matrix;
+        readonly matrix_m: Matrix4;
+        readonly matrix_mvp: Matrix4;
         readonly directShadowMaps: (WebGLTexture | null)[];
         readonly pointShadowMaps: (WebGLTexture | null)[];
         readonly spotShadowMaps: (WebGLTexture | null)[];
@@ -4470,14 +4485,14 @@ declare namespace egret3d {
         readonly cameraPosition: Float32Array;
         readonly cameraForward: Float32Array;
         readonly cameraUp: Float32Array;
-        readonly matrix_v: Matrix;
-        readonly matrix_p: Matrix;
-        readonly matrix_mv: Matrix;
-        readonly matrix_vp: Matrix;
+        readonly matrix_v: Matrix4;
+        readonly matrix_p: Matrix4;
+        readonly matrix_mv: Matrix4;
+        readonly matrix_vp: Matrix4;
         updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number): void;
-        updateCamera(camera: Camera, matrix: Matrix): void;
+        updateCamera(camera: Camera, matrix: Matrix4): void;
         updateLights(lights: ReadonlyArray<BaseLight>): void;
-        updateModel(matrix: Matrix): void;
+        updateModel(matrix: Matrix4): void;
         updateBones(data: Float32Array | null): void;
         readonly lightPosition: Float32Array;
         lightShadowCameraNear: number;
@@ -5957,9 +5972,9 @@ declare namespace egret3d {
         set(normal: Readonly<IVector3>, constant: number): this;
         fromPoint(value: Readonly<IVector3>, normal?: Readonly<IVector3>): this;
         fromPoints(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>, valueC: Readonly<IVector3>): this;
+        normalize(source?: Readonly<Plane>): this;
+        negate(source?: Readonly<Plane>): this;
         getDistance(value: Readonly<IVector3>): number;
-        normalize(value?: Readonly<Plane>): this;
-        negate(value?: Readonly<Plane>): this;
     }
 }
 declare namespace egret3d {
@@ -6145,7 +6160,7 @@ declare namespace egret3d {
         setVector3v(id: string, value: Float32Array): void;
         setVector4(id: string, value: Vector4): void;
         setVector4v(id: string, value: Float32Array | [number, number, number, number]): void;
-        setMatrix(id: string, value: Matrix): void;
+        setMatrix(id: string, value: Matrix4): void;
         setMatrixv(id: string, value: Float32Array): void;
         setTexture(id: string, value: egret3d.Texture): void;
         /**
@@ -7572,8 +7587,8 @@ declare namespace paper.editor {
     class xRot extends BaseGeo {
         constructor();
         onSet(): void;
-        wasPressed_local(): void;
-        isPressed_local(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasPressed_world(): void;
         isPressed_world(): void;
         wasReleased(): void;
@@ -8012,7 +8027,7 @@ declare namespace paper.editor {
         private static helpVec36;
         private static verticesCameraSquare;
         private static getCameraSquare(obj);
-        static DrawArrow(m: egret3d.Matrix, color: number[], fixSize?: boolean): void;
+        static DrawArrow(m: egret3d.Matrix4, color: number[], fixSize?: boolean): void;
         private static xArrowMMatrix;
         private static yArrowMMatrix;
         private static zArrowMMatrix;
@@ -8040,7 +8055,7 @@ declare namespace paper.editor {
         setVec3(name: string, value: egret3d.Vector3): void;
         setVec4(name: string, value: egret3d.Vector4): void;
         setColor(name: string, value: number[]): void;
-        setMatrix(name: string, value: egret3d.Matrix): void;
+        setMatrix(name: string, value: egret3d.Matrix4): void;
         setTexture(name: string, value: number): void;
     }
 }
@@ -8057,6 +8072,14 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    /**
+     * @deprecated
+     */
+    type Matrix = Matrix4;
+    /**
+     * @deprecated
+     */
+    const Matrix: typeof Matrix4;
     /**
      * @deprecated
      */

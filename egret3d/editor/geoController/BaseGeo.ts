@@ -73,7 +73,7 @@ namespace paper.editor {
                     mesh.mesh = egret3d.DefaultMeshes.CUBE;
                     break;
                 case 1:
-                    mesh.mesh = egret3d.DefaultMeshes.PYRAMID;
+                    mesh.mesh = this._createCircleLine();
                     break;
                 case 2:
                     mesh.mesh = egret3d.DefaultMeshes.CUBE;
@@ -87,6 +87,32 @@ namespace paper.editor {
             mat.setVector4v("_Color", [color.x, color.y, color.z, color.w]);
             renderer.materials = [mat];
             return gizmoAxis;
+        }
+
+        protected _createCircleLine() {
+            var vertexCount = 1;
+            var triangleFan = [];
+            var indices = [];
+            for (var angle = 0; angle <= 360; angle += 1) {
+                var x = Math.cos(angle / 180.0 * 3.14) / 1.03;
+                var y = Math.sin(angle / 180.0 * 3.14) / 1.03;
+                var z = 0.0;
+                triangleFan.push(x, y, z);
+
+                var x = Math.cos(angle / 180.0 * 3.14);
+                var y = Math.sin(angle / 180.0 * 3.14);
+                var z = 0.0;
+                triangleFan.push(x, y, z);
+                vertexCount++;
+            }
+            console.log(vertexCount)
+            for (var angle = 0; angle <= vertexCount * 2 - 3; angle += 1) {
+                indices.push(angle, angle + 1, angle + 2);
+            }
+            var mesh = new egret3d.Mesh(vertexCount * 2, (vertexCount * 2 - 3) * 3);
+            mesh.setIndices(indices);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, triangleFan)
+            return mesh
         }
     }
 
