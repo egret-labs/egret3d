@@ -98,7 +98,7 @@ namespace paper.editor {
             }
             let renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
 
-            let mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+            let mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
             let color1 = new Float32Array([color.x, color.y, color.z])
             let alpha = new Float32Array([color.w])
             let technique = mat.glTFTechnique

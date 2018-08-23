@@ -88,147 +88,6 @@ namespace egret3d {
         public getDistance(value: Readonly<IVector3>): number {
             return Math.sqrt(this.getSquaredDistance(value));
         }
-
-        /**
-         * 与aabb碰撞相交检测
-         */
-        public intersectAABB(aabb: AABB): boolean {
-            return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
-        }
-        /**
-         * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param transform transform实例
-         */
-        public intersectPlaneTransform(transform: Transform): PickInfo {
-            let pickinfo = null;
-            let panelpoint = transform.getPosition();
-            let forward = helpVec3_1;
-            transform.getForward(forward);
-            let hitposition = this.intersectPlane(panelpoint, forward);
-            if (hitposition) {
-                pickinfo = new PickInfo();
-                pickinfo.hitposition = hitposition;
-                pickinfo.distance = Vector3.getDistance(pickinfo.hitposition, this.origin);
-            }
-            return pickinfo;
-        }
-
-        public intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3 {
-            let vp1 = planeNormal.x;
-            let vp2 = planeNormal.y;
-            let vp3 = planeNormal.z;
-            let n1 = planePoint.x;
-            let n2 = planePoint.y;
-            let n3 = planePoint.z;
-            let v1 = this.direction.x;
-            let v2 = this.direction.y;
-            let v3 = this.direction.z;
-            let m1 = this.origin.x;
-            let m2 = this.origin.y;
-            let m3 = this.origin.z;
-            let vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
-            if (vpt === 0) {
-                return null;
-            } else {
-                let t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
-                return new Vector3(m1 + v1 * t, m2 + v2 * t, m3 + v3 * t);
-            }
-        }
-
-        /**
-         * 与最大最小点表示的box相交检测
-         * @param minimum 最小点
-         * @param maximum 最大点
-         * @version paper 1.0
-         */
-        public intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean {
-            let d = 0.0;
-            let maxValue = Number.MAX_VALUE;
-            let inv: number;
-            let min: number;
-            let max: number;
-            let temp: number;
-            if (Math.abs(this.direction.x) < 0.0000001) {
-                if (this.origin.x < minimum.x || this.origin.x > maximum.x) {
-                    return false;
-                }
-            } else {
-                inv = 1.0 / this.direction.x;
-                min = (minimum.x - this.origin.x) * inv;
-                max = (maximum.x - this.origin.x) * inv;
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-
-            if (Math.abs(this.direction.y) < 0.0000001) {
-                if (this.origin.y < minimum.y || this.origin.y > maximum.y) {
-                    return false;
-                }
-            } else {
-                inv = 1.0 / this.direction.y;
-                min = (minimum.y - this.origin.y) * inv;
-                max = (maximum.y - this.origin.y) * inv;
-
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-
-            if (Math.abs(this.direction.z) < 0.0000001) {
-                if (this.origin.z < minimum.z || this.origin.z > maximum.z) {
-                    return false;
-                }
-            } else {
-                inv = 1.0 / this.direction.z;
-                min = (minimum.z - this.origin.z) * inv;
-                max = (maximum.z - this.origin.z) * inv;
-
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-            return true;
-        }
         /**
          * 与三角形相交检测
          */
@@ -332,6 +191,146 @@ namespace egret3d {
             pickInfo.textureCoordA.y = bv;
 
             return pickInfo;
+        }
+        /**
+         * 与aabb碰撞相交检测
+         */
+        public intersectAABB(aabb: AABB): boolean {
+            return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
+        }
+
+        public intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3 {
+            let vp1 = planeNormal.x;
+            let vp2 = planeNormal.y;
+            let vp3 = planeNormal.z;
+            let n1 = planePoint.x;
+            let n2 = planePoint.y;
+            let n3 = planePoint.z;
+            let v1 = this.direction.x;
+            let v2 = this.direction.y;
+            let v3 = this.direction.z;
+            let m1 = this.origin.x;
+            let m2 = this.origin.y;
+            let m3 = this.origin.z;
+            let vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
+            if (vpt === 0) {
+                return null;
+            } else {
+                let t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
+                return new Vector3(m1 + v1 * t, m2 + v2 * t, m3 + v3 * t);
+            }
+        }
+        // /**
+        //  * 与transform表示的plane碰撞相交检测，主要用于2d检测
+        //  * @param transform transform实例
+        //  */
+        // public intersectPlaneTransform(transform: Transform): PickInfo {
+        //     let pickinfo = null;
+        //     let panelpoint = transform.getPosition();
+        //     let forward = helpVec3_1;
+        //     transform.getForward(forward);
+        //     let hitposition = this.intersectPlane(panelpoint, forward);
+        //     if (hitposition) {
+        //         pickinfo = new PickInfo();
+        //         pickinfo.hitposition = hitposition;
+        //         pickinfo.distance = Vector3.getDistance(pickinfo.hitposition, this.origin);
+        //     }
+        //     return pickinfo;
+        // }
+
+        /**
+         * 与最大最小点表示的box相交检测
+         * @param minimum 最小点
+         * @param maximum 最大点
+         * @version paper 1.0
+         */
+        public intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean {
+            let d = 0.0;
+            let maxValue = Number.MAX_VALUE;
+            let inv: number;
+            let min: number;
+            let max: number;
+            let temp: number;
+            if (Math.abs(this.direction.x) < 0.0000001) {
+                if (this.origin.x < minimum.x || this.origin.x > maximum.x) {
+                    return false;
+                }
+            } else {
+                inv = 1.0 / this.direction.x;
+                min = (minimum.x - this.origin.x) * inv;
+                max = (maximum.x - this.origin.x) * inv;
+                if (max === -Infinity) {
+                    max = Infinity;
+                }
+
+                if (min > max) {
+                    temp = min;
+                    min = max;
+                    max = temp;
+                }
+
+                d = Math.max(min, d);
+                maxValue = Math.min(max, maxValue);
+
+                if (d > maxValue) {
+                    return false;
+                }
+            }
+
+            if (Math.abs(this.direction.y) < 0.0000001) {
+                if (this.origin.y < minimum.y || this.origin.y > maximum.y) {
+                    return false;
+                }
+            } else {
+                inv = 1.0 / this.direction.y;
+                min = (minimum.y - this.origin.y) * inv;
+                max = (maximum.y - this.origin.y) * inv;
+
+                if (max === -Infinity) {
+                    max = Infinity;
+                }
+
+                if (min > max) {
+                    temp = min;
+                    min = max;
+                    max = temp;
+                }
+
+                d = Math.max(min, d);
+                maxValue = Math.min(max, maxValue);
+
+                if (d > maxValue) {
+                    return false;
+                }
+            }
+
+            if (Math.abs(this.direction.z) < 0.0000001) {
+                if (this.origin.z < minimum.z || this.origin.z > maximum.z) {
+                    return false;
+                }
+            } else {
+                inv = 1.0 / this.direction.z;
+                min = (minimum.z - this.origin.z) * inv;
+                max = (maximum.z - this.origin.z) * inv;
+
+                if (max === -Infinity) {
+                    max = Infinity;
+                }
+
+                if (min > max) {
+                    temp = min;
+                    min = max;
+                    max = temp;
+                }
+
+                d = Math.max(min, d);
+                maxValue = Math.min(max, maxValue);
+
+                if (d > maxValue) {
+                    return false;
+                }
+            }
+            return true;
         }
         /**
          * 与球相交检测

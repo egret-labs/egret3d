@@ -4,7 +4,6 @@ namespace egret3d {
         x: number;
         y: number;
         z: number;
-        readonly length: number;
     }
     /**
      * 
@@ -179,7 +178,7 @@ namespace egret3d {
                 source = this;
             }
 
-            let l = source.length;
+            let l = Math.sqrt(source.x * source.x + source.y * source.y + source.z * source.z);
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;
