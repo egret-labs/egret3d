@@ -1,4 +1,4 @@
-#ifdef LIGHTMAP
+#ifdef USE_LIGHTMAP
     highp vec2 beforelightUV = uv2.xy;
     if(lightMapUV == 0.0)
     {

@@ -202,8 +202,8 @@ declare namespace egret3d {
         min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>): this;
-        getDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
-        getSquaredDistance(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
+        getSquaredDistance(value: Readonly<IVector3>): number;
+        getDistance(value: Readonly<IVector3>): number;
         closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>): this;
         readonly length: number;
         readonly squaredLength: number;
@@ -322,6 +322,7 @@ declare namespace egret3d {
         multiplyScalar(value: number, source?: Readonly<Matrix4>): void;
         multiply(valueA: Matrix4, valueB?: Matrix4): this;
         premultiply(value: Readonly<Matrix4>): this;
+        lerp(t: number, value: Matrix4, source?: Matrix4): this;
         /**
          * - 两点位置不重合。
          * @param eye
@@ -347,10 +348,6 @@ declare namespace egret3d {
          * @deprecated
          */
         add(left: Matrix4, right?: Matrix4): this;
-        /**
-         * @deprecated
-         */
-        lerp(v: number, left: Matrix4, right: Matrix4): this;
         /**
          * @deprecated
          */
@@ -562,10 +559,13 @@ declare namespace egret3d {
          */
         constructor(origin?: Readonly<IVector3>, direction?: Readonly<IVector3>);
         serialize(): number[];
-        deserialize(element: Readonly<[number, number, number, number, number, number]>): this;
+        deserialize(value: Readonly<[number, number, number, number, number, number]>): this;
         copy(value: Readonly<Ray>): this;
         clone(): Ray;
         set(origin: Readonly<IVector3>, direction: Readonly<IVector3>): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        getSquaredDistance(value: Readonly<IVector3>): number;
+        getDistance(value: Readonly<IVector3>): number;
         /**
          * 与aabb碰撞相交检测
          */
@@ -584,13 +584,13 @@ declare namespace egret3d {
          */
         intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean;
         /**
-         * 与球相交检测
-         */
-        intersectsSphere(center: Vector3, radius: number): boolean;
-        /**
          * 与三角形相交检测
          */
         intersectTriangle(p1: Vector3, p2: Vector3, p3: Vector3, backfaceCulling?: boolean): PickInfo | null;
+        /**
+         * 与球相交检测
+         */
+        intersectsSphere(center: Vector3, radius: number): boolean;
         /**
          * 获取射线拾取到的最近物体。
          */
@@ -639,6 +639,8 @@ declare namespace egret3d {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper: {
                 renderQueue: number;
+                defines?: string[];
+                states?: gltf.States;
             };
         };
     }
@@ -781,6 +783,7 @@ declare namespace egret3d {
          */
         static createGLTFExtensionsConfig(): GLTF;
         static createTechnique(source: gltf.Technique): gltf.Technique;
+        static copyTechniqueStates(source: gltf.States, target?: gltf.States): gltf.States;
         /**
          * Buffer 列表。
          */
@@ -1831,7 +1834,7 @@ declare namespace gltf {
             [k: string]: gltf.Uniform;
         };
         name: any;
-        states: States;
+        states?: States;
         extensions?: any;
         extras?: any;
         [k: string]: any;
@@ -2070,11 +2073,11 @@ declare namespace egret3d {
          */
         private constructor();
         serialize(): number[];
-        deserialize(value: Readonly<[number, number, number, number]>): void;
+        deserialize(value: Readonly<[number, number, number, number]>): this;
         clone(): Color;
         copy(value: Readonly<Color>): this;
         set(r: number, g: number, b: number, a: number): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): void;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
         scale(value: number, source?: Readonly<Color>): Readonly<Color>;
         lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
@@ -3410,9 +3413,6 @@ declare namespace egret3d {
          * @param radius
          */
         static create(center?: Readonly<IVector3>, radius?: number): Sphere;
-        /**
-         *
-         */
         release(): this;
         /**
          *
@@ -4151,31 +4151,52 @@ declare namespace egret3d {
     /**
      *
      */
+    class DefaultShaders extends paper.SingletonComponent {
+        static MESH_BASIC: Shader;
+        static MESH_BASIC_DOUBLESIDE: Shader;
+        static MESH_LAMBERT: Shader;
+        static MESH_LAMBERT_DOUBLESIDE: Shader;
+        static MESH_PHONG: Shader;
+        static MESH_PHONE_DOUBLESIDE: Shader;
+        static MESH_PHYSICAL: Shader;
+        static MESH_PHYSICAL_DOUBLESIDE: Shader;
+        static LINEDASHED: Shader;
+        static VERTEX_COLOR: Shader;
+        static MATERIAL_COLOR: Shader;
+        static TRANSPARENT: Shader;
+        static TRANSPARENT_DOUBLESIDE: Shader;
+        static TRANSPARENT_ADDITIVE: Shader;
+        static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
+        static PARTICLE: Shader;
+        static PARTICLE_BLEND: Shader;
+        static PARTICLE_ADDITIVE: Shader;
+        static PARTICLE_BLEND_PREMULTIPLY: Shader;
+        static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
+        private _createShader(name, shaderNameOrConfig, renderQueue?, states?, defines?);
+        initialize(): void;
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
     class DefaultMaterials extends paper.SingletonComponent {
+        /**
+         *
+         */
         static MESH_BASIC: Material;
-        static MESH_BASIC_DOUBLESIDE: Material;
-        static MESH_LAMBERT: Material;
-        static MESH_LAMBERT_DOUBLESIDE: Material;
-        static MESH_PHONG: Material;
-        static MESH_PHONE_DOUBLESIDE: Material;
-        static MESH_PHYSICAL: Material;
-        static MESH_PHYSICAL_DOUBLESIDE: Material;
-        static LINEDASHED: Material;
-        static VERTEX_COLOR: Material;
-        static MATERIAL_COLOR: Material;
-        static TRANSPARENT: Material;
-        static TRANSPARENT_DOUBLESIDE: Material;
-        static TRANSPARENT_ADDITIVE: Material;
-        static TRANSPARENT_ADDITIVE_DOUBLESIDE: Material;
-        static PARTICLE: Material;
-        static PARTICLE_BLEND: Material;
-        static PARTICLE_ADDITIVE: Material;
-        static PARTICLE_BLEND_PREMULTIPLY: Material;
-        static PARTICLE_ADDITIVE_PREMULTIPLY: Material;
-        static SHADOW_DEPTH: Material;
-        static SHADOW_DISTANCE: Material;
+        /**
+         * @internal
+         */
         static MISSING: Material;
-        private _createShaders();
+        /**
+         * @internal
+         */
+        static SHADOW_DEPTH: Material;
+        /**
+         * @internal
+         */
+        static SHADOW_DISTANCE: Material;
         private _createMaterial(shaderName, name, renderQueue);
         initialize(): void;
     }
@@ -4308,7 +4329,7 @@ declare namespace egret3d {
          */
         size: number;
         /**
-         * 0=正交， 1=透视 中间值可以在两种相机间过度
+         * 0=正交，1=透视 中间值可以在两种相机间过度
          */
         opvalue: number;
         /**
@@ -4333,25 +4354,18 @@ declare namespace egret3d {
         renderTarget: IRenderTarget | null;
         private _near;
         private _far;
-        private readonly matProjP;
-        private readonly matProjO;
-        private readonly frameVecs;
+        private readonly _matProjP;
+        private readonly _matProjO;
+        private readonly _frameVecs;
         /**
          * 计算相机视锥区域
          */
-        private calcCameraFrame();
-        /**
-         * @inheritDoc
-         */
+        private _calcCameraFrame();
         initialize(): void;
         /**
          *
          */
         update(_delta: number): void;
-        /**
-         * 计算相机的 view matrix（视图矩阵）
-         */
-        calcViewMatrix(matrix: Matrix4): Matrix4;
         /**
          * 计算相机的 project matrix（投影矩阵）
          */
@@ -5438,7 +5452,7 @@ declare namespace paper {
         /**
          * 环境光
          */
-        readonly ambientLightColor: egret3d.Color;
+        readonly ambientColor: egret3d.Color;
         private constructor();
         /**
          * @internal
@@ -5879,7 +5893,7 @@ declare namespace egret3d {
         private _cacheState;
         private _getWebGLProgram(gl, vs, fs, defines);
         clearState(): void;
-        updateState(state: gltf.States): void;
+        updateState(state?: gltf.States): void;
         useProgram(program: GlProgram): boolean;
         getProgram(material: Material, technique: gltf.Technique, defines: string): GlProgram;
         /**
@@ -6174,6 +6188,22 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
+    class Shader extends GLTFAsset {
+        /**
+         * @internal
+         */
+        _renderQueue?: number;
+        /**
+         * @internal
+         */
+        _states?: gltf.States;
+        /**
+         * @internal
+         */
+        _defines?: string[];
+    }
+}
+declare namespace egret3d {
     /**
      * 材质资源
      */
@@ -6196,7 +6226,7 @@ declare namespace egret3d {
         /**
          * @internal
          */
-        _glTFShader: GLTFAsset;
+        _shader: Shader;
         /**
         * @internal
         */
@@ -6204,7 +6234,7 @@ declare namespace egret3d {
         /**
          *
          */
-        constructor(shaderOrMaterial: GLTFAsset | Material);
+        constructor(shader: Shader);
         initialize(): void;
         dispose(disposeChildren?: boolean): void;
         copy(value: Material): this;
@@ -6242,11 +6272,15 @@ declare namespace egret3d {
          */
         setDepth(zTest: boolean, zWrite: boolean): this;
         /**
+         *
+         */
+        clearStates(): this;
+        /**
          * TODO
          * @internal
          */
         readonly shaderDefine: string;
-        readonly shader: GLTFAsset;
+        readonly shader: Shader;
         readonly glTFTechnique: gltf.Technique;
     }
 }
@@ -6324,32 +6358,26 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "tCube": {
@@ -6450,32 +6478,26 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "uvTransform": {
@@ -6500,12 +6522,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "bindMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "bindMatrixInverse": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "boneTexture": {
@@ -6587,22 +6607,18 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "glstate_vec4_bones[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "lightMapOffset": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "lightMapUV": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewProjectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "uvTransform": {
@@ -6611,12 +6627,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "lightMap": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "lightMapIntensity": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "diffuse": {
@@ -6717,32 +6731,26 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "uvTransform": {
@@ -6767,12 +6775,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "bindMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "bindMatrixInverse": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "boneTexture": {
@@ -6789,17 +6795,14 @@ declare namespace egret3d.ShaderLib {
                         };
                         "referencePosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "nearDistance": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "farDistance": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "map": {
@@ -6900,32 +6903,26 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "tEquirect": {
@@ -7025,32 +7022,26 @@ declare namespace egret3d.ShaderLib {
                         };
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "logDepthBufFC": {
@@ -7092,47 +7083,6 @@ declare namespace egret3d.ShaderLib {
                         "clippingPlanes[0]": {
                             "type": number;
                             "value": any[];
-                        };
-                    };
-                    "states": {
-                        "enable": any[];
-                        "functions": {};
-                    };
-                }[];
-            };
-            "paper": {};
-        };
-        "extensionsRequired": string[];
-        "extensionsUsed": string[];
-        "materials": any[];
-    };
-    const line: {
-        "version": string;
-        "asset": {
-            "version": string;
-        };
-        "extensions": {
-            "KHR_techniques_webgl": {
-                "shaders": {
-                    "name": string;
-                    "type": number;
-                    "uri": string;
-                }[];
-                "techniques": {
-                    "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                    };
-                    "uniforms": {
-                        "modelViewProjectionMatrix": {
-                            "type": number;
-                            "value": any[];
-                            "semantic": string;
                         };
                     };
                     "states": {
@@ -7223,32 +7173,26 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "uvTransform": {
@@ -7265,12 +7209,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "bindMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "bindMatrixInverse": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "boneTexture": {
@@ -7315,12 +7257,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "lightMap": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "lightMapIntensity": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "reflectivity": {
@@ -7456,32 +7396,26 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "uvTransform": {
@@ -7494,42 +7428,34 @@ declare namespace egret3d.ShaderLib {
                         };
                         "ambientLightColor": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "directionalLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "ltc_1": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "ltc_2": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "rectAreaLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "hemisphereLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "morphTargetInfluences[0]": {
@@ -7538,12 +7464,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "bindMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "bindMatrixInverse": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "boneTexture": {
@@ -7560,17 +7484,14 @@ declare namespace egret3d.ShaderLib {
                         };
                         "directionalShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "logDepthBufFC": {
@@ -7607,12 +7528,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "lightMap": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "lightMapIntensity": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "emissiveMap": {
@@ -7657,17 +7576,14 @@ declare namespace egret3d.ShaderLib {
                         };
                         "directionalShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "specularMap": {
@@ -7767,32 +7683,26 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "uvTransform": {
@@ -7821,12 +7731,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "bindMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "bindMatrixInverse": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "boneTexture": {
@@ -7843,17 +7751,14 @@ declare namespace egret3d.ShaderLib {
                         };
                         "directionalShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "logDepthBufFC": {
@@ -7898,12 +7803,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "lightMap": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "lightMapIntensity": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "emissiveMap": {
@@ -7952,57 +7855,46 @@ declare namespace egret3d.ShaderLib {
                         };
                         "ambientLightColor": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "directionalLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "ltc_1": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "ltc_2": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "rectAreaLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "hemisphereLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "directionalShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "bumpMap": {
@@ -8118,32 +8010,26 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "uvTransform": {
@@ -8168,12 +8054,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "bindMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "bindMatrixInverse": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "boneTexture": {
@@ -8190,17 +8074,14 @@ declare namespace egret3d.ShaderLib {
                         };
                         "directionalShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "logDepthBufFC": {
@@ -8253,12 +8134,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "lightMap": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "lightMapIntensity": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "emissiveMap": {
@@ -8307,57 +8186,46 @@ declare namespace egret3d.ShaderLib {
                         };
                         "ambientLightColor": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "directionalLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "ltc_1": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "ltc_2": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "rectAreaLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "hemisphereLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "directionalShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "bumpMap": {
@@ -8474,32 +8342,26 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "uvTransform": {
@@ -8524,12 +8386,10 @@ declare namespace egret3d.ShaderLib {
                         };
                         "bindMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "bindMatrixInverse": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "boneTexture": {
@@ -8674,22 +8534,18 @@ declare namespace egret3d.ShaderLib {
                         };
                         "viewProjectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraForward": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraUp": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "u_lengthScale": {
@@ -8962,32 +8818,26 @@ declare namespace egret3d.ShaderLib {
                         };
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "morphTargetInfluences[0]": {
@@ -9120,47 +8970,38 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "directionalShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointShadowMatrix[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "color": {
@@ -9189,57 +9030,46 @@ declare namespace egret3d.ShaderLib {
                         };
                         "ambientLightColor": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "directionalLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "ltc_1": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "ltc_2": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "rectAreaLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "hemisphereLights[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "directionalShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "spotShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "pointShadowMap[0]": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                     };
@@ -9336,32 +9166,26 @@ declare namespace egret3d.ShaderLib {
                         };
                         "modelMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "modelViewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "projectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "viewMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "normalMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "cameraPosition": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "uvTransform": {
@@ -9448,7 +9272,6 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "modelViewProjectionMatrix": {
                             "type": number;
-                            "value": any[];
                             "semantic": string;
                         };
                         "_MainTex_ST": {
@@ -9515,12 +9338,12 @@ declare namespace egret3d.ShaderChunk {
     const fog_vertex = "#ifdef USE_FOG\n\n vFogPosition = mvPosition.xyz;\n\n#endif\n";
     const gradientmap_pars_fragment = "#ifdef TOON\n\n uniform sampler2D gradientMap;\n\n vec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {\n\n  // dotNL will be from -1.0 to 1.0\n  float dotNL = dot( normal, lightDirection );\n  vec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );\n\n  #ifdef USE_GRADIENTMAP\n\n   return texture2D( gradientMap, coord ).rgb;\n\n  #else\n\n   return ( coord.x < 0.7 ) ? vec3( 0.7 ) : vec3( 1.0 );\n\n  #endif\n\n\n }\n\n#endif\n";
     const inverse = "mat4 inverse(mat4 m) {\n    float\n    a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],\n    a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],\n    a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3],\n    a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3],\n    b00 = a00 * a11 - a01 * a10,\n    b01 = a00 * a12 - a02 * a10,\n    b02 = a00 * a13 - a03 * a10,\n    b03 = a01 * a12 - a02 * a11,\n    b04 = a01 * a13 - a03 * a11,\n    b05 = a02 * a13 - a03 * a12,\n    b06 = a20 * a31 - a21 * a30,\n    b07 = a20 * a32 - a22 * a30,\n    b08 = a20 * a33 - a23 * a30,\n    b09 = a21 * a32 - a22 * a31,\n    b10 = a21 * a33 - a23 * a31,\n    b11 = a22 * a33 - a23 * a32,\n    det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n    return mat4(\n        a11 * b11 - a12 * b10 + a13 * b09,\n        a02 * b10 - a01 * b11 - a03 * b09,\n        a31 * b05 - a32 * b04 + a33 * b03,\n        a22 * b04 - a21 * b05 - a23 * b03,\n        a12 * b08 - a10 * b11 - a13 * b07,\n        a00 * b11 - a02 * b08 + a03 * b07,\n        a32 * b02 - a30 * b05 - a33 * b01,\n        a20 * b05 - a22 * b02 + a23 * b01,\n        a10 * b10 - a11 * b08 + a13 * b06,\n        a01 * b08 - a00 * b10 - a03 * b06,\n        a30 * b04 - a31 * b02 + a33 * b00,\n        a21 * b02 - a20 * b04 - a23 * b00,\n        a11 * b07 - a10 * b09 - a12 * b06,\n        a00 * b09 - a01 * b07 + a02 * b06,\n        a31 * b01 - a30 * b03 - a32 * b00,\n        a20 * b03 - a21 * b01 + a22 * b00) / det;\n}";
-    const lightmap_frag = "#ifdef LIGHTMAP\n    lowp vec4 lightmap = texture2D(lightMap, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, lightMapIntensity);\n    gl_FragData[0] = outColor;\n#else\n    gl_FragData[0] = outColor;\n#endif";
+    const lightmap_frag = "#ifdef USE_LIGHTMAP\n    lowp vec4 lightmap = texture2D(lightMap, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, lightMapIntensity);\n    gl_FragData[0] = outColor;\n#else\n    gl_FragData[0] = outColor;\n#endif";
     const lightmap_fragment = "#ifdef USE_LIGHTMAP\n\n reflectedLight.indirectDiffuse += PI * texture2D( lightMap, vUv2 ).xyz * lightMapIntensity; // factor of PI should not be present; included here to prevent breakage\n\n#endif\n";
-    const lightmap_pars_frag = "#ifdef LIGHTMAP\n    uniform sampler2D lightMap;\n    uniform lowp float lightMapIntensity;\n    varying highp vec2 xlv_TEXCOORD1;\n\n    lowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n    {\n        highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n        return data.rgb * power * intensity;\n    }\n#endif";
+    const lightmap_pars_frag = "#ifdef USE_LIGHTMAP\n    uniform sampler2D lightMap;\n    uniform lowp float lightMapIntensity;\n    varying highp vec2 xlv_TEXCOORD1;\n\n    lowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n    {\n        highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n        return data.rgb * power * intensity;\n    }\n#endif";
     const lightmap_pars_fragment = "#ifdef USE_LIGHTMAP\n\n uniform sampler2D lightMap;\n uniform float lightMapIntensity;\n\n#endif";
-    const lightmap_pars_vert = "#ifdef LIGHTMAP\n    attribute vec4 uv2;\n    uniform highp vec4 lightMapOffset;\n    uniform lowp float lightMapUV;\n    varying highp vec2 xlv_TEXCOORD1;\n#endif";
-    const lightmap_vert = "#ifdef LIGHTMAP\n    highp vec2 beforelightUV = uv2.xy;\n    if(lightMapUV == 0.0)\n    {\n        beforelightUV = uv.xy;\n    }\n    highp float u = beforelightUV.x * lightMapOffset.x + lightMapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * lightMapOffset.y + lightMapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n#endif";
+    const lightmap_pars_vert = "#ifdef USE_LIGHTMAP\n    attribute vec4 uv2;\n    uniform highp vec4 lightMapOffset;\n    uniform lowp float lightMapUV;\n    varying highp vec2 xlv_TEXCOORD1;\n#endif";
+    const lightmap_vert = "#ifdef USE_LIGHTMAP\n    highp vec2 beforelightUV = uv2.xy;\n    if(lightMapUV == 0.0)\n    {\n        beforelightUV = uv.xy;\n    }\n    highp float u = beforelightUV.x * lightMapOffset.x + lightMapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * lightMapOffset.y + lightMapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n#endif";
     const lights_fragment_begin = "/**\n * This is a template that can be used to light a material, it uses pluggable\n * RenderEquations (RE)for specific lighting scenarios.\n *\n * Instructions for use:\n * - Ensure that both RE_Direct, RE_IndirectDiffuse and RE_IndirectSpecular are defined\n * - If you have defined an RE_IndirectSpecular, you need to also provide a Material_LightProbeLOD. <---- ???\n * - Create a material parameter that is to be passed as the third parameter to your lighting functions.\n *\n * TODO:\n * - Add area light support.\n * - Add sphere light support.\n * - Add diffuse light probe (irradiance cubemap) support.\n */\n\nGeometricContext geometry;\n\ngeometry.position = - vViewPosition;\ngeometry.normal = normal;\ngeometry.viewDir = normalize( vViewPosition );\n\nIncidentLight directLight;\n\n#if (defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0 ) && defined( RE_Direct )\n\n PointLight pointLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  // pointLight = pointLights[ i ];\n  pointLight.position = vec3(pointLights[i* 15 + 0], pointLights[i * 15 + 1], pointLights[i * 15 + 2]);\n  pointLight.color = vec3(pointLights[i* 15 + 3], pointLights[i * 15 + 4], pointLights[i * 15 + 5]);\n  pointLight.distance = pointLights[i * 15 + 6];\n  pointLight.decay = pointLights[i * 15 + 7];\n\n  getPointDirectLightIrradiance( pointLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( pointLight.shadow, directLight.visible ) ) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0 ) && defined( RE_Direct )\n\n SpotLight spotLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\n  // spotLight = spotLights[ i ];\n  spotLight.position = vec3(spotLights[i * 18 + 0], spotLights[i * 18 + 1], spotLights[i * 18 + 2]);\n  spotLight.direction = vec3(spotLights[i * 18 + 3], spotLights[i * 18 + 4], spotLights[i * 18 + 5]);\n  spotLight.color = vec3(spotLights[i * 18 + 6], spotLights[i * 18 + 7], spotLights[i * 18 + 8]);\n  spotLight.distance = spotLights[i * 18 + 9];\n  spotLight.decay = spotLights[i * 18 + 10];\n  spotLight.coneCos = spotLights[i * 18 + 11];\n  spotLight.penumbraCos = spotLights[i * 18 + 12];\n  getSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( spotLight.shadow, directLight.visible ) ) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )\n\n DirectionalLight directionalLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  // directionalLight = directionalLights[ i ];\n  directionalLight.direction = vec3(directionalLights[i * 12 + 0], directionalLights[i * 12 + 1], directionalLights[i * 12 + 2]);\n  directionalLight.color = vec3(directionalLights[i * 12 + 3], directionalLights[i * 12 + 4], directionalLights[i * 12 + 5]);\n  getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_RECT_AREA_LIGHTS) &&  NUM_RECT_AREA_LIGHTS > 0 ) && defined( RE_Direct_RectArea )\n\n RectAreaLight rectAreaLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\n  rectAreaLight = rectAreaLights[ i ];\n  RE_Direct_RectArea( rectAreaLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if defined( RE_IndirectDiffuse )\n\n vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );\n\n #if (defined(NUM_HEMI_LIGHTS) &&  NUM_HEMI_LIGHTS > 0 )\n\n  // #pragma unroll_loop\n  for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\n   irradiance += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry );\n\n  }\n\n #endif\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n vec3 radiance = vec3( 0.0 );\n vec3 clearCoatRadiance = vec3( 0.0 );\n\n#endif\n";
     const lights_fragment_end = "#if defined( RE_IndirectDiffuse )\n\n RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n RE_IndirectSpecular( radiance, clearCoatRadiance, geometry, material, reflectedLight );\n\n#endif\n";
     const lights_fragment_maps = "#if defined( RE_IndirectDiffuse )\n\n #ifdef USE_LIGHTMAP\n\n  vec3 lightMapIrradiance = texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\n\n  #ifndef PHYSICALLY_CORRECT_LIGHTS\n\n   lightMapIrradiance *= PI; // factor of PI should not be present; included here to prevent breakage\n\n  #endif\n\n  irradiance += lightMapIrradiance;\n\n #endif\n\n #if defined( USE_ENVMAP ) && defined( PHYSICAL ) && defined( ENVMAP_TYPE_CUBE_UV )\n\n  irradiance += getLightProbeIndirectIrradiance( /*lightProbe,*/ geometry, maxMipLevel );\n\n #endif\n\n#endif\n\n#if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )\n\n radiance += getLightProbeIndirectRadiance( /*specularLightProbe,*/ geometry, Material_BlinnShininessExponent( material ), maxMipLevel );\n\n #ifndef STANDARD\n  clearCoatRadiance += getLightProbeIndirectRadiance( /*specularLightProbe,*/ geometry, Material_ClearCoat_BlinnShininessExponent( material ), maxMipLevel );\n #endif\n\n#endif\n";
@@ -10819,6 +10642,7 @@ declare namespace paper.editor {
         editorModel: EditorModel;
         private geoCtrlMode;
         private geoCtrlType;
+        private coord;
         constructor();
         onUpdate(): void;
         private updateInLocalMode();
@@ -10832,6 +10656,7 @@ declare namespace paper.editor {
         private changeEditType(type);
         private addEventListener();
         private selectGameObjects(gameObjs);
+        private drawCoord();
     }
 }
 declare namespace egret3d {
@@ -11341,6 +11166,7 @@ declare namespace paper.editor {
         clearSelected(): void;
         onUpdate(delta: number): any;
         private setStroke(picked);
+        private intersectWithCameraAndLight(ray);
     }
 }
 declare namespace paper.editor {

@@ -66,6 +66,8 @@ namespace egret3d {
             this.g = value[1 + offset];
             this.b = value[2 + offset];
             this.a = value[3 + offset];
+
+            return this;
         }
 
         public multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>) {
