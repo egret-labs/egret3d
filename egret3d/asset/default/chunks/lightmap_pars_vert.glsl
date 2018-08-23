@@ -1,4 +1,4 @@
-#ifdef LIGHTMAP
+#ifdef USE_LIGHTMAP
     attribute vec4 uv2;
     uniform highp vec4 lightMapOffset;
     uniform lowp float lightMapUV;

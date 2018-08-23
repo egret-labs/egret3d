@@ -111,13 +111,15 @@ namespace paper.editor {
             mat.setVector3v("diffuse", color1);
             renderer.materials = [mat];
 
-            if (enables.indexOf(gltf.EnableState.DEPTH_TEST) >= 0) {
-                enables.splice(enables.indexOf(gltf.EnableState.DEPTH_TEST), 1);
-            }
+            // if (enables.indexOf(gltf.EnableState.DEPTH_TEST) >= 0) {
+            //     enables.splice(enables.indexOf(gltf.EnableState.DEPTH_TEST), 1);
+            // }
             if (enables.indexOf(gltf.EnableState.CULL_FACE) >= 0) {
                 enables.splice(enables.indexOf(gltf.EnableState.CULL_FACE), 1);
             }
-            funs.depthMask = [false];
+            // funs.depthMask = [false];
+            funs.depthMask = [true];
+            funs.depthFunc = [gltf.DepthFunc.ALWAYS];
             delete funs.frontFace;
             delete funs.cullFace;
             funs.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];

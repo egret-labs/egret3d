@@ -122,13 +122,13 @@ namespace egret3d {
             DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", "builtin/raw_particle.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
 
             helpMaterial.clearStates().setDepth(true, false).setCullFace(false).setBlend(gltf.BlendMode.Add);
-            DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_add.shader.json", "builtin/raw_particle.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
+            DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", "builtin/raw_particle.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
 
             helpMaterial.clearStates().setDepth(true, false).setCullFace(false).setBlend(gltf.BlendMode.Blend_PreMultiply);
             DefaultShaders.PARTICLE_BLEND_PREMULTIPLY = this._createShader("builtin/particle_blend_premultiply.shader.json", "builtin/raw_particle.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
 
             helpMaterial.clearStates().setDepth(true, false).setCullFace(false).setBlend(gltf.BlendMode.Add_PreMultiply);
-            DefaultShaders.PARTICLE_ADDITIVE_PREMULTIPLY = this._createShader("builtin/particle_add_premultiply.shader.json", "builtin/raw_particle.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
+            DefaultShaders.PARTICLE_ADDITIVE_PREMULTIPLY = this._createShader("builtin/particle_additive_premultiply.shader.json", "builtin/raw_particle.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
 
             helpMaterial.dispose();
         }

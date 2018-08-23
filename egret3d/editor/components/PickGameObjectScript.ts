@@ -27,8 +27,12 @@ namespace paper.editor {
                 // 点击 game object 激活
                 if (this.bindMouse.wasReleased(0)) {
                     let ray = this.camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                    let pickInfo = egret3d.Ray.raycast(ray, true);
+                    let pickInfo: any = egret3d.Ray.raycast(ray, true);
                     let tapDelta = Date.now() - this._tapStart;
+                    let pickCamera = this.intersectWithCameraAndLight(ray)
+                    if (pickCamera) {
+                        pickInfo = pickCamera
+                    }
                     if (this.bindKeyboard.isPressed('CONTROL')) {
                         if (pickInfo) {
                             let picked = pickInfo.transform.gameObject;
@@ -90,6 +94,35 @@ namespace paper.editor {
             // let mat = new egret3d.Material(egret3d.DefaultShaders.DIFFUSE_TINT_COLOR)
             render.materials = [egret3d.DefaultMaterials.MESH_BASIC.clone()];
             console.log(render.materials)
+        }
+        private intersectWithCameraAndLight(ray: egret3d.Ray) {
+            const camerasAndLights = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+            for (let item of camerasAndLights.cameras) {
+                if (item.gameObject.name != "EditorCamera") {
+                    let pos = item.transform.getPosition()
+                    let rot = item.transform.getRotation()
+                    let min = new egret3d.Vector3(pos.x - 0.5, pos.y - 0.5, pos.z - 0.5)
+                    let max = new egret3d.Vector3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
+                    // min.applyQuaternion(rot)
+                    // max.applyQuaternion(rot)
+                    if (ray.intersectBoxMinMax(min, max)) {
+                        return item.gameObject
+                    }
+                }
+            }
+            for (let item of camerasAndLights.lights) {
+
+                let pos = item.transform.getPosition()
+                let rot = item.transform.getRotation()
+                let min = new egret3d.Vector3(pos.x - 0.5, pos.y - 0.5, pos.z - 0.5)
+                let max = new egret3d.Vector3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
+                // min.applyQuaternion(rot)
+                // max.applyQuaternion(rot)
+                if (ray.intersectBoxMinMax(min, max)) {
+                    return item.gameObject
+                }
+
+            }
         }
     }
 }
