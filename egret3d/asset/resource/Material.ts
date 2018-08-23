@@ -11,7 +11,7 @@ namespace egret3d {
         /**
          * 
          */
-        public renderQueue: paper.RenderQueue | number = -1;
+        public renderQueue: paper.RenderQueue | number = paper.RenderQueue.Geometry;
 
         /**
           * @internal
@@ -35,45 +35,58 @@ namespace egret3d {
         /**
          * 
          */
-        public constructor(shader: Shader) {
-            super();
+        public constructor(shader?: Shader | string)
+        public constructor(config: GLTF, name: string)
+        public constructor(shaderOrConfig?: Shader | string | GLTF, name?: string) {
+            super(name);
 
-            if (shader) { // Custom.
-                this._shader = shader;
+            if (!shaderOrConfig) {
+                this._reset(DefaultShaders.MESH_BASIC);
+            }
+            else if (typeof shaderOrConfig === "string") {
+                const shader = paper.Asset.find<Shader>(shaderOrConfig);
+                if (!shader) {
+                    console.error("Cannot find shader.", shaderOrConfig);
+                }
 
-                this.config = GLTFAsset.createGLTFExtensionsConfig(); // TODO
-                this.config.materials![0] = {
-                    extensions: {
-                        KHR_techniques_webgl: { technique: this._shader.name, values: {} },
-                        paper: { renderQueue: -1 } // TODO
-                    }
-                } as GLTFMaterial;
-
-                this.initialize();
+                this._reset(shader || DefaultShaders.MESH_BASIC);
+            }
+            else {
+                this._reset(shaderOrConfig);
             }
         }
 
-        public initialize() {
-            if (this._glTFTechnique) {
-                return;
+        private _reset(shaderOrConfig: Shader | GLTF) {
+            let glTFMaterial: GLTFMaterial;
+
+            if (shaderOrConfig instanceof Shader) {
+                this.config = GLTFAsset.createGLTFExtensionsConfig(); // TODO
+                //
+                glTFMaterial = this.config.materials![0] = {
+                    extensions: {
+                        KHR_techniques_webgl: { technique: shaderOrConfig.name, values: {} },
+                        paper: { renderQueue: shaderOrConfig._renderQueue || this.renderQueue }
+                    }
+                };
+                //
+                this._shader = shaderOrConfig;
             }
-
-            const glTFMaterial = this.config.materials![0] as GLTFMaterial;
-
-            if (!this._shader) {
-                //不存在，那就从材质中获取
-                this._shader = paper.Asset.find<Shader>(glTFMaterial.extensions.KHR_techniques_webgl.technique);
-                if (!this._shader) {
-                    console.error("材质中获取着色器错误");
-                    return;
+            else {
+                this.config = shaderOrConfig;
+                //
+                glTFMaterial = this.config.materials![0] as GLTFMaterial;
+                //
+                const shaderName = glTFMaterial.extensions.KHR_techniques_webgl.technique;
+                const shader = paper.Asset.find<Shader>(shaderName);
+                if (!shader) {
+                    console.error("Cannot find shader.", shaderName);
                 }
+
+                this._shader = shader || DefaultShaders.MESH_BASIC;
             }
 
             this.renderQueue = glTFMaterial.extensions.paper.renderQueue;
-            if (this.renderQueue < 0) {
-                this.renderQueue = this._shader._renderQueue || paper.RenderQueue.Geometry;
-            }
-
+            //
             this._glTFTechnique = GLTFAsset.createTechnique(this._shader.config.extensions.KHR_techniques_webgl!.techniques[0]);
             //
             const uniformValues = glTFMaterial.extensions.KHR_techniques_webgl.values!;
@@ -194,6 +207,7 @@ namespace egret3d {
 
             return this;
         }
+
         setBoolean(id: string, value: boolean) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
@@ -587,6 +601,18 @@ namespace egret3d {
 
         public get shader() {
             return this._shader;
+        }
+        public set shader(value: Shader) {
+            if (!value) {
+                console.warn("Set shader error.");
+                value = egret3d.DefaultShaders.MESH_BASIC;
+            }
+
+            if (this._shader === value) {
+                return;
+            }
+
+            this._reset(value);
         }
 
         public get glTFTechnique() {

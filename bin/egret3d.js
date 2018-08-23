@@ -197,6 +197,9 @@ var paper;
             }
             return result;
         };
+        /**
+         * @internal
+         */
         Asset._assets = {};
         return Asset;
     }(paper.BaseObject));
@@ -243,10 +246,7 @@ var egret3d;
             return this.fromArray(value);
         };
         Vector3.prototype.copy = function (value) {
-            this.x = value.x;
-            this.y = value.y;
-            this.z = value.z;
-            return this;
+            return this.set(value.x, value.y, value.z);
         };
         Vector3.prototype.clone = function () {
             return Vector3.create(this.x, this.y, this.z);
@@ -327,7 +327,7 @@ var egret3d;
             if (!source) {
                 source = this;
             }
-            var l = source.length;
+            var l = Math.sqrt(source.x * source.x + source.y * source.y + source.z * source.z);
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;
@@ -1532,7 +1532,7 @@ var egret3d;
             if (!source) {
                 source = this;
             }
-            var l = source.length;
+            var l = Math.sqrt(source.x * source.x + source.y * source.y + source.z * source.z + source.w * source.w);
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;
@@ -1873,135 +1873,6 @@ var egret3d;
             return Math.sqrt(this.getSquaredDistance(value));
         };
         /**
-         * 与aabb碰撞相交检测
-         */
-        Ray.prototype.intersectAABB = function (aabb) {
-            return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
-        };
-        /**
-         * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param transform transform实例
-         */
-        Ray.prototype.intersectPlaneTransform = function (transform) {
-            var pickinfo = null;
-            var panelpoint = transform.getPosition();
-            var forward = helpVec3_1;
-            transform.getForward(forward);
-            var hitposition = this.intersectPlane(panelpoint, forward);
-            if (hitposition) {
-                pickinfo = new PickInfo();
-                pickinfo.hitposition = hitposition;
-                pickinfo.distance = egret3d.Vector3.getDistance(pickinfo.hitposition, this.origin);
-            }
-            return pickinfo;
-        };
-        Ray.prototype.intersectPlane = function (planePoint, planeNormal) {
-            var vp1 = planeNormal.x;
-            var vp2 = planeNormal.y;
-            var vp3 = planeNormal.z;
-            var n1 = planePoint.x;
-            var n2 = planePoint.y;
-            var n3 = planePoint.z;
-            var v1 = this.direction.x;
-            var v2 = this.direction.y;
-            var v3 = this.direction.z;
-            var m1 = this.origin.x;
-            var m2 = this.origin.y;
-            var m3 = this.origin.z;
-            var vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
-            if (vpt === 0) {
-                return null;
-            }
-            else {
-                var t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
-                return new egret3d.Vector3(m1 + v1 * t, m2 + v2 * t, m3 + v3 * t);
-            }
-        };
-        /**
-         * 与最大最小点表示的box相交检测
-         * @param minimum 最小点
-         * @param maximum 最大点
-         * @version paper 1.0
-         */
-        Ray.prototype.intersectBoxMinMax = function (minimum, maximum) {
-            var d = 0.0;
-            var maxValue = Number.MAX_VALUE;
-            var inv;
-            var min;
-            var max;
-            var temp;
-            if (Math.abs(this.direction.x) < 0.0000001) {
-                if (this.origin.x < minimum.x || this.origin.x > maximum.x) {
-                    return false;
-                }
-            }
-            else {
-                inv = 1.0 / this.direction.x;
-                min = (minimum.x - this.origin.x) * inv;
-                max = (maximum.x - this.origin.x) * inv;
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-            if (Math.abs(this.direction.y) < 0.0000001) {
-                if (this.origin.y < minimum.y || this.origin.y > maximum.y) {
-                    return false;
-                }
-            }
-            else {
-                inv = 1.0 / this.direction.y;
-                min = (minimum.y - this.origin.y) * inv;
-                max = (maximum.y - this.origin.y) * inv;
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-            if (Math.abs(this.direction.z) < 0.0000001) {
-                if (this.origin.z < minimum.z || this.origin.z > maximum.z) {
-                    return false;
-                }
-            }
-            else {
-                inv = 1.0 / this.direction.z;
-                min = (minimum.z - this.origin.z) * inv;
-                max = (maximum.z - this.origin.z) * inv;
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-            return true;
-        };
-        /**
          * 与三角形相交检测
          */
         Ray.prototype.intersectTriangle = function (p1, p2, p3, backfaceCulling) {
@@ -2088,6 +1959,135 @@ var egret3d;
             pickInfo.textureCoordA.x = bu;
             pickInfo.textureCoordA.y = bv;
             return pickInfo;
+        };
+        /**
+         * 与aabb碰撞相交检测
+         */
+        Ray.prototype.intersectAABB = function (aabb) {
+            return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
+        };
+        Ray.prototype.intersectPlane = function (planePoint, planeNormal) {
+            var vp1 = planeNormal.x;
+            var vp2 = planeNormal.y;
+            var vp3 = planeNormal.z;
+            var n1 = planePoint.x;
+            var n2 = planePoint.y;
+            var n3 = planePoint.z;
+            var v1 = this.direction.x;
+            var v2 = this.direction.y;
+            var v3 = this.direction.z;
+            var m1 = this.origin.x;
+            var m2 = this.origin.y;
+            var m3 = this.origin.z;
+            var vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
+            if (vpt === 0) {
+                return null;
+            }
+            else {
+                var t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
+                return new egret3d.Vector3(m1 + v1 * t, m2 + v2 * t, m3 + v3 * t);
+            }
+        };
+        // /**
+        //  * 与transform表示的plane碰撞相交检测，主要用于2d检测
+        //  * @param transform transform实例
+        //  */
+        // public intersectPlaneTransform(transform: Transform): PickInfo {
+        //     let pickinfo = null;
+        //     let panelpoint = transform.getPosition();
+        //     let forward = helpVec3_1;
+        //     transform.getForward(forward);
+        //     let hitposition = this.intersectPlane(panelpoint, forward);
+        //     if (hitposition) {
+        //         pickinfo = new PickInfo();
+        //         pickinfo.hitposition = hitposition;
+        //         pickinfo.distance = Vector3.getDistance(pickinfo.hitposition, this.origin);
+        //     }
+        //     return pickinfo;
+        // }
+        /**
+         * 与最大最小点表示的box相交检测
+         * @param minimum 最小点
+         * @param maximum 最大点
+         * @version paper 1.0
+         */
+        Ray.prototype.intersectBoxMinMax = function (minimum, maximum) {
+            var d = 0.0;
+            var maxValue = Number.MAX_VALUE;
+            var inv;
+            var min;
+            var max;
+            var temp;
+            if (Math.abs(this.direction.x) < 0.0000001) {
+                if (this.origin.x < minimum.x || this.origin.x > maximum.x) {
+                    return false;
+                }
+            }
+            else {
+                inv = 1.0 / this.direction.x;
+                min = (minimum.x - this.origin.x) * inv;
+                max = (maximum.x - this.origin.x) * inv;
+                if (max === -Infinity) {
+                    max = Infinity;
+                }
+                if (min > max) {
+                    temp = min;
+                    min = max;
+                    max = temp;
+                }
+                d = Math.max(min, d);
+                maxValue = Math.min(max, maxValue);
+                if (d > maxValue) {
+                    return false;
+                }
+            }
+            if (Math.abs(this.direction.y) < 0.0000001) {
+                if (this.origin.y < minimum.y || this.origin.y > maximum.y) {
+                    return false;
+                }
+            }
+            else {
+                inv = 1.0 / this.direction.y;
+                min = (minimum.y - this.origin.y) * inv;
+                max = (maximum.y - this.origin.y) * inv;
+                if (max === -Infinity) {
+                    max = Infinity;
+                }
+                if (min > max) {
+                    temp = min;
+                    min = max;
+                    max = temp;
+                }
+                d = Math.max(min, d);
+                maxValue = Math.min(max, maxValue);
+                if (d > maxValue) {
+                    return false;
+                }
+            }
+            if (Math.abs(this.direction.z) < 0.0000001) {
+                if (this.origin.z < minimum.z || this.origin.z > maximum.z) {
+                    return false;
+                }
+            }
+            else {
+                inv = 1.0 / this.direction.z;
+                min = (minimum.z - this.origin.z) * inv;
+                max = (maximum.z - this.origin.z) * inv;
+                if (max === -Infinity) {
+                    max = Infinity;
+                }
+                if (min > max) {
+                    temp = min;
+                    min = max;
+                    max = temp;
+                }
+                d = Math.max(min, d);
+                maxValue = Math.min(max, maxValue);
+                if (d > maxValue) {
+                    return false;
+                }
+            }
+            return true;
         };
         /**
          * 与球相交检测
@@ -2376,24 +2376,6 @@ var egret3d;
                 }
             }
             return target;
-        };
-        /**
-         * @internal
-         */
-        GLTFAsset.prototype.parse = function (config, buffers) {
-            this.config = config;
-            if (buffers) {
-                for (var _i = 0, buffers_1 = buffers; _i < buffers_1.length; _i++) {
-                    var buffer = buffers_1[_i];
-                    this.buffers.push(buffer);
-                }
-            }
-            this.initialize();
-        };
-        /**
-         * @internal
-         */
-        GLTFAsset.prototype.initialize = function () {
         };
         GLTFAsset.prototype.dispose = function () {
             if (this._isBuiltin) {
@@ -4496,7 +4478,7 @@ var egret3d;
     var _helpVector3C = egret3d.Vector3.create();
     var _helpMatrix = egret3d.Matrix4.create();
     var _helpRay = egret3d.Ray.create();
-    var _attributes = [
+    var _attributeNames = [
         "POSITION" /* POSITION */,
         "NORMAL" /* NORMAL */,
         "TANGENT" /* TANGENT */,
@@ -4508,20 +4490,16 @@ var egret3d;
      */
     var BaseMesh = (function (_super) {
         __extends(BaseMesh, _super);
-        /**
-         *
-         */
-        function BaseMesh(vertexCount, indexCount, attributeNames, attributeTypes, drawMode) {
-            if (attributeNames === void 0) { attributeNames = _attributes; }
-            if (attributeTypes === void 0) { attributeTypes = null; }
-            if (drawMode === void 0) { drawMode = 35044 /* Static */; }
-            var _this = _super.call(this) || this;
+        function BaseMesh(vertexCountOrConfig, indexCountOrBuffers, attributeNamesOrName, attributeTypes, drawMode) {
+            var _this = _super.call(this, typeof attributeNamesOrName === "string" ? attributeNamesOrName : "") || this;
             _this._drawMode = 35044 /* Static */;
             _this._vertexCount = 0;
             _this._attributeNames = [];
             _this._customAttributeTypes = {};
             _this._glTFMesh = null;
-            if (vertexCount > 0) {
+            if (typeof vertexCountOrConfig === "number") {
+                vertexCountOrConfig = vertexCountOrConfig || 3;
+                indexCountOrBuffers = indexCountOrBuffers || 0;
                 _this.config = egret3d.GLTFAsset.createMeshConfig();
                 //
                 var buffer = _this.config.buffers[0];
@@ -4536,16 +4514,16 @@ var egret3d;
                         _this._customAttributeTypes[k] = attributeTypes[k];
                     }
                 }
-                for (var _i = 0, attributeNames_1 = attributeNames; _i < attributeNames_1.length; _i++) {
-                    var attributeName = attributeNames_1[_i];
+                for (var _i = 0, _a = (attributeNamesOrName || _attributeNames); _i < _a.length; _i++) {
+                    var attributeName = _a[_i];
                     var attributeType = hasCustomAttributeType ? _this._customAttributeTypes[attributeName] || _this.getMeshAttributeType(attributeName) : _this.getMeshAttributeType(attributeName);
                     var byteOffset = vertexBufferView.byteLength;
-                    vertexBufferView.byteLength += vertexCount * _this.getAccessorTypeCount(attributeType) * Float32Array.BYTES_PER_ELEMENT;
+                    vertexBufferView.byteLength += vertexCountOrConfig * _this.getAccessorTypeCount(attributeType) * Float32Array.BYTES_PER_ELEMENT;
                     attributes[attributeName] = accessors.length;
                     accessors.push({
                         bufferView: 0,
                         byteOffset: byteOffset,
-                        count: vertexCount,
+                        count: vertexCountOrConfig,
                         normalized: attributeName === "NORMAL" /* NORMAL */ || attributeName === "TANGENT" /* TANGENT */,
                         componentType: 5126 /* Float */,
                         type: attributeType,
@@ -4553,28 +4531,30 @@ var egret3d;
                 }
                 buffer.byteLength = vertexBufferView.byteLength;
                 _this.buffers[0] = new Float32Array(vertexBufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
-                _this._drawMode = drawMode;
-                if (indexCount > 0) {
-                    _this.addSubMesh(indexCount, 0);
+                _this._drawMode = drawMode || 35044 /* Static */;
+                if (indexCountOrBuffers > 0) {
+                    _this.addSubMesh(indexCountOrBuffers, 0);
                 }
                 else {
                     _this.config.meshes[0].primitives[0].material = 0;
                 }
-                _this.initialize();
+            }
+            else {
+                _this.config = vertexCountOrConfig;
+                for (var _b = 0, _c = indexCountOrBuffers; _b < _c.length; _b++) {
+                    var buffer = _c[_b];
+                    _this.buffers.push(buffer);
+                }
+                _this.name = attributeNamesOrName;
+            }
+            var accessor = _this.getAccessor(0);
+            _this._vertexCount = accessor.count;
+            _this._glTFMesh = _this.config.meshes[0];
+            for (var k in _this._glTFMesh.primitives[0].attributes) {
+                _this._attributeNames.push(k);
             }
             return _this;
         }
-        BaseMesh.prototype.initialize = function () {
-            if (this._glTFMesh) {
-                return;
-            }
-            this._glTFMesh = this.config.meshes[0];
-            var accessor = this.getAccessor(0);
-            this._vertexCount = accessor.count;
-            for (var k in this._glTFMesh.primitives[0].attributes) {
-                this._attributeNames.push(k);
-            }
-        };
         /**
          *
          */
@@ -5073,7 +5053,7 @@ var paper;
                         break;
                 }
                 var renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
-                var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+                var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
                 var color1 = new Float32Array([color.x, color.y, color.z]);
                 var alpha = new Float32Array([color.w]);
                 var technique = mat.glTFTechnique;
@@ -7603,10 +7583,10 @@ var egret3d;
          * @platform Web
          * @language zh_CN
          */
-        Transform.prototype.getLocalEulerAngles = function () {
+        Transform.prototype.getLocalEulerAngles = function (order) {
             // if (this._dirtyLocalRS) {
             if (this._dirtyLocal) {
-                this.getLocalMatrix().toEuler(this._localEulerAngles).multiplyScalar(egret3d.RAD_DEG);
+                this.getLocalMatrix().toEuler(this._localEulerAngles, order).multiplyScalar(egret3d.RAD_DEG);
             }
             return this._localEulerAngles;
         };
@@ -7769,12 +7749,12 @@ var egret3d;
          * @platform Web
          * @language zh_CN
          */
-        Transform.prototype.getEulerAngles = function () {
+        Transform.prototype.getEulerAngles = function (order) {
             // if (this._dirtyWorldRS) {
             // if (this._dirtyWorld) {
             //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale).toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
             // }
-            this.getWorldMatrix().toEuler(this._eulerAngles).multiplyScalar(egret3d.RAD_DEG);
+            this.getWorldMatrix().toEuler(this._eulerAngles, order).multiplyScalar(egret3d.RAD_DEG);
             return this._eulerAngles;
         };
         Transform.prototype.setEulerAngles = function (q1, q2, q3, q4) {
@@ -8044,9 +8024,27 @@ var egret3d;
         DefaultMeshes.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             {
+                var mesh = new egret3d.Mesh(6, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/axises.mash.bin";
+                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
+                paper.Asset.register(mesh);
+                DefaultMeshes.AXISES = mesh;
+                mesh.setAttributes("POSITION" /* POSITION */, [
+                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                ]);
+                mesh.setAttributes("COLOR_0" /* COLOR_0 */, [
+                    1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+                    0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+                ]);
+            }
+            {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_quad.mash.bin";
+                mesh.name = "builtin/quad.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8086,7 +8084,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_quad_particle.mash.bin";
+                mesh.name = "builtin/quad_particle.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD_PARTICLE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8126,7 +8124,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_plane.mash.bin";
+                mesh.name = "builtin/plane.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PLANE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8166,7 +8164,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(24, 36);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_cube.mash.bin";
+                mesh.name = "builtin/cube.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CUBE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8311,7 +8309,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(16, 18);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_pyramid.mash.bin";
+                mesh.name = "builtin/pyramid.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8413,14 +8411,14 @@ var egret3d;
             {
                 var mesh = DefaultMeshes.createSphereCCW();
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_sphere.mash.bin";
+                mesh.name = "builtin/sphere.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.SPHERE = mesh;
             }
             {
                 var mesh = DefaultMeshes.createCylinderCCW();
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_cylinder.mash.bin";
+                mesh.name = "builtin/cylinder.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CYLINDER = mesh;
             }
@@ -8625,13 +8623,14 @@ var egret3d;
             return _super !== null && _super.apply(this, arguments) || this;
         }
         DefaultShaders.prototype._createShader = function (name, shaderNameOrConfig, renderQueue, states, defines) {
-            var shader = new egret3d.Shader(name);
+            var config;
             if (typeof shaderNameOrConfig === "string") {
-                shader.config = paper.Asset.find(shaderNameOrConfig).config;
+                config = paper.Asset.find(shaderNameOrConfig).config;
             }
             else {
-                shader.config = shaderNameOrConfig;
+                config = shaderNameOrConfig;
             }
+            var shader = new egret3d.Shader(config, name);
             shader._isBuiltin = true;
             if (renderQueue) {
                 shader._renderQueue = renderQueue;
@@ -8716,6 +8715,7 @@ var egret3d;
             return _super !== null && _super.apply(this, arguments) || this;
         }
         DefaultMaterials.prototype._createMaterial = function (shaderName, name, renderQueue) {
+            if (renderQueue === void 0) { renderQueue = paper.RenderQueue.Geometry; }
             var shader = paper.Asset.find(shaderName);
             if (!shader) {
                 console.debug("Cannot find builtin shader.", shaderName);
@@ -8729,13 +8729,15 @@ var egret3d;
         };
         DefaultMaterials.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.shader.json", "builtin/meshbasic.mat.json", paper.RenderQueue.Geometry)
+            DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.shader.json", "builtin/meshbasic.mat.json")
                 .setTexture("map", egret3d.DefaultTextures.GRAY);
-            DefaultMaterials.MISSING = this._createMaterial("builtin/meshbasic.shader.json", "builtin/missing.mat.json", paper.RenderQueue.Geometry)
+            DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed.shader.json", "builtin/linedashed_color.mat.json")
+                .addDefine("USE_COLOR");
+            DefaultMaterials.MISSING = this._createMaterial("builtin/meshbasic.shader.json", "builtin/missing.mat.json")
                 .setVector3v("diffuse", new Float32Array([1.0, 0.0, 1.0]));
-            DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/raw_depth.shader.json", "builtin/shadow_depth.mat.json", paper.RenderQueue.Geometry)
+            DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/raw_depth.shader.json", "builtin/shadow_depth.mat.json")
                 .setDepth(true, true).setCullFace(false).setBlend(0 /* None */).addDefine("DEPTH_PACKING 3201");
-            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/raw_distanceRGBA.shader.json", "builtin/shadow_distance.mat.json", paper.RenderQueue.Geometry)
+            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/raw_distanceRGBA.shader.json", "builtin/shadow_distance.mat.json")
                 .setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
         };
         return DefaultMaterials;
@@ -15832,8 +15834,10 @@ var egret3d;
 (function (egret3d) {
     var Shader = (function (_super) {
         __extends(Shader, _super);
-        function Shader() {
-            return _super !== null && _super.apply(this, arguments) || this;
+        function Shader(config, name) {
+            var _this = _super.call(this, name) || this;
+            _this.config = config;
+            return _this;
         }
         return Shader;
     }(egret3d.GLTFAsset));
@@ -15851,15 +15855,12 @@ var egret3d;
      */
     var Material = (function (_super) {
         __extends(Material, _super);
-        /**
-         *
-         */
-        function Material(shader) {
-            var _this = _super.call(this) || this;
+        function Material(shaderOrConfig, name) {
+            var _this = _super.call(this, name) || this;
             /**
              *
              */
-            _this.renderQueue = -1;
+            _this.renderQueue = paper.RenderQueue.Geometry;
             /**
               * @internal
               */
@@ -15879,36 +15880,49 @@ var egret3d;
             * @internal
             */
             _this._glTFTechnique = null;
-            if (shader) {
-                _this._shader = shader;
-                _this.config = egret3d.GLTFAsset.createGLTFExtensionsConfig(); // TODO
-                _this.config.materials[0] = {
-                    extensions: {
-                        KHR_techniques_webgl: { technique: _this._shader.name, values: {} },
-                        paper: { renderQueue: -1 } // TODO
-                    }
-                };
-                _this.initialize();
+            if (!shaderOrConfig) {
+                _this._reset(egret3d.DefaultShaders.MESH_BASIC);
+            }
+            else if (typeof shaderOrConfig === "string") {
+                var shader = paper.Asset.find(shaderOrConfig);
+                if (!shader) {
+                    console.error("Cannot find shader.", shaderOrConfig);
+                }
+                _this._reset(shader || egret3d.DefaultShaders.MESH_BASIC);
+            }
+            else {
+                _this._reset(shaderOrConfig);
             }
             return _this;
         }
-        Material.prototype.initialize = function () {
-            if (this._glTFTechnique) {
-                return;
+        Material.prototype._reset = function (shaderOrConfig) {
+            var glTFMaterial;
+            if (shaderOrConfig instanceof egret3d.Shader) {
+                this.config = egret3d.GLTFAsset.createGLTFExtensionsConfig(); // TODO
+                //
+                glTFMaterial = this.config.materials[0] = {
+                    extensions: {
+                        KHR_techniques_webgl: { technique: shaderOrConfig.name, values: {} },
+                        paper: { renderQueue: shaderOrConfig._renderQueue || this.renderQueue }
+                    }
+                };
+                //
+                this._shader = shaderOrConfig;
             }
-            var glTFMaterial = this.config.materials[0];
-            if (!this._shader) {
-                //不存在，那就从材质中获取
-                this._shader = paper.Asset.find(glTFMaterial.extensions.KHR_techniques_webgl.technique);
-                if (!this._shader) {
-                    console.error("材质中获取着色器错误");
-                    return;
+            else {
+                this.config = shaderOrConfig;
+                //
+                glTFMaterial = this.config.materials[0];
+                //
+                var shaderName = glTFMaterial.extensions.KHR_techniques_webgl.technique;
+                var shader = paper.Asset.find(shaderName);
+                if (!shader) {
+                    console.error("Cannot find shader.", shaderName);
                 }
+                this._shader = shader || egret3d.DefaultShaders.MESH_BASIC;
             }
             this.renderQueue = glTFMaterial.extensions.paper.renderQueue;
-            if (this.renderQueue < 0) {
-                this.renderQueue = this._shader._renderQueue || paper.RenderQueue.Geometry;
-            }
+            //
             this._glTFTechnique = egret3d.GLTFAsset.createTechnique(this._shader.config.extensions.KHR_techniques_webgl.techniques[0]);
             //
             var uniformValues = glTFMaterial.extensions.KHR_techniques_webgl.values;
@@ -16364,6 +16378,16 @@ var egret3d;
             get: function () {
                 return this._shader;
             },
+            set: function (value) {
+                if (!value) {
+                    console.warn("Set shader error.");
+                    value = egret3d.DefaultShaders.MESH_BASIC;
+                }
+                if (this._shader === value) {
+                    return;
+                }
+                this._reset(value);
+            },
             enumerable: true,
             configurable: true
         });
@@ -16601,18 +16625,17 @@ var RES;
                     var parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
                     var glb;
                     if (parseResult.config.meshes) {
-                        glb = new egret3d.Mesh(0, 0);
+                        glb = new egret3d.Mesh(parseResult.config, parseResult.buffers, resource.name);
                     }
                     else {
                         glb = new egret3d.GLTFAsset();
+                        glb.name = resource.name;
+                        glb.config = parseResult.config;
+                        for (var _i = 0, _a = parseResult.buffers; _i < _a.length; _i++) {
+                            var b = _a[_i];
+                            glb.buffers.push(b);
+                        }
                     }
-                    glb.name = resource.name;
-                    glb.config = parseResult.config;
-                    for (var _i = 0, _a = parseResult.buffers; _i < _a.length; _i++) {
-                        var b = _a[_i];
-                        glb.buffers.push(b);
-                    }
-                    glb.initialize();
                     // glb.parseFromBinary(new Uint32Array(result));
                     paper.Asset.register(glb);
                     return glb;
@@ -16633,8 +16656,7 @@ var RES;
                             case 0: return [4 /*yield*/, host.load(resource, 'json')];
                             case 1:
                                 result = _e.sent();
-                                glTF = new egret3d.Material(null);
-                                glTF.name = resource.name;
+                                glTF = new egret3d.Material(result, resource.name);
                                 if (!(result.materials && result.materials.length > 0)) return [3 /*break*/, 8];
                                 _i = 0, _a = result.materials;
                                 _e.label = 2;
@@ -16654,7 +16676,7 @@ var RES;
                                 if (!(typeof value === "string")) return [3 /*break*/, 6];
                                 r = RES.host.resourceConfig["getResource"](value);
                                 if (!r) return [3 /*break*/, 5];
-                                return [4 /*yield*/, host.load(r, "TextureDesc")];
+                                return [4 /*yield*/, host.load(r)];
                             case 4:
                                 texture = _e.sent();
                                 values[key] = texture;
@@ -16669,7 +16691,6 @@ var RES;
                                 _i++;
                                 return [3 /*break*/, 2];
                             case 8:
-                                glTF.parse(result);
                                 paper.Asset.register(glTF);
                                 return [2 /*return*/, glTF];
                         }
@@ -16691,8 +16712,7 @@ var RES;
                             case 0: return [4 /*yield*/, host.load(resource, 'json')];
                             case 1:
                                 result = _a.sent();
-                                glTF = new egret3d.GLTFAsset();
-                                glTF.name = resource.name;
+                                glTF = new egret3d.Shader(result, resource.name);
                                 if (!(result.extensions.KHR_techniques_webgl.shaders && result.extensions.KHR_techniques_webgl.shaders.length === 2)) return [3 /*break*/, 6];
                                 shaders = result.extensions.KHR_techniques_webgl.shaders;
                                 _i = 0, shaders_1 = shaders;
@@ -16715,7 +16735,6 @@ var RES;
                                 console.error("错误的Shader格式数据");
                                 _a.label = 7;
                             case 7:
-                                glTF.parse(result);
                                 paper.Asset.register(glTF);
                                 return [2 /*return*/, glTF];
                         }
@@ -21444,7 +21463,7 @@ var paper;
                     indices.push(i);
                 }
                 var mesh = new egret3d.Mesh(nrLine * 8, 8 * nrLine);
-                var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+                var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
                 var color1 = new Float32Array([0.3, 0.3, 0.5]);
                 var funs = mat.glTFTechnique.states.functions;
                 var enables = mat.glTFTechnique.states.enable;

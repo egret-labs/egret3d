@@ -29,14 +29,15 @@ namespace egret3d {
         public static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
 
         private _createShader(name: string, shaderNameOrConfig: string | GLTF, renderQueue?: number, states?: gltf.States, defines?: string[]) {
-            const shader = new Shader(name);
-
+            let config: GLTF;
             if (typeof shaderNameOrConfig === "string") {
-                shader.config = paper.Asset.find<Shader>(shaderNameOrConfig)!.config;
+                config = paper.Asset.find<Shader>(shaderNameOrConfig)!.config;
             }
             else {
-                shader.config = shaderNameOrConfig;
+                config = shaderNameOrConfig;
             }
+
+            const shader = new Shader(config, name);
 
             shader._isBuiltin = true;
 

@@ -167,7 +167,7 @@ namespace egret3d {
          */
         public static parseFromBinary(array: Uint32Array) {
             let index = 0;
-            let result: { config: GLTF, buffers: (Float32Array | Uint32Array | Uint16Array)[] } = { config: {}, buffers: [] } as any;
+            const result: { config: GLTF, buffers: (Float32Array | Uint32Array | Uint16Array)[] } = { config: {}, buffers: [] } as any;
 
             if (
                 array[index++] !== 0x46546C67 ||
@@ -315,25 +315,6 @@ namespace egret3d {
          * 配置。
          */
         public config: GLTF = null!;
-        /**
-         * @internal
-         */
-        public parse(config: GLTF, buffers?: Uint32Array[]) {
-            this.config = config;
-
-            if (buffers) {
-                for (const buffer of buffers) {
-                    this.buffers.push(buffer);
-                }
-            }
-
-            this.initialize();
-        }
-        /**
-         * @internal
-         */
-        public initialize() {
-        }
 
         public dispose() {
             if (this._isBuiltin) {

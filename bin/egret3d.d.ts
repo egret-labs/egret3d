@@ -91,7 +91,12 @@ declare namespace paper {
      * @language zh_CN
      */
     abstract class Asset extends BaseObject {
-        private static readonly _assets;
+        /**
+         * @internal
+         */
+        static readonly _assets: {
+            [key: string]: Asset;
+        };
         /**
          * @internal
          */
@@ -142,7 +147,6 @@ declare namespace egret3d {
         x: number;
         y: number;
         z: number;
-        readonly length: number;
     }
     /**
      *
@@ -365,7 +369,6 @@ declare namespace egret3d {
 declare namespace egret3d {
     interface IVector4 extends IVector3 {
         w: number;
-        readonly length: number;
     }
     class Vector4 implements IVector4, paper.IRelease<Vector4>, paper.ISerializable {
         private static readonly _instances;
@@ -567,14 +570,13 @@ declare namespace egret3d {
         getSquaredDistance(value: Readonly<IVector3>): number;
         getDistance(value: Readonly<IVector3>): number;
         /**
+         * 与三角形相交检测
+         */
+        intersectTriangle(p1: Vector3, p2: Vector3, p3: Vector3, backfaceCulling?: boolean): PickInfo | null;
+        /**
          * 与aabb碰撞相交检测
          */
         intersectAABB(aabb: AABB): boolean;
-        /**
-         * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param transform transform实例
-         */
-        intersectPlaneTransform(transform: Transform): PickInfo;
         intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3;
         /**
          * 与最大最小点表示的box相交检测
@@ -583,10 +585,6 @@ declare namespace egret3d {
          * @version paper 1.0
          */
         intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean;
-        /**
-         * 与三角形相交检测
-         */
-        intersectTriangle(p1: Vector3, p2: Vector3, p3: Vector3, backfaceCulling?: boolean): PickInfo | null;
         /**
          * 与球相交检测
          */
@@ -792,14 +790,6 @@ declare namespace egret3d {
          * 配置。
          */
         config: GLTF;
-        /**
-         * @internal
-         */
-        parse(config: GLTF, buffers?: Uint32Array[]): void;
-        /**
-         * @internal
-         */
-        initialize(): void;
         dispose(): void;
         caclByteLength(): number;
         /**
@@ -2887,10 +2877,10 @@ declare namespace egret3d {
         /**
          *
          */
-        constructor(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[], attributeTypes?: {
+        constructor(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
             [key: string]: gltf.AccessorType;
         } | null, drawMode?: gltf.DrawMode);
-        initialize(): void;
+        constructor(config: GLTF, buffers: Uint32Array[], name: string);
         /**
          *
          */
@@ -3849,7 +3839,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        getLocalEulerAngles(): Readonly<Vector3>;
+        getLocalEulerAngles(order?: EulerOrder): Readonly<Vector3>;
         /**
          * set local euler angles
          * @version paper 1.0
@@ -3862,8 +3852,8 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setLocalEulerAngles(euler: Readonly<IVector3>, eulerOrder?: EulerOrder): void;
-        setLocalEulerAngles(x: number, y: number, z: number, eulerOrder?: EulerOrder): void;
+        setLocalEulerAngles(euler: Readonly<IVector3>, order?: EulerOrder): void;
+        setLocalEulerAngles(x: number, y: number, z: number, order?: EulerOrder): void;
         /**
          * get local scale
          * @version paper 1.0
@@ -3970,7 +3960,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        getEulerAngles(): Readonly<Vector3>;
+        getEulerAngles(order?: EulerOrder): Readonly<Vector3>;
         /**
          * set euler angles
          * @version paper 1.0
@@ -3983,8 +3973,8 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setEulerAngles(v: Readonly<IVector3>, eulerOrder?: EulerOrder): void;
-        setEulerAngles(x: number, y: number, z: number, eulerOrder?: EulerOrder): void;
+        setEulerAngles(v: Readonly<IVector3>, order?: EulerOrder): void;
+        setEulerAngles(x: number, y: number, z: number, order?: EulerOrder): void;
         /**
          * get scale
          * @version paper 1.0
@@ -4114,6 +4104,7 @@ declare namespace egret3d {
      *
      */
     class DefaultMeshes extends paper.SingletonComponent {
+        static AXISES: Mesh;
         static QUAD: Mesh;
         static QUAD_PARTICLE: Mesh;
         static PLANE: Mesh;
@@ -4186,6 +4177,10 @@ declare namespace egret3d {
          */
         static MESH_BASIC: Material;
         /**
+         *
+         */
+        static LINEDASHED_COLOR: Material;
+        /**
          * @internal
          */
         static MISSING: Material;
@@ -4197,7 +4192,7 @@ declare namespace egret3d {
          * @internal
          */
         static SHADOW_DISTANCE: Material;
-        private _createMaterial(shaderName, name, renderQueue);
+        private _createMaterial(shaderName, name, renderQueue?);
         initialize(): void;
     }
 }
@@ -6201,6 +6196,7 @@ declare namespace egret3d {
          * @internal
          */
         _defines?: string[];
+        constructor(config: GLTF, name: string);
     }
 }
 declare namespace egret3d {
@@ -6234,8 +6230,9 @@ declare namespace egret3d {
         /**
          *
          */
-        constructor(shader: Shader);
-        initialize(): void;
+        constructor(shader?: Shader | string);
+        constructor(config: GLTF, name: string);
+        private _reset(shaderOrConfig);
         dispose(disposeChildren?: boolean): void;
         copy(value: Material): this;
         /**
@@ -6280,7 +6277,7 @@ declare namespace egret3d {
          * @internal
          */
         readonly shaderDefine: string;
-        readonly shader: Shader;
+        shader: Shader;
         readonly glTFTechnique: gltf.Technique;
     }
 }

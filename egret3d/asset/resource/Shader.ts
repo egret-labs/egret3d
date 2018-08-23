@@ -12,5 +12,11 @@ namespace egret3d {
          * @internal
          */
         public _defines?: string[];
+
+        public constructor(config: GLTF, name: string) {
+            super(name);
+
+            this.config = config;
+        }
     }
 }
