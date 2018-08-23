@@ -122,7 +122,6 @@ namespace RES.processor {
     export const GLTFProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, 'json') as egret3d.GLTF;
-            const glTF = new egret3d.Material(result, resource.name);
 
             if (result.materials && result.materials.length > 0) {
                 for (const mat of result.materials) {
@@ -132,8 +131,7 @@ namespace RES.processor {
                         if (typeof value === "string") {
                             const r = (RES.host.resourceConfig as any)["getResource"](value);
                             if (r) {
-                                // const texture = await RES.getResAsync(r.name);
-                                const texture = await host.load(r);
+                                const texture = await host.load(r, "TextureDesc");
                                 values[key] = texture;
                             }
                             else {
@@ -144,6 +142,7 @@ namespace RES.processor {
                 }
             }
 
+            const glTF = new egret3d.Material(result, resource.name);
             paper.Asset.register(glTF);
 
             return glTF;
@@ -160,7 +159,6 @@ namespace RES.processor {
     export const GLTFShaderProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, 'json') as egret3d.GLTF;
-            const glTF = new egret3d.Shader(result, resource.name);
 
             if (result.extensions.KHR_techniques_webgl.shaders && result.extensions.KHR_techniques_webgl.shaders.length === 2) {
                 //
@@ -177,6 +175,7 @@ namespace RES.processor {
                 console.error("错误的Shader格式数据");
             }
 
+            const glTF = new egret3d.Shader(result, resource.name);
             paper.Asset.register(glTF);
 
             return glTF;
