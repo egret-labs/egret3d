@@ -766,7 +766,7 @@ declare namespace egret3d {
          */
         private static _createConfig();
         /**
-         *
+         * @internal
          */
         static parseFromBinary(array: Uint32Array): {
             config: GLTF;
@@ -4122,6 +4122,10 @@ declare namespace egret3d {
          *
          */
         static GRID: Texture;
+        /**
+         *
+         */
+        static MISSING: Texture;
         initialize(): void;
     }
 }
@@ -4150,7 +4154,15 @@ declare namespace egret3d {
         static PARTICLE_ADDITIVE: Shader;
         static PARTICLE_BLEND_PREMULTIPLY: Shader;
         static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
-        private _createShader(name, shaderNameOrConfig, renderQueue?, states?, defines?);
+        static CUBE: Shader;
+        static DEPTH: Shader;
+        static DISTANCE_RGBA: Shader;
+        static EQUIRECT: Shader;
+        static NORMAL: Shader;
+        static POINTS: Shader;
+        static SHADOW: Shader;
+        static SPRITE: Shader;
+        private _createShader(name, config, renderQueue?, states?, defines?);
         initialize(): void;
     }
 }
@@ -4168,7 +4180,7 @@ declare namespace egret3d {
          */
         static LINEDASHED_COLOR: Material;
         /**
-         * @internal
+         *
          */
         static MISSING: Material;
         /**
@@ -4179,7 +4191,7 @@ declare namespace egret3d {
          * @internal
          */
         static SHADOW_DISTANCE: Material;
-        private _createMaterial(shaderName, name, renderQueue?);
+        private _createMaterial(name, shader, renderQueue?);
         initialize(): void;
     }
 }
@@ -5735,6 +5747,64 @@ declare namespace egret3d.particle {
         readonly floatValues: Readonly<Float32Array>;
     }
 }
+declare namespace egret3d.particle {
+    /**
+     * @internal
+     */
+    class ParticleBatcher {
+        private _dirty;
+        private _time;
+        private _emittsionTime;
+        private _frameRateTime;
+        private _firstAliveCursor;
+        private _lastFrameFirstCursor;
+        private _lastAliveCursor;
+        private _vertexStride;
+        private _burstIndex;
+        private _finalGravity;
+        private _vertexAttributes;
+        private _startPositionBuffer;
+        private _startVelocityBuffer;
+        private _startColorBuffer;
+        private _startSizeBuffer;
+        private _startRotationBuffer;
+        private _startTimeBuffer;
+        private _random0Buffer;
+        private _random1Buffer;
+        private _worldPostionBuffer;
+        private _worldRoationBuffer;
+        private _worldPostionCache;
+        private _worldRotationCache;
+        private _comp;
+        private _renderer;
+        /**
+        * 计算粒子爆发数量
+        * @param startTime
+        * @param endTime
+        */
+        private _getBurstCount(startTime, endTime);
+        /**
+         * 判断粒子是否已经过期
+         * @param particleIndex
+         */
+        private _isParticleExpired(particleIndex);
+        /**
+         *
+         * @param time 批量增加粒子
+         * @param startCursor
+         * @param endCursor
+         */
+        private _addParticles(time, startCursor, count);
+        private _tryEmit(time);
+        clean(): void;
+        resetTime(): void;
+        init(comp: ParticleComponent, renderer: ParticleRenderer): void;
+        update(elapsedTime: number): void;
+        private _updateEmission(elapsedTime);
+        private _updateRender();
+        readonly aliveParticleCount: number;
+    }
+}
 declare namespace paper {
     /**
      * 场景类
@@ -5813,68 +5883,6 @@ declare namespace paper {
          * 所有实体。
          */
         readonly gameObjects: ReadonlyArray<GameObject>;
-    }
-}
-declare namespace egret3d.particle {
-    const enum ParticleCompEventType {
-        MainChanged = "mainChanged",
-        ColorChanged = "colorChanged",
-        VelocityChanged = "velocityChanged",
-        SizeChanged = "sizeChanged",
-        RotationChanged = "rotationChanged",
-        TextureSheetChanged = "textureSheetChanged",
-        ShapeChanged = "shapeChanged",
-        StartRotation3DChanged = "rotation3DChanged",
-        SimulationSpaceChanged = "simulationSpace",
-        ScaleModeChanged = "scaleMode",
-        MaxParticlesChanged = "maxParticles",
-    }
-    class ParticleComponent extends paper.BaseComponent {
-        readonly main: MainModule;
-        readonly emission: EmissionModule;
-        readonly shape: ShapeModule;
-        readonly velocityOverLifetime: VelocityOverLifetimeModule;
-        readonly rotationOverLifetime: RotationOverLifetimeModule;
-        readonly sizeOverLifetime: SizeOverLifetimeModule;
-        readonly colorOverLifetime: ColorOverLifetimeModule;
-        readonly textureSheetAnimation: TextureSheetAnimationModule;
-        /**
-         * @internal
-         */
-        _isPlaying: boolean;
-        /**
-         * @internal
-         */
-        _isPaused: boolean;
-        private readonly _batcher;
-        /**
-         * @internal
-         */
-        _clean(): void;
-        /**
-         * @internal
-         */
-        uninitialize(): void;
-        /**
-         * @internal
-         */
-        initialize(): void;
-        /**
-         * @internal
-         */
-        initBatcher(): void;
-        /**
-         * @internal
-         */
-        update(elapsedTime: number): void;
-        play(withChildren?: boolean): void;
-        pause(withChildren?: boolean): void;
-        stop(withChildren?: boolean): void;
-        clear(withChildren?: boolean): void;
-        readonly loop: boolean;
-        readonly isPlaying: boolean;
-        readonly isPaused: boolean;
-        readonly isAlive: boolean;
     }
 }
 declare namespace egret3d.particle {
@@ -6449,6 +6457,9 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
+    /**
+     *
+     */
     class Shader extends GLTFAsset {
         /**
          * @internal
@@ -6457,11 +6468,14 @@ declare namespace egret3d {
         /**
          * @internal
          */
+        _defines?: string[];
+        /**
+         * @internal
+         */
         _states?: gltf.States;
         /**
          * @internal
          */
-        _defines?: string[];
         constructor(config: GLTF, name: string);
     }
 }
@@ -6546,6 +6560,25 @@ declare namespace egret3d {
         shader: Shader;
         readonly glTFTechnique: gltf.Technique;
     }
+}
+declare namespace egrer3d.Primitive {
+    /**
+     *
+     */
+    const enum PrimitiveType {
+        Axises = 0,
+        Quad = 1,
+        QuadParticle = 2,
+        Plane = 3,
+        Cube = 4,
+        Pyramid = 5,
+        Cylinder = 6,
+        Sphere = 7,
+    }
+    /**
+     *
+     */
+    function create(type: PrimitiveType): paper.GameObject;
 }
 declare namespace egret3d.ShaderLib {
     const cube: {
@@ -11572,60 +11605,64 @@ declare namespace egret3d {
     type RawScene = paper.RawScene;
 }
 declare namespace egret3d.particle {
-    /**
-     * @internal
-     */
-    class ParticleBatcher {
-        private _dirty;
-        private _time;
-        private _emittsionTime;
-        private _frameRateTime;
-        private _firstAliveCursor;
-        private _lastFrameFirstCursor;
-        private _lastAliveCursor;
-        private _vertexStride;
-        private _burstIndex;
-        private _finalGravity;
-        private _vertexAttributes;
-        private _startPositionBuffer;
-        private _startVelocityBuffer;
-        private _startColorBuffer;
-        private _startSizeBuffer;
-        private _startRotationBuffer;
-        private _startTimeBuffer;
-        private _random0Buffer;
-        private _random1Buffer;
-        private _worldPostionBuffer;
-        private _worldRoationBuffer;
-        private _worldPostionCache;
-        private _worldRotationCache;
-        private _comp;
-        private _renderer;
+    const enum ParticleCompEventType {
+        MainChanged = "mainChanged",
+        ColorChanged = "colorChanged",
+        VelocityChanged = "velocityChanged",
+        SizeChanged = "sizeChanged",
+        RotationChanged = "rotationChanged",
+        TextureSheetChanged = "textureSheetChanged",
+        ShapeChanged = "shapeChanged",
+        StartRotation3DChanged = "rotation3DChanged",
+        SimulationSpaceChanged = "simulationSpace",
+        ScaleModeChanged = "scaleMode",
+        MaxParticlesChanged = "maxParticles",
+    }
+    class ParticleComponent extends paper.BaseComponent {
+        readonly main: MainModule;
+        readonly emission: EmissionModule;
+        readonly shape: ShapeModule;
+        readonly velocityOverLifetime: VelocityOverLifetimeModule;
+        readonly rotationOverLifetime: RotationOverLifetimeModule;
+        readonly sizeOverLifetime: SizeOverLifetimeModule;
+        readonly colorOverLifetime: ColorOverLifetimeModule;
+        readonly textureSheetAnimation: TextureSheetAnimationModule;
         /**
-        * 计算粒子爆发数量
-        * @param startTime
-        * @param endTime
-        */
-        private _getBurstCount(startTime, endTime);
-        /**
-         * 判断粒子是否已经过期
-         * @param particleIndex
+         * @internal
          */
-        private _isParticleExpired(particleIndex);
+        _isPlaying: boolean;
         /**
-         *
-         * @param time 批量增加粒子
-         * @param startCursor
-         * @param endCursor
+         * @internal
          */
-        private _addParticles(time, startCursor, count);
-        private _tryEmit(time);
-        clean(): void;
-        resetTime(): void;
-        init(comp: ParticleComponent, renderer: ParticleRenderer): void;
+        _isPaused: boolean;
+        private readonly _batcher;
+        /**
+         * @internal
+         */
+        _clean(): void;
+        /**
+         * @internal
+         */
+        uninitialize(): void;
+        /**
+         * @internal
+         */
+        initialize(): void;
+        /**
+         * @internal
+         */
+        initBatcher(): void;
+        /**
+         * @internal
+         */
         update(elapsedTime: number): void;
-        private _updateEmission(elapsedTime);
-        private _updateRender();
-        readonly aliveParticleCount: number;
+        play(withChildren?: boolean): void;
+        pause(withChildren?: boolean): void;
+        stop(withChildren?: boolean): void;
+        clear(withChildren?: boolean): void;
+        readonly loop: boolean;
+        readonly isPlaying: boolean;
+        readonly isPaused: boolean;
+        readonly isAlive: boolean;
     }
 }
