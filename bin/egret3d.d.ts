@@ -8724,6 +8724,10 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number[];
                         };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
                     };
                     "states": {
                         "enable": any[];
