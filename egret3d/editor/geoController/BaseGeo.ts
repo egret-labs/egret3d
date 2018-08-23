@@ -63,9 +63,6 @@ namespace paper.editor {
                 this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
             }
             else if (color == "grey") {
-                // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                // mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
-                // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
                 let mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone()
 
                 let color1 = new Float32Array([0.3, 0.3, 0.3])
@@ -140,6 +137,7 @@ namespace paper.editor {
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, triangleFan)
             return mesh
         }
+
         protected createFan(maxAngle: number, _mesh?: egret3d.MeshFilter) {
             if (_mesh) {
                 mesh = _mesh

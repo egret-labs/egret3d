@@ -10971,7 +10971,7 @@ declare namespace paper.editor {
     class xAxis extends BaseGeo {
         constructor();
         onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;

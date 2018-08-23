@@ -5044,9 +5044,6 @@ var paper;
                     this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
                 }
                 else if (color == "grey") {
-                    // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                    // mat.setVector4v("_Color", [0.3, 0.3, 0.3, 0.5]);
-                    // this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
                     var mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone();
                     var color1 = new Float32Array([0.3, 0.3, 0.3]);
                     var alpha = new Float32Array([0.4]);
@@ -22508,11 +22505,28 @@ var paper;
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
                 var normal = new egret3d.Vector3;
-                normal.applyQuaternion(worldRotation, this.up);
-                this._dragPlaneNormal = new egret3d.Vector3(normal.x, ray.direction.y, ray.direction.z);
+                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+                normal.applyQuaternion(worldRotation, this.right);
+                _normal.cross(normal);
+                normal.cross(_normal);
+                this._dragPlaneNormal = normal.normalize();
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
+                {
+                    var dragPlane = this._createAxis(new egret3d.Vector4(0, 0.2, 0.2), 3);
+                    dragPlane.transform.setPosition(worldPosition);
+                    this.helpVec3_1.set(0, 1, 0);
+                    this.helpQuat_1.w = Math.sqrt(normal.getDistance(new egret3d.Vector3(0, 0, 0)) ^ 2) + normal.dot(this.helpVec3_3);
+                    this.helpVec3_1.cross(normal);
+                    this.helpQuat_1.x = this.helpVec3_1.x;
+                    this.helpQuat_1.y = this.helpVec3_1.y;
+                    this.helpQuat_1.z = this.helpVec3_1.z;
+                    this.helpQuat_1.normalize();
+                    dragPlane.transform.setRotation(this.helpQuat_1);
+                    // normal.fromPlaneProjection
+                    // dragPlane.transform.setRotation
+                }
             };
             xAxis.prototype.isPressed_local = function (ray, selectedGameObjs) {
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
@@ -22545,8 +22559,12 @@ var paper;
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
                 var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                var normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y);
-                egret3d.Vector3.copy(normal, this._dragPlaneNormal);
+                var normal = new egret3d.Vector3;
+                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+                normal.copy(this.right);
+                _normal.cross(normal);
+                normal.cross(_normal);
+                this._dragPlaneNormal = normal.normalize();
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             };
             xAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
@@ -22961,12 +22979,14 @@ var paper;
             };
             yAxis.prototype.wasPressed_local = function (ray, selectedGameObjs) {
                 this.canDrag = true;
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                var normal = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
-                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
+                var normal = new egret3d.Vector3;
+                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+                normal.applyQuaternion(worldRotation, this.up);
+                _normal.cross(normal);
+                normal.cross(_normal);
+                this._dragPlaneNormal = normal.normalize();
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
             };
@@ -22999,9 +23019,12 @@ var paper;
                 }
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                egret3d.Vector3.copy(this.forward, this._dragPlaneNormal);
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                var normal = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x);
+                var normal = new egret3d.Vector3;
+                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+                normal.copy(this.up);
+                _normal.cross(normal);
+                normal.cross(_normal);
+                this._dragPlaneNormal = normal.normalize();
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
             };
             yAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
@@ -23059,12 +23082,15 @@ var paper;
             };
             zAxis.prototype.wasPressed_local = function (ray, selectedGameObjs) {
                 this.canDrag = true;
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
                 var worldPosition = selectedGameObjs[0].transform.getPosition();
+                var worldRotation = selectedGameObjs[0].transform.getRotation();
                 egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                var normal = new egret3d.Vector3(pos.x + pos.y, pos.x + pos.y, 0);
-                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
+                var normal = new egret3d.Vector3;
+                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+                normal.applyQuaternion(worldRotation, this.forward);
+                _normal.cross(normal);
+                normal.cross(_normal);
+                this._dragPlaneNormal = normal.normalize();
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
                 egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
             };
@@ -23098,9 +23124,12 @@ var paper;
                 }
                 ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
                 egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                egret3d.Vector3.copy(this.up, this._dragPlaneNormal);
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                var normal = new egret3d.Vector3(pos.x + pos.y, pos.x + pos.y, 0);
+                var normal = new egret3d.Vector3;
+                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+                normal.copy(this.forward);
+                _normal.cross(normal);
+                normal.cross(_normal);
+                this._dragPlaneNormal = normal.normalize();
                 this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
             };
             zAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
@@ -23156,7 +23185,7 @@ var paper;
                 this.geo = xRotate;
             };
             xRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var lastY = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.y;
                 var lastX = egret3d.InputManager.mouse.position.x;
                 this.helpVec3_1.set(lastX, lastY, 0);
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
@@ -23170,8 +23199,8 @@ var paper;
             };
             xRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
                 var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.x;
-                var delta = lastY - this.helpVec3_1.y;
+                var lastY = egret3d.InputManager.mouse.position.y;
+                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
                 var rot = selectedGameObjs[0].transform.getRotation();
                 var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
                 this.helpVec3_3.x = this.helpVec3_3.x + delta;
@@ -23185,7 +23214,7 @@ var paper;
             };
             xRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.y;
                 var len = selectedGameObjs.length;
                 var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
                 var ctrlRot = this.geo.transform.parent.getRotation();
@@ -23207,8 +23236,8 @@ var paper;
             xRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
                 var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.x;
-                var delta = lastY - this.helpVec3_1.y;
+                var lastY = egret3d.InputManager.mouse.position.y;
+                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
                 var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
                 this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
                 this.helpVec3_3.x = this.helpVec3_3.x + delta;
@@ -23254,7 +23283,7 @@ var paper;
             };
             yRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
                 var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.y;
                 this.helpVec3_1.set(lastX, lastY, 0);
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 this._dragPlaneNormal.applyQuaternion(worldRotation, this.right);
@@ -23267,8 +23296,8 @@ var paper;
             };
             yRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
                 var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.x;
-                var delta = lastY - this.helpVec3_1.y;
+                var lastY = egret3d.InputManager.mouse.position.y;
+                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
                 var rot = selectedGameObjs[0].transform.getRotation();
                 var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
                 this.helpVec3_3.x = this.helpVec3_3.x + delta;
@@ -23282,7 +23311,7 @@ var paper;
             };
             yRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.y;
                 var len = selectedGameObjs.length;
                 var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
                 var ctrlRot = this.geo.transform.parent.getRotation();
@@ -23304,8 +23333,8 @@ var paper;
             yRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
                 var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.x;
-                var delta = lastY - this.helpVec3_1.y;
+                var lastY = egret3d.InputManager.mouse.position.y;
+                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
                 var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
                 this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
                 this.helpVec3_3.x = this.helpVec3_3.x + delta;
@@ -23351,7 +23380,7 @@ var paper;
             };
             zRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
                 var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.y;
                 this.helpVec3_1.set(lastX, lastY, 0);
                 var worldRotation = selectedGameObjs[0].transform.getRotation();
                 this._dragPlaneNormal.applyQuaternion(worldRotation, this.forward);
@@ -23365,7 +23394,7 @@ var paper;
             zRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
                 var lastX = egret3d.InputManager.mouse.position.x;
                 var lastY = egret3d.InputManager.mouse.position.x;
-                var delta = lastY - this.helpVec3_1.y;
+                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
                 var rot = selectedGameObjs[0].transform.getRotation();
                 var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
                 this.helpVec3_3.x = this.helpVec3_3.x + delta;
@@ -23379,7 +23408,7 @@ var paper;
             };
             zRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
                 var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.x;
+                var lastY = egret3d.InputManager.mouse.position.y;
                 var len = selectedGameObjs.length;
                 var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
                 var ctrlRot = this.geo.transform.parent.getRotation();
@@ -23401,8 +23430,8 @@ var paper;
             zRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
                 var len = selectedGameObjs.length;
                 var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.x;
-                var delta = lastY - this.helpVec3_1.y;
+                var lastY = egret3d.InputManager.mouse.position.y;
+                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
                 var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
                 this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
                 this.helpVec3_3.x = this.helpVec3_3.x + delta;
