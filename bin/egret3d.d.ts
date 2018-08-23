@@ -766,7 +766,7 @@ declare namespace egret3d {
          */
         private static _createConfig();
         /**
-         *
+         * @internal
          */
         static parseFromBinary(array: Uint32Array): {
             config: GLTF;
@@ -790,14 +790,6 @@ declare namespace egret3d {
          * 配置。
          */
         config: GLTF;
-        /**
-         * @internal
-         */
-        parse(config: GLTF, buffers?: Uint32Array[]): void;
-        /**
-         * @internal
-         */
-        initialize(): void;
         dispose(): void;
         caclByteLength(): number;
         /**
@@ -2885,10 +2877,10 @@ declare namespace egret3d {
         /**
          *
          */
-        constructor(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[], attributeTypes?: {
+        constructor(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
             [key: string]: gltf.AccessorType;
         } | null, drawMode?: gltf.DrawMode);
-        initialize(): void;
+        constructor(config: GLTF, buffers: Uint32Array[], name: string);
         /**
          *
          */
@@ -4130,6 +4122,10 @@ declare namespace egret3d {
          *
          */
         static GRID: Texture;
+        /**
+         *
+         */
+        static MISSING: Texture;
         initialize(): void;
     }
 }
@@ -4158,7 +4154,15 @@ declare namespace egret3d {
         static PARTICLE_ADDITIVE: Shader;
         static PARTICLE_BLEND_PREMULTIPLY: Shader;
         static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
-        private _createShader(name, shaderNameOrConfig, renderQueue?, states?, defines?);
+        static CUBE: Shader;
+        static DEPTH: Shader;
+        static DISTANCE_RGBA: Shader;
+        static EQUIRECT: Shader;
+        static NORMAL: Shader;
+        static POINTS: Shader;
+        static SHADOW: Shader;
+        static SPRITE: Shader;
+        private _createShader(name, config, renderQueue?, states?, defines?);
         initialize(): void;
     }
 }
@@ -4176,7 +4180,7 @@ declare namespace egret3d {
          */
         static LINEDASHED_COLOR: Material;
         /**
-         * @internal
+         *
          */
         static MISSING: Material;
         /**
@@ -4187,7 +4191,7 @@ declare namespace egret3d {
          * @internal
          */
         static SHADOW_DISTANCE: Material;
-        private _createMaterial(shaderName, name, renderQueue?);
+        private _createMaterial(name, shader, renderQueue?);
         initialize(): void;
     }
 }
@@ -5743,6 +5747,64 @@ declare namespace egret3d.particle {
         readonly floatValues: Readonly<Float32Array>;
     }
 }
+declare namespace egret3d.particle {
+    /**
+     * @internal
+     */
+    class ParticleBatcher {
+        private _dirty;
+        private _time;
+        private _emittsionTime;
+        private _frameRateTime;
+        private _firstAliveCursor;
+        private _lastFrameFirstCursor;
+        private _lastAliveCursor;
+        private _vertexStride;
+        private _burstIndex;
+        private _finalGravity;
+        private _vertexAttributes;
+        private _startPositionBuffer;
+        private _startVelocityBuffer;
+        private _startColorBuffer;
+        private _startSizeBuffer;
+        private _startRotationBuffer;
+        private _startTimeBuffer;
+        private _random0Buffer;
+        private _random1Buffer;
+        private _worldPostionBuffer;
+        private _worldRoationBuffer;
+        private _worldPostionCache;
+        private _worldRotationCache;
+        private _comp;
+        private _renderer;
+        /**
+        * 计算粒子爆发数量
+        * @param startTime
+        * @param endTime
+        */
+        private _getBurstCount(startTime, endTime);
+        /**
+         * 判断粒子是否已经过期
+         * @param particleIndex
+         */
+        private _isParticleExpired(particleIndex);
+        /**
+         *
+         * @param time 批量增加粒子
+         * @param startCursor
+         * @param endCursor
+         */
+        private _addParticles(time, startCursor, count);
+        private _tryEmit(time);
+        clean(): void;
+        resetTime(): void;
+        init(comp: ParticleComponent, renderer: ParticleRenderer): void;
+        update(elapsedTime: number): void;
+        private _updateEmission(elapsedTime);
+        private _updateRender();
+        readonly aliveParticleCount: number;
+    }
+}
 declare namespace paper {
     /**
      * 场景类
@@ -5821,68 +5883,6 @@ declare namespace paper {
          * 所有实体。
          */
         readonly gameObjects: ReadonlyArray<GameObject>;
-    }
-}
-declare namespace egret3d.particle {
-    const enum ParticleCompEventType {
-        MainChanged = "mainChanged",
-        ColorChanged = "colorChanged",
-        VelocityChanged = "velocityChanged",
-        SizeChanged = "sizeChanged",
-        RotationChanged = "rotationChanged",
-        TextureSheetChanged = "textureSheetChanged",
-        ShapeChanged = "shapeChanged",
-        StartRotation3DChanged = "rotation3DChanged",
-        SimulationSpaceChanged = "simulationSpace",
-        ScaleModeChanged = "scaleMode",
-        MaxParticlesChanged = "maxParticles",
-    }
-    class ParticleComponent extends paper.BaseComponent {
-        readonly main: MainModule;
-        readonly emission: EmissionModule;
-        readonly shape: ShapeModule;
-        readonly velocityOverLifetime: VelocityOverLifetimeModule;
-        readonly rotationOverLifetime: RotationOverLifetimeModule;
-        readonly sizeOverLifetime: SizeOverLifetimeModule;
-        readonly colorOverLifetime: ColorOverLifetimeModule;
-        readonly textureSheetAnimation: TextureSheetAnimationModule;
-        /**
-         * @internal
-         */
-        _isPlaying: boolean;
-        /**
-         * @internal
-         */
-        _isPaused: boolean;
-        private readonly _batcher;
-        /**
-         * @internal
-         */
-        _clean(): void;
-        /**
-         * @internal
-         */
-        uninitialize(): void;
-        /**
-         * @internal
-         */
-        initialize(): void;
-        /**
-         * @internal
-         */
-        initBatcher(): void;
-        /**
-         * @internal
-         */
-        update(elapsedTime: number): void;
-        play(withChildren?: boolean): void;
-        pause(withChildren?: boolean): void;
-        stop(withChildren?: boolean): void;
-        clear(withChildren?: boolean): void;
-        readonly loop: boolean;
-        readonly isPlaying: boolean;
-        readonly isPaused: boolean;
-        readonly isAlive: boolean;
     }
 }
 declare namespace egret3d.particle {
@@ -6457,6 +6457,9 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
+    /**
+     *
+     */
     class Shader extends GLTFAsset {
         /**
          * @internal
@@ -6465,11 +6468,15 @@ declare namespace egret3d {
         /**
          * @internal
          */
+        _defines?: string[];
+        /**
+         * @internal
+         */
         _states?: gltf.States;
         /**
          * @internal
          */
-        _defines?: string[];
+        constructor(config: GLTF, name: string);
     }
 }
 declare namespace egret3d {
@@ -6503,8 +6510,9 @@ declare namespace egret3d {
         /**
          *
          */
-        constructor(shader: Shader);
-        initialize(): void;
+        constructor(shader?: Shader | string);
+        constructor(config: GLTF, name: string);
+        private _reset(shaderOrConfig);
         dispose(disposeChildren?: boolean): void;
         copy(value: Material): this;
         /**
@@ -6549,9 +6557,28 @@ declare namespace egret3d {
          * @internal
          */
         readonly shaderDefine: string;
-        readonly shader: Shader;
+        shader: Shader;
         readonly glTFTechnique: gltf.Technique;
     }
+}
+declare namespace egrer3d.Primitive {
+    /**
+     *
+     */
+    const enum PrimitiveType {
+        Axises = 0,
+        Quad = 1,
+        QuadParticle = 2,
+        Plane = 3,
+        Cube = 4,
+        Pyramid = 5,
+        Cylinder = 6,
+        Sphere = 7,
+    }
+    /**
+     *
+     */
+    function create(type: PrimitiveType): paper.GameObject;
 }
 declare namespace egret3d.ShaderLib {
     const cube: {
@@ -6651,11 +6678,9 @@ declare namespace egret3d.ShaderLib {
                         };
                         "tCube": {
                             "type": number;
-                            "value": any[];
                         };
                         "tFlip": {
                             "type": number;
-                            "value": any[];
                         };
                         "opacity": {
                             "type": number;
@@ -6775,19 +6800,15 @@ declare namespace egret3d.ShaderLib {
                         };
                         "displacementMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "displacementScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "displacementBias": {
                             "type": number;
-                            "value": any[];
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "bindMatrix": {
                             "type": number;
@@ -6799,19 +6820,15 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTexture": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneTextureSize": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneMatrices[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "value": any[];
                         };
                         "opacity": {
                             "type": number;
@@ -6819,15 +6836,12 @@ declare namespace egret3d.ShaderLib {
                         };
                         "map": {
                             "type": number;
-                            "value": any[];
                         };
                         "alphaMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "clippingPlanes[0]": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -6908,7 +6922,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "map": {
                             "type": number;
-                            "value": any[];
                         };
                         "_AlphaCut": {
                             "type": number;
@@ -7028,19 +7041,15 @@ declare namespace egret3d.ShaderLib {
                         };
                         "displacementMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "displacementScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "displacementBias": {
                             "type": number;
-                            "value": any[];
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "bindMatrix": {
                             "type": number;
@@ -7052,15 +7061,12 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTexture": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneTextureSize": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneMatrices[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "referencePosition": {
                             "type": number;
@@ -7076,15 +7082,12 @@ declare namespace egret3d.ShaderLib {
                         };
                         "map": {
                             "type": number;
-                            "value": any[];
                         };
                         "alphaMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "clippingPlanes[0]": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -7196,7 +7199,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "tEquirect": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -7287,7 +7289,6 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "scale": {
                             "type": number;
-                            "value": any[];
                         };
                         "modelMatrix": {
                             "type": number;
@@ -7315,7 +7316,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "value": any[];
                         };
                         "diffuse": {
                             "type": number;
@@ -7327,31 +7327,24 @@ declare namespace egret3d.ShaderLib {
                         };
                         "dashSize": {
                             "type": number;
-                            "value": any[];
                         };
                         "totalSize": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogColor": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogDensity": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogNear": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogFar": {
                             "type": number;
-                            "value": any[];
                         };
                         "clippingPlanes[0]": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -7474,7 +7467,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "bindMatrix": {
                             "type": number;
@@ -7486,19 +7478,15 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTexture": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneTextureSize": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneMatrices[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "value": any[];
                         };
                         "diffuse": {
                             "type": number;
@@ -7510,15 +7498,12 @@ declare namespace egret3d.ShaderLib {
                         };
                         "map": {
                             "type": number;
-                            "value": any[];
                         };
                         "alphaMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "aoMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "aoMapIntensity": {
                             "type": number;
@@ -7542,7 +7527,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "envMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "flipEnvMap": {
                             "type": number;
@@ -7554,27 +7538,21 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogDensity": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogNear": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogFar": {
                             "type": number;
-                            "value": any[];
                         };
                         "specularMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "clippingPlanes[0]": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -7729,7 +7707,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "bindMatrix": {
                             "type": number;
@@ -7741,15 +7718,12 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTexture": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneTextureSize": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneMatrices[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "directionalShadowMatrix[0]": {
                             "type": number;
@@ -7765,7 +7739,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "value": any[];
                         };
                         "diffuse": {
                             "type": number;
@@ -7781,15 +7754,12 @@ declare namespace egret3d.ShaderLib {
                         };
                         "map": {
                             "type": number;
-                            "value": any[];
                         };
                         "alphaMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "aoMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "aoMapIntensity": {
                             "type": number;
@@ -7805,7 +7775,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "emissiveMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "reflectivity": {
                             "type": number;
@@ -7817,7 +7786,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "envMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "flipEnvMap": {
                             "type": number;
@@ -7829,19 +7797,15 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogDensity": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogNear": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogFar": {
                             "type": number;
-                            "value": any[];
                         };
                         "directionalShadowMap[0]": {
                             "type": number;
@@ -7857,11 +7821,9 @@ declare namespace egret3d.ShaderLib {
                         };
                         "specularMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "clippingPlanes[0]": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -7980,15 +7942,12 @@ declare namespace egret3d.ShaderLib {
                         };
                         "displacementMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "displacementScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "displacementBias": {
                             "type": number;
-                            "value": any[];
                         };
                         "refractionRatio": {
                             "type": number;
@@ -7996,7 +7955,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "bindMatrix": {
                             "type": number;
@@ -8008,15 +7966,12 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTexture": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneTextureSize": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneMatrices[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "directionalShadowMatrix[0]": {
                             "type": number;
@@ -8032,7 +7987,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "value": any[];
                         };
                         "diffuse": {
                             "type": number;
@@ -8056,15 +8010,12 @@ declare namespace egret3d.ShaderLib {
                         };
                         "map": {
                             "type": number;
-                            "value": any[];
                         };
                         "alphaMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "aoMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "aoMapIntensity": {
                             "type": number;
@@ -8080,7 +8031,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "emissiveMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "reflectivity": {
                             "type": number;
@@ -8092,7 +8042,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "envMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "flipEnvMap": {
                             "type": number;
@@ -8104,23 +8053,18 @@ declare namespace egret3d.ShaderLib {
                         };
                         "gradientMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogColor": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogDensity": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogNear": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogFar": {
                             "type": number;
-                            "value": any[];
                         };
                         "ambientLightColor": {
                             "type": number;
@@ -8168,27 +8112,21 @@ declare namespace egret3d.ShaderLib {
                         };
                         "bumpMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "bumpScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "normalMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "normalScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "specularMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "clippingPlanes[0]": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -8307,19 +8245,15 @@ declare namespace egret3d.ShaderLib {
                         };
                         "displacementMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "displacementScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "displacementBias": {
                             "type": number;
-                            "value": any[];
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "bindMatrix": {
                             "type": number;
@@ -8331,15 +8265,12 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTexture": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneTextureSize": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneMatrices[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "directionalShadowMatrix[0]": {
                             "type": number;
@@ -8355,7 +8286,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "value": any[];
                         };
                         "diffuse": {
                             "type": number;
@@ -8367,11 +8297,9 @@ declare namespace egret3d.ShaderLib {
                         };
                         "roughness": {
                             "type": number;
-                            "value": any[];
                         };
                         "metalness": {
                             "type": number;
-                            "value": any[];
                         };
                         "opacity": {
                             "type": number;
@@ -8379,23 +8307,18 @@ declare namespace egret3d.ShaderLib {
                         };
                         "clearCoat": {
                             "type": number;
-                            "value": any[];
                         };
                         "clearCoatRoughness": {
                             "type": number;
-                            "value": any[];
                         };
                         "map": {
                             "type": number;
-                            "value": any[];
                         };
                         "alphaMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "aoMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "aoMapIntensity": {
                             "type": number;
@@ -8411,7 +8334,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "emissiveMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "reflectivity": {
                             "type": number;
@@ -8423,7 +8345,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "envMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "flipEnvMap": {
                             "type": number;
@@ -8439,19 +8360,15 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogDensity": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogNear": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogFar": {
                             "type": number;
-                            "value": any[];
                         };
                         "ambientLightColor": {
                             "type": number;
@@ -8499,31 +8416,24 @@ declare namespace egret3d.ShaderLib {
                         };
                         "bumpMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "bumpScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "normalMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "normalScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "roughnessMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "metalnessMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "clippingPlanes[0]": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -8639,19 +8549,15 @@ declare namespace egret3d.ShaderLib {
                         };
                         "displacementMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "displacementScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "displacementBias": {
                             "type": number;
-                            "value": any[];
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "bindMatrix": {
                             "type": number;
@@ -8663,19 +8569,15 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTexture": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneTextureSize": {
                             "type": number;
-                            "value": any[];
                         };
                         "boneMatrices[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "value": any[];
                         };
                         "opacity": {
                             "type": number;
@@ -8683,19 +8585,15 @@ declare namespace egret3d.ShaderLib {
                         };
                         "bumpMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "bumpScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "normalMap": {
                             "type": number;
-                            "value": any[];
                         };
                         "normalScale": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -8771,35 +8669,27 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "u_currentTime": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_gravity": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_worldPosition": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_worldRotation": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_startRotation3D": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_scalingMode": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_positionScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_sizeScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "viewProjectionMatrix": {
                             "type": number;
@@ -8819,179 +8709,140 @@ declare namespace egret3d.ShaderLib {
                         };
                         "u_lengthScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_speeaScale": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_simulationSpace": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_spaceType": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_velocityConst": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_velocityCurveX[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_velocityCurveY[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_velocityCurveZ[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_velocityConstMax": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_velocityCurveMaxX[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_velocityCurveMaxY[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_velocityCurveMaxZ[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_colorGradient[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_alphaGradient[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_colorGradientMax[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_alphaGradientMax[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_sizeCurve[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_sizeCurveMax[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_sizeCurveX[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_sizeCurveY[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_sizeCurveZ[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_sizeCurveMaxX[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_sizeCurveMaxY[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_sizeCurveMaxZ[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationConst": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationConstMax": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationCurve[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationCurveMax[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationConstSeprarate": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationConstMaxSeprarate": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationCurveX[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationCurveY[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationCurveZ[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationCurveW[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationCurveMaxX[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationCurveMaxY[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationCurveMaxZ[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_rotationCurveMaxW[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_cycles": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_subUV": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_uvCurve[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "u_uvCurveMax[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "map": {
                             "type": number;
-                            "value": any[];
                         };
                         "diffuse": {
                             "type": number;
                             "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
                         };
                     };
                     "states": {
@@ -9079,11 +8930,9 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "size": {
                             "type": number;
-                            "value": any[];
                         };
                         "scale": {
                             "type": number;
-                            "value": any[];
                         };
                         "modelMatrix": {
                             "type": number;
@@ -9111,11 +8960,9 @@ declare namespace egret3d.ShaderLib {
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
-                            "value": any[];
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "value": any[];
                         };
                         "diffuse": {
                             "type": number;
@@ -9131,27 +8978,21 @@ declare namespace egret3d.ShaderLib {
                         };
                         "map": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogColor": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogDensity": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogNear": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogFar": {
                             "type": number;
-                            "value": any[];
                         };
                         "clippingPlanes[0]": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -9275,7 +9116,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "color": {
                             "type": number;
-                            "value": any[];
                         };
                         "opacity": {
                             "type": number;
@@ -9283,19 +9123,15 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogDensity": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogNear": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogFar": {
                             "type": number;
-                            "value": any[];
                         };
                         "ambientLightColor": {
                             "type": number;
@@ -9427,11 +9263,9 @@ declare namespace egret3d.ShaderLib {
                     "uniforms": {
                         "rotation": {
                             "type": number;
-                            "value": any[];
                         };
                         "center": {
                             "type": number;
-                            "value": any[];
                         };
                         "modelMatrix": {
                             "type": number;
@@ -9463,7 +9297,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "value": any[];
                         };
                         "diffuse": {
                             "type": number;
@@ -9475,27 +9308,21 @@ declare namespace egret3d.ShaderLib {
                         };
                         "map": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogColor": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogDensity": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogNear": {
                             "type": number;
-                            "value": any[];
                         };
                         "fogFar": {
                             "type": number;
-                            "value": any[];
                         };
                         "clippingPlanes[0]": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -9549,7 +9376,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "map": {
                             "type": number;
-                            "value": any[];
                         };
                     };
                     "states": {
@@ -11578,60 +11404,64 @@ declare namespace egret3d {
     type RawScene = paper.RawScene;
 }
 declare namespace egret3d.particle {
-    /**
-     * @internal
-     */
-    class ParticleBatcher {
-        private _dirty;
-        private _time;
-        private _emittsionTime;
-        private _frameRateTime;
-        private _firstAliveCursor;
-        private _lastFrameFirstCursor;
-        private _lastAliveCursor;
-        private _vertexStride;
-        private _burstIndex;
-        private _finalGravity;
-        private _vertexAttributes;
-        private _startPositionBuffer;
-        private _startVelocityBuffer;
-        private _startColorBuffer;
-        private _startSizeBuffer;
-        private _startRotationBuffer;
-        private _startTimeBuffer;
-        private _random0Buffer;
-        private _random1Buffer;
-        private _worldPostionBuffer;
-        private _worldRoationBuffer;
-        private _worldPostionCache;
-        private _worldRotationCache;
-        private _comp;
-        private _renderer;
+    const enum ParticleCompEventType {
+        MainChanged = "mainChanged",
+        ColorChanged = "colorChanged",
+        VelocityChanged = "velocityChanged",
+        SizeChanged = "sizeChanged",
+        RotationChanged = "rotationChanged",
+        TextureSheetChanged = "textureSheetChanged",
+        ShapeChanged = "shapeChanged",
+        StartRotation3DChanged = "rotation3DChanged",
+        SimulationSpaceChanged = "simulationSpace",
+        ScaleModeChanged = "scaleMode",
+        MaxParticlesChanged = "maxParticles",
+    }
+    class ParticleComponent extends paper.BaseComponent {
+        readonly main: MainModule;
+        readonly emission: EmissionModule;
+        readonly shape: ShapeModule;
+        readonly velocityOverLifetime: VelocityOverLifetimeModule;
+        readonly rotationOverLifetime: RotationOverLifetimeModule;
+        readonly sizeOverLifetime: SizeOverLifetimeModule;
+        readonly colorOverLifetime: ColorOverLifetimeModule;
+        readonly textureSheetAnimation: TextureSheetAnimationModule;
         /**
-        * 计算粒子爆发数量
-        * @param startTime
-        * @param endTime
-        */
-        private _getBurstCount(startTime, endTime);
-        /**
-         * 判断粒子是否已经过期
-         * @param particleIndex
+         * @internal
          */
-        private _isParticleExpired(particleIndex);
+        _isPlaying: boolean;
         /**
-         *
-         * @param time 批量增加粒子
-         * @param startCursor
-         * @param endCursor
+         * @internal
          */
-        private _addParticles(time, startCursor, count);
-        private _tryEmit(time);
-        clean(): void;
-        resetTime(): void;
-        init(comp: ParticleComponent, renderer: ParticleRenderer): void;
+        _isPaused: boolean;
+        private readonly _batcher;
+        /**
+         * @internal
+         */
+        _clean(): void;
+        /**
+         * @internal
+         */
+        uninitialize(): void;
+        /**
+         * @internal
+         */
+        initialize(): void;
+        /**
+         * @internal
+         */
+        initBatcher(): void;
+        /**
+         * @internal
+         */
         update(elapsedTime: number): void;
-        private _updateEmission(elapsedTime);
-        private _updateRender();
-        readonly aliveParticleCount: number;
+        play(withChildren?: boolean): void;
+        pause(withChildren?: boolean): void;
+        stop(withChildren?: boolean): void;
+        clear(withChildren?: boolean): void;
+        readonly loop: boolean;
+        readonly isPlaying: boolean;
+        readonly isPaused: boolean;
+        readonly isAlive: boolean;
     }
 }

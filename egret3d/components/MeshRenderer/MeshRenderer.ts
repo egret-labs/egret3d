@@ -44,6 +44,7 @@ namespace egret3d {
             return this._materials;
         }
         public set materials(value: ReadonlyArray<Material>) {
+            // TODO 将 materials, material, mesh 接口实现到 BaseRenderer.
             if (value === this._materials) {
                 return;
             }

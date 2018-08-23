@@ -5,7 +5,7 @@ namespace egret3d {
     const _helpMatrix = Matrix4.create();
     const _helpRay = Ray.create();
 
-    const _attributes: gltf.MeshAttributeType[] = [
+    const _attributeNames: gltf.MeshAttributeType[] = [
         gltf.MeshAttributeType.POSITION,
         gltf.MeshAttributeType.NORMAL,
         gltf.MeshAttributeType.TANGENT,
@@ -26,12 +26,21 @@ namespace egret3d {
          */
         public constructor(
             vertexCount: number, indexCount: number,
-            attributeNames: gltf.MeshAttribute[] = _attributes, attributeTypes: { [key: string]: gltf.AccessorType } | null = null,
-            drawMode: gltf.DrawMode = gltf.DrawMode.Static
+            attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
+            drawMode?: gltf.DrawMode
+        )
+        public constructor(config: GLTF, buffers: Uint32Array[], name: string)
+        public constructor(
+            vertexCountOrConfig: number | GLTF, indexCountOrBuffers?: number | Uint32Array[],
+            attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
+            drawMode?: gltf.DrawMode
         ) {
-            super();
+            super(typeof attributeNamesOrName === "string" ? attributeNamesOrName : "");
 
-            if (vertexCount > 0) { // Custom.
+            if (typeof vertexCountOrConfig === "number") {
+                vertexCountOrConfig = vertexCountOrConfig || 3;
+                indexCountOrBuffers = indexCountOrBuffers || 0;
+
                 this.config = GLTFAsset.createMeshConfig();
                 //
                 const buffer = this.config.buffers![0];
@@ -48,15 +57,15 @@ namespace egret3d {
                     }
                 }
 
-                for (const attributeName of attributeNames) { // Create
+                for (const attributeName of (attributeNamesOrName || _attributeNames) as string[]) { // Create
                     const attributeType = hasCustomAttributeType ? this._customAttributeTypes[attributeName] || this.getMeshAttributeType(attributeName) : this.getMeshAttributeType(attributeName);
                     const byteOffset = vertexBufferView.byteLength;
-                    vertexBufferView.byteLength += vertexCount * this.getAccessorTypeCount(attributeType) * Float32Array.BYTES_PER_ELEMENT;
+                    vertexBufferView.byteLength += vertexCountOrConfig * this.getAccessorTypeCount(attributeType) * Float32Array.BYTES_PER_ELEMENT;
                     attributes[attributeName] = accessors!.length;
                     accessors!.push({
                         bufferView: 0,
                         byteOffset: byteOffset,
-                        count: vertexCount,
+                        count: vertexCountOrConfig,
                         normalized: attributeName === gltf.MeshAttributeType.NORMAL || attributeName === gltf.MeshAttributeType.TANGENT,
                         componentType: gltf.ComponentType.Float,
                         type: attributeType,
@@ -65,28 +74,28 @@ namespace egret3d {
 
                 buffer.byteLength = vertexBufferView.byteLength;
                 this.buffers[0] = new Float32Array(vertexBufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
-                this._drawMode = drawMode;
+                this._drawMode = drawMode || gltf.DrawMode.Static;
 
-                if (indexCount > 0) { // Indices.
-                    this.addSubMesh(indexCount, 0);
+                if (indexCountOrBuffers as number > 0) { // Indices.
+                    this.addSubMesh(indexCountOrBuffers as number, 0);
                 }
                 else {
                     this.config.meshes[0].primitives[0].material = 0;
                 }
-
-                this.initialize();
             }
-        }
+            else {
+                this.config = vertexCountOrConfig as GLTF;
 
-        public initialize() {
-            if (this._glTFMesh) {
-                return;
+                for (const buffer of indexCountOrBuffers as Uint32Array[]) {
+                    this.buffers.push(buffer);
+                }
+
+                this.name = attributeNamesOrName as string;
             }
-
-            this._glTFMesh = this.config.meshes![0];
 
             const accessor = this.getAccessor(0);
             this._vertexCount = accessor.count;
+            this._glTFMesh = this.config.meshes![0];
 
             for (const k in this._glTFMesh.primitives[0].attributes) {
                 this._attributeNames.push(k);

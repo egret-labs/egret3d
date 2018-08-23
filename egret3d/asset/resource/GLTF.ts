@@ -163,11 +163,11 @@ namespace egret3d {
             return config;
         }
         /**
-         * 
+         * @internal
          */
         public static parseFromBinary(array: Uint32Array) {
             let index = 0;
-            let result: { config: GLTF, buffers: (Float32Array | Uint32Array | Uint16Array)[] } = { config: {}, buffers: [] } as any;
+            const result: { config: GLTF, buffers: (Float32Array | Uint32Array | Uint16Array)[] } = { config: {}, buffers: [] } as any;
 
             if (
                 array[index++] !== 0x46546C67 ||
@@ -254,8 +254,9 @@ namespace egret3d {
             for (const key in source.uniforms) {
                 const uniform = source.uniforms[key];
                 let value: any;
-                if (uniform.type === gltf.UniformType.SAMPLER_2D && !(uniform.value instanceof egret3d.Texture)) {
-                    value = egret3d.DefaultTextures.GRAY;
+
+                if (uniform.type === gltf.UniformType.SAMPLER_2D && !uniform.value) {
+                    value = egret3d.DefaultTextures.MISSING;
                 }
                 else if (Array.isArray(uniform.value)) {
                     value = uniform.value.concat();
@@ -264,7 +265,11 @@ namespace egret3d {
                     value = uniform.value;
                 }
 
-                target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value };
+                const targetUniform = target.uniforms[key] = { type: uniform.type, value } as gltf.Uniform;
+
+                if (uniform.semantic) {
+                    targetUniform.semantic = uniform.semantic;
+                }
             }
 
             // if (source.states) {
@@ -315,25 +320,6 @@ namespace egret3d {
          * 配置。
          */
         public config: GLTF = null!;
-        /**
-         * @internal
-         */
-        public parse(config: GLTF, buffers?: Uint32Array[]) {
-            this.config = config;
-
-            if (buffers) {
-                for (const buffer of buffers) {
-                    this.buffers.push(buffer);
-                }
-            }
-
-            this.initialize();
-        }
-        /**
-         * @internal
-         */
-        public initialize() {
-        }
 
         public dispose() {
             if (this._isBuiltin) {

@@ -15,6 +15,10 @@ namespace egret3d {
          * 
          */
         public static GRID: Texture;
+        /**
+         * 
+         */
+        public static MISSING: Texture;
 
         public initialize() {
             {
@@ -35,6 +39,13 @@ namespace egret3d {
                 const texture = GLTexture2D.createGridTexture("builtin/grid.image.json");
                 texture._isBuiltin = true;
                 DefaultTextures.GRID = texture;
+                paper.Asset.register(texture);
+            }
+
+            {
+                const texture = GLTexture2D.createColorTexture("builtin/missing.image.json", 255, 0, 255);
+                texture._isBuiltin = true;
+                DefaultTextures.MISSING = texture;
                 paper.Asset.register(texture);
             }
         }

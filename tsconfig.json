@@ -112,6 +112,7 @@
         "egret3d/asset/resource/Texture.ts",
         "egret3d/asset/resource/Shader.ts",
         "egret3d/asset/resource/Material.ts",
+        "egret3d/asset/resource/Primitive.ts",
         "egret3d/asset/default/ShaderLib.ts",
         "egret3d/asset/default/ShaderChunk.ts",
         "egret3d/res-processor/ResProcessor.ts",

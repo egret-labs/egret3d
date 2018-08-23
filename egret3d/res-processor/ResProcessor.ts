@@ -96,17 +96,16 @@ namespace RES.processor {
                 let glb: egret3d.GLTFAsset;
 
                 if (parseResult.config.meshes) {
-                    glb = new egret3d.Mesh(0, 0);
+                    glb = new egret3d.Mesh(parseResult.config, parseResult.buffers, resource.name);
                 }
                 else {
                     glb = new egret3d.GLTFAsset();
+                    glb.name = resource.name;
+                    glb.config = parseResult.config;
+                    for (const b of parseResult.buffers) {
+                        glb.buffers.push(b);
+                    }
                 }
-                glb.name = resource.name;
-                glb.config = parseResult.config;
-                for (const b of parseResult.buffers) {
-                    glb.buffers.push(b);
-                }
-                glb.initialize();
                 // glb.parseFromBinary(new Uint32Array(result));
                 paper.Asset.register(glb);
                 return glb;
@@ -123,8 +122,6 @@ namespace RES.processor {
     export const GLTFProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, 'json') as egret3d.GLTF;
-            const glTF = new egret3d.Material(null!);
-            glTF.name = resource.name;
 
             if (result.materials && result.materials.length > 0) {
                 for (const mat of result.materials) {
@@ -136,17 +133,6 @@ namespace RES.processor {
                             if (r) {
                                 const texture = await host.load(r, "TextureDesc");
                                 values[key] = texture;
-
-                                // const imgResource = (RES.host.resourceConfig as any)["getResource"](_name);
-                                // let loader = new egret.ImageLoader();
-                                // loader.load(imgResource.root + imgResource.url);
-                                // return promisify(loader, imgResource)
-                                //     .then((image) => {
-                                //         const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
-                                //         texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
-                                //         paper.Asset.register(texture);
-                                //         return texture;
-                                //     })
                             }
                             else {
                                 values[key] = egret3d.DefaultTextures.GRID;
@@ -156,7 +142,7 @@ namespace RES.processor {
                 }
             }
 
-            glTF.parse(result);
+            const glTF = new egret3d.Material(result, resource.name);
             paper.Asset.register(glTF);
 
             return glTF;
@@ -173,8 +159,6 @@ namespace RES.processor {
     export const GLTFShaderProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, 'json') as egret3d.GLTF;
-            const glTF = new egret3d.GLTFAsset();
-            glTF.name = resource.name;
 
             if (result.extensions.KHR_techniques_webgl.shaders && result.extensions.KHR_techniques_webgl.shaders.length === 2) {
                 //
@@ -191,7 +175,7 @@ namespace RES.processor {
                 console.error("错误的Shader格式数据");
             }
 
-            glTF.parse(result);
+            const glTF = new egret3d.Shader(result, resource.name);
             paper.Asset.register(glTF);
 
             return glTF;
