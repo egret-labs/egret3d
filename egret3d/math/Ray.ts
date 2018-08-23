@@ -32,13 +32,10 @@ namespace egret3d {
          */
         public readonly direction: Vector3 = Vector3.create();
         /**
-         * @deprecated
-         * @private
+         * 请使用 `egret3d.Ray.create()` 创建实例。
+         * @see egret3d.Ray.create()
          */
-        public constructor(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.RIGHT) {
-            this.origin.copy(origin);
-            this.direction.copy(direction);
-        }
+        private constructor() { }
 
         public serialize() {
             return [this.origin.x, this.origin.y, this.origin.z, this.direction.x, this.direction.y, this.direction.z];
@@ -49,10 +46,7 @@ namespace egret3d {
         }
 
         public copy(value: Readonly<Ray>) {
-            this.origin.copy(value.origin);
-            this.direction.copy(value.direction);
-
-            return this;
+            return this.set(value.origin, value.direction);
         }
 
         public clone() {

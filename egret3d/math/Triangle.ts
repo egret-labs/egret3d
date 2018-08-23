@@ -25,7 +25,10 @@ namespace egret3d {
         public readonly a: Vector3 = Vector3.create();
         public readonly b: Vector3 = Vector3.create();
         public readonly c: Vector3 = Vector3.create();
-
+        /**
+         * 请使用 `egret3d.Triangle.create()` 创建实例。
+         * @see egret3d.Triangle.create()
+         */
         private constructor() { }
 
         public serialize() {

@@ -7,7 +7,9 @@ namespace egret3d {
     export class Vector4 implements IVector4, paper.IRelease<Vector4>, paper.ISerializable {
 
         private static readonly _instances: Vector4[] = [];
-
+        /**
+         * 
+         */
         public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
             if (this._instances.length > 0) {
                 return this._instances.pop()!.set(x, y, z, w);
@@ -32,6 +34,8 @@ namespace egret3d {
 
         public w: number;
         /**
+         * 请使用 `egret3d.Quaternion.create()` 创建实例。
+         * @see egret3d.Quaternion.create()
          * @deprecated
          * @private
          */

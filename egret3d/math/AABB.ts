@@ -46,9 +46,11 @@ namespace egret3d {
         private readonly _minimum: Vector3 = Vector3.create(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
         private readonly _maximum: Vector3 = Vector3.create(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
         private readonly _center: Vector3 = Vector3.create();
-
-        private constructor() {
-        }
+        /**
+         * 请使用 `egret3d.AABB.create()` 创建实例。
+         * @see egret3d.AABB.create()
+         */
+        private constructor() { }
 
         public serialize() {
             return [this._minimum.x, this._minimum.y, this._minimum.z, this._maximum.x, this._maximum.y, this._maximum.z];
@@ -98,6 +100,8 @@ namespace egret3d {
 
             this._dirtyCenter = true;
             this._dirtyRadius = true;
+
+            return this;
         }
         /**
          * 

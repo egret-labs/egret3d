@@ -137,7 +137,7 @@ namespace RES.processor {
                                 values[key] = texture;
                             }
                             else {
-                                values[key] = egret3d.DefaultTextures.GRID;
+                                values[key] = egret3d.DefaultTextures.MISSING;
                             }
                         }
                     }

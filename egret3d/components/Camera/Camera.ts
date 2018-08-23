@@ -224,7 +224,7 @@ namespace egret3d {
             const dir = helpVector3G;
             Vector3.subtract(dest2, dest1, dir);
             Vector3.normalize(dir);
-            const ray = new Ray(dest1, dir);
+            const ray = Ray.create(dest1, dir);
 
             return ray;
         }

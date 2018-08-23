@@ -1,21 +1,46 @@
 namespace egret3d {
-
+    /**
+     * 
+     */
     export interface IVector2 {
         x: number;
         y: number;
     }
-
+    /**
+     * 
+     */
     export class Vector2 implements IVector2, paper.ISerializable {
-
         public static readonly ZERO: Readonly<Vector2> = new Vector2(0.0, 0.0);
-
         public static readonly ONE: Readonly<Vector2> = new Vector2(1.0, 1.0);
+
+        private static readonly _instances: Vector2[] = [];
+
+        public static create(x: number = 0.0, y: number = 0.0) {
+            if (this._instances.length > 0) {
+                return this._instances.pop()!.set(x, y);
+            }
+
+            return new Vector2().set(x, y);
+        }
+
+        public release() {
+            if (Vector2._instances.indexOf(this) < 0) {
+                Vector2._instances.push(this);
+            }
+
+            return this;
+        }
 
         public x: number;
 
         public y: number;
-
-        constructor(x: number = 0.0, y: number = 0.0) {
+        /**
+         * 请使用 `egret3d.Vector2.create()` 创建实例。
+         * @see egret3d.Vector2.create()
+         * @deprecated
+         * @private
+         */
+        public constructor(x: number = 0.0, y: number = 0.0) {
             this.x = x;
             this.y = y;
         }

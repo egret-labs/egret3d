@@ -30,11 +30,10 @@ namespace egret3d {
 
         public a: number;
         /**
-         * 请使用 `egret3d.Color.create()` 创建 egret3d.Color 实例。
+         * 请使用 `egret3d.Color.create()` 创建实例。
          * @see egret3d.Color.create()
          */
-        private constructor() {
-        }
+        private constructor() { }
 
         public serialize() {
             return [this.r, this.g, this.b, this.a];
@@ -94,7 +93,7 @@ namespace egret3d {
             this.b = source.b * value;
             this.a = source.a * value;
 
-            return source;
+            return this;
         }
 
         public lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>) {

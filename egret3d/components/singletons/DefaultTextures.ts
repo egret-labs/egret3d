@@ -42,12 +42,7 @@ namespace egret3d {
                 paper.Asset.register(texture);
             }
 
-            {
-                const texture = GLTexture2D.createColorTexture("builtin/missing.image.json", 255, 0, 255);
-                texture._isBuiltin = true;
-                DefaultTextures.MISSING = texture;
-                paper.Asset.register(texture);
-            }
+            DefaultTextures.MISSING = DefaultTextures.GRID;
         }
     }
 }

@@ -1,8 +1,8 @@
-namespace egrer3d.Primitive {
+namespace egret3d.Primitive {
     /**
      * 
      */
-    export const enum PrimitiveType {
+    export const enum Type {
         Axises,
         Quad,
         QuadParticle,
@@ -15,44 +15,44 @@ namespace egrer3d.Primitive {
     /**
      * 
      */
-    export function create(type: PrimitiveType) {
+    export function create(type: Type) {
         const gameObject = paper.GameObject.create();
-        const meshFilter = gameObject.addComponent(egret3d.MeshFilter);
-        const renderer = gameObject.addComponent(egret3d.MeshRenderer);
+        const meshFilter = gameObject.addComponent(MeshFilter);
+        const renderer = gameObject.addComponent(MeshRenderer);
 
         switch (type) {
-            case PrimitiveType.Axises: {
-                meshFilter.mesh = egret3d.DefaultMeshes.AXISES;
-                renderer.materials = [egret3d.DefaultMaterials.LINEDASHED_COLOR];
+            case Type.Axises: {
+                meshFilter.mesh = DefaultMeshes.AXISES;
+                renderer.material = DefaultMaterials.LINEDASHED_COLOR;
                 break;
             }
 
-            case PrimitiveType.Quad:
-                meshFilter.mesh = egret3d.DefaultMeshes.QUAD;
+            case Type.Quad:
+                meshFilter.mesh = DefaultMeshes.QUAD;
                 break;
 
-            case PrimitiveType.QuadParticle:
-                meshFilter.mesh = egret3d.DefaultMeshes.QUAD_PARTICLE;
+            case Type.QuadParticle:
+                meshFilter.mesh = DefaultMeshes.QUAD_PARTICLE;
                 break;
 
-            case PrimitiveType.Plane:
-                meshFilter.mesh = egret3d.DefaultMeshes.PLANE;
+            case Type.Plane:
+                meshFilter.mesh = DefaultMeshes.PLANE;
                 break;
 
-            case PrimitiveType.Cube:
-                meshFilter.mesh = egret3d.DefaultMeshes.CUBE;
+            case Type.Cube:
+                meshFilter.mesh = DefaultMeshes.CUBE;
                 break;
 
-            case PrimitiveType.Pyramid:
-                meshFilter.mesh = egret3d.DefaultMeshes.PYRAMID;
+            case Type.Pyramid:
+                meshFilter.mesh = DefaultMeshes.PYRAMID;
                 break;
 
-            case PrimitiveType.Cylinder:
-                meshFilter.mesh = egret3d.DefaultMeshes.CYLINDER;
+            case Type.Cylinder:
+                meshFilter.mesh = DefaultMeshes.CYLINDER;
                 break;
 
-            case PrimitiveType.Sphere:
-                meshFilter.mesh = egret3d.DefaultMeshes.SPHERE;
+            case Type.Sphere:
+                meshFilter.mesh = DefaultMeshes.SPHERE;
                 break;
 
             default:
