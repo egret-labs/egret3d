@@ -1,4 +1,7 @@
 namespace egret3d {
+    /**
+     * 
+     */
     export class Shader extends GLTFAsset {
         /**
          * @internal
@@ -7,12 +10,14 @@ namespace egret3d {
         /**
          * @internal
          */
+        public _defines?: string[];
+        /**
+         * @internal
+         */
         public _states?: gltf.States;
         /**
          * @internal
          */
-        public _defines?: string[];
-
         public constructor(config: GLTF, name: string) {
             super(name);
 

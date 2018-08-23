@@ -163,7 +163,7 @@ namespace egret3d {
             return config;
         }
         /**
-         * 
+         * @internal
          */
         public static parseFromBinary(array: Uint32Array) {
             let index = 0;
@@ -254,8 +254,9 @@ namespace egret3d {
             for (const key in source.uniforms) {
                 const uniform = source.uniforms[key];
                 let value: any;
-                if (uniform.type === gltf.UniformType.SAMPLER_2D && !(uniform.value instanceof egret3d.Texture)) {
-                    value = egret3d.DefaultTextures.GRAY;
+
+                if (uniform.type === gltf.UniformType.SAMPLER_2D && !uniform.value) {
+                    value = egret3d.DefaultTextures.MISSING;
                 }
                 else if (Array.isArray(uniform.value)) {
                     value = uniform.value.concat();
@@ -264,7 +265,11 @@ namespace egret3d {
                     value = uniform.value;
                 }
 
-                target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value };
+                const targetUniform = target.uniforms[key] = { type: uniform.type, value } as gltf.Uniform;
+
+                if (uniform.semantic) {
+                    targetUniform.semantic = uniform.semantic;
+                }
             }
 
             // if (source.states) {

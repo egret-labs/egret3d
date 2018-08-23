@@ -21,7 +21,13 @@ namespace paper {
          * @internal
          */
         public static register(asset: Asset) {
-            this._assets[asset.name] = asset;
+            if (!this._assets[asset.name]) {
+                this._assets[asset.name] = asset;
+            }
+            else if (this._assets[asset.name] !== asset) {
+                console.debug("Replace asset.", asset.name);
+                this._assets[asset.name] = asset;
+            }
         }
         /**
          * 
