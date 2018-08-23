@@ -240,6 +240,10 @@ namespace paper.editor {
             let bia = -0.05;
             let verticesCoord = [];
             let indices = [];
+            var dis1;
+            var delta;
+            dis1 = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
+            delta = (dis1 - this._oldTransform) / 20;
             for (let i = 0, len = 2 * nrLine + 1; i < len; i++) {
                 verticesCoord[6 * i] = -nrLine + i;
                 verticesCoord[6 * i + 1] = bia;
