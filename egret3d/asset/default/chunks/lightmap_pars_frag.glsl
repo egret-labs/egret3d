@@ -1,4 +1,4 @@
-#ifdef LIGHTMAP
+#ifdef USE_LIGHTMAP
     uniform sampler2D lightMap;
     uniform lowp float lightMapIntensity;
     varying highp vec2 xlv_TEXCOORD1;

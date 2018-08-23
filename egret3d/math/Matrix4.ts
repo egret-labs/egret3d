@@ -631,6 +631,19 @@ namespace egret3d {
         public premultiply(value: Readonly<Matrix4>) {
             return this.multiply(value, this);
         }
+
+        public lerp(t: number, value: Matrix4, source?: Matrix4) {
+            if (!source) {
+                source = this;
+            }
+
+            const p = 1.0 - t;
+            for (let i = 0; i < 16; i++) {
+                this.rawData[i] = source.rawData[i] * p + value.rawData[i] * t;
+            }
+
+            return this;
+        }
         /**
          * - 两点位置不重合。
          * @param eye 
@@ -848,17 +861,6 @@ namespace egret3d {
             this.rawData[13] = left.rawData[13] + right.rawData[13];
             this.rawData[14] = left.rawData[14] + right.rawData[14];
             this.rawData[15] = left.rawData[15] + right.rawData[15];
-
-            return this;
-        }
-        /**
-         * @deprecated
-         */
-        public lerp(v: number, left: Matrix4, right: Matrix4) { // TODO
-            const p = 1.0 - v;
-            for (let i = 0; i < 16; i++) {
-                this.rawData[i] = left.rawData[i] * p + right.rawData[i] * v;
-            }
 
             return this;
         }

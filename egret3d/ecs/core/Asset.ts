@@ -13,7 +13,10 @@ namespace paper {
      * @language zh_CN
      */
     export abstract class Asset extends BaseObject {
-        private static readonly _assets: { [key: string]: Asset } = {};
+        /**
+         * @internal
+         */
+        public static readonly _assets: { [key: string]: Asset } = {};
         /**
          * @internal
          */

@@ -198,7 +198,7 @@ namespace paper.editor {
 
         private static setMVPMatrix(m?: egret3d.Matrix4) {
             var asp = this.camera.context.viewPortPixel.w / this.camera.context.viewPortPixel.h;
-            this.camera.calcViewMatrix(this.vMatrix);
+            this.vMatrix.inverse(this.camera.gameObject.transform.getWorldMatrix());
             this.camera.calcProjectMatrix(asp, this.pMatrix);
             this.mvpMatrix.multiply(this.pMatrix, this.vMatrix);
             m = m || new egret3d.Matrix4();

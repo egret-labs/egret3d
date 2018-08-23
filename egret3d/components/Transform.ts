@@ -356,10 +356,10 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getLocalEulerAngles(): Readonly<Vector3> {
+        public getLocalEulerAngles(order?: EulerOrder): Readonly<Vector3> {
             // if (this._dirtyLocalRS) {
             if (this._dirtyLocal) {
-                this.getLocalMatrix().toEuler(this._localEulerAngles).multiplyScalar(RAD_DEG);
+                this.getLocalMatrix().toEuler(this._localEulerAngles, order).multiplyScalar(RAD_DEG);
             }
 
             return this._localEulerAngles;
@@ -376,8 +376,8 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public setLocalEulerAngles(euler: Readonly<IVector3>, eulerOrder?: EulerOrder): void;
-        public setLocalEulerAngles(x: number, y: number, z: number, eulerOrder?: EulerOrder): void;
+        public setLocalEulerAngles(euler: Readonly<IVector3>, order?: EulerOrder): void;
+        public setLocalEulerAngles(x: number, y: number, z: number, order?: EulerOrder): void;
         public setLocalEulerAngles(p1: Readonly<IVector3> | number, p2?: EulerOrder | number, p3?: number, p4?: EulerOrder): void {
             if (p1.hasOwnProperty("x")) {
                 _helpVector3.multiplyScalar(DEG_RAD, p1 as Readonly<IVector3>);
@@ -595,13 +595,13 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public getEulerAngles(): Readonly<Vector3> {
+        public getEulerAngles(order?: EulerOrder): Readonly<Vector3> {
             // if (this._dirtyWorldRS) {
             // if (this._dirtyWorld) {
             //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale).toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
             // }
 
-            this.getWorldMatrix().toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
+            this.getWorldMatrix().toEuler(this._eulerAngles, order).multiplyScalar(RAD_DEG);
 
             return this._eulerAngles;
         }
@@ -617,8 +617,8 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public setEulerAngles(v: Readonly<IVector3>, eulerOrder?: EulerOrder): void;
-        public setEulerAngles(x: number, y: number, z: number, eulerOrder?: EulerOrder): void;
+        public setEulerAngles(v: Readonly<IVector3>, order?: EulerOrder): void;
+        public setEulerAngles(x: number, y: number, z: number, order?: EulerOrder): void;
         public setEulerAngles(q1: Readonly<IVector3> | number, q2?: EulerOrder | number, q3?: number, q4?: EulerOrder) {
             if (q1.hasOwnProperty("x")) {
                 _helpVector3.multiplyScalar(DEG_RAD, q1 as Readonly<IVector3>);

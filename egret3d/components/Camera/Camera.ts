@@ -23,72 +23,54 @@ namespace egret3d {
          */
         @paper.serializedField
         public clearOption_Color: boolean = true;
-
         /**
          * 是否清除深度缓冲区
          */
         @paper.serializedField
         public clearOption_Depth: boolean = true;
-
         /**
          * 相机的渲染剔除，对应GameObject的层级
          */
         @paper.serializedField
         public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
-
-
         /**
          * 相机渲染排序
          */
         @paper.serializedField
         public order: number = 0;
-
-
         /**
          * 透视投影的fov
          */
         @paper.serializedField
         public fov: number = Math.PI * 0.25;
-
-
         /**
          * 正交投影的竖向size
          */
         @paper.serializedField
         public size: number = 2.0;
-
-
         /**
-         * 0=正交， 1=透视 中间值可以在两种相机间过度
+         * 0=正交，1=透视 中间值可以在两种相机间过度
          */
         @paper.serializedField
         public opvalue: number = 1.0;
-
-
         /**
          * 背景色
          */
         @paper.serializedField
         public readonly backgroundColor: Color = Color.create(0.13, 0.28, 0.51, 1);
-
-
         /**
          * 相机视窗
          */
         @paper.serializedField
         public readonly viewport: Rectangle = new Rectangle(0, 0, 1, 1);
-
         /**
          * TODO 功能完善后开放此接口
          */
         public readonly postQueues: ICameraPostQueue[] = [];
-
         /**
          * 相机渲染上下文
          */
         public context: RenderContext = null as any;
-
-
         /**
          * 渲染目标，如果为null，则为画布
          */
@@ -96,38 +78,35 @@ namespace egret3d {
 
         @paper.serializedField
         private _near: number = 0.01;
-
         @paper.serializedField
         private _far: number = 1000;
-
-        private readonly matProjP: Matrix4 = Matrix4.create();
-        private readonly matProjO: Matrix4 = Matrix4.create();
-        private readonly frameVecs: Vector3[] = [
-           Vector3.create(),
-           Vector3.create(),
-           Vector3.create(),
-           Vector3.create(),
-           Vector3.create(),
-           Vector3.create(),
-           Vector3.create(),
-           Vector3.create()
+        private readonly _matProjP: Matrix4 = Matrix4.create();
+        private readonly _matProjO: Matrix4 = Matrix4.create();
+        private readonly _frameVecs: Vector3[] = [
+            Vector3.create(),
+            Vector3.create(),
+            Vector3.create(),
+            Vector3.create(),
+            Vector3.create(),
+            Vector3.create(),
+            Vector3.create(),
+            Vector3.create()
         ];
-
         /**
          * 计算相机视锥区域
          */
-        private calcCameraFrame() {
+        private _calcCameraFrame() {
             const vpp = helpRectA;
             this.calcViewPortPixel(vpp);
 
-            const farLD = this.frameVecs[0];
-            const nearLD = this.frameVecs[1];
-            const farRD = this.frameVecs[2];
-            const nearRD = this.frameVecs[3];
-            const farLT = this.frameVecs[4];
-            const nearLT = this.frameVecs[5];
-            const farRT = this.frameVecs[6];
-            const nearRT = this.frameVecs[7];
+            const farLD = this._frameVecs[0];
+            const nearLD = this._frameVecs[1];
+            const farRD = this._frameVecs[2];
+            const nearRD = this._frameVecs[3];
+            const farLT = this._frameVecs[4];
+            const nearLT = this._frameVecs[5];
+            const farRT = this._frameVecs[6];
+            const nearRT = this._frameVecs[7];
 
             const near_h = this.near * Math.tan(this.fov * 0.5);
             const asp = vpp.w / vpp.h;
@@ -156,32 +135,19 @@ namespace egret3d {
             matrix.transformVector3(farRT);
             matrix.transformVector3(nearRT);
         }
-        /**
-         * @inheritDoc
-         */
+
         public initialize() {
             super.initialize();
 
             this.context = new RenderContext();
-            this.near = this._near;
-            this.far = this._far;
         }
         /**
          * 
          */
         public update(_delta: number) {
-            this.calcCameraFrame();
+            this._calcCameraFrame();
 
             this.context.updateCamera(this, this.gameObject.transform.getWorldMatrix());
-        }
-
-        /**
-         * 计算相机的 view matrix（视图矩阵）
-         */
-        public calcViewMatrix(matrix: Matrix4): Matrix4 {
-            matrix.inverse(this.gameObject.transform.getWorldMatrix());
-
-            return matrix;
         }
 
         /**
@@ -189,21 +155,21 @@ namespace egret3d {
          */
         public calcProjectMatrix(asp: number, matrix: Matrix4): Matrix4 {
             if (this.opvalue > 0) {
-                Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this.matProjP);
+                Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this._matProjP);
             }
 
             if (this.opvalue < 1) {
-                Matrix4.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this.matProjO);
+                Matrix4.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this._matProjO);
             }
 
             if (this.opvalue === 0.0) {
-                matrix.copy(this.matProjO);
+                matrix.copy(this._matProjO);
             }
             else if (this.opvalue === 1.0) {
-                matrix.copy(this.matProjP);
+                matrix.copy(this._matProjP);
             }
             else {
-                matrix.lerp(this.opvalue, this.matProjO, this.matProjP);
+                matrix.lerp(this.opvalue, this._matProjO, this._matProjP);
             }
 
             return matrix;
@@ -279,7 +245,8 @@ namespace egret3d {
             const matrixView = helpMatrixA;
             const matrixProject = helpMatrixB;
             const asp = vpp.w / vpp.h;
-            this.calcViewMatrix(matrixView);
+
+            matrixView.inverse(this.gameObject.transform.getWorldMatrix());
             this.calcProjectMatrix(asp, matrixProject);
 
             helpMatrixC.multiply(matrixProject, matrixView)
@@ -298,7 +265,7 @@ namespace egret3d {
             const matrixView = helpMatrixA;
             const matrixProject = helpMatrixB;
             const asp = vpp.w / vpp.h;
-            this.calcViewMatrix(matrixView);
+            matrixView.inverse(this.gameObject.transform.getWorldMatrix());
             this.calcProjectMatrix(asp, matrixProject);
 
             const matrixViewProject = helpMatrixC.multiply(matrixProject, matrixView);
@@ -361,12 +328,12 @@ namespace egret3d {
 
         public testFrustumCulling(node: paper.BaseRenderer) {
             const boundingSphere = node.boundingSphere;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[0], this.frameVecs[1], this.frameVecs[5])) return false;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[1], this.frameVecs[3], this.frameVecs[7])) return false;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[3], this.frameVecs[2], this.frameVecs[6])) return false;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[2], this.frameVecs[0], this.frameVecs[4])) return false;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[5], this.frameVecs[7], this.frameVecs[6])) return false;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[0], this.frameVecs[2], this.frameVecs[3])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[0], this._frameVecs[1], this._frameVecs[5])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[1], this._frameVecs[3], this._frameVecs[7])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[3], this._frameVecs[2], this._frameVecs[6])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[2], this._frameVecs[0], this._frameVecs[4])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[5], this._frameVecs[7], this._frameVecs[6])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[0], this._frameVecs[2], this._frameVecs[3])) return false;
 
             return true;
         }
@@ -388,7 +355,6 @@ namespace egret3d {
 
             this._near = value;
         }
-
         /**
          * 相机到远裁剪面距离
          */

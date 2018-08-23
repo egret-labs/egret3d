@@ -339,7 +339,7 @@ namespace egret3d {
                         activeScene.lightmapIntensity
                     );
 
-                    this.shaderContextDefine += "#define LIGHTMAP \n";
+                    this.shaderContextDefine += "#define USE_LIGHTMAP \n";
                 }
             }
 

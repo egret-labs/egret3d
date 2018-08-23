@@ -27,7 +27,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _glTFShader: GLTFAsset = null!;
+        public _shader: Shader = null!;
         /**
         * @internal
         */
@@ -35,30 +35,21 @@ namespace egret3d {
         /**
          * 
          */
-        public constructor(shaderOrMaterial: GLTFAsset | Material) {
+        public constructor(shader: Shader) {
             super();
 
-            if (shaderOrMaterial) { // Custom.
-                if (shaderOrMaterial instanceof Material) {
-                    this._glTFShader = shaderOrMaterial.shader;
-                }
-                else {
-                    this._glTFShader = shaderOrMaterial;
-                }
+            if (shader) { // Custom.
+                this._shader = shader;
 
-                this.config = GLTFAsset.createGLTFExtensionsConfig();
+                this.config = GLTFAsset.createGLTFExtensionsConfig(); // TODO
                 this.config.materials![0] = {
                     extensions: {
-                        KHR_techniques_webgl: { technique: this._glTFShader.name, values: {} },
-                        paper: { renderQueue: paper.RenderQueue.Geometry }
+                        KHR_techniques_webgl: { technique: this._shader.name, values: {} },
+                        paper: { renderQueue: -1 } // TODO
                     }
                 } as GLTFMaterial;
 
                 this.initialize();
-
-                if (shaderOrMaterial instanceof Material) {
-                    this.copy(shaderOrMaterial);
-                }
             }
         }
 
@@ -69,18 +60,22 @@ namespace egret3d {
 
             const glTFMaterial = this.config.materials![0] as GLTFMaterial;
 
-            if (!this._glTFShader) {
+            if (!this._shader) {
                 //不存在，那就从材质中获取
-                this._glTFShader = paper.Asset.find<GLTFAsset>(glTFMaterial.extensions.KHR_techniques_webgl.technique);
-                if (!this._glTFShader) {
+                this._shader = paper.Asset.find<Shader>(glTFMaterial.extensions.KHR_techniques_webgl.technique);
+                if (!this._shader) {
                     console.error("材质中获取着色器错误");
                     return;
                 }
             }
 
-            this.renderQueue = glTFMaterial.extensions.paper.renderQueue!;
-            this._glTFTechnique = GLTFAsset.createTechnique(this._glTFShader.config.extensions.KHR_techniques_webgl!.techniques[0]);
+            this.renderQueue = glTFMaterial.extensions.paper.renderQueue;
+            if (this.renderQueue < 0) {
+                this.renderQueue = this._shader._renderQueue || paper.RenderQueue.Geometry;
+            }
 
+            this._glTFTechnique = GLTFAsset.createTechnique(this._shader.config.extensions.KHR_techniques_webgl!.techniques[0]);
+            //
             const uniformValues = glTFMaterial.extensions.KHR_techniques_webgl.values!;
             const uniforms = this._glTFTechnique.uniforms;
             //使用Shader替换Material中没有默认值的Uniform
@@ -97,7 +92,23 @@ namespace egret3d {
                 }
             }
 
-            // TODO add define.
+            if (glTFMaterial.extensions.paper.states) {
+                this._glTFTechnique.states = glTFMaterial.extensions.paper.states; // TODO
+            }
+            else if (this._shader._states) {
+                this._glTFTechnique.states = GLTFAsset.copyTechniqueStates(this._shader._states);
+            }
+
+            if (glTFMaterial.extensions.paper.defines) {
+                for (const define of glTFMaterial.extensions.paper.defines) {
+                    this.addDefine(define);
+                }
+            }
+            else if (this._shader._defines) {
+                for (const define of this._shader._defines) {
+                    this.addDefine(define);
+                }
+            }
         }
 
         public dispose(disposeChildren?: boolean) {
@@ -118,7 +129,7 @@ namespace egret3d {
             this._defines.length = 0;
             this._textures.length = 0;
             this._glTFTechnique = null!;
-            this._glTFShader = null!;
+            this._shader = null!;
         }
 
         public copy(value: Material) {
@@ -161,7 +172,7 @@ namespace egret3d {
          * 克隆材质资源。
          */
         public clone(): Material {
-            return new Material(this._glTFShader).copy(this);
+            return new Material(this._shader).copy(this);
         }
 
         public addDefine(key: string) {
@@ -432,8 +443,12 @@ namespace egret3d {
          * @param blend 
          */
         public setBlend(blend: gltf.BlendMode) {
-            const functions = this._glTFTechnique.states.functions!;
+            if (!this._glTFTechnique.states) {
+                this._glTFTechnique.states = { enable: [], functions: {} };
+            }
+
             const enables = this._glTFTechnique.states.enable!;
+            const functions = this._glTFTechnique.states.functions!;
 
             switch (blend) {
                 case gltf.BlendMode.Add:
@@ -480,19 +495,23 @@ namespace egret3d {
          * 
          */
         public setCullFace(cull: boolean, frontFace?: gltf.FrontFace, cullFace?: gltf.CullFace) {
-            const funs = this._glTFTechnique.states.functions!;
+            if (!this._glTFTechnique.states) {
+                this._glTFTechnique.states = { enable: [], functions: {} };
+            }
+
             const enables = this._glTFTechnique.states.enable!;
+            const functions = this._glTFTechnique.states.functions!;
             const index = enables.indexOf(gltf.EnableState.CULL_FACE);
             if (cull && frontFace && cullFace) {
-                funs.frontFace = [frontFace];
-                funs.cullFace = [cullFace];
+                functions.frontFace = [frontFace];
+                functions.cullFace = [cullFace];
                 if (index < 0) {
                     enables.push(gltf.EnableState.CULL_FACE);
                 }
             }
             else {
-                delete funs.frontFace;
-                delete funs.cullFace;
+                delete functions.frontFace;
+                delete functions.cullFace;
 
                 if (index >= 0) {
                     enables.splice(index, 1);
@@ -505,25 +524,50 @@ namespace egret3d {
          * 
          */
         public setDepth(zTest: boolean, zWrite: boolean) {
-            const funs = this._glTFTechnique.states.functions!;
+            if (!this._glTFTechnique.states) {
+                this._glTFTechnique.states = { enable: [], functions: {} };
+            }
+
             const enables = this._glTFTechnique.states.enable!;
+            const functions = this._glTFTechnique.states.functions!;
             const index = enables.indexOf(gltf.EnableState.DEPTH_TEST);
+
             if (zTest) {
                 if (index < 0) {
                     enables.push(gltf.EnableState.DEPTH_TEST);
                 }
-                funs.depthFunc = [gltf.DepthFunc.LEQUAL];
+
+                functions.depthFunc = [gltf.DepthFunc.LEQUAL];
             }
             else {
                 if (index >= 0) {
                     enables.splice(index, 1);
                 }
             }
+
             if (zWrite) {
-                funs.depthMask = [true];
+                functions.depthMask = [true];
             }
             else {
-                funs.depthMask = [false];
+                functions.depthMask = [false];
+            }
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public clearStates() {
+            if (this._glTFTechnique.states) {
+                // const enables = this._glTFTechnique.states.enable!;
+                // const functions = this._glTFTechnique.states.functions!;
+                // enables.length = 0;
+
+                // for (const k in functions) {
+                //     delete functions[k];
+                // }
+
+                delete this._glTFTechnique.states;
             }
 
             return this;
@@ -542,7 +586,7 @@ namespace egret3d {
         }
 
         public get shader() {
-            return this._glTFShader;
+            return this._shader;
         }
 
         public get glTFTechnique() {

@@ -21,6 +21,8 @@ namespace egret3d {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper: {
                 renderQueue: number;
+                defines?: string[];
+                states?: gltf.States;
             }
         }
     }
@@ -243,7 +245,7 @@ namespace egret3d {
         }
 
         public static createTechnique(source: gltf.Technique) {
-            const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } };
+            const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {} }; // , states: { enable: [], functions: {} }
             for (const key in source.attributes) {
                 const attribute = source.attributes[key];
                 target.attributes[key] = { semantic: attribute.semantic };
@@ -265,23 +267,40 @@ namespace egret3d {
                 target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value };
             }
 
-            const states = source.states;
-            const targetStates = target.states;
-            if (states.enable) {
-                targetStates.enable = states.enable.concat();
-            }
+            // if (source.states) {
+            //     const states = GLTFAsset.copyTechniqueStates(source.states);
+            //     if (states) {
+            //         target.states = states;
+            //     }
+            // }
 
-            if (states.functions) {
-                if (!targetStates.functions) {
-                    targetStates.functions = {};
+            return target;
+        }
+
+        public static copyTechniqueStates(source: gltf.States, target?: gltf.States) {
+            if (source.enable && source.enable.length > 0) {
+                if (!target) {
+                    target = {};
                 }
 
-                for (const fun in states.functions) {
-                    if (Array.isArray(states.functions[fun])) {
-                        targetStates.functions[fun] = states.functions[fun].concat();
+                target.enable = source.enable.concat();
+            }
+
+            if (source.functions) {
+                for (const k in source.functions) {
+                    if (!target) {
+                        target = {};
+                    }
+
+                    if (!target.functions) {
+                        target.functions = {};
+                    }
+
+                    if (Array.isArray(source.functions[k])) { // TODO
+                        target.functions[k] = source.functions[k].concat();
                     }
                     else {
-                        targetStates.functions[fun] = states.functions[fun];
+                        target.functions[k] = source.functions[k];
                     }
                 }
             }
@@ -1593,7 +1612,7 @@ declare namespace gltf {
             [k: string]: gltf.Uniform;
         };
         name: any;
-        states: States;
+        states?: States;
         extensions?: any;
         extras?: any;
         [k: string]: any;

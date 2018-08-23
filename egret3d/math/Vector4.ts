@@ -2,7 +2,6 @@ namespace egret3d {
 
     export interface IVector4 extends IVector3 {
         w: number;
-        readonly length: number;
     }
 
     export class Vector4 implements IVector4, paper.IRelease<Vector4>, paper.ISerializable {
@@ -87,8 +86,7 @@ namespace egret3d {
                 source = this;
             }
 
-            let l = source.length;
-
+            let l = Math.sqrt(source.x * source.x + source.y * source.y + source.z * source.z + source.w * source.w);
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;

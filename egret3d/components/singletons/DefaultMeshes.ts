@@ -9,6 +9,7 @@ namespace egret3d {
      * 
      */
     export class DefaultMeshes extends paper.SingletonComponent {
+        public static AXISES: Mesh;
         public static QUAD: Mesh;
         public static QUAD_PARTICLE: Mesh;
         public static PLANE: Mesh;
@@ -21,10 +22,29 @@ namespace egret3d {
         public initialize() {
             super.initialize();
 
+            { // AXISES.
+                const mesh = new Mesh(6, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/axises.mash.bin";
+                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+                paper.Asset.register(mesh);
+                DefaultMeshes.AXISES = mesh;
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                ]);
+                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                    1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+                    0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+                ]);
+            }
+
             { // QUAD.
                 const mesh = new Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_quad.mash.bin";
+                mesh.name = "builtin/quad.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
@@ -65,7 +85,7 @@ namespace egret3d {
             { // QUAD_PARTICLE.
                 const mesh = new Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_quad_particle.mash.bin";
+                mesh.name = "builtin/quad_particle.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD_PARTICLE = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
@@ -106,7 +126,7 @@ namespace egret3d {
             { // PLANE.
                 const mesh = new Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_plane.mash.bin";
+                mesh.name = "builtin/plane.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PLANE = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
@@ -147,7 +167,7 @@ namespace egret3d {
             { // CUBE.
                 const mesh = new Mesh(24, 36);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_cube.mash.bin";
+                mesh.name = "builtin/cube.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CUBE = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
@@ -293,7 +313,7 @@ namespace egret3d {
             { // PYRAMID.
                 const mesh = new Mesh(16, 18);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_pyramid.mash.bin";
+                mesh.name = "builtin/pyramid.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
@@ -396,7 +416,7 @@ namespace egret3d {
             { // SPHERE.
                 const mesh = DefaultMeshes.createSphereCCW();
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_sphere.mash.bin";
+                mesh.name = "builtin/sphere.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.SPHERE = mesh;
             }
@@ -404,7 +424,7 @@ namespace egret3d {
             { // CYLINDER.
                 const mesh = DefaultMeshes.createCylinderCCW();
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_cylinder.mash.bin";
+                mesh.name = "builtin/cylinder.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CYLINDER = mesh;
             }

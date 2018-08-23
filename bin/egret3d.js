@@ -197,6 +197,9 @@ var paper;
             }
             return result;
         };
+        /**
+         * @internal
+         */
         Asset._assets = {};
         return Asset;
     }(paper.BaseObject));
@@ -243,10 +246,7 @@ var egret3d;
             return this.fromArray(value);
         };
         Vector3.prototype.copy = function (value) {
-            this.x = value.x;
-            this.y = value.y;
-            this.z = value.z;
-            return this;
+            return this.set(value.x, value.y, value.z);
         };
         Vector3.prototype.clone = function () {
             return Vector3.create(this.x, this.y, this.z);
@@ -327,7 +327,7 @@ var egret3d;
             if (!source) {
                 source = this;
             }
-            var l = source.length;
+            var l = Math.sqrt(source.x * source.x + source.y * source.y + source.z * source.z);
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;
@@ -475,19 +475,11 @@ var egret3d;
             this.z = Math.max(min.z, Math.min(max.z, source.z));
             return this;
         };
-        Vector3.prototype.getDistance = function (valueA, valueB) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
-            }
-            return helpVector.subtract(valueB, valueA).length;
+        Vector3.prototype.getSquaredDistance = function (value) {
+            return helpVector.subtract(value, this).squaredLength;
         };
-        Vector3.prototype.getSquaredDistance = function (valueA, valueB) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
-            }
-            return helpVector.subtract(valueB, valueA).squaredLength;
+        Vector3.prototype.getDistance = function (value) {
+            return helpVector.subtract(value, this).length;
         };
         Vector3.prototype.closestToTriangle = function (triangle, value) {
             if (!value) {
@@ -1214,6 +1206,16 @@ var egret3d;
         Matrix4.prototype.premultiply = function (value) {
             return this.multiply(value, this);
         };
+        Matrix4.prototype.lerp = function (t, value, source) {
+            if (!source) {
+                source = this;
+            }
+            var p = 1.0 - t;
+            for (var i = 0; i < 16; i++) {
+                this.rawData[i] = source.rawData[i] * p + value.rawData[i] * t;
+            }
+            return this;
+        };
         /**
          * - 两点位置不重合。
          * @param eye
@@ -1409,16 +1411,6 @@ var egret3d;
         /**
          * @deprecated
          */
-        Matrix4.prototype.lerp = function (v, left, right) {
-            var p = 1.0 - v;
-            for (var i = 0; i < 16; i++) {
-                this.rawData[i] = left.rawData[i] * p + right.rawData[i] * v;
-            }
-            return this;
-        };
-        /**
-         * @deprecated
-         */
         Matrix4.perspectiveProjectLH = function (fov, aspect, znear, zfar, out) {
             var tan = 1.0 / (Math.tan(fov * 0.5));
             out.rawData[0] = tan / aspect;
@@ -1540,7 +1532,7 @@ var egret3d;
             if (!source) {
                 source = this;
             }
-            var l = source.length;
+            var l = Math.sqrt(source.x * source.x + source.y * source.y + source.z * source.z + source.w * source.w);
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;
@@ -1806,37 +1798,7 @@ var paper;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
-    var _helpVector3A = new egret3d.Vector3();
-    var _helpVector3B = new egret3d.Vector3();
-    var _helpVector3C = new egret3d.Vector3();
-    var _helpVector3D = new egret3d.Vector3();
-    var _helpVector3E = new egret3d.Vector3();
-    var _helpVector3F = new egret3d.Vector3();
-    var _helpVector3G = new egret3d.Vector3();
-    var _helpVector3H = new egret3d.Vector3();
-    var _helpVectors = [
-        _helpVector3A,
-        _helpVector3B,
-        _helpVector3C,
-        _helpVector3D,
-        _helpVector3E,
-        _helpVector3F,
-        _helpVector3G,
-        _helpVector3H,
-    ];
     var helpVec3_1 = new egret3d.Vector3();
-    var helpVec3_2 = new egret3d.Vector3();
-    var helpVec3_3 = new egret3d.Vector3();
-    var helpVec3_4 = new egret3d.Vector3();
-    var helpVec3_5 = new egret3d.Vector3();
-    var boxIndices = [
-        0, 1, 2, 3,
-        4, 5, 6, 7,
-        1, 3, 5, 7,
-        0, 2, 4, 6,
-        6, 2, 7, 3,
-        0, 4, 1, 5
-    ];
     /**
      * 射线
      */
@@ -1876,10 +1838,8 @@ var egret3d;
         Ray.prototype.serialize = function () {
             return [this.origin.x, this.origin.y, this.origin.z, this.direction.x, this.direction.y, this.direction.z];
         };
-        Ray.prototype.deserialize = function (element) {
-            this.origin.fromArray(element);
-            this.direction.fromArray(element, 3);
-            return this;
+        Ray.prototype.deserialize = function (value) {
+            return this.fromArray(value);
         };
         Ray.prototype.copy = function (value) {
             this.origin.copy(value.origin);
@@ -1894,28 +1854,117 @@ var egret3d;
             this.direction.copy(direction);
             return this;
         };
+        Ray.prototype.fromArray = function (value, offset) {
+            if (offset === void 0) { offset = 0; }
+            this.origin.fromArray(value);
+            this.direction.fromArray(value, 3);
+            return this;
+        };
+        Ray.prototype.getSquaredDistance = function (value) {
+            var directionDistance = egret3d.helpVector3A.subtract(value, this.origin).dot(this.direction);
+            // point behind the ray
+            if (directionDistance < 0.0) {
+                return this.origin.getSquaredDistance(value);
+            }
+            egret3d.helpVector3A.multiplyScalar(directionDistance, this.direction).add(this.origin);
+            return egret3d.helpVector3A.getSquaredDistance(value);
+        };
+        Ray.prototype.getDistance = function (value) {
+            return Math.sqrt(this.getSquaredDistance(value));
+        };
+        /**
+         * 与三角形相交检测
+         */
+        Ray.prototype.intersectTriangle = function (p1, p2, p3, backfaceCulling) {
+            // // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
+            // const edge1 = helpVector3A;
+            // const edge2 = helpVector3B;
+            // const diff = helpVector3C;
+            // const normal = helpVector3D;
+            if (backfaceCulling === void 0) { backfaceCulling = false; }
+            // edge1.subtract(p2, p1);
+            // edge2.subtract(p3, p1);
+            // normal.cross(edge1, edge2);
+            // // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
+            // // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
+            // //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
+            // //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
+            // //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
+            // let DdN = this.direction.dot(normal);
+            // let sign = 1.0;
+            // if (DdN > 0.0) {
+            //     if (backfaceCulling) return null;
+            // }
+            // else if (DdN < 0.0) {
+            //     sign = -1.0;
+            //     DdN = -DdN;
+            // }
+            // else {
+            //     return null;
+            // }
+            // diff.subtract(this.origin, p1);
+            // const DdQxE2 = sign * this.direction.dot(edge2.cross(diff, edge2));
+            // // b1 < 0, no intersection
+            // if (DdQxE2 < 0.0) {
+            //     return null;
+            // }
+            // const DdE1xQ = sign * this.direction.dot(edge1.cross(diff));
+            // // b2 < 0, no intersection
+            // if (DdE1xQ < 0.0) {
+            //     return null;
+            // }
+            // // b1+b2 > 1, no intersection
+            // if (DdQxE2 + DdE1xQ > DdN) {
+            //     return null;
+            // }
+            // // Line intersects triangle, check if ray does.
+            // const QdN = - sign * diff.dot(normal);
+            // // t < 0, no intersection
+            // if (QdN < 0) {
+            //     return null;
+            // }
+            // const pickInfo = new PickInfo();
+            // pickInfo.distance = QdN / DdN;
+            // pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
+            // pickInfo.textureCoordA.x = DdQxE2;
+            // pickInfo.textureCoordA.y = DdE1xQ;
+            // return pickInfo;
+            // TODO
+            var edge1 = egret3d.helpVector3A;
+            var edge2 = egret3d.helpVector3B;
+            var pvec = egret3d.helpVector3C;
+            var tvec = egret3d.helpVector3D;
+            var qvec = egret3d.helpVector3E;
+            edge1.subtract(p2, p1);
+            edge2.subtract(p3, p1);
+            pvec.cross(this.direction, edge2);
+            var det = pvec.dot(edge1);
+            if (det === 0.0) {
+                return null;
+            }
+            var invdet = 1.0 / det;
+            tvec.subtract(this.origin, p1);
+            var bu = pvec.dot(tvec) * invdet;
+            if (bu < 0.0 || bu > 1.0) {
+                return null;
+            }
+            qvec.cross(tvec, edge1);
+            var bv = qvec.dot(this.direction) * invdet;
+            if (bv < 0.0 || bu + bv > 1.0) {
+                return null;
+            }
+            var pickInfo = new PickInfo();
+            pickInfo.distance = qvec.dot(edge2) * invdet;
+            pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
+            pickInfo.textureCoordA.x = bu;
+            pickInfo.textureCoordA.y = bv;
+            return pickInfo;
+        };
         /**
          * 与aabb碰撞相交检测
          */
         Ray.prototype.intersectAABB = function (aabb) {
             return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
-        };
-        /**
-         * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param transform transform实例
-         */
-        Ray.prototype.intersectPlaneTransform = function (transform) {
-            var pickinfo = null;
-            var panelpoint = transform.getPosition();
-            var forward = helpVec3_1;
-            transform.getForward(forward);
-            var hitposition = this.intersectPlane(panelpoint, forward);
-            if (hitposition) {
-                pickinfo = new PickInfo();
-                pickinfo.hitposition = hitposition;
-                pickinfo.distance = egret3d.Vector3.getDistance(pickinfo.hitposition, this.origin);
-            }
-            return pickinfo;
         };
         Ray.prototype.intersectPlane = function (planePoint, planeNormal) {
             var vp1 = planeNormal.x;
@@ -1939,6 +1988,23 @@ var egret3d;
                 return new egret3d.Vector3(m1 + v1 * t, m2 + v2 * t, m3 + v3 * t);
             }
         };
+        // /**
+        //  * 与transform表示的plane碰撞相交检测，主要用于2d检测
+        //  * @param transform transform实例
+        //  */
+        // public intersectPlaneTransform(transform: Transform): PickInfo {
+        //     let pickinfo = null;
+        //     let panelpoint = transform.getPosition();
+        //     let forward = helpVec3_1;
+        //     transform.getForward(forward);
+        //     let hitposition = this.intersectPlane(panelpoint, forward);
+        //     if (hitposition) {
+        //         pickinfo = new PickInfo();
+        //         pickinfo.hitposition = hitposition;
+        //         pickinfo.distance = Vector3.getDistance(pickinfo.hitposition, this.origin);
+        //     }
+        //     return pickinfo;
+        // }
         /**
          * 与最大最小点表示的box相交检测
          * @param minimum 最小点
@@ -2040,94 +2106,6 @@ var egret3d;
             if (d < 0)
                 return false;
             return true;
-        };
-        /**
-         * 与三角形相交检测
-         */
-        Ray.prototype.intersectTriangle = function (p1, p2, p3, backfaceCulling) {
-            // // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
-            // const edge1 = helpVector3A;
-            // const edge2 = helpVector3B;
-            // const diff = helpVector3C;
-            // const normal = helpVector3D;
-            if (backfaceCulling === void 0) { backfaceCulling = false; }
-            // edge1.subtract(p2, p1);
-            // edge2.subtract(p3, p1);
-            // normal.cross(edge1, edge2);
-            // // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
-            // // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
-            // //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
-            // //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
-            // //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
-            // let DdN = this.direction.dot(normal);
-            // let sign = 1.0;
-            // if (DdN > 0.0) {
-            //     if (backfaceCulling) return null;
-            // }
-            // else if (DdN < 0.0) {
-            //     sign = -1.0;
-            //     DdN = -DdN;
-            // }
-            // else {
-            //     return null;
-            // }
-            // diff.subtract(this.origin, p1);
-            // const DdQxE2 = sign * this.direction.dot(edge2.cross(diff, edge2));
-            // // b1 < 0, no intersection
-            // if (DdQxE2 < 0.0) {
-            //     return null;
-            // }
-            // const DdE1xQ = sign * this.direction.dot(edge1.cross(diff));
-            // // b2 < 0, no intersection
-            // if (DdE1xQ < 0.0) {
-            //     return null;
-            // }
-            // // b1+b2 > 1, no intersection
-            // if (DdQxE2 + DdE1xQ > DdN) {
-            //     return null;
-            // }
-            // // Line intersects triangle, check if ray does.
-            // const QdN = - sign * diff.dot(normal);
-            // // t < 0, no intersection
-            // if (QdN < 0) {
-            //     return null;
-            // }
-            // const pickInfo = new PickInfo();
-            // pickInfo.distance = QdN / DdN;
-            // pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
-            // pickInfo.textureCoordA.x = DdQxE2;
-            // pickInfo.textureCoordA.y = DdE1xQ;
-            // return pickInfo;
-            // TODO
-            var edge1 = egret3d.helpVector3A;
-            var edge2 = egret3d.helpVector3B;
-            var pvec = egret3d.helpVector3C;
-            var tvec = egret3d.helpVector3D;
-            var qvec = egret3d.helpVector3E;
-            edge1.subtract(p2, p1);
-            edge2.subtract(p3, p1);
-            pvec.cross(this.direction, edge2);
-            var det = pvec.dot(edge1);
-            if (det === 0.0) {
-                return null;
-            }
-            var invdet = 1.0 / det;
-            tvec.subtract(this.origin, p1);
-            var bu = pvec.dot(tvec) * invdet;
-            if (bu < 0.0 || bu > 1.0) {
-                return null;
-            }
-            qvec.cross(tvec, edge1);
-            var bv = qvec.dot(this.direction) * invdet;
-            if (bv < 0.0 || bu + bv > 1.0) {
-                return null;
-            }
-            var pickInfo = new PickInfo();
-            pickInfo.distance = qvec.dot(edge2) * invdet;
-            pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
-            pickInfo.textureCoordA.x = bu;
-            pickInfo.textureCoordA.y = bv;
-            return pickInfo;
         };
         /**
          * 获取射线拾取到的最近物体。
@@ -2347,7 +2325,7 @@ var egret3d;
             return config;
         };
         GLTFAsset.createTechnique = function (source) {
-            var target = { name: source.name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } };
+            var target = { name: source.name, attributes: {}, uniforms: {} }; // , states: { enable: [], functions: {} }
             for (var key in source.attributes) {
                 var attribute = source.attributes[key];
                 target.attributes[key] = { semantic: attribute.semantic };
@@ -2366,21 +2344,34 @@ var egret3d;
                 }
                 target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value: value };
             }
-            var states = source.states;
-            var targetStates = target.states;
-            if (states.enable) {
-                targetStates.enable = states.enable.concat();
-            }
-            if (states.functions) {
-                if (!targetStates.functions) {
-                    targetStates.functions = {};
+            // if (source.states) {
+            //     const states = GLTFAsset.copyTechniqueStates(source.states);
+            //     if (states) {
+            //         target.states = states;
+            //     }
+            // }
+            return target;
+        };
+        GLTFAsset.copyTechniqueStates = function (source, target) {
+            if (source.enable && source.enable.length > 0) {
+                if (!target) {
+                    target = {};
                 }
-                for (var fun in states.functions) {
-                    if (Array.isArray(states.functions[fun])) {
-                        targetStates.functions[fun] = states.functions[fun].concat();
+                target.enable = source.enable.concat();
+            }
+            if (source.functions) {
+                for (var k in source.functions) {
+                    if (!target) {
+                        target = {};
+                    }
+                    if (!target.functions) {
+                        target.functions = {};
+                    }
+                    if (Array.isArray(source.functions[k])) {
+                        target.functions[k] = source.functions[k].concat();
                     }
                     else {
-                        targetStates.functions[fun] = states.functions[fun];
+                        target.functions[k] = source.functions[k];
                     }
                 }
             }
@@ -2836,6 +2827,7 @@ var egret3d;
             this.g = value[1 + offset];
             this.b = value[2 + offset];
             this.a = value[3 + offset];
+            return this;
         };
         Color.prototype.multiply = function (valueA, valueB) {
             if (!valueB) {
@@ -5081,7 +5073,7 @@ var paper;
                         break;
                 }
                 var renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
-                var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+                var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
                 var color1 = new Float32Array([color.x, color.y, color.z]);
                 var alpha = new Float32Array([color.w]);
                 var technique = mat.glTFTechnique;
@@ -5795,9 +5787,6 @@ var egret3d;
             }
             return new Sphere().set(center, radius);
         };
-        /**
-         *
-         */
         Sphere.prototype.release = function () {
             if (Sphere._instances.indexOf(this) < 0) {
                 Sphere._instances.push(this);
@@ -7159,6 +7148,7 @@ var egret3d;
         BeginSystem.prototype.onAwake = function () {
             this._globalGameObject.getOrAddComponent(egret3d.DefaultTextures);
             this._globalGameObject.getOrAddComponent(egret3d.DefaultMeshes);
+            this._globalGameObject.getOrAddComponent(egret3d.DefaultShaders);
             this._globalGameObject.getOrAddComponent(egret3d.DefaultMaterials);
             this._globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities);
             paper.Time = this._globalGameObject.getOrAddComponent(paper.Clock);
@@ -7489,10 +7479,10 @@ var egret3d;
          * @platform Web
          * @language zh_CN
          */
-        Transform.prototype.getLocalEulerAngles = function () {
+        Transform.prototype.getLocalEulerAngles = function (order) {
             // if (this._dirtyLocalRS) {
             if (this._dirtyLocal) {
-                this.getLocalMatrix().toEuler(this._localEulerAngles).multiplyScalar(egret3d.RAD_DEG);
+                this.getLocalMatrix().toEuler(this._localEulerAngles, order).multiplyScalar(egret3d.RAD_DEG);
             }
             return this._localEulerAngles;
         };
@@ -7655,12 +7645,12 @@ var egret3d;
          * @platform Web
          * @language zh_CN
          */
-        Transform.prototype.getEulerAngles = function () {
+        Transform.prototype.getEulerAngles = function (order) {
             // if (this._dirtyWorldRS) {
             // if (this._dirtyWorld) {
             //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale).toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
             // }
-            this.getWorldMatrix().toEuler(this._eulerAngles).multiplyScalar(egret3d.RAD_DEG);
+            this.getWorldMatrix().toEuler(this._eulerAngles, order).multiplyScalar(egret3d.RAD_DEG);
             return this._eulerAngles;
         };
         Transform.prototype.setEulerAngles = function (q1, q2, q3, q4) {
@@ -7930,9 +7920,27 @@ var egret3d;
         DefaultMeshes.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             {
+                var mesh = new egret3d.Mesh(6, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/axises.mash.bin";
+                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
+                paper.Asset.register(mesh);
+                DefaultMeshes.AXISES = mesh;
+                mesh.setAttributes("POSITION" /* POSITION */, [
+                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                ]);
+                mesh.setAttributes("COLOR_0" /* COLOR_0 */, [
+                    1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+                    0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+                ]);
+            }
+            {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_quad.mash.bin";
+                mesh.name = "builtin/quad.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -7972,7 +7980,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_quad_particle.mash.bin";
+                mesh.name = "builtin/quad_particle.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD_PARTICLE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8012,7 +8020,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_plane.mash.bin";
+                mesh.name = "builtin/plane.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PLANE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8052,7 +8060,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(24, 36);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_cube.mash.bin";
+                mesh.name = "builtin/cube.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CUBE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8197,7 +8205,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(16, 18);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_pyramid.mash.bin";
+                mesh.name = "builtin/pyramid.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8299,14 +8307,14 @@ var egret3d;
             {
                 var mesh = DefaultMeshes.createSphereCCW();
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_sphere.mash.bin";
+                mesh.name = "builtin/sphere.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.SPHERE = mesh;
             }
             {
                 var mesh = DefaultMeshes.createCylinderCCW();
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/default_cylinder.mash.bin";
+                mesh.name = "builtin/cylinder.mash.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CYLINDER = mesh;
             }
@@ -8505,22 +8513,108 @@ var egret3d;
     /**
      *
      */
+    var DefaultShaders = (function (_super) {
+        __extends(DefaultShaders, _super);
+        function DefaultShaders() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        DefaultShaders.prototype._createShader = function (name, shaderNameOrConfig, renderQueue, states, defines) {
+            var shader = new egret3d.Shader(name);
+            if (typeof shaderNameOrConfig === "string") {
+                shader.config = paper.Asset.find(shaderNameOrConfig).config;
+            }
+            else {
+                shader.config = shaderNameOrConfig;
+            }
+            shader._isBuiltin = true;
+            if (renderQueue) {
+                shader._renderQueue = renderQueue;
+            }
+            if (defines) {
+                shader._defines = defines;
+            }
+            if (states) {
+                var shaderStates = egret3d.GLTFAsset.copyTechniqueStates(states);
+                if (shaderStates) {
+                    shader._states = shaderStates;
+                }
+            }
+            paper.Asset.register(shader);
+            return shader;
+        };
+        DefaultShaders.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
+            // Create builtin shaders.
+            var shaders = egret3d.ShaderLib;
+            for (var k in shaders) {
+                this._createShader("builtin/raw_" + k + ".shader.json", shaders[k]);
+            }
+            //
+            var helpMaterial = new egret3d.Material(paper.Asset.find("builtin/raw_meshbasic.shader.json"));
+            //
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */);
+            DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", "builtin/raw_meshbasic.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
+            DefaultShaders.MESH_BASIC_DOUBLESIDE = this._createShader("builtin/meshbasic_doubleside.shader.json", "builtin/raw_meshbasic.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */);
+            DefaultShaders.MESH_LAMBERT = this._createShader("builtin/meshlambert.shader.json", "builtin/raw_meshlambert.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
+            DefaultShaders.MESH_LAMBERT_DOUBLESIDE = this._createShader("builtin/meshlambert_doubleside.shader.json", "builtin/raw_meshlambert.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */);
+            DefaultShaders.MESH_PHONG = this._createShader("builtin/meshphong.shader.json", "builtin/raw_meshphong.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
+            DefaultShaders.MESH_PHONE_DOUBLESIDE = this._createShader("builtin/meshphong_doubleside.shader.json", "builtin/raw_meshphong.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */);
+            DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", "builtin/raw_meshphysical.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
+            DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", "builtin/raw_meshphysical.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(1 /* Blend */);
+            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", "builtin/raw_meshbasic.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(false).setBlend(1 /* Blend */);
+            DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", "builtin/raw_meshbasic.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(3 /* Add */);
+            DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", "builtin/raw_meshbasic.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(false).setBlend(3 /* Add */);
+            DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", "builtin/raw_meshbasic.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */);
+            DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", "builtin/raw_linedashed.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */);
+            DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", "builtin/raw_vertcolor.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
+            DefaultShaders.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", "builtin/raw_meshbasic.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
+            DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", "builtin/raw_particle.shader.json", paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(false).setBlend(1 /* Blend */);
+            DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", "builtin/raw_particle.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(false).setBlend(3 /* Add */);
+            DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", "builtin/raw_particle.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(false).setBlend(2 /* Blend_PreMultiply */);
+            DefaultShaders.PARTICLE_BLEND_PREMULTIPLY = this._createShader("builtin/particle_blend_premultiply.shader.json", "builtin/raw_particle.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(false).setBlend(4 /* Add_PreMultiply */);
+            DefaultShaders.PARTICLE_ADDITIVE_PREMULTIPLY = this._createShader("builtin/particle_additive_premultiply.shader.json", "builtin/raw_particle.shader.json", paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
+            helpMaterial.dispose();
+        };
+        return DefaultShaders;
+    }(paper.SingletonComponent));
+    egret3d.DefaultShaders = DefaultShaders;
+    __reflect(DefaultShaders.prototype, "egret3d.DefaultShaders");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     *
+     */
     var DefaultMaterials = (function (_super) {
         __extends(DefaultMaterials, _super);
         function DefaultMaterials() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        DefaultMaterials.prototype._createShaders = function () {
-            var shaders = egret3d.ShaderLib;
-            for (var k in shaders) {
-                var shader = new egret3d.GLTFAsset("builtin/" + k + ".shader.json");
-                shader.config = shaders[k];
-                shader._isBuiltin = true;
-                paper.Asset.register(shader);
-            }
-        };
         DefaultMaterials.prototype._createMaterial = function (shaderName, name, renderQueue) {
+            if (renderQueue === void 0) { renderQueue = paper.RenderQueue.Geometry; }
             var shader = paper.Asset.find(shaderName);
+            if (!shader) {
+                console.debug("Cannot find builtin shader.", shaderName);
+            }
             var material = new egret3d.Material(shader);
             material.name = name;
             material.renderQueue = renderQueue;
@@ -8530,66 +8624,16 @@ var egret3d;
         };
         DefaultMaterials.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            // Create builtin shaders.
-            this._createShaders();
-            DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.shader.json", "builtin/meshbasic.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.MESH_BASIC_DOUBLESIDE = this._createMaterial("builtin/meshbasic.shader.json", "builtin/meshbasic_doubleside.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.MESH_LAMBERT = this._createMaterial("builtin/meshlambert.shader.json", "builtin/meshlambert.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.MESH_LAMBERT_DOUBLESIDE = this._createMaterial("builtin/meshlambert.shader.json", "builtin/meshlambert_doubleside.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.MESH_PHONG = this._createMaterial("builtin/meshphong.shader.json", "builtin/meshphong.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.MESH_PHONE_DOUBLESIDE = this._createMaterial("builtin/meshphong.shader.json", "builtin/meshphong_doubleside.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.MESH_PHYSICAL = this._createMaterial("builtin/meshphysical.shader.json", "builtin/meshphysical.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.MESH_PHYSICAL_DOUBLESIDE = this._createMaterial("builtin/meshphysical.shader.json", "builtin/meshphysical_doubleside.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.LINEDASHED = this._createMaterial("builtin/linedashed.shader.json", "builtin/linedashed.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */);
-            DefaultMaterials.VERTEX_COLOR = this._createMaterial("builtin/vertcolor.shader.json", "builtin/vertcolor.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(0 /* None */);
-            DefaultMaterials.MATERIAL_COLOR = this._createMaterial("builtin/meshbasic.shader.json", "builtin/materialcolor.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
-            DefaultMaterials.TRANSPARENT = this._createMaterial("builtin/meshbasic.shader.json", "builtin/transparent.mat.json", paper.RenderQueue.Transparent)
-                .setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(1 /* Blend */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.TRANSPARENT_DOUBLESIDE = this._createMaterial("builtin/meshbasic.shader.json", "builtin/transparent_doubleside.mat.json", paper.RenderQueue.Transparent)
-                .setDepth(true, false).setCullFace(false).setBlend(1 /* Blend */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.TRANSPARENT_ADDITIVE = this._createMaterial("builtin/meshbasic.shader.json", "builtin/transparent_additive.mat.json", paper.RenderQueue.Transparent)
-                .setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(3 /* Add */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createMaterial("builtin/meshbasic.shader.json", "builtin/transparent_additive_doubleside.mat.json", paper.RenderQueue.Transparent)
-                .setDepth(true, false).setCullFace(false).setBlend(3 /* Add */)
-                .addDefine("USE_MAP");
-            DefaultMaterials.PARTICLE = this._createMaterial("builtin/particle.shader.json", "builtin/particle.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
-            DefaultMaterials.PARTICLE_BLEND = this._createMaterial("builtin/particle.shader.json", "builtin/particle_blend.mat.json", paper.RenderQueue.Transparent)
-                .setDepth(true, false).setCullFace(false).setBlend(1 /* Blend */);
-            DefaultMaterials.PARTICLE_BLEND_PREMULTIPLY = this._createMaterial("builtin/particle.shader.json", "builtin/particle_blend_premultiply.mat.json", paper.RenderQueue.Transparent)
-                .setDepth(true, false).setCullFace(false).setBlend(2 /* Blend_PreMultiply */);
-            DefaultMaterials.PARTICLE_ADDITIVE = this._createMaterial("builtin/particle.shader.json", "builtin/particle_add.mat.json", paper.RenderQueue.Transparent)
-                .setDepth(true, false).setCullFace(false).setBlend(3 /* Add */);
-            DefaultMaterials.PARTICLE_ADDITIVE_PREMULTIPLY = this._createMaterial("builtin/particle.shader.json", "builtin/particle_add_premultiply.mat.json", paper.RenderQueue.Transparent)
-                .setDepth(true, false).setCullFace(false).setBlend(4 /* Add_PreMultiply */);
-            DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/depth.shader.json", "builtin/shadow_depth.mat.json", paper.RenderQueue.Geometry)
+            DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.shader.json", "builtin/meshbasic.mat.json")
+                .setTexture("map", egret3d.DefaultTextures.GRAY);
+            DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed.shader.json", "builtin/linedashed_color.mat.json")
+                .addDefine("USE_COLOR");
+            DefaultMaterials.MISSING = this._createMaterial("builtin/meshbasic.shader.json", "builtin/missing.mat.json")
+                .setVector3v("diffuse", new Float32Array([1.0, 0.0, 1.0]));
+            DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/raw_depth.shader.json", "builtin/shadow_depth.mat.json")
                 .setDepth(true, true).setCullFace(false).setBlend(0 /* None */).addDefine("DEPTH_PACKING 3201");
-            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/distanceRGBA.shader.json", "builtin/shadow_distance.mat.json", paper.RenderQueue.Geometry)
+            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/raw_distanceRGBA.shader.json", "builtin/shadow_distance.mat.json")
                 .setDepth(true, true).setCullFace(false).setBlend(0 /* None */);
-            DefaultMaterials.MISSING = this._createMaterial("builtin/meshbasic.shader.json", "builtin/missing.mat.json", paper.RenderQueue.Geometry)
-                .setDepth(true, true).setCullFace(false).setBlend(0 /* None */).setVector3v("diffuse", new Float32Array([1.0, 0.0, 1.0]));
         };
         return DefaultMaterials;
     }(paper.SingletonComponent));
@@ -8858,7 +8902,7 @@ var egret3d;
              */
             _this.size = 2.0;
             /**
-             * 0=正交， 1=透视 中间值可以在两种相机间过度
+             * 0=正交，1=透视 中间值可以在两种相机间过度
              */
             _this.opvalue = 1.0;
             /**
@@ -8883,9 +8927,9 @@ var egret3d;
             _this.renderTarget = null;
             _this._near = 0.01;
             _this._far = 1000;
-            _this.matProjP = egret3d.Matrix4.create();
-            _this.matProjO = egret3d.Matrix4.create();
-            _this.frameVecs = [
+            _this._matProjP = egret3d.Matrix4.create();
+            _this._matProjO = egret3d.Matrix4.create();
+            _this._frameVecs = [
                 egret3d.Vector3.create(),
                 egret3d.Vector3.create(),
                 egret3d.Vector3.create(),
@@ -8916,17 +8960,17 @@ var egret3d;
         /**
          * 计算相机视锥区域
          */
-        Camera.prototype.calcCameraFrame = function () {
+        Camera.prototype._calcCameraFrame = function () {
             var vpp = helpRectA;
             this.calcViewPortPixel(vpp);
-            var farLD = this.frameVecs[0];
-            var nearLD = this.frameVecs[1];
-            var farRD = this.frameVecs[2];
-            var nearRD = this.frameVecs[3];
-            var farLT = this.frameVecs[4];
-            var nearLT = this.frameVecs[5];
-            var farRT = this.frameVecs[6];
-            var nearRT = this.frameVecs[7];
+            var farLD = this._frameVecs[0];
+            var nearLD = this._frameVecs[1];
+            var farRD = this._frameVecs[2];
+            var nearRD = this._frameVecs[3];
+            var farLT = this._frameVecs[4];
+            var nearLT = this._frameVecs[5];
+            var farRT = this._frameVecs[6];
+            var nearRT = this._frameVecs[7];
             var near_h = this.near * Math.tan(this.fov * 0.5);
             var asp = vpp.w / vpp.h;
             var near_w = near_h * asp;
@@ -8950,47 +8994,35 @@ var egret3d;
             matrix.transformVector3(farRT);
             matrix.transformVector3(nearRT);
         };
-        /**
-         * @inheritDoc
-         */
         Camera.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             this.context = new egret3d.RenderContext();
-            this.near = this._near;
-            this.far = this._far;
         };
         /**
          *
          */
         Camera.prototype.update = function (_delta) {
-            this.calcCameraFrame();
+            this._calcCameraFrame();
             this.context.updateCamera(this, this.gameObject.transform.getWorldMatrix());
-        };
-        /**
-         * 计算相机的 view matrix（视图矩阵）
-         */
-        Camera.prototype.calcViewMatrix = function (matrix) {
-            matrix.inverse(this.gameObject.transform.getWorldMatrix());
-            return matrix;
         };
         /**
          * 计算相机的 project matrix（投影矩阵）
          */
         Camera.prototype.calcProjectMatrix = function (asp, matrix) {
             if (this.opvalue > 0) {
-                egret3d.Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this.matProjP);
+                egret3d.Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this._matProjP);
             }
             if (this.opvalue < 1) {
-                egret3d.Matrix4.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this.matProjO);
+                egret3d.Matrix4.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this._matProjO);
             }
             if (this.opvalue === 0.0) {
-                matrix.copy(this.matProjO);
+                matrix.copy(this._matProjO);
             }
             else if (this.opvalue === 1.0) {
-                matrix.copy(this.matProjP);
+                matrix.copy(this._matProjP);
             }
             else {
-                matrix.lerp(this.opvalue, this.matProjO, this.matProjP);
+                matrix.lerp(this.opvalue, this._matProjO, this._matProjP);
             }
             return matrix;
         };
@@ -9051,7 +9083,7 @@ var egret3d;
             var matrixView = egret3d.helpMatrixA;
             var matrixProject = egret3d.helpMatrixB;
             var asp = vpp.w / vpp.h;
-            this.calcViewMatrix(matrixView);
+            matrixView.inverse(this.gameObject.transform.getWorldMatrix());
             this.calcProjectMatrix(asp, matrixProject);
             egret3d.helpMatrixC.multiply(matrixProject, matrixView)
                 .inverse()
@@ -9066,7 +9098,7 @@ var egret3d;
             var matrixView = egret3d.helpMatrixA;
             var matrixProject = egret3d.helpMatrixB;
             var asp = vpp.w / vpp.h;
-            this.calcViewMatrix(matrixView);
+            matrixView.inverse(this.gameObject.transform.getWorldMatrix());
             this.calcProjectMatrix(asp, matrixProject);
             var matrixViewProject = egret3d.helpMatrixC.multiply(matrixProject, matrixView);
             var ndcPos = egret3d.helpVector3A;
@@ -9113,17 +9145,17 @@ var egret3d;
         };
         Camera.prototype.testFrustumCulling = function (node) {
             var boundingSphere = node.boundingSphere;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[0], this.frameVecs[1], this.frameVecs[5]))
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[0], this._frameVecs[1], this._frameVecs[5]))
                 return false;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[1], this.frameVecs[3], this.frameVecs[7]))
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[1], this._frameVecs[3], this._frameVecs[7]))
                 return false;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[3], this.frameVecs[2], this.frameVecs[6]))
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[3], this._frameVecs[2], this._frameVecs[6]))
                 return false;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[2], this.frameVecs[0], this.frameVecs[4]))
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[2], this._frameVecs[0], this._frameVecs[4]))
                 return false;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[5], this.frameVecs[7], this.frameVecs[6]))
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[5], this._frameVecs[7], this._frameVecs[6]))
                 return false;
-            if (!this._intersectPlane(boundingSphere, this.frameVecs[0], this.frameVecs[2], this.frameVecs[3]))
+            if (!this._intersectPlane(boundingSphere, this._frameVecs[0], this._frameVecs[2], this._frameVecs[3]))
                 return false;
             return true;
         };
@@ -9566,7 +9598,7 @@ var egret3d;
                 var activeScene = paper.Application.sceneManager.activeScene;
                 if (activeScene.lightmaps.length > renderer.lightmapIndex) {
                     this.updateLightmap(activeScene.lightmaps[renderer.lightmapIndex], drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0, renderer.lightmapScaleOffset, activeScene.lightmapIntensity);
-                    this.shaderContextDefine += "#define LIGHTMAP \n";
+                    this.shaderContextDefine += "#define USE_LIGHTMAP \n";
                 }
             }
             if (this.lightCount > 0) {
@@ -14069,7 +14101,7 @@ var paper;
             /**
              * 环境光
              */
-            _this.ambientLightColor = egret3d.Color.create(0.21, 0.22, 0.25, 1);
+            _this.ambientColor = egret3d.Color.create(0.21, 0.22, 0.25, 1);
             _this.name = name;
             return _this;
         }
@@ -14247,7 +14279,7 @@ var paper;
         ], Scene.prototype, "extras", void 0);
         __decorate([
             paper.serializedField
-        ], Scene.prototype, "ambientLightColor", void 0);
+        ], Scene.prototype, "ambientColor", void 0);
         __decorate([
             paper.serializedField,
             paper.deserializedIgnore
@@ -15357,7 +15389,7 @@ var egret3d;
             _this.programMap = {};
             _this.vsShaderMap = {};
             _this.fsShaderMap = {};
-            _this._stateEnables = [3042 /* BLEND */, 2884 /* CULL_FACE */, 2929 /* DEPTH_TEST */];
+            _this._stateEnables = [3042 /* BLEND */, 2884 /* CULL_FACE */, 2929 /* DEPTH_TEST */]; // TODO
             _this._cacheStateEnable = {};
             return _this;
         }
@@ -15404,17 +15436,19 @@ var egret3d;
             //TODO WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
             for (var _i = 0, stateEnables_1 = stateEnables; _i < stateEnables_1.length; _i++) {
                 var e = stateEnables_1[_i];
-                var b = state.enable && state.enable.indexOf(e) >= 0;
+                var b = state && state.enable && state.enable.indexOf(e) >= 0;
                 if (cacheStateEnable[e] !== b) {
                     cacheStateEnable[e] = b;
                     b ? webgl.enable(e) : webgl.disable(e);
                 }
             }
-            //functions
-            var functions = state.functions;
-            if (functions) {
-                for (var fun in functions) {
-                    webgl[fun].apply(webgl, functions[fun]);
+            // Functions.
+            if (state) {
+                var functions = state.functions;
+                if (functions) {
+                    for (var fun in functions) {
+                        webgl[fun].apply(webgl, functions[fun]);
+                    }
                 }
             }
         };
@@ -15427,7 +15461,7 @@ var egret3d;
             return false;
         };
         WebGLRenderState.prototype.getProgram = function (material, technique, defines) {
-            var shader = material._glTFShader;
+            var shader = material._shader;
             var extensions = shader.config.extensions.KHR_techniques_webgl;
             var vertexShader = extensions.shaders[0];
             var fragShader = extensions.shaders[1];
@@ -16576,6 +16610,18 @@ var paper;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
+    var Shader = (function (_super) {
+        __extends(Shader, _super);
+        function Shader() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        return Shader;
+    }(egret3d.GLTFAsset));
+    egret3d.Shader = Shader;
+    __reflect(Shader.prototype, "egret3d.Shader");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
     //TODO 运行时DrawCall排序优化使用
     var _hashCode = 0;
     //兼容老的Uniform键值
@@ -16588,7 +16634,7 @@ var egret3d;
         /**
          *
          */
-        function Material(shaderOrMaterial) {
+        function Material(shader) {
             var _this = _super.call(this) || this;
             /**
              *
@@ -16608,29 +16654,21 @@ var egret3d;
             /**
              * @internal
              */
-            _this._glTFShader = null;
+            _this._shader = null;
             /**
             * @internal
             */
             _this._glTFTechnique = null;
-            if (shaderOrMaterial) {
-                if (shaderOrMaterial instanceof Material) {
-                    _this._glTFShader = shaderOrMaterial.shader;
-                }
-                else {
-                    _this._glTFShader = shaderOrMaterial;
-                }
-                _this.config = egret3d.GLTFAsset.createGLTFExtensionsConfig();
+            if (shader) {
+                _this._shader = shader;
+                _this.config = egret3d.GLTFAsset.createGLTFExtensionsConfig(); // TODO
                 _this.config.materials[0] = {
                     extensions: {
-                        KHR_techniques_webgl: { technique: _this._glTFShader.name, values: {} },
-                        paper: { renderQueue: paper.RenderQueue.Geometry }
+                        KHR_techniques_webgl: { technique: _this._shader.name, values: {} },
+                        paper: { renderQueue: -1 } // TODO
                     }
                 };
                 _this.initialize();
-                if (shaderOrMaterial instanceof Material) {
-                    _this.copy(shaderOrMaterial);
-                }
             }
             return _this;
         }
@@ -16639,16 +16677,20 @@ var egret3d;
                 return;
             }
             var glTFMaterial = this.config.materials[0];
-            if (!this._glTFShader) {
+            if (!this._shader) {
                 //不存在，那就从材质中获取
-                this._glTFShader = paper.Asset.find(glTFMaterial.extensions.KHR_techniques_webgl.technique);
-                if (!this._glTFShader) {
+                this._shader = paper.Asset.find(glTFMaterial.extensions.KHR_techniques_webgl.technique);
+                if (!this._shader) {
                     console.error("材质中获取着色器错误");
                     return;
                 }
             }
             this.renderQueue = glTFMaterial.extensions.paper.renderQueue;
-            this._glTFTechnique = egret3d.GLTFAsset.createTechnique(this._glTFShader.config.extensions.KHR_techniques_webgl.techniques[0]);
+            if (this.renderQueue < 0) {
+                this.renderQueue = this._shader._renderQueue || paper.RenderQueue.Geometry;
+            }
+            this._glTFTechnique = egret3d.GLTFAsset.createTechnique(this._shader.config.extensions.KHR_techniques_webgl.techniques[0]);
+            //
             var uniformValues = glTFMaterial.extensions.KHR_techniques_webgl.values;
             var uniforms = this._glTFTechnique.uniforms;
             //使用Shader替换Material中没有默认值的Uniform
@@ -16663,7 +16705,24 @@ var egret3d;
                     }
                 }
             }
-            // TODO add define.
+            if (glTFMaterial.extensions.paper.states) {
+                this._glTFTechnique.states = glTFMaterial.extensions.paper.states; // TODO
+            }
+            else if (this._shader._states) {
+                this._glTFTechnique.states = egret3d.GLTFAsset.copyTechniqueStates(this._shader._states);
+            }
+            if (glTFMaterial.extensions.paper.defines) {
+                for (var _i = 0, _a = glTFMaterial.extensions.paper.defines; _i < _a.length; _i++) {
+                    var define = _a[_i];
+                    this.addDefine(define);
+                }
+            }
+            else if (this._shader._defines) {
+                for (var _b = 0, _c = this._shader._defines; _b < _c.length; _b++) {
+                    var define = _c[_b];
+                    this.addDefine(define);
+                }
+            }
         };
         Material.prototype.dispose = function (disposeChildren) {
             if (this._isBuiltin) {
@@ -16681,7 +16740,7 @@ var egret3d;
             this._defines.length = 0;
             this._textures.length = 0;
             this._glTFTechnique = null;
-            this._glTFShader = null;
+            this._shader = null;
         };
         Material.prototype.copy = function (value) {
             this.renderQueue = value.renderQueue;
@@ -16716,7 +16775,7 @@ var egret3d;
          * 克隆材质资源。
          */
         Material.prototype.clone = function () {
-            return new Material(this._glTFShader).copy(this);
+            return new Material(this._shader).copy(this);
         };
         Material.prototype.addDefine = function (key) {
             if (this._defines.indexOf(key) < 0) {
@@ -16955,8 +17014,11 @@ var egret3d;
          * @param blend
          */
         Material.prototype.setBlend = function (blend) {
-            var functions = this._glTFTechnique.states.functions;
+            if (!this._glTFTechnique.states) {
+                this._glTFTechnique.states = { enable: [], functions: {} };
+            }
             var enables = this._glTFTechnique.states.enable;
+            var functions = this._glTFTechnique.states.functions;
             switch (blend) {
                 case 3 /* Add */:
                     functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
@@ -16996,19 +17058,22 @@ var egret3d;
          *
          */
         Material.prototype.setCullFace = function (cull, frontFace, cullFace) {
-            var funs = this._glTFTechnique.states.functions;
+            if (!this._glTFTechnique.states) {
+                this._glTFTechnique.states = { enable: [], functions: {} };
+            }
             var enables = this._glTFTechnique.states.enable;
+            var functions = this._glTFTechnique.states.functions;
             var index = enables.indexOf(2884 /* CULL_FACE */);
             if (cull && frontFace && cullFace) {
-                funs.frontFace = [frontFace];
-                funs.cullFace = [cullFace];
+                functions.frontFace = [frontFace];
+                functions.cullFace = [cullFace];
                 if (index < 0) {
                     enables.push(2884 /* CULL_FACE */);
                 }
             }
             else {
-                delete funs.frontFace;
-                delete funs.cullFace;
+                delete functions.frontFace;
+                delete functions.cullFace;
                 if (index >= 0) {
                     enables.splice(index, 1);
                 }
@@ -17019,14 +17084,17 @@ var egret3d;
          *
          */
         Material.prototype.setDepth = function (zTest, zWrite) {
-            var funs = this._glTFTechnique.states.functions;
+            if (!this._glTFTechnique.states) {
+                this._glTFTechnique.states = { enable: [], functions: {} };
+            }
             var enables = this._glTFTechnique.states.enable;
+            var functions = this._glTFTechnique.states.functions;
             var index = enables.indexOf(2929 /* DEPTH_TEST */);
             if (zTest) {
                 if (index < 0) {
                     enables.push(2929 /* DEPTH_TEST */);
                 }
-                funs.depthFunc = [515 /* LEQUAL */];
+                functions.depthFunc = [515 /* LEQUAL */];
             }
             else {
                 if (index >= 0) {
@@ -17034,10 +17102,25 @@ var egret3d;
                 }
             }
             if (zWrite) {
-                funs.depthMask = [true];
+                functions.depthMask = [true];
             }
             else {
-                funs.depthMask = [false];
+                functions.depthMask = [false];
+            }
+            return this;
+        };
+        /**
+         *
+         */
+        Material.prototype.clearStates = function () {
+            if (this._glTFTechnique.states) {
+                // const enables = this._glTFTechnique.states.enable!;
+                // const functions = this._glTFTechnique.states.functions!;
+                // enables.length = 0;
+                // for (const k in functions) {
+                //     delete functions[k];
+                // }
+                delete this._glTFTechnique.states;
             }
             return this;
         };
@@ -17059,7 +17142,7 @@ var egret3d;
         });
         Object.defineProperty(Material.prototype, "shader", {
             get: function () {
-                return this._glTFShader;
+                return this._shader;
             },
             enumerable: true,
             configurable: true
@@ -17080,23 +17163,22 @@ var egret3d;
 (function (egret3d) {
     var ShaderLib;
     (function (ShaderLib) {
-        ShaderLib.cube = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "cube_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n\tgl_Position.z = gl_Position.w; // set z to camera.far\r\n\r\n}\r\n" }, { "name": "cube_frag", "type": 35632, "uri": "uniform samplerCube tCube;\r\nuniform float tFlip;\r\nuniform float opacity;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\nvoid main() {\r\n\r\n\tgl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );\r\n\tgl_FragColor.a *= opacity;\r\n\r\n}\r\n" }], "techniques": [{ "name": "cube", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "tCube": { "type": 35680, "value": [] }, "tFlip": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.depth = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "depth_vert", "type": 35633, "uri": "#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n}\r\n" }, { "name": "depth_frag", "type": 35632, "uri": "#if DEPTH_PACKING == 3200\r\n\r\n\tuniform float opacity;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tdiffuseColor.a = opacity;\r\n\r\n\t#endif\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tgl_FragColor = vec4( vec3( 1.0 - gl_FragCoord.z ), opacity );\r\n\r\n\t#elif DEPTH_PACKING == 3201\r\n\r\n\t\tgl_FragColor = packDepthToRGBA( gl_FragCoord.z );\r\n\r\n\t#endif\r\n\r\n}\r\n" }], "techniques": [{ "name": "depth", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.diffuse = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "diffuse_vert", "type": 35633, "uri": "#include <common>\r\n#include <skinning_pars_vert>\r\n#include <lightmap_pars_vert> \r\nattribute vec4 position;\r\nattribute vec4 uv;\r\nuniform highp mat4 modelViewProjectionMatrix;\r\nuniform highp mat3 uvTransform;  \r\nvarying highp vec2 xlv_TEXCOORD0;\r\n\r\nvoid main() {\r\n    #include <skinning_base_vert>\r\n    xlv_TEXCOORD0 = ( uvTransform * vec3( uv.xy, 1 ) ).xy;\r\n    #include <lightmap_vert>\r\n    gl_Position = (modelViewProjectionMatrix * tmpVertex);\r\n}" }, { "name": "diffuse_frag", "type": 35632, "uri": "#include <common>\r\n#include <lightmap_pars_frag>\r\nuniform vec3 diffuse;\r\nuniform sampler2D map;\r\nuniform lowp float _AlphaCut;\r\nvarying highp vec2 xlv_TEXCOORD0;\r\nvoid main() {\r\n    lowp vec4 outColor = texture2D(map, xlv_TEXCOORD0) * vec4(diffuse, 1.0);\r\n    if(outColor.a < _AlphaCut)\r\n        discard;\r\n    #include <lightmap_frag>    \r\n}" }], "techniques": [{ "name": "diffuse", "attributes": { "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" }, "position": { "semantic": "POSITION" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "glstate_vec4_bones[0]": { "type": 35666, "value": [], "semantic": "_BONESVEC4" }, "lightMapOffset": { "type": 35666, "value": [], "semantic": "_LIGHTMAPOFFSET" }, "lightMapUV": { "type": 5126, "value": [], "semantic": "_LIGHTMAPUV" }, "modelViewProjectionMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEWPROJECTION" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "map": { "type": 35678, "value": [] }, "_AlphaCut": { "type": 5126, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.distanceRGBA = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "distanceRGBA_vert", "type": 35633, "uri": "#define DISTANCE\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvWorldPosition = worldPosition.xyz;\r\n\r\n}\r\n" }, { "name": "distanceRGBA_frag", "type": 35632, "uri": "#define DISTANCE\r\n\r\nuniform vec3 referencePosition;\r\nuniform float nearDistance;\r\nuniform float farDistance;\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main () {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\tfloat dist = length( vWorldPosition - referencePosition );\r\n\tdist = ( dist - nearDistance ) / ( farDistance - nearDistance );\r\n\tdist = saturate( dist ); // clamp to [ 0, 1 ]\r\n\r\n\tgl_FragColor = packDepthToRGBA( dist );\r\n\r\n}\r\n" }], "techniques": [{ "name": "distanceRGBA", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "referencePosition": { "type": 35665, "value": [], "semantic": "_REFERENCEPOSITION" }, "nearDistance": { "type": 5126, "value": [], "semantic": "_NEARDICTANCE" }, "farDistance": { "type": 5126, "value": [], "semantic": "_FARDISTANCE" }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.equirect = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "equirect_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n}\r\n" }, { "name": "equirect_frag", "type": 35632, "uri": "uniform sampler2D tEquirect;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n\r\nvoid main() {\r\n\r\n\tvec3 direction = normalize( vWorldPosition );\r\n\r\n\tvec2 sampleUV;\r\n\r\n\tsampleUV.y = asin( clamp( direction.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\r\n\r\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\r\n\r\n\tgl_FragColor = texture2D( tEquirect, sampleUV );\r\n\r\n}\r\n" }], "techniques": [{ "name": "equirect", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "tEquirect": { "type": 35678, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.linedashed = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linedashed_vert", "type": 35633, "uri": "uniform float scale;\r\nattribute float lineDistance;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <color_vertex>\r\n\r\n\tvLineDistance = scale * lineDistance;\r\n\r\n\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\r\n\tgl_Position = projectionMatrix * mvPosition;\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "linedashed_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\nuniform float dashSize;\r\nuniform float totalSize;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tif ( mod( vLineDistance, totalSize ) > dashSize ) {\r\n\r\n\t\tdiscard;\r\n\r\n\t}\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <color_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb; // simple shader\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "linedashed", "attributes": { "lineDistance": { "semantic": "Unknown" }, "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "scale": { "type": 5126, "value": [] }, "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126, "value": [] }, "totalSize": { "type": 5126, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.line = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "line_vert", "type": 35633, "uri": "#include <common>\r\nattribute vec4 position;\r\nattribute vec4 color;\r\nuniform highp mat4 modelViewProjectionMatrix;\r\nvarying lowp vec4 xlv_COLOR;\r\nvoid main() {\r\n    highp vec4 tmpvar_1;\r\n    tmpvar_1.w = 1.0;\r\n    tmpvar_1.xyz = position.xyz;\r\n    xlv_COLOR = color;\r\n    gl_Position = (modelViewProjectionMatrix * tmpvar_1);\r\n}" }, { "name": "line_frag", "type": 35632, "uri": "#include <common>\r\nvarying lowp vec4 xlv_COLOR;\r\nvoid main() {\r\n    gl_FragData[0] = xlv_COLOR;\r\n}" }], "techniques": [{ "name": "line", "attributes": { "position": { "semantic": "POSITION" }, "color": { "semantic": "COLOR_0" } }, "uniforms": { "modelViewProjectionMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEWPROJECTION" } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.meshbasic = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshbasic_vert", "type": 35633, "uri": "#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_ENVMAP\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshbasic_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\r\n\t// accumulation (baked indirect lighting only)\r\n\t#ifdef USE_LIGHTMAP\r\n\r\n\t\treflectedLight.indirectDiffuse += texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\r\n\r\n\t#else\r\n\r\n\t\treflectedLight.indirectDiffuse += vec3( 1.0 );\r\n\r\n\t#endif\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\treflectedLight.indirectDiffuse *= diffuseColor.rgb;\r\n\r\n\tvec3 outgoingLight = reflectedLight.indirectDiffuse;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t// #include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshbasic", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.meshlambert = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshlambert_vert", "type": 35633, "uri": "#define LAMBERT\r\nvarying vec3 vLightFront;\r\n\r\n#ifdef DOUBLE_SIDED\r\n\r\n\tvarying vec3 vLightBack;\r\n\r\n#endif\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_pars_maps>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <lights_lambert_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshlambert_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform float opacity;\r\n\r\nvarying vec3 vLightFront;\r\n\r\n#ifdef DOUBLE_SIDED\r\n\r\n\tvarying vec3 vLightBack;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_pars_maps>\r\n#include <fog_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <shadowmask_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\treflectedLight.indirectDiffuse = getAmbientLightIrradiance( ambientLightColor );\r\n\r\n\t#include <lightmap_fragment>\r\n\r\n\treflectedLight.indirectDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb );\r\n\r\n\t#ifdef DOUBLE_SIDED\r\n\r\n\t\treflectedLight.directDiffuse = ( gl_FrontFacing ) ? vLightFront : vLightBack;\r\n\r\n\t#else\r\n\r\n\t\treflectedLight.directDiffuse = vLightFront;\r\n\r\n\t#endif\r\n\r\n\treflectedLight.directDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb ) * getShadowMask();\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + totalEmissiveRadiance;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t// #include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshlambert", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.meshphong = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphong_vert", "type": 35633, "uri": "#define PHONG\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshphong_frag", "type": 35632, "uri": "#define PHONG\r\n\r\nuniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform vec3 specular;\r\nuniform float shininess;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <gradientmap_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_phong_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\t#include <lights_phong_fragment>\r\n\t#include <lights_fragment_begin>\r\n\t#include <lights_fragment_maps>\r\n\t#include <lights_fragment_end>\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshphong", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "refractionRatio": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "specular": { "type": 35665, "value": [1, 1, 1] }, "shininess": { "type": 5126, "value": 1 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "gradientMap": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.meshphysical = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphysical_vert", "type": 35633, "uri": "#define PHYSICAL\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshphysical_frag", "type": 35632, "uri": "#define PHYSICAL\r\n\r\nuniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform float roughness;\r\nuniform float metalness;\r\nuniform float opacity;\r\n\r\n#ifndef STANDARD\r\n\tuniform float clearCoat;\r\n\tuniform float clearCoatRoughness;\r\n#endif\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <bsdfs>\r\n#include <cube_uv_reflection_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <envmap_physical_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <lights_pars_begin>\r\n#include <lights_physical_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <roughnessmap_pars_fragment>\r\n#include <metalnessmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <roughnessmap_fragment>\r\n\t#include <metalnessmap_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\t#include <lights_physical_fragment>\r\n\t#include <lights_fragment_begin>\r\n\t#include <lights_fragment_maps>\r\n\t#include <lights_fragment_end>\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshphysical", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "roughness": { "type": 5126, "value": [] }, "metalness": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "clearCoat": { "type": 5126, "value": [] }, "clearCoatRoughness": { "type": 5126, "value": [] }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "value": [], "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "value": [], "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "refractionRatio": { "type": 5126, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] }, "roughnessMap": { "type": 35678, "value": [] }, "metalnessMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.normal = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "normal_vert", "type": 35633, "uri": "#define NORMAL\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvarying vec3 vViewPosition;\r\n\r\n#endif\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n#endif\r\n\r\n}\r\n" }, { "name": "normal_frag", "type": 35632, "uri": "#define NORMAL\r\n\r\nuniform float opacity;\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvarying vec3 vViewPosition;\r\n\r\n#endif\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\r\n\tgl_FragColor = vec4( packNormalToRGB( normal ), opacity );\r\n\r\n}\r\n" }], "techniques": [{ "name": "normal", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "value": [], "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "value": [], "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.particle = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "particle_vert", "type": 35633, "uri": "//inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.vs\r\n#include <common>\r\n#if defined(SPHERHBILLBOARD)||defined(STRETCHEDBILLBOARD)||defined(HORIZONTALBILLBOARD)||defined(VERTICALBILLBOARD)\r\n\tattribute vec2 corner;\r\n#endif\r\n#ifdef RENDERMESH\r\n\tattribute vec3 position;\r\n\tattribute vec4 color;\r\n#endif\r\nattribute vec2 uv;\r\nattribute vec3 startPosition;\r\nattribute vec3 startVelocity;\r\nattribute vec4 startColor;\r\nattribute vec3 startSize;\r\nattribute vec3 startRotation;\r\nattribute vec2 time;\r\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)||defined(ROTATIONTWOCONSTANTS)||defined(ROTATIONTWOCURVES)\r\n  attribute vec4 random0;\r\n#endif\r\n#if defined(TEXTURESHEETANIMATIONTWOCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\r\n  attribute vec4 random1;\r\n#endif\r\nattribute vec3 startWorldPosition;\r\nattribute vec4 startWorldRotation;\r\n\r\n#include <particle_common>\r\n\r\nvoid main()\r\n{\r\n\tfloat age = u_currentTime - time.y;\r\n\tfloat t = age/time.x;\r\n\tif(t>1.0){ \t\t\t\r\n\t\t\tv_discard=1.0;\r\n\t\t\treturn;\r\n  }\r\n\t  \r\n\t#include <particle_affector>\r\n\tgl_Position=viewProjectionMatrix*vec4(center,1.0);\r\n\tv_color = computeColor(startColor, t);\r\n\tv_texcoord =computeUV(uv, t);\r\n\tv_discard=0.0;\r\n}\r\n\r\n" }, { "name": "particle_frag", "type": 35632, "uri": "//inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.ps\r\n#include <common>\r\nuniform sampler2D map;\r\nuniform vec4 diffuse;\r\nvarying float v_discard;\r\nvarying vec4 v_color;\r\nvarying vec2 v_texcoord;\r\n\r\n#ifdef RENDERMODE_MESH\r\n\tvarying vec4 v_mesh_color;\r\n#endif\r\n\r\nvoid main()\r\n{\t\r\n\t#ifdef RENDERMODE_MESH\r\n\t\tgl_FragColor=v_mesh_color;\r\n\t#else\r\n\t\tgl_FragColor=vec4(1.0);\t\r\n\t#endif\r\n\r\n\tif(v_discard!=0.0)\r\n\t\tdiscard;\r\n\tgl_FragColor*=texture2D(map,v_texcoord)*diffuse*v_color*2.0;\r\n}" }], "techniques": [{ "name": "particle", "attributes": { "corner": { "semantic": "_CORNER" }, "position": { "semantic": "POSITION" }, "color": { "semantic": "COLOR_0" }, "uv": { "semantic": "TEXCOORD_0" }, "startPosition": { "semantic": "_START_POSITION" }, "startVelocity": { "semantic": "_START_VELOCITY" }, "startColor": { "semantic": "_START_COLOR" }, "startSize": { "semantic": "_START_SIZE" }, "startRotation": { "semantic": "_START_ROTATION" }, "time": { "semantic": "_TIME" }, "random0": { "semantic": "_RANDOM0" }, "random1": { "semantic": "_RANDOM1" }, "startWorldPosition": { "semantic": "_WORLD_POSITION" }, "startWorldRotation": { "semantic": "_WORLD_ROTATION" } }, "uniforms": { "u_currentTime": { "type": 5126, "value": [] }, "u_gravity": { "type": 35665, "value": [] }, "u_worldPosition": { "type": 35665, "value": [] }, "u_worldRotation": { "type": 35666, "value": [] }, "u_startRotation3D": { "type": 35670, "value": [] }, "u_scalingMode": { "type": 5124, "value": [] }, "u_positionScale": { "type": 35665, "value": [] }, "u_sizeScale": { "type": 35665, "value": [] }, "viewProjectionMatrix": { "type": 35676, "value": [], "semantic": "_VIEWPROJECTION" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "cameraForward": { "type": 35665, "value": [], "semantic": "_CAMERA_FORWARD" }, "cameraUp": { "type": 35665, "value": [], "semantic": "CAMERA_UP" }, "u_lengthScale": { "type": 5126, "value": [] }, "u_speeaScale": { "type": 5126, "value": [] }, "u_simulationSpace": { "type": 5124, "value": [] }, "u_spaceType": { "type": 5124, "value": [] }, "u_velocityConst": { "type": 35665, "value": [] }, "u_velocityCurveX[0]": { "type": 35664, "value": [] }, "u_velocityCurveY[0]": { "type": 35664, "value": [] }, "u_velocityCurveZ[0]": { "type": 35664, "value": [] }, "u_velocityConstMax": { "type": 35665, "value": [] }, "u_velocityCurveMaxX[0]": { "type": 35664, "value": [] }, "u_velocityCurveMaxY[0]": { "type": 35664, "value": [] }, "u_velocityCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_colorGradient[0]": { "type": 35666, "value": [] }, "u_alphaGradient[0]": { "type": 35664, "value": [] }, "u_colorGradientMax[0]": { "type": 35666, "value": [] }, "u_alphaGradientMax[0]": { "type": 35664, "value": [] }, "u_sizeCurve[0]": { "type": 35664, "value": [] }, "u_sizeCurveMax[0]": { "type": 35664, "value": [] }, "u_sizeCurveX[0]": { "type": 35664, "value": [] }, "u_sizeCurveY[0]": { "type": 35664, "value": [] }, "u_sizeCurveZ[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxX[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxY[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_rotationConst": { "type": 5126, "value": [] }, "u_rotationConstMax": { "type": 5126, "value": [] }, "u_rotationCurve[0]": { "type": 35664, "value": [] }, "u_rotationCurveMax[0]": { "type": 35664, "value": [] }, "u_rotationConstSeprarate": { "type": 35665, "value": [] }, "u_rotationConstMaxSeprarate": { "type": 35665, "value": [] }, "u_rotationCurveX[0]": { "type": 35664, "value": [] }, "u_rotationCurveY[0]": { "type": 35664, "value": [] }, "u_rotationCurveZ[0]": { "type": 35664, "value": [] }, "u_rotationCurveW[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxX[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxY[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxW[0]": { "type": 35664, "value": [] }, "u_cycles": { "type": 5126, "value": [] }, "u_subUV": { "type": 35666, "value": [] }, "u_uvCurve[0]": { "type": 35664, "value": [] }, "u_uvCurveMax[0]": { "type": 35664, "value": [] }, "map": { "type": 35678, "value": [] }, "diffuse": { "type": 35666, "value": [1, 1, 1] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.points = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "points_vert", "type": 35633, "uri": "uniform float size;\r\nuniform float scale;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <color_vertex>\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <project_vertex>\r\n\r\n\tgl_PointSize = size;\r\n\r\n\t#ifdef USE_SIZEATTENUATION\r\n\r\n\t\tbool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\r\n\r\n\t\tif ( isPerspective ) gl_PointSize *= ( scale / - mvPosition.z );\r\n\r\n\t#endif\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "points_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <map_particle_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_particle_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "points", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "size": { "type": 5126, "value": [] }, "scale": { "type": 5126, "value": [] }, "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "map": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.shadow = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "shadow_vert", "type": 35633, "uri": "\r\n#include <common2>\r\n#include <fog_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "shadow_frag", "type": 35632, "uri": "uniform vec3 color;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <fog_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <shadowmap_pars_fragment>\r\n#include <shadowmask_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\tgl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );\r\n\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "shadow", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "directionalShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "value": [], "semantic": "_POINTSHADOWMAT" }, "color": { "type": 35665, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "value": [], "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "value": [], "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "value": [], "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "value": [], "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "value": [], "semantic": "Unknown" }, "ltc_2": { "type": 35678, "value": [], "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "value": [], "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "value": [], "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "value": [], "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "value": [], "semantic": "_POINTSHADOWMAT" } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.sprite = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "sprite_vert", "type": 35633, "uri": "uniform float rotation;\r\nuniform vec2 center;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\tvec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );\r\n\r\n\tvec2 scale;\r\n\tscale.x = length( vec3( modelMatrix[ 0 ].x, modelMatrix[ 0 ].y, modelMatrix[ 0 ].z ) );\r\n\tscale.y = length( vec3( modelMatrix[ 1 ].x, modelMatrix[ 1 ].y, modelMatrix[ 1 ].z ) );\r\n\r\n\t#ifndef USE_SIZEATTENUATION\r\n\r\n\t\tbool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\r\n\r\n\t\tif ( isPerspective ) scale *= - mvPosition.z;\r\n\r\n\t#endif\r\n\r\n\tvec2 alignedPosition = ( position.xy - ( center - vec2( 0.5 ) ) ) * scale;\r\n\r\n\tvec2 rotatedPosition;\r\n\trotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;\r\n\trotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;\r\n\r\n\tmvPosition.xy += rotatedPosition;\r\n\r\n\tgl_Position = projectionMatrix * mvPosition;\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "sprite_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "sprite", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "rotation": { "type": 5126, "value": [] }, "center": { "type": 35664, "value": [] }, "modelMatrix": { "type": 35676, "value": [], "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "value": [], "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "value": [], "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "value": [], "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "value": [], "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.vertcolor = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "vertcolor_vert", "type": 35633, "uri": "#include <common>\r\nattribute vec4 position;   \r\nattribute vec4 normal;   \r\nattribute vec4 color;                  \r\nattribute vec4 uv;        \r\nuniform highp mat4 modelViewProjectionMatrix;   \r\nuniform highp vec4 _MainTex_ST;       \r\n\r\nvarying lowp vec4 xlv_COLOR;                \r\nvarying highp vec2 xlv_TEXCOORD0;   \r\n\r\nvoid main()                                     \r\n{                                               \r\n    highp vec4 tmpvar_1;                        \r\n    tmpvar_1.w = 1.0;                           \r\n    tmpvar_1.xyz = position.xyz;             \r\n    xlv_COLOR = color;                     \r\n    xlv_TEXCOORD0 = uv.xy * _MainTex_ST.xy + _MainTex_ST.zw;   \r\n\r\n    //xlv_COLOR.xyz =pos.xyz;\r\n    gl_Position = (modelViewProjectionMatrix * tmpvar_1);  \r\n}\r\n" }, { "name": "vertcolor_frag", "type": 35632, "uri": "#include <common>\r\nuniform sampler2D map;                                                 \r\nvarying lowp vec4 xlv_COLOR;                                                 \r\nvarying highp vec2 xlv_TEXCOORD0;   \r\nvoid main() \r\n{\r\n    lowp vec4 col_1;    \r\n    mediump vec4 prev_2;\r\n    lowp vec4 tmpvar_3;\r\n\r\n    tmpvar_3 = (texture2D(map, xlv_TEXCOORD0));\r\n    //prev_2 = tmpvar_3;\r\n    //mediump vec4 tmpvar_4;\r\n    //tmpvar_4 = mix(vec4(1.0, 1.0, 1.0, 1.0), prev_2, prev_2.wwww);\r\n    //col_1 = tmpvar_4;\r\n    //col_1.x = xlv_TEXCOORD0.x;\r\n    //col_1.y = xlv_TEXCOORD0.y;\r\n    gl_FragData[0] = tmpvar_3;\r\n}" }], "techniques": [{ "name": "vertcolor", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "color": { "semantic": "COLOR_0" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "modelViewProjectionMatrix": { "type": 35676, "value": [], "semantic": "MODELVIEWPROJECTION" }, "_MainTex_ST": { "type": 35666, "value": [1, 1, 0, 0] }, "map": { "type": 35678, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.cube = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "cube_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n\tgl_Position.z = gl_Position.w; // set z to camera.far\r\n\r\n}\r\n" }, { "name": "cube_frag", "type": 35632, "uri": "uniform samplerCube tCube;\r\nuniform float tFlip;\r\nuniform float opacity;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\nvoid main() {\r\n\r\n\tgl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );\r\n\tgl_FragColor.a *= opacity;\r\n\r\n}\r\n" }], "techniques": [{ "name": "cube", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "tCube": { "type": 35680, "value": [] }, "tFlip": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.depth = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "depth_vert", "type": 35633, "uri": "#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n}\r\n" }, { "name": "depth_frag", "type": 35632, "uri": "#if DEPTH_PACKING == 3200\r\n\r\n\tuniform float opacity;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tdiffuseColor.a = opacity;\r\n\r\n\t#endif\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tgl_FragColor = vec4( vec3( 1.0 - gl_FragCoord.z ), opacity );\r\n\r\n\t#elif DEPTH_PACKING == 3201\r\n\r\n\t\tgl_FragColor = packDepthToRGBA( gl_FragCoord.z );\r\n\r\n\t#endif\r\n\r\n}\r\n" }], "techniques": [{ "name": "depth", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.diffuse = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "diffuse_vert", "type": 35633, "uri": "#include <common>\r\n#include <skinning_pars_vert>\r\n#include <lightmap_pars_vert> \r\nattribute vec4 position;\r\nattribute vec4 uv;\r\nuniform highp mat4 modelViewProjectionMatrix;\r\nuniform highp mat3 uvTransform;  \r\nvarying highp vec2 xlv_TEXCOORD0;\r\n\r\nvoid main() {\r\n    #include <skinning_base_vert>\r\n    xlv_TEXCOORD0 = ( uvTransform * vec3( uv.xy, 1 ) ).xy;\r\n    #include <lightmap_vert>\r\n    gl_Position = (modelViewProjectionMatrix * tmpVertex);\r\n}" }, { "name": "diffuse_frag", "type": 35632, "uri": "#include <common>\r\n#include <lightmap_pars_frag>\r\nuniform vec3 diffuse;\r\nuniform sampler2D map;\r\nuniform lowp float _AlphaCut;\r\nvarying highp vec2 xlv_TEXCOORD0;\r\nvoid main() {\r\n    lowp vec4 outColor = texture2D(map, xlv_TEXCOORD0) * vec4(diffuse, 1.0);\r\n    if(outColor.a < _AlphaCut)\r\n        discard;\r\n    #include <lightmap_frag>    \r\n}" }], "techniques": [{ "name": "diffuse", "attributes": { "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" }, "position": { "semantic": "POSITION" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "glstate_vec4_bones[0]": { "type": 35666, "semantic": "_BONESVEC4" }, "lightMapOffset": { "type": 35666, "semantic": "_LIGHTMAPOFFSET" }, "lightMapUV": { "type": 5126, "semantic": "_LIGHTMAPUV" }, "modelViewProjectionMatrix": { "type": 35676, "semantic": "MODELVIEWPROJECTION" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "map": { "type": 35678, "value": [] }, "_AlphaCut": { "type": 5126, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.distanceRGBA = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "distanceRGBA_vert", "type": 35633, "uri": "#define DISTANCE\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvWorldPosition = worldPosition.xyz;\r\n\r\n}\r\n" }, { "name": "distanceRGBA_frag", "type": 35632, "uri": "#define DISTANCE\r\n\r\nuniform vec3 referencePosition;\r\nuniform float nearDistance;\r\nuniform float farDistance;\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main () {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\tfloat dist = length( vWorldPosition - referencePosition );\r\n\tdist = ( dist - nearDistance ) / ( farDistance - nearDistance );\r\n\tdist = saturate( dist ); // clamp to [ 0, 1 ]\r\n\r\n\tgl_FragColor = packDepthToRGBA( dist );\r\n\r\n}\r\n" }], "techniques": [{ "name": "distanceRGBA", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "referencePosition": { "type": 35665, "semantic": "_REFERENCEPOSITION" }, "nearDistance": { "type": 5126, "semantic": "_NEARDICTANCE" }, "farDistance": { "type": 5126, "semantic": "_FARDISTANCE" }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.equirect = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "equirect_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n}\r\n" }, { "name": "equirect_frag", "type": 35632, "uri": "uniform sampler2D tEquirect;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n\r\nvoid main() {\r\n\r\n\tvec3 direction = normalize( vWorldPosition );\r\n\r\n\tvec2 sampleUV;\r\n\r\n\tsampleUV.y = asin( clamp( direction.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\r\n\r\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\r\n\r\n\tgl_FragColor = texture2D( tEquirect, sampleUV );\r\n\r\n}\r\n" }], "techniques": [{ "name": "equirect", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "tEquirect": { "type": 35678, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.linedashed = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linedashed_vert", "type": 35633, "uri": "uniform float scale;\r\nattribute float lineDistance;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <color_vertex>\r\n\r\n\tvLineDistance = scale * lineDistance;\r\n\r\n\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\r\n\tgl_Position = projectionMatrix * mvPosition;\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "linedashed_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\nuniform float dashSize;\r\nuniform float totalSize;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tif ( mod( vLineDistance, totalSize ) > dashSize ) {\r\n\r\n\t\tdiscard;\r\n\r\n\t}\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <color_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb; // simple shader\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "linedashed", "attributes": { "lineDistance": { "semantic": "Unknown" }, "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "scale": { "type": 5126, "value": [] }, "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126, "value": [] }, "totalSize": { "type": 5126, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.meshbasic = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshbasic_vert", "type": 35633, "uri": "#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_ENVMAP\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshbasic_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\r\n\t// accumulation (baked indirect lighting only)\r\n\t#ifdef USE_LIGHTMAP\r\n\t\t   lowp vec4 lightmapTex = texture2D(lightMap, vUv2);\r\n\t\t   reflectedLight.indirectDiffuse +=lightmapTex.rgb * pow( 2.0 ,lightmapTex.a * 255.0 - 128.0) * lightMapIntensity;//EGRET\r\n\t\t// reflectedLight.indirectDiffuse += texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\r\n\r\n\t#else\r\n\r\n\t\treflectedLight.indirectDiffuse += vec3( 1.0 );\r\n\r\n\t#endif\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\treflectedLight.indirectDiffuse *= diffuseColor.rgb;\r\n\r\n\tvec3 outgoingLight = reflectedLight.indirectDiffuse;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t// #include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshbasic", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.meshlambert = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshlambert_vert", "type": 35633, "uri": "#define LAMBERT\r\nvarying vec3 vLightFront;\r\n\r\n#ifdef DOUBLE_SIDED\r\n\r\n\tvarying vec3 vLightBack;\r\n\r\n#endif\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_pars_maps>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <lights_lambert_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshlambert_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform float opacity;\r\n\r\nvarying vec3 vLightFront;\r\n\r\n#ifdef DOUBLE_SIDED\r\n\r\n\tvarying vec3 vLightBack;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_pars_maps>\r\n#include <fog_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <shadowmask_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\treflectedLight.indirectDiffuse = getAmbientLightIrradiance( ambientLightColor );\r\n\r\n\t#include <lightmap_fragment>\r\n\r\n\treflectedLight.indirectDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb );\r\n\r\n\t#ifdef DOUBLE_SIDED\r\n\r\n\t\treflectedLight.directDiffuse = ( gl_FrontFacing ) ? vLightFront : vLightBack;\r\n\r\n\t#else\r\n\r\n\t\treflectedLight.directDiffuse = vLightFront;\r\n\r\n\t#endif\r\n\r\n\treflectedLight.directDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb ) * getShadowMask();\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + totalEmissiveRadiance;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t// #include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshlambert", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "semantic": "Unknown" }, "ltc_2": { "type": 35678, "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "semantic": "Unknown" }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "directionalShadowMap[0]": { "type": 35678, "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "semantic": "_POINTSHADOWMAT" }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.meshphong = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphong_vert", "type": 35633, "uri": "#define PHONG\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshphong_frag", "type": 35632, "uri": "#define PHONG\r\n\r\nuniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform vec3 specular;\r\nuniform float shininess;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <gradientmap_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_phong_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\t#include <lights_phong_fragment>\r\n\t#include <lights_fragment_begin>\r\n\t#include <lights_fragment_maps>\r\n\t#include <lights_fragment_end>\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshphong", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "refractionRatio": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "specular": { "type": 35665, "value": [1, 1, 1] }, "shininess": { "type": 5126, "value": 1 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "gradientMap": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "semantic": "Unknown" }, "ltc_2": { "type": 35678, "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "semantic": "_POINTSHADOWMAT" }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] }, "specularMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.meshphysical = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphysical_vert", "type": 35633, "uri": "#define PHYSICAL\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshphysical_frag", "type": 35632, "uri": "#define PHYSICAL\r\n\r\nuniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform float roughness;\r\nuniform float metalness;\r\nuniform float opacity;\r\n\r\n#ifndef STANDARD\r\n\tuniform float clearCoat;\r\n\tuniform float clearCoatRoughness;\r\n#endif\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <bsdfs>\r\n#include <cube_uv_reflection_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <envmap_physical_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <lights_pars_begin>\r\n#include <lights_physical_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <roughnessmap_pars_fragment>\r\n#include <metalnessmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <roughnessmap_fragment>\r\n\t#include <metalnessmap_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\t#include <lights_physical_fragment>\r\n\t#include <lights_fragment_begin>\r\n\t#include <lights_fragment_maps>\r\n\t#include <lights_fragment_end>\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshphysical", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "directionalShadowMatrix[0]": { "type": 35676, "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "roughness": { "type": 5126, "value": [] }, "metalness": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "clearCoat": { "type": 5126, "value": [] }, "clearCoatRoughness": { "type": 5126, "value": [] }, "map": { "type": 35678, "value": [] }, "alphaMap": { "type": 35678, "value": [] }, "aoMap": { "type": 35678, "value": [] }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678, "value": [] }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678, "value": [] }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "refractionRatio": { "type": 5126, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "semantic": "Unknown" }, "ltc_2": { "type": 35678, "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "semantic": "_POINTSHADOWMAT" }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] }, "roughnessMap": { "type": 35678, "value": [] }, "metalnessMap": { "type": 35678, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.normal = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "normal_vert", "type": 35633, "uri": "#define NORMAL\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvarying vec3 vViewPosition;\r\n\r\n#endif\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n#endif\r\n\r\n}\r\n" }, { "name": "normal_frag", "type": 35632, "uri": "#define NORMAL\r\n\r\nuniform float opacity;\r\n\r\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\r\n\r\n\tvarying vec3 vViewPosition;\r\n\r\n#endif\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\r\n\tgl_FragColor = vec4( packNormalToRGB( normal ), opacity );\r\n\r\n}\r\n" }], "techniques": [{ "name": "normal", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678, "value": [] }, "displacementScale": { "type": 5126, "value": [] }, "displacementBias": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "bindMatrix": { "type": 35676, "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678, "value": [] }, "boneTextureSize": { "type": 5124, "value": [] }, "boneMatrices[0]": { "type": 35676, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "bumpMap": { "type": 35678, "value": [] }, "bumpScale": { "type": 5126, "value": [] }, "normalMap": { "type": 35678, "value": [] }, "normalScale": { "type": 35664, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.particle = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "particle_vert", "type": 35633, "uri": "//inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.vs\r\n#include <common>\r\n#if defined(SPHERHBILLBOARD)||defined(STRETCHEDBILLBOARD)||defined(HORIZONTALBILLBOARD)||defined(VERTICALBILLBOARD)\r\n\tattribute vec2 corner;\r\n#endif\r\n#ifdef RENDERMESH\r\n\tattribute vec3 position;\r\n\tattribute vec4 color;\r\n#endif\r\nattribute vec2 uv;\r\nattribute vec3 startPosition;\r\nattribute vec3 startVelocity;\r\nattribute vec4 startColor;\r\nattribute vec3 startSize;\r\nattribute vec3 startRotation;\r\nattribute vec2 time;\r\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)||defined(ROTATIONTWOCONSTANTS)||defined(ROTATIONTWOCURVES)\r\n  attribute vec4 random0;\r\n#endif\r\n#if defined(TEXTURESHEETANIMATIONTWOCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\r\n  attribute vec4 random1;\r\n#endif\r\nattribute vec3 startWorldPosition;\r\nattribute vec4 startWorldRotation;\r\n\r\n#include <particle_common>\r\n\r\nvoid main()\r\n{\r\n\tfloat age = u_currentTime - time.y;\r\n\tfloat t = age/time.x;\r\n\tif(t>1.0){ \t\t\t\r\n\t\t\tv_discard=1.0;\r\n\t\t\treturn;\r\n  }\r\n\t  \r\n\t#include <particle_affector>\r\n\tgl_Position=viewProjectionMatrix*vec4(center,1.0);\r\n\tv_color = computeColor(startColor, t);\r\n\tv_texcoord =computeUV(uv, t);\r\n\tv_discard=0.0;\r\n}\r\n\r\n" }, { "name": "particle_frag", "type": 35632, "uri": "//inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.ps\r\n#include <common>\r\nuniform sampler2D map;\r\nuniform vec4 diffuse;\r\nvarying float v_discard;\r\nvarying vec4 v_color;\r\nvarying vec2 v_texcoord;\r\n\r\n#ifdef RENDERMODE_MESH\r\n\tvarying vec4 v_mesh_color;\r\n#endif\r\n\r\nvoid main()\r\n{\t\r\n\t#ifdef RENDERMODE_MESH\r\n\t\tgl_FragColor=v_mesh_color;\r\n\t#else\r\n\t\tgl_FragColor=vec4(1.0);\t\r\n\t#endif\r\n\r\n\tif(v_discard!=0.0)\r\n\t\tdiscard;\r\n\tgl_FragColor*=texture2D(map,v_texcoord)*diffuse*v_color*2.0;\r\n}" }], "techniques": [{ "name": "particle", "attributes": { "corner": { "semantic": "_CORNER" }, "position": { "semantic": "POSITION" }, "color": { "semantic": "COLOR_0" }, "uv": { "semantic": "TEXCOORD_0" }, "startPosition": { "semantic": "_START_POSITION" }, "startVelocity": { "semantic": "_START_VELOCITY" }, "startColor": { "semantic": "_START_COLOR" }, "startSize": { "semantic": "_START_SIZE" }, "startRotation": { "semantic": "_START_ROTATION" }, "time": { "semantic": "_TIME" }, "random0": { "semantic": "_RANDOM0" }, "random1": { "semantic": "_RANDOM1" }, "startWorldPosition": { "semantic": "_WORLD_POSITION" }, "startWorldRotation": { "semantic": "_WORLD_ROTATION" } }, "uniforms": { "u_currentTime": { "type": 5126, "value": [] }, "u_gravity": { "type": 35665, "value": [] }, "u_worldPosition": { "type": 35665, "value": [] }, "u_worldRotation": { "type": 35666, "value": [] }, "u_startRotation3D": { "type": 35670, "value": [] }, "u_scalingMode": { "type": 5124, "value": [] }, "u_positionScale": { "type": 35665, "value": [] }, "u_sizeScale": { "type": 35665, "value": [] }, "viewProjectionMatrix": { "type": 35676, "semantic": "_VIEWPROJECTION" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "cameraForward": { "type": 35665, "semantic": "_CAMERA_FORWARD" }, "cameraUp": { "type": 35665, "semantic": "CAMERA_UP" }, "u_lengthScale": { "type": 5126, "value": [] }, "u_speeaScale": { "type": 5126, "value": [] }, "u_simulationSpace": { "type": 5124, "value": [] }, "u_spaceType": { "type": 5124, "value": [] }, "u_velocityConst": { "type": 35665, "value": [] }, "u_velocityCurveX[0]": { "type": 35664, "value": [] }, "u_velocityCurveY[0]": { "type": 35664, "value": [] }, "u_velocityCurveZ[0]": { "type": 35664, "value": [] }, "u_velocityConstMax": { "type": 35665, "value": [] }, "u_velocityCurveMaxX[0]": { "type": 35664, "value": [] }, "u_velocityCurveMaxY[0]": { "type": 35664, "value": [] }, "u_velocityCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_colorGradient[0]": { "type": 35666, "value": [] }, "u_alphaGradient[0]": { "type": 35664, "value": [] }, "u_colorGradientMax[0]": { "type": 35666, "value": [] }, "u_alphaGradientMax[0]": { "type": 35664, "value": [] }, "u_sizeCurve[0]": { "type": 35664, "value": [] }, "u_sizeCurveMax[0]": { "type": 35664, "value": [] }, "u_sizeCurveX[0]": { "type": 35664, "value": [] }, "u_sizeCurveY[0]": { "type": 35664, "value": [] }, "u_sizeCurveZ[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxX[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxY[0]": { "type": 35664, "value": [] }, "u_sizeCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_rotationConst": { "type": 5126, "value": [] }, "u_rotationConstMax": { "type": 5126, "value": [] }, "u_rotationCurve[0]": { "type": 35664, "value": [] }, "u_rotationCurveMax[0]": { "type": 35664, "value": [] }, "u_rotationConstSeprarate": { "type": 35665, "value": [] }, "u_rotationConstMaxSeprarate": { "type": 35665, "value": [] }, "u_rotationCurveX[0]": { "type": 35664, "value": [] }, "u_rotationCurveY[0]": { "type": 35664, "value": [] }, "u_rotationCurveZ[0]": { "type": 35664, "value": [] }, "u_rotationCurveW[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxX[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxY[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxZ[0]": { "type": 35664, "value": [] }, "u_rotationCurveMaxW[0]": { "type": 35664, "value": [] }, "u_cycles": { "type": 5126, "value": [] }, "u_subUV": { "type": 35666, "value": [] }, "u_uvCurve[0]": { "type": 35664, "value": [] }, "u_uvCurveMax[0]": { "type": 35664, "value": [] }, "map": { "type": 35678, "value": [] }, "diffuse": { "type": 35666, "value": [1, 1, 1] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.points = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "points_vert", "type": 35633, "uri": "uniform float size;\r\nuniform float scale;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <color_vertex>\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <project_vertex>\r\n\r\n\tgl_PointSize = size;\r\n\r\n\t#ifdef USE_SIZEATTENUATION\r\n\r\n\t\tbool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\r\n\r\n\t\tif ( isPerspective ) gl_PointSize *= ( scale / - mvPosition.z );\r\n\r\n\t#endif\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "points_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <map_particle_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_particle_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "points", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "size": { "type": 5126, "value": [] }, "scale": { "type": 5126, "value": [] }, "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "morphTargetInfluences[0]": { "type": 5126, "value": [] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "map": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.shadow = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "shadow_vert", "type": 35633, "uri": "\r\n#include <common2>\r\n#include <fog_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "shadow_frag", "type": 35632, "uri": "uniform vec3 color;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <fog_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <shadowmap_pars_fragment>\r\n#include <shadowmask_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\tgl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );\r\n\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "shadow", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "directionalShadowMatrix[0]": { "type": 35676, "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "semantic": "_POINTSHADOWMAT" }, "color": { "type": 35665, "value": [] }, "opacity": { "type": 5126, "value": 1 }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "semantic": "Unknown" }, "ltc_2": { "type": 35678, "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "semantic": "_POINTSHADOWMAT" } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.sprite = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "sprite_vert", "type": 35633, "uri": "uniform float rotation;\r\nuniform vec2 center;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\tvec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );\r\n\r\n\tvec2 scale;\r\n\tscale.x = length( vec3( modelMatrix[ 0 ].x, modelMatrix[ 0 ].y, modelMatrix[ 0 ].z ) );\r\n\tscale.y = length( vec3( modelMatrix[ 1 ].x, modelMatrix[ 1 ].y, modelMatrix[ 1 ].z ) );\r\n\r\n\t#ifndef USE_SIZEATTENUATION\r\n\r\n\t\tbool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\r\n\r\n\t\tif ( isPerspective ) scale *= - mvPosition.z;\r\n\r\n\t#endif\r\n\r\n\tvec2 alignedPosition = ( position.xy - ( center - vec2( 0.5 ) ) ) * scale;\r\n\r\n\tvec2 rotatedPosition;\r\n\trotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;\r\n\trotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;\r\n\r\n\tmvPosition.xy += rotatedPosition;\r\n\r\n\tgl_Position = projectionMatrix * mvPosition;\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "sprite_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "sprite", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "rotation": { "type": 5126, "value": [] }, "center": { "type": 35664, "value": [] }, "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "logDepthBufFC": { "type": 5126, "value": [] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678, "value": [] }, "fogColor": { "type": 35665, "value": [] }, "fogDensity": { "type": 5126, "value": [] }, "fogNear": { "type": 5126, "value": [] }, "fogFar": { "type": 5126, "value": [] }, "clippingPlanes[0]": { "type": 35666, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.vertcolor = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "vertcolor_vert", "type": 35633, "uri": "#include <common>\r\nattribute vec4 position;   \r\nattribute vec4 normal;   \r\nattribute vec4 color;                  \r\nattribute vec4 uv;        \r\nuniform highp mat4 modelViewProjectionMatrix;   \r\nuniform highp vec4 _MainTex_ST;       \r\n\r\nvarying lowp vec4 xlv_COLOR;                \r\nvarying highp vec2 xlv_TEXCOORD0;   \r\n\r\nvoid main()                                     \r\n{                                               \r\n    highp vec4 tmpvar_1;                        \r\n    tmpvar_1.w = 1.0;                           \r\n    tmpvar_1.xyz = position.xyz;             \r\n    xlv_COLOR = color;                     \r\n    xlv_TEXCOORD0 = uv.xy * _MainTex_ST.xy + _MainTex_ST.zw;   \r\n\r\n    //xlv_COLOR.xyz =pos.xyz;\r\n    gl_Position = (modelViewProjectionMatrix * tmpvar_1);  \r\n}\r\n" }, { "name": "vertcolor_frag", "type": 35632, "uri": "#include <common>\r\nuniform sampler2D map;                                                 \r\nvarying lowp vec4 xlv_COLOR;                                                 \r\nvarying highp vec2 xlv_TEXCOORD0;   \r\nvoid main() \r\n{\r\n    lowp vec4 col_1;    \r\n    mediump vec4 prev_2;\r\n    lowp vec4 tmpvar_3;\r\n\r\n    tmpvar_3 = (texture2D(map, xlv_TEXCOORD0));\r\n    //prev_2 = tmpvar_3;\r\n    //mediump vec4 tmpvar_4;\r\n    //tmpvar_4 = mix(vec4(1.0, 1.0, 1.0, 1.0), prev_2, prev_2.wwww);\r\n    //col_1 = tmpvar_4;\r\n    //col_1.x = xlv_TEXCOORD0.x;\r\n    //col_1.y = xlv_TEXCOORD0.y;\r\n    gl_FragData[0] = tmpvar_3;\r\n}" }], "techniques": [{ "name": "vertcolor", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "color": { "semantic": "COLOR_0" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "modelViewProjectionMatrix": { "type": 35676, "semantic": "MODELVIEWPROJECTION" }, "_MainTex_ST": { "type": 35666, "value": [1, 1, 0, 0] }, "map": { "type": 35678, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
     })(ShaderLib = egret3d.ShaderLib || (egret3d.ShaderLib = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -17144,12 +17226,12 @@ var egret3d;
         ShaderChunk.fog_vertex = "#ifdef USE_FOG\n\n vFogPosition = mvPosition.xyz;\n\n#endif\n";
         ShaderChunk.gradientmap_pars_fragment = "#ifdef TOON\n\n uniform sampler2D gradientMap;\n\n vec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {\n\n  // dotNL will be from -1.0 to 1.0\n  float dotNL = dot( normal, lightDirection );\n  vec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );\n\n  #ifdef USE_GRADIENTMAP\n\n   return texture2D( gradientMap, coord ).rgb;\n\n  #else\n\n   return ( coord.x < 0.7 ) ? vec3( 0.7 ) : vec3( 1.0 );\n\n  #endif\n\n\n }\n\n#endif\n";
         ShaderChunk.inverse = "mat4 inverse(mat4 m) {\n    float\n    a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],\n    a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],\n    a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3],\n    a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3],\n    b00 = a00 * a11 - a01 * a10,\n    b01 = a00 * a12 - a02 * a10,\n    b02 = a00 * a13 - a03 * a10,\n    b03 = a01 * a12 - a02 * a11,\n    b04 = a01 * a13 - a03 * a11,\n    b05 = a02 * a13 - a03 * a12,\n    b06 = a20 * a31 - a21 * a30,\n    b07 = a20 * a32 - a22 * a30,\n    b08 = a20 * a33 - a23 * a30,\n    b09 = a21 * a32 - a22 * a31,\n    b10 = a21 * a33 - a23 * a31,\n    b11 = a22 * a33 - a23 * a32,\n    det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n    return mat4(\n        a11 * b11 - a12 * b10 + a13 * b09,\n        a02 * b10 - a01 * b11 - a03 * b09,\n        a31 * b05 - a32 * b04 + a33 * b03,\n        a22 * b04 - a21 * b05 - a23 * b03,\n        a12 * b08 - a10 * b11 - a13 * b07,\n        a00 * b11 - a02 * b08 + a03 * b07,\n        a32 * b02 - a30 * b05 - a33 * b01,\n        a20 * b05 - a22 * b02 + a23 * b01,\n        a10 * b10 - a11 * b08 + a13 * b06,\n        a01 * b08 - a00 * b10 - a03 * b06,\n        a30 * b04 - a31 * b02 + a33 * b00,\n        a21 * b02 - a20 * b04 - a23 * b00,\n        a11 * b07 - a10 * b09 - a12 * b06,\n        a00 * b09 - a01 * b07 + a02 * b06,\n        a31 * b01 - a30 * b03 - a32 * b00,\n        a20 * b03 - a21 * b01 + a22 * b00) / det;\n}";
-        ShaderChunk.lightmap_frag = "#ifdef LIGHTMAP\n    lowp vec4 lightmap = texture2D(lightMap, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, lightMapIntensity);\n    gl_FragData[0] = outColor;\n#else\n    gl_FragData[0] = outColor;\n#endif";
+        ShaderChunk.lightmap_frag = "#ifdef USE_LIGHTMAP\n    lowp vec4 lightmap = texture2D(lightMap, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, lightMapIntensity);\n    gl_FragData[0] = outColor;\n#else\n    gl_FragData[0] = outColor;\n#endif";
         ShaderChunk.lightmap_fragment = "#ifdef USE_LIGHTMAP\n\n reflectedLight.indirectDiffuse += PI * texture2D( lightMap, vUv2 ).xyz * lightMapIntensity; // factor of PI should not be present; included here to prevent breakage\n\n#endif\n";
-        ShaderChunk.lightmap_pars_frag = "#ifdef LIGHTMAP\n    uniform sampler2D lightMap;\n    uniform lowp float lightMapIntensity;\n    varying highp vec2 xlv_TEXCOORD1;\n\n    lowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n    {\n        highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n        return data.rgb * power * intensity;\n    }\n#endif";
+        ShaderChunk.lightmap_pars_frag = "#ifdef USE_LIGHTMAP\n    uniform sampler2D lightMap;\n    uniform lowp float lightMapIntensity;\n    varying highp vec2 xlv_TEXCOORD1;\n\n    lowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n    {\n        highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n        return data.rgb * power * intensity;\n    }\n#endif";
         ShaderChunk.lightmap_pars_fragment = "#ifdef USE_LIGHTMAP\n\n uniform sampler2D lightMap;\n uniform float lightMapIntensity;\n\n#endif";
-        ShaderChunk.lightmap_pars_vert = "#ifdef LIGHTMAP\n    attribute vec4 uv2;\n    uniform highp vec4 lightMapOffset;\n    uniform lowp float lightMapUV;\n    varying highp vec2 xlv_TEXCOORD1;\n#endif";
-        ShaderChunk.lightmap_vert = "#ifdef LIGHTMAP\n    highp vec2 beforelightUV = uv2.xy;\n    if(lightMapUV == 0.0)\n    {\n        beforelightUV = uv.xy;\n    }\n    highp float u = beforelightUV.x * lightMapOffset.x + lightMapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * lightMapOffset.y + lightMapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n#endif";
+        ShaderChunk.lightmap_pars_vert = "#ifdef USE_LIGHTMAP\n    attribute vec4 uv2;\n    uniform highp vec4 lightMapOffset;\n    uniform lowp float lightMapUV;\n    varying highp vec2 xlv_TEXCOORD1;\n#endif";
+        ShaderChunk.lightmap_vert = "#ifdef USE_LIGHTMAP\n    highp vec2 beforelightUV = uv2.xy;\n    if(lightMapUV == 0.0)\n    {\n        beforelightUV = uv.xy;\n    }\n    highp float u = beforelightUV.x * lightMapOffset.x + lightMapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * lightMapOffset.y + lightMapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n#endif";
         ShaderChunk.lights_fragment_begin = "/**\n * This is a template that can be used to light a material, it uses pluggable\n * RenderEquations (RE)for specific lighting scenarios.\n *\n * Instructions for use:\n * - Ensure that both RE_Direct, RE_IndirectDiffuse and RE_IndirectSpecular are defined\n * - If you have defined an RE_IndirectSpecular, you need to also provide a Material_LightProbeLOD. <---- ???\n * - Create a material parameter that is to be passed as the third parameter to your lighting functions.\n *\n * TODO:\n * - Add area light support.\n * - Add sphere light support.\n * - Add diffuse light probe (irradiance cubemap) support.\n */\n\nGeometricContext geometry;\n\ngeometry.position = - vViewPosition;\ngeometry.normal = normal;\ngeometry.viewDir = normalize( vViewPosition );\n\nIncidentLight directLight;\n\n#if (defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0 ) && defined( RE_Direct )\n\n PointLight pointLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  // pointLight = pointLights[ i ];\n  pointLight.position = vec3(pointLights[i* 15 + 0], pointLights[i * 15 + 1], pointLights[i * 15 + 2]);\n  pointLight.color = vec3(pointLights[i* 15 + 3], pointLights[i * 15 + 4], pointLights[i * 15 + 5]);\n  pointLight.distance = pointLights[i * 15 + 6];\n  pointLight.decay = pointLights[i * 15 + 7];\n\n  getPointDirectLightIrradiance( pointLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( pointLight.shadow, directLight.visible ) ) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0 ) && defined( RE_Direct )\n\n SpotLight spotLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\n  // spotLight = spotLights[ i ];\n  spotLight.position = vec3(spotLights[i * 18 + 0], spotLights[i * 18 + 1], spotLights[i * 18 + 2]);\n  spotLight.direction = vec3(spotLights[i * 18 + 3], spotLights[i * 18 + 4], spotLights[i * 18 + 5]);\n  spotLight.color = vec3(spotLights[i * 18 + 6], spotLights[i * 18 + 7], spotLights[i * 18 + 8]);\n  spotLight.distance = spotLights[i * 18 + 9];\n  spotLight.decay = spotLights[i * 18 + 10];\n  spotLight.coneCos = spotLights[i * 18 + 11];\n  spotLight.penumbraCos = spotLights[i * 18 + 12];\n  getSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( spotLight.shadow, directLight.visible ) ) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )\n\n DirectionalLight directionalLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  // directionalLight = directionalLights[ i ];\n  directionalLight.direction = vec3(directionalLights[i * 12 + 0], directionalLights[i * 12 + 1], directionalLights[i * 12 + 2]);\n  directionalLight.color = vec3(directionalLights[i * 12 + 3], directionalLights[i * 12 + 4], directionalLights[i * 12 + 5]);\n  getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_RECT_AREA_LIGHTS) &&  NUM_RECT_AREA_LIGHTS > 0 ) && defined( RE_Direct_RectArea )\n\n RectAreaLight rectAreaLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\n  rectAreaLight = rectAreaLights[ i ];\n  RE_Direct_RectArea( rectAreaLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if defined( RE_IndirectDiffuse )\n\n vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );\n\n #if (defined(NUM_HEMI_LIGHTS) &&  NUM_HEMI_LIGHTS > 0 )\n\n  // #pragma unroll_loop\n  for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\n   irradiance += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry );\n\n  }\n\n #endif\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n vec3 radiance = vec3( 0.0 );\n vec3 clearCoatRadiance = vec3( 0.0 );\n\n#endif\n";
         ShaderChunk.lights_fragment_end = "#if defined( RE_IndirectDiffuse )\n\n RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n RE_IndirectSpecular( radiance, clearCoatRadiance, geometry, material, reflectedLight );\n\n#endif\n";
         ShaderChunk.lights_fragment_maps = "#if defined( RE_IndirectDiffuse )\n\n #ifdef USE_LIGHTMAP\n\n  vec3 lightMapIrradiance = texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\n\n  #ifndef PHYSICALLY_CORRECT_LIGHTS\n\n   lightMapIrradiance *= PI; // factor of PI should not be present; included here to prevent breakage\n\n  #endif\n\n  irradiance += lightMapIrradiance;\n\n #endif\n\n #if defined( USE_ENVMAP ) && defined( PHYSICAL ) && defined( ENVMAP_TYPE_CUBE_UV )\n\n  irradiance += getLightProbeIndirectIrradiance( /*lightProbe,*/ geometry, maxMipLevel );\n\n #endif\n\n#endif\n\n#if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )\n\n radiance += getLightProbeIndirectRadiance( /*specularLightProbe,*/ geometry, Material_BlinnShininessExponent( material ), maxMipLevel );\n\n #ifndef STANDARD\n  clearCoatRadiance += getLightProbeIndirectRadiance( /*specularLightProbe,*/ geometry, Material_ClearCoat_BlinnShininessExponent( material ), maxMipLevel );\n #endif\n\n#endif\n";
@@ -17352,7 +17434,7 @@ var RES;
                                 if (!(typeof value === "string")) return [3 /*break*/, 6];
                                 r = RES.host.resourceConfig["getResource"](value);
                                 if (!r) return [3 /*break*/, 5];
-                                return [4 /*yield*/, host.load(r)];
+                                return [4 /*yield*/, host.load(r, "TextureDesc")];
                             case 4:
                                 texture = _e.sent();
                                 values[key] = texture;
@@ -19956,10 +20038,10 @@ var egret3d;
             var renderState = this._renderState;
             //Program
             var program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
-            //State
-            renderState.updateState(technique.states);
             //Use Program
             var force = renderState.useProgram(program);
+            //State
+            renderState.updateState(technique.states);
             //Uniform
             this._updateContextUniforms(program, context, technique, force);
             this._updateUniforms(program, material, technique, force);
@@ -20061,7 +20143,7 @@ var egret3d;
                         continue;
                     }
                     if (filteredLights.length > 0) {
-                        camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientLightColor); // TODO 性能优化
+                        camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientColor); // TODO 性能优化
                     }
                     if (camera.postQueues.length === 0) {
                         renderState.targetAndViewport(camera.viewport, camera.renderTarget);
@@ -20331,18 +20413,19 @@ var egret3d;
                     }
                     if (meshAttribute["TEXCOORD_1" /* TEXCOORD_1 */]) {
                         if (combineInstance.lightmapIndex >= 0) {
-                            //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
-                            var uvBuffer = orginAttributes.TEXCOORD_1 ?
-                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) :
-                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0));
-                            //
-                            for (var j = 0; j < uvBuffer.length; j += 2) {
-                                var u = uvBuffer[j + 0];
-                                var v = uvBuffer[j + 1];
-                                u = ((u * orginLightmapScaleOffset[0] + orginLightmapScaleOffset[2]) - lightmapScaleOffset[2]) / lightmapScaleOffset[0];
-                                v = ((v * orginLightmapScaleOffset[1] - orginLightmapScaleOffset[1] - orginLightmapScaleOffset[3]) + lightmapScaleOffset[3] + lightmapScaleOffset[1]) / lightmapScaleOffset[1];
-                                tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */].push(u, v);
-                            }
+                            // //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
+                            // const uvBuffer = orginAttributes.TEXCOORD_1 ?
+                            //     mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) as Float32Array :
+                            //     mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0!)) as Float32Array;
+                            // //
+                            // for (let j = 0; j < uvBuffer.length; j += 2) {
+                            //     let u = uvBuffer[j + 0];
+                            //     let v = uvBuffer[j + 1];
+                            //     // u = ((u * orginLightmapScaleOffset[0] + orginLightmapScaleOffset[2]) - lightmapScaleOffset[2]) / lightmapScaleOffset[0];
+                            //     // v = ((v * orginLightmapScaleOffset[1] - orginLightmapScaleOffset[1] - orginLightmapScaleOffset[3]) + lightmapScaleOffset[3] + lightmapScaleOffset[1]) / lightmapScaleOffset[1];
+                            //     tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
+                            // }
+                            _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */]);
                         }
                         else {
                             if (orginAttributes.TEXCOORD_1) {
@@ -22145,7 +22228,7 @@ var paper;
                     indices.push(i);
                 }
                 var mesh = new egret3d.Mesh(nrLine * 8, 8 * nrLine);
-                var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+                var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
                 var color1 = new Float32Array([0.3, 0.3, 0.5]);
                 var funs = mat.glTFTechnique.states.functions;
                 var enables = mat.glTFTechnique.states.enable;
@@ -26269,7 +26352,7 @@ var paper;
             };
             Gizmo.setMVPMatrix = function (m) {
                 var asp = this.camera.context.viewPortPixel.w / this.camera.context.viewPortPixel.h;
-                this.camera.calcViewMatrix(this.vMatrix);
+                this.vMatrix.inverse(this.camera.gameObject.transform.getWorldMatrix());
                 this.camera.calcProjectMatrix(asp, this.pMatrix);
                 this.mvpMatrix.multiply(this.pMatrix, this.vMatrix);
                 m = m || new egret3d.Matrix4();

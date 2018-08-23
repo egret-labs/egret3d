@@ -134,9 +134,19 @@ namespace RES.processor {
                         if (typeof value === "string") {
                             const r = (RES.host.resourceConfig as any)["getResource"](value);
                             if (r) {
-                                // const texture = await RES.getResAsync(r.name);
-                                const texture = await host.load(r);
+                                const texture = await host.load(r, "TextureDesc");
                                 values[key] = texture;
+
+                                // const imgResource = (RES.host.resourceConfig as any)["getResource"](_name);
+                                // let loader = new egret.ImageLoader();
+                                // loader.load(imgResource.root + imgResource.url);
+                                // return promisify(loader, imgResource)
+                                //     .then((image) => {
+                                //         const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
+                                //         texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
+                                //         paper.Asset.register(texture);
+                                //         return texture;
+                                //     })
                             }
                             else {
                                 values[key] = egret3d.DefaultTextures.GRID;

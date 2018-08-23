@@ -360,10 +360,10 @@ namespace egret3d {
             const renderState = this._renderState;
             //Program
             const program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
-            //State
-            renderState.updateState(technique.states);
             //Use Program
             const force = renderState.useProgram(program);
+            //State
+            renderState.updateState(technique.states);
             //Uniform
             this._updateContextUniforms(program, context, technique, force);
             this._updateUniforms(program, material, technique, force);
@@ -466,7 +466,7 @@ namespace egret3d {
                     }
 
                     if (filteredLights.length > 0) {
-                        camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientLightColor); // TODO 性能优化
+                        camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientColor); // TODO 性能优化
                     }
 
                     if (camera.postQueues.length === 0) {
