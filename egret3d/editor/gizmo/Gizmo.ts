@@ -67,31 +67,31 @@ namespace paper.editor {
         private static verticesLine: number[];
         private static lineVertexBuffer;
 
-        public static DrawLine(posStart: egret3d.Vector3, posEnd: egret3d.Vector3, size?: number, color?: number[]) {
-            if (!this.enabled) return;
+        // public static DrawLine(posStart: egret3d.Vector3, posEnd: egret3d.Vector3, size?: number, color?: number[]) {
+        //     if (!this.enabled) return;
 
-            let gl = this.webgl;
-            let prg = this.glProgram_line;
-            gl.enable(gl.DEPTH_TEST);
+        //     let gl = this.webgl;
+        //     let prg = this.glProgram_line;
+        //     gl.enable(gl.DEPTH_TEST);
 
-            this.verticesLine = [
-                posStart.x, posStart.y, posStart.z,
-                posEnd.x, posEnd.y, posEnd.z
-            ];
-            gl.lineWidth(size || 1);
-            prg.use();
-            let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
+        //     this.verticesLine = [
+        //         posStart.x, posStart.y, posStart.z,
+        //         posEnd.x, posEnd.y, posEnd.z
+        //     ];
+        //     gl.lineWidth(size || 1);
+        //     prg.use();
+        //     let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.lineVertexBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.verticesLine), gl.STATIC_DRAW);
-            gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(prgVertexPosition);
-            this.setMVPMatrix();
-            prg.setMatrix("mvpMat", this.mvpMatrix);
-            prg.setColor("lineColor", color);
+        //     gl.bindBuffer(gl.ARRAY_BUFFER, this.lineVertexBuffer);
+        //     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.verticesLine), gl.STATIC_DRAW);
+        //     gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
+        //     gl.enableVertexAttribArray(prgVertexPosition);
+        //     this.setMVPMatrix();
+        //     prg.setMatrix("mvpMat", this.mvpMatrix);
+        //     prg.setColor("lineColor", color);
 
-            gl.drawArrays(gl.LINES, 0, 2);
-        }
+        //     gl.drawArrays(gl.LINES, 0, 2);
+        // }
 
         private _oldTransform
         private nrLine
@@ -383,52 +383,52 @@ namespace paper.editor {
             this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
         }
 
-        public static DrawArrow(m: egret3d.Matrix4, color: number[], fixSize?: boolean) {
-            if (!this.enabled) return;
+        // public static DrawArrow(m: egret3d.Matrix4, color: number[], fixSize?: boolean) {
+        //     if (!this.enabled) return;
 
-            let gl = this.webgl;
-            let prg = this.glProgram_line;
-            gl.disable(gl.DEPTH_TEST);
+        //     let gl = this.webgl;
+        //     let prg = this.glProgram_line;
+        //     gl.disable(gl.DEPTH_TEST);
 
-            prg.use();
-            let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.arrowVertexBuffer);
-            gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(prgVertexPosition);
-            this.setMVPMatrix(m);
-            prg.setMatrix("mvpMat", this.mvpMatrix);
-            prg.setColor("lineColor", color);
-            gl.drawArrays(gl.LINES, 0, 2);
-            gl.drawArrays(gl.TRIANGLES, 2, 24);
-        }
+        //     prg.use();
+        //     let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
+        //     gl.bindBuffer(gl.ARRAY_BUFFER, this.arrowVertexBuffer);
+        //     gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
+        //     gl.enableVertexAttribArray(prgVertexPosition);
+        //     this.setMVPMatrix(m);
+        //     prg.setMatrix("mvpMat", this.mvpMatrix);
+        //     prg.setColor("lineColor", color);
+        //     gl.drawArrays(gl.LINES, 0, 2);
+        //     gl.drawArrays(gl.TRIANGLES, 2, 24);
+        // }
 
-        private static xArrowMMatrix = new egret3d.Matrix4();
-        private static yArrowMMatrix = egret3d.Matrix4.create([
-            0, 1, 0, 0,
-            -1, 0, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        ]);
-        private static zArrowMMatrix = egret3d.Matrix4.create([
-            0, 0, 1, 0,
-            0, 1, 0, 0,
-            -1, 0, 0, 0,
-            0, 0, 0, 1
-        ]);
+        // private static xArrowMMatrix = new egret3d.Matrix4();
+        // private static yArrowMMatrix = egret3d.Matrix4.create([
+        //     0, 1, 0, 0,
+        //     -1, 0, 0, 0,
+        //     0, 0, 1, 0,
+        //     0, 0, 0, 1
+        // ]);
+        // private static zArrowMMatrix = egret3d.Matrix4.create([
+        //     0, 0, 1, 0,
+        //     0, 1, 0, 0,
+        //     -1, 0, 0, 0,
+        //     0, 0, 0, 1
+        // ]);
 
         private static helpMat: egret3d.Matrix4 = new egret3d.Matrix4();
         private static helpMat1: egret3d.Matrix4 = new egret3d.Matrix4();
-        public static DrawArrowXYZ(transform: egret3d.Transform) {
-            console.log("now drawXYZ", transform)
-            let worldMat = Gizmo.helpMat;
-            Gizmo.getWorldMatrixWithoutScale(transform, 10, worldMat);
-            worldMat.multiply(this.xArrowMMatrix);
-            Gizmo.DrawArrow(worldMat, [1.0, 0.0, 0.0, 1.0], true);
-            worldMat.multiply(this.yArrowMMatrix);
-            Gizmo.DrawArrow(worldMat, [0.0, 1.0, 0.0, 1.0], true);
-            worldMat.multiply(this.zArrowMMatrix);
-            Gizmo.DrawArrow(worldMat, [0.0, 0.0, 1.0, 1.0], true);
-        }
+        // public static DrawArrowXYZ(transform: egret3d.Transform) {
+        //     console.log("now drawXYZ", transform)
+        //     let worldMat = Gizmo.helpMat;
+        //     Gizmo.getWorldMatrixWithoutScale(transform, 10, worldMat);
+        //     worldMat.multiply(this.xArrowMMatrix);
+        //     Gizmo.DrawArrow(worldMat, [1.0, 0.0, 0.0, 1.0], true);
+        //     worldMat.multiply(this.yArrowMMatrix);
+        //     Gizmo.DrawArrow(worldMat, [0.0, 1.0, 0.0, 1.0], true);
+        //     worldMat.multiply(this.zArrowMMatrix);
+        //     Gizmo.DrawArrow(worldMat, [0.0, 0.0, 1.0, 1.0], true);
+        // }
         private static getWorldMatrixWithoutScale(transform: egret3d.Transform, fixScale: number, out: egret3d.Matrix4) {
             out.identity();
             let p = transform.getPosition();
