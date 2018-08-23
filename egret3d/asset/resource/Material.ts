@@ -98,6 +98,15 @@ namespace egret3d {
             }
 
             // TODO add define.
+            if (glTFMaterial.extensions.paper.defines) {
+                for (const define of glTFMaterial.extensions.paper.defines) {
+                    this.addDefine(define);
+                }
+            }
+
+            if (glTFMaterial.extensions.paper.states) {
+                this._glTFTechnique.states = glTFMaterial.extensions.paper.states;
+            }
         }
 
         public dispose(disposeChildren?: boolean) {

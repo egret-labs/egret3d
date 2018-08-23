@@ -71,7 +71,7 @@ namespace paper {
          * 环境光
          */
         @paper.serializedField
-        public readonly ambientLightColor: egret3d.Color = egret3d.Color.create(0.21, 0.22, 0.25, 1);
+        public readonly ambientColor: egret3d.Color = egret3d.Color.create(0.21, 0.22, 0.25, 1);
         private constructor(name: string) {
             super();
 

@@ -21,6 +21,8 @@ namespace egret3d {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper: {
                 renderQueue: number;
+                defines: string[],
+                states: gltf.States;
             }
         }
     }
