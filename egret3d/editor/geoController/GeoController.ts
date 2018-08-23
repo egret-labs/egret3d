@@ -259,7 +259,7 @@ namespace paper.editor {
                 indices.push(i)
             }
             var mesh = new egret3d.Mesh(nrLine * 8, 8 * nrLine)
-            var mat = egret3d.DefaultMaterials.LINEDASHED.clone();
+            var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
             let color1 = new Float32Array([0.3, 0.3, 0.5])
             const funs = mat.glTFTechnique.states.functions;
             const enables = mat.glTFTechnique.states.enable;

@@ -71,11 +71,7 @@ namespace egret3d {
         }
 
         public copy(value: Readonly<IVector3>) {
-            this.x = value.x;
-            this.y = value.y;
-            this.z = value.z;
-
-            return this;
+            return this.set(value.x, value.y, value.z);
         }
 
         public clone() {
