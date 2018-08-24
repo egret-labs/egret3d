@@ -8675,9 +8675,11 @@ declare namespace egret3d.ShaderLib {
                         };
                         "u_worldPosition": {
                             "type": number;
+                            "value": number[];
                         };
                         "u_worldRotation": {
                             "type": number;
+                            "value": number[];
                         };
                         "u_startRotation3D": {
                             "type": number;
