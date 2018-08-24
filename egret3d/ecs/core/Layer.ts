@@ -40,6 +40,16 @@ namespace paper {
         Global = "Global",
     }
     /**
+     * 渲染排序
+     */
+    export enum RenderQueue {
+        Background = 1000,
+        Geometry = 2000,
+        AlphaTest = 2450,
+        Transparent = 3000,
+        Overlay = 4000
+    }
+    /**
      * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
      * 这个属性可以实现相机的选择性剔除。
      */

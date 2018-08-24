@@ -3,54 +3,49 @@ namespace egret3d {
      * 
      */
     export class DefaultMaterials extends paper.SingletonComponent {
+        /**
+         * 
+         */
+        public static MESH_BASIC: Material;
+        /**
+         * 
+         */
+        public static LINEDASHED_COLOR: Material;
+        /**
+         * 
+         */
+        public static MISSING: Material;
+        /**
+         * @internal
+         */
+        public static SHADOW_DEPTH: Material;
+        /**
+         * @internal
+         */
+        public static SHADOW_DISTANCE: Material;
 
-        public static DefaultDiffuse: Material;
-        public static Missing: Material;
-        public static Line: Material;
-        public static ShadowDepth: Material;
-        public static ShadowDistance: Material;
+        private _createMaterial(name: string, shader: Shader, renderQueue: paper.RenderQueue = paper.RenderQueue.Geometry) {
+            const material = new Material(shader);
+            material.name = name;
+            material.renderQueue = renderQueue;
+            material._isBuiltin = true;
+            paper.Asset.register(material);
+
+            return material;
+        }
 
         public initialize() {
             super.initialize();
 
-            {
-                const material = new Material(egret3d.DefaultShaders.DIFFUSE);
-                material.name = "builtin/default_diffuse.mat.gltf";
-                material._isBuiltin = true;
-                DefaultMaterials.DefaultDiffuse = material;
-            }
-
-            {
-                const material = new Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                material.name = "builtin/missing.mat.gltf";
-                material._isBuiltin = true;
-                material.setVector4v("_Color", new Float32Array([1.0, 0.0, 1.0, 1.0]));
-                DefaultMaterials.Missing = material;
-            }
-
-            {
-                const material = new Material(egret3d.DefaultShaders.LINE);
-                material.name = "builtin/line.mat.gltf";
-                material._isBuiltin = true;
-                DefaultMaterials.Line = material;
-            }
-
-            {
-                const material = new Material(egret3d.DefaultShaders.SHADOW_DEPTH);
-                material.name = "builtin/line.mat.gltf";
-                material._isBuiltin = true;
-                DefaultMaterials.ShadowDepth = material;
-            }
-
-            {
-                const material = new Material(egret3d.DefaultShaders.LINE);
-                material.name = "builtin/line.mat.gltf";
-                material._isBuiltin = true;
-                DefaultMaterials.Line = material;
-            }
-
-            DefaultMaterials.ShadowDepth = new Material(egret3d.DefaultShaders.SHADOW_DEPTH);
-            DefaultMaterials.ShadowDistance = new Material(egret3d.DefaultShaders.SHADOW_DISTANCE);
+            DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.mat.json", DefaultShaders.MESH_BASIC)
+                .setTexture("map", DefaultTextures.GRAY);
+            DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", DefaultShaders.LINEDASHED)
+                .addDefine("USE_COLOR");
+            DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", DefaultShaders.MESH_BASIC)
+                .setVector3v("diffuse", new Float32Array([1.0, 0.0, 1.0]));
+            DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", DefaultShaders.DEPTH)
+                .addDefine("DEPTH_PACKING 3201");
+            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", DefaultShaders.DISTANCE_RGBA);
         }
     }
 }

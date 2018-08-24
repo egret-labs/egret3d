@@ -3,7 +3,7 @@ namespace egret3d.particle {
     const positionHelper: Vector3 = new Vector3();
     const velocityHelper: Vector3 = new Vector3();
     const startSizeHelper: Vector3 = new Vector3();
-    const startColorHelper: Color = new Color();
+    const startColorHelper: Color = Color.create();
     const startRotationHelper: Vector3 = new Vector3();
 
     const GRAVITY: Readonly<Vector3> = new Vector3(0, -9.81, 0);//TODO没有物理系统，暂时先放到这里

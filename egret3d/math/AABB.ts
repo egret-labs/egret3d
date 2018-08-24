@@ -54,11 +54,8 @@ namespace egret3d {
             return [this._minimum.x, this._minimum.y, this._minimum.z, this._maximum.x, this._maximum.y, this._maximum.z];
         }
 
-        public deserialize(element: Readonly<[number, number, number, number, number, number]>) {
-            this._minimum.fromArray(element);
-            this._maximum.fromArray(element, 3);
-
-            return this;
+        public deserialize(value: Readonly<[number, number, number, number, number, number]>) {
+            return this.fromArray(value);
         }
 
         public clone() {
@@ -93,6 +90,14 @@ namespace egret3d {
             this._dirtyRadius = true;
 
             return this;
+        }
+
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+            this._minimum.fromArray(value, offset);
+            this._maximum.fromArray(value, offset + 3);
+
+            this._dirtyCenter = true;
+            this._dirtyRadius = true;
         }
         /**
          * 

@@ -13,12 +13,21 @@ namespace paper {
      * @language zh_CN
      */
     export abstract class Asset extends BaseObject {
-        private static readonly _assets: { [key: string]: Asset } = {};
+        /**
+         * @internal
+         */
+        public static readonly _assets: { [key: string]: Asset } = {};
         /**
          * @internal
          */
         public static register(asset: Asset) {
-            this._assets[asset.name] = asset;
+            if (!this._assets[asset.name]) {
+                this._assets[asset.name] = asset;
+            }
+            else if (this._assets[asset.name] !== asset) {
+                console.debug("Replace asset.", asset.name);
+                this._assets[asset.name] = asset;
+            }
         }
         /**
          * 
@@ -71,6 +80,6 @@ namespace paper {
          * @platform Web
          * @language zh_CN
          */
-        public abstract dispose(): void;
+        public abstract dispose(disposeChildren?: boolean): void;
     }
 }

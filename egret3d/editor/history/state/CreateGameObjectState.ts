@@ -6,7 +6,7 @@ namespace paper.editor {
             return "[class common.AddGameObjectState]";
         }
 
-        public static create(parentList: GameObject[], createType: string): CreateGameObjectState | null {
+        public static create(parentList: (GameObject | Scene)[], createType: string): CreateGameObjectState | null {
             let infos = parentList.map((obj) => { return { parentUUID: obj.uuid, serializeData: null } });
             let state = new CreateGameObjectState();
             state.infos = infos;
@@ -52,7 +52,7 @@ namespace paper.editor {
                     this.addList.push(obj.uuid);
                 }
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, this.addList);
-                this.isFirst=false;
+                this.isFirst = false;
                 return true;
             }
             return false;
@@ -66,7 +66,7 @@ namespace paper.editor {
                     obj.name = "NewGameObject";
                     break;
                 case 'cube':
-                    obj = new paper.GameObject();
+                    obj = new GameObject();
                     obj.name = "cube";
                     let mesh = obj.addComponent(egret3d.MeshFilter);
                     mesh.mesh = egret3d.DefaultMeshes.CUBE;

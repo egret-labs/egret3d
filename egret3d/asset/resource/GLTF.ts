@@ -19,8 +19,10 @@ namespace egret3d {
     export interface GLTFMaterial extends gltf.Material {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
-            paper?: {
-                renderQueue?: number;
+            paper: {
+                renderQueue: number;
+                defines?: string[];
+                states?: gltf.States;
             }
         }
     }
@@ -32,8 +34,7 @@ namespace egret3d {
         extensions: {
             KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
             paper?: {
-                shaders?: gltf.Shader[],
-                renderQueue?: number;
+                shaders?: gltf.Shader[], // TODO
             };
         };
         extensionsUsed: string[];
@@ -150,7 +151,7 @@ namespace egret3d {
          */
         private static _createConfig() {
             const config = {
-                version: "3",
+                version: "4",
                 asset: {
                     version: "2.0"
                 },
@@ -162,11 +163,11 @@ namespace egret3d {
             return config;
         }
         /**
-         * 
+         * @internal
          */
         public static parseFromBinary(array: Uint32Array) {
             let index = 0;
-            let result: { config: GLTF, buffers: (Float32Array | Uint32Array | Uint16Array)[] } = { config: {}, buffers: [] } as any;
+            const result: { config: GLTF, buffers: (Float32Array | Uint32Array | Uint16Array)[] } = { config: {}, buffers: [] } as any;
 
             if (
                 array[index++] !== 0x46546C67 ||
@@ -243,15 +244,8 @@ namespace egret3d {
             return config;
         }
 
-        public static createShaderAsset(name: string) {
-            const gltf = new GLTFAsset(name);
-            gltf.config = this.createGLTFExtensionsConfig();
-
-            return gltf;
-        }
-
         public static createTechnique(source: gltf.Technique) {
-            const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } };
+            const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {} }; // , states: { enable: [], functions: {} }
             for (const key in source.attributes) {
                 const attribute = source.attributes[key];
                 target.attributes[key] = { semantic: attribute.semantic };
@@ -259,27 +253,59 @@ namespace egret3d {
 
             for (const key in source.uniforms) {
                 const uniform = source.uniforms[key];
-                const value = Array.isArray(uniform.value) ? uniform.value.concat() : uniform.value;
-                target.uniforms[key] = { type: uniform.type, semantic: uniform.semantic, value };
-            }
+                let value: any;
 
-            const states = source.states;
-            const targetStates = target.states;
-            if (states.enable) {
-                targetStates.enable = states.enable.concat();
-            }
-
-            if (states.functions) {
-                if (!targetStates.functions) {
-                    targetStates.functions = {};
+                if (uniform.type === gltf.UniformType.SAMPLER_2D && !uniform.value) {
+                    value = egret3d.DefaultTextures.MISSING;
+                }
+                else if (Array.isArray(uniform.value)) {
+                    value = uniform.value.concat();
+                }
+                else {
+                    value = uniform.value;
                 }
 
-                for (const fun in states.functions) {
-                    if (Array.isArray(states.functions[fun])) {
-                        targetStates.functions[fun] = states.functions[fun].concat();
+                const targetUniform = target.uniforms[key] = { type: uniform.type, value } as gltf.Uniform;
+
+                if (uniform.semantic) {
+                    targetUniform.semantic = uniform.semantic;
+                }
+            }
+
+            // if (source.states) {
+            //     const states = GLTFAsset.copyTechniqueStates(source.states);
+            //     if (states) {
+            //         target.states = states;
+            //     }
+            // }
+
+            return target;
+        }
+
+        public static copyTechniqueStates(source: gltf.States, target?: gltf.States) {
+            if (source.enable && source.enable.length > 0) {
+                if (!target) {
+                    target = {};
+                }
+
+                target.enable = source.enable.concat();
+            }
+
+            if (source.functions) {
+                for (const k in source.functions) {
+                    if (!target) {
+                        target = {};
+                    }
+
+                    if (!target.functions) {
+                        target.functions = {};
+                    }
+
+                    if (Array.isArray(source.functions[k])) { // TODO
+                        target.functions[k] = source.functions[k].concat();
                     }
                     else {
-                        targetStates.functions[fun] = states.functions[fun];
+                        target.functions[k] = source.functions[k];
                     }
                 }
             }
@@ -294,25 +320,6 @@ namespace egret3d {
          * 配置。
          */
         public config: GLTF = null!;
-        /**
-         * @internal
-         */
-        public parse(config: GLTF, buffers?: Uint32Array[]) {
-            this.config = config;
-
-            if (buffers) {
-                for (const buffer of buffers) {
-                    this.buffers.push(buffer);
-                }
-            }
-
-            this.initialize();
-        }
-        /**
-         * @internal
-         */
-        public initialize() {
-        }
 
         public dispose() {
             if (this._isBuiltin) {
@@ -592,7 +599,7 @@ declare namespace gltf {
      * The uniform type.  All valid values correspond to WebGL enums.
      */
     export const enum UniformType {
-        Int = 5124,
+        INT = 5124,
         FLOAT = 5126,
         FLOAT_VEC2 = 35664,
         FLOAT_VEC3 = 35665,
@@ -640,6 +647,14 @@ declare namespace gltf {
         DEPTH_TEST = 2929,
         POLYGON_OFFSET_FILL = 32823,
         SAMPLE_ALPHA_TO_COVERAGE = 32926,
+    }
+
+    export const enum BlendMode {
+        None,
+        Blend,
+        Blend_PreMultiply,
+        Add,
+        Add_PreMultiply,
     }
 
     export const enum BlendEquation {
@@ -698,17 +713,31 @@ declare namespace gltf {
         JOINTS_0 = "JOINTS_0",
         WEIGHTS_0 = "WEIGHTS_0",
 
-        _CORNER = "CORNER",
-        _START_POSITION = "START_POSITION",
-        _START_VELOCITY = "START_VELOCITY",
-        _START_COLOR = "START_COLOR",
-        _START_SIZE = "START_SIZE",
-        _START_ROTATION = "START_ROTATION",
-        _TIME = "TIME",
-        _RANDOM0 = "RANDOM0",
-        _RANDOM1 = "RANDOM1",
-        _WORLD_POSITION = "WORLD_POSITION",
-        _WORLD_ROTATION = "WORLD_ROTATION",
+        MORPHTARGET_0 = "WEIGHTS_0",
+        MORPHTARGET_1 = "WEIGHTS_1",
+        MORPHTARGET_2 = "WEIGHTS_2",
+        MORPHTARGET_3 = "WEIGHTS_3",
+        MORPHTARGET_4 = "WEIGHTS_4",
+        MORPHTARGET_5 = "WEIGHTS_5",
+        MORPHTARGET_6 = "WEIGHTS_6",
+        MORPHTARGET_7 = "WEIGHTS_7",
+
+        MORPHNORMAL_0 = "MORPHNORMAL_0",
+        MORPHNORMAL_1 = "MORPHNORMAL_1",
+        MORPHNORMAL_2 = "MORPHNORMAL_2",
+        MORPHNORMAL_3 = "MORPHNORMAL_3",
+
+        _CORNER = "_CORNER",
+        _START_POSITION = "_START_POSITION",
+        _START_VELOCITY = "_START_VELOCITY",
+        _START_COLOR = "_START_COLOR",
+        _START_SIZE = "_START_SIZE",
+        _START_ROTATION = "_START_ROTATION",
+        _TIME = "_TIME",
+        _RANDOM0 = "_RANDOM0",
+        _RANDOM1 = "_RANDOM1",
+        _WORLD_POSITION = "_WORLD_POSITION",
+        _WORLD_ROTATION = "_WORLD_ROTATION",
     }
 
     export const enum UniformSemanticType {
@@ -728,6 +757,16 @@ declare namespace gltf {
         VIEWPORT = "VIEWPORT",
         JOINTMATRIX = "JOINTMATRIX",
 
+        //
+        _AMBIENTLIGHTCOLOR = "_AMBIENTLIGHTCOLOR",
+        _BINDMATRIX = "_BINDMATRIX",
+        _BINDMATRIXINVERSE = "_BINDMATRIXINVERSE",
+        // _BONETEXTURE = "_BONETEXTURE",
+        // _BONETEXTURESIZE = "_BONETEXTURESIZE",
+        _BONEMATRIX = "_BONEMATRIX",
+
+
+
         _VIEWPROJECTION = "_VIEWPROJECTION",
         _CAMERA_POS = "_CAMERA_POS",
         _CAMERA_UP = "CAMERA_UP",
@@ -738,6 +777,7 @@ declare namespace gltf {
         _LIGHTCOUNT = "_LIGHTCOUNT",
         _DIRECTIONSHADOWMAT = "_DIRECTIONSHADOWMAT",
         _SPOTSHADOWMAT = "_SPOTSHADOWMAT",
+        _POINTSHADOWMAT = "_POINTSHADOWMAT",
         _DIRECTIONSHADOWMAP = "_DIRECTIONSHADOWMAP",
         _POINTSHADOWMAP = "_POINTSHADOWMAP",
         _SPOTSHADOWMAP = "_SPOTSHADOWMAP",
@@ -1558,7 +1598,7 @@ declare namespace gltf {
             [k: string]: gltf.Uniform;
         };
         name: any;
-        states: States;
+        states?: States;
         extensions?: any;
         extras?: any;
         [k: string]: any;

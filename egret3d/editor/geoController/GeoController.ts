@@ -35,19 +35,23 @@ namespace paper.editor {
 
         private geoCtrlMode: string = 'world';
         private geoCtrlType: string;
+        private coord: GameObject
         constructor() {
             super();
             this.mainGeo = new GeoContainer();
+            this.coord = new GameObject()
             this.bindMouse = egret3d.InputManager.mouse;
             this.bindKeyboard = egret3d.InputManager.keyboard;
             this._cameraObject = Application.sceneManager.editorScene.find("EditorCamera");
             this._oldTransform = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
 
         }
+
         public onUpdate() {
             if (!this.editorModel) {
                 return;
             }
+            this.drawCoord();
             this.geoChangeByCamera();
             this.inputUpdate();
             // this.mouseRayCastUpdate();
@@ -57,7 +61,6 @@ namespace paper.editor {
             if (this.bindMouse.wasReleased(0)) {
                 this.mainGeo.wasReleased(this.selectedGameObjs);
             }
-
         }
 
         private updateInLocalMode() {
@@ -231,6 +234,51 @@ namespace paper.editor {
                 this.controller.activeSelf = false;
             }
 
+        }
+        private drawCoord() {
+            let nrLine = 100;
+            let bia = -0.05;
+            let verticesCoord = [];
+            let indices = [];
+            var dis1;
+            var delta;
+            dis1 = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
+            delta = (dis1 - this._oldTransform) / 20;
+            for (let i = 0, len = 2 * nrLine + 1; i < len; i++) {
+                verticesCoord[6 * i] = -nrLine + i;
+                verticesCoord[6 * i + 1] = bia;
+                verticesCoord[6 * i + 2] = -nrLine;
+                verticesCoord[6 * i + 3] = -nrLine + i;
+                verticesCoord[6 * i + 4] = bia;
+                verticesCoord[6 * i + 5] = nrLine;
+
+                verticesCoord[6 * len + 6 * i] = -nrLine;
+                verticesCoord[6 * len + 6 * i + 1] = bia;
+                verticesCoord[6 * len + 6 * i + 2] = -nrLine + i;
+                verticesCoord[6 * len + 6 * i + 3] = nrLine;
+                verticesCoord[6 * len + 6 * i + 4] = bia;
+                verticesCoord[6 * len + 6 * i + 5] = -nrLine + i;
+            }
+            for (let i = 0; i < 8 * nrLine + 1; i++) {
+                indices.push(i)
+            }
+            var mesh = new egret3d.Mesh(nrLine * 8, 8 * nrLine)
+            var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
+            let color1 = new Float32Array([0.3, 0.3, 0.5])
+            const funs = mat.glTFTechnique.states.functions;
+            const enables = mat.glTFTechnique.states.enable;
+            const index = enables.indexOf(gltf.EnableState.DEPTH_TEST);
+            if (index < 0) {
+                enables.push(gltf.EnableState.DEPTH_TEST);
+            }
+            funs.depthMask = [true];
+            funs.depthFunc = [gltf.DepthFunc.LEQUAL];
+            mat.setVector3v("diffuse", color1);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, verticesCoord)
+            mesh.setIndices(indices);
+            mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines
+            this.coord.getOrAddComponent(egret3d.MeshFilter).mesh = mesh
+            this.coord.getOrAddComponent(egret3d.MeshRenderer).materials = [mat]
         }
     }
 }

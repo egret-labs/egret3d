@@ -5,7 +5,7 @@ namespace egret3d {
      */
     export class MeshRenderer extends paper.BaseRenderer {
         @paper.serializedField
-        private readonly _materials: Material[] = [DefaultMaterials.DefaultDiffuse];
+        private readonly _materials: Material[] = [DefaultMaterials.MESH_BASIC];
 
         public uninitialize() {
             super.uninitialize();
@@ -44,6 +44,7 @@ namespace egret3d {
             return this._materials;
         }
         public set materials(value: ReadonlyArray<Material>) {
+            // TODO 将 materials, material, mesh 接口实现到 BaseRenderer.
             if (value === this._materials) {
                 return;
             }

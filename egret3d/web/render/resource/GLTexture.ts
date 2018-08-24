@@ -349,7 +349,7 @@ namespace egret3d {
             }
             else {
                 const i = (y * this.width + x) * 4;
-                return new Color(this.data[i], this.data[i + 1], this.data[i + 2], this.data[i + 3]);
+                return Color.create(this.data[i], this.data[i + 1], this.data[i + 2], this.data[i + 3]);
             }
         }
     }

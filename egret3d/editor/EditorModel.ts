@@ -133,8 +133,8 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createPrefabState(prefab: any) {
-            const state = CreatePrefabState.create(prefab);
+        public createPrefabState(prefab: Prefab, parent?: GameObject) {
+            const state = CreatePrefabState.create(prefab, parent);
             this.addState(state);
         }
 
@@ -226,7 +226,7 @@ namespace paper.editor {
             }
         }
 
-        public createGameObject(parentList: GameObject[], createType: string) {
+        public createGameObject(parentList: (GameObject | Scene)[], createType: string) {
             let state = CreateGameObjectState.create(parentList, createType);
             this.addState(state);
         }
