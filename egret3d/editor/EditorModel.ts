@@ -128,11 +128,6 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createAddComponentToPrefab(serializeData: any, gameObjIds: string[]) {
-            // const state = AddPrefabComponentState.create(serializeData, gameObjIds);
-            // this.addState(state);
-        }
-
         public createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]) {
             const state = ModifyAssetPropertyState.create(assetUrl, newValueList, preValueCopylist);
             this.addState(state);
@@ -472,11 +467,10 @@ namespace paper.editor {
         }
 
         public async getAssetByAssetUrl(url: string): Promise<any> {
-            let asset = await RES.getResAsync(url);
-            if (asset) {
-                return asset;
-            }
-            return null;
+            let asset = RES.getRes(url);
+            if (!asset)
+                asset = await RES.getResAsync(url);
+            return asset;
         }
 
         public getGameObjectsByUUids(uuids: string[]): GameObject[] {
@@ -741,6 +735,88 @@ namespace paper.editor {
             }
 
             return objs;
+        }
+
+        private async setMaterialTexture(target: egret3d.Material,url:string,propName:string):Promise<void>
+        {   
+            let asset:egret3d.GLTexture2D = paper.Asset.find<egret3d.GLTexture2D>(url);
+
+            if (!asset) {
+                asset = await this.getAssetByAssetUrl(url);
+            }
+
+            if (!asset) {
+                console.error(`${url} can't find`)
+                return;
+            }
+
+            target._glTFTechnique.uniforms[propName].value = asset;
+        }
+
+        public async modifyMaterialPropertyValues(target: egret3d.Material, valueList: any[]): Promise<void> {
+            for (const propertyValue of valueList) {
+                const { propName, copyValue, uniformType } = propertyValue;
+
+                switch (uniformType) {
+                    case gltf.UniformType.BOOL:
+                        target.setBoolean(propName, copyValue);
+                        break;
+                    case gltf.UniformType.Int:
+                        target.setInt(propName, copyValue);
+                    case gltf.UniformType.FLOAT:
+                        target.setFloat(propName, copyValue);
+                        break;
+                    case gltf.UniformType.BOOL_VEC2:
+                    case gltf.UniformType.INT_VEC2:
+                    case gltf.UniformType.FLOAT_VEC2:
+                        target.setVector2v(propName, copyValue);
+                        break;
+                    case gltf.UniformType.BOOL_VEC3:
+                    case gltf.UniformType.INT_VEC3:
+                    case gltf.UniformType.FLOAT_VEC3:
+                        target.setVector3v(propName, copyValue);
+                        break;
+                    case gltf.UniformType.BOOL_VEC4:
+                    case gltf.UniformType.INT_VEC4:
+                    case gltf.UniformType.FLOAT_VEC4:
+                        target.setVector4v(propName, copyValue);
+                        break;
+                    case gltf.UniformType.SAMPLER_2D:
+                        await this.setMaterialTexture(target,copyValue.url,propName);
+                        break;
+                    case gltf.UniformType.FLOAT_MAT2:
+                    case gltf.UniformType.FLOAT_MAT3:
+                    case gltf.UniformType.FLOAT_MAT4:
+                        target.setMatrixv(propName, copyValue);
+                        break;
+                    default:
+                        break;
+                }
+
+                if (propName === "renderQueue") {
+                    (target.config.materials![0] as egret3d.GLTFMaterial).extensions.paper.renderQueue = copyValue;
+                }   
+
+                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: copyValue }));
+            }
+
+            const _glTFMaterial = target.config.materials![0] as egret3d.GLTFMaterial;
+            const gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values!;
+            const uniformMap = target._glTFTechnique.uniforms;
+            for (const key in uniformMap) {
+                if (uniformMap[key].semantic === undefined) {
+                    const value = uniformMap[key].value;
+                    if (Array.isArray(value)) {
+                        gltfUnifromMap[key] = value.concat();
+                    }
+                    else if (value instanceof egret3d.GLTexture2D) {
+                        gltfUnifromMap[key] = value.name;
+                    }
+                    else {
+                        gltfUnifromMap[key] = value;
+                    }
+                }
+            }
         }
     }
 }
