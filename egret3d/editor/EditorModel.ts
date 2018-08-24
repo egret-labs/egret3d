@@ -761,7 +761,7 @@ namespace paper.editor {
                     case gltf.UniformType.BOOL:
                         target.setBoolean(propName, copyValue);
                         break;
-                    case gltf.UniformType.Int:
+                    case gltf.UniformType.INT:
                         target.setInt(propName, copyValue);
                     case gltf.UniformType.FLOAT:
                         target.setFloat(propName, copyValue);
