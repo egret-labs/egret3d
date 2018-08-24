@@ -77,6 +77,97 @@ declare namespace paper {
         uuid: string;
     }
 }
+declare namespace paper.editor {
+    /**属性信息 */
+    class PropertyInfo {
+        /**属性名称 */
+        name: string;
+        /**编辑类型 */
+        editType: EditType;
+        /**属性配置 */
+        option: PropertyOption;
+        constructor(name?: string, editType?: EditType, option?: PropertyOption);
+    }
+    /**属性配置 */
+    type PropertyOption = {
+        /**赋值函数*/
+        set?: string;
+        /**下拉项*/
+        listItems?: {
+            label: string;
+            value: any;
+        }[];
+    };
+    /**编辑类型 */
+    enum EditType {
+        /**数字输入 */
+        NUMBER = 0,
+        /**文本输入 */
+        TEXT = 1,
+        /**选中框 */
+        CHECKBOX = 2,
+        /**vertor2 */
+        VECTOR2 = 3,
+        /**vertor3 */
+        VECTOR3 = 4,
+        /**vertor4 */
+        VECTOR4 = 5,
+        /**Quaternion */
+        QUATERNION = 6,
+        /**颜色选择器 */
+        COLOR = 7,
+        /**下拉 */
+        LIST = 8,
+        /**Rect */
+        RECT = 9,
+        /**材质 */
+        MATERIAL = 10,
+        /**材质数组 */
+        MATERIAL_ARRAY = 11,
+        /**游戏对象 */
+        GAMEOBJECT = 12,
+        /**变换 */
+        TRANSFROM = 13,
+        /**声音 */
+        SOUND = 14,
+        /**Mesh */
+        MESH = 15,
+        /**shader */
+        SHADER = 16,
+        /**数组 */
+        ARRAY = 17,
+    }
+    /**
+     * 装饰器:自定义
+     */
+    function custom(): (target: any) => void;
+    /**
+     * 装饰器:属性
+     * @param editType 编辑类型
+     */
+    function property(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
+    /**
+     * 检测一个实例对象是否为已被自定义
+     * @param classInstance 实例对象
+     */
+    function isCustom(classInstance: any): boolean;
+    /**
+     * 获取一个实例对象的编辑信息
+     * @param classInstance 实例对象
+     */
+    function getEditInfo(classInstance: any): PropertyInfo[];
+    function getEditInfoByPrototype(classInstance: any): PropertyInfo[];
+    /**
+     * 装饰器:属性
+     * @param editType 编辑类型
+     */
+    function extraProperty(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
+    /**
+     * 额外信息
+     * @param classInstance 实例对象
+     */
+    function getExtraInfo(classInstance: any): PropertyInfo[];
+}
 declare namespace paper {
     /**
      * Base Class for Asset
@@ -140,296 +231,6 @@ declare namespace paper {
          * @language zh_CN
          */
         abstract dispose(disposeChildren?: boolean): void;
-    }
-}
-declare namespace egret3d {
-    interface IVector3 {
-        x: number;
-        y: number;
-        z: number;
-    }
-    /**
-     *
-     */
-    const enum EulerOrder {
-        XYZ = 0,
-        XZY = 1,
-        YXZ = 2,
-        YZX = 3,
-        ZXY = 4,
-        ZYX = 5,
-    }
-    /**
-     *
-     */
-    class Vector3 implements IVector3, paper.IRelease<Vector3>, paper.ISerializable {
-        static readonly ZERO: Readonly<Vector3>;
-        static readonly ONE: Readonly<Vector3>;
-        static readonly UP: Readonly<Vector3>;
-        static readonly DOWN: Readonly<Vector3>;
-        static readonly LEFT: Readonly<Vector3>;
-        static readonly RIGHT: Readonly<Vector3>;
-        static readonly FORWARD: Readonly<Vector3>;
-        static readonly BACK: Readonly<Vector3>;
-        private static readonly _instances;
-        static create(x?: number, y?: number, z?: number): Vector3;
-        release(): this;
-        x: number;
-        y: number;
-        z: number;
-        /**
-         * @deprecated
-         * @private
-         */
-        constructor(x?: number, y?: number, z?: number);
-        serialize(): number[];
-        deserialize(value: Readonly<[number, number, number]>): this;
-        copy(value: Readonly<IVector3>): this;
-        clone(): Vector3;
-        equal(value: Readonly<IVector3>, threshold?: number): boolean;
-        set(x: number, y: number, z: number): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>): this;
-        applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
-        applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
-        applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>): this;
-        normalize(source?: Readonly<IVector3>): this;
-        negate(source?: Readonly<IVector3>): void;
-        addScalar(add: number, source?: Readonly<IVector3>): this;
-        add(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        subtract(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        multiplyScalar(scale: number, source?: Readonly<IVector3>): this;
-        multiply(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        dot(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
-        cross(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        lerp(t: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>): this;
-        getSquaredDistance(value: Readonly<IVector3>): number;
-        getDistance(value: Readonly<IVector3>): number;
-        closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>): this;
-        readonly length: number;
-        readonly squaredLength: number;
-        /**
-         * @deprecated
-         */
-        static set(x: number, y: number, z: number, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static normalize(v: IVector3): IVector3;
-        /**
-         * @deprecated
-         */
-        static copy(v: Vector3, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static add(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static multiply(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static scale(v: Vector3, scale: number): Vector3;
-        /**
-         * @deprecated
-         */
-        static cross(lhs: IVector3, rhs: IVector3, out: IVector3): IVector3;
-        /**
-         * @deprecated
-         */
-        static dot(v1: Vector3, v2: Vector3): number;
-        /**
-         * @deprecated
-         */
-        static lerp(v1: Vector3, v2: Vector3, v: number, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static equal(v1: Vector3, v2: Vector3, threshold?: number): boolean;
-        /**
-         * @deprecated
-         */
-        static subtract(v1: Readonly<IVector3>, v2: Readonly<IVector3>, out: IVector3): IVector3;
-        /**
-         * @deprecated
-         */
-        static getSqrLength(v: Readonly<IVector3>): number;
-        /**
-         * @deprecated
-         */
-        static getLength(v: Readonly<IVector3>): number;
-        /**
-         * @deprecated
-         */
-        static getDistance(a: Readonly<IVector3>, b: Readonly<IVector3>): number;
-    }
-    const helpVector3A: Vector3;
-    const helpVector3B: Vector3;
-    const helpVector3C: Vector3;
-    const helpVector3D: Vector3;
-    const helpVector3E: Vector3;
-    const helpVector3F: Vector3;
-    const helpVector3G: Vector3;
-    const helpVector3H: Vector3;
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    class Matrix4 implements paper.IRelease<Matrix4>, paper.ISerializable {
-        private static readonly _instances;
-        /**
-         *
-         * @param rawData
-         * @param offset
-         */
-        static create(rawData?: Readonly<ArrayLike<number>> | null, offset?: number): Matrix4;
-        /**
-         *
-         */
-        release(): this;
-        /**
-         *
-         */
-        readonly rawData: Float32Array;
-        /**
-         * @deprecated
-         * @private
-         */
-        constructor();
-        serialize(): Float32Array;
-        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
-        copy(value: Readonly<Matrix4>): this;
-        clone(): Matrix4;
-        identity(): this;
-        set(n11: number, n12: number, n13: number, n14: number, n21: number, n22: number, n23: number, n24: number, n31: number, n32: number, n33: number, n34: number, n41: number, n42: number, n43: number, n44: number): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays?: boolean): this;
-        fromRotation(rotation: Quaternion, translateStays?: boolean): this;
-        fromEuler(value: Readonly<IVector3>, order?: EulerOrder, translateStays?: boolean): this;
-        fromScale(x: number, y: number, z: number, translateStays?: boolean): this;
-        fromAxis(axis: Readonly<IVector3>, radian?: number): this;
-        fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>): this;
-        fromRotationX(radian: number): this;
-        fromRotationY(radian: number): this;
-        fromRotationZ(theta: any): this;
-        determinant(): number;
-        compose(translation: Vector3, rotation: Quaternion, scale: Vector3): this;
-        decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): this;
-        transpose(source?: Readonly<Matrix4>): this;
-        inverse(source?: Readonly<Matrix4>): this;
-        multiplyScalar(value: number, source?: Readonly<Matrix4>): void;
-        multiply(valueA: Matrix4, valueB?: Matrix4): this;
-        premultiply(value: Readonly<Matrix4>): this;
-        lerp(t: number, value: Matrix4, source?: Matrix4): this;
-        /**
-         * - 两点位置不重合。
-         * @param eye
-         * @param target
-         * @param up
-         */
-        lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): this;
-        getMaxScaleOnAxis(): number;
-        toEuler(value: Vector3, order?: EulerOrder): Vector3;
-        /**
-         * @deprecated
-         */
-        transformVector3(value: Vector3, out?: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        transformNormal(value: Vector3, out?: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        scale(scaler: number): this;
-        /**
-         * @deprecated
-         */
-        add(left: Matrix4, right?: Matrix4): this;
-        /**
-         * @deprecated
-         */
-        static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix4): Matrix4;
-        /**
-         * @deprecated
-         */
-        static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4;
-    }
-    const helpMatrixA: Matrix4;
-    const helpMatrixB: Matrix4;
-    const helpMatrixC: Matrix4;
-    const helpMatrixD: Matrix4;
-}
-declare namespace egret3d {
-    interface IVector4 extends IVector3 {
-        w: number;
-    }
-    class Vector4 implements IVector4, paper.IRelease<Vector4>, paper.ISerializable {
-        private static readonly _instances;
-        static create(x?: number, y?: number, z?: number, w?: number): Vector4;
-        release(): this;
-        x: number;
-        y: number;
-        z: number;
-        w: number;
-        /**
-         * @deprecated
-         * @private
-         */
-        constructor(x?: number, y?: number, z?: number, w?: number);
-        serialize(): number[];
-        deserialize(element: Readonly<[number, number, number, number]>): this;
-        copy(value: Readonly<IVector4>): this;
-        clone(): Vector4;
-        set(x: number, y: number, z: number, w: number): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        normalize(source?: Readonly<IVector4>): this;
-        readonly length: number;
-        readonly squaredLength: number;
-    }
-    const helpVector4A: Vector4;
-    const helpVector4B: Vector4;
-    const helpVector4C: Vector4;
-    const helpVector4D: Vector4;
-    const helpVector4E: Vector4;
-    const helpVector4F: Vector4;
-}
-declare namespace paper {
-    /**
-     *
-     */
-    class BaseObjectAsset extends Asset {
-        protected _raw: ISerializedData;
-        /**
-         * @internal
-         */
-        $parse(json: ISerializedData): void;
-        dispose(): void;
-        caclByteLength(): number;
-    }
-    /**
-     * scene asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 场景数据资源
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class RawScene extends BaseObjectAsset {
-        /**
-         * @internal
-         */
-        createInstance(keepUUID?: boolean): Scene;
     }
 }
 declare namespace paper {
@@ -541,6 +342,363 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
+    interface IVector3 {
+        x: number;
+        y: number;
+        z: number;
+    }
+    /**
+     *
+     */
+    const enum EulerOrder {
+        XYZ = 0,
+        XZY = 1,
+        YXZ = 2,
+        YZX = 3,
+        ZXY = 4,
+        ZYX = 5,
+    }
+    /**
+     *
+     */
+    class Vector3 implements IVector3, paper.IRelease<Vector3>, paper.ISerializable {
+        static readonly ZERO: Readonly<Vector3>;
+        static readonly ONE: Readonly<Vector3>;
+        static readonly UP: Readonly<Vector3>;
+        static readonly DOWN: Readonly<Vector3>;
+        static readonly LEFT: Readonly<Vector3>;
+        static readonly RIGHT: Readonly<Vector3>;
+        static readonly FORWARD: Readonly<Vector3>;
+        static readonly BACK: Readonly<Vector3>;
+        private static readonly _instances;
+        static create(x?: number, y?: number, z?: number): Vector3;
+        release(): this;
+        x: number;
+        y: number;
+        z: number;
+        /**
+         * 请使用 `egret3d.Vector3.create()` 创建实例。
+         * @see egret3d.Vector3.create()
+         * @deprecated
+         * @private
+         */
+        constructor(x?: number, y?: number, z?: number);
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number]>): this;
+        copy(value: Readonly<IVector3>): this;
+        clone(): Vector3;
+        equal(value: Readonly<IVector3>, threshold?: number): boolean;
+        set(x: number, y: number, z: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>): this;
+        applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
+        applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
+        applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>): this;
+        normalize(source?: Readonly<IVector3>): this;
+        negate(source?: Readonly<IVector3>): void;
+        addScalar(add: number, source?: Readonly<IVector3>): this;
+        add(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        subtract(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        multiplyScalar(scale: number, source?: Readonly<IVector3>): this;
+        multiply(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        dot(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
+        cross(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        lerp(t: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>): this;
+        getSquaredDistance(value: Readonly<IVector3>): number;
+        getDistance(value: Readonly<IVector3>): number;
+        closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>): this;
+        readonly length: number;
+        readonly squaredLength: number;
+        /**
+         * @deprecated
+         */
+        static set(x: number, y: number, z: number, out: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        static normalize(v: IVector3): IVector3;
+        /**
+         * @deprecated
+         */
+        static copy(v: Vector3, out: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        static add(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        static multiply(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        static scale(v: Vector3, scale: number): Vector3;
+        /**
+         * @deprecated
+         */
+        static cross(lhs: IVector3, rhs: IVector3, out: IVector3): IVector3;
+        /**
+         * @deprecated
+         */
+        static dot(v1: Vector3, v2: Vector3): number;
+        /**
+         * @deprecated
+         */
+        static lerp(v1: Vector3, v2: Vector3, v: number, out: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        static equal(v1: Vector3, v2: Vector3, threshold?: number): boolean;
+        /**
+         * @deprecated
+         */
+        static subtract(v1: Readonly<IVector3>, v2: Readonly<IVector3>, out: IVector3): IVector3;
+        /**
+         * @deprecated
+         */
+        static getSqrLength(v: Readonly<IVector3>): number;
+        /**
+         * @deprecated
+         */
+        static getLength(v: Readonly<IVector3>): number;
+        /**
+         * @deprecated
+         */
+        static getDistance(a: Readonly<IVector3>, b: Readonly<IVector3>): number;
+    }
+    const helpVector3A: Vector3;
+    const helpVector3B: Vector3;
+    const helpVector3C: Vector3;
+    const helpVector3D: Vector3;
+    const helpVector3E: Vector3;
+    const helpVector3F: Vector3;
+    const helpVector3G: Vector3;
+    const helpVector3H: Vector3;
+}
+declare namespace egret3d {
+    interface IVector4 extends IVector3 {
+        w: number;
+    }
+    class Vector4 implements IVector4, paper.IRelease<Vector4>, paper.ISerializable {
+        private static readonly _instances;
+        /**
+         *
+         */
+        static create(x?: number, y?: number, z?: number, w?: number): Vector4;
+        release(): this;
+        x: number;
+        y: number;
+        z: number;
+        w: number;
+        /**
+         * 请使用 `egret3d.Quaternion.create()` 创建实例。
+         * @see egret3d.Quaternion.create()
+         * @deprecated
+         * @private
+         */
+        constructor(x?: number, y?: number, z?: number, w?: number);
+        serialize(): number[];
+        deserialize(element: Readonly<[number, number, number, number]>): this;
+        copy(value: Readonly<IVector4>): this;
+        clone(): Vector4;
+        set(x: number, y: number, z: number, w: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        normalize(source?: Readonly<IVector4>): this;
+        readonly length: number;
+        readonly squaredLength: number;
+    }
+    const helpVector4A: Vector4;
+    const helpVector4B: Vector4;
+    const helpVector4C: Vector4;
+    const helpVector4D: Vector4;
+    const helpVector4E: Vector4;
+    const helpVector4F: Vector4;
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    class Matrix4 implements paper.IRelease<Matrix4>, paper.ISerializable {
+        private static readonly _instances;
+        /**
+         *
+         * @param rawData
+         * @param offset
+         */
+        static create(rawData?: Readonly<ArrayLike<number>> | null, offset?: number): Matrix4;
+        /**
+         *
+         */
+        release(): this;
+        /**
+         *
+         */
+        readonly rawData: Float32Array;
+        /**
+         * 请使用 `egret3d.Matrix4.create()` 创建实例。
+         * @see egret3d.Matrix4.create()
+         * @deprecated
+         * @private
+         */
+        constructor();
+        serialize(): Float32Array;
+        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
+        copy(value: Readonly<Matrix4>): this;
+        clone(): Matrix4;
+        identity(): this;
+        set(n11: number, n12: number, n13: number, n14: number, n21: number, n22: number, n23: number, n24: number, n31: number, n32: number, n33: number, n34: number, n41: number, n42: number, n43: number, n44: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays?: boolean): this;
+        fromRotation(rotation: Quaternion, translateStays?: boolean): this;
+        fromEuler(value: Readonly<IVector3>, order?: EulerOrder, translateStays?: boolean): this;
+        fromScale(x: number, y: number, z: number, translateStays?: boolean): this;
+        fromAxis(axis: Readonly<IVector3>, radian?: number): this;
+        fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>): this;
+        fromRotationX(radian: number): this;
+        fromRotationY(radian: number): this;
+        fromRotationZ(theta: any): this;
+        determinant(): number;
+        compose(translation: Vector3, rotation: Quaternion, scale: Vector3): this;
+        decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): this;
+        transpose(source?: Readonly<Matrix4>): this;
+        inverse(source?: Readonly<Matrix4>): this;
+        multiplyScalar(value: number, source?: Readonly<Matrix4>): void;
+        multiply(valueA: Matrix4, valueB?: Matrix4): this;
+        premultiply(value: Readonly<Matrix4>): this;
+        lerp(t: number, value: Matrix4, source?: Matrix4): this;
+        /**
+         * - 两点位置不重合。
+         * @param eye
+         * @param target
+         * @param up
+         */
+        lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): this;
+        getMaxScaleOnAxis(): number;
+        toEuler(value: Vector3, order?: EulerOrder): Vector3;
+        /**
+         * @deprecated
+         */
+        transformVector3(value: Vector3, out?: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        transformNormal(value: Vector3, out?: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        scale(scaler: number): this;
+        /**
+         * @deprecated
+         */
+        add(left: Matrix4, right?: Matrix4): this;
+        /**
+         * @deprecated
+         */
+        static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix4): Matrix4;
+        /**
+         * @deprecated
+         */
+        static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4;
+    }
+    const helpMatrixA: Matrix4;
+    const helpMatrixB: Matrix4;
+    const helpMatrixC: Matrix4;
+    const helpMatrixD: Matrix4;
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class BaseObjectAsset extends Asset {
+        protected _raw: ISerializedData;
+        /**
+         * @internal
+         */
+        $parse(json: ISerializedData): void;
+        dispose(): void;
+        caclByteLength(): number;
+    }
+    /**
+     * scene asset
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 场景数据资源
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    class RawScene extends BaseObjectAsset {
+        /**
+         * @internal
+         */
+        createInstance(keepUUID?: boolean): Scene;
+    }
+}
+declare namespace paper {
+    const enum RendererEventType {
+        Materials = "materials",
+    }
+    /**
+     * renderer component interface
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 渲染器组件接口
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    abstract class BaseRenderer extends BaseComponent {
+        /**
+         * @internal
+         */
+        _boundingSphereDirty: boolean;
+        protected _receiveShadows: boolean;
+        protected _castShadows: boolean;
+        protected _lightmapIndex: number;
+        protected readonly _boundingSphere: egret3d.Sphere;
+        protected readonly _aabb: egret3d.AABB;
+        protected readonly _lightmapScaleOffset: Float32Array;
+        protected _recalculateSphere(): void;
+        /**
+         * 重新计算 AABB。
+         */
+        abstract recalculateAABB(): void;
+        /**
+         *
+         */
+        receiveShadows: boolean;
+        /**
+         *
+         */
+        castShadows: boolean;
+        /**
+         *
+         */
+        lightmapIndex: number;
+        /**
+         *
+         */
+        readonly aabb: Readonly<egret3d.AABB>;
+        /**
+         *
+         */
+        readonly boundingSphere: Readonly<egret3d.Sphere>;
+        /**
+         * TODO
+         */
+        readonly lightmapScaleOffset: Float32Array;
+    }
+}
+declare namespace egret3d {
     /**
      * 射线
      */
@@ -557,10 +715,10 @@ declare namespace egret3d {
          */
         readonly direction: Vector3;
         /**
-         * @deprecated
-         * @private
+         * 请使用 `egret3d.Ray.create()` 创建实例。
+         * @see egret3d.Ray.create()
          */
-        constructor(origin?: Readonly<IVector3>, direction?: Readonly<IVector3>);
+        private constructor();
         serialize(): number[];
         deserialize(value: Readonly<[number, number, number, number, number, number]>): this;
         copy(value: Readonly<Ray>): this;
@@ -1955,137 +2113,25 @@ declare namespace gltf {
         extras?: any;
     }
 }
-declare namespace paper.editor {
-    /**属性信息 */
-    class PropertyInfo {
-        /**属性名称 */
-        name: string;
-        /**编辑类型 */
-        editType: EditType;
-        /**属性配置 */
-        option: PropertyOption;
-        constructor(name?: string, editType?: EditType, option?: PropertyOption);
-    }
-    /**属性配置 */
-    type PropertyOption = {
-        /**赋值函数*/
-        set?: string;
-        /**下拉项*/
-        listItems?: {
-            label: string;
-            value: any;
-        }[];
-    };
-    /**编辑类型 */
-    enum EditType {
-        /**数字输入 */
-        NUMBER = 0,
-        /**文本输入 */
-        TEXT = 1,
-        /**选中框 */
-        CHECKBOX = 2,
-        /**vertor2 */
-        VECTOR2 = 3,
-        /**vertor3 */
-        VECTOR3 = 4,
-        /**vertor4 */
-        VECTOR4 = 5,
-        /**Quaternion */
-        QUATERNION = 6,
-        /**颜色选择器 */
-        COLOR = 7,
-        /**下拉 */
-        LIST = 8,
-        /**Rect */
-        RECT = 9,
-        /**材质 */
-        MATERIAL = 10,
-        /**材质数组 */
-        MATERIAL_ARRAY = 11,
-        /**游戏对象 */
-        GAMEOBJECT = 12,
-        /**变换 */
-        TRANSFROM = 13,
-        /**声音 */
-        SOUND = 14,
-        /**Mesh */
-        MESH = 15,
-        /**shader */
-        SHADER = 16,
-        /**数组 */
-        ARRAY = 17,
-    }
-    /**
-     * 装饰器:自定义
-     */
-    function custom(): (target: any) => void;
-    /**
-     * 装饰器:属性
-     * @param editType 编辑类型
-     */
-    function property(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
-    /**
-     * 检测一个实例对象是否为已被自定义
-     * @param classInstance 实例对象
-     */
-    function isCustom(classInstance: any): boolean;
-    /**
-     * 获取一个实例对象的编辑信息
-     * @param classInstance 实例对象
-     */
-    function getEditInfo(classInstance: any): PropertyInfo[];
-    function getEditInfoByPrototype(classInstance: any): PropertyInfo[];
-    /**
-     * 装饰器:属性
-     * @param editType 编辑类型
-     */
-    function extraProperty(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
-    /**
-     * 额外信息
-     * @param classInstance 实例对象
-     */
-    function getExtraInfo(classInstance: any): PropertyInfo[];
-}
-declare namespace egret3d {
-    class Color implements paper.IRelease<Color>, paper.ISerializable {
-        static readonly WHITE: Readonly<Color>;
-        static readonly BLACK: Readonly<Color>;
-        private static readonly _instances;
-        static create(r?: number, g?: number, b?: number, a?: number): Color;
-        release(): this;
-        r: number;
-        g: number;
-        b: number;
-        a: number;
-        /**
-         * 请使用 `egret3d.Color.create()` 创建 egret3d.Color 实例。
-         * @see egret3d.Color.create()
-         */
-        private constructor();
-        serialize(): number[];
-        deserialize(value: Readonly<[number, number, number, number]>): this;
-        clone(): Color;
-        copy(value: Readonly<Color>): this;
-        set(r: number, g: number, b: number, a: number): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
-        scale(value: number, source?: Readonly<Color>): Readonly<Color>;
-        lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
-    }
-}
 declare namespace paper {
     /**
-     * 预制体资源。
+     * 单例组件基类。
      */
-    class Prefab extends BaseObjectAsset {
+    abstract class SingletonComponent extends BaseComponent {
+        /**
+         * @internal
+         */
+        static readonly __isSingleton: boolean;
+        /**
+         * @internal
+         */
+        static __instance: SingletonComponent | null;
         /**
          *
          */
-        static create(name: string, scene?: Scene | null): GameObject;
-        /**
-         * @deprecated
-         */
-        createInstance(scene?: Scene | null, keepUUID?: boolean): GameObject;
+        static getInstance<T extends SingletonComponent>(componentClass: ComponentClass<T>): T;
+        initialize(): void;
+        uninitialize(): void;
     }
 }
 declare namespace paper {
@@ -2317,83 +2363,57 @@ declare namespace paper {
         deserialize(element: any, data?: Deserializer): any;
     }
 }
-declare namespace paper {
+declare namespace egret3d {
     /**
-     * 单例组件基类。
+     *
      */
-    abstract class SingletonComponent extends BaseComponent {
-        /**
-         * @internal
-         */
-        static readonly __isSingleton: boolean;
-        /**
-         * @internal
-         */
-        static __instance: SingletonComponent | null;
-        /**
-         *
-         */
-        static getInstance<T extends SingletonComponent>(componentClass: ComponentClass<T>): T;
-        initialize(): void;
-        uninitialize(): void;
-    }
+    const RAD_DEG: number;
+    /**
+     *
+     */
+    const DEG_RAD: number;
+    /**
+     *
+     */
+    const EPSILON = 2.220446049250313e-16;
+    function sign(value: number): number;
+    function floatClamp(v: number, min?: number, max?: number): number;
+    function numberLerp(fromV: number, toV: number, v: number): number;
+    function getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3): Vector3;
+    function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3;
+    function triangleIntersectsPlane(): void;
+    function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<AABB>): boolean;
+    function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<AABB>): boolean;
+    function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>): boolean;
+    function aabbIntersectsSphere(aabb: Readonly<AABB>, value: Readonly<Sphere>): boolean;
+    function aabbIntersectsAABB(valueA: Readonly<AABB>, valueB: Readonly<AABB>): boolean;
+    function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
 }
-declare namespace paper {
-    const enum RendererEventType {
-        Materials = "materials",
-    }
+declare namespace egret3d {
     /**
-     * renderer component interface
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     *
      */
-    /**
-     * 渲染器组件接口
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    abstract class BaseRenderer extends BaseComponent {
-        /**
-         * @protected
-         */
-        _boundingSphereDirty: boolean;
-        protected _receiveShadows: boolean;
-        protected _castShadows: boolean;
-        protected _lightmapIndex: number;
-        protected readonly _boundingSphere: egret3d.Sphere;
-        protected readonly _aabb: egret3d.AABB;
-        protected readonly _lightmapScaleOffset: Float32Array;
-        protected _recalculateSphere(): void;
-        /**
-         * 重新计算 AABB。
-         */
-        abstract recalculateAABB(): void;
+    class Quaternion extends Vector4 {
+        private static readonly _instancesQ;
         /**
          *
          */
-        receiveShadows: boolean;
+        static create(x?: number, y?: number, z?: number, w?: number): Quaternion;
+        release(): this;
+        clone(): Quaternion;
+        fromMatrix(matrix: Readonly<Matrix4>): this;
+        fromEuler(value: Readonly<IVector3>, order?: EulerOrder): this;
         /**
-         *
+         * - 向量必须已归一化。
          */
-        castShadows: boolean;
-        /**
-         *
-         */
-        lightmapIndex: number;
-        /**
-         *
-         */
-        readonly aabb: Readonly<egret3d.AABB>;
-        /**
-         *
-         */
-        readonly boundingSphere: Readonly<egret3d.Sphere>;
-        /**
-         *
-         */
-        readonly lightmapScaleOffset: Float32Array;
+        fromAxis(axis: Readonly<IVector3>, radian: number): this;
+        inverse(source?: Readonly<IVector4>): this;
+        dot(value: Readonly<IVector4>): number;
+        multiply(valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
+        premultiply(value: Readonly<IVector4>): this;
+        lerp(t: number, valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
+        lookAt(eye: Vector3, target: Vector3): this;
+        toEuler(value: Vector3, order?: EulerOrder): Vector3;
     }
 }
 declare namespace paper {
@@ -2638,59 +2658,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * Light Type Enum
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 灯光类型的枚举。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    const enum LightType {
-        /**
-         * direction light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 直射光
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Direction = 1,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 点光源
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Point = 2,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Spot = 3,
-    }
-    /**
      * light component
      * @version paper 1.0
      * @platform Web
@@ -2704,13 +2671,9 @@ declare namespace egret3d {
      */
     abstract class BaseLight extends paper.BaseComponent {
         /**
-         *
+         * TODO
          */
-        readonly type: LightType;
-        /**
-         *
-         */
-        castShadows: boolean;
+        cullingMask: paper.CullingMask;
         /**
          *
          */
@@ -2718,40 +2681,19 @@ declare namespace egret3d {
         /**
          *
          */
-        distance: number;
+        readonly color: Color;
         /**
          *
          */
-        decay: number;
-        /**
-         *
-         */
-        angle: number;
-        /**
-         *
-         */
-        penumbra: number;
-        /**
-         * spot angel cos
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯的开合角度cos值
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        spotAngelCos: number;
-        /**
-         *
-         */
-        shadowBias: number;
+        castShadows: boolean;
         /**
          *
          */
         shadowRadius: number;
+        /**
+         *
+         */
+        shadowBias: number;
         /**
          *
          */
@@ -2768,30 +2710,75 @@ declare namespace egret3d {
          *
          */
         shadowCameraSize: number;
-        /**
-         *
-         */
-        readonly color: Color;
+        readonly viewPortPixel: IRectangle;
         readonly matrix: Matrix4;
         renderTarget: IRenderTarget;
-        readonly viewPortPixel: IRectangle;
         protected _updateMatrix(camera: Camera): void;
         /**
          * @internal
          */
         update(camera: Camera, faceIndex: number): void;
+        /**
+         *
+         */
+        /**
+         *
+         */
+        power: number;
     }
 }
 declare namespace egret3d {
+    /**
+     * Mesh 渲染组件。
+     */
+    class MeshRenderer extends paper.BaseRenderer {
+        protected readonly _materials: Material[];
+        uninitialize(): void;
+        recalculateAABB(): void;
+        /**
+         * material list
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 材质数组
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        materials: ReadonlyArray<Material>;
+        /**
+         * 材质数组中的第一个材质。
+         */
+        material: Material | null;
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
     interface IVector2 {
         x: number;
         y: number;
     }
+    /**
+     *
+     */
     class Vector2 implements IVector2, paper.ISerializable {
         static readonly ZERO: Readonly<Vector2>;
         static readonly ONE: Readonly<Vector2>;
+        private static readonly _instances;
+        static create(x?: number, y?: number): Vector2;
+        release(): this;
         x: number;
         y: number;
+        /**
+         * 请使用 `egret3d.Vector2.create()` 创建实例。
+         * @see egret3d.Vector2.create()
+         * @deprecated
+         * @private
+         */
         constructor(x?: number, y?: number);
         serialize(): number[];
         deserialize(element: [number, number]): this;
@@ -2816,50 +2803,65 @@ declare namespace egret3d {
     /**
      *
      */
-    const RAD_DEG: number;
+    interface IRectangle {
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+    }
     /**
-     *
+     * 矩形可序列化对象
      */
-    const DEG_RAD: number;
-    /**
-     *
-     */
-    const EPSILON = 2.220446049250313e-16;
-    function sign(value: number): number;
-    function floatClamp(v: number, min?: number, max?: number): number;
-    function numberLerp(fromV: number, toV: number, v: number): number;
-    function getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3): Vector3;
-    function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3;
-    function triangleIntersectsPlane(): void;
-    function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<AABB>): boolean;
-    function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<AABB>): boolean;
-    function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>): boolean;
-    function aabbIntersectsSphere(aabb: Readonly<AABB>, value: Readonly<Sphere>): boolean;
-    function aabbIntersectsAABB(valueA: Readonly<AABB>, valueB: Readonly<AABB>): boolean;
-    function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
+    class Rectangle implements IRectangle, paper.ISerializable {
+        /**
+         *
+         */
+        x: number;
+        /**
+         *
+         */
+        y: number;
+        /**
+         *
+         */
+        w: number;
+        /**
+         *
+         */
+        h: number;
+        /**
+         *
+         */
+        constructor(x?: number, y?: number, w?: number, h?: number);
+        serialize(): number[];
+        deserialize(element: number[]): this;
+    }
 }
 declare namespace egret3d {
-    /**
-     *
-     */
-    class Quaternion extends Vector4 {
-        private static readonly _instancesQ;
-        static create(x?: number, y?: number, z?: number, w?: number): Quaternion;
+    class Color implements paper.IRelease<Color>, paper.ISerializable {
+        static readonly WHITE: Readonly<Color>;
+        static readonly BLACK: Readonly<Color>;
+        private static readonly _instances;
+        static create(r?: number, g?: number, b?: number, a?: number): Color;
         release(): this;
-        clone(): Quaternion;
-        fromMatrix(matrix: Readonly<Matrix4>): this;
-        fromEuler(value: Readonly<IVector3>, order?: EulerOrder): this;
+        r: number;
+        g: number;
+        b: number;
+        a: number;
         /**
-         * - 向量必须已归一化。
+         * 请使用 `egret3d.Color.create()` 创建实例。
+         * @see egret3d.Color.create()
          */
-        fromAxis(axis: Readonly<IVector3>, radian: number): this;
-        inverse(source?: Readonly<IVector4>): this;
-        dot(value: Readonly<IVector4>): number;
-        multiply(valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
-        premultiply(value: Readonly<IVector4>): this;
-        lerp(t: number, valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
-        lookAt(eye: Vector3, target: Vector3): this;
-        toEuler(value: Vector3, order?: EulerOrder): Vector3;
+        private constructor();
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number]>): this;
+        clone(): Color;
+        copy(value: Readonly<Color>): this;
+        set(r: number, g: number, b: number, a: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
+        scale(value: number, source?: Readonly<Color>): this;
+        lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
     }
 }
 declare namespace egret3d {
@@ -3000,42 +3002,19 @@ declare namespace paper.editor {
         constructor(type: string, data?: any);
     }
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     *
+     * 预制体资源。
      */
-    interface IRectangle {
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-    }
-    /**
-     * 矩形可序列化对象
-     */
-    class Rectangle implements IRectangle, paper.ISerializable {
+    class Prefab extends BaseObjectAsset {
         /**
          *
          */
-        x: number;
+        static create(name: string, scene?: Scene | null): GameObject;
         /**
-         *
+         * @deprecated
          */
-        y: number;
-        /**
-         *
-         */
-        w: number;
-        /**
-         *
-         */
-        h: number;
-        /**
-         *
-         */
-        constructor(x?: number, y?: number, w?: number, h?: number);
-        serialize(): number[];
-        deserialize(element: number[]): this;
+        createInstance(scene?: Scene | null, keepUUID?: boolean): GameObject;
     }
 }
 declare namespace paper.editor {
@@ -3088,14 +3067,6 @@ declare namespace paper.editor {
         dispatchEditorModelEvent(type: string, data?: any): void;
         serialize(): any;
         deserialize(data: any): void;
-    }
-}
-declare namespace paper {
-    /**
-     *
-     */
-    class MissingComponent extends BaseComponent {
-        missingObject: any | null;
     }
 }
 declare namespace paper {
@@ -3399,6 +3370,10 @@ declare namespace egret3d {
          *
          */
         readonly center: Vector3;
+        /**
+         * 请使用 `egret3d.Sphere.create()` 创建实例。
+         * @see egret3d.Sphere.create()
+         */
         private constructor();
         serialize(): number[];
         deserialize(value: Readonly<[number, number, number]>): this;
@@ -3565,7 +3540,7 @@ declare namespace paper {
     /**
      *
      */
-    function clone(object: GameObject): BaseComponent | Scene | GameObject;
+    function clone(object: GameObject): BaseComponent | GameObject | Scene;
     /**
      *
      */
@@ -3602,9 +3577,13 @@ declare namespace egret3d {
         private readonly _minimum;
         private readonly _maximum;
         private readonly _center;
+        /**
+         * 请使用 `egret3d.AABB.create()` 创建实例。
+         * @see egret3d.AABB.create()
+         */
         private constructor();
         serialize(): number[];
-        deserialize(value: Readonly<[number, number, number, number, number, number]>): void;
+        deserialize(value: Readonly<[number, number, number, number, number, number]>): this;
         clone(): AABB;
         copy(value: Readonly<AABB>): this;
         clear(): this;
@@ -3612,7 +3591,7 @@ declare namespace egret3d {
          *
          */
         set(minimum?: Readonly<IVector3> | null, maximum?: Readonly<IVector3> | null): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): void;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         /**
          *
          */
@@ -3747,7 +3726,7 @@ declare namespace egret3d {
         /**
          * 设置父节点
          */
-        setParent(newParent: Transform | null, worldPositionStays?: boolean): void;
+        setParent(newParent: Transform | null, worldPositionStays?: boolean): this;
         getChildIndex(value: Transform): number;
         setChildIndex(value: Transform, index: number): void;
         /**
@@ -3785,8 +3764,8 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setLocalPosition(position: Readonly<IVector3>): void;
-        setLocalPosition(x: number, y: number, z: number): void;
+        setLocalPosition(position: Readonly<IVector3>): this;
+        setLocalPosition(x: number, y: number, z: number): this;
         /**
          * get local rotation
          * @version paper 1.0
@@ -3812,8 +3791,8 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setLocalRotation(rotation: Readonly<IVector4>): void;
-        setLocalRotation(x: number, y: number, z: number, w: number): void;
+        setLocalRotation(rotation: Readonly<IVector4>): this;
+        setLocalRotation(x: number, y: number, z: number, w: number): this;
         /**
          * get local euler angles
          * @version paper 1.0
@@ -3839,8 +3818,8 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setLocalEulerAngles(euler: Readonly<IVector3>, order?: EulerOrder): void;
-        setLocalEulerAngles(x: number, y: number, z: number, order?: EulerOrder): void;
+        setLocalEulerAngles(euler: Readonly<IVector3>, order?: EulerOrder): this;
+        setLocalEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
          * get local scale
          * @version paper 1.0
@@ -3866,8 +3845,8 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setLocalScale(v: Readonly<IVector3>): void;
-        setLocalScale(x: number, y: number, z: number): void;
+        setLocalScale(v: Readonly<IVector3>): this;
+        setLocalScale(x: number, y: number, z: number): this;
         /**
          * get local matrix
          * @version paper 1.0
@@ -3906,8 +3885,8 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setPosition(position: IVector3): void;
-        setPosition(x: number, y: number, z: number): void;
+        setPosition(position: IVector3): this;
+        setPosition(x: number, y: number, z: number): this;
         /**
          * get rotation
          * @version paper 1.0
@@ -3933,8 +3912,8 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setRotation(v: IVector4): void;
-        setRotation(x: number, y: number, z: number, w: number): void;
+        setRotation(v: IVector4): this;
+        setRotation(x: number, y: number, z: number, w: number): this;
         /**
          * get euler angles
          * @version paper 1.0
@@ -3960,8 +3939,8 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setEulerAngles(v: Readonly<IVector3>, order?: EulerOrder): void;
-        setEulerAngles(x: number, y: number, z: number, order?: EulerOrder): void;
+        setEulerAngles(v: Readonly<IVector3>, order?: EulerOrder): this;
+        setEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
          * get scale
          * @version paper 1.0
@@ -3987,8 +3966,8 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setScale(v: IVector3): void;
-        setScale(x: number, y: number, z: number): void;
+        setScale(v: IVector3): this;
+        setScale(x: number, y: number, z: number): this;
         /**
          * get world matrix
          * @version paper 1.0
@@ -4053,7 +4032,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        lookAt(target: Readonly<Transform> | Readonly<IVector3>, up?: Readonly<IVector3>): void;
+        lookAt(target: Readonly<Transform> | Readonly<IVector3>, up?: Readonly<IVector3>): this;
         /**
          * 当前子集对象的数量
          */
@@ -4151,6 +4130,7 @@ declare namespace egret3d {
         static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
         static PARTICLE: Shader;
         static PARTICLE_BLEND: Shader;
+        static PARTICLE_BLEND1: Shader;
         static PARTICLE_ADDITIVE: Shader;
         static PARTICLE_BLEND_PREMULTIPLY: Shader;
         static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
@@ -4944,7 +4924,6 @@ declare namespace egret3d {
      *
      */
     class DirectLight extends BaseLight {
-        readonly type: LightType;
         renderTarget: IRenderTarget;
         update(camera: Camera, faceIndex: number): void;
     }
@@ -4954,7 +4933,14 @@ declare namespace egret3d {
      *
      */
     class PointLight extends BaseLight {
-        readonly type: LightType;
+        /**
+         *
+         */
+        decay: number;
+        /**
+         *
+         */
+        distance: number;
         renderTarget: IRenderTarget;
         update(camera: Camera, faceIndex: number): void;
     }
@@ -4964,7 +4950,22 @@ declare namespace egret3d {
      *
      */
     class SpotLight extends BaseLight {
-        readonly type: LightType;
+        /**
+         *
+         */
+        decay: number;
+        /**
+         *
+         */
+        distance: number;
+        /**
+         *
+         */
+        angle: number;
+        /**
+         *
+         */
+        penumbra: number;
         update(camera: Camera, faceIndex: number): void;
     }
 }
@@ -4987,27 +4988,80 @@ declare namespace egret3d {
         mesh: Mesh | null;
     }
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     * mesh的渲染组件
+     * 场景类
      */
-    class MeshRenderer extends paper.BaseRenderer {
-        private readonly _materials;
-        uninitialize(): void;
-        recalculateAABB(): void;
+    class Scene extends BaseObject {
         /**
-         * material list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
+        static createEmpty(name?: string, isActive?: boolean): Scene;
         /**
-         * 材质数组
-         * @version paper 1.0
-         * @platform Web
-         * @language
+         *
          */
-        materials: ReadonlyArray<Material>;
+        static create(name: string, combineStaticObjects?: boolean): Scene;
+        /**
+         * lightmap强度
+         */
+        lightmapIntensity: number;
+        /**
+         * 场景名称。
+         */
+        readonly name: string;
+        /**
+         * 场景的light map列表。
+         */
+        readonly lightmaps: egret3d.Texture[];
+        /**
+         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+         */
+        extras?: any;
+        /**
+         * @internal
+         */
+        readonly _gameObjects: GameObject[];
+        /**
+         * 环境光
+         */
+        readonly ambientColor: egret3d.Color;
+        private constructor();
+        /**
+         * @internal
+         */
+        _addGameObject(gameObject: GameObject): void;
+        /**
+         * @internal
+         */
+        _removeGameObject(gameObject: GameObject): void;
+        /**
+         *
+         */
+        destroy(): void;
+        /**
+         *
+         */
+        find(nameOrPath: string): GameObject;
+        /**
+         *
+         */
+        findWithTag(tag: string): GameObject;
+        /**
+         *
+         */
+        findGameObjectsWithTag(tag: string): GameObject[];
+        /**
+         * 所有根实体。
+         */
+        getRootGameObjects(): GameObject[];
+        /**
+         *
+         */
+        readonly gameObjectCount: number;
+        /**
+         * 所有实体。
+         */
+        readonly gameObjects: ReadonlyArray<GameObject>;
     }
 }
 declare namespace egret3d {
@@ -5040,7 +5094,6 @@ declare namespace egret3d {
     const enum SkinnedMeshRendererEventType {
         Mesh = "mesh",
         Bones = "bones",
-        Materials = "materials",
     }
     /**
      * Skinned Mesh Renderer Component
@@ -5054,7 +5107,7 @@ declare namespace egret3d {
      * @platform Web
      * @language
      */
-    class SkinnedMeshRenderer extends paper.BaseRenderer {
+    class SkinnedMeshRenderer extends MeshRenderer {
         /**
          *
          */
@@ -5062,7 +5115,6 @@ declare namespace egret3d {
             key: string;
             data: Float32Array;
         }[];
-        private readonly _materials;
         private _mesh;
         /**
          * mesh instance
@@ -5123,19 +5175,6 @@ declare namespace egret3d {
          */
         intersects(ray: Ray): any;
         /**
-         * material list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 材质数组
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        materials: ReadonlyArray<Material>;
-        /**
          * 骨骼列表
          *
          */
@@ -5153,10 +5192,13 @@ declare namespace egret3d {
     class SkinnedMeshRendererSystem extends paper.BaseSystem {
         protected readonly _interests: {
             componentClass: typeof SkinnedMeshRenderer;
-            listeners: {
+            listeners: ({
                 type: SkinnedMeshRendererEventType;
                 listener: (component: SkinnedMeshRenderer) => void;
-            }[];
+            } | {
+                type: paper.RendererEventType;
+                listener: (component: SkinnedMeshRenderer) => void;
+            })[];
         }[];
         private readonly _drawCalls;
         private _updateDrawCalls(gameObject);
@@ -5380,6 +5422,7 @@ declare namespace egret3d {
         update(globalTime: number): void;
         fadeIn(animationName: string | null, fadeTime: number, playTimes?: number, layer?: number, additive?: boolean): AnimationState | null;
         play(animationNameOrNames?: string | string[] | null, playTimes?: number): AnimationState | null;
+        stop(): void;
         readonly lastAnimationnName: string;
         /**
          * 动画数据列表。
@@ -5807,82 +5850,178 @@ declare namespace egret3d.particle {
 }
 declare namespace paper {
     /**
-     * 场景类
+     *
      */
-    class Scene extends BaseObject {
+    type GameObjectExtras = {
+        linkedID?: string;
+        rootID?: string;
+        prefab?: Prefab;
+    };
+    /**
+     * 可以挂载Component的实体类。
+     */
+    class GameObject extends BaseObject {
+        /**
+         * 创建 GameObject，并添加到当前场景中。
+         */
+        static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
+        /**
+         * 是否是静态，启用这个属性可以提升性能
+         */
+        isStatic: boolean;
         /**
          *
          */
-        static createEmpty(name?: string, isActive?: boolean): Scene;
+        hideFlags: HideFlags;
+        /**
+         * 层级
+         */
+        layer: Layer;
+        /**
+         * 名称
+         */
+        name: string;
+        /**
+         * 标签
+         */
+        tag: string;
+        /**
+         * 变换组件
+         */
+        transform: egret3d.Transform;
         /**
          *
          */
-        static create(name: string, combineStaticObjects?: boolean): Scene;
-        /**
-         * lightmap强度
-         */
-        lightmapIntensity: number;
-        /**
-         * 场景名称。
-         */
-        readonly name: string;
-        /**
-         * 场景的light map列表。
-         */
-        readonly lightmaps: egret3d.Texture[];
+        renderer: BaseRenderer | null;
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
-        extras?: any;
+        extras?: GameObjectExtras;
+        private _activeSelf;
         /**
          * @internal
          */
-        readonly _gameObjects: GameObject[];
-        /**
-         * 环境光
-         */
-        readonly ambientColor: egret3d.Color;
-        private constructor();
+        _activeInHierarchy: boolean;
         /**
          * @internal
          */
-        _addGameObject(gameObject: GameObject): void;
+        _activeDirty: boolean;
+        private readonly _components;
+        private readonly _cachedComponents;
+        private _scene;
+        /**
+         * @deprecated
+         */
+        constructor(name?: string, tag?: string, scene?: Scene | null);
+        private _destroy();
+        private _addToScene(value);
+        private _canRemoveComponent(value);
+        private _removeComponent(value, groupComponent);
+        private _getComponentsInChildren(componentClass, child, components, isExtends?);
+        private _getComponent(componentClass);
         /**
          * @internal
          */
-        _removeGameObject(gameObject: GameObject): void;
+        _activeInHierarchyDirty(prevActive: boolean): void;
         /**
          *
          */
         destroy(): void;
         /**
-         *
+         * 添加组件。
          */
-        find(name: string): GameObject;
+        addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T;
+        /**
+         * 移除组件。
+         */
+        removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends?: boolean): void;
+        /**
+         * 移除所有组件。
+         */
+        removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends?: boolean): void;
+        /**
+         * 获取组件。
+         */
+        getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
         /**
          *
          */
-        findWithTag(tag: string): GameObject;
+        getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
+        /**
+         * 搜索自己和父节点中所有特定类型的组件
+         */
+        getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
+        /**
+         * 搜索自己和子节点中所有特定类型的组件
+         */
+        getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
+        /**
+         * 获取组件，如果未添加该组件，则添加该组件。
+         */
+        getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
+        /**
+         * 针对同级的组件发送消息
+         * @param methodName
+         * @param parameter``
+         */
+        sendMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
+        /**
+         * 针对直接父级发送消息
+         * @param methodName
+         * @param parameter
+         */
+        sendMessageUpwards(methodName: string, parameter?: any, requireReceiver?: boolean): void;
+        /**
+         * 群发消息
+         * @param methodName
+         * @param parameter
+         */
+        broadcastMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
         /**
          *
          */
-        findGameObjectsWithTag(tag: string): GameObject[];
-        /**
-         * @internal
-         */
-        findWithUUID(uuid: string): GameObject;
-        /**
-         * 所有根实体。
-         */
-        getRootGameObjects(): GameObject[];
+        readonly isDestroyed: boolean;
         /**
          *
          */
-        readonly gameObjectCount: number;
+        dontDestroy: boolean;
         /**
-         * 所有实体。
+         * 当前GameObject对象自身激活状态
          */
-        readonly gameObjects: ReadonlyArray<GameObject>;
+        activeSelf: boolean;
+        /**
+         * 获取当前GameObject对象在场景中激活状态。
+         * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
+         */
+        readonly activeInHierarchy: boolean;
+        readonly path: string;
+        /**
+         *
+         */
+        readonly components: ReadonlyArray<BaseComponent>;
+        /**
+         *
+         */
+        parent: GameObject | null;
+        /**
+         * 获取物体所在场景实例。
+         */
+        readonly scene: Scene;
+        /**
+         * @deprecated
+         * @see paper.Scene#find()
+         */
+        static find(name: string, scene?: Scene | null): GameObject;
+        /**
+         * @deprecated
+         * @see paper.Scene#findWithTag()
+         */
+        static findWithTag(tag: string, scene?: Scene | null): GameObject;
+        /**
+         * @deprecated
+         * @see paper.Scene#findGameObjectsWithTag()
+         */
+        static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
     }
 }
 declare namespace egret3d.particle {
@@ -6178,186 +6317,6 @@ declare namespace egret3d {
         cleanBuffer(clearOptColor: boolean, clearOptDepath: boolean, clearColor: Color): void;
     }
 }
-declare namespace paper {
-    /**
-     *
-     */
-    type GameObjectExtras = {
-        linkedID?: string;
-        rootID?: string;
-        prefab?: Prefab;
-    };
-    /**
-     * 可以挂载Component的实体类。
-     */
-    class GameObject extends BaseObject {
-        /**
-         * 创建 GameObject，并添加到当前场景中。
-         */
-        static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
-        /**
-         * 是否是静态，启用这个属性可以提升性能
-         */
-        isStatic: boolean;
-        /**
-         *
-         */
-        hideFlags: HideFlags;
-        /**
-         * 层级
-         */
-        layer: Layer;
-        /**
-         * 名称
-         */
-        name: string;
-        /**
-         * 标签
-         */
-        tag: string;
-        /**
-         * 变换组件
-         */
-        transform: egret3d.Transform;
-        /**
-         *
-         */
-        renderer: BaseRenderer | null;
-        /**
-         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
-         */
-        extras?: GameObjectExtras;
-        private _activeSelf;
-        /**
-         * @internal
-         */
-        _activeInHierarchy: boolean;
-        /**
-         * @internal
-         */
-        _activeDirty: boolean;
-        private readonly _components;
-        private readonly _cachedComponents;
-        private _scene;
-        /**
-         * @deprecated
-         */
-        constructor(name?: string, tag?: string, scene?: Scene | null);
-        private _destroy();
-        private _addToScene(value);
-        private _canRemoveComponent(value);
-        private _removeComponent(value, groupComponent);
-        private _getComponentsInChildren(componentClass, child, components, isExtends?);
-        private _getComponent(componentClass);
-        /**
-         * @internal
-         */
-        _activeInHierarchyDirty(prevActive: boolean): void;
-        /**
-         *
-         */
-        destroy(): void;
-        /**
-         *
-         */
-        destroyChildren(): void;
-        /**
-         * 添加组件。
-         */
-        addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T;
-        /**
-         * 移除组件。
-         */
-        removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends?: boolean): void;
-        /**
-         * 移除所有组件。
-         */
-        removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends?: boolean): void;
-        /**
-         * 获取组件。
-         */
-        getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
-        /**
-         *
-         */
-        getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
-        /**
-         * 搜索自己和父节点中所有特定类型的组件
-         */
-        getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
-        /**
-         * 搜索自己和子节点中所有特定类型的组件
-         */
-        getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
-        /**
-         * 获取组件，如果未添加该组件，则添加该组件。
-         */
-        getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
-        /**
-         * 针对同级的组件发送消息
-         * @param methodName
-         * @param parameter``
-         */
-        sendMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
-        /**
-         * 针对直接父级发送消息
-         * @param methodName
-         * @param parameter
-         */
-        sendMessageUpwards(methodName: string, parameter?: any, requireReceiver?: boolean): void;
-        /**
-         * 群发消息
-         * @param methodName
-         * @param parameter
-         */
-        broadcastMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
-        /**
-         *
-         */
-        readonly isDestroyed: boolean;
-        /**
-         *
-         */
-        dontDestroy: boolean;
-        /**
-         * 当前GameObject对象自身激活状态
-         */
-        activeSelf: boolean;
-        /**
-         * 获取当前GameObject对象在场景中激活状态。
-         * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
-         */
-        readonly activeInHierarchy: boolean;
-        readonly path: string;
-        /**
-         *
-         */
-        readonly components: ReadonlyArray<BaseComponent>;
-        /**
-         *
-         */
-        parent: GameObject | null;
-        /**
-         * 获取物体所在场景实例。
-         */
-        readonly scene: Scene;
-        /**
-         * @deprecated
-         * @see paper.Scene#find()
-         */
-        static find(name: string, scene?: Scene | null): GameObject;
-        /**
-         * @deprecated
-         * @see paper.Scene#findWithTag()
-         */
-        static findWithTag(tag: string, scene?: Scene | null): GameObject;
-        /**
-         * @deprecated
-         * @see paper.Scene#findGameObjectsWithTag()
-         */
-        static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
-    }
-}
 declare namespace egret3d {
     /**
      *
@@ -6454,6 +6413,68 @@ declare namespace paper {
          * @param component component
          */
         function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any): void;
+    }
+}
+declare type int = number;
+declare type uint = number;
+declare namespace paper {
+    /**
+     *
+     */
+    let Time: Clock;
+    /**
+     *
+     */
+    let Application: ECS;
+    /**
+     *
+     */
+    class ECS {
+        private static _instance;
+        /**
+         *
+         */
+        static getInstance(): ECS;
+        private constructor();
+        /**
+         *
+         */
+        readonly version: string;
+        /**
+         * 系统管理器。
+         */
+        readonly systemManager: SystemManager;
+        /**
+         * 场景管理器。
+         */
+        readonly sceneManager: SceneManager;
+        private _isEditor;
+        private _isFocused;
+        private _isPlaying;
+        private _isRunning;
+        private _bindUpdate;
+        _option: egret3d.RequiredRuntimeOptions;
+        _canvas: HTMLCanvasElement;
+        _webgl: WebGLRenderingContext;
+        private _update();
+        init({isEditor, isPlaying, systems, option, canvas, webgl}?: {
+            isEditor?: boolean;
+            isPlaying?: boolean;
+            systems?: (new () => BaseSystem)[];
+            option?: {};
+            canvas?: {};
+            webgl?: {};
+        }): void;
+        /**
+         *
+         */
+        pause(): void;
+        resume(): void;
+        callLater(callback: () => void): void;
+        readonly isEditor: boolean;
+        readonly isFocused: boolean;
+        readonly isPlaying: boolean;
+        readonly isRunning: boolean;
     }
 }
 declare namespace egret3d {
@@ -6561,11 +6582,11 @@ declare namespace egret3d {
         readonly glTFTechnique: gltf.Technique;
     }
 }
-declare namespace egrer3d.Primitive {
+declare namespace egret3d.Primitive {
     /**
      *
      */
-    const enum PrimitiveType {
+    const enum Type {
         Axises = 0,
         Quad = 1,
         QuadParticle = 2,
@@ -6578,7 +6599,7 @@ declare namespace egrer3d.Primitive {
     /**
      *
      */
-    function create(type: PrimitiveType): paper.GameObject;
+    function create(type: Type): paper.GameObject;
 }
 declare namespace egret3d.ShaderLib {
     const cube: {
@@ -9507,11 +9528,11 @@ declare namespace egret3d.ShaderChunk {
     const worldpos_vertex = "#if defined( USE_ENVMAP ) || defined( DISTANCE ) || defined ( USE_SHADOWMAP )\n\n vec4 worldPosition = modelMatrix * vec4( transformed, 1.0 );\n\n#endif\n";
 }
 declare namespace RES.processor {
+    const ShaderProcessor: RES.processor.Processor;
     const TextureDescProcessor: RES.processor.Processor;
     const TextureProcessor: RES.processor.Processor;
     const GLTFBinaryProcessor: RES.processor.Processor;
-    const GLTFProcessor: RES.processor.Processor;
-    const GLTFShaderProcessor: RES.processor.Processor;
+    const MaterialProcessor: RES.processor.Processor;
     const PrefabProcessor: RES.processor.Processor;
     const SceneProcessor: RES.processor.Processor;
 }
@@ -10431,66 +10452,40 @@ declare namespace egret3d {
         static test(): void;
     }
 }
-declare type int = number;
-declare type uint = number;
-declare namespace paper {
+declare namespace egret3d {
     /**
      *
      */
-    let Time: Clock;
-    /**
-     *
-     */
-    let Application: ECS;
-    /**
-     *
-     */
-    class ECS {
-        private static _instance;
+    class Plane implements paper.IRelease<Plane>, paper.ISerializable {
+        private static readonly _instances;
         /**
          *
          */
-        static getInstance(): ECS;
+        static create(normal?: Readonly<IVector3>, constant?: number): Plane;
+        release(): this;
+        /**
+         *
+         */
+        constant: number;
+        /**
+         *
+         */
+        readonly normal: Vector3;
+        /**
+         * 请使用 `egret3d.Plane.create()` 创建实例。
+         * @see egret3d.Plane.create()
+         */
         private constructor();
-        /**
-         *
-         */
-        readonly version: string;
-        /**
-         * 系统管理器。
-         */
-        readonly systemManager: SystemManager;
-        /**
-         * 场景管理器。
-         */
-        readonly sceneManager: SceneManager;
-        private _isEditor;
-        private _isFocused;
-        private _isPlaying;
-        private _isRunning;
-        private _bindUpdate;
-        _option: egret3d.RequiredRuntimeOptions;
-        _canvas: HTMLCanvasElement;
-        _webgl: WebGLRenderingContext;
-        private _update();
-        init({isEditor, isPlaying, systems, option, canvas, webgl}?: {
-            isEditor?: boolean;
-            isPlaying?: boolean;
-            systems?: (new () => BaseSystem)[];
-            option?: {};
-            canvas?: {};
-            webgl?: {};
-        }): void;
-        /**
-         *
-         */
-        pause(): void;
-        resume(): void;
-        callLater(callback: () => void): void;
-        readonly isEditor: boolean;
-        readonly isFocused: boolean;
-        readonly isPlaying: boolean;
-        readonly isRunning: boolean;
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number]>): this;
+        clone(): Plane;
+        copy(value: Readonly<Plane>): this;
+        set(normal: Readonly<IVector3>, constant: number): this;
+        fromPoint(value: Readonly<IVector3>, normal?: Readonly<IVector3>): this;
+        fromPoints(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>, valueC: Readonly<IVector3>): this;
+        normalize(source?: Readonly<Plane>): this;
+        negate(source?: Readonly<Plane>): this;
+        getDistance(value: Readonly<IVector3>): number;
     }
 }
 declare namespace paper.editor {
@@ -10551,32 +10546,27 @@ declare namespace egret3d {
     /**
      *
      */
-    class Plane implements paper.IRelease<Plane>, paper.ISerializable {
+    class Triangle implements paper.IRelease<Triangle>, paper.ISerializable {
         private static readonly _instances;
-        /**
-         *
-         */
-        static create(normal?: Readonly<IVector3>, constant?: number): Plane;
+        static create(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): Triangle;
         release(): this;
+        readonly a: Vector3;
+        readonly b: Vector3;
+        readonly c: Vector3;
         /**
-         *
+         * 请使用 `egret3d.Triangle.create()` 创建实例。
+         * @see egret3d.Triangle.create()
          */
-        constant: number;
-        /**
-         *
-         */
-        readonly normal: Vector3;
         private constructor();
         serialize(): number[];
-        deserialize(value: Readonly<[number, number, number, number]>): this;
-        clone(): Plane;
-        copy(value: Readonly<Plane>): this;
-        set(normal: Readonly<IVector3>, constant: number): this;
-        fromPoint(value: Readonly<IVector3>, normal?: Readonly<IVector3>): this;
-        fromPoints(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>, valueC: Readonly<IVector3>): this;
-        normalize(source?: Readonly<Plane>): this;
-        negate(source?: Readonly<Plane>): this;
-        getDistance(value: Readonly<IVector3>): number;
+        deserialize(element: Readonly<[number, number, number, number, number, number, number, number, number]>): void;
+        copy(value: Readonly<Triangle>): this;
+        clone(): Triangle;
+        set(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offsetA?: number, offsetB?: number, offsetC?: number): void;
+        getCenter(value: Vector3): Vector3;
+        getNormal(value: Vector3): Vector3;
+        getArea(): number;
     }
 }
 declare namespace paper.editor {
@@ -10630,7 +10620,6 @@ declare namespace paper.editor {
         setTransformProperty(propName: string, propValue: any, target: BaseComponent): void;
         createModifyGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): void;
         createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any;
-        createAddComponentToPrefab(serializeData: any, gameObjIds: string[]): void;
         createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]): void;
         createPrefabState(prefab: Prefab, parent?: GameObject): void;
         serializeProperty(value: any, editType: editor.EditType): any;
@@ -10712,6 +10701,8 @@ declare namespace paper.editor {
         private findAssetRefs(target, as, refs?);
         private findFromChildren(source, as, refs, parent, key);
         getAllGameObjectsFromPrefabInstance(gameObj: paper.GameObject, objs?: paper.GameObject[] | null): GameObject[];
+        private setMaterialTexture(target, url, propName);
+        modifyMaterialPropertyValues(target: egret3d.Material, valueList: any[]): Promise<void>;
     }
 }
 declare namespace paper.editor {
@@ -10756,27 +10747,23 @@ declare namespace paper.editor {
         private drawCoord();
     }
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     *
+     * @internal
      */
-    class Triangle implements paper.IRelease<Triangle>, paper.ISerializable {
-        private static readonly _instances;
-        static create(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): Triangle;
-        release(): this;
-        readonly a: Vector3;
-        readonly b: Vector3;
-        readonly c: Vector3;
-        private constructor();
-        serialize(): number[];
-        deserialize(element: Readonly<[number, number, number, number, number, number, number, number, number]>): void;
-        copy(value: Readonly<Triangle>): this;
-        clone(): Triangle;
-        set(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offsetA?: number, offsetB?: number, offsetC?: number): void;
-        getCenter(value: Vector3): Vector3;
-        getNormal(value: Vector3): Vector3;
-        getArea(): number;
+    class GroupComponent extends paper.BaseComponent {
+        componentIndex: number;
+        componentClass: ComponentClass<BaseComponent>;
+        private readonly _components;
+        /**
+         * @internal
+         */
+        _addComponent(component: BaseComponent): void;
+        /**
+         * @internal
+         */
+        _removeComponent(component: BaseComponent): void;
+        readonly components: ReadonlyArray<BaseComponent>;
     }
 }
 declare namespace paper.editor {
@@ -11029,21 +11016,10 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
-     * @internal
+     *
      */
-    class GroupComponent extends paper.BaseComponent {
-        componentIndex: number;
-        componentClass: ComponentClass<BaseComponent>;
-        private readonly _components;
-        /**
-         * @internal
-         */
-        _addComponent(component: BaseComponent): void;
-        /**
-         * @internal
-         */
-        _removeComponent(component: BaseComponent): void;
-        readonly components: ReadonlyArray<BaseComponent>;
+    class MissingComponent extends BaseComponent {
+        missingObject: any | null;
     }
 }
 declare namespace paper.editor {

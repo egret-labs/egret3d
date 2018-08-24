@@ -1,11 +1,10 @@
 namespace egret3d {
-
     /**
-     * mesh的渲染组件
+     * Mesh 渲染组件。
      */
     export class MeshRenderer extends paper.BaseRenderer {
         @paper.serializedField
-        private readonly _materials: Material[] = [DefaultMaterials.MESH_BASIC];
+        protected readonly _materials: Material[] = [DefaultMaterials.MESH_BASIC];
 
         public uninitialize() {
             super.uninitialize();
@@ -44,17 +43,50 @@ namespace egret3d {
             return this._materials;
         }
         public set materials(value: ReadonlyArray<Material>) {
-            // TODO 将 materials, material, mesh 接口实现到 BaseRenderer.
             if (value === this._materials) {
                 return;
             }
+            // TODO 共享材质的接口。
 
             this._materials.length = 0;
             for (const material of value) {
-                this._materials.push(material);
+                if (!material) {
+                    console.warn("Invalid material.");
+                }
+
+                this._materials.push(material || DefaultMaterials.MISSING);
             }
 
             paper.EventPool.dispatchEvent(paper.RendererEventType.Materials, this);
+        }
+        /**
+         * 材质数组中的第一个材质。
+         */
+        public get material(): Material | null {
+            return this._materials.length > 0 ? this._materials[0] : null;
+        }
+        public set material(value: Material | null) {
+            let dirty = false;
+            if (value) {
+                if (this._materials.length > 0) {
+                    if (this._materials[0] !== value) {
+                        this._materials[0] = value;
+                        dirty = true;
+                    }
+                }
+                else {
+                    this._materials.push(value);
+                    dirty = true;
+                }
+            }
+            else if (this._materials.length > 0) {
+                this._materials.splice(0, 1);
+                dirty = true;
+            }
+
+            if (dirty) {
+                paper.EventPool.dispatchEvent(paper.RendererEventType.Materials, this);
+            }
         }
     }
 }

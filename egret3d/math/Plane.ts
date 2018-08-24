@@ -31,9 +31,11 @@ namespace egret3d {
          * 
          */
         public readonly normal: Vector3 = Vector3.create();
-
-        private constructor() {
-        }
+        /**
+         * 请使用 `egret3d.Plane.create()` 创建实例。
+         * @see egret3d.Plane.create()
+         */
+        private constructor() { }
 
         public serialize() {
             return [this.normal.x, this.normal.y, this.normal.z, this.constant];

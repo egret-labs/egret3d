@@ -18,7 +18,7 @@ namespace paper {
      */
     export abstract class BaseRenderer extends BaseComponent {
         /**
-         * @protected
+         * @internal
          */
         public _boundingSphereDirty: boolean = true;
         @serializedField
@@ -104,7 +104,7 @@ namespace paper {
             return this._boundingSphere;
         }
         /**
-         * 
+         * TODO
          */
         public get lightmapScaleOffset() {
             return this._lightmapScaleOffset;

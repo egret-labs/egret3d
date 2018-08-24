@@ -161,120 +161,115 @@ namespace egret3d {
             this.pointLightCount = pointLightCount;
             this.spotLightCount = spotLightCount;
 
-            let directLightIndex = 0, pointLightIndex = 0, spotLightIndex = 0, index = 0, size = 0;
+            let directLightIndex = 0, pointLightIndex = 0, spotLightIndex = 0, index = 0;
+            let lightArray = this.directLightArray;
 
             for (const light of lights) {
-                let lightArray = this.directLightArray;
-                const pos = light.gameObject.transform.getPosition();
-                dirHelper.applyDirection(this.matrix_v, pos).normalize();
-                let offset = 0;
+                const position = light.gameObject.transform.getPosition();
+                dirHelper.applyDirection(this.matrix_v, position).normalize();
 
-                if (light.type === LightType.Direction) {
-                    lightArray = this.directLightArray;
-                    index = directLightIndex;
-                    size = this.DIRECT_LIGHT_SIZE;
-                    lightArray[index * size + offset++] = dirHelper.x;
-                    lightArray[index * size + offset++] = dirHelper.y;
-                    lightArray[index * size + offset++] = dirHelper.z;
+                switch (light.constructor) {
+                    case DirectLight: {
+                        lightArray = this.directLightArray;
+                        index = directLightIndex * this.DIRECT_LIGHT_SIZE;
+                        lightArray[index++] = dirHelper.x;
+                        lightArray[index++] = dirHelper.y;
+                        lightArray[index++] = dirHelper.z;
 
-                    lightArray[index * size + offset++] = light.color.r * light.intensity;
-                    lightArray[index * size + offset++] = light.color.g * light.intensity;
-                    lightArray[index * size + offset++] = light.color.b * light.intensity;
-                }
-                else if (light.type === LightType.Point) {
-                    lightArray = this.pointLightArray;
-                    index = pointLightIndex;
-                    size = this.POINT_LIGHT_SIZE;
+                        lightArray[index++] = light.color.r * light.intensity;
+                        lightArray[index++] = light.color.g * light.intensity;
+                        lightArray[index++] = light.color.b * light.intensity;
+                        break;
+                    }
 
-                    lightArray[index * size + offset++] = pos.x;
-                    lightArray[index * size + offset++] = pos.y;
-                    lightArray[index * size + offset++] = pos.z;
+                    case PointLight: {
+                        lightArray = this.pointLightArray;
+                        index = pointLightIndex * this.POINT_LIGHT_SIZE;
 
-                    lightArray[index * size + offset++] = light.color.r * light.intensity;
-                    lightArray[index * size + offset++] = light.color.g * light.intensity;
-                    lightArray[index * size + offset++] = light.color.b * light.intensity;
+                        lightArray[index++] = position.x;
+                        lightArray[index++] = position.y;
+                        lightArray[index++] = position.z;
 
-                    lightArray[index * size + offset++] = light.distance;
-                    lightArray[index * size + offset++] = light.decay;
-                }
-                else if (light.type === LightType.Spot) {
-                    lightArray = this.spotLightArray;
-                    index = spotLightIndex;
-                    size = this.SPOT_LIGHT_SIZE;
+                        lightArray[index++] = light.color.r * light.intensity;
+                        lightArray[index++] = light.color.g * light.intensity;
+                        lightArray[index++] = light.color.b * light.intensity;
 
-                    lightArray[index * size + offset++] = pos.x;
-                    lightArray[index * size + offset++] = pos.y;
-                    lightArray[index * size + offset++] = pos.z;
+                        lightArray[index++] = (light as PointLight).distance;
+                        lightArray[index++] = (light as PointLight).decay;
+                        break;
+                    }
 
-                    lightArray[index * size + offset++] = dirHelper.x;
-                    lightArray[index * size + offset++] = dirHelper.y;
-                    lightArray[index * size + offset++] = dirHelper.z;
+                    case SpotLight: {
+                        lightArray = this.spotLightArray;
+                        index = spotLightIndex * this.SPOT_LIGHT_SIZE;
 
-                    lightArray[index * size + offset++] = light.color.r * light.intensity;
-                    lightArray[index * size + offset++] = light.color.g * light.intensity;
-                    lightArray[index * size + offset++] = light.color.b * light.intensity;
+                        lightArray[index++] = position.x;
+                        lightArray[index++] = position.y;
+                        lightArray[index++] = position.z;
 
-                    lightArray[index * size + offset++] = light.distance;
-                    lightArray[index * size + offset++] = light.decay;
-                    lightArray[index * size + offset++] = Math.cos(light.angle);
-                    lightArray[index * size + offset++] = Math.cos(light.angle * (1 - light.penumbra));
+                        lightArray[index++] = dirHelper.x;
+                        lightArray[index++] = dirHelper.y;
+                        lightArray[index++] = dirHelper.z;
+
+                        lightArray[index++] = light.color.r * light.intensity;
+                        lightArray[index++] = light.color.g * light.intensity;
+                        lightArray[index++] = light.color.b * light.intensity;
+
+                        lightArray[index++] = (light as SpotLight).distance;
+                        lightArray[index++] = (light as SpotLight).decay;
+                        lightArray[index++] = Math.cos((light as SpotLight).angle);
+                        lightArray[index++] = Math.cos((light as SpotLight).angle * (1 - (light as SpotLight).penumbra));
+                        break;
+                    }
                 }
 
                 if (light.castShadows) {
-                    lightArray[index * size + offset++] = 1;
-                    if (light.type === LightType.Direction) {
-                        lightArray[index * size + offset++] = light.shadowBias;
-                        lightArray[index * size + offset++] = light.shadowRadius;
-                        lightArray[index * size + offset++] = light.shadowSize;
-                        lightArray[index * size + offset++] = light.shadowSize;
-                        this.directShadowMatrix.set(light.matrix.rawData, directLightIndex * 16);
-                        this.directShadowMaps[directLightIndex] = light.renderTarget.texture;
-                    }
-                    else if (light.type === LightType.Point) {
-                        lightArray[index * size + offset++] = light.shadowBias;
-                        lightArray[index * size + offset++] = light.shadowRadius;
-                        lightArray[index * size + offset++] = light.shadowSize;
-                        lightArray[index * size + offset++] = light.shadowSize;
-                        lightArray[index * size + offset++] = light.shadowCameraNear;
-                        lightArray[index * size + offset++] = light.shadowCameraFar;
-                        this.pointShadowMatrix.set(light.matrix.rawData, pointLightIndex * 16);
-                        this.pointShadowMaps[pointLightIndex] = light.renderTarget.texture;
-                    }
-                    else if (light.type === LightType.Spot) {
-                        lightArray[index * size + offset++] = light.shadowBias;
-                        lightArray[index * size + offset++] = light.shadowRadius;
-                        lightArray[index * size + offset++] = light.shadowSize;
-                        lightArray[index * size + offset++] = light.shadowSize;
-                        this.spotShadowMatrix.set(light.matrix.rawData, spotLightIndex * 16);
-                        this.spotShadowMaps[spotLightIndex] = light.renderTarget.texture;
+                    lightArray[index++] = 1;
+                    lightArray[index++] = light.shadowBias;
+                    lightArray[index++] = light.shadowRadius;
+                    lightArray[index++] = light.shadowSize;
+                    lightArray[index++] = light.shadowSize;
+
+                    switch (light.constructor) {
+                        case DirectLight:
+                            this.directShadowMatrix.set(light.matrix.rawData, directLightIndex * 16);
+                            this.directShadowMaps[directLightIndex++] = light.renderTarget.texture;
+                            break;
+
+                        case PointLight:
+                            lightArray[index++] = light.shadowCameraNear;
+                            lightArray[index++] = light.shadowCameraFar;
+                            this.pointShadowMatrix.set(light.matrix.rawData, pointLightIndex * 16);
+                            this.pointShadowMaps[pointLightIndex++] = light.renderTarget.texture;
+                            break;
+
+                        case SpotLight:
+                            this.spotShadowMatrix.set(light.matrix.rawData, spotLightIndex * 16);
+                            this.spotShadowMaps[spotLightIndex++] = light.renderTarget.texture;
+                            break;
                     }
                 }
                 else {
-                    lightArray[index * size + offset++] = 0;
-                    lightArray[index * size + offset++] = 0;
-                    lightArray[index * size + offset++] = 0;
-                    lightArray[index * size + offset++] = 0;
-                    if (light.type === LightType.Direction) {
-                        this.directShadowMaps[directLightIndex] = null;
-                    }
-                    else if (light.type === LightType.Point) {
-                        lightArray[index * size + offset++] = 0;
-                        lightArray[index * size + offset++] = 0;
-                        this.pointShadowMaps[pointLightIndex] = null;
-                    }
-                    else if (light.type === LightType.Spot) {
-                        this.spotShadowMaps[spotLightIndex] = null;
-                    }
-                }
+                    lightArray[index++] = 0;
+                    lightArray[index++] = 0;
+                    lightArray[index++] = 0;
+                    lightArray[index++] = 0;
 
-                if (light.type === LightType.Direction) {
-                    directLightIndex++;
-                }
-                else if (light.type === LightType.Point) {
-                    pointLightIndex++;
-                }
-                else if (light.type === LightType.Spot) {
-                    spotLightIndex++;
+                    switch (light.constructor) {
+                        case DirectLight:
+                            this.directShadowMaps[directLightIndex++] = null;
+                            break;
+
+                        case PointLight:
+                            lightArray[index++] = 0;
+                            lightArray[index++] = 0;
+                            this.pointShadowMaps[pointLightIndex++] = null;
+                            break;
+
+                        case SpotLight:
+                            this.spotShadowMaps[spotLightIndex++] = null;
+                            break;
+                    }
                 }
             }
 

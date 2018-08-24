@@ -53,6 +53,8 @@ namespace egret3d {
 
         public z: number;
         /**
+         * 请使用 `egret3d.Vector3.create()` 创建实例。
+         * @see egret3d.Vector3.create()
          * @deprecated
          * @private
          */

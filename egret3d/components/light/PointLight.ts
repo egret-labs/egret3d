@@ -11,7 +11,19 @@ namespace egret3d {
      * 
      */
     export class PointLight extends BaseLight {
-        public readonly type: LightType = LightType.Point;
+        /**
+         * 
+         */
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.NUMBER)
+        public decay: number = 2.0;
+        /**
+         * 
+         */
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.NUMBER)
+        public distance: number = 0.0;
+
         public renderTarget: IRenderTarget = new GlRenderTarget(1024, 1024, true); // TODO
 
         public update(camera: Camera, faceIndex: number) {

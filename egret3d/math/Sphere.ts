@@ -33,7 +33,10 @@ namespace egret3d {
          * 
          */
         public readonly center: Vector3 = Vector3.create();
-
+        /**
+         * 请使用 `egret3d.Sphere.create()` 创建实例。
+         * @see egret3d.Sphere.create()
+         */
         private constructor() { }
 
         public serialize() {

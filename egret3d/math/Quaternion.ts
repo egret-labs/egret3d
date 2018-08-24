@@ -5,7 +5,9 @@ namespace egret3d {
     export class Quaternion extends Vector4 {
 
         private static readonly _instancesQ: Quaternion[] = [];
-
+        /**
+         * 
+         */
         public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
             if (this._instancesQ.length > 0) {
                 return this._instancesQ.pop()!.set(x, y, z, w);

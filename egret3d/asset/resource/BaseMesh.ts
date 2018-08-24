@@ -136,6 +136,11 @@ namespace egret3d {
             _helpRay.origin.applyMatrix(_helpMatrix);
             _helpRay.direction.applyDirection(_helpMatrix).normalize();
 
+            let subMeshIndex = 0;
+            const p0 = _helpVector3A;
+            const p1 = _helpVector3B;
+            const p2 = _helpVector3C;
+            const vertices = this.getVertices();
             let pickInfo: PickInfo | null = null; // TODO
 
             for (const primitive of this._glTFMesh!.primitives) {
@@ -159,47 +164,50 @@ namespace egret3d {
                         break;
 
                     case gltf.MeshPrimitiveMode.Triangles:
-                    default: {
+                    default:
                         if (primitive.indices === undefined) {
-                            // TODO
-                        }
-                        else {
-                            let subMeshIndex = 0;
-                            let vertexIndex = 0;
-                            const p0 = _helpVector3A;
-                            const p1 = _helpVector3B;
-                            const p2 = _helpVector3C;
-                            const vertices = this.getVertices();
+                            for (let i = 0, l = vertices.length; i < l; i += 9) { //
+                                p0.fromArray(vertices, i);
+                                p0.fromArray(vertices, i + 3);
+                                p0.fromArray(vertices, i + 6);
 
-                            for (const _primitive of this._glTFMesh.primitives) {
-                                const indices = this.getIndices(subMeshIndex++);
+                                const result = _helpRay.intersectTriangle(p0, p1, p2);
+                                if (result) {
+                                    if (result.distance < 0) {
+                                        continue;
+                                    }
 
-                                for (let i = 0, l = indices.length; i < l; i += 3) {
-                                    vertexIndex = indices[i] * 3;
-                                    p0.set(vertices[vertexIndex++], vertices[vertexIndex++], vertices[vertexIndex++]);
-                                    vertexIndex = indices[i + 1] * 3;
-                                    p1.set(vertices[vertexIndex++], vertices[vertexIndex++], vertices[vertexIndex++]);
-                                    vertexIndex = indices[i + 2] * 3;
-                                    p2.set(vertices[vertexIndex++], vertices[vertexIndex++], vertices[vertexIndex++]);
-
-                                    const result = _helpRay.intersectTriangle(p0, p1, p2);
-                                    if (result) {
-                                        if (result.distance < 0) {
-                                            continue;
-                                        }
-
-                                        if (!pickInfo || pickInfo.distance > result.distance) {
-                                            pickInfo = result;
-                                            pickInfo.subMeshIndex = subMeshIndex;
-                                            pickInfo.triangleIndex = i / 3; // TODO
-                                        }
+                                    if (!pickInfo || pickInfo.distance > result.distance) {
+                                        pickInfo = result;
+                                        pickInfo.subMeshIndex = subMeshIndex;
+                                        pickInfo.triangleIndex = i / 3; // TODO
                                     }
                                 }
                             }
                         }
+                        else {
+                            const indices = this.getIndices(subMeshIndex++);
 
+                            for (let i = 0, l = indices.length; i < l; i += 3) { //
+                                p0.fromArray(vertices, indices[i] * 3);
+                                p1.fromArray(vertices, indices[i + 1] * 3);
+                                p2.fromArray(vertices, indices[i + 2] * 3);
+
+                                const result = _helpRay.intersectTriangle(p0, p1, p2);
+                                if (result) {
+                                    if (result.distance < 0) {
+                                        continue;
+                                    }
+
+                                    if (!pickInfo || pickInfo.distance > result.distance) {
+                                        pickInfo = result;
+                                        pickInfo.subMeshIndex = subMeshIndex;
+                                        pickInfo.triangleIndex = i / 3; // TODO
+                                    }
+                                }
+                            }
+                        }
                         break;
-                    }
                 }
             }
 

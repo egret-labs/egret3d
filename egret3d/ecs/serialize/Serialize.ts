@@ -42,7 +42,9 @@ namespace paper {
             delete _deserializers[k];
         }
 
-        _defaultGameObject.destroyChildren();
+        for (const child of _defaultGameObject.transform.children) {
+            child.gameObject.destroy();
+        }
 
         const serializeData = _serializeData;
         _serializeData = null;

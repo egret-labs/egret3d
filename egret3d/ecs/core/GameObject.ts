@@ -258,20 +258,6 @@ namespace paper {
             this._destroy();
         }
         /**
-         * 
-         */
-        public destroyChildren() {
-            if (this === Application.sceneManager.globalGameObject) {
-                console.warn("Cannot destroy global game object.");
-                return;
-            }
-
-            let i = this.transform.children.length;
-            while (i--) {
-                this.transform.children[i].gameObject.destroy();
-            }
-        }
-        /**
          * 添加组件。
          */
         public addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T {

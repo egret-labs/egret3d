@@ -44,11 +44,12 @@ namespace egret3d {
          */
         public readonly rawData: Float32Array = new Float32Array(_array);
         /**
+         * 请使用 `egret3d.Matrix4.create()` 创建实例。
+         * @see egret3d.Matrix4.create()
          * @deprecated
          * @private
          */
-        public constructor() {
-        }
+        public constructor() { }
 
         public serialize() {
             return this.rawData;

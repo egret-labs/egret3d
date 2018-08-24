@@ -20,7 +20,6 @@ namespace paper.editor{
 
         public async modifyAssetPropertyValues(assetUrl: string, valueList: any[]): Promise<void> {
             let target = await this.editorModel.getAssetByAssetUrl(assetUrl);
-            let editInfoList = editor.getEditInfo(target);
             valueList.forEach(async (propertyValue) => {
                 const { propName, copyValue, valueEditType } = propertyValue;
                 const newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);

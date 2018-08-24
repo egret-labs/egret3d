@@ -34,9 +34,10 @@ namespace egret3d {
 
             const filter = gameObject.getComponent(MeshFilter) as MeshFilter;
             const renderer = gameObject.renderer as MeshRenderer;
+            const materials = renderer.materials;
 
             this._drawCalls.removeDrawCalls(renderer);
-            if (!filter.mesh || renderer.materials.length === 0) {
+            if (!filter.mesh || materials.length === 0) {
                 return;
             }
 
@@ -50,7 +51,7 @@ namespace egret3d {
 
                     subMeshIndex: subMeshIndex++,
                     mesh: filter.mesh,
-                    material: renderer.materials[primitive.material!] || DefaultMaterials.MISSING,
+                    material: materials[primitive.material!] || DefaultMaterials.MISSING,
 
                     frustumTest: false,
                     zdist: -1,
