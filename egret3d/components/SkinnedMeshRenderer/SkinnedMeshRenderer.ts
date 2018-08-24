@@ -23,7 +23,6 @@ namespace egret3d {
     export const enum SkinnedMeshRendererEventType {
         Mesh = "mesh",
         Bones = "bones",
-        Materials = "materials",
     }
     /**
      * Skinned Mesh Renderer Component
@@ -37,14 +36,11 @@ namespace egret3d {
      * @platform Web
      * @language
      */
-    export class SkinnedMeshRenderer extends paper.BaseRenderer {
+    export class SkinnedMeshRenderer extends MeshRenderer {
         /**
          * 
          */
         public static dataCaches: { key: string, data: Float32Array }[] = [];
-
-        @paper.serializedField
-        private readonly _materials: Material[] = [];
 
         @paper.serializedField
         private _mesh: Mesh | null = null;
@@ -390,30 +386,6 @@ namespace egret3d {
             }
 
             return pickinfo;
-        }
-        /**
-         * material list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 材质数组
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        public get materials(): ReadonlyArray<Material> {
-            return this._materials;
-        }
-        public set materials(value: ReadonlyArray<Material>) {
-            if (value !== this._materials) {
-                for (const material of value) {
-                    this._materials.push(material);
-                }
-            }
-
-            paper.EventPool.dispatchEvent(SkinnedMeshRendererEventType.Materials, this);
         }
         /**
          * 骨骼列表

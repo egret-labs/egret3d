@@ -409,8 +409,8 @@ namespace egret3d {
                 }
                 else {
                     const skinmesh = transform.gameObject.getComponent(SkinnedMeshRenderer);
-                    if (skinmesh) {
-                        let pickinfo = skinmesh.intersects(ray);
+                    if (skinmesh && skinmesh.mesh) {
+                        const pickinfo = skinmesh.mesh.raycast(ray, transform.getWorldMatrix());
                         if (pickinfo) {
                             pickInfos.push(pickinfo);
                             pickinfo.transform = transform;

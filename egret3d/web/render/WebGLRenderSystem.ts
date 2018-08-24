@@ -409,7 +409,7 @@ namespace egret3d {
         public _renderLightShadow(light: BaseLight) {
             const camera = this._lightCamera;
             const drawCalls = this._drawCalls;
-            const faceCount = light.type === LightType.Point ? 6 : 1;
+            const faceCount = light.constructor === PointLight ? 6 : 1;
             const renderState = this._renderState;
             for (let i = 0; i < faceCount; ++i) {
                 const context = camera.context;
@@ -421,7 +421,7 @@ namespace egret3d {
                 drawCalls.shadowFrustumCulling(camera);
                 //
                 const shadowCalls = drawCalls.shadowCalls;
-                const shadowMaterial = light.type === LightType.Point ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
+                const shadowMaterial = light.constructor === PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
                 for (const drawCall of shadowCalls) {
                     //TODO, 现在不支持蒙皮动画阴影     
                     this._renderCall(context, drawCall, shadowMaterial);

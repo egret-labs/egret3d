@@ -839,7 +839,7 @@ namespace egret3d {
             layer: number = 0, additive: boolean = false,
         ): AnimationState | null {
             if (!this._addToSystem) {
-                console.warn("The animation component is not add to system yet.");
+                // console.warn("The animation component is not add to system yet.");
                 this._fadeInParamter = arguments as any;
                 return null;
             }
@@ -902,10 +902,17 @@ namespace egret3d {
             return this.fadeIn(animationNameOrNames, 0.0, playTimes);
         }
 
+        public stop() {
+            for (const blendNode of this._blendNodes) {
+                if (!blendNode.parent) {
+                    blendNode.fadeOut(0.0);
+                }
+            }
+        }
+
         public get lastAnimationnName(): string {
             return this._lastAnimationState ? this._lastAnimationState.animationClip.name : "";
         }
-
         /**
          * 动画数据列表。
          */

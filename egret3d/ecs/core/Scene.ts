@@ -124,10 +124,22 @@ namespace paper {
         /**
          * 
          */
-        public find(name: string) {
-            for (const gameObject of this._gameObjects) {
-                if (gameObject.name === name) {
-                    return gameObject;
+        public find(nameOrPath: string) {
+            const index = nameOrPath.indexOf("/");
+            if (index > 0) {
+                const firstName = nameOrPath.slice(0, index);
+                for (const gameObject of this._gameObjects) {
+                    if (gameObject.name === firstName) {
+                        const child = gameObject.transform.find(nameOrPath.slice(index + 1));
+                        return child ? child.gameObject : null;
+                    }
+                }
+            }
+            else {
+                for (const gameObject of this._gameObjects) {
+                    if (gameObject.name === nameOrPath) {
+                        return gameObject;
+                    }
                 }
             }
 
@@ -157,18 +169,6 @@ namespace paper {
             }
 
             return gameObjects;
-        }
-        /**
-         * @internal
-         */
-        public findWithUUID(uuid: string) {
-            for (const gameObject of this._gameObjects) {
-                if (gameObject.uuid === uuid) {
-                    return gameObject;
-                }
-            }
-
-            return null;
         }
         /**
          * 所有根实体。
