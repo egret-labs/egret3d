@@ -14,7 +14,7 @@ namespace paper.editor {
         }
 
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any) {
-            let lastY = egret3d.InputManager.mouse.position.x;
+            let lastY = egret3d.InputManager.mouse.position.y;
             let lastX = egret3d.InputManager.mouse.position.x;
             this.helpVec3_1.set(lastX, lastY, 0)
             let worldRotation = selectedGameObjs[0].transform.getRotation();
@@ -29,8 +29,8 @@ namespace paper.editor {
         }
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]) {
             let lastX = egret3d.InputManager.mouse.position.x;
-            let lastY = egret3d.InputManager.mouse.position.x;
-            let delta = lastY - this.helpVec3_1.y
+            let lastY = egret3d.InputManager.mouse.position.y;
+            let delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x
             let rot = selectedGameObjs[0].transform.getRotation()
             let cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
 
@@ -46,7 +46,7 @@ namespace paper.editor {
         }
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]) {
             let lastX = egret3d.InputManager.mouse.position.x;
-            let lastY = egret3d.InputManager.mouse.position.x;
+            let lastY = egret3d.InputManager.mouse.position.y;
             let len = selectedGameObjs.length
             let ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
             let ctrlRot = this.geo.transform.parent.getRotation();
@@ -69,8 +69,8 @@ namespace paper.editor {
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]) {
             let len = selectedGameObjs.length
             let lastX = egret3d.InputManager.mouse.position.x;
-            let lastY = egret3d.InputManager.mouse.position.x;
-            let delta = lastY - this.helpVec3_1.y
+            let lastY = egret3d.InputManager.mouse.position.y;
+            let delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x
             let cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
             this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
 

@@ -14,14 +14,15 @@ namespace paper.editor {
         }
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any) {
             this.canDrag = true;
-            let worldRotation = selectedGameObjs[0].transform.getRotation();
             let worldPosition = selectedGameObjs[0].transform.getPosition();
+            let worldRotation = selectedGameObjs[0].transform.getRotation();
 
-            let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
-            let normal = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
-            this._dragPlaneNormal.applyQuaternion(worldRotation, normal)
-
-            egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
+            var normal = new egret3d.Vector3
+            var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z)
+            normal.applyQuaternion(worldRotation, this.up)
+            _normal.cross(normal)
+            normal.cross(_normal)
+            this._dragPlaneNormal = normal.normalize()
 
             this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
@@ -59,10 +60,13 @@ namespace paper.editor {
             }
             ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
             egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-            egret3d.Vector3.copy(this.forward, this._dragPlaneNormal);
 
-            let pos = Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition()
-            let normal = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
+            var normal = new egret3d.Vector3
+            var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z)
+            normal.copy(this.up)
+            _normal.cross(normal)
+            normal.cross(_normal)
+            this._dragPlaneNormal = normal.normalize()
 
             this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
 
