@@ -190,11 +190,12 @@ namespace paper {
     }
 
     function _getSerializedKeys(serializedClass: BaseClass, keys: string[] | null = null) {
-        if (serializedClass.__serializeKeys) {
+        const serializeKeys = serializedClass.__serializeKeys;
+        if (serializeKeys) {
             keys = keys || [];
 
-            for (const key of serializedClass.__serializeKeys) {
-                keys.push(key);
+            for (const key in serializeKeys) {
+                keys.push(serializeKeys[key] || key);
             }
         }
 

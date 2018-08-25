@@ -30,16 +30,13 @@ namespace egret3d {
         private readonly _localMatrix: Matrix4 = Matrix4.create();
         private readonly _worldMatrix: Matrix4 = Matrix4.create();
 
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalPosition" })
-        private readonly localPosition: Vector3 = Vector3.create();
-        @paper.serializedField
-        private readonly localRotation: Quaternion = Quaternion.create();
-        @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setLocalEulerAngles" })
+        @paper.serializedField("localPosition")
+        private readonly _localPosition: Vector3 = Vector3.create();
+        @paper.serializedField("localRotation")
+        private readonly _localRotation: Quaternion = Quaternion.create();
         private readonly _localEulerAngles: Vector3 = Vector3.create();
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalScale" })
-        private readonly localScale: Vector3 = Vector3.ONE.clone();
+        @paper.serializedField("localScale")
+        private readonly _localScale: Vector3 = Vector3.ONE.clone();
 
         private readonly _position: Vector3 = Vector3.create();
         private readonly _rotation: Quaternion = Quaternion.create();
@@ -265,7 +262,7 @@ namespace egret3d {
          * @language zh_CN
          */
         public getLocalPosition(): Readonly<Vector3> {
-            return this.localPosition;
+            return this._localPosition;
         }
         /**
          * set local position
@@ -283,10 +280,10 @@ namespace egret3d {
         public setLocalPosition(x: number, y: number, z: number): this;
         public setLocalPosition(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
-                this.localPosition.copy(p1 as Readonly<IVector3>);
+                this._localPosition.copy(p1 as Readonly<IVector3>);
             }
             else {
-                this.localPosition.set(p1 as number, p2 || 0.0, p3 || 0.0);
+                this._localPosition.set(p1 as number, p2 || 0.0, p3 || 0.0);
             }
 
             // if (!this._dirtyLocalT) {
@@ -299,7 +296,20 @@ namespace egret3d {
 
             return this;
         }
+        /**
+         * 
+         */
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        public get localPosition(): Readonly<Vector3> {
+            return this._localPosition;
+        }
+        public set localPosition(value: Readonly<Vector3>) {
+            this._localPosition.copy(value);
 
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        }
         /**
          * get local rotation
          * @version paper 1.0
@@ -313,7 +323,7 @@ namespace egret3d {
          * @language zh_CN
          */
         public getLocalRotation(): Readonly<Quaternion> {
-            return this.localRotation;
+            return this._localRotation;
         }
         /**
          * set local rotation
@@ -331,10 +341,10 @@ namespace egret3d {
         public setLocalRotation(x: number, y: number, z: number, w: number): this;
         public setLocalRotation(p1: Readonly<IVector4> | number, p2?: number, p3?: number, p4?: number) {
             if (p1.hasOwnProperty("x")) {
-                this.localRotation.copy(p1 as Readonly<IVector4>);
+                this._localRotation.copy(p1 as Readonly<IVector4>);
             }
             else {
-                this.localRotation.set(p1 as number, p2 || 0.0, p3 || 0.0, p4 !== undefined ? p4 : 1.0);
+                this._localRotation.set(p1 as number, p2 || 0.0, p3 || 0.0, p4 !== undefined ? p4 : 1.0);
             }
 
             // if (!this._dirtyLocalRS) {
@@ -384,11 +394,11 @@ namespace egret3d {
         public setLocalEulerAngles(p1: Readonly<IVector3> | number, p2?: EulerOrder | number, p3?: number, p4?: EulerOrder) {
             if (p1.hasOwnProperty("x")) {
                 _helpVector3.multiplyScalar(DEG_RAD, p1 as Readonly<IVector3>);
-                this.localRotation.fromEuler(_helpVector3, p2 as EulerOrder);
+                this._localRotation.fromEuler(_helpVector3, p2 as EulerOrder);
             }
             else {
                 _helpVector3.set(p1 as number * DEG_RAD, p2 as number * DEG_RAD, p3 as number * DEG_RAD);
-                this.localRotation.fromEuler(_helpVector3, p4 as EulerOrder);
+                this._localRotation.fromEuler(_helpVector3, p4 as EulerOrder);
             }
 
             // if (!this._dirtyLocalRS) {
@@ -400,6 +410,21 @@ namespace egret3d {
             }
 
             return this;
+        }
+        /**
+         * 
+         */
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        public get localEulerAngles(): Readonly<Vector3> {
+            return this._localPosition;
+        }
+        public set localEulerAngles(value: Readonly<Vector3>) {
+            _helpVector3.multiplyScalar(DEG_RAD, value);
+            this._localRotation.fromEuler(_helpVector3);
+
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
         }
         /**
          * get local scale
@@ -414,7 +439,7 @@ namespace egret3d {
          * @language zh_CN
          */
         public getLocalScale(): Readonly<Vector3> {
-            return this.localScale;
+            return this._localScale;
         }
         /**
          * set local scale
@@ -432,10 +457,10 @@ namespace egret3d {
         public setLocalScale(x: number, y: number, z: number): this;
         public setLocalScale(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
-                this.localScale.copy(p1 as Readonly<IVector3>);
+                this._localScale.copy(p1 as Readonly<IVector3>);
             }
             else {
-                this.localScale.set(p1 as number, p2 !== undefined ? p2 : 1.0, p3 !== undefined ? p3 : 1.0);
+                this._localScale.set(p1 as number, p2 !== undefined ? p2 : 1.0, p3 !== undefined ? p3 : 1.0);
             }
 
             // if (!this._dirtyLocalRS) {
@@ -447,6 +472,20 @@ namespace egret3d {
             }
 
             return this;
+        }
+        /**
+         * 
+         */
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        public get localScale(): Readonly<Vector3> {
+            return this._localPosition;
+        }
+        public set localScale(value: Readonly<Vector3>) {
+            this._localScale.copy(value);
+
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
         }
         /**
          * get local matrix
@@ -472,7 +511,7 @@ namespace egret3d {
             // }
 
             if (this._dirtyLocal) {
-                this._localMatrix.compose(this.localPosition, this.localRotation, this.localScale);
+                this._localMatrix.compose(this._localPosition, this._localRotation, this._localScale);
                 this._dirtyLocal = false;
             }
 
@@ -516,14 +555,14 @@ namespace egret3d {
         public setPosition(x: number, y: number, z: number): this;
         public setPosition(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
-                this.localPosition.copy(p1 as IVector3);
+                this._localPosition.copy(p1 as IVector3);
             }
             else {
-                this.localPosition.set(p1 as number, p2 || 0.0, p3 || 0.0);
+                this._localPosition.set(p1 as number, p2 || 0.0, p3 || 0.0);
             }
 
             if (this._parent) {
-                this.localPosition.applyMatrix(_helpMatrix.inverse(this._parent.getWorldMatrix()));
+                this._localPosition.applyMatrix(_helpMatrix.inverse(this._parent.getWorldMatrix()));
             }
 
             // if (!this._dirtyWorldT) {
@@ -573,14 +612,14 @@ namespace egret3d {
         public setRotation(x: number, y: number, z: number, w: number): this;
         public setRotation(q1: IVector4 | number, q2?: number, q3?: number, q4?: number) {
             if (q1.hasOwnProperty("x")) {
-                this.localRotation.copy(q1 as IVector4);
+                this._localRotation.copy(q1 as IVector4);
             }
             else {
-                this.localRotation.set(q1 as number, q2 || 0.0, q3 || 0.0, q4 !== undefined ? q4 : 1.0);
+                this._localRotation.set(q1 as number, q2 || 0.0, q3 || 0.0, q4 !== undefined ? q4 : 1.0);
             }
 
             if (this._parent) {
-                this.localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
             }
 
             // if (!this._dirtyWorldRS) {
@@ -632,15 +671,15 @@ namespace egret3d {
         public setEulerAngles(q1: Readonly<IVector3> | number, q2?: EulerOrder | number, q3?: number, q4?: EulerOrder) {
             if (q1.hasOwnProperty("x")) {
                 _helpVector3.multiplyScalar(DEG_RAD, q1 as Readonly<IVector3>);
-                this.localRotation.fromEuler(_helpVector3, q2 as EulerOrder);
+                this._localRotation.fromEuler(_helpVector3, q2 as EulerOrder);
             }
             else {
                 _helpVector3.set(q1 as number * DEG_RAD, q2 as number * DEG_RAD, q3 as number * DEG_RAD);
-                this.localRotation.fromEuler(_helpVector3, q4 as EulerOrder);
+                this._localRotation.fromEuler(_helpVector3, q4 as EulerOrder);
             }
 
             if (this._parent) {
-                this.localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
             }
 
             // if (!this._dirtyWorldRS) {
@@ -691,14 +730,14 @@ namespace egret3d {
         public setScale(x: number, y: number, z: number): this;
         public setScale(p1: IVector3 | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
-                this.localScale.copy(p1 as IVector3);
+                this._localScale.copy(p1 as IVector3);
             }
             else {
-                this.localScale.set(p1 as number, p2 !== undefined ? p2 : 1.0, p3 !== undefined ? p3 : 1.0);
+                this._localScale.set(p1 as number, p2 !== undefined ? p2 : 1.0, p3 !== undefined ? p3 : 1.0);
             }
 
             if (this._parent) {
-                this.localScale.applyDirection(_helpMatrix.inverse(this._parent.getWorldMatrix()));
+                this._localScale.applyDirection(_helpMatrix.inverse(this._parent.getWorldMatrix()));
             }
 
             // if (!this._dirtyWorldRS) {
@@ -833,13 +872,13 @@ namespace egret3d {
             }
 
             if (up) {
-                this.localRotation.fromMatrix(_helpMatrix.lookAt(this.getPosition(), _helpVector3, up));
+                this._localRotation.fromMatrix(_helpMatrix.lookAt(this.getPosition(), _helpVector3, up));
             }
             else {
-                this.localRotation.lookAt(this.getPosition(), _helpVector3);
+                this._localRotation.lookAt(this.getPosition(), _helpVector3);
             }
 
-            this.setRotation(this.localRotation);
+            this.setRotation(this._localRotation);
 
             return this;
         }

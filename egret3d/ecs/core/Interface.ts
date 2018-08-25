@@ -97,4 +97,59 @@ namespace paper {
          */
         deserialize(element: any, data?: Deserializer): any;
     }
+    /**
+     * 
+     */
+    export interface BaseClass extends Function {
+        /**
+         * @internal
+         */
+        __deserializeIgnore?: string[];
+        /**
+         * @internal
+         */
+        __serializeKeys?: { [key: string]: string | null };
+        /**
+         * @internal
+         */
+        __owner?: BaseClass;
+        /**
+         * @internal
+         */
+        readonly __onRegister: () => boolean;
+    }
+    /**
+     * 
+     */
+    export type GameObjectExtras = { linkedID?: string, rootID?: string, prefab?: Prefab };
+    /**
+     * 
+     */
+    export interface ComponentClass<T extends BaseComponent> extends BaseClass {
+        executeInEditMode: boolean;
+        allowMultiple: boolean;
+        requireComponents: ComponentClass<BaseComponent>[] | null;
+        /**
+         * @internal
+         */
+        readonly __isSingleton: boolean;
+        /**
+         * @internal
+         */
+        __index: number;
+
+        new(): T;
+    }
+    /**
+     * 
+     */
+    export type ComponentClassArray = (ComponentClass<BaseComponent> | undefined)[];
+    /**
+     * 
+     */
+    export type ComponentArray = (BaseComponent | undefined)[];
+    /**
+     * 
+     */
+    export type ComponentExtras = { linkedID?: string };
 }

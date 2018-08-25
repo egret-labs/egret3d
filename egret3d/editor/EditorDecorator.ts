@@ -71,6 +71,21 @@ namespace paper.editor {
     }
     let propertyMap: { [key: string]: { extends: string, propertyList: PropertyInfo[] } } = {};
     /**
+     * 从枚举中生成装饰器列表项。
+     */
+    export function getItemsFromEnum(enumObject: any) {
+        const items = [];
+        for (const k in enumObject) {
+            if (isNaN(Number(k))) {
+                continue;
+            }
+
+            items.push({ label: k, value: enumObject[k] });
+        }
+
+        return items;
+    }
+    /**
      * 装饰器:属性
      * @param editType 编辑类型
      */

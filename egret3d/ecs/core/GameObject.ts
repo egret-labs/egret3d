@@ -1,9 +1,5 @@
 namespace paper {
     /**
-     * 
-     */
-    export type GameObjectExtras = { linkedID?: string, rootID?: string, prefab?: Prefab };
-    /**
      * 可以挂载Component的实体类。
      */
     export class GameObject extends BaseObject {
@@ -47,11 +43,13 @@ namespace paper {
          * 
          */
         @serializedField
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.HideFlags) })
         public hideFlags: HideFlags = HideFlags.None;
         /**
          * 层级
          */
         @serializedField
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.Layer) })
         public layer: Layer = Layer.Default;
         /**
          * 名称
@@ -659,6 +657,7 @@ namespace paper {
         /**
          * 当前GameObject对象自身激活状态
          */
+        @editor.property(editor.EditType.CHECKBOX)
         public get activeSelf() {
             return this._activeSelf;
         }

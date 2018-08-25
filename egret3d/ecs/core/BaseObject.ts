@@ -1,26 +1,4 @@
 namespace paper {
-    /**
-     * 
-     */
-    export interface BaseClass extends Function {
-        /**
-         * @internal
-         */
-        __serializeKeys?: string[];
-        /**
-         * @internal
-         */
-        __deserializeIgnore?: string[];
-        /**
-         * @internal
-         */
-        __owner?: BaseClass;
-        /**
-         * @internal
-         */
-        readonly __onRegister: (baseClass: BaseClass) => void;
-    }
-
     let _hashCount: number = 1;
     /**
      * 生成 uuid 的方式。
@@ -30,21 +8,9 @@ namespace paper {
         return (_hashCount++).toString();
     };
     /**
-     * @internal
-     */
-    export function registerClass(baseClass: BaseClass) {
-        if (!baseClass.__owner || baseClass.__owner !== baseClass) {
-            baseClass.__onRegister(baseClass);
-        }
-    }
-    /**
      * 基础对象。
      */
     export abstract class BaseObject implements IUUID {
-        /**
-         * @internal
-         */
-        public static __serializeKeys?: string[];
         /**
          * @internal
          */
@@ -52,14 +18,24 @@ namespace paper {
         /**
          * @internal
          */
+        public static __serializeKeys?: { [key: string]: string | null };
+        /**
+         * @internal
+         */
         public static __owner?: BaseClass;
         /**
          * @internal
          */
-        public static __onRegister(baseClass: BaseClass) {
-            baseClass.__serializeKeys = [];
-            baseClass.__deserializeIgnore = [];
-            baseClass.__owner = baseClass;
+        public static __onRegister() {
+            if (this.__owner && this.__owner === this) {
+                return false;
+            }
+
+            this.__deserializeIgnore = [];
+            this.__serializeKeys = {};
+            this.__owner = this;
+            
+            return true;
         }
         /**
          * 
