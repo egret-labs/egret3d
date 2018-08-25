@@ -38,9 +38,6 @@ namespace egret3d {
             this._texture = WebGLCapabilities.webgl.createTexture()!;
         }
 
-        dispose() { }
-        caclByteLength() { return 0; };
-
         public get texture() {
             return this._texture;
         }
@@ -164,13 +161,17 @@ namespace egret3d {
         }
 
         dispose() {
-            if (this._isBuiltin) {
-                return;
+
+            if (!super.dispose()) {
+                return false;
             }
+
             if (this._texture != null) {
                 WebGLCapabilities.webgl.deleteTexture(this._texture);
                 this._texture = null!;
             }
+
+            return true;
         }
 
         getReader(redOnly: boolean = false): TextureReader {

@@ -29,8 +29,8 @@ namespace egret3d {
         public _vbo: WebGLBuffer | null = null;
 
         public dispose() {
-            if (this._isBuiltin) {
-                return;
+            if (!super.dispose()) {
+                return false;
             }
 
             const webgl = WebGLCapabilities.webgl;
@@ -43,10 +43,10 @@ namespace egret3d {
                 webgl.deleteBuffer(this._vbo);
             }
 
-            super.dispose();
-
             this._ibos.length = 0;
             this._vbo = null;
+
+            return true;
         }
 
         public _createBuffer() {

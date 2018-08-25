@@ -8,12 +8,32 @@ namespace paper {
      */
     export class GameObject extends BaseObject {
         /**
+         * @internal
+         */
+        public static readonly _instances: GameObject[] = [];
+        /**
          * 创建 GameObject，并添加到当前场景中。
          */
         public static create(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
-            const gameObect = new GameObject(name, tag, scene);
-            // gameObect.addComponent(egret3d.Transform);
+            let gameObect: GameObject;
+            if (this._instances.length > 0) {
+                gameObect = this._instances.pop()!;
+
+                gameObect.name = name;
+                gameObect.tag = tag;
+                gameObect._addToScene(Application.sceneManager.activeScene);
+                gameObect.addComponent(egret3d.Transform);
+            }
+            else {
+                gameObect = new GameObject(name, tag, scene);
+                // gameObect = new GameObject();
+            }
+
+            // gameObect.name = name;
+            // gameObect.tag = tag;
             // gameObect._addToScene(Application.sceneManager.activeScene);
+            // gameObect.addComponent(egret3d.Transform);
+
             return gameObect;
         }
 
@@ -86,6 +106,8 @@ namespace paper {
         }
 
         private _destroy() {
+            this._scene!._removeGameObject(this);
+
             for (const child of this.transform.children) {
                 child.gameObject._destroy();
             }
@@ -106,9 +128,18 @@ namespace paper {
             this.name = "";
             this.tag = "";
             this.transform = null!;
+            this.renderer = null;
+
+            if (this.extras) { // Editor.
+                this.extras = {};
+            }
+
+            this._activeSelf = true;
+            this._activeInHierarchy = true;
+            this._activeDirty = true;
 
             this._components.length = 0;
-            this._scene!._removeGameObject(this);
+            this._cachedComponents.length = 0;
             this._scene = null;
         }
 

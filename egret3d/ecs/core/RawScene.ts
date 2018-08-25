@@ -12,11 +12,13 @@ namespace paper {
         }
 
         public dispose() {
-            if (this._isBuiltin) {
-                return;
+            if (!super.dispose()) {
+                return false;
             }
 
-            this._raw = null as any;
+            this._raw = null!;
+
+            return true;
         }
 
         public caclByteLength() {

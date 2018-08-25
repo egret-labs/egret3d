@@ -81,24 +81,23 @@ namespace paper {
          * @internal
          */
         public _addGameObject(gameObject: GameObject) {
-            if (this._gameObjects.indexOf(gameObject) < 0) {
-                this._gameObjects.push(gameObject);
-            }
-            else {
+            if (this._gameObjects.indexOf(gameObject) >= 0) {
                 console.debug("Add game object error.", gameObject.path);
             }
+
+            this._gameObjects.push(gameObject);
         }
         /**
          * @internal
          */
         public _removeGameObject(gameObject: GameObject) {
             const index = this._gameObjects.indexOf(gameObject);
-            if (index >= 0) {
-                this._gameObjects.splice(index, 1);
-            }
-            else {
+
+            if (index < 0) {
                 console.debug("Remove game object error.", gameObject.path);
             }
+
+            this._gameObjects.splice(index, 1);
         }
         /**
          * 

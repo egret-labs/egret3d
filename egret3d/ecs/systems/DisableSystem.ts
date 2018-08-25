@@ -45,10 +45,15 @@ namespace paper {
                 }
             }
             //
+            const gameObjectPool = GameObject._instances;
+
             for (const scene of this._disposeCollecter.scenes) {
             }
+
             for (const gameObject of this._disposeCollecter.gameObjects) {
+                gameObjectPool.push(gameObject);
             }
+
             for (const component of this._disposeCollecter.components) {
                 component.uninitialize();
             }

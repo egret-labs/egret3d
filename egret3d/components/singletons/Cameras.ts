@@ -6,7 +6,7 @@ namespace egret3d {
         public readonly cameras: Camera[] = [];
         public readonly lights: BaseLight[] = [];
 
-        private _sortCamera(a: Camera, b: Camera) {
+        private _sortCameras(a: Camera, b: Camera) {
             return a.order - b.order;
         }
 
@@ -26,8 +26,8 @@ namespace egret3d {
             }
         }
 
-        public sort() {
-            this.cameras.sort(this._sortCamera);
+        public sortCameras() {
+            this.cameras.sort(this._sortCameras);
         }
     }
 }

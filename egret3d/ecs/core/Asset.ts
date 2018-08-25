@@ -40,9 +40,8 @@ namespace paper {
 
             return result as T;
         }
-
         /**
-         * 
+         * @readonly
          */
         public name: string = "";
         /**
@@ -80,6 +79,16 @@ namespace paper {
          * @platform Web
          * @language zh_CN
          */
-        public abstract dispose(disposeChildren?: boolean): void;
+        public dispose(disposeChildren?: boolean) {
+            if (this._isBuiltin) {
+                console.warn("Can not dispose builtin asset.", this.name);
+                return false;
+            }
+
+            delete Asset._assets[this.name];
+            this.name = "";
+
+            return true;
+        }
     }
 }

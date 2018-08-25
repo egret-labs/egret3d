@@ -134,8 +134,8 @@ namespace egret3d {
         }
 
         public dispose(disposeChildren?: boolean) {
-            if (this._isBuiltin) {
-                return;
+            if (!super.dispose()) {
+                return false;
             }
 
             if (disposeChildren) {
@@ -143,8 +143,6 @@ namespace egret3d {
                     texture.dispose();
                 }
             }
-
-            super.dispose();
 
             this._version++;
             this._cacheDefines = "";

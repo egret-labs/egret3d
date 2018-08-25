@@ -322,12 +322,14 @@ namespace egret3d {
         public config: GLTF = null!;
 
         public dispose() {
-            if (this._isBuiltin) {
-                return;
+            if (!super.dispose()) {
+                return false;
             }
 
             this.buffers.length = 0; // TODO clear buffer.
             this.config = null!;
+            
+            return true;
         }
 
         public caclByteLength() {

@@ -11,7 +11,7 @@ namespace egret3d {
                 { componentClass: Egret2DRenderer }
             ],
             [
-                { componentClass: [DirectLight, SpotLight, PointLight] }
+                { componentClass: [DirectionalLight, SpotLight, PointLight] }
             ]
         ];
         private readonly _drawCalls: DrawCalls = DrawCalls.getInstance(DrawCalls);
@@ -434,14 +434,17 @@ namespace egret3d {
 
         public onUpdate() {
             Performance.startCounter("render");
+            let lightsDirty = false;
             const renderState = this._renderState;
             const cameras = this._camerasAndLights.cameras;
             const lights = this._camerasAndLights.lights;
             const filteredLights = this._filteredLights;
             const camerasScene = paper.Application.sceneManager.camerasScene || paper.Application.sceneManager.activeScene;
             const lightsScene = paper.Application.sceneManager.lightsScene || paper.Application.sceneManager.activeScene;
+
             // Lights.
             if (filteredLights.length > 0) {
+                lightsDirty = true;
                 filteredLights.length = 0;
             }
 
@@ -452,9 +455,11 @@ namespace egret3d {
                     }
 
                     filteredLights.push(light);
+
                     if (!light.castShadows) {
                         continue;
                     }
+
                     this._renderLightShadow(light);
                 }
             }
@@ -465,7 +470,7 @@ namespace egret3d {
                         continue;
                     }
 
-                    if (filteredLights.length > 0) {
+                    if (lightsDirty || filteredLights.length > 0) {
                         camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientColor); // TODO 性能优化
                     }
 
@@ -476,7 +481,7 @@ namespace egret3d {
                     }
                     else {
                         for (const item of camera.postQueues) {
-                            console.log(camera)
+                            // TODO
                         }
                     }
                 }

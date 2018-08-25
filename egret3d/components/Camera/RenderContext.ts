@@ -72,38 +72,37 @@ namespace egret3d {
 
         public updateCamera(camera: Camera, matrix: Matrix4) {
             camera.calcViewPortPixel(this.viewPortPixel); // update viewport
+            camera.calcProjectMatrix(this.viewPortPixel.w / this.viewPortPixel.h, this.matrix_p);
 
-            const asp = this.viewPortPixel.w / this.viewPortPixel.h;
             this.matrix_v.inverse(matrix);
-            camera.calcProjectMatrix(asp, this.matrix_p);
             this.matrix_vp.multiply(this.matrix_p, this.matrix_v);
 
-            const worldMatrix = matrix.rawData;
+            const rawData = matrix.rawData;
 
-            if (this.cameraPosition[0] !== worldMatrix[12] ||
-                this.cameraPosition[1] !== worldMatrix[13] ||
-                this.cameraPosition[2] !== worldMatrix[14]) {
-                this.cameraPosition[0] = worldMatrix[12];
-                this.cameraPosition[1] = worldMatrix[13];
-                this.cameraPosition[2] = worldMatrix[14];
+            if (this.cameraPosition[0] !== rawData[12] ||
+                this.cameraPosition[1] !== rawData[13] ||
+                this.cameraPosition[2] !== rawData[14]) {
+                this.cameraPosition[0] = rawData[12];
+                this.cameraPosition[1] = rawData[13];
+                this.cameraPosition[2] = rawData[14];
                 this.version++;
             }
 
-            if (this.cameraUp[0] !== worldMatrix[4] ||
-                this.cameraUp[1] !== worldMatrix[5] ||
-                this.cameraUp[2] !== worldMatrix[6]) {
-                this.cameraUp[0] = worldMatrix[4];
-                this.cameraUp[1] = worldMatrix[5];
-                this.cameraUp[2] = worldMatrix[6];
+            if (this.cameraUp[0] !== rawData[4] ||
+                this.cameraUp[1] !== rawData[5] ||
+                this.cameraUp[2] !== rawData[6]) {
+                this.cameraUp[0] = rawData[4];
+                this.cameraUp[1] = rawData[5];
+                this.cameraUp[2] = rawData[6];
                 this.version++;
             }
 
-            if (this.cameraForward[0] !== worldMatrix[8] ||
-                this.cameraForward[1] !== worldMatrix[9] ||
-                this.cameraForward[2] !== worldMatrix[10]) {
-                this.cameraForward[0] = -worldMatrix[8];
-                this.cameraForward[1] = -worldMatrix[9];
-                this.cameraForward[2] = -worldMatrix[10];
+            if (this.cameraForward[0] !== rawData[8] ||
+                this.cameraForward[1] !== rawData[9] ||
+                this.cameraForward[2] !== rawData[10]) {
+                this.cameraForward[0] = -rawData[8];
+                this.cameraForward[1] = -rawData[9];
+                this.cameraForward[2] = -rawData[10];
                 this.version++;
             }
         }
@@ -118,7 +117,7 @@ namespace egret3d {
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
 
-                if (light instanceof DirectLight) {
+                if (light instanceof DirectionalLight) {
                     directLightCount++;
                 }
                 else if (light instanceof PointLight) {
@@ -169,7 +168,7 @@ namespace egret3d {
                 dirHelper.applyDirection(this.matrix_v, position).normalize();
 
                 switch (light.constructor) {
-                    case DirectLight: {
+                    case DirectionalLight: {
                         lightArray = this.directLightArray;
                         index = directLightIndex * this.DIRECT_LIGHT_SIZE;
                         lightArray[index++] = dirHelper.x;
@@ -231,7 +230,7 @@ namespace egret3d {
                     lightArray[index++] = light.shadowSize;
 
                     switch (light.constructor) {
-                        case DirectLight:
+                        case DirectionalLight:
                             this.directShadowMatrix.set(light.matrix.rawData, directLightIndex * 16);
                             this.directShadowMaps[directLightIndex++] = light.renderTarget.texture;
                             break;
@@ -256,7 +255,7 @@ namespace egret3d {
                     lightArray[index++] = 0;
 
                     switch (light.constructor) {
-                        case DirectLight:
+                        case DirectionalLight:
                             this.directShadowMaps[directLightIndex++] = null;
                             break;
 

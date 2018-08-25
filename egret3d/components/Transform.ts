@@ -41,10 +41,6 @@ namespace egret3d {
         @paper.editor.property(paper.editor.EditType.VECTOR3, { set: "setLocalScale" })
         private readonly localScale: Vector3 = Vector3.ONE.clone();
 
-        // @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setPosition" })
-        // @paper.editor.extraProperty(paper.editor.EditType.QUATERNION, { set: "setRotation" })
-        // @paper.editor.extraProperty(paper.editor.EditType.VECTOR3, { set: "setScale" })
-
         private readonly _position: Vector3 = Vector3.create();
         private readonly _rotation: Quaternion = Quaternion.create();
         private readonly _eulerAngles: Vector3 = Vector3.create();

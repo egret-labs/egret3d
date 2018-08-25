@@ -36,8 +36,9 @@ namespace egret3d {
 
             camera.near = this.shadowCameraNear;
             camera.far = this.shadowCameraFar;
-            camera.size = this.shadowSize;
+            camera.size = this.shadowCameraSize;
             camera.fov = Math.PI * 0.5;
+            camera.opvalue = 1.0;
             camera.gameObject.transform.setPosition(position); // TODO support copy matrix.
             camera.gameObject.transform.setRotation(this.gameObject.transform.getRotation());
             camera.gameObject.transform.lookAt(helpVector3A, _ups[faceIndex]);
