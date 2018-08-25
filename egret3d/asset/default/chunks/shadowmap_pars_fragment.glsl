@@ -62,7 +62,7 @@
 		float shadow = 1.0;
 
 		shadowCoord.xyz /= shadowCoord.w;
-		shadowCoord.z += shadowBias;
+		shadowCoord.z += shadowBias;//Egret Right-hand
 
 		// if ( something && something ) breaks ATI OpenGL shader compiler
 		// if ( all( something, something ) ) using this instead
