@@ -23,6 +23,7 @@ namespace egret3d {
 
         public static PARTICLE: Shader;
         public static PARTICLE_BLEND: Shader;
+        public static PARTICLE_BLEND1: Shader;
         public static PARTICLE_ADDITIVE: Shader;
 
         public static PARTICLE_BLEND_PREMULTIPLY: Shader;
@@ -117,6 +118,10 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend);
             DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
 
+            helpMaterial.clearStates().setDepth(true, true).setBlend(gltf.BlendMode.Blend);
+            helpMaterial.glTFTechnique.states.functions.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
+            DefaultShaders.PARTICLE_BLEND1 = this._createShader("builtin/particle_blend1.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
+            
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add);
             DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
 

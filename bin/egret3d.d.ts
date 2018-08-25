@@ -4130,6 +4130,7 @@ declare namespace egret3d {
         static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
         static PARTICLE: Shader;
         static PARTICLE_BLEND: Shader;
+        static PARTICLE_BLEND1: Shader;
         static PARTICLE_ADDITIVE: Shader;
         static PARTICLE_BLEND_PREMULTIPLY: Shader;
         static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
@@ -8695,9 +8696,11 @@ declare namespace egret3d.ShaderLib {
                         };
                         "u_worldPosition": {
                             "type": number;
+                            "value": number[];
                         };
                         "u_worldRotation": {
                             "type": number;
+                            "value": number[];
                         };
                         "u_startRotation3D": {
                             "type": number;

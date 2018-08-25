@@ -64,8 +64,7 @@ namespace paper.editor {
          * @param sceneUrl 场景资源URL
          */
         public static async editScene(sceneUrl: string) {
-            await RES.getResAsync(sceneUrl);
-            const rawScene = RES.getRes(sceneUrl) as RawScene;
+            const rawScene = await RES.getResAsync(sceneUrl) as RawScene;
             if (rawScene) {
                 if (this.activeEditorModel) {
                     this.activeEditorModel.scene.destroy();
@@ -82,8 +81,7 @@ namespace paper.editor {
          * @param prefabUrl 预置体资源URL
          */
         public static async editPrefab(prefabUrl: string) {
-            await RES.getResAsync(prefabUrl);
-            const prefab = RES.getRes(prefabUrl) as Prefab;
+            const prefab = await RES.getResAsync(prefabUrl) as Prefab;
             if (prefab) {
                 if (this.activeEditorModel) {
                     this.activeEditorModel.scene.destroy();
@@ -95,9 +93,10 @@ namespace paper.editor {
                 prefabEditorModel.init(scene, 'prefab', prefabUrl);
                 //清除自身的预置体信息
                 let clearPrefabInfo = (obj: GameObject): void => {
-                    obj.extras.linkedID = undefined;
-                    obj.extras.prefab = undefined;
-                    obj.extras.rootID = undefined;
+                    obj.extras={};
+                    for(let comp of obj.components){
+                        comp.extras={};
+                    }
                     for (let i: number = 0; i < obj.transform.children.length; i++) {
                         let child = obj.transform.children[i].gameObject;
                         if (prefabEditorModel.isPrefabChild(child))
@@ -178,7 +177,6 @@ namespace paper.editor {
                     //
                     egret3d.CameraSystem,
                     egret3d.WebGLRenderSystem,
-                    egret3d.GizmoRenderSystem,
                     //
                     paper.DisableSystem,
                     egret3d.EndSystem

@@ -259,10 +259,10 @@ namespace egret3d {
                     value = egret3d.DefaultTextures.MISSING;
                 }
                 else if (Array.isArray(uniform.value)) {
-                    value = uniform.value.concat();
+                    value = uniform.value ? uniform.value.concat() : [];
                 }
                 else {
-                    value = uniform.value;
+                    value = uniform.value ? uniform.value : [];
                 }
 
                 const targetUniform = target.uniforms[key] = { type: uniform.type, value } as gltf.Uniform;

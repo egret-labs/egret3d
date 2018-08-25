@@ -261,7 +261,12 @@ namespace egret3d {
 
                             //     tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
                             // }
-                            _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                            if (orginAttributes.TEXCOORD_1){
+                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                            }
+                            else{
+                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                            }                            
                         }
                         else {
                             if (orginAttributes.TEXCOORD_1) {
