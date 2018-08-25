@@ -202,7 +202,7 @@ declare namespace paper {
          */
         static find<T extends Asset>(name: string): T;
         /**
-         *
+         * @readonly
          */
         name: string;
         /**
@@ -235,7 +235,7 @@ declare namespace paper {
          * @platform Web
          * @language zh_CN
          */
-        abstract dispose(disposeChildren?: boolean): void;
+        dispose(disposeChildren?: boolean): boolean;
     }
 }
 declare namespace paper {
@@ -623,7 +623,7 @@ declare namespace paper {
          * @internal
          */
         $parse(json: ISerializedData): void;
-        dispose(): void;
+        dispose(): boolean;
         caclByteLength(): number;
     }
     /**
@@ -953,7 +953,7 @@ declare namespace egret3d {
          * 配置。
          */
         config: GLTF;
-        dispose(): void;
+        dispose(): boolean;
         caclByteLength(): number;
         /**
          * 根据指定 BufferView 创建二进制数组。
@@ -2972,10 +2972,6 @@ declare namespace egret3d {
      * 纹理资源。
      */
     class Texture extends paper.Asset {
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
         caclByteLength(): number;
     }
 }
@@ -4205,10 +4201,10 @@ declare namespace egret3d {
     class CamerasAndLights extends paper.SingletonComponent {
         readonly cameras: Camera[];
         readonly lights: BaseLight[];
-        private _sortCamera(a, b);
+        private _sortCameras(a, b);
         updateCamera(gameObjects: ReadonlyArray<paper.GameObject>): void;
         updateLight(gameObjects: ReadonlyArray<paper.GameObject>): void;
-        sort(): void;
+        sortCameras(): void;
     }
 }
 declare namespace egret3d {
@@ -4284,7 +4280,7 @@ declare namespace egret3d {
         protected readonly _interests: ({
             componentClass: typeof Camera;
         }[] | {
-            componentClass: typeof DirectLight[];
+            componentClass: typeof DirectionalLight[];
         }[])[];
         protected readonly _camerasAndLights: CamerasAndLights;
         onAddGameObject(_gameObject: paper.GameObject, group: paper.Group): void;
@@ -4946,7 +4942,7 @@ declare namespace egret3d {
     /**
      *
      */
-    class DirectLight extends BaseLight {
+    class DirectionalLight extends BaseLight {
         renderTarget: IRenderTarget;
         update(camera: Camera, faceIndex: number): void;
     }
@@ -5827,6 +5823,10 @@ declare namespace paper {
      */
     class GameObject extends BaseObject {
         /**
+         * @internal
+         */
+        static readonly _instances: GameObject[];
+        /**
          * 创建 GameObject，并添加到当前场景中。
          */
         static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
@@ -6573,7 +6573,7 @@ declare namespace egret3d {
         constructor(shader?: Shader | string);
         constructor(config: GLTF, name: string);
         private _reset(shaderOrConfig);
-        dispose(disposeChildren?: boolean): void;
+        dispose(disposeChildren?: boolean): boolean;
         copy(value: Material): this;
         /**
          * 克隆材质资源。
@@ -10251,7 +10251,7 @@ declare namespace egret3d {
          * @internal
          */
         _vbo: WebGLBuffer | null;
-        dispose(): void;
+        dispose(): boolean;
         _createBuffer(): void;
         /**
          *
@@ -10291,8 +10291,6 @@ declare namespace egret3d {
         protected _width: number;
         protected _height: number;
         constructor(name?: string, width?: number, height?: number);
-        dispose(): void;
-        caclByteLength(): number;
         readonly texture: WebGLTexture;
         readonly width: number;
         readonly height: number;
@@ -10309,7 +10307,7 @@ declare namespace egret3d {
         constructor(name?: string, width?: number, height?: number, format?: TextureFormatEnum);
         uploadImage(img: HTMLImageElement | Uint8Array, mipmap: boolean, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
         caclByteLength(): number;
-        dispose(): void;
+        dispose(): boolean;
         getReader(redOnly?: boolean): TextureReader;
     }
     abstract class RenderTarget implements IRenderTarget {
@@ -10399,7 +10397,7 @@ declare namespace egret3d {
         }[] | {
             componentClass: typeof Egret2DRenderer;
         }[] | {
-            componentClass: typeof DirectLight[];
+            componentClass: typeof DirectionalLight[];
         }[])[];
         private readonly _drawCalls;
         private readonly _renderState;
