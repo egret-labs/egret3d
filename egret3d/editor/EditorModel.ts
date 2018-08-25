@@ -163,6 +163,8 @@ namespace paper.editor {
                     })
                     return data;
                 case editor.EditType.MESH:
+                    if (!value)
+                        return '';
                     let url = value.name;
                     return url;
                 case editor.EditType.MATERIAL:
@@ -737,9 +739,8 @@ namespace paper.editor {
             return objs;
         }
 
-        private async setMaterialTexture(target: egret3d.Material,url:string,propName:string):Promise<void>
-        {   
-            let asset:egret3d.GLTexture2D = paper.Asset.find<egret3d.GLTexture2D>(url);
+        private async setMaterialTexture(target: egret3d.Material, url: string, propName: string): Promise<void> {
+            let asset: egret3d.GLTexture2D = paper.Asset.find<egret3d.GLTexture2D>(url);
 
             if (!asset) {
                 asset = await this.getAssetByAssetUrl(url);
@@ -782,7 +783,7 @@ namespace paper.editor {
                         target.setVector4v(propName, copyValue);
                         break;
                     case gltf.UniformType.SAMPLER_2D:
-                        await this.setMaterialTexture(target,copyValue.url,propName);
+                        await this.setMaterialTexture(target, copyValue.url, propName);
                         break;
                     case gltf.UniformType.FLOAT_MAT2:
                     case gltf.UniformType.FLOAT_MAT3:
@@ -795,7 +796,7 @@ namespace paper.editor {
 
                 if (propName === "renderQueue") {
                     (target.config.materials![0] as egret3d.GLTFMaterial).extensions.paper.renderQueue = copyValue;
-                }   
+                }
 
                 this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: copyValue }));
             }

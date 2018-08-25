@@ -100,10 +100,28 @@ namespace paper.editor {
     }
 
     /**
+   * 获取一个实例对象的编辑信息
+   * @param classInstance 实例对象
+   */
+    export function getEditInfo(classInstance: any): PropertyInfo[] {
+        let whileInsance = classInstance;
+        let retrunList = [];
+        let className;
+        while (whileInsance) {
+            className = whileInsance.constructor.name;
+            let classInfo = propertyMap[className];
+            if (classInfo) {
+                retrunList = retrunList.concat(classInfo.propertyList);
+            }
+            whileInsance = whileInsance.__proto__;
+        }
+        return retrunList;
+    }
+    /**
      * 获取一个实例对象的编辑信息
      * @param classInstance 实例对象
      */
-    export function getEditInfo(classInstance: any): PropertyInfo[] {
+    export function getEditInfo2(classInstance: any): PropertyInfo[] {
         let className = classInstance.constructor.name;
         function _getEditInfo(className: string): PropertyInfo[] {
             let classInfo = propertyMap[className];
@@ -131,7 +149,7 @@ namespace paper.editor {
                 extendsInfo = _getEditInfo(Object.getPrototypeOf(proto));
                 extendsInfo = extendsInfo.concat(classInfo.propertyList);
                 return extendsInfo;
-            }else{
+            } else {
                 if (proto) {
                     extendsInfo = _getEditInfo(Object.getPrototypeOf(proto));
                     return extendsInfo;
