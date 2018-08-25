@@ -56,6 +56,7 @@
         "egret3d/ecs/components/MissingComponent.ts",
         "egret3d/ecs/components/Time.ts",
         "egret3d/ecs/components/ContactColliders.ts",
+        "egret3d/ecs/components/DisposeCollecter.ts",
         "egret3d/ecs/components/BaseRenderer.ts",
         "egret3d/ecs/components/Behaviour.ts",
         "egret3d/ecs/systems/Group.ts",

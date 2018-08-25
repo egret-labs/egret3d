@@ -11,8 +11,15 @@ namespace egret3d {
         /**
          * 
          */
+        public static create(shader?: Shader | string): Material;
+        public static create(config: GLTF, name: string): Material;
+        public static create(shaderOrConfig?: Shader | string | GLTF, name?: string) {
+            return new Material(shaderOrConfig as any, name);
+        }
+        /**
+         * 
+         */
         public renderQueue: paper.RenderQueue | number = paper.RenderQueue.Geometry;
-
         /**
           * @internal
           */
@@ -33,7 +40,9 @@ namespace egret3d {
         */
         public _glTFTechnique: gltf.Technique = null!;
         /**
-         * 
+         * 请使用 `egret3d.Material.create()` 创建实例。
+         * @see egret3d.Material.create()
+         * @deprecated
          */
         public constructor(shader?: Shader | string)
         public constructor(config: GLTF, name: string)

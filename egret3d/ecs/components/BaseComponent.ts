@@ -93,7 +93,7 @@ namespace paper {
          * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
          */
         @paper.serializedField
-        public extras?: ComponentExtras = Application.isEditor && !Application.isPlaying ? {} : undefined;
+        public extras?: ComponentExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
         @serializedField
         protected _enabled: boolean = true;

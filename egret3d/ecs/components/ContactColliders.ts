@@ -15,5 +15,12 @@ namespace paper {
          * 
          */
         public readonly end: any[] = [];
+        /**
+         * @internal
+         */
+        public clear() {
+            this.begin.length = 0;
+            this.end.length = 0;
+        }
     }
 }

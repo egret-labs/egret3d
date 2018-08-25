@@ -159,8 +159,7 @@ namespace paper.editor {
         private static initEditEnvironment() {
             egret3d.runEgret({
                 antialias: false,
-                isEditor: true,
-                isPlaying: false,
+                playerMode: PlayerMode.Editor,
                 systems: [
                     egret3d.BeginSystem,
                     paper.EnableSystem,

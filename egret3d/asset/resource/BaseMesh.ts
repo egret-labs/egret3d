@@ -22,7 +22,9 @@ namespace egret3d {
         protected readonly _customAttributeTypes: { [key: string]: gltf.AccessorType } = {};
         protected _glTFMesh: gltf.Mesh | null = null;
         /**
-         * 
+         * 请使用 `egret3d.Mesh.create()` 创建实例。
+         * @see egret3d.Mesh.create()
+         * @deprecated
          */
         public constructor(
             vertexCount: number, indexCount: number,

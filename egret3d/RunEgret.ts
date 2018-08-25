@@ -10,7 +10,7 @@ namespace egret3d {
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
 
-        isEditor?: boolean;
+        playerMode?: paper.PlayerMode;
         isPlaying?: boolean;
         systems?: any[];
     }

@@ -26,13 +26,13 @@ namespace paper {
         public initialize(config?: any) {
             super.initialize(config);
 
-            if (!Application.isEditor || (this.constructor as ComponentClass<Behaviour>).executeInEditMode) {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as ComponentClass<Behaviour>).executeInEditMode) {
                 this.onAwake && this.onAwake(config);
             }
         }
 
         public uninitialize() {
-            if (!Application.isEditor || (this.constructor as ComponentClass<Behaviour>).executeInEditMode) {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as ComponentClass<Behaviour>).executeInEditMode) {
                 this.onDestroy && this.onDestroy(); // TODO onDestroy 如果不是 enabled 就不派发
             }
 

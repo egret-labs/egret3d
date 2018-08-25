@@ -56,7 +56,7 @@ namespace paper {
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @serializedField
-        public extras?: GameObjectExtras = Application.isEditor && !Application.isPlaying ? {} : undefined;
+        public extras?: GameObjectExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
         @serializedField
         private _activeSelf: boolean = true;
@@ -86,11 +86,6 @@ namespace paper {
         }
 
         private _destroy() {
-            const destroySystem = Application.systemManager.getSystem(DisableSystem);
-            if (destroySystem) {
-                destroySystem.bufferGameObject(this);
-            }
-
             for (const child of this.transform.children) {
                 child.gameObject._destroy();
             }
@@ -103,11 +98,18 @@ namespace paper {
                 this._removeComponent(component, null);
             }
 
-            this.transform = null as any;
+            DisposeCollecter.getInstance(DisposeCollecter).gameObjects.push(this);
+
+            this.isStatic = false;
+            this.hideFlags = HideFlags.None;
+            this.layer = Layer.Default;
+            this.name = "";
+            this.tag = "";
+            this.transform = null!;
 
             this._components.length = 0;
             this._scene!._removeGameObject(this);
-            this._scene = null as any;
+            this._scene = null;
         }
 
         private _addToScene(value: Scene): any {
@@ -152,10 +154,7 @@ namespace paper {
                 this.renderer = null;
             }
 
-            const destroySystem = Application.systemManager.getSystem(DisableSystem);
-            if (destroySystem) {
-                destroySystem.bufferComponent(value);
-            }
+            DisposeCollecter.getInstance(DisposeCollecter).components.push(value);
 
             if (groupComponent) {
                 groupComponent._removeComponent(value);

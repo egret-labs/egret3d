@@ -33,7 +33,7 @@ namespace paper {
                 const scene = rawScene.createInstance();
 
                 if (scene) {
-                    if (combineStaticObjects && Application.isPlaying) {
+                    if (combineStaticObjects && Application.playerMode !== PlayerMode.Editor) {
                         egret3d.combine(scene.gameObjects);
                     }
 
@@ -62,7 +62,7 @@ namespace paper {
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @paper.serializedField
-        public extras?: any = Application.isEditor && !Application.isPlaying ? {} : undefined;
+        public extras?: any = Application.playerMode === PlayerMode.Editor ? {} : undefined;
         /**
          * @internal
          */

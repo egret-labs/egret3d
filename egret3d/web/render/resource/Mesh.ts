@@ -4,6 +4,22 @@ namespace egret3d {
      */
     export class Mesh extends BaseMesh {
         /**
+         * 
+         */
+        public static create(
+            vertexCount: number, indexCount: number,
+            attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
+            drawMode?: gltf.DrawMode
+        )
+        public static create(config: GLTF, buffers: Uint32Array[], name: string)
+        public static create(
+            vertexCountOrConfig: number | GLTF, indexCountOrBuffers?: number | Uint32Array[],
+            attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
+            drawMode?: gltf.DrawMode
+        ) {
+            return new Mesh(vertexCountOrConfig as any, indexCountOrBuffers as any, attributeNamesOrName as any, attributeTypes, drawMode);
+        }
+        /**
          * @internal
          */
         public readonly _ibos: WebGLBuffer[] = [];

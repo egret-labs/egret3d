@@ -45,7 +45,7 @@ namespace paper {
                 return null;
             }
 
-            const isEditor = Application.isEditor && !Application.isPlaying;
+            const isEditor = Application.playerMode === PlayerMode.Editor;
             const deserializer = new paper.Deserializer();
             const scene = deserializer.deserialize(this._raw, keepUUID) as Scene | null;
 

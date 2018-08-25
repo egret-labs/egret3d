@@ -86,8 +86,8 @@ namespace RES.processor {
                         texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
                         paper.Asset.register(texture);
                         return texture;
-                    })
-            })
+                    });
+            });
         },
         onRemoveStart(host, resource) {
             let data = host.get(resource);
@@ -113,36 +113,6 @@ namespace RES.processor {
             return Promise.resolve();
         }
     };
-
-    export const GLTFBinaryProcessor: RES.processor.Processor = {
-        onLoadStart(host, resource) {
-
-            return host.load(resource, RES.processor.BinaryProcessor).then((result) => {
-                const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
-                let glb: egret3d.GLTFAsset;
-
-                if (parseResult.config.meshes) {
-                    glb = new egret3d.Mesh(parseResult.config, parseResult.buffers, resource.name);
-                }
-                else {
-                    glb = new egret3d.GLTFAsset();
-                    glb.name = resource.name;
-                    glb.config = parseResult.config;
-                    for (const b of parseResult.buffers) {
-                        glb.buffers.push(b);
-                    }
-                }
-
-                paper.Asset.register(glb);
-                return glb;
-            })
-        },
-        onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
-            return Promise.resolve();
-        }
-    }
 
     export const MaterialProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
@@ -180,6 +150,59 @@ namespace RES.processor {
         }
     };
 
+    export const MeshProcessor: RES.processor.Processor = {
+        onLoadStart(host, resource) {
+            return host.load(resource, RES.processor.BinaryProcessor).then((result) => {
+                const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
+                let glb: egret3d.GLTFAsset;
+
+                if (parseResult.config.meshes) {
+                    glb = new egret3d.Mesh(parseResult.config, parseResult.buffers, resource.name);
+                }
+                else {
+                    glb = new egret3d.GLTFAsset();
+                    glb.name = resource.name;
+                    glb.config = parseResult.config;
+                    for (const b of parseResult.buffers) {
+                        glb.buffers.push(b);
+                    }
+                }
+
+                paper.Asset.register(glb);
+                return glb;
+            });
+        },
+        onRemoveStart(host, resource) {
+            let data = host.get(resource);
+            data.dispose();
+            return Promise.resolve();
+        }
+    };
+
+    export const AnimationProcessor: RES.processor.Processor = {
+        onLoadStart(host, resource) {
+            return host.load(resource, RES.processor.BinaryProcessor).then((result) => {
+                const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
+                const animation: egret3d.GLTFAsset = new egret3d.GLTFAsset();
+                animation.name = resource.name;
+                animation.config = parseResult.config;
+
+                for (const b of parseResult.buffers) {
+                    animation.buffers.push(b);
+                }
+
+                paper.Asset.register(animation);
+
+                return animation;
+            });
+        },
+        onRemoveStart(host, resource) {
+            let data = host.get(resource);
+            data.dispose();
+            return Promise.resolve();
+        }
+    };
+
     export const PrefabProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
             return host.load(resource, "json").then((data: paper.ISerializedData) => {
@@ -188,7 +211,7 @@ namespace RES.processor {
                     prefab.$parse(data);
                     paper.Asset.register(prefab);
                     return prefab;
-                })
+                });
             });
         },
         onRemoveStart(host, resource) {
@@ -206,7 +229,7 @@ namespace RES.processor {
                     rawScene.$parse(data);
                     paper.Asset.register(rawScene);
                     return rawScene;
-                })
+                });
             });
         },
         onRemoveStart(host, resource) {
@@ -232,8 +255,9 @@ namespace RES.processor {
     RES.processor.map("Shader", ShaderProcessor);
     RES.processor.map("Texture", TextureProcessor);
     RES.processor.map("TextureDesc", TextureDescProcessor);
-    RES.processor.map("GLTF", MaterialProcessor);
-    RES.processor.map("GLTFBinary", GLTFBinaryProcessor);
+    RES.processor.map("Material", MaterialProcessor);
+    RES.processor.map("Mesh", MeshProcessor);
+    RES.processor.map("Animation", AnimationProcessor);
     RES.processor.map("Prefab", PrefabProcessor);
     RES.processor.map("Scene", SceneProcessor);
 }
