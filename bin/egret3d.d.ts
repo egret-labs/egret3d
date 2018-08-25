@@ -152,10 +152,15 @@ declare namespace paper.editor {
      */
     function isCustom(classInstance: any): boolean;
     /**
+   * 获取一个实例对象的编辑信息
+   * @param classInstance 实例对象
+   */
+    function getEditInfo(classInstance: any): PropertyInfo[];
+    /**
      * 获取一个实例对象的编辑信息
      * @param classInstance 实例对象
      */
-    function getEditInfo(classInstance: any): PropertyInfo[];
+    function getEditInfo2(classInstance: any): PropertyInfo[];
     function getEditInfoByPrototype(classInstance: any): PropertyInfo[];
     /**
      * 装饰器:属性
@@ -2559,11 +2564,6 @@ declare namespace paper {
          */
         constructor();
         /**
-         * TODO 宏定义。
-         * @internal
-         */
-        protected _isEditorUpdate(): boolean;
-        /**
          * 系统内部初始化。
          * @internal
          */
@@ -2877,7 +2877,9 @@ declare namespace egret3d {
         };
         protected _glTFMesh: gltf.Mesh | null;
         /**
-         *
+         * 请使用 `egret3d.Mesh.create()` 创建实例。
+         * @see egret3d.Mesh.create()
+         * @deprecated
          */
         constructor(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
             [key: string]: gltf.AccessorType;
@@ -3010,7 +3012,10 @@ declare namespace paper {
         /**
          *
          */
-        static create(name: string, scene?: Scene | null): GameObject;
+        static create(name: string): GameObject | null;
+        static create(name: string, x: number, y: number, z: number): GameObject | null;
+        static create(name: string, scene: Scene): GameObject | null;
+        static create(name: string, x: number, y: number, z: number, scene: Scene): GameObject | null;
         /**
          * @deprecated
          */
@@ -3116,6 +3121,33 @@ declare namespace paper {
          *
          */
         readonly end: any[];
+        /**
+         * @internal
+         */
+        clear(): void;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class DisposeCollecter extends SingletonComponent {
+        /**
+         * 移除的场景数组。
+         */
+        readonly scenes: Scene[];
+        /**
+         * 移除的实体数组。
+         */
+        readonly gameObjects: GameObject[];
+        /**
+         * 移除的组件数组。
+         */
+        readonly components: BaseComponent[];
+        /**
+         * @internal
+         */
+        clear(): void;
     }
 }
 declare namespace paper {
@@ -3230,7 +3262,7 @@ declare namespace egret3d {
         option?: RequiredRuntimeOptions;
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
-        isEditor?: boolean;
+        playerMode?: paper.PlayerMode;
         isPlaying?: boolean;
         systems?: any[];
     };
@@ -3454,19 +3486,10 @@ declare namespace paper {
             type: number;
             isBehaviour: boolean;
         }[];
-        private readonly _bufferedComponents;
-        private readonly _bufferedGameObjects;
         private readonly _contactColliders;
+        private readonly _disposeCollecter;
         onRemoveComponent(component: Behaviour): void;
         onUpdate(): void;
-        /**
-         * @internal
-         */
-        bufferComponent(component: BaseComponent): void;
-        /**
-         * @internal
-         */
-        bufferGameObject(gameObject: GameObject): void;
     }
 }
 declare namespace paper {
@@ -5790,64 +5813,6 @@ declare namespace egret3d.particle {
         readonly floatValues: Readonly<Float32Array>;
     }
 }
-declare namespace egret3d.particle {
-    /**
-     * @internal
-     */
-    class ParticleBatcher {
-        private _dirty;
-        private _time;
-        private _emittsionTime;
-        private _frameRateTime;
-        private _firstAliveCursor;
-        private _lastFrameFirstCursor;
-        private _lastAliveCursor;
-        private _vertexStride;
-        private _burstIndex;
-        private _finalGravity;
-        private _vertexAttributes;
-        private _startPositionBuffer;
-        private _startVelocityBuffer;
-        private _startColorBuffer;
-        private _startSizeBuffer;
-        private _startRotationBuffer;
-        private _startTimeBuffer;
-        private _random0Buffer;
-        private _random1Buffer;
-        private _worldPostionBuffer;
-        private _worldRoationBuffer;
-        private _worldPostionCache;
-        private _worldRotationCache;
-        private _comp;
-        private _renderer;
-        /**
-        * 计算粒子爆发数量
-        * @param startTime
-        * @param endTime
-        */
-        private _getBurstCount(startTime, endTime);
-        /**
-         * 判断粒子是否已经过期
-         * @param particleIndex
-         */
-        private _isParticleExpired(particleIndex);
-        /**
-         *
-         * @param time 批量增加粒子
-         * @param startCursor
-         * @param endCursor
-         */
-        private _addParticles(time, startCursor, count);
-        private _tryEmit(time);
-        clean(): void;
-        resetTime(): void;
-        init(comp: ParticleComponent, renderer: ParticleRenderer): void;
-        update(elapsedTime: number): void;
-        private _updateEmission(elapsedTime);
-        private _updateRender();
-        readonly aliveParticleCount: number;
-    }
-}
 declare namespace paper {
     /**
      *
@@ -6022,6 +5987,68 @@ declare namespace paper {
          * @see paper.Scene#findGameObjectsWithTag()
          */
         static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
+    }
+}
+declare namespace egret3d.particle {
+    const enum ParticleCompEventType {
+        MainChanged = "mainChanged",
+        ColorChanged = "colorChanged",
+        VelocityChanged = "velocityChanged",
+        SizeChanged = "sizeChanged",
+        RotationChanged = "rotationChanged",
+        TextureSheetChanged = "textureSheetChanged",
+        ShapeChanged = "shapeChanged",
+        StartRotation3DChanged = "rotation3DChanged",
+        SimulationSpaceChanged = "simulationSpace",
+        ScaleModeChanged = "scaleMode",
+        MaxParticlesChanged = "maxParticles",
+    }
+    class ParticleComponent extends paper.BaseComponent {
+        readonly main: MainModule;
+        readonly emission: EmissionModule;
+        readonly shape: ShapeModule;
+        readonly velocityOverLifetime: VelocityOverLifetimeModule;
+        readonly rotationOverLifetime: RotationOverLifetimeModule;
+        readonly sizeOverLifetime: SizeOverLifetimeModule;
+        readonly colorOverLifetime: ColorOverLifetimeModule;
+        readonly textureSheetAnimation: TextureSheetAnimationModule;
+        /**
+         * @internal
+         */
+        _isPlaying: boolean;
+        /**
+         * @internal
+         */
+        _isPaused: boolean;
+        private readonly _batcher;
+        /**
+         * @internal
+         */
+        _clean(): void;
+        /**
+         * @internal
+         */
+        uninitialize(): void;
+        /**
+         * @internal
+         */
+        initialize(): void;
+        /**
+         * @internal
+         */
+        initBatcher(): void;
+        /**
+         * @internal
+         */
+        update(elapsedTime: number): void;
+        play(withChildren?: boolean): void;
+        pause(withChildren?: boolean): void;
+        stop(withChildren?: boolean): void;
+        clear(withChildren?: boolean): void;
+        readonly loop: boolean;
+        readonly isPlaying: boolean;
+        readonly isPaused: boolean;
+        readonly isAlive: boolean;
     }
 }
 declare namespace egret3d.particle {
@@ -6421,6 +6448,14 @@ declare namespace paper {
     /**
      *
      */
+    const enum PlayerMode {
+        Player = 0,
+        DebugPlayer = 1,
+        Editor = 2,
+    }
+    /**
+     *
+     */
     let Time: Clock;
     /**
      *
@@ -6448,18 +6483,16 @@ declare namespace paper {
          * 场景管理器。
          */
         readonly sceneManager: SceneManager;
-        private _isEditor;
         private _isFocused;
-        private _isPlaying;
         private _isRunning;
+        private _playerMode;
         private _bindUpdate;
         _option: egret3d.RequiredRuntimeOptions;
         _canvas: HTMLCanvasElement;
         _webgl: WebGLRenderingContext;
         private _update();
-        init({isEditor, isPlaying, systems, option, canvas, webgl}?: {
-            isEditor?: boolean;
-            isPlaying?: boolean;
+        init({playerMode, systems, option, canvas, webgl}?: {
+            playerMode?: PlayerMode;
             systems?: (new () => BaseSystem)[];
             option?: {};
             canvas?: {};
@@ -6471,10 +6504,9 @@ declare namespace paper {
         pause(): void;
         resume(): void;
         callLater(callback: () => void): void;
-        readonly isEditor: boolean;
         readonly isFocused: boolean;
-        readonly isPlaying: boolean;
         readonly isRunning: boolean;
+        readonly playerMode: PlayerMode;
     }
 }
 declare namespace egret3d {
@@ -6508,6 +6540,11 @@ declare namespace egret3d {
         /**
          *
          */
+        static create(shader?: Shader | string): Material;
+        static create(config: GLTF, name: string): Material;
+        /**
+         *
+         */
         renderQueue: paper.RenderQueue | number;
         /**
           * @internal
@@ -6529,7 +6566,9 @@ declare namespace egret3d {
         */
         _glTFTechnique: gltf.Technique;
         /**
-         *
+         * 请使用 `egret3d.Material.create()` 创建实例。
+         * @see egret3d.Material.create()
+         * @deprecated
          */
         constructor(shader?: Shader | string);
         constructor(config: GLTF, name: string);
@@ -9531,8 +9570,9 @@ declare namespace RES.processor {
     const ShaderProcessor: RES.processor.Processor;
     const TextureDescProcessor: RES.processor.Processor;
     const TextureProcessor: RES.processor.Processor;
-    const GLTFBinaryProcessor: RES.processor.Processor;
     const MaterialProcessor: RES.processor.Processor;
+    const MeshProcessor: RES.processor.Processor;
+    const AnimationProcessor: RES.processor.Processor;
     const PrefabProcessor: RES.processor.Processor;
     const SceneProcessor: RES.processor.Processor;
 }
@@ -10197,6 +10237,13 @@ declare namespace egret3d {
      */
     class Mesh extends BaseMesh {
         /**
+         *
+         */
+        static create(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
+            [key: string]: gltf.AccessorType;
+        } | null, drawMode?: gltf.DrawMode): any;
+        static create(config: GLTF, buffers: Uint32Array[], name: string): any;
+        /**
          * @internal
          */
         readonly _ibos: WebGLBuffer[];
@@ -10707,7 +10754,9 @@ declare namespace paper.editor {
 }
 declare namespace paper.editor {
     class EditorSceneModel {
+        private viewCache;
         readonly editorScene: Scene;
+        private currentModel;
         editorModel: EditorModel;
         private editorCameraScript;
         private pickGameScript;
@@ -11382,64 +11431,60 @@ declare namespace egret3d {
     type RawScene = paper.RawScene;
 }
 declare namespace egret3d.particle {
-    const enum ParticleCompEventType {
-        MainChanged = "mainChanged",
-        ColorChanged = "colorChanged",
-        VelocityChanged = "velocityChanged",
-        SizeChanged = "sizeChanged",
-        RotationChanged = "rotationChanged",
-        TextureSheetChanged = "textureSheetChanged",
-        ShapeChanged = "shapeChanged",
-        StartRotation3DChanged = "rotation3DChanged",
-        SimulationSpaceChanged = "simulationSpace",
-        ScaleModeChanged = "scaleMode",
-        MaxParticlesChanged = "maxParticles",
-    }
-    class ParticleComponent extends paper.BaseComponent {
-        readonly main: MainModule;
-        readonly emission: EmissionModule;
-        readonly shape: ShapeModule;
-        readonly velocityOverLifetime: VelocityOverLifetimeModule;
-        readonly rotationOverLifetime: RotationOverLifetimeModule;
-        readonly sizeOverLifetime: SizeOverLifetimeModule;
-        readonly colorOverLifetime: ColorOverLifetimeModule;
-        readonly textureSheetAnimation: TextureSheetAnimationModule;
+    /**
+     * @internal
+     */
+    class ParticleBatcher {
+        private _dirty;
+        private _time;
+        private _emittsionTime;
+        private _frameRateTime;
+        private _firstAliveCursor;
+        private _lastFrameFirstCursor;
+        private _lastAliveCursor;
+        private _vertexStride;
+        private _burstIndex;
+        private _finalGravity;
+        private _vertexAttributes;
+        private _startPositionBuffer;
+        private _startVelocityBuffer;
+        private _startColorBuffer;
+        private _startSizeBuffer;
+        private _startRotationBuffer;
+        private _startTimeBuffer;
+        private _random0Buffer;
+        private _random1Buffer;
+        private _worldPostionBuffer;
+        private _worldRoationBuffer;
+        private _worldPostionCache;
+        private _worldRotationCache;
+        private _comp;
+        private _renderer;
         /**
-         * @internal
-         */
-        _isPlaying: boolean;
+        * 计算粒子爆发数量
+        * @param startTime
+        * @param endTime
+        */
+        private _getBurstCount(startTime, endTime);
         /**
-         * @internal
+         * 判断粒子是否已经过期
+         * @param particleIndex
          */
-        _isPaused: boolean;
-        private readonly _batcher;
+        private _isParticleExpired(particleIndex);
         /**
-         * @internal
+         *
+         * @param time 批量增加粒子
+         * @param startCursor
+         * @param endCursor
          */
-        _clean(): void;
-        /**
-         * @internal
-         */
-        uninitialize(): void;
-        /**
-         * @internal
-         */
-        initialize(): void;
-        /**
-         * @internal
-         */
-        initBatcher(): void;
-        /**
-         * @internal
-         */
+        private _addParticles(time, startCursor, count);
+        private _tryEmit(time);
+        clean(): void;
+        resetTime(): void;
+        init(comp: ParticleComponent, renderer: ParticleRenderer): void;
         update(elapsedTime: number): void;
-        play(withChildren?: boolean): void;
-        pause(withChildren?: boolean): void;
-        stop(withChildren?: boolean): void;
-        clear(withChildren?: boolean): void;
-        readonly loop: boolean;
-        readonly isPlaying: boolean;
-        readonly isPaused: boolean;
-        readonly isAlive: boolean;
+        private _updateEmission(elapsedTime);
+        private _updateRender();
+        readonly aliveParticleCount: number;
     }
 }
