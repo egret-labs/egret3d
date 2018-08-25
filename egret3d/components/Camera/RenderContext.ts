@@ -224,7 +224,7 @@ namespace egret3d {
 
                 if (light.castShadows) {
                     lightArray[index++] = 1;
-                    lightArray[index++] = light.shadowBias;
+                    lightArray[index++] = -light.shadowBias;//Right-hand
                     lightArray[index++] = light.shadowRadius;
                     lightArray[index++] = light.shadowSize;
                     lightArray[index++] = light.shadowSize;
@@ -291,7 +291,6 @@ namespace egret3d {
 
             this.version++;
         }
-        //TODO废弃
         public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0, 1.0]);
         public lightShadowCameraNear: number = 0;
         public lightShadowCameraFar: number = 0;
@@ -300,6 +299,7 @@ namespace egret3d {
             if (this.lightPosition[0] !== position.x ||
                 this.lightPosition[1] !== position.y ||
                 this.lightPosition[2] !== position.z) {
+                //
                 this.lightPosition[0] = position.x;
                 this.lightPosition[1] = position.y;
                 this.lightPosition[2] = position.z;
@@ -308,6 +308,7 @@ namespace egret3d {
 
             if (this.lightShadowCameraNear !== light.shadowCameraNear ||
                 this.lightShadowCameraNear !== light.shadowCameraFar) {
+                //
                 this.lightShadowCameraNear = light.shadowCameraNear;
                 this.lightShadowCameraFar = light.shadowCameraFar;
                 this.version++;
@@ -320,7 +321,6 @@ namespace egret3d {
             this.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
             if (drawCall.boneData) {
                 this.updateBones(drawCall.boneData);
-                //this.shaderContextDefine += "#define SKINNING \n";
             }
             //
             if (renderer.lightmapIndex >= 0) {
@@ -351,7 +351,7 @@ namespace egret3d {
                 }
                 if (renderer.receiveShadows) {
                     this.shaderContextDefine += "#define USE_SHADOWMAP \n";
-                    this.shaderContextDefine += "#define USE_PCF_SOFT_SHADOW \n";
+                    this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
             }
         }

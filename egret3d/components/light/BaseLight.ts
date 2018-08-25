@@ -46,7 +46,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.NUMBER)
-        public shadowBias: number = 0.05;
+        public shadowBias: number = 0.001;
         /**
          * 
          */
@@ -64,7 +64,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.NUMBER)
-        public shadowCameraFar: number = 10.0;
+        public shadowCameraFar: number = 100.0;
         /**
          * 
          */
@@ -88,6 +88,7 @@ namespace egret3d {
 
             const context = camera.context;
             context.updateCamera(camera, this.gameObject.transform.getWorldMatrix());
+            context.updateLightDepth(this);
             matrix.multiply(context.matrix_p).multiply(context.matrix_v);
         }
         /**
