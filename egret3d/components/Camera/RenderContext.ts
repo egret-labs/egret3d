@@ -116,7 +116,6 @@ namespace egret3d {
             }
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
-
                 if (light instanceof DirectionalLight) {
                     directLightCount++;
                 }
@@ -164,16 +163,20 @@ namespace egret3d {
             let lightArray = this.directLightArray;
 
             for (const light of lights) {
-                const position = light.gameObject.transform.getPosition();
-                dirHelper.applyDirection(this.matrix_v, position).normalize();
-
                 switch (light.constructor) {
                     case DirectionalLight: {
+                        light.gameObject.transform.getForward(dirHelper);
+                        dirHelper.applyDirection(this.matrix_v).normalize();
+
                         lightArray = this.directLightArray;
                         index = directLightIndex * this.DIRECT_LIGHT_SIZE;
-                        lightArray[index++] = dirHelper.x;
-                        lightArray[index++] = dirHelper.y;
-                        lightArray[index++] = dirHelper.z;
+                        // lightArray[index++] = dirHelper.x; // Right-hand.
+                        // lightArray[index++] = dirHelper.y;
+                        // lightArray[index++] = dirHelper.z;
+
+                        lightArray[index++] = -dirHelper.x; // Left-hand.
+                        lightArray[index++] = -dirHelper.y;
+                        lightArray[index++] = -dirHelper.z;
 
                         lightArray[index++] = light.color.r * light.intensity;
                         lightArray[index++] = light.color.g * light.intensity;
@@ -182,6 +185,7 @@ namespace egret3d {
                     }
 
                     case PointLight: {
+                        const position = light.gameObject.transform.getPosition();
                         lightArray = this.pointLightArray;
                         index = pointLightIndex * this.POINT_LIGHT_SIZE;
 
@@ -199,6 +203,10 @@ namespace egret3d {
                     }
 
                     case SpotLight: {
+                        const position = light.gameObject.transform.getPosition();
+                        light.gameObject.transform.getForward(dirHelper);
+                        dirHelper.applyDirection(this.matrix_v).normalize();
+
                         lightArray = this.spotLightArray;
                         index = spotLightIndex * this.SPOT_LIGHT_SIZE;
 
@@ -206,9 +214,13 @@ namespace egret3d {
                         lightArray[index++] = position.y;
                         lightArray[index++] = position.z;
 
-                        lightArray[index++] = dirHelper.x;
-                        lightArray[index++] = dirHelper.y;
-                        lightArray[index++] = dirHelper.z;
+                        // lightArray[index++] = dirHelper.x; // Right-hand.
+                        // lightArray[index++] = dirHelper.y;
+                        // lightArray[index++] = dirHelper.z;
+
+                        lightArray[index++] = -dirHelper.x; // Left-hand.
+                        lightArray[index++] = -dirHelper.y;
+                        lightArray[index++] = -dirHelper.z;
 
                         lightArray[index++] = light.color.r * light.intensity;
                         lightArray[index++] = light.color.g * light.intensity;
@@ -224,7 +236,8 @@ namespace egret3d {
 
                 if (light.castShadows) {
                     lightArray[index++] = 1;
-                    lightArray[index++] = -light.shadowBias;//Right-hand
+                    // lightArray[index++] = light.shadowBias; // Right-hand.
+                    lightArray[index++] = -light.shadowBias; // Left-hand.
                     lightArray[index++] = light.shadowRadius;
                     lightArray[index++] = light.shadowSize;
                     lightArray[index++] = light.shadowSize;
