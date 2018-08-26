@@ -4,7 +4,7 @@ float getShadowMask() {
 
 	#ifdef USE_SHADOWMAP
 
-	#if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0
+	#if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0//Egret
 
 	DirectionalLight directionalLight;
 
@@ -22,7 +22,7 @@ float getShadowMask() {
 
 	#endif
 
-	#if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0
+	#if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0//Egret
 
 	SpotLight spotLight;
 	// #pragma unroll_loop
@@ -39,7 +39,7 @@ float getShadowMask() {
 
 	#endif
 
-	#if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0
+	#if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0//Egret
 
 	PointLight pointLight;
 
