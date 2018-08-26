@@ -42,7 +42,8 @@ namespace paper {
             delete _deserializers[k];
         }
 
-        for (const child of _defaultGameObject.transform.children) {
+        const children = _defaultGameObject.transform.children.concat();
+        for (const child of children) {
             child.gameObject.destroy();
         }
 
@@ -178,7 +179,7 @@ namespace paper {
 
         return target;
     }
-    
+
     function _getSerializedKeys(serializedClass: BaseClass, keys: string[] | null = null) {
         const serializeKeys = serializedClass.__serializeKeys;
         if (serializeKeys) {

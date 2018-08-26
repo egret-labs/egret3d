@@ -15,6 +15,10 @@ namespace paper {
          * 
          */
         Hide,
+        /**
+         * 
+         */
+        HideAndDontSave,
     }
     /**
      * 

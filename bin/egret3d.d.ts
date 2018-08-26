@@ -2447,6 +2447,10 @@ declare namespace paper {
          *
          */
         Hide = 2,
+        /**
+         *
+         */
+        HideAndDontSave = 3,
     }
     /**
      *

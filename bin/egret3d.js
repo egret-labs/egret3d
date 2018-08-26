@@ -188,7 +188,7 @@ var paper;
         function getItemsFromEnum(enumObject) {
             var items = [];
             for (var k in enumObject) {
-                if (!isNaN(Number(k))) {
+                if (isNaN(Number(k))) {
                     continue;
                 }
                 items.push({ label: k, value: enumObject[k] });
@@ -3703,6 +3703,10 @@ var paper;
          *
          */
         HideFlags[HideFlags["Hide"] = 2] = "Hide";
+        /**
+         *
+         */
+        HideFlags[HideFlags["HideAndDontSave"] = 3] = "HideAndDontSave";
     })(HideFlags = paper.HideFlags || (paper.HideFlags = {}));
     /**
      *
@@ -7281,8 +7285,9 @@ var paper;
         for (var k in _deserializers) {
             delete _deserializers[k];
         }
-        for (var _i = 0, _a = _defaultGameObject.transform.children; _i < _a.length; _i++) {
-            var child = _a[_i];
+        var children = _defaultGameObject.transform.children.concat();
+        for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
+            var child = children_1[_i];
             child.gameObject.destroy();
         }
         var serializeData = _serializeData;
@@ -15650,8 +15655,8 @@ var egret3d;
                 //
                 if (withChildren) {
                     var children = this.gameObject.transform.children;
-                    for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
-                        var child = children_1[_i];
+                    for (var _i = 0, children_2 = children; _i < children_2.length; _i++) {
+                        var child = children_2[_i];
                         var particleComp = child.gameObject.getComponent(ParticleComponent);
                         if (particleComp && particleComp.isActiveAndEnabled) {
                             particleComp.play(withChildren);
@@ -15665,8 +15670,8 @@ var egret3d;
                 //
                 if (withChildren) {
                     var children = this.gameObject.transform.children;
-                    for (var _i = 0, children_2 = children; _i < children_2.length; _i++) {
-                        var child = children_2[_i];
+                    for (var _i = 0, children_3 = children; _i < children_3.length; _i++) {
+                        var child = children_3[_i];
                         var particleComp = child.gameObject.getComponent(ParticleComponent);
                         if (particleComp && particleComp.isActiveAndEnabled) {
                             particleComp.pause(withChildren);
@@ -15681,8 +15686,8 @@ var egret3d;
                 //
                 if (withChildren) {
                     var children = this.gameObject.transform.children;
-                    for (var _i = 0, children_3 = children; _i < children_3.length; _i++) {
-                        var child = children_3[_i];
+                    for (var _i = 0, children_4 = children; _i < children_4.length; _i++) {
+                        var child = children_4[_i];
                         var particleComp = child.gameObject.getComponent(ParticleComponent);
                         if (particleComp && particleComp.isActiveAndEnabled) {
                             particleComp.stop(withChildren);
@@ -15694,8 +15699,8 @@ var egret3d;
                 if (withChildren === void 0) { withChildren = true; }
                 if (withChildren) {
                     var children = this.gameObject.transform.children;
-                    for (var _i = 0, children_4 = children; _i < children_4.length; _i++) {
-                        var child = children_4[_i];
+                    for (var _i = 0, children_5 = children; _i < children_5.length; _i++) {
+                        var child = children_5[_i];
                         var particleComp = child.gameObject.getComponent(ParticleComponent);
                         if (particleComp && particleComp.isActiveAndEnabled) {
                             particleComp.stop(withChildren);
