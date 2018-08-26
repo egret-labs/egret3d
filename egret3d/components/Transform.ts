@@ -492,7 +492,7 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get localScale(): Readonly<Vector3> {
-            return this._localPosition;
+            return this._localScale;
         }
         public set localScale(value: Readonly<Vector3>) {
             this._localScale.copy(value);

@@ -188,7 +188,7 @@ var paper;
         function getItemsFromEnum(enumObject) {
             var items = [];
             for (var k in enumObject) {
-                if (isNaN(Number(k))) {
+                if (!isNaN(Number(k))) {
                     continue;
                 }
                 items.push({ label: k, value: enumObject[k] });
@@ -8121,7 +8121,7 @@ var egret3d;
              *
              */
             get: function () {
-                return this._localPosition;
+                return this._localScale;
             },
             set: function (value) {
                 this._localScale.copy(value);
