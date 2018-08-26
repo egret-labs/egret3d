@@ -7,6 +7,24 @@ namespace paper {
     const KEY_EXTRAS: keyof GameObject = "extras";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
     /**
+     * @internal
+     */
+    export function getDeserializedIgnoreKeys(serializedClass: BaseClass, keys: string[] | null = null) {
+        if (serializedClass.__deserializeIgnore) {
+            keys = keys || [];
+
+            for (const key of serializedClass.__deserializeIgnore) {
+                keys.push(key);
+            }
+        }
+
+        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object as any) {
+            getDeserializedIgnoreKeys(serializedClass.prototype.__proto__.constructor, keys);
+        }
+
+        return keys;
+    }
+    /**
      * 
      */
     export class Deserializer {
@@ -32,24 +50,9 @@ namespace paper {
         private readonly _deserializers: { [key: string]: Deserializer } = {};
         private _target: Scene | GameObject = null!;
 
-        private _getDeserializedIgnoreKeys(serializedClass: BaseClass, keys: string[] | null = null) {
-            if (serializedClass.__deserializeIgnore) {
-                keys = keys || [];
-
-                for (const key of serializedClass.__deserializeIgnore) {
-                    keys.push(key);
-                }
-            }
-
-            if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object as any) {
-                this._getDeserializedIgnoreKeys(serializedClass.prototype.__proto__.constructor, keys);
-            }
-
-            return keys;
-        }
-
         private _deserializeObject(source: ISerializedObject, target: BaseObject) {
-            const deserializedIgnoreKeys = this._getDeserializedIgnoreKeys(<any>target.constructor as BaseClass);
+            const serializedKeys = getSerializedKeys(<any>target.constructor as BaseClass);
+            const deserializedIgnoreKeys = getDeserializedIgnoreKeys(<any>target.constructor as BaseClass);
 
             for (const k in source) {
                 if (k === KEY_CLASS) {
@@ -60,14 +63,16 @@ namespace paper {
                     continue;
                 }
 
+                const kk = serializedKeys ? serializedKeys[k] || k : k;
+
                 if (
                     deserializedIgnoreKeys &&
-                    deserializedIgnoreKeys.indexOf(k) >= 0
+                    deserializedIgnoreKeys.indexOf(kk) >= 0
                 ) {
                     continue;
                 }
 
-                (target as any)[k] = this._deserializeChild(source[k], (target as any)[k]);
+                (target as any)[kk] = this._deserializeChild(source[k], (target as any)[kk]);
             }
 
             return target;

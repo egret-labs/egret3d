@@ -50,13 +50,8 @@ namespace egret3d {
             return [this.x, this.y, this.z, this.w];
         }
 
-        public deserialize(element: Readonly<[number, number, number, number]>) {
-            this.x = element[0];
-            this.y = element[1];
-            this.z = element[2];
-            this.w = element[3];
-
-            return this;
+        public deserialize(value: Readonly<[number, number, number, number]>) {
+            return this.fromArray(value);
         }
 
         public copy(value: Readonly<IVector4>) {

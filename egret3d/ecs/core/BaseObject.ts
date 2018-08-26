@@ -34,7 +34,7 @@ namespace paper {
             this.__deserializeIgnore = [];
             this.__serializeKeys = {};
             this.__owner = this;
-            
+
             return true;
         }
         /**

@@ -430,7 +430,7 @@ namespace egret3d {
         }
 
         setTexture(id: string, value: egret3d.Texture) {
-            value = value || egret3d.DefaultTextures.GRAY;
+            value = value || egret3d.DefaultTextures.MISSING;
             //兼容老键值
             if (id === "_MainTex" && this._glTFTechnique.uniforms["map"]) {
                 id = "map";

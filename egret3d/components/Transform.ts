@@ -358,6 +358,20 @@ namespace egret3d {
             return this;
         }
         /**
+         * 
+         */
+        @paper.editor.property(paper.editor.EditType.VECTOR4)
+        public get localRotation(): Readonly<IVector4> {
+            return this._localRotation;
+        }
+        public set localRotation(value: Readonly<IVector4>) {
+            this._localRotation.copy(value);
+
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        }
+        /**
          * get local euler angles
          * @version paper 1.0
          * @platform Web

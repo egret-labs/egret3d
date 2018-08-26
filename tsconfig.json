@@ -17,6 +17,7 @@
         "strictNullChecks": false,
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": false,
+        "preserveConstEnums": true,
         "outFile": "bin/egret3d.js"
     },
     "files": [

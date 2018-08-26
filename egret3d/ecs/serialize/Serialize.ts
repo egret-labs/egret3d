@@ -178,18 +178,10 @@ namespace paper {
 
         return target;
     }
-
-    function _findClassCode(name: string) {
-        for (let key in serializeClassMap) {
-            if (serializeClassMap[key] === name) {
-                return key;
-            }
-        }
-
-        return "";
-    }
-
-    function _getSerializedKeys(serializedClass: BaseClass, keys: string[] | null = null) {
+    /**
+     * @internal
+     */
+    export function getSerializedKeys(serializedClass: BaseClass, keys: string[] | null = null) {
         const serializeKeys = serializedClass.__serializeKeys;
         if (serializeKeys) {
             keys = keys || [];
@@ -200,10 +192,20 @@ namespace paper {
         }
 
         if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object as any) {
-            _getSerializedKeys(serializedClass.prototype.__proto__.constructor, keys);
+            getSerializedKeys(serializedClass.prototype.__proto__.constructor, keys);
         }
 
         return keys;
+    }
+
+    function _findClassCode(name: string) {
+        for (let key in serializeClassMap) {
+            if (serializeClassMap[key] === name) {
+                return key;
+            }
+        }
+
+        return "";
     }
 
     function _serializeReference(source: BaseObject): ISerializedObject {
@@ -295,7 +297,7 @@ namespace paper {
     }
 
     function _serializeChildren(source: BaseObject, target: ISerializedObject | ISerializedStruct, temp: GameObject | BaseComponent | null, ignoreKeys: string[] | null) {
-        const serializedKeys = _getSerializedKeys(<any>source.constructor as BaseClass);
+        const serializedKeys = getSerializedKeys(<any>source.constructor as BaseClass);
         if (!serializedKeys) {
             return;
         }

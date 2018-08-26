@@ -123,7 +123,7 @@ namespace RES.processor {
                     const values = mat.extensions.KHR_techniques_webgl.values;
                     for (const key in values) {
                         const value = values[key];
-                        if (typeof value === "string") { // A string value must be texture uri.
+                        if (value && typeof value === "string") { // A string value must be texture uri.
                             const r = (RES.host.resourceConfig as any)["getResource"](value);
                             if (r) {
                                 const texture = await host.load(r, "TextureDesc");

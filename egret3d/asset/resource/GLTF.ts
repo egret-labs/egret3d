@@ -256,7 +256,7 @@ namespace egret3d {
                 let value: any;
 
                 if (uniform.type === gltf.UniformType.SAMPLER_2D && !uniform.value) {
-                    value = egret3d.DefaultTextures.MISSING;
+                    value = egret3d.DefaultTextures.WHITE; // Default texture.
                 }
                 else if (Array.isArray(uniform.value)) {
                     value = uniform.value ? uniform.value.concat() : [];
@@ -328,7 +328,7 @@ namespace egret3d {
 
             this.buffers.length = 0; // TODO clear buffer.
             this.config = null!;
-            
+
             return true;
         }
 
