@@ -6,10 +6,27 @@ namespace paper {
     const KEY_COMPONENTS: keyof GameObject = "components";
     const KEY_EXTRAS: keyof GameObject = "extras";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
-    /**
-     * @internal
-     */
-    export function getDeserializedIgnoreKeys(serializedClass: BaseClass, keys: string[] | null = null) {
+
+
+    function _getDeserializedKeys(serializedClass: BaseClass, keys: { [key: string]: string } | null = null) {
+        const serializeKeys = serializedClass.__serializeKeys;
+        if (serializeKeys) {
+            keys = keys || {};
+
+            for (const key in serializeKeys) {
+                if (serializeKeys[key]) {
+                    keys[serializeKeys[key]] = key;
+                }
+            }
+        }
+
+        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object as any) {
+            _getDeserializedKeys(serializedClass.prototype.__proto__.constructor, keys);
+        }
+
+        return keys;
+    }
+    function _getDeserializedIgnoreKeys(serializedClass: BaseClass, keys: string[] | null = null) {
         if (serializedClass.__deserializeIgnore) {
             keys = keys || [];
 
@@ -19,7 +36,7 @@ namespace paper {
         }
 
         if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object as any) {
-            getDeserializedIgnoreKeys(serializedClass.prototype.__proto__.constructor, keys);
+            _getDeserializedIgnoreKeys(serializedClass.prototype.__proto__.constructor, keys);
         }
 
         return keys;
@@ -51,8 +68,8 @@ namespace paper {
         private _target: Scene | GameObject = null!;
 
         private _deserializeObject(source: ISerializedObject, target: BaseObject) {
-            const serializedKeys = getSerializedKeys(<any>target.constructor as BaseClass);
-            const deserializedIgnoreKeys = getDeserializedIgnoreKeys(<any>target.constructor as BaseClass);
+            const deserializedKeys = _getDeserializedKeys(<any>target.constructor as BaseClass);
+            const deserializedIgnoreKeys = _getDeserializedIgnoreKeys(<any>target.constructor as BaseClass);
 
             for (const k in source) {
                 if (k === KEY_CLASS) {
@@ -63,7 +80,7 @@ namespace paper {
                     continue;
                 }
 
-                const kk = serializedKeys ? serializedKeys[k] || k : k;
+                const kk = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k;
 
                 if (
                     deserializedIgnoreKeys &&

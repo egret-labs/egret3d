@@ -178,10 +178,8 @@ namespace paper {
 
         return target;
     }
-    /**
-     * @internal
-     */
-    export function getSerializedKeys(serializedClass: BaseClass, keys: string[] | null = null) {
+    
+    function _getSerializedKeys(serializedClass: BaseClass, keys: string[] | null = null) {
         const serializeKeys = serializedClass.__serializeKeys;
         if (serializeKeys) {
             keys = keys || [];
@@ -192,7 +190,7 @@ namespace paper {
         }
 
         if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object as any) {
-            getSerializedKeys(serializedClass.prototype.__proto__.constructor, keys);
+            _getSerializedKeys(serializedClass.prototype.__proto__.constructor, keys);
         }
 
         return keys;
@@ -297,7 +295,7 @@ namespace paper {
     }
 
     function _serializeChildren(source: BaseObject, target: ISerializedObject | ISerializedStruct, temp: GameObject | BaseComponent | null, ignoreKeys: string[] | null) {
-        const serializedKeys = getSerializedKeys(<any>source.constructor as BaseClass);
+        const serializedKeys = _getSerializedKeys(<any>source.constructor as BaseClass);
         if (!serializedKeys) {
             return;
         }

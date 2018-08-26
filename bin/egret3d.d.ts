@@ -3721,10 +3721,6 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
-     * @internal
-     */
-    function getDeserializedIgnoreKeys(serializedClass: BaseClass, keys?: string[] | null): string[];
-    /**
      *
      */
     class Deserializer {
@@ -3791,10 +3787,6 @@ declare namespace paper {
      * 创建指定对象的结构体。
      */
     function serializeStruct(source: BaseObject): ISerializedStruct;
-    /**
-     * @internal
-     */
-    function getSerializedKeys(serializedClass: BaseClass, keys?: string[] | null): string[];
 }
 declare namespace egret3d {
     /**

@@ -12,18 +12,18 @@ namespace paper {
          */
         public static create(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
             let gameObect: GameObject;
-            if (this._instances.length > 0) {
-                gameObect = this._instances.pop()!;
+            // if (this._instances.length > 0) {
+            //     gameObect = this._instances.pop()!;
 
-                gameObect.name = name;
-                gameObect.tag = tag;
-                gameObect._addToScene(scene);
-                gameObect.addComponent(egret3d.Transform);
-            }
-            else {
+            //     gameObect.name = name;
+            //     gameObect.tag = tag;
+            //     gameObect._addToScene(scene);
+            //     gameObect.addComponent(egret3d.Transform);
+            // }
+            // else {
                 gameObect = new GameObject(name, tag, scene);
                 // gameObect = new GameObject();
-            }
+            // }
 
             // gameObect.name = name;
             // gameObect.tag = tag;

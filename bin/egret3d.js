@@ -6893,10 +6893,23 @@ var paper;
     var KEY_COMPONENTS = "components";
     var KEY_EXTRAS = "extras";
     var KEY_CHILDREN = "children";
-    /**
-     * @internal
-     */
-    function getDeserializedIgnoreKeys(serializedClass, keys) {
+    function _getDeserializedKeys(serializedClass, keys) {
+        if (keys === void 0) { keys = null; }
+        var serializeKeys = serializedClass.__serializeKeys;
+        if (serializeKeys) {
+            keys = keys || {};
+            for (var key in serializeKeys) {
+                if (serializeKeys[key]) {
+                    keys[serializeKeys[key]] = key;
+                }
+            }
+        }
+        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object) {
+            _getDeserializedKeys(serializedClass.prototype.__proto__.constructor, keys);
+        }
+        return keys;
+    }
+    function _getDeserializedIgnoreKeys(serializedClass, keys) {
         if (keys === void 0) { keys = null; }
         if (serializedClass.__deserializeIgnore) {
             keys = keys || [];
@@ -6906,11 +6919,10 @@ var paper;
             }
         }
         if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object) {
-            getDeserializedIgnoreKeys(serializedClass.prototype.__proto__.constructor, keys);
+            _getDeserializedIgnoreKeys(serializedClass.prototype.__proto__.constructor, keys);
         }
         return keys;
     }
-    paper.getDeserializedIgnoreKeys = getDeserializedIgnoreKeys;
     /**
      *
      */
@@ -6932,8 +6944,8 @@ var paper;
             this._target = null;
         }
         Deserializer.prototype._deserializeObject = function (source, target) {
-            var serializedKeys = paper.getSerializedKeys(target.constructor);
-            var deserializedIgnoreKeys = getDeserializedIgnoreKeys(target.constructor);
+            var deserializedKeys = _getDeserializedKeys(target.constructor);
+            var deserializedIgnoreKeys = _getDeserializedIgnoreKeys(target.constructor);
             for (var k in source) {
                 if (k === KEY_CLASS) {
                     continue;
@@ -6941,7 +6953,7 @@ var paper;
                 if (!this._keepUUID && k === KEY_UUID) {
                     continue;
                 }
-                var kk = serializedKeys ? serializedKeys[k] || k : k;
+                var kk = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k;
                 if (deserializedIgnoreKeys &&
                     deserializedIgnoreKeys.indexOf(kk) >= 0) {
                     continue;
@@ -7384,10 +7396,7 @@ var paper;
         return target;
     }
     paper.serializeStruct = serializeStruct;
-    /**
-     * @internal
-     */
-    function getSerializedKeys(serializedClass, keys) {
+    function _getSerializedKeys(serializedClass, keys) {
         if (keys === void 0) { keys = null; }
         var serializeKeys = serializedClass.__serializeKeys;
         if (serializeKeys) {
@@ -7397,11 +7406,10 @@ var paper;
             }
         }
         if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object) {
-            getSerializedKeys(serializedClass.prototype.__proto__.constructor, keys);
+            _getSerializedKeys(serializedClass.prototype.__proto__.constructor, keys);
         }
         return keys;
     }
-    paper.getSerializedKeys = getSerializedKeys;
     function _findClassCode(name) {
         for (var key in paper.serializeClassMap) {
             if (paper.serializeClassMap[key] === name) {
@@ -7483,7 +7491,7 @@ var paper;
         return true;
     }
     function _serializeChildren(source, target, temp, ignoreKeys) {
-        var serializedKeys = getSerializedKeys(source.constructor);
+        var serializedKeys = _getSerializedKeys(source.constructor);
         if (!serializedKeys) {
             return;
         }
@@ -11539,17 +11547,17 @@ var paper;
             if (tag === void 0) { tag = "" /* Untagged */; }
             if (scene === void 0) { scene = null; }
             var gameObect;
-            if (this._instances.length > 0) {
-                gameObect = this._instances.pop();
-                gameObect.name = name;
-                gameObect.tag = tag;
-                gameObect._addToScene(scene);
-                gameObect.addComponent(egret3d.Transform);
-            }
-            else {
-                gameObect = new GameObject(name, tag, scene);
-                // gameObect = new GameObject();
-            }
+            // if (this._instances.length > 0) {
+            //     gameObect = this._instances.pop()!;
+            //     gameObect.name = name;
+            //     gameObect.tag = tag;
+            //     gameObect._addToScene(scene);
+            //     gameObect.addComponent(egret3d.Transform);
+            // }
+            // else {
+            gameObect = new GameObject(name, tag, scene);
+            // gameObect = new GameObject();
+            // }
             // gameObect.name = name;
             // gameObect.tag = tag;
             // gameObect._addToScene(Application.sceneManager.activeScene);
