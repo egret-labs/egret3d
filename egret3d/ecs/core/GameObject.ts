@@ -17,7 +17,7 @@ namespace paper {
 
                 gameObect.name = name;
                 gameObect.tag = tag;
-                gameObect._addToScene(Application.sceneManager.activeScene);
+                gameObect._addToScene(scene);
                 gameObect.addComponent(egret3d.Transform);
             }
             else {

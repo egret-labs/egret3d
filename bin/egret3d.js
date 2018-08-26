@@ -9247,7 +9247,7 @@ var egret3d;
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", egret3d.DefaultShaders.LINEDASHED)
                 .addDefine("USE_COLOR");
             DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", egret3d.DefaultShaders.MESH_BASIC)
-                .setVector3v("diffuse", new Float32Array([1.0, 0.0, 0.0]));
+                .setVector3v("diffuse", new Float32Array([1.0, 0.0, 1.0]));
             DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", egret3d.DefaultShaders.DEPTH)
                 .addDefine("DEPTH_PACKING 3201");
             DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", egret3d.DefaultShaders.DISTANCE_RGBA);
@@ -11543,7 +11543,7 @@ var paper;
                 gameObect = this._instances.pop();
                 gameObect.name = name;
                 gameObect.tag = tag;
-                gameObect._addToScene(paper.Application.sceneManager.activeScene);
+                gameObect._addToScene(scene);
                 gameObect.addComponent(egret3d.Transform);
             }
             else {
@@ -17678,7 +17678,7 @@ var egret3d;
             return this;
         };
         Material.prototype.setTexture = function (id, value) {
-            value = value || egret3d.DefaultTextures.MISSING;
+            value = value || egret3d.DefaultTextures.WHITE;
             //兼容老键值
             if (id === "_MainTex" && this._glTFTechnique.uniforms["map"]) {
                 id = "map";
