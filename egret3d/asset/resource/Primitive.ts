@@ -15,8 +15,8 @@ namespace egret3d.Primitive {
     /**
      * 
      */
-    export function create(type: Type) {
-        const gameObject = paper.GameObject.create();
+    export function create(type: Type, name?: string, tag?: string, scene?: paper.Scene) {
+        const gameObject = paper.GameObject.create(name, tag, scene);
         const meshFilter = gameObject.addComponent(MeshFilter);
         const renderer = gameObject.addComponent(MeshRenderer);
 

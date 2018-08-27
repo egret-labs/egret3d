@@ -318,6 +318,10 @@ namespace paper {
                         this._target = target;
                     }
                     else {
+                        if (!this._target) {
+                            this._target = paper.Application.sceneManager.activeScene;
+                        }
+
                         const hasLink = KEY_EXTRAS in source && (source[KEY_EXTRAS] as GameObjectExtras).linkedID;
                         if (hasLink) {
                             const extras = source[KEY_EXTRAS] as GameObjectExtras;
@@ -343,10 +347,6 @@ namespace paper {
                             if (!target) {
                                 console.error("Deserialize prefab error.");
                             }
-                        }
-
-                        if (!this._target) {
-                            this._target = paper.Application.sceneManager.activeScene;
                         }
 
                         if (!hasLink || !target) {

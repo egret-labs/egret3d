@@ -48,8 +48,10 @@ namespace paper.editor {
         MATERIAL_ARRAY,
         /**游戏对象 */
         GAMEOBJECT,
-        /**变换 */
+        /**变换 TODO 不需要*/
         TRANSFROM,
+        /**组件 */
+        COMPONENT,
         /**声音 */
         SOUND,
         /**Mesh */
@@ -76,7 +78,7 @@ namespace paper.editor {
     export function getItemsFromEnum(enumObject: any) {
         const items = [];
         for (const k in enumObject) {
-            if (isNaN(Number(k))) {
+            if (!isNaN(Number(k))) {
                 continue;
             }
 
@@ -118,13 +120,13 @@ namespace paper.editor {
    * 获取一个实例对象的编辑信息
    * @param classInstance 实例对象
    */
-    export function getEditInfo(classInstance: any): PropertyInfo[] {
-        let whileInsance = classInstance;
-        let retrunList = [];
-        let className;
+    export function getEditInfo(classInstance) {
+        var whileInsance = classInstance.__proto__;
+        var retrunList = [];
+        var className;
         while (whileInsance) {
             className = whileInsance.constructor.name;
-            let classInfo = propertyMap[className];
+            var classInfo = propertyMap[className];
             if (classInfo) {
                 retrunList = retrunList.concat(classInfo.propertyList);
             }
@@ -149,7 +151,6 @@ namespace paper.editor {
         }
         return _getEditInfo(className);
     }
-
 
     export function getEditInfoByPrototype(classInstance: any): PropertyInfo[] {
         function _getEditInfo(proto: any): PropertyInfo[] {
