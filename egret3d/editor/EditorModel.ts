@@ -783,7 +783,7 @@ namespace paper.editor {
                         target.setVector4v(propName, copyValue);
                         break;
                     case gltf.UniformType.SAMPLER_2D:
-                        await this.setMaterialTexture(target, copyValue.url, propName);
+                        target._glTFTechnique.uniforms[propName].value = copyValue;
                         break;
                     case gltf.UniformType.FLOAT_MAT2:
                     case gltf.UniformType.FLOAT_MAT3:

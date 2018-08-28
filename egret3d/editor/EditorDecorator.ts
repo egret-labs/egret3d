@@ -119,7 +119,7 @@ namespace paper.editor {
    * @param classInstance 实例对象
    */
     export function getEditInfo(classInstance: any): PropertyInfo[] {
-        let whileInsance = classInstance;
+        let whileInsance = classInstance.__proto__;
         let retrunList = [];
         let className;
         while (whileInsance) {
