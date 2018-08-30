@@ -236,16 +236,18 @@ declare namespace paper.editor {
         MATERIAL_ARRAY = 11,
         /**游戏对象 */
         GAMEOBJECT = 12,
-        /**变换 */
+        /**变换 TODO 不需要*/
         TRANSFROM = 13,
+        /**组件 */
+        COMPONENT = 14,
         /**声音 */
-        SOUND = 14,
+        SOUND = 15,
         /**Mesh */
-        MESH = 15,
+        MESH = 16,
         /**shader */
-        SHADER = 16,
+        SHADER = 17,
         /**数组 */
-        ARRAY = 17,
+        ARRAY = 18,
     }
     /**
      * 装饰器:自定义
@@ -269,7 +271,7 @@ declare namespace paper.editor {
    * 获取一个实例对象的编辑信息
    * @param classInstance 实例对象
    */
-    function getEditInfo(classInstance: any): PropertyInfo[];
+    function getEditInfo(classInstance: any): any[];
     /**
      * 获取一个实例对象的编辑信息
      * @param classInstance 实例对象
@@ -2837,9 +2839,6 @@ declare namespace egret3d {
         /**
          *
          */
-        /**
-         *
-         */
         power: number;
     }
 }
@@ -3138,7 +3137,7 @@ declare namespace egret3d {
     function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<AABB>): boolean;
     function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<AABB>): boolean;
     function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>): boolean;
-    function aabbIntersectsSphere(aabb: Readonly<AABB>, value: Readonly<Sphere>): boolean;
+    function aabbIntersectsSphere(aabb: Readonly<AABB>, sphere: Readonly<Sphere>): boolean;
     function aabbIntersectsAABB(valueA: Readonly<AABB>, valueB: Readonly<AABB>): boolean;
     function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
 }
@@ -4472,9 +4471,15 @@ declare namespace egret3d {
      */
     class Camera extends paper.BaseComponent {
         /**
-         * 当前主相机。
+         * 当前场景的主相机。
+         * - 如果没有则创建一个。
          */
         static readonly main: Camera;
+        /**
+         * 编辑相机。
+         * - 如果没有则创建一个。
+         */
+        static readonly edit: Camera;
         /**
          * 是否清除颜色缓冲区
          */
@@ -4722,6 +4727,11 @@ declare namespace egret3d {
         protected readonly _interests: {
             componentClass: typeof Egret2DRenderer;
         }[];
+        /**
+         * @internal
+         */
+        readonly webInput: egret.web.HTMLInput;
+        onAwake(): void;
         onUpdate(deltaTime: number): void;
     }
 }
@@ -5260,6 +5270,10 @@ declare namespace paper {
          * 获取物体所在场景实例。
          */
         readonly scene: Scene;
+        /**
+         *
+         */
+        readonly globalGameObject: GameObject;
         /**
          * @deprecated
          * @see paper.Scene#find()
@@ -6325,6 +6339,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     class WebGLCapabilities extends paper.SingletonComponent {
+        static canvas: HTMLCanvasElement;
         static webgl: WebGLRenderingContext;
         static commonDefines: string;
         webgl: WebGLRenderingContext;
@@ -6671,7 +6686,7 @@ declare namespace egret3d.Primitive {
     /**
      *
      */
-    function create(type: Type): paper.GameObject;
+    function create(type: Type, name?: string, tag?: string, scene?: paper.Scene): paper.GameObject;
 }
 declare namespace egret3d.ShaderLib {
     const cube: {
