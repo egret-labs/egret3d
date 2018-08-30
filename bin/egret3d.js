@@ -4709,7 +4709,7 @@ var egret3d;
                 var bufferViewA = _c[_b];
                 var bufferViewB = value.config.bufferViews[index++];
                 var a = this.createTypeArrayFromBufferView(bufferViewA, 5125 /* UnsignedInt */);
-                var b = this.createTypeArrayFromBufferView(bufferViewB, 5125 /* UnsignedInt */);
+                var b = value.createTypeArrayFromBufferView(bufferViewB, 5125 /* UnsignedInt */);
                 for (var i = 0, l = a.length; i < l; ++i) {
                     b[i] = a[i];
                 }
@@ -8540,7 +8540,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(6, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/axises.mash.bin";
+                mesh.name = "builtin/axises.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 paper.Asset.register(mesh);
                 DefaultMeshes.AXISES = mesh;
@@ -8558,7 +8558,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/quad.mash.bin";
+                mesh.name = "builtin/quad.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8598,7 +8598,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/quad_particle.mash.bin";
+                mesh.name = "builtin/quad_particle.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD_PARTICLE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8638,7 +8638,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(4, 6);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/plane.mash.bin";
+                mesh.name = "builtin/plane.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PLANE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8678,7 +8678,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(24, 36);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/cube.mash.bin";
+                mesh.name = "builtin/cube.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CUBE = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8823,7 +8823,7 @@ var egret3d;
             {
                 var mesh = new egret3d.Mesh(16, 18);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/pyramid.mash.bin";
+                mesh.name = "builtin/pyramid.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;
                 mesh.setAttributes("POSITION" /* POSITION */, [
@@ -8925,14 +8925,14 @@ var egret3d;
             {
                 var mesh = DefaultMeshes.createSphereCCW();
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/sphere.mash.bin";
+                mesh.name = "builtin/sphere.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.SPHERE = mesh;
             }
             {
                 var mesh = DefaultMeshes.createCylinderCCW();
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/cylinder.mash.bin";
+                mesh.name = "builtin/cylinder.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CYLINDER = mesh;
             }
@@ -17177,7 +17177,7 @@ var paper;
             this._webgl = webgl;
             for (var _i = 0, systems_1 = systems; _i < systems_1.length; _i++) {
                 var systemClass = systems_1[_i];
-                this.systemManager.register(systemClass);
+                this.systemManager.register(systemClass, null);
             }
             this.resume();
         };
