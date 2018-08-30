@@ -158,6 +158,7 @@ namespace egret3d {
     }
 
     export class WebGLCapabilities extends paper.SingletonComponent {
+        public static canvas: HTMLCanvasElement;
         public static webgl: WebGLRenderingContext;
         public static commonDefines: string;
 

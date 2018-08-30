@@ -46,6 +46,8 @@ namespace egret3d {
             let displayList = new egret.sys.DisplayList(stage);
             displayList.renderBuffer = new egret.sys.RenderBuffer(undefined, undefined, true);
             stage.$displayList = displayList;
+            //
+            egret.web.$cacheTextAdapter(paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput, stage, WebGLCapabilities.canvas.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
 
             InputManager.touch.addEventListener("touchstart", this._onTouchStart, this);
             InputManager.touch.addEventListener("touchend", this._onTouchEnd, this);
@@ -71,7 +73,7 @@ namespace egret3d {
             // this.stage.removeChild(this.root);
         }
 
-        public recalculateAABB() { 
+        public recalculateAABB() {
             // TODO
         }
 
@@ -172,12 +174,8 @@ namespace egret3d {
          * 
          */
         public render(context: RenderContext, camera: egret3d.Camera) {
-            let gl = WebGLCapabilities.webgl;
-
             this.renderer.beforeRender();
-
             this.stage.drawToSurface();
-
             // WebGLRenderUtils.resetState(); // 清除3D渲染器中的标脏
         }
     }
