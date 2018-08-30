@@ -146,6 +146,10 @@ namespace egret3d {
                 this.directShadowMatrix = new Float32Array(directLightCount * 16);
             }
 
+            if (this.pointShadowMatrix.length !== pointLightCount * 16) {
+                this.pointShadowMatrix = new Float32Array(pointLightCount * 16);
+            }
+
             if (this.spotShadowMatrix.length !== spotLightCount * 16) {
                 this.spotShadowMatrix = new Float32Array(spotLightCount * 16);
             }

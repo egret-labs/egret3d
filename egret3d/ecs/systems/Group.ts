@@ -134,23 +134,25 @@ namespace paper {
 
                 if (Array.isArray(config.componentClass)) {
                     for (const componentClass of config.componentClass) {
-                        EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddUnessentialComponent);
                         EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveUnessentialComponent);
 
                         if (!isUnessential) {
                             EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddComponent);
                             EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveComponent);
                         }
+
+                        EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddUnessentialComponent);
                     }
                 }
                 else {
+                    EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveUnessentialComponent);
+
                     if (!isUnessential) {
                         EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddComponent);
                         EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveComponent);
                     }
 
                     EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddUnessentialComponent);
-                    EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveUnessentialComponent);
                 }
             }
 
