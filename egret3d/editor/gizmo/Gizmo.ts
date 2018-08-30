@@ -53,7 +53,7 @@ namespace paper.editor {
                 prg.setColor("iconColor", [color.r, color.g, color.b, color.a]);
             } else {
                 prg.setBool("hasColor", false);
-                prg.setColor("iconColor", [0, 0, 0, 1]);
+                prg.setColor("iconColor", [1, 0, 0, 1]);
             }
 
             prg.setTexture("PointTexture", 0);

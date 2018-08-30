@@ -7,7 +7,9 @@ namespace paper.editor {
 
         private baseColor: egret3d.Material;
 
-        public canDrag: boolean = false
+        public greyColor: egret3d.Material
+
+        public yellowColor: egret3d.Material
 
         protected helpVec3_1 = new egret3d.Vector3();
         protected helpVec3_2 = new egret3d.Vector3();
@@ -53,9 +55,13 @@ namespace paper.editor {
                 this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor]
             }
             else if (color == "yellow") {
+                if (this.yellowColor) {
+                    this.geo.getComponent(egret3d.MeshRenderer).materials = [this.greyColor]
+                }
+
                 let mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone()
 
-                let color1 = new Float32Array([0.9, 0.9, 0.7])
+                let color1 = new Float32Array([0.8, 0.8, 0.3])
                 let alpha = new Float32Array([0.3])
                 mat.setFloatv("opacity", alpha)
                 mat.setVector3v("diffuse", color1);
@@ -63,10 +69,13 @@ namespace paper.editor {
                 this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
             }
             else if (color == "grey") {
+                if (this.greyColor) {
+                    this.geo.getComponent(egret3d.MeshRenderer).materials = [this.greyColor]
+                }
                 let mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone()
 
                 let color1 = new Float32Array([0.3, 0.3, 0.3])
-                let alpha = new Float32Array([0.4])
+                let alpha = new Float32Array([0.2])
                 mat.setFloatv("opacity", alpha)
                 mat.setVector3v("diffuse", color1);
 
@@ -106,7 +115,9 @@ namespace paper.editor {
             mat.setFloatv("opacity", alpha)
             mat.setVector3v("diffuse", color1);
             mat.setCullFace(false)
-            funs.depthMask = [true];
+            mat.setBlend(gltf.BlendMode.Blend)
+            mat.renderQueue = RenderQueue.Overlay
+            // funs.depthMask = [true];
             funs.depthFunc = [gltf.DepthFunc.ALWAYS];
             renderer.materials = [mat];
             return gizmoAxis;
