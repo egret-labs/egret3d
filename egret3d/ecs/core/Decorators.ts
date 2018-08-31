@@ -44,6 +44,9 @@ namespace paper {
         if (!componentClass.__isSingleton) {
             componentClass.allowMultiple = true;
         }
+        else {
+            console.warn("Singleton component cannot allow multiple.");
+        }
     }
     /**
      * 通过装饰器标记组件依赖的其他组件。

@@ -430,7 +430,7 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get localEulerAngles(): Readonly<Vector3> {
-            return this._localPosition;
+            return this.getLocalEulerAngles();
         }
         public set localEulerAngles(value: Readonly<Vector3>) {
             _helpVector3.multiplyScalar(DEG_RAD, value);

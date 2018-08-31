@@ -74,7 +74,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromEuler(value: Readonly<IVector3>, order: EulerOrder = EulerOrder.XYZ) {
+        public fromEuler(value: Readonly<IVector3>, order: EulerOrder = EulerOrder.YXZ) {
             const { x, y, z } = value;
 
             // http://www.mathworks.com/matlabcentral/fileexchange/
@@ -282,7 +282,7 @@ namespace egret3d {
             return this;
         }
 
-        public toEuler(value: Vector3, order: EulerOrder = EulerOrder.XYZ) {
+        public toEuler(value: Vector3, order: EulerOrder = EulerOrder.YXZ) {
             return _helpMatrix.fromRotation(this).toEuler(value, order);
         }
     }

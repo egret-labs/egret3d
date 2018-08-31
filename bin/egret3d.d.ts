@@ -236,16 +236,18 @@ declare namespace paper.editor {
         MATERIAL_ARRAY = 11,
         /**游戏对象 */
         GAMEOBJECT = 12,
-        /**变换 */
+        /**变换 TODO 不需要*/
         TRANSFROM = 13,
+        /**组件 */
+        COMPONENT = 14,
         /**声音 */
-        SOUND = 14,
+        SOUND = 15,
         /**Mesh */
-        MESH = 15,
+        MESH = 16,
         /**shader */
-        SHADER = 16,
+        SHADER = 17,
         /**数组 */
-        ARRAY = 17,
+        ARRAY = 18,
     }
     /**
      * 装饰器:自定义
@@ -269,7 +271,7 @@ declare namespace paper.editor {
    * 获取一个实例对象的编辑信息
    * @param classInstance 实例对象
    */
-    function getEditInfo(classInstance: any): PropertyInfo[];
+    function getEditInfo(classInstance: any): any[];
     /**
      * 获取一个实例对象的编辑信息
      * @param classInstance 实例对象
@@ -2837,9 +2839,6 @@ declare namespace egret3d {
         /**
          *
          */
-        /**
-         *
-         */
         power: number;
     }
 }
@@ -3138,7 +3137,7 @@ declare namespace egret3d {
     function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<AABB>): boolean;
     function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<AABB>): boolean;
     function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>): boolean;
-    function aabbIntersectsSphere(aabb: Readonly<AABB>, value: Readonly<Sphere>): boolean;
+    function aabbIntersectsSphere(aabb: Readonly<AABB>, sphere: Readonly<Sphere>): boolean;
     function aabbIntersectsAABB(valueA: Readonly<AABB>, valueB: Readonly<AABB>): boolean;
     function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
 }
@@ -3147,7 +3146,8 @@ declare namespace paper.editor {
         editorModel: EditorModel;
         geo: GameObject;
         private baseColor;
-        canDrag: boolean;
+        greyColor: egret3d.Material;
+        yellowColor: egret3d.Material;
         protected helpVec3_1: egret3d.Vector3;
         protected helpVec3_2: egret3d.Vector3;
         protected helpVec3_3: egret3d.Vector3;
@@ -4472,9 +4472,15 @@ declare namespace egret3d {
      */
     class Camera extends paper.BaseComponent {
         /**
-         * 当前主相机。
+         * 当前场景的主相机。
+         * - 如果没有则创建一个。
          */
         static readonly main: Camera;
+        /**
+         * 编辑相机。
+         * - 如果没有则创建一个。
+         */
+        static readonly edit: Camera;
         /**
          * 是否清除颜色缓冲区
          */
@@ -4722,6 +4728,11 @@ declare namespace egret3d {
         protected readonly _interests: {
             componentClass: typeof Egret2DRenderer;
         }[];
+        /**
+         * @internal
+         */
+        readonly webInput: egret.web.HTMLInput;
+        onAwake(): void;
         onUpdate(deltaTime: number): void;
     }
 }
@@ -5260,6 +5271,10 @@ declare namespace paper {
          * 获取物体所在场景实例。
          */
         readonly scene: Scene;
+        /**
+         *
+         */
+        readonly globalGameObject: GameObject;
         /**
          * @deprecated
          * @see paper.Scene#find()
@@ -6325,6 +6340,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     class WebGLCapabilities extends paper.SingletonComponent {
+        static canvas: HTMLCanvasElement;
         static webgl: WebGLRenderingContext;
         static commonDefines: string;
         webgl: WebGLRenderingContext;
@@ -6671,7 +6687,7 @@ declare namespace egret3d.Primitive {
     /**
      *
      */
-    function create(type: Type): paper.GameObject;
+    function create(type: Type, name?: string, tag?: string, scene?: paper.Scene): paper.GameObject;
 }
 declare namespace egret3d.ShaderLib {
     const cube: {
@@ -10726,6 +10742,7 @@ declare namespace paper.editor {
         private _cameraObject;
         private bindMouse;
         private bindKeyboard;
+        readonly onGeoControll: boolean;
         private mainGeo;
         private readonly controller;
         private _editorModel;
@@ -10761,6 +10778,7 @@ declare namespace paper.editor {
     class GeoContainer extends BaseGeo {
         private geos;
         private selectedGeo;
+        readonly onGeoControll: boolean;
         constructor();
         onSet(): void;
         checkIntersect(ray: egret3d.Ray): BaseGeo;
@@ -10833,9 +10851,9 @@ declare namespace paper.editor {
         constructor();
         onSet(): void;
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
@@ -11277,12 +11295,23 @@ declare namespace paper.editor {
         private bindKeyboard;
         private cameraScript;
         private camera;
+        private lastX;
+        private lastY;
+        private selectBox;
+        private boundingBoxes;
+        private readonly onGeoControll;
         onStart(): any;
         private _tapStart;
         private selectedGameObjects;
         clearSelected(): void;
         onUpdate(delta: number): any;
+        private excludingChild();
+        private boxSelect();
         private setStroke(picked);
+        private setBoundingBox();
+        private drawBoundingBox(obj);
+        private initSelectBox();
+        private drawSelectBox(start, end);
         private intersectWithCameraAndLight(ray);
     }
 }
@@ -11293,6 +11322,9 @@ declare namespace paper.editor {
         private static camera;
         onStart(): void;
         static Enabled(): void;
+        static setGameObj(obj: GameObject): void;
+        private static gameObj;
+        static DrawStroke(): void;
         static DrawIcon(path: string, pos: egret3d.Vector3, size: number, color?: egret3d.Color): void;
         private static verticesLine;
         private static lineVertexBuffer;
@@ -11316,6 +11348,7 @@ declare namespace paper.editor {
         private static setMVPMatrix(m?);
         private static glProgram_line;
         private static glProgram_icon;
+        private static glProgram_stroke;
         private static initPrg();
         static DrawLights(): void;
         private static DrawCylinder(transform, color);
@@ -11361,6 +11394,7 @@ declare namespace paper.editor {
     const icon_vert: string;
     const line_frag: string;
     const line_vert: string;
+    const stroke_vert: string;
 }
 declare namespace egret3d {
     class GizmoRenderSystem extends paper.BaseSystem {

@@ -42,7 +42,7 @@ namespace paper {
             delete _deserializers[k];
         }
 
-        const children = _defaultGameObject.transform.children.concat();
+        const children = _defaultGameObject.transform.children.concat(); // Clone.
         for (const child of children) {
             child.gameObject.destroy();
         }
@@ -357,7 +357,11 @@ namespace paper {
                         return serializeAsset(source);
                     }
 
-                    if (source instanceof GameObject || source instanceof BaseComponent) {
+                    if (source.constructor === GameObject || source instanceof BaseComponent) {
+                        if (source.constructor === GameObject && (source as GameObject).hideFlags === paper.HideFlags.HideAndDontSave) {
+                            return undefined; // Pass.
+                        }
+
                         if (parent) {
                             if (parent.constructor === Scene) {
                                 if (key === KEY_GAMEOBJECTS) {

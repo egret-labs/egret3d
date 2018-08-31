@@ -13,7 +13,6 @@ namespace paper.editor {
             this.geo = zAxis
         }
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any) {
-            this.canDrag = true
             let worldPosition = selectedGameObjs[0].transform.getPosition();
             let worldRotation = selectedGameObjs[0].transform.getRotation();
             egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
@@ -27,7 +26,7 @@ namespace paper.editor {
             this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
         }
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any) {
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]) {
             let worldRotation = selectedGameObjs[0].transform.getRotation();
             let worldPosition = selectedGameObjs[0].transform.getPosition();
 
@@ -68,7 +67,7 @@ namespace paper.editor {
             this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
 
         }
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any) {
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]) {
             let len = selectedGameObjs.length;
             let hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
             egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
@@ -82,13 +81,13 @@ namespace paper.editor {
                 let lastPos = obj.transform.getPosition();
                 egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
 
-                if (obj.transform.parent) {
-                    let parentMatrix = obj.transform.parent.getWorldMatrix()
-                    parentMatrix = parentMatrix.inverse()
-                    parentMatrix.transformNormal(this._newPosition)
-                }
+                // if (obj.transform.parent) {
+                //     let parentMatrix = obj.transform.parent.getPosition();
+                //     this._newPosition.subtract(this._newPosition, parentMatrix)
 
-                obj.transform.setLocalPosition(this._newPosition)
+                // }
+
+                obj.transform.setPosition(this._newPosition)
                 // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
             }
             egret3d.Vector3.copy(hit, this._dragOffset);

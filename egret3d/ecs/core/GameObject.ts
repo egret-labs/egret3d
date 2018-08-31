@@ -21,8 +21,8 @@ namespace paper {
             //     gameObect.addComponent(egret3d.Transform);
             // }
             // else {
-                gameObect = new GameObject(name, tag, scene);
-                // gameObect = new GameObject();
+            gameObect = new GameObject(name, tag, scene);
+            // gameObect = new GameObject();
             // }
 
             // gameObect.name = name;
@@ -61,6 +61,7 @@ namespace paper {
          * 标签
          */
         @serializedField
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.DefaultTags) })
         public tag: string = "";
         /**
          * 变换组件
@@ -290,6 +291,11 @@ namespace paper {
          */
         public addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T {
             registerClass(componentClass);
+            // SingletonComponent.
+            if (componentClass.__isSingleton && this !== Application.sceneManager.globalGameObject) {
+                return Application.sceneManager.globalGameObject.getOrAddComponent(componentClass, config);
+            }
+
             const componentIndex = componentClass.__index;
             const existedComponent = this._components[componentIndex];
             // disallowMultipleComponents.
@@ -750,7 +756,12 @@ namespace paper {
         public get scene() {
             return this._scene!;
         }
-
+        /**
+         * 
+         */
+        public get globalGameObject() {
+            return Application.sceneManager.globalGameObject;
+        }
         /**
          * @deprecated
          * @see paper.Scene#find()

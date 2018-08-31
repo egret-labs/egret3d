@@ -15,7 +15,9 @@ namespace paper.editor {
         private _cameraObject: paper.GameObject
         private bindMouse: egret3d.MouseDevice;
         private bindKeyboard: egret3d.KeyboardDevice;
-
+        public get onGeoControll() {
+            return this.mainGeo.onGeoControll
+        }
         private mainGeo: GeoContainer;
         private get controller() {
             return this.mainGeo.geo;
@@ -54,7 +56,6 @@ namespace paper.editor {
             this.drawCoord();
             this.geoChangeByCamera();
             this.inputUpdate();
-            // this.mouseRayCastUpdate();
             if (this._isEditing) {
                 (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
             }
@@ -190,6 +191,9 @@ namespace paper.editor {
             this.editorModel.changeEditType(type)
             if (type == 'scale') {
                 this.mainGeo.geo.transform.setRotation(this.selectedGameObjs[0].transform.getRotation())
+            }
+            if (this.geoCtrlMode == 'world') {
+                this.controller.transform.setRotation(0, 0, 0, 1);
             }
             this.mainGeo.changeType(type)
         }

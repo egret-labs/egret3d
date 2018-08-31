@@ -28,7 +28,47 @@ namespace paper.editor {
             this.camera.gameObject.addComponent(Gizmo)
 
         }
+        public static setGameObj(obj: GameObject) {
+            this.gameObj = obj
+        }
+        private static gameObj: GameObject
+        public static DrawStroke() {
+            if (!this.enabled) return;
+            if (!this.gameObj) return;
+            let obj = this.gameObj
+            let gl = this.webgl
+            let prg = this.glProgram_stroke;
+            let mesh = obj.getComponent(egret3d.MeshFilter).mesh
+            let position = mesh.getAttributes('POSITION')
+            let normal = mesh.getAttributes('NORMAL')
+            let indices = mesh.getIndices()
+            let vertexCount = position.length / 3
 
+            let vertexBuffer = gl.createBuffer();
+            let normalBuffer = gl.createBuffer();
+            let indiceBuffer = gl.createBuffer();
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
+            gl.bufferData(gl.ARRAY_BUFFER, position, gl.STATIC_DRAW)
+            gl.vertexAttribPointer(gl.getAttribLocation(prg.prg, 'aPosition'), 3, gl.FLOAT, false, 0, 0)
+            gl.enableVertexAttribArray(gl.getAttribLocation(prg.prg, 'aPosition'))
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer)
+            gl.bufferData(gl.ARRAY_BUFFER, normal, gl.STATIC_DRAW)
+            gl.vertexAttribPointer(gl.getAttribLocation(prg.prg, 'aNormal'), 3, gl.FLOAT, false, 0, 0)
+            gl.enableVertexAttribArray(gl.getAttribLocation(prg.prg, 'aNormal'))
+
+            this.setMVPMatrix();
+            prg.setMatrix("mvpMat", this.mvpMatrix);
+            prg.setColor("lineColor", [1, 1, 1, 1]);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indiceBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+
+            gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
+            console.log(position, normal)
+        }
         public static DrawIcon(path: string, pos: egret3d.Vector3, size: number, color?: egret3d.Color) {
             if (!this.enabled) return;
 
@@ -53,7 +93,7 @@ namespace paper.editor {
                 prg.setColor("iconColor", [color.r, color.g, color.b, color.a]);
             } else {
                 prg.setBool("hasColor", false);
-                prg.setColor("iconColor", [0, 0, 0, 1]);
+                prg.setColor("iconColor", [1, 0, 0, 1]);
             }
 
             prg.setTexture("PointTexture", 0);
@@ -208,10 +248,12 @@ namespace paper.editor {
 
         private static glProgram_line: editor.GizmoShader;
         private static glProgram_icon: editor.GizmoShader;
+        private static glProgram_stroke: editor.GizmoShader;
 
         private static initPrg() {
             this.glProgram_line = new GizmoShader(this.webgl, editor.line_vert, editor.line_frag);
             this.glProgram_icon = new GizmoShader(this.webgl, editor.icon_vert, editor.icon_frag);
+            this.glProgram_stroke = new GizmoShader(this.webgl, editor.stroke_vert, editor.line_frag);
         }
 
         // const cameras = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);

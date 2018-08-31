@@ -71,17 +71,19 @@ namespace egret3d {
             canvas.style.position = "absolute";
             canvas.style[egret.web.getPrefixStyleName("transformOrigin")] = "0% 0% 0px";
             if (shouldRotate) {
-                canvas.style.width = h + "px";
-                canvas.style.height = w + "px";
+                // canvas.style.width = h + "px";
+                // canvas.style.height = w + "px";
                 canvas.style.left = window.innerWidth + "px";
-                const transform = `matrix(0,1,-1,0,0,0)`;
+                const transform = `matrix(0,${h / canvas.width},${-w / canvas.height},0,0,0)`;
                 canvas.style[egret.web.getPrefixStyleName("transform")] = transform;
             }
             else {
-                canvas.style.width = w + "px";
-                canvas.style.height = h + "px";
+                // canvas.style.width = w + "px";
+                // canvas.style.height = h + "px";
+                // canvas.style[egret.web.getPrefixStyleName("transform")] = null;
                 canvas.style.left = x + "px";
-                canvas.style[egret.web.getPrefixStyleName("transform")] = null;
+                const transform = `matrix(${w / canvas.width},0,0,${h / canvas.height},0,0)`;
+                canvas.style[egret.web.getPrefixStyleName("transform")] = transform;
             }
 
             // 更新触摸信息
@@ -97,6 +99,8 @@ namespace egret3d {
             }
             egret3d.InputManager.touch.updateOffsetAndScale(x, y, touchScaleX, touchScaleY, shouldRotate);
             egret3d.InputManager.mouse.updateOffsetAndScale(x, y, touchScaleX, touchScaleY, shouldRotate);
+            
+            paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput.$updateSize();
         }
     }
 

@@ -107,9 +107,6 @@ namespace egret3d {
         public get power() {
             return this.intensity * (Math.PI * 4.0);
         }
-        /**
-         * 
-         */
         public set power(value: number) {
             this.intensity = value / (Math.PI * 4.0);
         }
