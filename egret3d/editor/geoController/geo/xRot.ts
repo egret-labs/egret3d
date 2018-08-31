@@ -11,6 +11,8 @@ namespace paper.editor {
             xRotate.transform.setLocalScale(2, 2, 2);
             xRotate.transform.setLocalEulerAngles(90, 0, 0);
             this.geo = xRotate
+
+            this.greyColor = this.geo.getComponent(egret3d.MeshRenderer).materials[0]
         }
 
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any) {
@@ -20,7 +22,7 @@ namespace paper.editor {
             let worldRotation = selectedGameObjs[0].transform.getRotation();
             this._dragPlaneNormal.applyQuaternion(worldRotation, this.up)
 
-            this.fan = this._createAxis(new egret3d.Vector4(0, 0.3, 0.3, 0.2), 1)
+            this.fan = this._createAxis(new egret3d.Vector4(0.8, 0.8, 0.3, 0.6), 1)
             this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(0)
             this.fan.transform.setLocalPosition(this.geo.transform.getPosition())
             this.fan.transform.setLocalRotation(this.geo.transform.getRotation())
@@ -59,7 +61,7 @@ namespace paper.editor {
             this.helpVec3_1.set(lastX, lastY, 0)
             this._ctrlRot = ctrlRot;
 
-            this.fan = this._createAxis(new egret3d.Vector4(0, 0.3, 0.3, 0.2), 1)
+            this.fan = this._createAxis(new egret3d.Vector4(0.8, 0.8, 0.3, 0.6), 1)
             this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(0)
             this.fan.transform.setLocalPosition(this.geo.transform.getPosition())
             this.fan.transform.setLocalRotation(this.geo.transform.getRotation())

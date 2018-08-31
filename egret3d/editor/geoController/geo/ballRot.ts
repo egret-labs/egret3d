@@ -8,7 +8,7 @@ namespace paper.editor {
             xRotate.name = "GizmoController_Rotate_X";
             xRotate.tag = "Editor";
             xRotate.transform.setLocalScale(1.3, 1.3, 1.3);
-            xRotate.getComponent(egret3d.MeshFilter).mesh = this.drawBall(16)
+            xRotate.getComponent(egret3d.MeshFilter).mesh = this.drawBall(32)
             this.geo = xRotate
         }
         drawBall(SPHERE_DIV: number) {
@@ -60,8 +60,8 @@ namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]) {
             let lastX = egret3d.InputManager.mouse.position.x;
             let lastY = egret3d.InputManager.mouse.position.y;
-            let deltaX = lastX - this.helpVec3_1.x
-            let deltaY = lastY - this.helpVec3_1.y
+            let deltaX = -(lastX - this.helpVec3_1.x)
+            let deltaY = -(lastY - this.helpVec3_1.y)
             let rot = selectedGameObjs[0].transform.getRotation()
             let cosX = Math.cos(deltaX / 180 * Math.PI / 2), sinX = Math.sin(deltaX / 180 * Math.PI / 2);
             let cosY = Math.cos(deltaY / 180 * Math.PI / 2), sinY = Math.sin(deltaY / 180 * Math.PI / 2);
@@ -99,8 +99,8 @@ namespace paper.editor {
             let len = selectedGameObjs.length
             let lastX = egret3d.InputManager.mouse.position.x;
             let lastY = egret3d.InputManager.mouse.position.y;
-            let deltaX = lastX - this.helpVec3_1.x
-            let deltaY = lastY - this.helpVec3_1.y
+            let deltaX = -(lastX - this.helpVec3_1.x)
+            let deltaY = -(lastY - this.helpVec3_1.y)
             let cosX = Math.cos(deltaX / 180 * Math.PI / 2), sinX = Math.sin(deltaX / 180 * Math.PI / 2);
             let cosY = Math.cos(deltaY / 180 * Math.PI / 2), sinY = Math.sin(deltaY / 180 * Math.PI / 2);
             let camera = Application.sceneManager.editorScene.find("EditorCamera")
