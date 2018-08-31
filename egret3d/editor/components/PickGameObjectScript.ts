@@ -10,6 +10,7 @@ namespace paper.editor {
         private lastX
         private lastY
         private selectBox: GameObject
+        private boundingBoxes: GameObject[] = []
         private get onGeoControll() {
             return this.gameObject.getComponent(Controller).onGeoControll
         }
@@ -89,9 +90,7 @@ namespace paper.editor {
                     }
                     this.excludingChild()
                     this.selectBox.activeSelf = false
-                    // if (this.selectedGameObjects[0]) {
-                    //     Gizmo.setGameObj(this.selectedGameObjects[0])
-                    // }
+                    this.setBoundingBox()
                     this.editorModel.selectGameObject(this.selectedGameObjects);
                 }
 
@@ -126,7 +125,7 @@ namespace paper.editor {
             let children: egret3d.Transform[] = []
             for (let item of this.selectedGameObjects) {
                 if (item.transform.childCount > 0) {
-                    children = children.concat(item.transform.getAllChildren())
+                    children = children.concat(children, item.transform.getAllChildren())
                 }
             }
             for (let child of children) {
@@ -183,6 +182,61 @@ namespace paper.editor {
             // console.log(render.materials)
         }
 
+        private setBoundingBox() {
+            for (let item of this.boundingBoxes) {
+                item.activeSelf = false
+                item.destroy()
+            }
+            this.boundingBoxes = []
+            let drawList = []
+            for (let item of this.selectedGameObjects) {
+                if (item.transform.childCount > 0) {
+                    drawList = drawList.concat(drawList, item.transform.getAllChildren())
+                }
+                drawList.push(item.transform)
+            }
+            for (let item of drawList) {
+                if (item.gameObject) {
+                    if (item.gameObject.getComponent(egret3d.MeshFilter)) {
+                        this.boundingBoxes.push(this.drawBoundingBox(item.gameObject))
+                    }
+                }
+
+            }
+        }
+
+        //
+        private drawBoundingBox(obj: GameObject) {
+            let box = new GameObject('boundingBox', 'Editor', Application.sceneManager.editorScene)
+            let position = obj.getComponent(egret3d.MeshFilter).mesh.getAttributes('POSITION')
+            let max = new egret3d.Vector3(position[0], position[1], position[2])
+            let min = new egret3d.Vector3(position[0], position[1], position[2])
+            let mesh = new egret3d.Mesh(8, 24)
+            for (let i = 0; i < position.length; i = i + 3) {
+                max.set(Math.max(max.x, position[i]), Math.max(max.y, position[i + 1]), Math.max(max.z, position[i + 2]))
+                min.set(Math.min(min.x, position[i]), Math.min(min.y, position[i + 1]), Math.min(min.z, position[i + 2]))
+            }
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                max.x, max.y, max.z,
+                max.x, max.y, min.z,
+                max.x, min.y, min.z,
+                max.x, min.y, max.z,
+                min.x, max.y, max.z,
+                min.x, max.y, min.z,
+                min.x, min.y, max.z,
+                min.x, min.y, min.z,
+            ])
+            mesh.setIndices([0, 1, 0, 3, 1, 2, 7, 6, 7, 5, 6, 4, 5, 4, 0, 4, 5, 1, 2, 7, 3, 6, 2, 3])
+            let meshFilter = box.addComponent(egret3d.MeshFilter)
+            meshFilter.mesh = mesh
+            mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines
+            box.addComponent(egret3d.MeshRenderer)
+            box.transform.setPosition(obj.transform.getPosition())
+            box.transform.setRotation(obj.transform.getRotation())
+            box.transform.setScale(obj.transform.getScale())
+            return box
+        }
+
         //
         private initSelectBox() {
             this.selectBox = new GameObject('selectBox', '', Application.sceneManager.editorScene)
@@ -191,19 +245,12 @@ namespace paper.editor {
             let render = selectBox.addComponent(egret3d.MeshRenderer)
             let mesh = new egret3d.Mesh(4, 6)
             MeshFilter.mesh = mesh
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                0, 1, 0,
-                1, 1, 0,
-                0, 0, 0,
-                1, 0, 0
-            ])
-            mesh.setIndices([0, 1, 2, 2, 1, 3])
             selectBox.activeSelf = false
             let mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
             mat.setVector3v("diffuse", new Float32Array([0.8, 0.8, 0.3]));
             mat.setFloatv("opacity", new Float32Array([0.3]))
             mat.setDepth(true, true)
-            mat.renderQueue = 4000
+            mat.renderQueue = paper.RenderQueue.Overlay
             mat.setCullFace(false)
             mat.setBlend(gltf.BlendMode.Blend)
             render.materials = [mat]

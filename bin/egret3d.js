@@ -27077,6 +27077,7 @@ var paper;
             __extends(PickGameObjectScript, _super);
             function PickGameObjectScript() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.boundingBoxes = [];
                 _this._tapStart = 0;
                 _this.selectedGameObjects = [];
                 return _this;
@@ -27165,9 +27166,7 @@ var paper;
                         }
                         this.excludingChild();
                         this.selectBox.activeSelf = false;
-                        // if (this.selectedGameObjects[0]) {
-                        //     Gizmo.setGameObj(this.selectedGameObjects[0])
-                        // }
+                        this.setBoundingBox();
                         this.editorModel.selectGameObject(this.selectedGameObjects);
                     }
                     if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
@@ -27201,7 +27200,7 @@ var paper;
                 for (var _i = 0, _a = this.selectedGameObjects; _i < _a.length; _i++) {
                     var item = _a[_i];
                     if (item.transform.childCount > 0) {
-                        children = children.concat(item.transform.getAllChildren());
+                        children = children.concat(children, item.transform.getAllChildren());
                     }
                 }
                 for (var _b = 0, children_6 = children; _b < children_6.length; _b++) {
@@ -27257,6 +27256,61 @@ var paper;
                 // transform.parent = _transform
                 // console.log(render.materials)
             };
+            PickGameObjectScript.prototype.setBoundingBox = function () {
+                for (var _i = 0, _a = this.boundingBoxes; _i < _a.length; _i++) {
+                    var item = _a[_i];
+                    item.activeSelf = false;
+                    item.destroy();
+                }
+                this.boundingBoxes = [];
+                var drawList = [];
+                for (var _b = 0, _c = this.selectedGameObjects; _b < _c.length; _b++) {
+                    var item = _c[_b];
+                    if (item.transform.childCount > 0) {
+                        drawList = drawList.concat(drawList, item.transform.getAllChildren());
+                    }
+                    drawList.push(item.transform);
+                }
+                for (var _d = 0, drawList_1 = drawList; _d < drawList_1.length; _d++) {
+                    var item = drawList_1[_d];
+                    if (item.gameObject) {
+                        if (item.gameObject.getComponent(egret3d.MeshFilter)) {
+                            this.boundingBoxes.push(this.drawBoundingBox(item.gameObject));
+                        }
+                    }
+                }
+            };
+            //
+            PickGameObjectScript.prototype.drawBoundingBox = function (obj) {
+                var box = new paper.GameObject('boundingBox', 'Editor', paper.Application.sceneManager.editorScene);
+                var position = obj.getComponent(egret3d.MeshFilter).mesh.getAttributes('POSITION');
+                var max = new egret3d.Vector3(position[0], position[1], position[2]);
+                var min = new egret3d.Vector3(position[0], position[1], position[2]);
+                var mesh = new egret3d.Mesh(8, 24);
+                for (var i = 0; i < position.length; i = i + 3) {
+                    max.set(Math.max(max.x, position[i]), Math.max(max.y, position[i + 1]), Math.max(max.z, position[i + 2]));
+                    min.set(Math.min(min.x, position[i]), Math.min(min.y, position[i + 1]), Math.min(min.z, position[i + 2]));
+                }
+                mesh.setAttributes("POSITION" /* POSITION */, [
+                    max.x, max.y, max.z,
+                    max.x, max.y, min.z,
+                    max.x, min.y, min.z,
+                    max.x, min.y, max.z,
+                    min.x, max.y, max.z,
+                    min.x, max.y, min.z,
+                    min.x, min.y, max.z,
+                    min.x, min.y, min.z,
+                ]);
+                mesh.setIndices([0, 1, 0, 3, 1, 2, 7, 6, 7, 5, 6, 4, 5, 4, 0, 4, 5, 1, 2, 7, 3, 6, 2, 3]);
+                var meshFilter = box.addComponent(egret3d.MeshFilter);
+                meshFilter.mesh = mesh;
+                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
+                box.addComponent(egret3d.MeshRenderer);
+                box.transform.setPosition(obj.transform.getPosition());
+                box.transform.setRotation(obj.transform.getRotation());
+                box.transform.setScale(obj.transform.getScale());
+                return box;
+            };
             //
             PickGameObjectScript.prototype.initSelectBox = function () {
                 this.selectBox = new paper.GameObject('selectBox', '', paper.Application.sceneManager.editorScene);
@@ -27265,19 +27319,12 @@ var paper;
                 var render = selectBox.addComponent(egret3d.MeshRenderer);
                 var mesh = new egret3d.Mesh(4, 6);
                 MeshFilter.mesh = mesh;
-                mesh.setAttributes("POSITION" /* POSITION */, [
-                    0, 1, 0,
-                    1, 1, 0,
-                    0, 0, 0,
-                    1, 0, 0
-                ]);
-                mesh.setIndices([0, 1, 2, 2, 1, 3]);
                 selectBox.activeSelf = false;
                 var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
                 mat.setVector3v("diffuse", new Float32Array([0.8, 0.8, 0.3]));
                 mat.setFloatv("opacity", new Float32Array([0.3]));
                 mat.setDepth(true, true);
-                mat.renderQueue = 4000;
+                mat.renderQueue = paper.RenderQueue.Overlay;
                 mat.setCullFace(false);
                 mat.setBlend(1 /* Blend */);
                 render.materials = [mat];
