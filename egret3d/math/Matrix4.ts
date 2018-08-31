@@ -158,7 +158,7 @@ namespace egret3d {
             return this.compose(translateStays ? _helpVector3A.fromArray(this.rawData, 12) : Vector3.ZERO, rotation, Vector3.ONE);
         }
 
-        public fromEuler(value: Readonly<IVector3>, order: EulerOrder = EulerOrder.XYZ, translateStays: boolean = false) {
+        public fromEuler(value: Readonly<IVector3>, order: EulerOrder = EulerOrder.YXZ, translateStays: boolean = false) {
             // http://www.mathworks.com/matlabcentral/fileexchange/
             // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
             //	content/SpinCalc.m

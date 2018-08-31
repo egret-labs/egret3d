@@ -120,7 +120,7 @@ namespace egret3d {
             for (const bufferViewA of this.config.bufferViews!) {
                 const bufferViewB = value.config.bufferViews![index++];
                 const a = this.createTypeArrayFromBufferView(bufferViewA, gltf.ComponentType.UnsignedInt);
-                const b = this.createTypeArrayFromBufferView(bufferViewB, gltf.ComponentType.UnsignedInt);
+                const b = value.createTypeArrayFromBufferView(bufferViewB, gltf.ComponentType.UnsignedInt);
 
                 for (let i = 0, l = a.length; i < l; ++i) {
                     b[i] = a[i];

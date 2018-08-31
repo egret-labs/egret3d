@@ -30,7 +30,9 @@ namespace egret3d {
         options.canvas = canvas;
         options.option = requiredOptions;
         options.webgl = <WebGLRenderingContext>canvas.getContext('webgl', options) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
+        WebGLCapabilities.canvas = options.canvas;
         WebGLCapabilities.webgl = options.webgl;
+
         InputManager.init(canvas);
         // DefaultTechnique.init();
         stage.init(canvas, requiredOptions);

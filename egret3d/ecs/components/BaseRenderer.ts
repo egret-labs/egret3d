@@ -35,9 +35,7 @@ namespace paper {
             const worldMatrix = this.gameObject.transform.getWorldMatrix();
             this._boundingSphere.set(this._bounds.center, this._bounds.boundingSphereRadius);
             this._boundingSphere.center.applyMatrix(worldMatrix);
-
-            worldMatrix.decompose(null, null, _helpVector3A);
-            this._boundingSphere.radius *= Math.max(Math.abs(_helpVector3A.x), Math.abs(_helpVector3A.y), Math.abs(_helpVector3A.z));
+            this._boundingSphere.radius *= worldMatrix.getMaxScaleOnAxis();
         }
         /**
          * 重新计算 AABB。

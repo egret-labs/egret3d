@@ -13,7 +13,7 @@ namespace paper {
         public static create(name: string, xOrScene?: number | Scene, y?: number, z?: number, scene?: Scene) {
             const prefab = paper.Asset.find<Prefab>(name);
             if (prefab) {
-                if (xOrScene !== undefined) {
+                if (xOrScene !== undefined && xOrScene !== null) {
                     if (xOrScene instanceof Scene) {
                         const gameObject = prefab.createInstance(xOrScene);
                         if (gameObject) {

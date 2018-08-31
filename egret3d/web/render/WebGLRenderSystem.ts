@@ -20,40 +20,122 @@ namespace egret3d {
         private readonly _lightCamera: Camera = this._globalGameObject.getOrAddComponent(Camera);
         //
         private readonly _filteredLights: BaseLight[] = [];
-        private _cacheContextVersion: number = -1;
-        private _cacheSubMeshIndex: number = -1;
+        // private _cacheContextVersion: number = -1;
+        // private _cacheContext: RenderContext | null = null;
         private _cacheMaterialVerision: number = -1;
-        private _cacheContext: RenderContext | null = null;
-        private _cacheMesh: Mesh | null = null;
         private _cacheMaterial: Material | null = null;
+        private _cacheSubMeshIndex: number = -1;
+        private _cacheMesh: Mesh | null = null;
 
-        private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
-            const needUpdate = this._cacheContext !== context || this._cacheContextVersion !== context.version || forceUpdate;
-            if (!needUpdate) {
-                return;
+        private _renderLightShadow(light: BaseLight) {
+            const camera = this._lightCamera;
+            const drawCalls = this._drawCalls;
+            const faceCount = light.constructor === PointLight ? 6 : 1;
+            const renderState = this._renderState;
+            for (let i = 0; i < faceCount; ++i) {
+                const context = camera.context;
+                light.update(camera, i);
+
+                (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
+                renderState.targetAndViewport(camera.viewport, light.renderTarget);
+                renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                drawCalls.shadowFrustumCulling(camera);
+                //
+                const shadowCalls = drawCalls.shadowCalls;
+                const shadowMaterial = light.constructor === PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
+                for (const drawCall of shadowCalls) {
+                    //TODO, 现在不支持蒙皮动画阴影     
+                    this._draw(context, drawCall, shadowMaterial);
+                }
             }
 
-            this._cacheContext = context;
-            this._cacheContextVersion = context.version;
             const webgl = WebGLCapabilities.webgl;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+        }
 
+        private _renderCamera(camera: Camera) {
+            //在这里先剔除，然后排序，最后绘制
+            const drawCalls = this._drawCalls;
+            drawCalls.sortAfterFrustumCulling(camera);
+            //
+            const opaqueCalls = drawCalls.opaqueCalls;
+            const transparentCalls = drawCalls.transparentCalls;
+            // Step 1 draw opaques.
+            for (const drawCall of opaqueCalls) {
+                this._draw(camera.context, drawCall, drawCall.material);
+            }
+            // Step 2 draw transparents.
+            for (const drawCall of transparentCalls) {
+                this._draw(camera.context, drawCall, drawCall.material);
+            }
+            // Egret2D渲染不加入DrawCallList的排序
+            for (const gameObject of this._groups[1].gameObjects) {
+                const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
+                if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
+                    egret2DRenderer.render(camera.context, camera);
+                    //
+                    this._renderState.clearState();
+                }
+            }
+        }
+
+        private _draw(context: RenderContext, drawCall: DrawCall, material: Material) {
+            context.update(drawCall);
+            //
+            const webgl = WebGLCapabilities.webgl;
+            const technique = material._glTFTechnique;
+            const renderState = this._renderState;
+            // Get program.
+            const program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
+            // Use program.
+            const force = renderState.useProgram(program);
+            // Update states.
+            renderState.updateState(technique.states || null);
+            // Update static uniforms.
+            this._updateContextUniforms(program, context, technique, force);
+            // Update uniforms.
+            this._updateUniforms(program, material, technique, force);
+            // Update attributes.
+            this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
+            // Draw.
+            const mesh = drawCall.mesh;
+            const primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
+            const vertexAccessor = mesh.getAccessor(0);
+            const bufferOffset = mesh.getBufferOffset(vertexAccessor);
+            const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
+
+            if (primitive.indices !== undefined) {
+                const indexAccessor = mesh.getAccessor(primitive.indices);
+                webgl.drawElements(drawMode, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
+            }
+            else {
+                webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
+            }
+        }
+
+        private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
+            // const needUpdate = forceUpdate || this._cacheContext !== context || this._cacheContextVersion !== context.version;
+            // if (!needUpdate) {
+            //     return;
+            // }
+
+            // this._cacheContext = context;
+            // this._cacheContextVersion = context.version;
+
+            const webgl = WebGLCapabilities.webgl;
             const uniforms = technique.uniforms;
             const glUniforms = program.contextUniforms;
+
             for (const glUniform of glUniforms) {
                 const uniform = uniforms[glUniform.name];
                 if (!uniform.semantic) {
                     continue;
                 }
+
                 const location = glUniform.location;
                 switch (uniform.semantic) {
                     case gltf.UniformSemanticType.MODEL:
                         webgl.uniformMatrix4fv(location, false, context.matrix_m.rawData);
-                        break;
-                    case gltf.UniformSemanticType.VIEW:
-                        webgl.uniformMatrix4fv(location, false, context.matrix_v.rawData);
-                        break;
-                    case gltf.UniformSemanticType.PROJECTION:
-                        webgl.uniformMatrix4fv(location, false, context.matrix_p.rawData);
                         break;
                     case gltf.UniformSemanticType.MODELVIEW:
                         webgl.uniformMatrix4fv(location, false, context.matrix_mv.rawData);
@@ -61,12 +143,20 @@ namespace egret3d {
                     case gltf.UniformSemanticType.MODELVIEWINVERSE:
                         webgl.uniformMatrix3fv(location, false, context.matrix_mv_inverse.rawData);
                         break;
-                    case gltf.UniformSemanticType._VIEWPROJECTION:
-                        webgl.uniformMatrix4fv(location, false, context.matrix_vp.rawData);
-                        break;
                     case gltf.UniformSemanticType.MODELVIEWPROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_mvp.rawData);
                         break;
+
+                    case gltf.UniformSemanticType.VIEW:
+                        webgl.uniformMatrix4fv(location, false, context.matrix_v.rawData);
+                        break;
+                    case gltf.UniformSemanticType.PROJECTION:
+                        webgl.uniformMatrix4fv(location, false, context.matrix_p.rawData);
+                        break;
+                    case gltf.UniformSemanticType._VIEWPROJECTION:
+                        webgl.uniformMatrix4fv(location, false, context.matrix_vp.rawData);
+                        break;
+
                     case gltf.UniformSemanticType._CAMERA_POS:
                         webgl.uniform3fv(location, context.cameraPosition);
                         break;
@@ -76,9 +166,10 @@ namespace egret3d {
                     case gltf.UniformSemanticType._CAMERA_UP:
                         webgl.uniform3fv(location, context.cameraUp);
                         break;
-                    case gltf.UniformSemanticType._LIGHTCOUNT:
-                        webgl.uniform1f(location, context.lightCount);
+
+                    case gltf.UniformSemanticType._BINDMATRIX:
                         break;
+
                     case gltf.UniformSemanticType._DIRECTLIGHTS:
                         if (context.directLightCount > 0) {
                             webgl.uniform1fv(location, context.directLightArray);
@@ -97,6 +188,7 @@ namespace egret3d {
                     case gltf.UniformSemanticType._AMBIENTLIGHTCOLOR:
                         webgl.uniform3fv(location, context.ambientLightColor);
                         break;
+
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.directShadowMatrix);
                         break;
@@ -148,6 +240,7 @@ namespace egret3d {
                             }
                         }
                         break;
+
                     case gltf.UniformSemanticType._LIGHTMAPTEX:
                         if (glUniform.textureUnits && glUniform.textureUnits.length === 1 && context.lightmap) {
                             const unit = glUniform.textureUnits[0];
@@ -156,26 +249,13 @@ namespace egret3d {
                             webgl.bindTexture(webgl.TEXTURE_2D, (context.lightmap as GLTexture)._texture);
                         }
                         else {
-                            console.error("Error texture unit");
+                            console.error("Error texture unit.");
                         }
                         break;
                     case gltf.UniformSemanticType._LIGHTMAPINTENSITY:
                         webgl.uniform1f(location, context.lightmapIntensity);
                         break;
-                    case gltf.UniformSemanticType._LIGHTMAPOFFSET:
-                        if (context.lightmapOffset) {
-                            webgl.uniform4fv(location, context.lightmapOffset);
-                        }
-                        else {
-                            console.debug("Error light map scale and offset.");
-                        }
-                        break;
-                    case gltf.UniformSemanticType._LIGHTMAPUV:
-                        webgl.uniform1f(location, context.lightmapUV);
-                        break;
-                    case gltf.UniformSemanticType._BONESVEC4:
-                        webgl.uniform4fv(location, context.boneData!);
-                        break;
+
                     case gltf.UniformSemanticType._REFERENCEPOSITION:
                         webgl.uniform4fv(location, context.lightPosition);
                         break;
@@ -185,6 +265,7 @@ namespace egret3d {
                     case gltf.UniformSemanticType._FARDISTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraFar);
                         break;
+
                     default:
                         console.warn("不识别的Uniform语义:" + uniform.semantic);
                         break;
@@ -275,7 +356,7 @@ namespace egret3d {
         }
 
         private _updateAttributes(program: GlProgram, mesh: Mesh, subMeshIndex: number, technique: gltf.Technique, forceUpdate: boolean) {
-            const needUpdate = this._cacheSubMeshIndex !== subMeshIndex || this._cacheMesh !== mesh || forceUpdate;
+            const needUpdate = forceUpdate || this._cacheSubMeshIndex !== subMeshIndex || this._cacheMesh !== mesh;
             if (!needUpdate) {
                 return;
             }
@@ -283,155 +364,33 @@ namespace egret3d {
             this._cacheSubMeshIndex = subMeshIndex;
             this._cacheMesh = mesh;
 
-            if (0 <= subMeshIndex && subMeshIndex < mesh.glTFMesh.primitives.length) {
-                const primitive = mesh.glTFMesh.primitives[subMeshIndex];
-                const gl = WebGLCapabilities.webgl;
-
-                gl.bindBuffer(gl.ARRAY_BUFFER, mesh._vbo);
-
-                const glAttributes = program.attributes;
-                const attributes = technique.attributes;
-                for (const glAttribute of glAttributes) {
-                    const attribute = attributes[glAttribute.name];
-                    const location = glAttribute.location;
-                    const accessorIndex = primitive.attributes[attribute.semantic];
-                    if (accessorIndex !== undefined) {
-                        const accessor = mesh.getAccessor(accessorIndex);
-                        const bufferOffset = mesh.getBufferOffset(accessor);
-                        const typeCount = mesh.getAccessorTypeCount(accessor.type);
-                        gl.vertexAttribPointer(location, typeCount, accessor.componentType, accessor.normalized ? true : false, 0, bufferOffset);//TODO normalized应该来源于mesh，应该还没有
-                        gl.enableVertexAttribArray(location);
-                    }
-                    else {
-                        gl.disableVertexAttribArray(location);
-                    }
-                }
-
-                const ibo = mesh._ibos[subMeshIndex];
-                if (ibo) {
-                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-                }
-            }
-            else {
-                console.warn("Error arguments.");
-            }
-        }
-
-        private _drawCall(drawCall: DrawCall) {
             const webgl = WebGLCapabilities.webgl;
-            const mesh = drawCall.mesh;
-            const primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
-            const vertexAccessor = mesh.getAccessor(0);
-            const bufferOffset = mesh.getBufferOffset(vertexAccessor);
+            const primitive = mesh.glTFMesh.primitives[subMeshIndex];
+            // vbo.
+            const webglAttributes = program.attributes;
+            const attributes = technique.attributes;
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, mesh._vbo);
 
-            if (primitive.indices !== undefined) {
-                const indexAccessor = mesh.getAccessor(primitive.indices);
-                switch (primitive.mode) { // TODO
-                    case gltf.MeshPrimitiveMode.Lines:
-                        webgl.drawElements(webgl.LINES, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
-                        break;
-                    case gltf.MeshPrimitiveMode.Triangles:
-                    default:
-                        webgl.drawElements(webgl.TRIANGLES, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
-                        break;
+            for (const glAttribute of webglAttributes) {
+                const attribute = attributes[glAttribute.name];
+                const location = glAttribute.location;
+                const accessorIndex = primitive.attributes[attribute.semantic];
+                if (accessorIndex !== undefined) {
+                    const accessor = mesh.getAccessor(accessorIndex);
+                    const bufferOffset = mesh.getBufferOffset(accessor);
+                    const typeCount = mesh.getAccessorTypeCount(accessor.type);
+                    webgl.vertexAttribPointer(location, typeCount, accessor.componentType, accessor.normalized ? true : false, 0, bufferOffset);//TODO normalized应该来源于mesh，应该还没有
+                    webgl.enableVertexAttribArray(location);
+                }
+                else {
+                    webgl.disableVertexAttribArray(location);
                 }
             }
-            else {
-                switch (primitive.mode) {
-                    case gltf.MeshPrimitiveMode.Lines:
-                        webgl.drawArrays(webgl.LINES, bufferOffset, vertexAccessor.count);
-                        break;
-                    case gltf.MeshPrimitiveMode.LineLoop:
-                        webgl.drawArrays(webgl.LINE_LOOP, bufferOffset, vertexAccessor.count);
-                        break;
-                    case gltf.MeshPrimitiveMode.LineStrip:
-                        webgl.drawArrays(webgl.LINE_STRIP, bufferOffset, vertexAccessor.count);
-                        break;
-                    case gltf.MeshPrimitiveMode.Triangles:
-                    default:
-                        webgl.drawArrays(webgl.TRIANGLES, bufferOffset, vertexAccessor.count);
-                        break;
-                }
+            // ibo.
+            const ibo = mesh._ibos[subMeshIndex];
+            if (ibo) {
+                webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
             }
-        }
-
-        private _renderCall(context: RenderContext, drawCall: DrawCall, material: Material) {
-            context.update(drawCall);
-            //
-            const technique = material._glTFTechnique;
-            const renderState = this._renderState;
-            // Get program.
-            const program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
-            // Use program.
-            const force = renderState.useProgram(program);
-            // Update states.
-            renderState.updateState(technique.states || null);
-            // Update static uniforms.
-            this._updateContextUniforms(program, context, technique, force);
-            // Update uniforms.
-            this._updateUniforms(program, material, technique, force);
-            // Update attributes.
-            this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
-            // Draw.
-            this._drawCall(drawCall);
-        }
-        /**
-         * @internal
-         * @param camera 
-         */
-        public _renderCamera(camera: Camera) {
-            //在这里先剔除，然后排序，最后绘制
-            const drawCalls = this._drawCalls;
-            drawCalls.sortAfterFrustumCulling(camera);
-            //
-            const opaqueCalls = drawCalls.opaqueCalls;
-            const transparentCalls = drawCalls.transparentCalls;
-            //Step1 draw opaque
-            for (const drawCall of opaqueCalls) {
-                this._renderCall(camera.context, drawCall, drawCall.material);
-            }
-            //Step2 draw transparent
-            for (const drawCall of transparentCalls) {
-                this._renderCall(camera.context, drawCall, drawCall.material);
-            }
-            // Egret2D渲染不加入DrawCallList的排序
-            for (const gameObject of this._groups[1].gameObjects) {
-                const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
-                if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
-                    egret2DRenderer.render(camera.context, camera);
-                    //
-                    this._renderState.clearState();
-                }
-            }
-        }
-        /**
-         * @internal
-         * @param light
-         */
-        public _renderLightShadow(light: BaseLight) {
-            const camera = this._lightCamera;
-            const drawCalls = this._drawCalls;
-            const faceCount = light.constructor === PointLight ? 6 : 1;
-            const renderState = this._renderState;
-            for (let i = 0; i < faceCount; ++i) {
-                const context = camera.context;
-                light.update(camera, i);
-
-                (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
-                renderState.targetAndViewport(camera.viewport, light.renderTarget);
-                renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
-                drawCalls.shadowFrustumCulling(camera);
-                //
-                const shadowCalls = drawCalls.shadowCalls;
-                const shadowMaterial = light.constructor === PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
-                for (const drawCall of shadowCalls) {
-                    //TODO, 现在不支持蒙皮动画阴影     
-                    this._renderCall(context, drawCall, shadowMaterial);
-                }
-            }
-
-            const webgl = WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
 
         public onUpdate() {

@@ -191,11 +191,11 @@ namespace egret3d {
         return Math.abs(plane.getDistance(sphere.center)) <= sphere.radius;
     }
 
-    export function aabbIntersectsSphere(aabb: Readonly<AABB>, value: Readonly<Sphere>) {
+    export function aabbIntersectsSphere(aabb: Readonly<AABB>, sphere: Readonly<Sphere>) {
         // Find the point on the AABB closest to the sphere center.
-        helpVector3A.copy(value.center).clamp(aabb.minimum, aabb.maximum);
+        helpVector3A.copy(sphere.center).clamp(aabb.minimum, aabb.maximum);
         // If that point is inside the sphere, the AABB and sphere intersect.
-        return helpVector3A.getSquaredDistance(value.center) <= (value.radius * value.radius);
+        return helpVector3A.getSquaredDistance(sphere.center) <= (sphere.radius * sphere.radius);
     }
 
     export function aabbIntersectsAABB(valueA: Readonly<AABB>, valueB: Readonly<AABB>) {

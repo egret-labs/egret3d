@@ -37,11 +37,13 @@ namespace egret3d {
          * 是否清除颜色缓冲区
          */
         @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.CHECKBOX)
         public clearOption_Color: boolean = true;
         /**
          * 是否清除深度缓冲区
          */
         @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.CHECKBOX)
         public clearOption_Depth: boolean = true;
         /**
          * 相机的渲染剔除，对应GameObject的层级
