@@ -325,32 +325,10 @@ namespace egret3d {
 
             if (primitive.indices !== undefined) {
                 const indexAccessor = mesh.getAccessor(primitive.indices);
-                switch (primitive.mode) { // TODO
-                    case gltf.MeshPrimitiveMode.Lines:
-                        webgl.drawElements(webgl.LINES, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
-                        break;
-                    case gltf.MeshPrimitiveMode.Triangles:
-                    default:
-                        webgl.drawElements(webgl.TRIANGLES, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
-                        break;
-                }
+                webgl.drawElements(primitive.mode, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
             }
             else {
-                switch (primitive.mode) {
-                    case gltf.MeshPrimitiveMode.Lines:
-                        webgl.drawArrays(webgl.LINES, bufferOffset, vertexAccessor.count);
-                        break;
-                    case gltf.MeshPrimitiveMode.LineLoop:
-                        webgl.drawArrays(webgl.LINE_LOOP, bufferOffset, vertexAccessor.count);
-                        break;
-                    case gltf.MeshPrimitiveMode.LineStrip:
-                        webgl.drawArrays(webgl.LINE_STRIP, bufferOffset, vertexAccessor.count);
-                        break;
-                    case gltf.MeshPrimitiveMode.Triangles:
-                    default:
-                        webgl.drawArrays(webgl.TRIANGLES, bufferOffset, vertexAccessor.count);
-                        break;
-                }
+                webgl.drawArrays(primitive.mode, bufferOffset, vertexAccessor.count);
             }
         }
         private _renderCall(context: RenderContext, drawCall: DrawCall, material: Material) {
