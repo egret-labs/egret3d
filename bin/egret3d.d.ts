@@ -3146,7 +3146,8 @@ declare namespace paper.editor {
         editorModel: EditorModel;
         geo: GameObject;
         private baseColor;
-        canDrag: boolean;
+        greyColor: egret3d.Material;
+        yellowColor: egret3d.Material;
         protected helpVec3_1: egret3d.Vector3;
         protected helpVec3_2: egret3d.Vector3;
         protected helpVec3_3: egret3d.Vector3;
@@ -10848,9 +10849,9 @@ declare namespace paper.editor {
         constructor();
         onSet(): void;
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
@@ -11292,12 +11293,19 @@ declare namespace paper.editor {
         private bindKeyboard;
         private cameraScript;
         private camera;
+        private lastX;
+        private lastY;
+        private selectBox;
         onStart(): any;
         private _tapStart;
         private selectedGameObjects;
         clearSelected(): void;
         onUpdate(delta: number): any;
+        private excludingChild();
+        private boxSelect();
         private setStroke(picked);
+        private initSelectBox();
+        private drawSelectBox(start, end);
         private intersectWithCameraAndLight(ray);
     }
 }
