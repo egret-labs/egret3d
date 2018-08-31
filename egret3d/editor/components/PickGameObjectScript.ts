@@ -204,7 +204,6 @@ namespace paper.editor {
 
             }
         }
-
         //
         private drawBoundingBox(obj: GameObject) {
             let box = new GameObject('boundingBox', 'Editor', Application.sceneManager.editorScene)
