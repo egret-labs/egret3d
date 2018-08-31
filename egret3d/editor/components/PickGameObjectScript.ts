@@ -10,6 +10,9 @@ namespace paper.editor {
         private lastX
         private lastY
         private selectBox: GameObject
+        private get onGeoControll() {
+            return this.gameObject.getComponent(Controller).onGeoControll
+        }
         public onStart(): any {
             this.bindMouse = egret3d.InputManager.mouse;
             this.bindKeyboard = egret3d.InputManager.keyboard;
@@ -61,7 +64,7 @@ namespace paper.editor {
                                     }
                                 }
                             }
-                        } else if (tapDelta >= 200) {
+                        } else if (tapDelta >= 200 && !this.onGeoControll) {
                             this.boxSelect()
                         }
                     } else {
@@ -79,7 +82,7 @@ namespace paper.editor {
                             }
                         } else if (tapDelta < 200) {
                             this.selectedGameObjects = [];
-                        } else if (tapDelta >= 200) {
+                        } else if (tapDelta >= 200 && !this.onGeoControll) {
                             this.selectedGameObjects = []
                             this.boxSelect()
                         }
@@ -90,18 +93,23 @@ namespace paper.editor {
                 }
 
                 if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+                    if (!this.onGeoControll) {
+                        this.selectBox.activeSelf = true
+                    } else {
+                        this.selectBox.activeSelf = false
+                    }
+
+                    let tapDelta = Date.now() - this._tapStart;
                     let MaxX = Math.max(this.lastX, this.bindMouse.position.x)
                     let MinX = Math.min(this.lastX, this.bindMouse.position.x)
                     let MaxY = Math.max(this.lastY, this.bindMouse.position.y)
                     let MinY = Math.min(this.lastY, this.bindMouse.position.y)
-
                     this.drawSelectBox(new egret3d.Vector2(MaxX, MaxY), new egret3d.Vector2(MinX, MinY))
                 }
                 // 点击控制杆，更新控制点
                 if (this.bindMouse.wasPressed(0)) {
                     this.lastX = this.bindMouse.position.x
                     this.lastY = this.bindMouse.position.y
-                    this.selectBox.activeSelf = true
                     this._tapStart = Date.now();
                 }
             }

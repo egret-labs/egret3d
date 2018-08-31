@@ -22942,6 +22942,7 @@ var paper;
                 _this._modeCanChange = true;
                 _this._isEditing = false;
                 _this.selectedGameObjs = [];
+                _this._onGeoControll = false;
                 _this.geoCtrlMode = 'world';
                 _this.mainGeo = new editor.GeoContainer();
                 _this.coord = new paper.GameObject();
@@ -22951,6 +22952,13 @@ var paper;
                 _this._oldTransform = egret3d.Vector3.getDistance(_this.controller.transform.getLocalPosition(), _this.gameObject.transform.getLocalPosition());
                 return _this;
             }
+            Object.defineProperty(Controller.prototype, "onGeoControll", {
+                get: function () {
+                    return this._onGeoControll;
+                },
+                enumerable: true,
+                configurable: true
+            });
             Object.defineProperty(Controller.prototype, "controller", {
                 get: function () {
                     return this.mainGeo.geo;
@@ -22983,6 +22991,7 @@ var paper;
                     (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
                 }
                 if (this.bindMouse.wasReleased(0)) {
+                    this._onGeoControll = false;
                     this.mainGeo.wasReleased(this.selectedGameObjs);
                 }
             };
@@ -22992,6 +23001,7 @@ var paper;
                     return;
                 var camera = this._cameraObject.getComponent(egret3d.Camera);
                 if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+                    this._onGeoControll = true;
                     var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                     this.mainGeo.wasPressed_local(ray, this.selectedGameObjs);
                 }
@@ -23009,6 +23019,7 @@ var paper;
                     return;
                 var camera = this._cameraObject.getComponent(egret3d.Camera);
                 if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+                    this._onGeoControll = true;
                     var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                     this.mainGeo.wasPressed_world(ray, this.selectedGameObjs);
                 }
@@ -27065,6 +27076,13 @@ var paper;
                 _this.selectedGameObjects = [];
                 return _this;
             }
+            Object.defineProperty(PickGameObjectScript.prototype, "onGeoControll", {
+                get: function () {
+                    return this.gameObject.getComponent(editor.Controller).onGeoControll;
+                },
+                enumerable: true,
+                configurable: true
+            });
             PickGameObjectScript.prototype.onStart = function () {
                 this.bindMouse = egret3d.InputManager.mouse;
                 this.bindKeyboard = egret3d.InputManager.keyboard;
@@ -27114,7 +27132,7 @@ var paper;
                                     }
                                 }
                             }
-                            else if (tapDelta >= 200) {
+                            else if (tapDelta >= 200 && !this.onGeoControll) {
                                 this.boxSelect();
                             }
                         }
@@ -27135,7 +27153,7 @@ var paper;
                             else if (tapDelta < 200) {
                                 this.selectedGameObjects = [];
                             }
-                            else if (tapDelta >= 200) {
+                            else if (tapDelta >= 200 && !this.onGeoControll) {
                                 this.selectedGameObjects = [];
                                 this.boxSelect();
                             }
@@ -27145,6 +27163,13 @@ var paper;
                         this.editorModel.selectGameObject(this.selectedGameObjects);
                     }
                     if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+                        if (!this.onGeoControll) {
+                            this.selectBox.activeSelf = true;
+                        }
+                        else {
+                            this.selectBox.activeSelf = false;
+                        }
+                        var tapDelta = Date.now() - this._tapStart;
                         var MaxX = Math.max(this.lastX, this.bindMouse.position.x);
                         var MinX = Math.min(this.lastX, this.bindMouse.position.x);
                         var MaxY = Math.max(this.lastY, this.bindMouse.position.y);
@@ -27155,7 +27180,6 @@ var paper;
                     if (this.bindMouse.wasPressed(0)) {
                         this.lastX = this.bindMouse.position.x;
                         this.lastY = this.bindMouse.position.y;
-                        this.selectBox.activeSelf = true;
                         this._tapStart = Date.now();
                     }
                 }

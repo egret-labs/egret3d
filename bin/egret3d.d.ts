@@ -10742,6 +10742,8 @@ declare namespace paper.editor {
         private _cameraObject;
         private bindMouse;
         private bindKeyboard;
+        private _onGeoControll;
+        readonly onGeoControll: boolean;
         private mainGeo;
         private readonly controller;
         private _editorModel;
@@ -11296,6 +11298,7 @@ declare namespace paper.editor {
         private lastX;
         private lastY;
         private selectBox;
+        private readonly onGeoControll;
         onStart(): any;
         private _tapStart;
         private selectedGameObjects;
