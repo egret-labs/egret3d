@@ -10742,7 +10742,6 @@ declare namespace paper.editor {
         private _cameraObject;
         private bindMouse;
         private bindKeyboard;
-        private _onGeoControll;
         readonly onGeoControll: boolean;
         private mainGeo;
         private readonly controller;
@@ -10779,6 +10778,7 @@ declare namespace paper.editor {
     class GeoContainer extends BaseGeo {
         private geos;
         private selectedGeo;
+        readonly onGeoControll: boolean;
         constructor();
         onSet(): void;
         checkIntersect(ray: egret3d.Ray): BaseGeo;
@@ -11319,6 +11319,9 @@ declare namespace paper.editor {
         private static camera;
         onStart(): void;
         static Enabled(): void;
+        static setGameObj(obj: GameObject): void;
+        private static gameObj;
+        static DrawStroke(): void;
         static DrawIcon(path: string, pos: egret3d.Vector3, size: number, color?: egret3d.Color): void;
         private static verticesLine;
         private static lineVertexBuffer;
@@ -11342,6 +11345,7 @@ declare namespace paper.editor {
         private static setMVPMatrix(m?);
         private static glProgram_line;
         private static glProgram_icon;
+        private static glProgram_stroke;
         private static initPrg();
         static DrawLights(): void;
         private static DrawCylinder(transform, color);
@@ -11387,6 +11391,7 @@ declare namespace paper.editor {
     const icon_vert: string;
     const line_frag: string;
     const line_vert: string;
+    const stroke_vert: string;
 }
 declare namespace egret3d {
     class GizmoRenderSystem extends paper.BaseSystem {

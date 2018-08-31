@@ -22942,7 +22942,6 @@ var paper;
                 _this._modeCanChange = true;
                 _this._isEditing = false;
                 _this.selectedGameObjs = [];
-                _this._onGeoControll = false;
                 _this.geoCtrlMode = 'world';
                 _this.mainGeo = new editor.GeoContainer();
                 _this.coord = new paper.GameObject();
@@ -22954,7 +22953,7 @@ var paper;
             }
             Object.defineProperty(Controller.prototype, "onGeoControll", {
                 get: function () {
-                    return this._onGeoControll;
+                    return this.mainGeo.onGeoControll;
                 },
                 enumerable: true,
                 configurable: true
@@ -22991,7 +22990,6 @@ var paper;
                     (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
                 }
                 if (this.bindMouse.wasReleased(0)) {
-                    this._onGeoControll = false;
                     this.mainGeo.wasReleased(this.selectedGameObjs);
                 }
             };
@@ -23001,7 +22999,6 @@ var paper;
                     return;
                 var camera = this._cameraObject.getComponent(egret3d.Camera);
                 if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
-                    this._onGeoControll = true;
                     var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                     this.mainGeo.wasPressed_local(ray, this.selectedGameObjs);
                 }
@@ -23019,7 +23016,6 @@ var paper;
                     return;
                 var camera = this._cameraObject.getComponent(egret3d.Camera);
                 if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
-                    this._onGeoControll = true;
                     var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                     this.mainGeo.wasPressed_world(ray, this.selectedGameObjs);
                 }
@@ -23251,6 +23247,16 @@ var paper;
                 _this.changeType("position");
                 return _this;
             }
+            Object.defineProperty(GeoContainer.prototype, "onGeoControll", {
+                get: function () {
+                    if (this.selectedGeo) {
+                        return true;
+                    }
+                    return false;
+                },
+                enumerable: true,
+                configurable: true
+            });
             GeoContainer.prototype.onSet = function () {
                 var controller = new paper.GameObject("", "", paper.Application.sceneManager.editorScene);
                 controller.activeSelf = false;
@@ -23322,7 +23328,6 @@ var paper;
             GeoContainer.prototype.wasPressed_local = function (ray, selected) {
                 var result = this.checkIntersect(ray);
                 if (result) {
-                    console.log(result.geo.name);
                     result.wasPressed_local(ray, selected);
                     this.selectedGeo = result;
                     for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
@@ -27160,6 +27165,9 @@ var paper;
                         }
                         this.excludingChild();
                         this.selectBox.activeSelf = false;
+                        // if (this.selectedGameObjects[0]) {
+                        //     Gizmo.setGameObj(this.selectedGameObjects[0])
+                        // }
                         this.editorModel.selectGameObject(this.selectedGameObjects);
                     }
                     if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
@@ -27365,6 +27373,41 @@ var paper;
                 this.initIconTexture();
                 this.camera.gameObject.addComponent(Gizmo_1);
             };
+            Gizmo.setGameObj = function (obj) {
+                this.gameObj = obj;
+            };
+            Gizmo.DrawStroke = function () {
+                if (!this.enabled)
+                    return;
+                if (!this.gameObj)
+                    return;
+                var obj = this.gameObj;
+                var gl = this.webgl;
+                var prg = this.glProgram_stroke;
+                var mesh = obj.getComponent(egret3d.MeshFilter).mesh;
+                var position = mesh.getAttributes('POSITION');
+                var normal = mesh.getAttributes('NORMAL');
+                var indices = mesh.getIndices();
+                var vertexCount = position.length / 3;
+                var vertexBuffer = gl.createBuffer();
+                var normalBuffer = gl.createBuffer();
+                var indiceBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, position, gl.STATIC_DRAW);
+                gl.vertexAttribPointer(gl.getAttribLocation(prg.prg, 'aPosition'), 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(gl.getAttribLocation(prg.prg, 'aPosition'));
+                gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, normal, gl.STATIC_DRAW);
+                gl.vertexAttribPointer(gl.getAttribLocation(prg.prg, 'aNormal'), 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(gl.getAttribLocation(prg.prg, 'aNormal'));
+                this.setMVPMatrix();
+                prg.setMatrix("mvpMat", this.mvpMatrix);
+                prg.setColor("lineColor", [1, 1, 1, 1]);
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indiceBuffer);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+                gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+                console.log(position, normal);
+            };
             Gizmo.DrawIcon = function (path, pos, size, color) {
                 if (!this.enabled)
                     return;
@@ -27483,6 +27526,7 @@ var paper;
             Gizmo.initPrg = function () {
                 this.glProgram_line = new editor.GizmoShader(this.webgl, editor.line_vert, editor.line_frag);
                 this.glProgram_icon = new editor.GizmoShader(this.webgl, editor.icon_vert, editor.icon_frag);
+                this.glProgram_stroke = new editor.GizmoShader(this.webgl, editor.stroke_vert, editor.line_frag);
             };
             // const cameras = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
             Gizmo.DrawLights = function () {
@@ -27819,6 +27863,7 @@ var paper;
         editor.icon_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        uniform float pointSize;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n            gl_PointSize = pointSize; \n        }";
         editor.line_frag = "\n        #ifdef GL_ES\n        precision highp float;\n        #endif\n        uniform vec4 lineColor;\n        void main(void) {\n            gl_FragColor = lineColor;\n        }";
         editor.line_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n        }";
+        editor.stroke_vert = "\n        uniform mat4 uMVPMatrix;                            //\u603B\u53D8\u6362\u77E9\u9635\n        attribute  vec3 aPosition;                                   //\u9876\u70B9\u4F4D\u7F6E\n        attribute vec3 aNormal;                                   //\u9876\u70B9\u6CD5\u5411\u91CF\n        void main(){\n            vec3 position=aPosition;                     //\u83B7\u53D6\u6B64\u9876\u70B9\u4F4D\u7F6E\n            position.xyz+=aNormal*0.4;                //\u5C06\u9876\u70B9\u4F4D\u7F6E\u6CBF\u6CD5\u7EBF\u65B9\u5411\u6324\u51FA\n            gl_Position = uMVPMatrix * vec4(position.xyz,1);//\u6839\u636E\u603B\u53D8\u6362\u77E9\u9635\u8BA1\u7B97\u6B64\u6B21\u7ED8\u5236\u6B64\u9876\u70B9\u4F4D\u7F6E\n        }";
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var egret3d;
@@ -27835,6 +27880,7 @@ var egret3d;
             // paper.editor.Gizmo.DrawCoord();
             paper.editor.Gizmo.DrawLights();
             paper.editor.Gizmo.DrawCameras();
+            // paper.editor.Gizmo.DrawStroke()
         };
         return GizmoRenderSystem;
     }(paper.BaseSystem));

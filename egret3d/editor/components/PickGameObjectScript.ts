@@ -89,6 +89,9 @@ namespace paper.editor {
                     }
                     this.excludingChild()
                     this.selectBox.activeSelf = false
+                    // if (this.selectedGameObjects[0]) {
+                    //     Gizmo.setGameObj(this.selectedGameObjects[0])
+                    // }
                     this.editorModel.selectGameObject(this.selectedGameObjects);
                 }
 

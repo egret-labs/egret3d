@@ -2,6 +2,12 @@ namespace paper.editor {
     export class GeoContainer extends BaseGeo {
         private geos: BaseGeo[] = []
         private selectedGeo: BaseGeo
+        public get onGeoControll() {
+            if (this.selectedGeo) {
+                return true
+            }
+            return false
+        }
         constructor() {
             super();
             this.changeType("position")
@@ -76,7 +82,6 @@ namespace paper.editor {
         wasPressed_local(ray: egret3d.Ray, selected: any) {
             const result = this.checkIntersect(ray)
             if (result) {
-                console.log(result.geo.name)
                 result.wasPressed_local(ray, selected)
                 this.selectedGeo = result
 

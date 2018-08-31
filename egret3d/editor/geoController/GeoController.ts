@@ -15,9 +15,8 @@ namespace paper.editor {
         private _cameraObject: paper.GameObject
         private bindMouse: egret3d.MouseDevice;
         private bindKeyboard: egret3d.KeyboardDevice;
-        private _onGeoControll: boolean = false;
         public get onGeoControll() {
-            return this._onGeoControll
+            return this.mainGeo.onGeoControll
         }
         private mainGeo: GeoContainer;
         private get controller() {
@@ -61,7 +60,6 @@ namespace paper.editor {
                 (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
             }
             if (this.bindMouse.wasReleased(0)) {
-                this._onGeoControll = false
                 this.mainGeo.wasReleased(this.selectedGameObjs);
             }
         }
@@ -73,7 +71,6 @@ namespace paper.editor {
 
             let camera = this._cameraObject.getComponent(egret3d.Camera);
             if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
-                this._onGeoControll = true
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.wasPressed_local(ray, this.selectedGameObjs)
             }
@@ -91,7 +88,6 @@ namespace paper.editor {
             if (len <= 0) return;
             let camera = this._cameraObject.getComponent(egret3d.Camera);
             if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
-                this._onGeoControll = true
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.wasPressed_world(ray, this.selectedGameObjs)
             }
