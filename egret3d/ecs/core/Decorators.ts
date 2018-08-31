@@ -10,7 +10,7 @@ namespace paper {
      */
     export function serializedField(classPrototype: any, key: string): void;
     export function serializedField(key: string): Function;
-    export function serializedField(classPrototypeOrKey: any, key?: string) {
+    export function serializedField(classPrototypeOrKey: any, key?: string): void | Function {
         if (key) {
             const baseClass = classPrototypeOrKey.constructor as BaseClass;
             registerClass(baseClass);

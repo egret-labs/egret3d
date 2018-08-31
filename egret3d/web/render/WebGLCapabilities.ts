@@ -235,30 +235,29 @@ namespace egret3d {
      * @internal
      */
     export class WebGLRenderState extends paper.SingletonComponent {
-        private readonly programMap: { [key: string]: GlProgram } = {};
-        private readonly vsShaderMap: { [key: string]: WebGLShader } = {};
-        private readonly fsShaderMap: { [key: string]: WebGLShader } = {};
-
-        private readonly _stateEnables: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO
+        private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO
+        private readonly _programs: { [key: string]: GlProgram } = {};
+        private readonly _vsShaders: { [key: string]: WebGLShader } = {};
+        private readonly _fsShaders: { [key: string]: WebGLShader } = {};
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
-        private _cacheProgram: GlProgram | undefined;
-        private _cacheState: gltf.States | undefined;
+        private _cacheProgram: GlProgram | null = null;
+        private _cacheState: gltf.States | null = null;
 
         private _getWebGLProgram(gl: WebGLRenderingContext, vs: gltf.Shader, fs: gltf.Shader, defines: string): WebGLProgram {
             let program = gl.createProgram();
 
             let key = vs.name + defines;
-            let vertexShader = this.vsShaderMap[key];
+            let vertexShader = this._vsShaders[key];
             if (!vertexShader) {
                 vertexShader = getWebGLShader(gl.VERTEX_SHADER, gl, vs, defines);
-                this.vsShaderMap[key] = vertexShader;
+                this._vsShaders[key] = vertexShader;
             }
 
             key = fs.name + defines;
-            let fragmentShader = this.fsShaderMap[key];
+            let fragmentShader = this._fsShaders[key];
             if (!fragmentShader) {
                 fragmentShader = getWebGLShader(gl.FRAGMENT_SHADER, gl, fs, defines);
-                this.fsShaderMap[key] = fragmentShader;
+                this._fsShaders[key] = fragmentShader;
             }
 
             gl.attachShader(program, vertexShader);
@@ -280,11 +279,12 @@ namespace egret3d {
             for (const key in this._cacheStateEnable) {
                 delete this._cacheStateEnable[key];
             }
-            this._cacheProgram = undefined;
-            this._cacheState = undefined;
+
+            this._cacheProgram = null;
+            this._cacheState = null;
         }
 
-        public updateState(state?: gltf.States) {
+        public updateState(state: gltf.States | null) {
             if (this._cacheState === state) {
                 return;
             }
@@ -295,7 +295,7 @@ namespace egret3d {
             const cacheStateEnable = this._cacheStateEnable;
             //TODO WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
             for (const e of stateEnables) {
-                const b = state && state.enable && state.enable.indexOf(e) >= 0;
+                const b = state ? state.enable && state.enable.indexOf(e) >= 0 : false;
                 if (cacheStateEnable[e] !== b) {
                     cacheStateEnable[e] = b;
                     b ? webgl.enable(e) : webgl.disable(e);
@@ -316,8 +316,10 @@ namespace egret3d {
             if (this._cacheProgram !== program) {
                 this._cacheProgram = program;
                 WebGLCapabilities.webgl.useProgram(program.program);
+
                 return true;
             }
+
             return false;
         }
 
@@ -327,12 +329,13 @@ namespace egret3d {
             const vertexShader = extensions!.shaders[0];
             const fragShader = extensions!.shaders[1];
             const name = vertexShader.name + "_" + fragShader.name + "_" + defines;//TODO材质标脏可以优化
-            let program = this.programMap[name];
             const webgl = WebGLCapabilities.webgl;
+            let program = this._programs[name];
+
             if (!program) {
                 const webglProgram = this._getWebGLProgram(webgl, vertexShader, fragShader, defines);
                 program = new GlProgram(webglProgram);
-                this.programMap[name] = program;
+                this._programs[name] = program;
                 extractAttributes(webgl, program);
                 extractUniforms(webgl, program, technique);
                 extractTexUnits(program);
@@ -341,6 +344,7 @@ namespace egret3d {
             if (technique.program !== program.id) {
                 technique.program = program.id;
             }
+
             return program;
         }
 

@@ -138,21 +138,34 @@ namespace egret3d {
             // this._dirtify(false, false);
             this._dirtify(false);
         }
-
-        private _getAllChildren(children: Transform[]) {
-            for (const child of this._children) {
-                children.push(child);
-                child._getAllChildren(children);
-            }
-        }
         /**
          * @internal
          */
-        public getAllChildren() {
-            const children: Transform[] = [];
-            this._getAllChildren(children);
+        public getAllChildren(out: Transform[] | { [key: string]: Transform | (Transform[]) } = []) {
+            for (const child of this._children) {
+                if (Array.isArray(out)) {
+                    out.push(child);
+                }
+                else {
+                    const childName = child.gameObject.name;
+                    if (childName in out) {
+                        const transformOrTransforms = out[childName];
+                        if (Array.isArray(transformOrTransforms)) {
+                            transformOrTransforms.push(child);
+                        }
+                        else {
+                            out[childName] = [transformOrTransforms, child];
+                        }
+                    }
+                    else {
+                        out[childName] = child;
+                    }
+                }
 
-            return children;
+                child.getAllChildren(out);
+            }
+
+            return out;
         }
         /**
          * 设置父节点 
@@ -361,10 +374,10 @@ namespace egret3d {
          * 
          */
         @paper.editor.property(paper.editor.EditType.VECTOR4)
-        public get localRotation(): Readonly<IVector4> {
+        public get localRotation(): Readonly<Quaternion> {
             return this._localRotation;
         }
-        public set localRotation(value: Readonly<IVector4>) {
+        public set localRotation(value: Readonly<Quaternion>) {
             this._localRotation.copy(value);
 
             if (!this._dirtyLocal) {
@@ -430,7 +443,7 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get localEulerAngles(): Readonly<Vector3> {
-            return this.getLocalEulerAngles();
+            return this.getLocalEulerAngles() as Readonly<Vector3>;
         }
         public set localEulerAngles(value: Readonly<Vector3>) {
             _helpVector3.multiplyScalar(DEG_RAD, value);
@@ -532,6 +545,17 @@ namespace egret3d {
             return this._localMatrix;
         }
         /**
+         * 
+         */
+        public get localMatrix(): Readonly<Matrix4> {
+            if (this._dirtyLocal) {
+                this._localMatrix.compose(this._localPosition, this._localRotation, this._localScale);
+                this._dirtyLocal = false;
+            }
+
+            return this._localMatrix;
+        }
+        /**
          * get position
          * @version paper 1.0
          * @platform Web
@@ -565,7 +589,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public setPosition(position: IVector3): this;
+        public setPosition(position: Readonly<IVector3>): this;
         public setPosition(x: number, y: number, z: number): this;
         public setPosition(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
@@ -586,7 +610,36 @@ namespace egret3d {
             if (!this._dirtyLocal) {
                 this._dirtify(true);
             }
+
             return this;
+        }
+        /**
+         * 
+         */
+        public get position(): Readonly<Vector3> {
+            // if (this._dirtyWorldT) {
+            // if (this._dirtyWorld) {
+            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
+            // }
+
+            this.getWorldMatrix().decompose(this._position, null, null);
+
+            return this._position;
+        }
+        public set position(value: Readonly<Vector3>) {
+            this._localPosition.copy(value);
+
+            if (this._parent) {
+                this._localPosition.applyMatrix(_helpMatrix.inverse(this._parent.getWorldMatrix()));
+            }
+
+            // if (!this._dirtyWorldT) {
+            //     this._dirtify(true, true);
+            // }
+
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
         }
         /**
          * get rotation
@@ -622,11 +675,11 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public setRotation(v: IVector4): this;
+        public setRotation(v: Readonly<IVector4>): this;
         public setRotation(x: number, y: number, z: number, w: number): this;
-        public setRotation(q1: IVector4 | number, q2?: number, q3?: number, q4?: number) {
+        public setRotation(q1: Readonly<IVector4> | number, q2?: number, q3?: number, q4?: number) {
             if (q1.hasOwnProperty("x")) {
-                this._localRotation.copy(q1 as IVector4);
+                this._localRotation.copy(q1 as Readonly<IVector4>);
             }
             else {
                 this._localRotation.set(q1 as number, q2 || 0.0, q3 || 0.0, q4 !== undefined ? q4 : 1.0);
@@ -645,6 +698,34 @@ namespace egret3d {
             }
 
             return this;
+        }
+        /**
+         * 
+         */
+        public get rotation(): Readonly<Quaternion> {
+            // if (this._dirtyWorldRS) {
+            // if (this._dirtyWorld) {
+            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
+            // }
+
+            this.getWorldMatrix().decompose(null, this._rotation, null);
+
+            return this._rotation;
+        }
+        public set rotation(value: Readonly<Quaternion>) {
+            this._localRotation.copy(value);
+
+            if (this._parent) {
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
+            }
+
+            // if (!this._dirtyWorldRS) {
+            //     this._dirtify(true, false);
+            // }
+
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
         }
         /**
          * get euler angles
@@ -707,6 +788,35 @@ namespace egret3d {
             return this;
         }
         /**
+         * 
+         */
+        public get eulerAngles(): Readonly<Vector3> {
+            // if (this._dirtyWorldRS) {
+            // if (this._dirtyWorld) {
+            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale).toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
+            // }
+
+            this.getWorldMatrix().toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
+
+            return this._eulerAngles;
+        }
+        public set eulerAngles(value: Readonly<Vector3>) {
+            _helpVector3.multiplyScalar(DEG_RAD, value);
+            this._localRotation.fromEuler(_helpVector3);
+
+            if (this._parent) {
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
+            }
+
+            // if (!this._dirtyWorldRS) {
+            //     this._dirtify(true, false);
+            // }
+
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        }
+        /**
          * get scale
          * @version paper 1.0
          * @platform Web
@@ -740,11 +850,11 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public setScale(v: IVector3): this;
+        public setScale(v: Readonly<IVector3>): this;
         public setScale(x: number, y: number, z: number): this;
-        public setScale(p1: IVector3 | number, p2?: number, p3?: number) {
+        public setScale(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
-                this._localScale.copy(p1 as IVector3);
+                this._localScale.copy(p1 as Readonly<IVector3>);
             }
             else {
                 this._localScale.set(p1 as number, p2 !== undefined ? p2 : 1.0, p3 !== undefined ? p3 : 1.0);
@@ -765,6 +875,34 @@ namespace egret3d {
             return this;
         }
         /**
+         * 
+         */
+        public get scale(): Readonly<Vector3> {
+            // if (this._dirtyWorldRS) {
+            // if (this._dirtyWorld) {
+            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
+            // }
+
+            this.getWorldMatrix().decompose(null, null, this._scale);
+
+            return this._scale;
+        }
+        public set scale(value: Readonly<Vector3>) {
+            this._localScale.copy(value);
+
+            if (this._parent) {
+                this._localScale.applyDirection(_helpMatrix.inverse(this._parent.getWorldMatrix()));
+            }
+
+            // if (!this._dirtyWorldRS) {
+            //     this._dirtify(true, false);
+            // }
+
+            if (!this._dirtyLocal) {
+                this._dirtify(true);
+            }
+        }
+        /**
          * get world matrix
          * @version paper 1.0
          * @platform Web
@@ -777,6 +915,41 @@ namespace egret3d {
          * @language zh_CN
          */
         public getWorldMatrix(): Readonly<Matrix4> {
+            // if (this._dirtyWorldT || this._dirtyWorldRS) {
+            //     const localMatrix = this.getLocalMatrix();
+
+            //     if (this._parent) {
+            //         this._worldMatrix.multiply(this._parent.getWorldMatrix(), localMatrix);
+            //     }
+            //     else {
+            //         this._worldMatrix.copy(localMatrix);
+            //     }
+
+            //     this._worldMatrixDeterminant = this._worldMatrix.determinant();
+            //     this._dirtyWorldT = false;
+            //     this._dirtyWorldRS = false;
+            // }
+
+            if (this._dirtyWorld) {
+                const localMatrix = this.getLocalMatrix();
+
+                if (this._parent) {
+                    this._worldMatrix.multiply(this._parent.getWorldMatrix(), localMatrix);
+                }
+                else {
+                    this._worldMatrix.copy(localMatrix);
+                }
+
+                this._worldMatrixDeterminant = this._worldMatrix.determinant();
+                this._dirtyWorld = false;
+            }
+
+            return this._worldMatrix;
+        }
+        /**
+         * 
+         */
+        public get worldMatrix(): Readonly<Matrix4> {
             // if (this._dirtyWorldT || this._dirtyWorldRS) {
             //     const localMatrix = this.getLocalMatrix();
 

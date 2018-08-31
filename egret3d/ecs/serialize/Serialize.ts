@@ -214,7 +214,7 @@ namespace paper {
 
     function _findPrefabRoot(gameObject: GameObject) {
         while (!gameObject.extras!.prefab) {
-            gameObject = gameObject.parent;
+            gameObject = gameObject.parent!;
         }
 
         return gameObject;

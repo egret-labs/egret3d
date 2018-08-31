@@ -119,7 +119,7 @@ namespace egret3d {
             DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
 
             helpMaterial.clearStates().setDepth(true, true).setBlend(gltf.BlendMode.Blend);
-            helpMaterial.glTFTechnique.states.functions.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
+            helpMaterial.glTFTechnique.states!.functions!.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
             DefaultShaders.PARTICLE_BLEND1 = this._createShader("builtin/particle_blend1.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add);

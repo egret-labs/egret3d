@@ -42,10 +42,12 @@ namespace egret3d {
 
         private _dirtyRadius: boolean = true;
         private _dirtyCenter: boolean = true;
+        private _dirtySize: boolean = true;
         private _boundingSphereRadius: number = 0.0;
         private readonly _minimum: Vector3 = Vector3.create(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
         private readonly _maximum: Vector3 = Vector3.create(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
         private readonly _center: Vector3 = Vector3.create();
+        private readonly _size: Vector3 = Vector3.create();
         /**
          * 请使用 `egret3d.AABB.create()` 创建实例。
          * @see egret3d.AABB.create()
@@ -73,6 +75,7 @@ namespace egret3d {
             this._maximum.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
             this._dirtyCenter = true;
             this._dirtyRadius = true;
+            this._dirtySize = true;
 
             return this;
         }
@@ -90,6 +93,7 @@ namespace egret3d {
 
             this._dirtyCenter = true;
             this._dirtyRadius = true;
+            this._dirtySize = true;
 
             return this;
         }
@@ -100,6 +104,7 @@ namespace egret3d {
 
             this._dirtyCenter = true;
             this._dirtyRadius = true;
+            this._dirtySize = true;
 
             return this;
         }
@@ -123,7 +128,7 @@ namespace egret3d {
 
             // transform of empty box is an empty box.
             if (source.isEmpty) {
-                if (source !== this) {
+                if (source !== this!) {
                     this.copy(source);
                 }
 
@@ -170,6 +175,7 @@ namespace egret3d {
 
             this._dirtyRadius = true;
             this._dirtyCenter = true;
+            this._dirtySize = true;
 
             return this;
         }
@@ -195,6 +201,7 @@ namespace egret3d {
 
             this._dirtyRadius = true;
             this._dirtyCenter = true;
+            this._dirtySize = true;
 
             return this;
         }
@@ -220,6 +227,7 @@ namespace egret3d {
 
             this._dirtyRadius = true;
             this._dirtyCenter = true;
+            this._dirtySize = true;
 
             return this;
         }
@@ -282,13 +290,13 @@ namespace egret3d {
         /**
          * 
          */
-        public get minimum(): Readonly<Vector3> {
+        public get minimum(): Readonly<IVector3> {
             return this._minimum;
         }
         /**
          * 
          */
-        public get maximum(): Readonly<Vector3> {
+        public get maximum(): Readonly<IVector3> {
             return this._maximum;
         }
         /**
@@ -303,13 +311,39 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public get center(): Readonly<Vector3> {
+        public get center(): Readonly<IVector3> {
             if (this._dirtyCenter) {
                 this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);
                 this._dirtyCenter = false;
             }
 
             return this._center;
+        }
+        public set center(value: Readonly<IVector3>) {
+            const size = this.size;
+            const center = this._center.copy(value);
+
+            const halfSize = helpVector3A.copy(size).multiplyScalar(0.5);
+            this._minimum.copy(center).subtract(halfSize);
+            this._maximum.copy(center).subtract(halfSize);
+        }
+
+        public get size(): Readonly<IVector3> {
+            if (this._dirtySize) {
+                this._size.subtract(this._maximum, this._minimum);
+                this._dirtySize = false;
+            }
+
+            return this._size;
+        }
+        public set size(value: Readonly<IVector3>) {
+            const center = this.center;
+            const size = this._size.copy(value);
+
+            const halfSize = helpVector3A.copy(size).multiplyScalar(0.5);
+            this._minimum.copy(center).subtract(halfSize);
+            this._maximum.copy(center).subtract(halfSize);
+            this._dirtyRadius = true;
         }
     }
 

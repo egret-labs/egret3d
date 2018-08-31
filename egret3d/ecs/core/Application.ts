@@ -65,7 +65,7 @@ namespace paper {
             }
 
             Time && Time.update();
-            Group.update();
+            ComponentGroup.update();
             this.systemManager.update();
         }
 
@@ -76,7 +76,7 @@ namespace paper {
             this._webgl = webgl as WebGLRenderingContext;
 
             for (const systemClass of systems) {
-                this.systemManager.register(systemClass);
+                this.systemManager.register(systemClass, null);
             }
 
             this.resume();

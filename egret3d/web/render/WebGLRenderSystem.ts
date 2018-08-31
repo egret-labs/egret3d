@@ -15,8 +15,8 @@ namespace egret3d {
             ]
         ];
         private readonly _drawCalls: DrawCalls = DrawCalls.getInstance(DrawCalls);
-        private readonly _renderState: WebGLRenderState = WebGLRenderState.getInstance(WebGLRenderState);
         private readonly _camerasAndLights: CamerasAndLights = CamerasAndLights.getInstance(CamerasAndLights);
+        private readonly _renderState: WebGLRenderState = WebGLRenderState.getInstance(WebGLRenderState);
         private readonly _lightCamera: Camera = this._globalGameObject.getOrAddComponent(Camera);
         //
         private readonly _filteredLights: BaseLight[] = [];
@@ -316,6 +316,7 @@ namespace egret3d {
                 console.warn("Error arguments.");
             }
         }
+
         private _drawCall(drawCall: DrawCall) {
             const webgl = WebGLCapabilities.webgl;
             const mesh = drawCall.mesh;
@@ -353,26 +354,27 @@ namespace egret3d {
                 }
             }
         }
+
         private _renderCall(context: RenderContext, drawCall: DrawCall, material: Material) {
             context.update(drawCall);
             //
             const technique = material._glTFTechnique;
             const renderState = this._renderState;
-            //Program
+            // Get program.
             const program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
-            //Use Program
+            // Use program.
             const force = renderState.useProgram(program);
-            //State
-            renderState.updateState(technique.states);
-            //Uniform
+            // Update states.
+            renderState.updateState(technique.states || null);
+            // Update static uniforms.
             this._updateContextUniforms(program, context, technique, force);
+            // Update uniforms.
             this._updateUniforms(program, material, technique, force);
-            //Attribute
+            // Update attributes.
             this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
-            //Draw
+            // Draw.
             this._drawCall(drawCall);
         }
-
         /**
          * @internal
          * @param camera 

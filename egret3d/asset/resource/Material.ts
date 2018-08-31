@@ -14,7 +14,7 @@ namespace egret3d {
         public static create(shader?: Shader | string): Material;
         public static create(config: GLTF, name: string): Material;
         public static create(shaderOrConfig?: Shader | string | GLTF, name?: string) {
-            return new Material(shaderOrConfig as any, name);
+            return new Material(shaderOrConfig as any, name as any);
         }
         /**
          * 
@@ -150,6 +150,8 @@ namespace egret3d {
             this._textures.length = 0;
             this._glTFTechnique = null!;
             this._shader = null!;
+
+            return true;
         }
 
         public copy(value: Material) {

@@ -12,7 +12,7 @@ namespace egret3d {
          */
         public static create(center: Readonly<IVector3> = Vector3.ZERO, radius: number = 0.0) {
             if (this._instances.length > 0) {
-                return this._instances.pop();
+                return this._instances.pop()!;
             }
 
             return new Sphere().set(center, radius);
