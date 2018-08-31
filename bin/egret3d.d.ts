@@ -11298,6 +11298,7 @@ declare namespace paper.editor {
         private lastX;
         private lastY;
         private selectBox;
+        private boundingBoxes;
         private readonly onGeoControll;
         onStart(): any;
         private _tapStart;
@@ -11307,6 +11308,8 @@ declare namespace paper.editor {
         private excludingChild();
         private boxSelect();
         private setStroke(picked);
+        private setBoundingBox();
+        private drawBoundingBox(obj);
         private initSelectBox();
         private drawSelectBox(start, end);
         private intersectWithCameraAndLight(ray);
