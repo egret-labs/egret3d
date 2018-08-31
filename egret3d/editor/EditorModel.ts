@@ -128,11 +128,6 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]) {
-            const state = ModifyAssetPropertyState.create(assetUrl, newValueList, preValueCopylist);
-            this.addState(state);
-        }
-
         public createPrefabState(prefab: Prefab, parent?: GameObject) {
             const state = CreatePrefabState.create(prefab, parent);
             this.addState(state);
@@ -201,19 +196,19 @@ namespace paper.editor {
                     return target;
                 case editor.EditType.SHADER:
                     const url = serializeData;
-                    const asset = RES.getRes(url);
+                    const asset = paper.Asset.find(url);
                     return asset;
                 case editor.EditType.LIST:
                     return serializeData;
                 case editor.EditType.MATERIAL_ARRAY:
                     const materials: egret3d.Material[] = [];
                     for (const matrial of serializeData) {
-                        const asset = RES.getRes(matrial.url);
-                        materials.push(asset);
+                        const asset = paper.Asset.find(matrial.url);
+                        materials.push(asset as egret3d.Material);
                     }
                     return materials;
                 case editor.EditType.MESH:
-                    let meshAsset = RES.getRes(serializeData);
+                    let meshAsset = paper.Asset.find(serializeData);
                     return meshAsset;
                 case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
@@ -466,13 +461,6 @@ namespace paper.editor {
                 }
             }
             return null;
-        }
-
-        public async getAssetByAssetUrl(url: string): Promise<any> {
-            let asset = RES.getRes(url);
-            if (!asset)
-                asset = await RES.getResAsync(url);
-            return asset;
         }
 
         public getGameObjectsByUUids(uuids: string[]): GameObject[] {
@@ -739,24 +727,13 @@ namespace paper.editor {
             return objs;
         }
 
-        private async setMaterialTexture(target: egret3d.Material, url: string, propName: string): Promise<void> {
-            let asset: egret3d.GLTexture2D = paper.Asset.find<egret3d.GLTexture2D>(url);
-
-            if (!asset) {
-                asset = await this.getAssetByAssetUrl(url);
-            }
-
-            if (!asset) {
-                console.error(`${url} can't find`)
-                return;
-            }
-
-            target._glTFTechnique.uniforms[propName].value = asset;
-        }
-
         public async modifyMaterialPropertyValues(target: egret3d.Material, valueList: any[]): Promise<void> {
             for (const propertyValue of valueList) {
                 const { propName, copyValue, uniformType } = propertyValue;
+                
+                if (!copyValue) {
+                    continue;
+                }
 
                 switch (uniformType) {
                     case gltf.UniformType.BOOL:
@@ -819,5 +796,7 @@ namespace paper.editor {
                 }
             }
         }
+
+
     }
 }
