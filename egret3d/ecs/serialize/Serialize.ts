@@ -30,7 +30,7 @@ namespace paper {
 
         if (!_defaultGameObject) {
             _defaultGameObject = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, Application.sceneManager.globalScene);
-            _defaultGameObject.parent = Application.sceneManager.globalGameObject;
+            _defaultGameObject.parent = GameObject.globalGameObject;
         }
 
         _inline = inline;

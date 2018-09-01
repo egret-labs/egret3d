@@ -1,12 +1,14 @@
 namespace egret3d {
+    const enum LightSize {
+        Directional = 12,
+        Point = 15,
+        Spot = 18,
+    }
     const _helpVector3 = Vector3.create();
     /**
      * @internal
      */
     export class RenderContext {
-        public readonly DIRECT_LIGHT_SIZE: number = 12;
-        public readonly POINT_LIGHT_SIZE: number = 15;
-        public readonly SPOT_LIGHT_SIZE: number = 18;
         /**
          * 
          */
@@ -23,6 +25,7 @@ namespace egret3d {
         public lightmapUV: number = 1;
         public lightmapIntensity: number = 1.0;
 
+        //TODO
         // 15: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
         public directLightArray: Float32Array = new Float32Array(0);
         // 19: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, distance, decay, shadow, shadowBias, shadowRadius, shadowCameraNear, shadowCameraFar, shadowMapSizeX, shadowMapSizeY
@@ -31,9 +34,10 @@ namespace egret3d {
         public spotLightArray: Float32Array = new Float32Array(0);
         public directShadowMatrix: Float32Array = new Float32Array(0);
         public spotShadowMatrix: Float32Array = new Float32Array(0);
-        public pointShadowMatrix: Float32Array = new Float32Array(0);//TODO
-        public readonly matrix_m: Matrix4 = new Matrix4();
-        public readonly matrix_mvp: Matrix4 = new Matrix4();
+        public pointShadowMatrix: Float32Array = new Float32Array(0);
+
+        public readonly matrix_m: Matrix4 = Matrix4.create();
+        public readonly matrix_mvp: Matrix4 = Matrix4.create();
         public readonly directShadowMaps: (WebGLTexture | null)[] = [];
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
@@ -48,15 +52,16 @@ namespace egret3d {
 
 
         // transforms
-        public readonly matrix_v: Matrix4 = new Matrix4();
-        public readonly matrix_p: Matrix4 = new Matrix4();
-        public readonly matrix_mv: Matrix4 = new Matrix4();
-        public readonly matrix_vp: Matrix4 = new Matrix4();
+        public readonly matrix_v: Matrix4 = Matrix4.create();
+        public readonly matrix_p: Matrix4 = Matrix4.create();
+        public readonly matrix_mv: Matrix4 = Matrix4.create();
+        public readonly matrix_vp: Matrix4 = Matrix4.create();
         public readonly matrix_mv_inverse: Matrix3 = new Matrix3();//INVERS
 
-        public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0, 1.0]);
         public lightShadowCameraNear: number = 0;
         public lightShadowCameraFar: number = 0;
+        public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0, 1.0]);
+        public drawCall: DrawCall = null!;
 
         public updateCamera(camera: Camera, matrix: Matrix4) {
             camera.calcViewPortPixel(this.viewPortPixel); // update viewport
@@ -115,16 +120,16 @@ namespace egret3d {
             }
 
             // TODO
-            if (this.directLightArray.length !== directLightCount * this.DIRECT_LIGHT_SIZE) {
-                this.directLightArray = new Float32Array(directLightCount * this.DIRECT_LIGHT_SIZE);
+            if (this.directLightArray.length !== directLightCount * LightSize.Directional) {
+                this.directLightArray = new Float32Array(directLightCount * LightSize.Directional);
             }
 
-            if (this.pointLightArray.length !== pointLightCount * this.POINT_LIGHT_SIZE) {
-                this.pointLightArray = new Float32Array(pointLightCount * this.POINT_LIGHT_SIZE);
+            if (this.pointLightArray.length !== pointLightCount * LightSize.Point) {
+                this.pointLightArray = new Float32Array(pointLightCount * LightSize.Point);
             }
 
-            if (this.spotLightArray.length !== spotLightCount * this.SPOT_LIGHT_SIZE) {
-                this.spotLightArray = new Float32Array(spotLightCount * this.SPOT_LIGHT_SIZE);
+            if (this.spotLightArray.length !== spotLightCount * LightSize.Spot) {
+                this.spotLightArray = new Float32Array(spotLightCount * LightSize.Spot);
             }
 
             if (this.directShadowMatrix.length !== directLightCount * 16) {
@@ -158,7 +163,7 @@ namespace egret3d {
                         _helpVector3.applyDirection(this.matrix_v).normalize();
 
                         lightArray = this.directLightArray;
-                        index = directLightIndex * this.DIRECT_LIGHT_SIZE;
+                        index = directLightIndex * LightSize.Directional;
                         // lightArray[index++] = dirHelper.x; // Right-hand.
                         // lightArray[index++] = dirHelper.y;
                         // lightArray[index++] = dirHelper.z;
@@ -176,7 +181,7 @@ namespace egret3d {
                     case PointLight: {
                         const position = light.gameObject.transform.getPosition();
                         lightArray = this.pointLightArray;
-                        index = pointLightIndex * this.POINT_LIGHT_SIZE;
+                        index = pointLightIndex * LightSize.Point;
 
                         lightArray[index++] = position.x;
                         lightArray[index++] = position.y;
@@ -197,7 +202,7 @@ namespace egret3d {
                         _helpVector3.applyDirection(this.matrix_v).normalize();
 
                         lightArray = this.spotLightArray;
-                        index = spotLightIndex * this.SPOT_LIGHT_SIZE;
+                        index = spotLightIndex * LightSize.Spot;
 
                         lightArray[index++] = position.x;
                         lightArray[index++] = position.y;
@@ -295,7 +300,9 @@ namespace egret3d {
         }
 
         public update(drawCall: DrawCall) {
-            const renderer = drawCall.renderer;
+            this.drawCall = drawCall;
+
+            const renderer = this.drawCall.renderer;
             {
                 const matrix = drawCall.matrix || renderer.gameObject.transform.getWorldMatrix();
                 this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
@@ -310,7 +317,7 @@ namespace egret3d {
                 const activeScene = paper.Application.sceneManager.activeScene;
                 if (activeScene.lightmaps.length > renderer.lightmapIndex) {
                     this.lightmap = activeScene.lightmaps[renderer.lightmapIndex];
-                    this.lightmapUV = drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
+                    this.lightmapUV = this.drawCall.mesh.glTFMesh.primitives[this.drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
                     this.lightmapIntensity = activeScene.lightmapIntensity;
                     this.shaderContextDefine += "#define USE_LIGHTMAP \n";
                 }

@@ -11,7 +11,7 @@ namespace egret3d {
                 { componentClass: [DirectionalLight, PointLight, SpotLight] }
             ]
         ];
-        protected readonly _camerasAndLights: CamerasAndLights = CamerasAndLights.getInstance(CamerasAndLights);
+        protected readonly _camerasAndLights: CamerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(CamerasAndLights);
 
         public onAddGameObject(_gameObject: paper.GameObject, group: paper.ComponentGroup) {
             if (group === this._groups[0]) {

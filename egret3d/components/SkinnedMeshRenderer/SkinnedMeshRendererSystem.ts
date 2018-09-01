@@ -12,7 +12,7 @@ namespace egret3d {
                 ]
             }
         ];
-        private readonly _drawCalls: DrawCalls = DrawCalls.getInstance(DrawCalls);
+        private readonly _drawCalls: DrawCalls = paper.GameObject.globalGameObject.getOrAddComponent(DrawCalls);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
             if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {

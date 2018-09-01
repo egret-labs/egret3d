@@ -62,7 +62,7 @@ namespace egret3d {
             }
             else {
                 this.rawData = new Float32Array(16);
-                this.fromArray(rawData || _array);
+                this.fromArray(rawData as Readonly<ArrayLike<number>> || _array);
             }
         }
 
@@ -607,35 +607,25 @@ namespace egret3d {
             rawData[15] = sourceRawData[15] * value;
         }
 
-        public multiply(valueA: Matrix4 | Float32Array, valueB?: Matrix4 | Float32Array, offsetA: number = 0, offsetB: number = 0) {
+        public multiply(valueA: Matrix4, valueB?: Matrix4) {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;
             }
 
-            const rawDataA = ArrayBuffer.isView(valueA) ? valueA : valueA.rawData;
-            const rawDataB = ArrayBuffer.isView(valueB) ? valueB : valueB.rawData;
+            const rawDataA = valueA.rawData;
+            const rawDataB = valueB.rawData;
             const rawData = this.rawData;
 
-            // const a11 = rawDataA[0], a12 = rawDataA[4], a13 = rawDataA[8], a14 = rawDataA[12];
-            // const a21 = rawDataA[1], a22 = rawDataA[5], a23 = rawDataA[9], a24 = rawDataA[13];
-            // const a31 = rawDataA[2], a32 = rawDataA[6], a33 = rawDataA[10], a34 = rawDataA[14];
-            // const a41 = rawDataA[3], a42 = rawDataA[7], a43 = rawDataA[11], a44 = rawDataA[15];
+            const a11 = rawDataA[0], a12 = rawDataA[4], a13 = rawDataA[8], a14 = rawDataA[12];
+            const a21 = rawDataA[1], a22 = rawDataA[5], a23 = rawDataA[9], a24 = rawDataA[13];
+            const a31 = rawDataA[2], a32 = rawDataA[6], a33 = rawDataA[10], a34 = rawDataA[14];
+            const a41 = rawDataA[3], a42 = rawDataA[7], a43 = rawDataA[11], a44 = rawDataA[15];
 
-            // const b11 = rawDataB[0], b12 = rawDataB[4], b13 = rawDataB[8], b14 = rawDataB[12];
-            // const b21 = rawDataB[1], b22 = rawDataB[5], b23 = rawDataB[9], b24 = rawDataB[13];
-            // const b31 = rawDataB[2], b32 = rawDataB[6], b33 = rawDataB[10], b34 = rawDataB[14];
-            // const b41 = rawDataB[3], b42 = rawDataB[7], b43 = rawDataB[11], b44 = rawDataB[15];
-
-            const a11 = rawDataA[offsetA++], a21 = rawDataA[offsetA++], a31 = rawDataA[offsetA++], a41 = rawDataA[offsetA++];
-            const a12 = rawDataA[offsetA++], a22 = rawDataA[offsetA++], a32 = rawDataA[offsetA++], a42 = rawDataA[offsetA++];
-            const a13 = rawDataA[offsetA++], a23 = rawDataA[offsetA++], a33 = rawDataA[offsetA++], a43 = rawDataA[offsetA++];
-            const a14 = rawDataA[offsetA++], a24 = rawDataA[offsetA++], a34 = rawDataA[offsetA++], a44 = rawDataA[offsetA++];
-
-            const b11 = rawDataB[offsetB++], b21 = rawDataB[offsetB++], b31 = rawDataB[offsetB++], b41 = rawDataB[offsetB++];
-            const b12 = rawDataB[offsetB++], b22 = rawDataB[offsetB++], b32 = rawDataB[offsetB++], b42 = rawDataB[offsetB++];
-            const b13 = rawDataB[offsetB++], b23 = rawDataB[offsetB++], b33 = rawDataB[offsetB++], b43 = rawDataB[offsetB++];
-            const b14 = rawDataB[offsetB++], b24 = rawDataB[offsetB++], b34 = rawDataB[offsetB++], b44 = rawDataB[offsetB++];
+            const b11 = rawDataB[0], b12 = rawDataB[4], b13 = rawDataB[8], b14 = rawDataB[12];
+            const b21 = rawDataB[1], b22 = rawDataB[5], b23 = rawDataB[9], b24 = rawDataB[13];
+            const b31 = rawDataB[2], b32 = rawDataB[6], b33 = rawDataB[10], b34 = rawDataB[14];
+            const b41 = rawDataB[3], b42 = rawDataB[7], b43 = rawDataB[11], b44 = rawDataB[15];
 
             rawData[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
             rawData[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;

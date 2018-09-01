@@ -132,7 +132,7 @@ namespace egret3d {
             return this;
         }
 
-        public getNormalMatrix(matrix4) {
+        public getNormalMatrix(matrix4: Readonly<Matrix4>) {
             return this.setFromMatrix4(matrix4).inverse(this).transpose();
         }
 

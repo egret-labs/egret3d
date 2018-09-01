@@ -23,7 +23,10 @@ namespace paper {
          * @internal
          */
         public static __index: number = -1;
-        private static readonly _componentClasses: ComponentClass<BaseComponent>[] = [];
+        /**
+         * @internal
+         */
+        private static readonly _allComponents: ComponentClass<BaseComponent>[] = [];
         private static _createEnabled: GameObject | null = null;
         /**
          * @internal
@@ -33,17 +36,24 @@ namespace paper {
                 return false;
             }
 
-            if (this.requireComponents) {
+            if (this._allComponents.indexOf(this as any) >= 0) {
+                console.debug("Register component class error.", egret.getQualifiedClassName(this));
+                return false;
+            }
+
+            if (this.requireComponents) { // Inherited parent class require components.
                 this.requireComponents = this.requireComponents.concat();
             }
             else {
                 this.requireComponents = [];
             }
 
-            if (this._componentClasses.indexOf(this as any) < 0) {
-                this.__index = this._componentClasses.length;
-                this._componentClasses.push(this as any);
+            this.__index = this._allComponents.length;
+            if (this.__isSingleton) {
+                this.__index += 300; // This means that a maximum of 300 non-singleton components can be added.
             }
+
+            this._allComponents.push(this as any);
 
             return true;
         }
@@ -74,13 +84,12 @@ namespace paper {
         public constructor() {
             super();
 
-            if (BaseComponent._createEnabled) {
-                this.gameObject = BaseComponent._createEnabled;
-                BaseComponent._createEnabled = null;
+            if (!BaseComponent._createEnabled) {
+                throw new Error("Component instantiation through constructor is not allowed.");
             }
-            else {
-                throw new Error("Create an instance of a component is not allowed.");
-            }
+
+            this.gameObject = BaseComponent._createEnabled;
+            BaseComponent._createEnabled = null;
 
         }
         /**
@@ -114,7 +123,7 @@ namespace paper {
             }
 
             if (!value && this.constructor === egret3d.Transform) {
-                console.log("Cannot disable transform compnent.");
+                console.warn("Cannot disable transform compnent.");
                 return
             }
 

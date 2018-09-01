@@ -82,7 +82,7 @@ namespace egret3d {
                     this.addSubMesh(indexCountOrBuffers as number, 0);
                 }
                 else {
-                    this.config.meshes[0].primitives[0].material = 0;
+                    this.config.meshes![0].primitives[0].material = 0;
                 }
             }
             else {
@@ -142,7 +142,7 @@ namespace egret3d {
             const p0 = _helpVector3A;
             const p1 = _helpVector3B;
             const p2 = _helpVector3C;
-            const vertices = this.getVertices();
+            const vertices = this.getVertices()!;
             let pickInfo: PickInfo | null = null; // TODO
 
             for (const primitive of this._glTFMesh!.primitives) {
@@ -188,7 +188,7 @@ namespace egret3d {
                             }
                         }
                         else {
-                            const indices = this.getIndices(subMeshIndex++);
+                            const indices = this.getIndices(subMeshIndex++)!;
 
                             for (let i = 0, l = indices.length; i < l; i += 3) { //
                                 p0.fromArray(vertices, indices[i] * 3);

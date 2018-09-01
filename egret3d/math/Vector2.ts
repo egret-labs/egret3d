@@ -10,8 +10,8 @@ namespace egret3d {
      * 
      */
     export class Vector2 implements IVector2, paper.ISerializable {
-        public static readonly ZERO: Readonly<IVector2> = new Vector2(0.0, 0.0);
-        public static readonly ONE: Readonly<IVector2> = new Vector2(1.0, 1.0);
+        public static readonly ZERO: Readonly<IVector2> & { clone: () => Vector2 } = new Vector2(0.0, 0.0);
+        public static readonly ONE: Readonly<IVector2> & { clone: () => Vector2 } = new Vector2(1.0, 1.0);
 
         private static readonly _instances: Vector2[] = [];
 

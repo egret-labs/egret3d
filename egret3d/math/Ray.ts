@@ -61,8 +61,8 @@ namespace egret3d {
         }
 
         public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
-            this.origin.fromArray(value);
-            this.direction.fromArray(value, 3);
+            this.origin.fromArray(value, offset);
+            this.direction.fromArray(value, offset + 3);
 
             return this;
         }
@@ -193,7 +193,7 @@ namespace egret3d {
             return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
         }
 
-        public intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3 {
+        public intersectPlane(planePoint: Vector3, planeNormal: Vector3) {
             let vp1 = planeNormal.x;
             let vp2 = planeNormal.y;
             let vp3 = planeNormal.z;
@@ -238,7 +238,7 @@ namespace egret3d {
          * @param maximum 最大点
          * @version paper 1.0
          */
-        public intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean {
+        public intersectBoxMinMax(minimum: Readonly<IVector3>, maximum: Readonly<IVector3>): boolean {
             let d = 0.0;
             let maxValue = Number.MAX_VALUE;
             let inv: number;

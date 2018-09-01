@@ -2,8 +2,6 @@ namespace paper {
     export const enum RendererEventType {
         Materials = "materials",
     }
-
-    const _helpVector3A = egret3d.Vector3.create();
     /**
      * renderer component interface
      * @version paper 1.0

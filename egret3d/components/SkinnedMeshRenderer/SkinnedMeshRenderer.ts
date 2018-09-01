@@ -1,5 +1,6 @@
 namespace egret3d {
     const _helpMatrix = Matrix4.create();
+    const _helpMatrixB = Matrix4.create();
     /**
      * Skinned Mesh Renderer Component
      * @version paper 1.0
@@ -15,10 +16,7 @@ namespace egret3d {
     export class SkinnedMeshRenderer extends MeshRenderer {
         private readonly _bones: (Transform | null)[] = [];
         private _rootBone: Transform | null = null;
-        /**
-         * @internal
-         */
-        public _inverseBindMatrices: Float32Array | null = null;
+        private _inverseBindMatrices: Float32Array | null = null;
         /**
          * @internal
          */
@@ -42,8 +40,7 @@ namespace egret3d {
                 const offset = i * 16;
                 const bone = bones[i];
                 const matrix = bone ? bone.getWorldMatrix() : Matrix4.IDENTITY;
-                _helpMatrix.multiply(matrix, inverseBindMatrices, 0, offset);
-                _helpMatrix.toArray(boneMatrices, offset);
+                _helpMatrix.fromArray(inverseBindMatrices, offset).premultiply(matrix).toArray(boneMatrices, offset);
             }
         }
 

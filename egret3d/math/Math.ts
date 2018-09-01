@@ -46,7 +46,7 @@ namespace egret3d {
         return out.set(0.0, 0.0, 1.0);
     }
 
-    export function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3 {
+    export function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3) {
         let vp1 = planeVector.x;
         let vp2 = planeVector.y;
         let vp3 = planeVector.z;
@@ -61,7 +61,7 @@ namespace egret3d {
         let m3 = linePoint.z;
         let vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
         if (vpt === 0) {
-            out = null;
+            return null;
         } else {
             let t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
             out.x = m1 + v1 * t;

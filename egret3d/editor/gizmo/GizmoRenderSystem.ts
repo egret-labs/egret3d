@@ -1,6 +1,6 @@
 namespace egret3d {
     export class GizmoRenderSystem extends paper.BaseSystem {
-        private readonly _renderState: WebGLRenderState = WebGLRenderState.getInstance(WebGLRenderState);
+        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
 
         public onUpdate() {
             this._renderState.clearState();//编辑器走自己的渲染流程，状态需要清除一下

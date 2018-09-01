@@ -41,6 +41,7 @@ namespace paper {
      */
     export function allowMultiple(componentClass: ComponentClass<BaseComponent>) {
         registerClass(componentClass);
+        
         if (!componentClass.__isSingleton) {
             componentClass.allowMultiple = true;
         }

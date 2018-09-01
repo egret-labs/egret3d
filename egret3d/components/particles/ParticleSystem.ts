@@ -28,7 +28,7 @@ namespace egret3d.particle {
                 ]
             }
         ];
-        private readonly _drawCalls: DrawCalls = DrawCalls.getInstance(DrawCalls);
+        private readonly _drawCalls: DrawCalls = paper.GameObject.globalGameObject.getOrAddComponent(DrawCalls);
         /**
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */

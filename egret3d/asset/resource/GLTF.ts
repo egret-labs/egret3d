@@ -55,14 +55,6 @@ namespace egret3d {
                  */
                 frameCount: number;
                 /**
-                 * 整个帧数据访问器索引。
-                 */
-                data: number;
-                /**
-                 * 采样帧访问器索引列表。
-                 */
-                frames: number[];
-                /**
                  * 骨骼名称列表。
                  */
                 joints: string[];
@@ -763,7 +755,6 @@ declare namespace gltf {
         _BINDMATRIXINVERSE = "_BINDMATRIXINVERSE",
         // _BONETEXTURE = "_BONETEXTURE",
         // _BONETEXTURESIZE = "_BONETEXTURESIZE",
-        _BONEMATRIX = "_BONEMATRIX",
 
         _VIEWPROJECTION = "_VIEWPROJECTION",
         _CAMERA_POS = "_CAMERA_POS",

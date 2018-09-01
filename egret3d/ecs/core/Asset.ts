@@ -25,7 +25,7 @@ namespace paper {
                 this._assets[asset.name] = asset;
             }
             else if (this._assets[asset.name] !== asset) {
-                console.debug("Replace asset.", asset.name);
+                console.debug("Replace existing asset.", asset.name);
                 this._assets[asset.name] = asset;
             }
         }
@@ -81,7 +81,7 @@ namespace paper {
          */
         public dispose(disposeChildren?: boolean) {
             if (this._isBuiltin) {
-                console.warn("Can not dispose builtin asset.", this.name);
+                console.warn("Cannot dispose builtin asset.", this.name);
                 return false;
             }
 

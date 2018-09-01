@@ -115,7 +115,7 @@ namespace paper.editor {
             let children: egret3d.Transform[] = []
             for (let item of this.selectedGameObjects) {
                 if (item.transform.childCount > 0) {
-                    children = children.concat(item.transform.getAllChildren())
+                    children = children.concat(item.transform.getAllChildren() as egret3d.Transform[])
                 }
             }
             for (let child of children) {
@@ -225,7 +225,7 @@ namespace paper.editor {
 
         //点击选择相机和灯光
         private intersectWithCameraAndLight(ray: egret3d.Ray) {
-            const camerasAndLights = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+            const camerasAndLights = GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
             for (let item of camerasAndLights.cameras) {
                 if (item.gameObject.name != "EditorCamera") {
                     let pos = item.transform.getPosition()

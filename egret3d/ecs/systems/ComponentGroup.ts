@@ -119,7 +119,6 @@ namespace paper {
         public readonly _addedComponents: (BaseComponent | null)[] = [];
         private _components: BaseComponent[] = [];
         private readonly _interestConfig: ReadonlyArray<InterestConfig> = null as any;
-        private readonly _globalGameObject: GameObject = Application.sceneManager.globalGameObject;
 
         private constructor(interestConfig: ReadonlyArray<InterestConfig>) {
             this._isBehaviour = interestConfig.length === 1 && interestConfig[0].type !== undefined && (interestConfig[0].type as InterestType & InterestType.Unessential) !== 0;
@@ -171,7 +170,7 @@ namespace paper {
             const gameObject = component.gameObject;
 
             if (!this._isBehaviour) {
-                if (gameObject === this._globalGameObject) { // Pass global game object.
+                if (gameObject === GameObject.globalGameObject) { // Pass global game object.
                     return;
                 }
 
@@ -211,7 +210,7 @@ namespace paper {
                 }
             }
             else {
-                if (gameObject === this._globalGameObject) { // Pass global game object.
+                if (gameObject === GameObject.globalGameObject) { // Pass global game object.
                     return;
                 }
 
@@ -239,7 +238,7 @@ namespace paper {
         }
 
         private _addGameObject(gameObject: GameObject) {
-            if (!this._isBehaviour && gameObject === this._globalGameObject) { // Pass global game object.
+            if (!this._isBehaviour && gameObject === GameObject.globalGameObject) { // Pass global game object.
                 return;
             }
 

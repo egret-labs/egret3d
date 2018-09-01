@@ -1,4 +1,6 @@
 namespace egret3d {
+    const _helpMatrixArray = new Float32Array(16);
+    const _helpMatrix = Matrix4.create();
     /**
      * WebGL 渲染系统
      */
@@ -14,14 +16,12 @@ namespace egret3d {
                 { componentClass: [DirectionalLight, SpotLight, PointLight] }
             ]
         ];
-        private readonly _drawCalls: DrawCalls = DrawCalls.getInstance(DrawCalls);
-        private readonly _camerasAndLights: CamerasAndLights = CamerasAndLights.getInstance(CamerasAndLights);
-        private readonly _renderState: WebGLRenderState = WebGLRenderState.getInstance(WebGLRenderState);
-        private readonly _lightCamera: Camera = this._globalGameObject.getOrAddComponent(Camera);
+        private readonly _drawCalls: DrawCalls = paper.GameObject.globalGameObject.getOrAddComponent(DrawCalls);
+        private readonly _camerasAndLights: CamerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(CamerasAndLights);
+        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
+        private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
         //
         private readonly _filteredLights: BaseLight[] = [];
-        // private _cacheContextVersion: number = -1;
-        // private _cacheContext: RenderContext | null = null;
         private _cacheMaterialVerision: number = -1;
         private _cacheMaterial: Material | null = null;
         private _cacheSubMeshIndex: number = -1;
@@ -92,7 +92,7 @@ namespace egret3d {
             // Update states.
             renderState.updateState(technique.states || null);
             // Update static uniforms.
-            this._updateContextUniforms(program, context, technique, force);
+            this._updateContextUniforms(program, context, technique);
             // Update uniforms.
             this._updateUniforms(program, material, technique, force);
             // Update attributes.
@@ -113,15 +113,7 @@ namespace egret3d {
             }
         }
 
-        private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
-            // const needUpdate = forceUpdate || this._cacheContext !== context || this._cacheContextVersion !== context.version;
-            // if (!needUpdate) {
-            //     return;
-            // }
-
-            // this._cacheContext = context;
-            // this._cacheContextVersion = context.version;
-
+        private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique) {
             const webgl = WebGLCapabilities.webgl;
             const uniforms = technique.uniforms;
             const glUniforms = program.contextUniforms;
@@ -140,11 +132,11 @@ namespace egret3d {
                     case gltf.UniformSemanticType.MODELVIEW:
                         webgl.uniformMatrix4fv(location, false, context.matrix_mv.rawData);
                         break;
-                    case gltf.UniformSemanticType.MODELVIEWINVERSE:
-                        webgl.uniformMatrix3fv(location, false, context.matrix_mv_inverse.rawData);
-                        break;
                     case gltf.UniformSemanticType.MODELVIEWPROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_mvp.rawData);
+                        break;
+                    case gltf.UniformSemanticType.MODELVIEWINVERSE:
+                        webgl.uniformMatrix3fv(location, false, context.matrix_mv_inverse.rawData);
                         break;
 
                     case gltf.UniformSemanticType.VIEW:
@@ -167,7 +159,20 @@ namespace egret3d {
                         webgl.uniform3fv(location, context.cameraUp);
                         break;
 
-                    case gltf.UniformSemanticType._BINDMATRIX:
+                    case gltf.UniformSemanticType._BINDMATRIX: {
+                        const renderer = context.drawCall.renderer as SkinnedMeshRenderer;
+                        (renderer.rootBone || renderer.transform).getWorldMatrix().toArray(_helpMatrixArray);
+                        webgl.uniformMatrix4fv(location, false, _helpMatrixArray);
+                        break;
+                    }
+                    case gltf.UniformSemanticType._BINDMATRIXINVERSE: {
+                        const renderer = context.drawCall.renderer as SkinnedMeshRenderer;
+                        _helpMatrix.inverse((renderer.rootBone || renderer.transform).getWorldMatrix()).toArray(_helpMatrixArray);
+                        webgl.uniformMatrix4fv(location, false, _helpMatrixArray);
+                        break;
+                    }
+                    case gltf.UniformSemanticType.JOINTMATRIX:
+                        webgl.uniformMatrix4fv(location, false, (context.drawCall.renderer as SkinnedMeshRenderer)._boneMatrices!);
                         break;
 
                     case gltf.UniformSemanticType._DIRECTLIGHTS:

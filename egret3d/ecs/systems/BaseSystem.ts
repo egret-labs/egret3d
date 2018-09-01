@@ -28,11 +28,7 @@ namespace paper {
         /**
          * 
          */
-        protected readonly _globalGameObject: GameObject = Application.sceneManager.globalGameObject;
-        /**
-         * 
-         */
-        protected readonly _clock: Clock = Clock.getInstance(Clock);
+        protected readonly _clock: Clock = GameObject.globalGameObject.getOrAddComponent(Clock);
         /**
          * 禁止实例化系统。
          * @protected

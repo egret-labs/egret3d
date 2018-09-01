@@ -97,7 +97,6 @@ namespace egret3d {
         if (!combine.root) {
             combine.root = root ? root : target;
             combine.lightmapIndex = meshRenderer.lightmapIndex;
-            combine.lightmapScaleOffset = meshRenderer.lightmapScaleOffset;
         }
         //适配最大格式
         const primitives = meshData.glTFMesh.primitives;
@@ -139,7 +138,6 @@ namespace egret3d {
         helpInverseMatrix.inverse(combineInstance.root.transform.getWorldMatrix());
 
         const meshAttribute = combineInstance.meshAttribute;
-        const lightmapScaleOffset = combineInstance.lightmapScaleOffset;
         const newAttribute: gltf.MeshAttributeType[] = [];
         const tempIndexBuffers: number[][] = [];
         const tempVertexBuffers: { [key: string]: number[] } = {};
@@ -155,7 +153,6 @@ namespace egret3d {
             const meshFilter = instance.getComponent(egret3d.MeshFilter)!;
             const meshRenderer = instance.getComponent(egret3d.MeshRenderer)!;
             const worldMatrix = instance.transform.getWorldMatrix();
-            const orginLightmapScaleOffset = meshRenderer.lightmapScaleOffset;
             const mesh = meshFilter.mesh!;
 
             const primitives = mesh.glTFMesh.primitives;
@@ -261,17 +258,18 @@ namespace egret3d {
 
                             //     tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
                             // }
-                            if (orginAttributes.TEXCOORD_1){
+                            if (orginAttributes.TEXCOORD_1 !== undefined) {
                                 _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
                             }
-                            else{
-                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
-                            }                            
+                            else {
+                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0!, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                            }
                         }
                         else {
-                            if (orginAttributes.TEXCOORD_1) {
+                            if (orginAttributes.TEXCOORD_1 !== undefined) {
                                 _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
-                            } else {
+                            }
+                            else {
                                 _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1], orginVertexCount, [0, 0]);
                             }
                         }
@@ -279,7 +277,8 @@ namespace egret3d {
                     if (meshAttribute[gltf.MeshAttributeType.JOINTS_0]) {
                         if (orginAttributes.JOINTS_0) {
                             _copyAccessorBufferArray(mesh, orginAttributes.JOINTS_0, tempVertexBuffers[gltf.MeshAttributeType.JOINTS_0]);
-                        } else {
+                        }
+                        else {
                             _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.JOINTS_0], orginVertexCount, [0, 0, 0, 0]);
                         }
                     }
@@ -376,7 +375,6 @@ namespace egret3d {
         public lightmapIndex: number = -1;
         public meshAttribute: { [key: string]: gltf.MeshAttributeType } = {};
         public root: paper.GameObject | null = null;
-        public lightmapScaleOffset: Float32Array | null = null;
         public readonly instances: paper.GameObject[] = [];
     }
 }

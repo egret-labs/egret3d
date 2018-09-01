@@ -6,8 +6,8 @@ namespace paper {
         protected readonly _interests = [
             { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
         ];
-        private readonly _contactColliders: ContactColliders = ContactColliders.getInstance(ContactColliders);
-        private readonly _disposeCollecter: DisposeCollecter = DisposeCollecter.getInstance(DisposeCollecter);
+        private readonly _contactColliders: ContactColliders = GameObject.globalGameObject.getOrAddComponent(ContactColliders);
+        private readonly _disposeCollecter: DisposeCollecter = GameObject.globalGameObject.getOrAddComponent(DisposeCollecter);
 
         public onRemoveComponent(component: Behaviour) {
             if (!component) {
