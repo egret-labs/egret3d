@@ -218,7 +218,7 @@ namespace egret3d.particle {
             for (let i = 0, l = this.alphaKeys.length; i < l; i++) {
                 const curKeyFrame = this.alphaKeys[i];
                 if (curKeyFrame.time > t) {
-                    const lastIndex = i == 0 ? 0 : i - 1;
+                    const lastIndex = i === 0 ? 0 : i - 1;
                     const lastKeyFrame = this.alphaKeys[lastIndex];
                     const tt = (t - lastKeyFrame.time) / (curKeyFrame.time - lastKeyFrame.time);
                     out.a = numberLerp(lastKeyFrame.alpha, curKeyFrame.alpha, tt);
@@ -229,7 +229,7 @@ namespace egret3d.particle {
             for (let i = 0, l = this.colorKeys.length; i < l; i++) {
                 const colorKey = this.colorKeys[i];
                 if (colorKey.time > t) {
-                    const lastIndex = i == 0 ? 0 : i - 1;
+                    const lastIndex = i === 0 ? 0 : i - 1;
                     const lastKeyFrame = this.colorKeys[lastIndex];
                     const tt = (t - lastKeyFrame.time) / (colorKey.time - lastKeyFrame.time);
                     out.r = numberLerp(lastKeyFrame.color.r, colorKey.color.r, tt);

@@ -11,7 +11,7 @@ namespace egret3d {
                 width?: number;
                 height?: number;
             }
-        }
+        };
     }
     /**
      * 
@@ -24,7 +24,7 @@ namespace egret3d {
                 defines?: string[];
                 states?: gltf.States;
             }
-        }
+        };
     }
     /**
      * 
@@ -107,7 +107,7 @@ namespace egret3d {
                 type: string,
                 property: string,
             }
-        }
+        };
     }
     /**
      * 帧事件反序列化。

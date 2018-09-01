@@ -124,7 +124,7 @@ namespace paper {
 
             if (!value && this.constructor === egret3d.Transform) {
                 console.warn("Cannot disable transform compnent.");
-                return
+                return;
             }
 
             const prevEnabled = this.isActiveAndEnabled;

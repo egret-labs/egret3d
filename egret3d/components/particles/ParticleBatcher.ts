@@ -199,7 +199,7 @@ namespace egret3d.particle {
                         worldRoationBuffer[vector4Offset + 2] = worldRotation.z;
                         worldRoationBuffer[vector4Offset + 3] = worldRotation.w;
                     }
-                };
+                }
                 startCursor++;
                 if (startCursor >= main._maxParticles) {
                     startCursor = 0;
@@ -305,7 +305,7 @@ namespace egret3d.particle {
             const comp = this._comp;
             const mainModule = comp.main;
             //
-            while (this._lastAliveCursor != this._firstAliveCursor) {
+            while (this._lastAliveCursor !== this._firstAliveCursor) {
                 if (!this._isParticleExpired(this._lastAliveCursor)) {
                     break;
                 }

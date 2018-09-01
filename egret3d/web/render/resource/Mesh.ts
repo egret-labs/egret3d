@@ -10,8 +10,8 @@ namespace egret3d {
             vertexCount: number, indexCount: number,
             attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
             drawMode?: gltf.DrawMode
-        ): Mesh
-        public static create(config: GLTF, buffers: Uint32Array[], name: string): Mesh
+        ): Mesh;
+        public static create(config: GLTF, buffers: Uint32Array[], name: string): Mesh;
         public static create(
             vertexCountOrConfig: number | GLTF, indexCountOrBuffers?: number | Uint32Array[],
             attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: { [key: string]: gltf.AccessorType } | null,

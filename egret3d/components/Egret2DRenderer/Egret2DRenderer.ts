@@ -143,7 +143,7 @@ namespace egret3d {
             let stage2d = this.stage;
             const { w, h } = stage.screenViewport;
 
-            if (this._stageWidth != w || this._stageHeight != h || this.screenAdapter.$dirty) {
+            if (this._stageWidth !== w || this._stageHeight !== h || this.screenAdapter.$dirty) {
                 let result = { w: 0, h: 0, s: 0 };
 
                 this.screenAdapter.calculateScaler(w, h, result);

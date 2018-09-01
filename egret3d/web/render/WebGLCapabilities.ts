@@ -83,7 +83,7 @@ namespace egret3d {
         //排序
         for (let uniform of activeUniforms) {
             const key = uniform.name;
-            if (uniform.type == gltf.UniformType.SAMPLER_2D || uniform.type == gltf.UniformType.SAMPLER_CUBE) {
+            if (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE) {
                 if (key.indexOf("[") > -1) {
                     samplerArrayKeys.push(key);
                 }

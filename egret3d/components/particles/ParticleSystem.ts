@@ -7,9 +7,9 @@ namespace egret3d.particle {
             {
                 componentClass: ParticleComponent,
                 listeners: [
-                    { type: ParticleCompEventType.StartRotation3DChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.StartRotation3DChanged) } },
-                    { type: ParticleCompEventType.SimulationSpaceChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.SimulationSpaceChanged) } },
-                    { type: ParticleCompEventType.ScaleModeChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.ScaleModeChanged) } },
+                    { type: ParticleCompEventType.StartRotation3DChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.StartRotation3DChanged); } },
+                    { type: ParticleCompEventType.SimulationSpaceChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.SimulationSpaceChanged); } },
+                    { type: ParticleCompEventType.ScaleModeChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.ScaleModeChanged); } },
                     { type: ParticleCompEventType.VelocityChanged, listener: this._onVelocityOverLifetime.bind(this) },
                     { type: ParticleCompEventType.ColorChanged, listener: this._onColorOverLifetime.bind(this) },
                     { type: ParticleCompEventType.SizeChanged, listener: this._onSizeOverLifetime.bind(this) },

@@ -21,7 +21,7 @@ namespace paper {
                 const baseClass = classPrototype.constructor as BaseClass;
                 registerClass(baseClass);
                 baseClass.__serializeKeys![key] = classPrototypeOrKey as string;
-            }
+            };
         }
     }
     /**

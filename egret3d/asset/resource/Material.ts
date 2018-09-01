@@ -384,7 +384,7 @@ namespace egret3d {
             if (id === "_MainTex_ST" && this._glTFTechnique.uniforms["uvTransform"]) {
                 id = "uvTransform";
                 console.warn("已废弃的键值_MainTex_ST，建议改为:uvTransform-Matrix3");
-                this._glTFTechnique.uniforms[id].value = [value[0], 0, 0, 0, value[1], 0, value[2], value[3], 1];;
+                this._glTFTechnique.uniforms[id].value = [value[0], 0, 0, 0, value[1], 0, value[2], value[3], 1];
                 return;
             }
             else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms["diffuse"]) {
