@@ -7,7 +7,15 @@ namespace egret3d {
             {
                 componentClass: MeshFilter,
                 listeners: [
-                    { type: MeshFilterEventType.Mesh, listener: (component: MeshFilter) => { this._updateDrawCalls(component.gameObject); } }
+                    {
+                        type: MeshFilterEventType.Mesh, listener: (component: MeshFilter) => {
+                            this._updateDrawCalls(component.gameObject);
+
+                            if (component.gameObject.renderer) {
+                                component.gameObject.renderer.recalculateAABB();
+                            }
+                        }
+                    }
                 ]
             },
             {
@@ -26,12 +34,14 @@ namespace egret3d {
 
             const filter = gameObject.getComponent(MeshFilter) as MeshFilter;
             const renderer = gameObject.renderer as MeshRenderer;
+            const materials = renderer.materials;
 
             this._drawCalls.removeDrawCalls(renderer);
-            if (!filter.mesh || renderer.materials.length === 0) {
+            if (!filter.mesh || materials.length === 0) {
                 return;
             }
-            //
+
+            filter.mesh._createBuffer();
             this._drawCalls.renderers.push(renderer);
             //
             let subMeshIndex = 0;
@@ -41,18 +51,14 @@ namespace egret3d {
 
                     subMeshIndex: subMeshIndex++,
                     mesh: filter.mesh,
-                    material: renderer.materials[primitive.material!] || DefaultMaterials.Missing,
+                    material: materials[primitive.material!] || DefaultMaterials.MISSING,
 
                     frustumTest: false,
                     zdist: -1,
                 };
-
-                if (!filter.mesh.vbo) {
-                    filter.mesh.createVBOAndIBOs();
-                }
-
                 this._drawCalls.drawCalls.push(drawCall);
             }
+
         }
 
         public onEnable() {

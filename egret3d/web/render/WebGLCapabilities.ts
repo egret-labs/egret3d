@@ -48,24 +48,36 @@ namespace egret3d {
     /**
      * extract uniforms
      */
-    function extractUniforms(gl: WebGLRenderingContext, program: GlProgram, ) {
+    function extractUniforms(gl: WebGLRenderingContext, program: GlProgram, technique: gltf.Technique) {
         const webglProgram = program.program;
         const totalUniforms = gl.getProgramParameter(webglProgram, gl.ACTIVE_UNIFORMS);
         //
+        const contextUniforms: WebGLActiveUniform[] = [];
         const uniforms: WebGLActiveUniform[] = [];
         for (let i = 0; i < totalUniforms; i++) {
             const uniformData = gl.getActiveUniform(webglProgram, i)!;
+            const tUniform = technique.uniforms[uniformData.name];
+            if (!tUniform) {
+                console.warn("缺少Uniform定义：" + uniformData.name);
+            }
             const location = gl.getUniformLocation(webglProgram, uniformData!.name)!;
 
-            uniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location });
+            if (tUniform.semantic) {
+                contextUniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location });
+            }
+            else {
+                uniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location });
+            }
         }
+
+        program.contextUniforms = contextUniforms;
         program.uniforms = uniforms;
     }
     /**
      * extract texUnits
      */
     function extractTexUnits(program: GlProgram) {
-        const activeUniforms = program.uniforms;
+        const activeUniforms: WebGLActiveUniform[] = program.contextUniforms.concat(program.uniforms);
         const samplerArrayKeys: string[] = [];
         const samplerKeys: string[] = [];
         //排序
@@ -146,6 +158,7 @@ namespace egret3d {
     }
 
     export class WebGLCapabilities extends paper.SingletonComponent {
+        public static canvas: HTMLCanvasElement;
         public static webgl: WebGLRenderingContext;
         public static commonDefines: string;
 
@@ -227,7 +240,7 @@ namespace egret3d {
         private readonly vsShaderMap: { [key: string]: WebGLShader } = {};
         private readonly fsShaderMap: { [key: string]: WebGLShader } = {};
 
-        private readonly _stateEnables: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST];
+        private readonly _stateEnables: gltf.EnableState[] = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
         private _cacheProgram: GlProgram | undefined;
         private _cacheState: gltf.States | undefined;
@@ -272,27 +285,30 @@ namespace egret3d {
             this._cacheState = undefined;
         }
 
-        public updateState(state: gltf.States) {
+        public updateState(state?: gltf.States) {
             if (this._cacheState === state) {
                 return;
             }
             this._cacheState = state;
+
             const webgl = WebGLCapabilities.webgl;
             const stateEnables = this._stateEnables;
             const cacheStateEnable = this._cacheStateEnable;
             //TODO WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
             for (const e of stateEnables) {
-                const b = state.enable && state.enable.indexOf(e) >= 0;
+                const b = state && state.enable && state.enable.indexOf(e) >= 0;
                 if (cacheStateEnable[e] !== b) {
                     cacheStateEnable[e] = b;
                     b ? webgl.enable(e) : webgl.disable(e);
                 }
             }
-            //functions
-            const functions = state.functions;
-            if (functions) {
-                for (const fun in functions) {
-                    ((webgl as any)[fun] as Function).apply(webgl, functions[fun]);
+            // Functions.
+            if (state) {
+                const functions = state.functions;
+                if (functions) {
+                    for (const fun in functions) {
+                        ((webgl as any)[fun] as Function).apply(webgl, functions[fun]);
+                    }
                 }
             }
         }
@@ -307,7 +323,7 @@ namespace egret3d {
         }
 
         public getProgram(material: Material, technique: gltf.Technique, defines: string) {
-            const shader = material._glTFShader;
+            const shader = material._shader;
             const extensions = shader.config.extensions!.KHR_techniques_webgl;
             const vertexShader = extensions!.shaders[0];
             const fragShader = extensions!.shaders[1];
@@ -319,7 +335,7 @@ namespace egret3d {
                 program = new GlProgram(webglProgram);
                 this.programMap[name] = program;
                 extractAttributes(webgl, program);
-                extractUniforms(webgl, program);
+                extractUniforms(webgl, program, technique);
                 extractTexUnits(program);
             }
             //
@@ -342,7 +358,7 @@ namespace egret3d {
             if (!target) {
                 w = stage.screenViewport.w;
                 h = stage.screenViewport.h;
-                GlRenderTarget.useNull();
+                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
             }
             else {
                 w = target.width;

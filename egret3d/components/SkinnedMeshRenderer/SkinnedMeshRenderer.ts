@@ -13,17 +13,16 @@ namespace egret3d {
     const helpVec3_7: Vector3 = new Vector3();
     // const helpVec3_8: Vector3 = new Vector3();
 
-    const helpMat4_1: Matrix = new Matrix();
-    const helpMat4_2: Matrix = new Matrix();
-    const helpMat4_3: Matrix = new Matrix();
-    const helpMat4_4: Matrix = new Matrix();
-    const helpMat4_5: Matrix = new Matrix();
-    const helpMat4_6: Matrix = new Matrix();
+    const helpMat4_1: Matrix4 = new Matrix4();
+    const helpMat4_2: Matrix4 = new Matrix4();
+    const helpMat4_3: Matrix4 = new Matrix4();
+    const helpMat4_4: Matrix4 = new Matrix4();
+    const helpMat4_5: Matrix4 = new Matrix4();
+    const helpMat4_6: Matrix4 = new Matrix4();
 
     export const enum SkinnedMeshRendererEventType {
         Mesh = "mesh",
         Bones = "bones",
-        Materials = "materials",
     }
     /**
      * Skinned Mesh Renderer Component
@@ -37,14 +36,11 @@ namespace egret3d {
      * @platform Web
      * @language
      */
-    export class SkinnedMeshRenderer extends paper.BaseRenderer {
+    export class SkinnedMeshRenderer extends MeshRenderer {
         /**
          * 
          */
         public static dataCaches: { key: string, data: Float32Array }[] = [];
-
-        @paper.serializedField
-        private readonly _materials: Material[] = [];
 
         @paper.serializedField
         private _mesh: Mesh | null = null;
@@ -115,7 +111,7 @@ namespace egret3d {
         private _joints: Float32Array | null = null;
         private _weights: Float32Array | null = null;
 
-        private _getMatByIndex(index: number, out: Matrix) {
+        private _getMatByIndex(index: number, out: Matrix4) {
             const mesh = this._mesh;
             if (!mesh) {
                 return null;
@@ -189,19 +185,19 @@ namespace egret3d {
                 const mat2 = helpMatrixC;
                 const mat3 = helpMatrixD;
 
-                egret3d.Matrix.fromRTS(vec30p, Vector3.ONE, vec40r as any, mat0);
-                egret3d.Matrix.fromRTS(vec31p, Vector3.ONE, vec41r as any, mat1);
-                egret3d.Matrix.fromRTS(vec32p, Vector3.ONE, vec42r as any, mat2);
-                egret3d.Matrix.fromRTS(vec33p, Vector3.ONE, vec43r as any, mat3);
+                mat0.compose(vec30p, vec40r as any, Vector3.ONE);
+                mat1.compose(vec31p, vec41r as any, Vector3.ONE);
+                mat2.compose(vec32p, vec42r as any, Vector3.ONE);
+                mat3.compose(vec33p, vec43r as any, Vector3.ONE);
 
-                egret3d.Matrix.scale(blendWeights.x, mat0);
-                egret3d.Matrix.scale(blendWeights.y, mat1);
-                egret3d.Matrix.scale(blendWeights.z, mat2);
-                egret3d.Matrix.scale(blendWeights.w, mat3);
+                mat0.scale(blendWeights.x);
+                mat1.scale(blendWeights.y);
+                mat2.scale(blendWeights.z);
+                mat3.scale(blendWeights.w);
 
-                egret3d.Matrix.add(mat0, mat1, out);
-                egret3d.Matrix.add(out, mat2, out);
-                egret3d.Matrix.add(out, mat3, out);
+                out.add(mat0, mat1);
+                out.add(mat2);
+                out.add(mat3);
             }
             else {
                 // TODO
@@ -287,6 +283,20 @@ namespace egret3d {
             this._bones.length = 0;
             this._mesh = null;
         }
+
+        public recalculateAABB() {
+            this.aabb.clear();
+
+            if (this._mesh) {
+                const vertices = this._mesh.getVertices();
+                const position = helpVector3A;
+
+                for (let i = 0, l = vertices.length; i < l; i += 3) {
+                    position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
+                    this.aabb.add(position);
+                }
+            }
+        }
         /**
          * ray intersects
          * @param ray ray
@@ -348,15 +358,15 @@ namespace egret3d {
                         this._getMatByIndex(verindex2, mat2);
                         if (mat0 === null || mat1 === null || mat2 === null) continue;
 
-                        egret3d.Matrix.multiply(mvpmat, mat0, mat00);
-                        egret3d.Matrix.multiply(mvpmat, mat1, mat11);
-                        egret3d.Matrix.multiply(mvpmat, mat2, mat22);
+                        mat00.multiply(mvpmat, mat0);
+                        mat11.multiply(mvpmat, mat1);
+                        mat22.multiply(mvpmat, mat2);
 
-                        egret3d.Matrix.transformVector3(p0, mat00, t0);
-                        egret3d.Matrix.transformVector3(p1, mat11, t1);
-                        egret3d.Matrix.transformVector3(p2, mat22, t2);
+                        mat00.transformVector3(p0, t0);
+                        mat11.transformVector3(p1, t1);
+                        mat22.transformVector3(p2, t2);
 
-                        const result = ray.intersectsTriangle(t0, t1, t2);
+                        const result = ray.intersectTriangle(t0, t1, t2);
                         if (result) {
                             if (result.distance < 0) continue;
                             if (!pickinfo || pickinfo.distance > result.distance) {
@@ -376,30 +386,6 @@ namespace egret3d {
             }
 
             return pickinfo;
-        }
-        /**
-         * material list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 材质数组
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        public get materials(): ReadonlyArray<Material> {
-            return this._materials;
-        }
-        public set materials(value: ReadonlyArray<Material>) {
-            if (value !== this._materials) {
-                for (const material of value) {
-                    this._materials.push(material);
-                }
-            }
-
-            paper.EventPool.dispatchEvent(SkinnedMeshRendererEventType.Materials, this);
         }
         /**
          * 骨骼列表

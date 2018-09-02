@@ -6,9 +6,8 @@ namespace paper {
         protected readonly _interests = [
             { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
         ];
-        private readonly _bufferedComponents: BaseComponent[] = [];
-        private readonly _bufferedGameObjects: GameObject[] = [];
         private readonly _contactColliders: ContactColliders = ContactColliders.getInstance(ContactColliders);
+        private readonly _disposeCollecter: DisposeCollecter = DisposeCollecter.getInstance(DisposeCollecter);
 
         public onRemoveComponent(component: Behaviour) {
             if (!component) {
@@ -16,7 +15,7 @@ namespace paper {
             }
 
             if (
-                this._isEditorUpdate() &&
+                Application.playerMode === PlayerMode.Editor &&
                 !(component.constructor as ComponentClass<Behaviour>).executeInEditMode
             ) {
                 return;
@@ -27,13 +26,6 @@ namespace paper {
 
         public onUpdate() {
             //
-            for (const component of this._bufferedComponents) {
-                component.uninitialize();
-            }
-
-            this._bufferedComponents.length = 0;
-            this._bufferedGameObjects.length = 0;
-            //
             const begin = this._contactColliders.begin;
             const stay = this._contactColliders.stay;
             const end = this._contactColliders.end;
@@ -42,8 +34,6 @@ namespace paper {
                 for (const contact of begin) {
                     stay.push(contact);
                 }
-
-                begin.length = 0;
             }
 
             if (end.length > 0) {
@@ -53,32 +43,23 @@ namespace paper {
                         stay.splice(index, 1);
                     }
                 }
+            }
+            //
+            const gameObjectPool = GameObject._instances;
 
-                end.length = 0;
+            for (const scene of this._disposeCollecter.scenes) {
             }
 
-            if (stay.length > 0) {
-            }
-        }
-        /**
-         * @internal
-         */
-        public bufferComponent(component: BaseComponent) {
-            if (this._bufferedComponents.indexOf(component) >= 0) {
-                return;
+            for (const gameObject of this._disposeCollecter.gameObjects) {
+                gameObjectPool.push(gameObject);
             }
 
-            this._bufferedComponents.push(component);
-        }
-        /**
-         * @internal
-         */
-        public bufferGameObject(gameObject: GameObject) {
-            if (this._bufferedGameObjects.indexOf(gameObject) >= 0) {
-                return;
+            for (const component of this._disposeCollecter.components) {
+                component.uninitialize();
             }
 
-            this._bufferedGameObjects.push(gameObject);
+            this._contactColliders.clear();
+            this._disposeCollecter.clear();
         }
     }
 }

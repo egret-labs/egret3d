@@ -68,8 +68,8 @@ namespace paper.editor {
 
             let rotation = this.gameObject.transform.getLocalRotation();
 
-            egret3d.Quaternion.transformVector3(rotation, up, up);
-            egret3d.Quaternion.transformVector3(rotation, right, right);
+            up.applyQuaternion(rotation);
+            right.applyQuaternion(rotation);
 
             let p = this.gameObject.transform.getLocalPosition();
             let result = new egret3d.Vector3();
@@ -101,7 +101,7 @@ namespace paper.editor {
                     move.z = 0
                     move.x = (mouse.position.x - this._lastMouseX) / 10;
                     move.y = -(mouse.position.y - this._lastMouseY) / 10;
-                    egret3d.Quaternion.transformVector3(rotation, move, move);
+                    move.applyQuaternion(rotation);
 
                     egret3d.Vector3.subtract(result, move, result);
                     this.gameObject.transform.setLocalPosition(result)
@@ -117,8 +117,8 @@ namespace paper.editor {
             //放大缩小
             if (mouse.wheel !== 0) {
                 forward.z = mouse.wheel * this.wheelSpeed;
-                egret3d.Quaternion.transformVector3(rotation, forward, forward);
-                egret3d.Vector3.add(result, forward, result);
+                forward.applyQuaternion(rotation);
+                result.add(forward);
                 this.gameObject.transform.setLocalPosition(result);
             }
 
@@ -132,7 +132,7 @@ namespace paper.editor {
                     let moveY = mouse.position.y - this._lastMouseY;
 
                     forward.z = moveX * 0.1 + moveY * 0.1;
-                    egret3d.Quaternion.transformVector3(rotation, forward, forward);
+                    forward.applyQuaternion(rotation);
                     egret3d.Vector3.add(result, forward, result);
                     this.gameObject.transform.setLocalPosition(result);
 
@@ -142,6 +142,7 @@ namespace paper.editor {
             } else if (keyboard.wasReleased('ALT') || mouse.wasReleased(0)) {
                 this._mouseDown_r = false;
             }
+
 
             //方向
             if (mouse.isPressed(2) && !keyboard.isPressed('ALT')) {
@@ -161,12 +162,14 @@ namespace paper.editor {
 
                     this.gameObject.transform.getRight(this._helpVec3);
                     egret3d.Vector3.normalize(this._helpVec3);
-                    egret3d.Quaternion.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX, this._helpQuat);
-                    egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
+                    this._helpQuat.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX);
+                    rot.multiply(this._helpQuat, rot)
+                    rot.normalize()
 
                     egret3d.Vector3.set(0, 1, 0, this._helpVec3);
-                    egret3d.Quaternion.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY, this._helpQuat);
-                    egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
+                    this._helpQuat.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY);
+                    rot.multiply(this._helpQuat, rot)
+                    rot.normalize()
 
                     this.gameObject.transform.setRotation(rot);
 
@@ -203,14 +206,17 @@ namespace paper.editor {
 
                     this.gameObject.transform.getRight(this._helpVec3);
                     egret3d.Vector3.normalize(this._helpVec3);
-                    egret3d.Quaternion.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX, this._helpQuat);
-                    egret3d.Quaternion.transformVector3(this._helpQuat, pos, pos);
-                    egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
+                    this._helpQuat.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX);
+                    pos.applyQuaternion(this._helpQuat, pos);
+                    rot.multiply(this._helpQuat, rot)
+                    rot.normalize()
 
                     egret3d.Vector3.set(0, 1, 0, this._helpVec3);
-                    egret3d.Quaternion.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY, this._helpQuat);
-                    egret3d.Quaternion.transformVector3(this._helpQuat, pos, pos);
-                    egret3d.Quaternion.multiply(this._helpQuat, rot, rot);
+                    this._helpQuat.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY);
+                    pos.applyQuaternion(this._helpQuat);
+                    rot.multiply(this._helpQuat, rot)
+                    rot.normalize()
+
 
                     egret3d.Vector3.add(pos, this._lookAtPiont, pos);
                     this.gameObject.transform.setRotation(rot);

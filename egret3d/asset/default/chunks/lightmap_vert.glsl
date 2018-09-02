@@ -1,10 +1,10 @@
-#ifdef LIGHTMAP
-    highp vec2 beforelightUV = _glesMultiTexCoord1.xy;
-    if(glstate_lightmapUV == 0.0)
+#ifdef USE_LIGHTMAP
+    highp vec2 beforelightUV = uv2.xy;
+    if(lightMapUV == 0.0)
     {
-        beforelightUV = _glesMultiTexCoord0.xy;
+        beforelightUV = uv.xy;
     }
-    highp float u = beforelightUV.x * glstate_lightmapOffset.x + glstate_lightmapOffset.z;
-    highp float v = 1.0 - ((1.0 - beforelightUV.y) * glstate_lightmapOffset.y + glstate_lightmapOffset.w);
+    highp float u = beforelightUV.x * lightMapOffset.x + lightMapOffset.z;
+    highp float v = 1.0 - ((1.0 - beforelightUV.y) * lightMapOffset.y + lightMapOffset.w);
     xlv_TEXCOORD1 = vec2(u,v);
 #endif

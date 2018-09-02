@@ -13,7 +13,7 @@ namespace paper {
             }
 
             if (
-                this._isEditorUpdate() &&
+                Application.playerMode === PlayerMode.Editor &&
                 !(component.constructor as ComponentClass<Behaviour>).executeInEditMode
             ) {
                 return;

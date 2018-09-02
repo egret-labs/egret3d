@@ -5,7 +5,7 @@ namespace egret3d {
      */
     export type DrawCall = {
         renderer: paper.BaseRenderer,
-        matrix?: Matrix,
+        matrix?: Matrix4,
 
         subMeshIndex: number,
         mesh: Mesh,
@@ -81,7 +81,7 @@ namespace egret3d {
                 const drawTarget = drawCall.renderer.gameObject;
                 const visible = (camera.cullingMask & drawTarget.layer) !== 0;
                 if (visible && drawCall.renderer.castShadows) {
-                    if (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.transform))) {
+                    if (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer))) {
                         this.shadowCalls.push(drawCall);
                     }
                 }
@@ -97,12 +97,12 @@ namespace egret3d {
             //
             for (const drawCall of this.drawCalls) {
                 const drawTarget = drawCall.renderer.gameObject;
-                const visible = ((camera.cullingMask & drawTarget.layer) !== 0 && (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.transform))));
+                const visible = ((camera.cullingMask & drawTarget.layer) !== 0 && (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer))));
                 //裁切没通过
                 if (visible) {
                     const objPos = drawTarget.transform.getPosition();
                     drawCall.zdist = objPos.getDistance(cameraPos);
-                    if (drawCall.material.renderQueue >= RenderQueue.Transparent && drawCall.material.renderQueue < RenderQueue.Overlay) {
+                    if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue < paper.RenderQueue.Overlay) {
                         this.transparentCalls.push(drawCall);
                     }
                     else {

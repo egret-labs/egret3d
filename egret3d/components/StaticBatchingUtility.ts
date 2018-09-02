@@ -2,9 +2,9 @@ namespace egret3d {
     //最大允许合并的顶点数，超过就是下一批次
     export const MAX_VERTEX_COUNT_PER_BUFFER: number = 50000;
     //
-    const helpVec3_1: Vector3 = new Vector3();
-    const helpVec3_2: Vector3 = new Vector3();
-    const helpInverseMatrix: Matrix = new Matrix();
+    const helpVec3_1 = Vector3.create();
+    const helpVec3_2 = Vector3.create();
+    const helpInverseMatrix = Matrix4.create();
     //缓存已经校验过的对象，用于过滤
     const cacheInstances: string[] = [];
 
@@ -136,7 +136,7 @@ namespace egret3d {
      */
     function _combineMesh(combineInstance: CombineInstance): Mesh {
         //
-        egret3d.Matrix.inverse(combineInstance.root.transform.getWorldMatrix(), helpInverseMatrix);
+        helpInverseMatrix.inverse(combineInstance.root.transform.getWorldMatrix());
 
         const meshAttribute = combineInstance.meshAttribute;
         const lightmapScaleOffset = combineInstance.lightmapScaleOffset;
@@ -174,8 +174,8 @@ namespace egret3d {
                         helpVec3_1.y = positionBuffer[j + 1];
                         helpVec3_1.z = positionBuffer[j + 2];
                         //转换成世界坐标后在转换为合并节点的本地坐标
-                        egret3d.Matrix.transformVector3(helpVec3_1, worldMatrix, helpVec3_2);
-                        egret3d.Matrix.transformVector3(helpVec3_2, helpInverseMatrix, helpVec3_1);
+                        worldMatrix.transformVector3(helpVec3_1, helpVec3_2);
+                        helpInverseMatrix.transformVector3(helpVec3_2, helpVec3_1);
                         //
                         tempVertexBuffers[gltf.MeshAttributeType.POSITION].push(helpVec3_1.x, helpVec3_1.y, helpVec3_1.z);
                     }
@@ -248,20 +248,27 @@ namespace egret3d {
                     }
                     if (meshAttribute[gltf.MeshAttributeType.TEXCOORD_1]) {
                         if (combineInstance.lightmapIndex >= 0) {
-                            //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
-                            const uvBuffer = orginAttributes.TEXCOORD_1 ?
-                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) as Float32Array :
-                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0!)) as Float32Array;
-                            //
-                            for (let j = 0; j < uvBuffer.length; j += 2) {
-                                let u = uvBuffer[j + 0];
-                                let v = uvBuffer[j + 1];
-                                u = ((u * orginLightmapScaleOffset[0] + orginLightmapScaleOffset[2]) - lightmapScaleOffset[2]) / lightmapScaleOffset[0];
-                                v = ((v * orginLightmapScaleOffset[1] - orginLightmapScaleOffset[1] - orginLightmapScaleOffset[3]) + lightmapScaleOffset[3] + lightmapScaleOffset[1]) / lightmapScaleOffset[1];
+                            // //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
+                            // const uvBuffer = orginAttributes.TEXCOORD_1 ?
+                            //     mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) as Float32Array :
+                            //     mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0!)) as Float32Array;
+                            // //
+                            // for (let j = 0; j < uvBuffer.length; j += 2) {
+                            //     let u = uvBuffer[j + 0];
+                            //     let v = uvBuffer[j + 1];
+                            //     // u = ((u * orginLightmapScaleOffset[0] + orginLightmapScaleOffset[2]) - lightmapScaleOffset[2]) / lightmapScaleOffset[0];
+                            //     // v = ((v * orginLightmapScaleOffset[1] - orginLightmapScaleOffset[1] - orginLightmapScaleOffset[3]) + lightmapScaleOffset[3] + lightmapScaleOffset[1]) / lightmapScaleOffset[1];
 
-                                tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
+                            //     tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
+                            // }
+                            if (orginAttributes.TEXCOORD_1){
+                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
                             }
-                        } else {
+                            else{
+                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                            }                            
+                        }
+                        else {
                             if (orginAttributes.TEXCOORD_1) {
                                 _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
                             } else {
@@ -330,9 +337,9 @@ namespace egret3d {
         let indicesCount = 0;
         for (let i = 0; i < tempIndexBuffers.length; i++) {
             const subLen = tempIndexBuffers[i].length;
-                //第一个submesh在构造函数中已经添加，需要手动添加后续的
-                combineMesh.addSubMesh(indicesCount, subLen, i);
-            
+            //第一个submesh在构造函数中已经添加，需要手动添加后续的
+            combineMesh.addSubMesh(indicesCount, subLen, i);
+
             indicesCount += subLen;
         }
 

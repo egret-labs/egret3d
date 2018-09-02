@@ -1,40 +1,38 @@
 namespace paper {
     /**
-     * 
-     */
-    export class BaseObjectAsset extends Asset {
-        protected _raw: ISerializedData = null as any;
-        /**
-         * @internal
-         */
-        $parse(json: ISerializedData) {
-            this._raw = json;
-        }
-
-        public dispose() {
-            if (this._isBuiltin) {
-                return;
-            }
-
-            this._raw = null as any;
-        }
-
-        public caclByteLength() {
-            return 0;
-        }
-    }
-
-    /**
      * 预制体资源。
      */
     export class Prefab extends BaseObjectAsset {
         /**
          * 
          */
-        public static create(name: string, scene: Scene | null = null,keepUUID: boolean = false) {
+        public static create(name: string): GameObject | null;
+        public static create(name: string, x: number, y: number, z: number): GameObject | null;
+        public static create(name: string, scene: Scene): GameObject | null;
+        public static create(name: string, x: number, y: number, z: number, scene: Scene): GameObject | null;
+        public static create(name: string, xOrScene?: number | Scene, y?: number, z?: number, scene?: Scene) {
             const prefab = paper.Asset.find<Prefab>(name);
             if (prefab) {
-                return prefab.createInstance(scene,keepUUID);
+                if (xOrScene !== undefined && xOrScene !== null) {
+                    if (xOrScene instanceof Scene) {
+                        const gameObject = prefab.createInstance(xOrScene);
+                        gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+
+                        return gameObject;
+                    }
+                    else {
+                        const gameObject = prefab.createInstance(scene || null);
+                        gameObject.transform.setLocalPosition(xOrScene, y!, z!);
+
+                        return gameObject;
+                    }
+                }
+                else {
+                    const gameObject = prefab.createInstance();
+                    gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+
+                    return gameObject;
+                }
             }
 
             return null;
@@ -43,17 +41,19 @@ namespace paper {
         /**
          * @deprecated
          */
-        public createInstance(scene: Scene | null = null, keepUUID: boolean = false) {
+        public createInstance(scene?: Scene | null, keepUUID?: boolean) {
             if (!this._raw) {
                 return null;
             }
 
-            const isEditor = Application.isEditor && !Application.isPlaying;
+            const isEditor = Application.playerMode === PlayerMode.Editor;
             const deserializer = new paper.Deserializer();
             const gameObject = deserializer.deserialize(this._raw, keepUUID, isEditor, scene) as GameObject | null;
 
             if (gameObject && isEditor) {
-                gameObject.extras!.prefab = this;
+                if (!gameObject.extras!.prefab) {
+                    gameObject.extras!.prefab = this;
+                }
             }
 
             return gameObject;

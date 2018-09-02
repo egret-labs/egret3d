@@ -1,11 +1,14 @@
 namespace egret3d {
-
-    const tmpVecA = new Vector3();
-    const tmpVecB = new Vector3();
-    const tmpVecC = new Vector3();
-    const tmpVecD = new Vector3();
-    const tmpVecE = new Vector3();
-
+    const _points = [
+        Vector3.create(),
+        Vector3.create(),
+        Vector3.create(),
+        Vector3.create(),
+        Vector3.create(),
+        Vector3.create(),
+        Vector3.create(),
+        Vector3.create(),
+    ];
     /**
      * aabb box
      * @version paper 1.0
@@ -18,285 +21,276 @@ namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    export class AABB {
-        /**
-         * min point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 最小点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public readonly minimum: Vector3 = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+    export class AABB implements paper.IRelease<AABB>, paper.ISerializable {
+        private static readonly _instances: AABB[] = [];
 
-        /**
-         * max point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 最大点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public readonly maximum: Vector3 = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+        public static create(minimum: Readonly<IVector3> | null = null, maximum: Readonly<IVector3> | null = null) {
+            if (this._instances.length > 0) {
+                return this._instances.pop()!.set(minimum, maximum);
+            }
 
-        private _dirtyCenter: boolean = true;
+            return new AABB().set(minimum, maximum);
+        }
+
+        public release() {
+            if (AABB._instances.indexOf(this) < 0) {
+                AABB._instances.push(this);
+            }
+
+            return this;
+        }
+
         private _dirtyRadius: boolean = true;
-
-        // TODO local bounding box 与 world bounding box 分离
-        private srcmin: Vector3 = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-        private srcmax: Vector3 = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-
+        private _dirtyCenter: boolean = true;
+        private _boundingSphereRadius: number = 0.0;
+        private readonly _minimum: Vector3 = Vector3.create(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+        private readonly _maximum: Vector3 = Vector3.create(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+        private readonly _center: Vector3 = Vector3.create();
         /**
-         * build a aabb
-         * @param minimum min point
-         * @param maximum max point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * 请使用 `egret3d.AABB.create()` 创建实例。
+         * @see egret3d.AABB.create()
          */
-        /**
-         * 构建轴对称包围盒
-         * @param minimum 最小点
-         * @param maximum 最大点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        constructor(minimum?: Vector3, maximum?: Vector3) {
-            if (minimum) {
-                Vector3.copy(minimum, this.srcmin);
-                Vector3.copy(minimum, this.minimum);
-            }
+        private constructor() { }
 
-            if (maximum) {
-                Vector3.copy(maximum, this.srcmax);
-                Vector3.copy(maximum, this.maximum);
-            }
+        public serialize() {
+            return [this._minimum.x, this._minimum.y, this._minimum.z, this._maximum.x, this._maximum.y, this._maximum.z];
         }
 
+        public deserialize(value: Readonly<[number, number, number, number, number, number]>) {
+            return this.fromArray(value);
+        }
+
+        public clone() {
+            return AABB.create(this.minimum, this.maximum);
+        }
+
+        public copy(value: Readonly<AABB>) {
+            return this.set(value.minimum, value.maximum);
+        }
+
+        public clear() {
+            this._minimum.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+            this._maximum.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+            this._dirtyCenter = true;
+            this._dirtyRadius = true;
+
+            return this;
+        }
         /**
-         * update
-         * @param worldmatrix world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * 
          */
-        /**
-         * 刷新轴对称包围盒
-         * @param worldmatrix 物体的世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public update(worldmatrix: Matrix) {
-            Matrix.getTranslation(worldmatrix, tmpVecA);
-            Matrix.getTranslation(worldmatrix, tmpVecB);
-            if (worldmatrix.rawData[0] > 0) {
-                tmpVecA.x += worldmatrix.rawData[0] * this.srcmin.x;
-                tmpVecB.x += worldmatrix.rawData[0] * this.srcmax.x;
-            } else {
-                tmpVecA.x += worldmatrix.rawData[0] * this.srcmax.x;
-                tmpVecB.x += worldmatrix.rawData[0] * this.srcmin.x;
-            }
-            if (worldmatrix.rawData[1] > 0) {
-                tmpVecA.y += worldmatrix.rawData[1] * this.srcmin.y;
-                tmpVecB.y += worldmatrix.rawData[1] * this.srcmax.y;
-            } else {
-                tmpVecA.y += worldmatrix.rawData[1] * this.srcmax.y;
-                tmpVecB.y += worldmatrix.rawData[1] * this.srcmin.y;
-            }
-            if (worldmatrix.rawData[2] > 0) {
-                tmpVecA.z += worldmatrix.rawData[2] * this.srcmin.z;
-                tmpVecB.z += worldmatrix.rawData[2] * this.srcmax.z;
-            } else {
-                tmpVecA.z += worldmatrix.rawData[2] * this.srcmax.z;
-                tmpVecB.z += worldmatrix.rawData[2] * this.srcmin.z;
-            }
-            if (worldmatrix.rawData[4] > 0) {
-                tmpVecA.x += worldmatrix.rawData[4] * this.srcmin.x;
-                tmpVecB.x += worldmatrix.rawData[4] * this.srcmax.x;
-            } else {
-                tmpVecA.x += worldmatrix.rawData[4] * this.srcmax.x;
-                tmpVecB.x += worldmatrix.rawData[4] * this.srcmin.x;
-            }
-            if (worldmatrix.rawData[5] > 0) {
-                tmpVecA.y += worldmatrix.rawData[5] * this.srcmin.y;
-                tmpVecB.y += worldmatrix.rawData[5] * this.srcmax.y;
-            } else {
-                tmpVecA.y += worldmatrix.rawData[5] * this.srcmax.y;
-                tmpVecB.y += worldmatrix.rawData[5] * this.srcmin.y;
-            }
-            if (worldmatrix.rawData[6] > 0) {
-                tmpVecA.z += worldmatrix.rawData[6] * this.srcmin.z;
-                tmpVecB.z += worldmatrix.rawData[6] * this.srcmax.z;
-            } else {
-                tmpVecA.z += worldmatrix.rawData[6] * this.srcmax.z;
-                tmpVecB.z += worldmatrix.rawData[6] * this.srcmin.z;
-            }
-            if (worldmatrix.rawData[8] > 0) {
-                tmpVecA.x += worldmatrix.rawData[8] * this.srcmin.x;
-                tmpVecB.x += worldmatrix.rawData[8] * this.srcmax.x;
-            } else {
-                tmpVecA.x += worldmatrix.rawData[8] * this.srcmax.x;
-                tmpVecB.x += worldmatrix.rawData[8] * this.srcmin.x;
-            }
-            if (worldmatrix.rawData[9] > 0) {
-                tmpVecA.y += worldmatrix.rawData[9] * this.srcmin.y;
-                tmpVecB.y += worldmatrix.rawData[9] * this.srcmax.y;
-            } else {
-                tmpVecA.y += worldmatrix.rawData[9] * this.srcmax.y;
-                tmpVecB.y += worldmatrix.rawData[9] * this.srcmin.y;
-            }
-            if (worldmatrix.rawData[10] > 0) {
-                tmpVecA.z += worldmatrix.rawData[10] * this.srcmin.z;
-                tmpVecB.z += worldmatrix.rawData[10] * this.srcmax.z;
-            } else {
-                tmpVecA.z += worldmatrix.rawData[10] * this.srcmax.z;
-                tmpVecB.z += worldmatrix.rawData[10] * this.srcmin.z;
+        public set(minimum: Readonly<IVector3> | null = null, maximum: Readonly<IVector3> | null = null) {
+            if (minimum && minimum !== this._minimum) {
+                this._minimum.copy(minimum);
             }
 
-            Vector3.copy(tmpVecA, this.minimum);
-            Vector3.copy(tmpVecB, this.maximum);
+            if (maximum && maximum !== this._maximum) {
+                this._maximum.copy(maximum);
+            }
 
             this._dirtyCenter = true;
             this._dirtyRadius = true;
+
+            return this;
         }
 
-        /**
-         * extend by a point
-         * @param vec a world point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 包含一个点
-         * @param vec 世界坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public addVector3(vec: Vector3) {
-            Vector3.max(this.maximum, vec, this.maximum);
-            Vector3.min(this.minimum, vec, this.minimum);
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+            this._minimum.fromArray(value, offset);
+            this._maximum.fromArray(value, offset + 3);
 
             this._dirtyCenter = true;
             this._dirtyRadius = true;
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public fromPoints(value: Readonly<ArrayLike<IVector3>>) {
+            this.clear();
+
+            for (const point of value as IVector3[]) {
+                this.add(point);
+            }
+
+            return this;
         }
 
+        public applyMatrix(value: Readonly<Matrix4>, source?: Readonly<AABB>) {
+            if (!source) {
+                source = this;
+            }
+
+            // transform of empty box is an empty box.
+            if (source.isEmpty) {
+                if (source !== this) {
+                    this.copy(source);
+                }
+
+                return this;
+            }
+
+            const min = source.minimum;
+            const max = source.maximum;
+
+            // NOTE: I am using a binary pattern to specify all 2^3 combinations below
+            _points[0].set(min.x, min.y, min.z).applyMatrix(value); // 000
+            _points[1].set(min.x, min.y, max.z).applyMatrix(value); // 001
+            _points[2].set(min.x, max.y, min.z).applyMatrix(value); // 010
+            _points[3].set(min.x, max.y, max.z).applyMatrix(value); // 011
+            _points[4].set(max.x, min.y, min.z).applyMatrix(value); // 100
+            _points[5].set(max.x, min.y, max.z).applyMatrix(value); // 101
+            _points[6].set(max.x, max.y, min.z).applyMatrix(value); // 110
+            _points[7].set(max.x, max.y, max.z).applyMatrix(value); // 111
+
+            this.fromPoints(_points);
+
+            return this;
+
+        }
+        /**
+         * 
+         */
+        public add(value: Readonly<IVector3 | AABB>, source?: Readonly<AABB>) {
+            if (!source) {
+                source = this;
+            }
+
+            const min = source.minimum;
+            const max = source.maximum;
+
+            if (value instanceof AABB) {
+                this._minimum.min(value._minimum, min);
+                this._maximum.max(value._maximum, max);
+            }
+            else {
+                this._minimum.min(value as IVector3, min);
+                this._maximum.max(value as IVector3, max);
+            }
+
+            this._dirtyRadius = true;
+            this._dirtyCenter = true;
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public expand(value: Readonly<IVector3> | number, source?: Readonly<AABB>) {
+            if (!source) {
+                source = this;
+            }
+
+            const min = source.minimum;
+            const max = source.maximum;
+
+            if (typeof value === "number") {
+                this._minimum.addScalar(-value, min);
+                this._maximum.addScalar(value, max);
+            }
+            else {
+                this._minimum.subtract(value as IVector3, min);
+                this._maximum.add(value as IVector3, max);
+            }
+
+            this._dirtyRadius = true;
+            this._dirtyCenter = true;
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public offset(value: number | Readonly<IVector3>, source?: Readonly<AABB>) {
+            if (!source) {
+                source = this;
+            }
+
+            const min = source.minimum;
+            const max = source.maximum;
+
+            if (typeof value === "number") {
+                this._minimum.addScalar(value, min);
+                this._maximum.addScalar(value, max);
+            }
+            else {
+                this._minimum.add(value, min);
+                this._maximum.add(value, max);
+            }
+
+            this._dirtyRadius = true;
+            this._dirtyCenter = true;
+
+            return this;
+        }
         /**
          * check contains vector
-         * @param vec a world point
+         * @param value a world point
          * @version paper 1.0
          * @platform Web
          * @language en_US
          */
         /**
          * 检查是否包含点
-         * @param vec 世界坐标
+         * @param value 世界坐标
          * @version paper 1.0
          * @platform Web
          * @language zh_CN
          */
-        public containsVector3(vec: Vector3): boolean {
-            return (vec.x > this.minimum.x) && (vec.x < this.maximum.x) &&
-                (vec.y > this.minimum.y) && (vec.x < this.maximum.y) &&
-                (vec.z > this.minimum.z) && (vec.z < this.maximum.z);
+        public contains(value: Readonly<IVector3 | AABB>) {
+            const min = this._minimum;
+            const max = this._maximum;
+
+            if (value instanceof AABB) {
+                const vMin = value.minimum;
+                const vMax = value.maximum;
+
+                return min.x <= vMin.x && vMax.x <= max.x &&
+                    min.y <= vMin.y && vMax.y <= max.y &&
+                    min.z <= vMin.z && vMax.z <= max.z;
+            }
+
+            return ((value as IVector3).x > min.x) && ((value as IVector3).x < max.x) &&
+                ((value as IVector3).y > min.y) && ((value as IVector3).x < max.y) &&
+                ((value as IVector3).z > min.z) && ((value as IVector3).z < max.z);
         }
 
-        /**
-         * intersect with aabb
-         * @param aabb aabb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 检查是否与aabb相交
-         * @param aabb 轴对称包围盒
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public intersectAABB(aabb: AABB): boolean {
-            if (this.minimum.x > aabb.maximum.x) return false;
-            if (this.maximum.x < aabb.minimum.x) return false;
-            if (this.minimum.x > aabb.maximum.x) return false;
-            if (this.maximum.x < aabb.minimum.x) return false;
-            if (this.minimum.x > aabb.maximum.x) return false;
-            if (this.maximum.x < aabb.minimum.x) return false;
-            return true;
+        public getDistance(value: Readonly<IVector3>) {
+            return helpVector3A.clamp(this._minimum, this._maximum, value).subtract(value).length;
         }
 
+        public clampPoints(value: Readonly<IVector3>, out: Vector3) {
+            return out.clamp(this._minimum, this._maximum, value);
+        }
+
+        public get isEmpty() {
+            // this is a more robust check for empty than ( volume <= 0 ) because volume can get positive with two negative axes
+            return (this._maximum.x < this._minimum.x) || (this._maximum.y < this._minimum.y) || (this._maximum.z < this._minimum.z);
+        }
+        /**
+         * Bounding sphere radius.
+         */
+        public get boundingSphereRadius() {
+            if (this._dirtyRadius) {
+                helpVector3A.subtract(this._maximum, this._minimum).multiplyScalar(0.5);
+                this._boundingSphereRadius = helpVector3A.length;
+                this._dirtyRadius = false;
+            }
+
+            return this._boundingSphereRadius;
+        }
         /**
          * 
-         * 用于视锥检测的计算，引擎内部使用
-         * 这里采用包围球式计算以提高性能
          */
-        public intersectPlane(v0: Vector3, v1: Vector3, v2: Vector3) {
-            let subV0 = tmpVecA;
-            let subV1 = tmpVecB;
-            let cross = tmpVecC;
-            let hitPoint = tmpVecD;
-            let distVec = tmpVecE;
-
-            let center = this.center;
-
-            Vector3.subtract(v1, v0, subV0);
-            Vector3.subtract(v2, v1, subV1);
-            Vector3.cross(subV0, subV1, cross);
-
-            calPlaneLineIntersectPoint(cross, v0, cross, center, hitPoint);
-
-            Vector3.subtract(hitPoint, center, distVec);
-
-            let val = Vector3.dot(cross, distVec);
-
-            if (val <= 0) {
-                return true;
-            }
-
-            let dist = Vector3.getDistance(center, hitPoint);
-
-            if (dist < this.radius) {
-                return true;
-            }
-
-            return false;
+        public get minimum(): Readonly<Vector3> {
+            return this._minimum;
         }
-
         /**
-         * extend by aabb
-         * @param aabb aabb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * 
          */
-        /**
-         * 包含一个aabb
-         * @param aabb 轴对称包围盒
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public addAABB(aabb: egret3d.AABB) {
-            Vector3.max(this.maximum, aabb.maximum, this.maximum);
-            Vector3.min(this.minimum, aabb.minimum, this.minimum);
-
-            this._dirtyCenter = true;
-            this._dirtyRadius = true;
+        public get maximum(): Readonly<Vector3> {
+            return this._maximum;
         }
-
-        private _center: Vector3 = new Vector3();
-
         /**
          * get center
          * @version paper 1.0
@@ -309,124 +303,15 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public get center(): Vector3 {
+        public get center(): Readonly<Vector3> {
             if (this._dirtyCenter) {
-                Vector3.add(this.maximum, this.minimum, this._center);
-                Vector3.scale(this._center, 0.5);
+                this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);
                 this._dirtyCenter = false;
             }
+
             return this._center;
         }
-
-        /**
-         * get bounding sphere radius
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取包围球的半径
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public get radius(): number {
-            if (this._dirtyRadius) {
-                Vector3.subtract(this.maximum, this.minimum, tmpVecA);
-                Vector3.scale(tmpVecA, 0.5);
-                this._dirtyRadius = false;
-            }
-            return Vector3.getLength(tmpVecA);
-        }
-
-        /**
-         * clear
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 清空
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public clear() {
-            Vector3.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, this.minimum);
-            Vector3.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, this.maximum);
-
-            this._dirtyCenter = true;
-            this._dirtyRadius = true;
-        }
-
-        /**
-         * clone
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 克隆
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public clone(): AABB {
-            let aabb: AABB = new egret3d.AABB(this.minimum, this.maximum);
-            return aabb;
-        }
-
-        /**
-         * copy
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 复制
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public copy(aabb: AABB): AABB {
-            Vector3.copy(aabb.minimum, this.minimum);
-            Vector3.copy(aabb.maximum, this.maximum);
-
-            this._dirtyCenter = true;
-            this._dirtyRadius = true;
-
-            return this;
-        }
-
-        /**
-         * get vectors
-         * @param vecs output vectors
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取包围盒顶点数据
-         * @param vecs 引用数组
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public getVec3(vecs: Vector3[]) {
-            vecs[0] = Vector3.copy(this.minimum, new Vector3());
-            vecs[1] = Vector3.copy(this.minimum, new Vector3());
-            vecs[1].z = this.maximum.z;
-            vecs[2] = Vector3.copy(this.minimum, new Vector3());
-            vecs[2].x = this.maximum.x;
-            vecs[3] = Vector3.copy(this.maximum, new Vector3());
-            vecs[3].y = this.minimum.y;
-            vecs[4] = Vector3.copy(this.minimum, new Vector3());
-            vecs[4].y = this.maximum.y;
-            vecs[5] = Vector3.copy(this.maximum, new Vector3());
-            vecs[5].x = this.minimum.x;
-            vecs[6] = Vector3.copy(this.maximum, new Vector3());
-            vecs[6].z = this.minimum.z;
-            vecs[7] = Vector3.copy(this.maximum, new Vector3());
-        }
     }
+
+    export const helpAABBA = AABB.create();
 }

@@ -1,85 +1,196 @@
 namespace egret3d {
-
-    const _helpVector3A = new Vector3();
-    const _helpVector3B = new Vector3();
-    const _helpVector3C = new Vector3();
-    const _helpVector3D = new Vector3();
-    const _helpVector3E = new Vector3();
-    const _helpVector3F = new Vector3();
-    const _helpVector3G = new Vector3();
-    const _helpVector3H = new Vector3();
-    const _helpVectors = [
-        _helpVector3A,
-        _helpVector3B,
-        _helpVector3C,
-        _helpVector3D,
-        _helpVector3E,
-        _helpVector3F,
-        _helpVector3G,
-        _helpVector3H,
-    ];
     let helpVec3_1: Vector3 = new Vector3();
-    let helpVec3_2: Vector3 = new Vector3();
-    let helpVec3_3: Vector3 = new Vector3();
-    let helpVec3_4: Vector3 = new Vector3();
-    let helpVec3_5: Vector3 = new Vector3();
-    const boxIndices = [
-        0, 1, 2, 3,
-        4, 5, 6, 7,
-        1, 3, 5, 7,
-        0, 2, 4, 6,
-        6, 2, 7, 3,
-        0, 4, 1, 5
-    ];
-
     /**
      * 射线
      */
-    export class Ray {
+    export class Ray implements paper.IRelease<Ray>, paper.ISerializable {
+
+        private static readonly _instances: Ray[] = [];
+
+        public static create(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.RIGHT) {
+            if (this._instances.length > 0) {
+                return this._instances.pop()!.set(origin, direction);
+            }
+
+            return new Ray().set(origin, direction);
+        }
+
+        public release() {
+            if (Ray._instances.indexOf(this) >= 0) {
+                Ray._instances.push(this);
+            }
+
+            return this;
+        }
 
         /**
          * 射线起始点
          */
-        public origin: Vector3;
-
+        public readonly origin: Vector3 = Vector3.create();
         /**
          * 射线的方向向量
          */
-        public direction: Vector3;
-
+        public readonly direction: Vector3 = Vector3.create();
         /**
-         * 构建一条射线
-         * @param origin 射线起点
-         * @param dir 射线方向
+         * 请使用 `egret3d.Ray.create()` 创建实例。
+         * @see egret3d.Ray.create()
          */
-        constructor(origin: Vector3, direction: Vector3) {
-            this.origin = Vector3.copy(origin, new Vector3());
-            this.direction = Vector3.copy(direction, new Vector3());
+        private constructor() { }
+
+        public serialize() {
+            return [this.origin.x, this.origin.y, this.origin.z, this.direction.x, this.direction.y, this.direction.z];
         }
 
+        public deserialize(value: Readonly<[number, number, number, number, number, number]>) {
+            return this.fromArray(value);
+        }
+
+        public copy(value: Readonly<Ray>) {
+            return this.set(value.origin, value.direction);
+        }
+
+        public clone() {
+            return Ray.create(this.origin, this.direction);
+        }
+
+        public set(origin: Readonly<IVector3>, direction: Readonly<IVector3>) {
+            this.origin.copy(origin);
+            this.direction.copy(direction);
+
+            return this;
+        }
+
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+            this.origin.fromArray(value);
+            this.direction.fromArray(value, 3);
+
+            return this;
+        }
+
+        public getSquaredDistance(value: Readonly<IVector3>): number {
+            const directionDistance = helpVector3A.subtract(value, this.origin).dot(this.direction);
+            // point behind the ray
+            if (directionDistance < 0.0) {
+                return this.origin.getSquaredDistance(value);
+            }
+
+            helpVector3A.multiplyScalar(directionDistance, this.direction).add(this.origin);
+
+            return helpVector3A.getSquaredDistance(value);
+        }
+
+        public getDistance(value: Readonly<IVector3>): number {
+            return Math.sqrt(this.getSquaredDistance(value));
+        }
+        /**
+         * 与三角形相交检测
+         */
+        public intersectTriangle(p1: Vector3, p2: Vector3, p3: Vector3, backfaceCulling: boolean = false): PickInfo | null {
+            // // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
+            // const edge1 = helpVector3A;
+            // const edge2 = helpVector3B;
+            // const diff = helpVector3C;
+            // const normal = helpVector3D;
+
+            // edge1.subtract(p2, p1);
+            // edge2.subtract(p3, p1);
+            // normal.cross(edge1, edge2);
+
+            // // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
+            // // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
+            // //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
+            // //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
+            // //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
+            // let DdN = this.direction.dot(normal);
+            // let sign = 1.0;
+
+            // if (DdN > 0.0) {
+            //     if (backfaceCulling) return null;
+            // }
+            // else if (DdN < 0.0) {
+            //     sign = -1.0;
+            //     DdN = -DdN;
+            // }
+            // else {
+            //     return null;
+            // }
+
+            // diff.subtract(this.origin, p1);
+            // const DdQxE2 = sign * this.direction.dot(edge2.cross(diff, edge2));
+            // // b1 < 0, no intersection
+            // if (DdQxE2 < 0.0) {
+            //     return null;
+            // }
+
+            // const DdE1xQ = sign * this.direction.dot(edge1.cross(diff));
+            // // b2 < 0, no intersection
+            // if (DdE1xQ < 0.0) {
+            //     return null;
+            // }
+            // // b1+b2 > 1, no intersection
+            // if (DdQxE2 + DdE1xQ > DdN) {
+            //     return null;
+            // }
+            // // Line intersects triangle, check if ray does.
+            // const QdN = - sign * diff.dot(normal);
+            // // t < 0, no intersection
+            // if (QdN < 0) {
+            //     return null;
+            // }
+
+            // const pickInfo = new PickInfo();
+            // pickInfo.distance = QdN / DdN;
+            // pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
+            // pickInfo.textureCoordA.x = DdQxE2;
+            // pickInfo.textureCoordA.y = DdE1xQ;
+
+            // return pickInfo;
+            // TODO
+            const edge1 = helpVector3A;
+            const edge2 = helpVector3B;
+            const pvec = helpVector3C;
+            const tvec = helpVector3D;
+            const qvec = helpVector3E;
+
+            edge1.subtract(p2, p1);
+            edge2.subtract(p3, p1);
+            pvec.cross(this.direction, edge2);
+
+            const det = pvec.dot(edge1);
+            if (det === 0.0) {
+                return null;
+            }
+
+            const invdet = 1.0 / det;
+
+            tvec.subtract(this.origin, p1);
+
+            const bu = pvec.dot(tvec) * invdet;
+            if (bu < 0.0 || bu > 1.0) {
+                return null;
+            }
+
+            qvec.cross(tvec, edge1);
+
+            const bv = qvec.dot(this.direction) * invdet;
+
+            if (bv < 0.0 || bu + bv > 1.0) {
+                return null;
+            }
+
+            const pickInfo = new PickInfo();
+            pickInfo.distance = qvec.dot(edge2) * invdet;
+            pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
+            pickInfo.textureCoordA.x = bu;
+            pickInfo.textureCoordA.y = bv;
+
+            return pickInfo;
+        }
         /**
          * 与aabb碰撞相交检测
          */
         public intersectAABB(aabb: AABB): boolean {
             return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
-        }
-
-        /**
-         * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param transform transform实例
-         */
-        public intersectPlaneTransform(transform: Transform): PickInfo {
-            let pickinfo = null;
-            let panelpoint = transform.getPosition();
-            let forward = helpVec3_1;
-            transform.getForward(forward);
-            let hitposition = this.intersectPlane(panelpoint, forward);
-            if (hitposition) {
-                pickinfo = new PickInfo();
-                pickinfo.hitposition = hitposition;
-                pickinfo.distance = Vector3.getDistance(pickinfo.hitposition, this.origin);
-            }
-            return pickinfo;
         }
 
         public intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3 {
@@ -103,6 +214,23 @@ namespace egret3d {
                 return new Vector3(m1 + v1 * t, m2 + v2 * t, m3 + v3 * t);
             }
         }
+        // /**
+        //  * 与transform表示的plane碰撞相交检测，主要用于2d检测
+        //  * @param transform transform实例
+        //  */
+        // public intersectPlaneTransform(transform: Transform): PickInfo {
+        //     let pickinfo = null;
+        //     let panelpoint = transform.getPosition();
+        //     let forward = helpVec3_1;
+        //     transform.getForward(forward);
+        //     let hitposition = this.intersectPlane(panelpoint, forward);
+        //     if (hitposition) {
+        //         pickinfo = new PickInfo();
+        //         pickinfo.hitposition = hitposition;
+        //         pickinfo.distance = Vector3.getDistance(pickinfo.hitposition, this.origin);
+        //     }
+        //     return pickinfo;
+        // }
 
         /**
          * 与最大最小点表示的box相交检测
@@ -198,7 +326,6 @@ namespace egret3d {
             }
             return true;
         }
-
         /**
          * 与球相交检测
          */
@@ -220,56 +347,6 @@ namespace egret3d {
 
             return true;
         }
-
-
-        /**
-         * 与三角形相交检测
-         */
-        public intersectsTriangle(vertex0: Vector3, vertex1: Vector3, vertex2: Vector3): PickInfo {
-            let _edge1 = helpVec3_1;
-            let _edge2 = helpVec3_2;
-            let _pvec = helpVec3_3;
-            let _tvec = helpVec3_4;
-            let _qvec = helpVec3_5;
-
-            Vector3.subtract(vertex1, vertex0, _edge1);
-            Vector3.subtract(vertex2, vertex0, _edge2);
-            Vector3.cross(this.direction, _edge2, _pvec);
-            let det = Vector3.dot(_edge1, _pvec);
-
-            if (det === 0) {
-                return null;
-            }
-
-            let invdet = 1 / det;
-
-            Vector3.subtract(this.origin, vertex0, _tvec);
-
-            let bu = Vector3.dot(_tvec, _pvec) * invdet;
-
-            if (bu < 0 || bu > 1.0) {
-                return null;
-            }
-
-            Vector3.cross(_tvec, _edge1, _qvec);
-
-            let bv = Vector3.dot(this.direction, _qvec) * invdet;
-
-            if (bv < 0 || bu + bv > 1.0) {
-                return null;
-            }
-
-            const pickInfo = new PickInfo();
-            pickInfo.distance = Vector3.dot(_edge2, _qvec) * invdet;
-            pickInfo.textureCoordA.x = bu;
-            pickInfo.textureCoordA.y = bv;
-
-            return pickInfo;
-        }
-
-
-
-
         /**
          * 获取射线拾取到的最近物体。
          */
@@ -323,7 +400,7 @@ namespace egret3d {
                 if (meshFilter) {
                     const mesh = meshFilter.mesh;
                     if (mesh) {
-                        const pickinfo = mesh.intersects(ray, transform.getWorldMatrix());
+                        const pickinfo = mesh.raycast(ray, transform.getWorldMatrix());
                         if (pickinfo) {
                             pickInfos.push(pickinfo);
                             pickinfo.transform = transform;
@@ -332,8 +409,8 @@ namespace egret3d {
                 }
                 else {
                     const skinmesh = transform.gameObject.getComponent(SkinnedMeshRenderer);
-                    if (skinmesh) {
-                        let pickinfo = skinmesh.intersects(ray);
+                    if (skinmesh && skinmesh.mesh) {
+                        const pickinfo = skinmesh.mesh.raycast(ray, transform.getWorldMatrix());
                         if (pickinfo) {
                             pickInfos.push(pickinfo);
                             pickinfo.transform = transform;

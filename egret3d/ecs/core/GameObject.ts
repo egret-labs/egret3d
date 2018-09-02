@@ -1,19 +1,35 @@
 namespace paper {
     /**
-     * 
-     */
-    export type GameObjectExtras = { linkedID?: string, prefabRootId?: string, prefab?: Prefab };
-    /**
      * 可以挂载Component的实体类。
      */
     export class GameObject extends BaseObject {
         /**
+         * @internal
+         */
+        public static readonly _instances: GameObject[] = [];
+        /**
          * 创建 GameObject，并添加到当前场景中。
          */
         public static create(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
-            const gameObect = new GameObject(name, tag, scene);
-            // gameObect.addComponent(egret3d.Transform);
+            let gameObect: GameObject;
+            // if (this._instances.length > 0) {
+            //     gameObect = this._instances.pop()!;
+
+            //     gameObect.name = name;
+            //     gameObect.tag = tag;
+            //     gameObect._addToScene(scene);
+            //     gameObect.addComponent(egret3d.Transform);
+            // }
+            // else {
+            gameObect = new GameObject(name, tag, scene);
+            // gameObect = new GameObject();
+            // }
+
+            // gameObect.name = name;
+            // gameObect.tag = tag;
             // gameObect._addToScene(Application.sceneManager.activeScene);
+            // gameObect.addComponent(egret3d.Transform);
+
             return gameObect;
         }
 
@@ -27,12 +43,13 @@ namespace paper {
          * 
          */
         @serializedField
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.HideFlags) })
         public hideFlags: HideFlags = HideFlags.None;
         /**
          * 层级
          */
         @serializedField
-        @deserializedIgnore // TODO remove
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.Layer) })
         public layer: Layer = Layer.Default;
         /**
          * 名称
@@ -44,6 +61,7 @@ namespace paper {
          * 标签
          */
         @serializedField
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.DefaultTags) })
         public tag: string = "";
         /**
          * 变换组件
@@ -57,7 +75,7 @@ namespace paper {
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @serializedField
-        public extras?: GameObjectExtras = Application.isEditor && !Application.isPlaying ? {} : undefined;
+        public extras?: GameObjectExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
         @serializedField
         private _activeSelf: boolean = true;
@@ -87,10 +105,7 @@ namespace paper {
         }
 
         private _destroy() {
-            const destroySystem = Application.systemManager.getSystem(DisableSystem);
-            if (destroySystem) {
-                destroySystem.bufferGameObject(this);
-            }
+            this._scene!._removeGameObject(this);
 
             for (const child of this.transform.children) {
                 child.gameObject._destroy();
@@ -104,12 +119,27 @@ namespace paper {
                 this._removeComponent(component, null);
             }
 
-            this.transform = null as any;
+            DisposeCollecter.getInstance(DisposeCollecter).gameObjects.push(this);
+
+            this.isStatic = false;
+            this.hideFlags = HideFlags.None;
+            this.layer = Layer.Default;
+            this.name = "";
+            this.tag = "";
+            this.transform = null!;
             this.renderer = null;
 
+            if (this.extras) { // Editor.
+                this.extras = {};
+            }
+
+            this._activeSelf = true;
+            this._activeInHierarchy = true;
+            this._activeDirty = true;
+
             this._components.length = 0;
-            this._scene!._removeGameObject(this);
-            this._scene = null as any;
+            this._cachedComponents.length = 0;
+            this._scene = null;
         }
 
         private _addToScene(value: Scene): any {
@@ -154,10 +184,7 @@ namespace paper {
                 this.renderer = null;
             }
 
-            const destroySystem = Application.systemManager.getSystem(DisableSystem);
-            if (destroySystem) {
-                destroySystem.bufferComponent(value);
-            }
+            DisposeCollecter.getInstance(DisposeCollecter).components.push(value);
 
             if (groupComponent) {
                 groupComponent._removeComponent(value);
@@ -264,6 +291,11 @@ namespace paper {
          */
         public addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T {
             registerClass(componentClass);
+            // SingletonComponent.
+            if (componentClass.__isSingleton && this !== Application.sceneManager.globalGameObject) {
+                return Application.sceneManager.globalGameObject.getOrAddComponent(componentClass, config);
+            }
+
             const componentIndex = componentClass.__index;
             const existedComponent = this._components[componentIndex];
             // disallowMultipleComponents.
@@ -631,6 +663,7 @@ namespace paper {
         /**
          * 当前GameObject对象自身激活状态
          */
+        @editor.property(editor.EditType.CHECKBOX)
         public get activeSelf() {
             return this._activeSelf;
         }
@@ -723,7 +756,12 @@ namespace paper {
         public get scene() {
             return this._scene!;
         }
-
+        /**
+         * 
+         */
+        public get globalGameObject() {
+            return Application.sceneManager.globalGameObject;
+        }
         /**
          * @deprecated
          * @see paper.Scene#find()

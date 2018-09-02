@@ -1,26 +1,102 @@
 declare namespace paper {
     /**
-     * 通过装饰器标记序列化属性。
+     *
      */
-    function serializedField(classPrototype: any, key: string): void;
+    interface IUUID {
+        /**
+         *
+         */
+        readonly uuid: string;
+    }
     /**
-     * 通过装饰器标记反序列化时需要忽略的属性。
+     *
      */
-    function deserializedIgnore(classPrototype: any, key: string): void;
+    interface IAssetReference {
+        /**
+         *
+         */
+        readonly asset: number;
+    }
     /**
-     * 通过装饰器标记组件是否允许在同一实体上添加多个实例。
+     *
      */
-    function allowMultiple(componentClass: ComponentClass<BaseComponent>): void;
+    interface IClass {
+        /**
+         *
+         */
+        readonly class: string;
+    }
     /**
-     * 通过装饰器标记组件依赖的其他组件。
+     *
      */
-    function requireComponent(requireComponentClass: ComponentClass<BaseComponent>): (componentClass: ComponentClass<BaseComponent>) => void;
+    interface IRelease<T extends IRelease<T>> {
+        /**
+         *
+         */
+        release(): T;
+        /**
+         *
+         */
+        clone(): T;
+        /**
+         *
+         */
+        copy(value: Readonly<T>): T;
+        /**
+         *
+         */
+        set(...args: any[]): T;
+    }
     /**
-     * 通过装饰器标记组件是否在编辑模式拥有生命周期。
+     *
      */
-    function executeInEditMode(componentClass: ComponentClass<Behaviour>): void;
-}
-declare namespace paper {
+    interface ISerializedObject extends IUUID, IClass {
+        [key: string]: any | IUUID | IAssetReference;
+    }
+    /**
+     *
+     */
+    interface ISerializedStruct extends IClass {
+        [key: string]: any | IUUID | IAssetReference;
+    }
+    /**
+     * 序列化数据接口。
+     */
+    interface ISerializedData {
+        /**
+         *
+         */
+        version?: number;
+        /**
+         *
+         */
+        compatibleVersion?: number;
+        /**
+         * 所有资源。
+         */
+        readonly assets?: string[];
+        /**
+         * 所有实体。（至多含一个场景）
+         */
+        readonly objects?: ISerializedObject[];
+        /**
+         * 所有组件。
+         */
+        readonly components?: ISerializedObject[];
+    }
+    /**
+     * 自定义序列化接口。
+     */
+    interface ISerializable {
+        /**
+         *
+         */
+        serialize(): any;
+        /**
+         *
+         */
+        deserialize(element: any, data?: Deserializer): any;
+    }
     /**
      *
      */
@@ -28,11 +104,13 @@ declare namespace paper {
         /**
          * @internal
          */
-        __serializeKeys?: string[];
+        __deserializeIgnore?: string[];
         /**
          * @internal
          */
-        __deserializeIgnore?: string[];
+        __serializeKeys?: {
+            [key: string]: string | null;
+        };
         /**
          * @internal
          */
@@ -40,210 +118,16 @@ declare namespace paper {
         /**
          * @internal
          */
-        readonly __onRegister: (baseClass: BaseClass) => void;
+        readonly __onRegister: () => boolean;
     }
     /**
-     * 生成 uuid 的方式。
-     * @internal
+     *
      */
-    let createUUID: () => string;
-    /**
-     * @internal
-     */
-    function registerClass(baseClass: BaseClass): void;
-    /**
-     * 基础对象。
-     */
-    abstract class BaseObject implements IUUID {
-        /**
-         * @internal
-         */
-        static __serializeKeys?: string[];
-        /**
-         * @internal
-         */
-        static __deserializeIgnore?: string[];
-        /**
-         * @internal
-         */
-        static __owner?: BaseClass;
-        /**
-         * @internal
-         */
-        static __onRegister(baseClass: BaseClass): void;
-        /**
-         *
-         */
-        uuid: string;
-    }
-}
-declare namespace paper {
-    /**
-     * Base Class for Asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 资源基类，扩展资源类型需要继承此抽象类
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    abstract class Asset extends BaseObject {
-        /**
-         * @deprecated
-         */
-        private static readonly _assets;
-        /**
-         * @deprecated
-         */
-        static register(asset: Asset): void;
-        /**
-         * @deprecated
-         */
-        static find<T extends Asset>(name: string): T;
-        /**
-         *
-         */
-        name: string;
-        /**
-         * @internal
-         */
-        _isBuiltin: boolean;
-        constructor(name?: string);
-        /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        abstract caclByteLength(): number;
-        /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        abstract dispose(): void;
-    }
-}
-declare namespace egret3d {
-    interface IVector3 {
-        x: number;
-        y: number;
-        z: number;
-    }
-    class Vector3 implements IVector3, paper.ISerializable {
-        static readonly ZERO: Readonly<Vector3>;
-        static readonly ONE: Readonly<Vector3>;
-        static readonly UP: Readonly<Vector3>;
-        static readonly DOWN: Readonly<Vector3>;
-        static readonly LEFT: Readonly<Vector3>;
-        static readonly RIGHT: Readonly<Vector3>;
-        static readonly FORWARD: Readonly<Vector3>;
-        static readonly BACK: Readonly<Vector3>;
-        private static readonly _instances;
-        static create(x?: number, y?: number, z?: number): Vector3;
-        static release(value: Vector3): void;
-        static subtract(v1: Readonly<IVector3>, v2: Readonly<IVector3>, out: IVector3): IVector3;
-        static getSqrLength(v: Readonly<IVector3>): number;
-        static getLength(v: Readonly<IVector3>): number;
-        static getDistance(a: Readonly<IVector3>, b: Readonly<IVector3>): number;
-        x: number;
-        y: number;
-        z: number;
-        constructor(x?: number, y?: number, z?: number);
-        serialize(): number[];
-        deserialize(element: Readonly<[number, number, number]>): this;
-        copy(value: Readonly<IVector3>): this;
-        clone(): Vector3;
-        set(x?: number, y?: number, z?: number): this;
-        normalize(): this;
-        scale(scale: number): this;
-        add(value: Readonly<IVector3>): this;
-        subtract(value: Readonly<IVector3>): this;
-        multiply(value: Readonly<IVector3>): this;
-        cross(rhs: Readonly<IVector3>): this;
-        dot(value: Readonly<IVector3>): number;
-        min(v1: Readonly<IVector3>, v2: Readonly<IVector3>): this;
-        max(v1: Readonly<IVector3>, v2: Readonly<IVector3>): this;
-        lerp(v1: Readonly<IVector3>, v2: Readonly<IVector3>, v: number): this;
-        equal(value: Readonly<IVector3>, threshold?: number): boolean;
-        getDistance(value: Readonly<IVector3>): number;
-        readonly length: number;
-        readonly sqrtLength: number;
-        /**
-         * @deprecated
-         */
-        static set(x: number, y: number, z: number, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static normalize(v: IVector3): IVector3;
-        /**
-         * @deprecated
-         */
-        static copy(v: Vector3, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static add(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static multiply(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static scale(v: Vector3, scale: number): Vector3;
-        /**
-         * @deprecated
-         */
-        static cross(lhs: IVector3, rhs: IVector3, out: IVector3): IVector3;
-        /**
-         * @deprecated
-         */
-        static dot(v1: Vector3, v2: Vector3): number;
-        /**
-         * @deprecated
-         */
-        static min(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static max(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static lerp(v1: Vector3, v2: Vector3, v: number, out: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        static equal(v1: Vector3, v2: Vector3, threshold?: number): boolean;
-    }
-    const helpVector3A: Vector3;
-    const helpVector3B: Vector3;
-    const helpVector3C: Vector3;
-    const helpVector3D: Vector3;
-    const helpVector3E: Vector3;
-    const helpVector3F: Vector3;
-    const helpVector3G: Vector3;
-    const helpVector3H: Vector3;
-}
-declare namespace paper {
+    type GameObjectExtras = {
+        linkedID?: string;
+        rootID?: string;
+        prefab?: Prefab;
+    };
     /**
      *
      */
@@ -275,150 +159,33 @@ declare namespace paper {
     type ComponentExtras = {
         linkedID?: string;
     };
-    /**
-     * 组件基类
-     */
-    abstract class BaseComponent extends BaseObject {
-        /**
-         * 是否在编辑模式拥有生命周期。
-         */
-        static executeInEditMode: boolean;
-        /**
-         * 是否允许在同一实体上添加多个实例。
-         */
-        static allowMultiple: boolean;
-        /**
-         * 依赖的其他组件。
-         */
-        static requireComponents: ComponentClass<BaseComponent>[] | null;
-        /**
-         * @internal
-         */
-        static readonly __isSingleton: boolean;
-        /**
-         * @internal
-         */
-        static __index: number;
-        private static readonly _componentClasses;
-        private static _createEnabled;
-        /**
-         * @internal
-         */
-        static __onRegister(componentClass: ComponentClass<BaseComponent>): void;
-        /**
-         * @internal
-         */
-        static create<T extends BaseComponent>(componentClass: ComponentClass<T>, gameObject: GameObject): T;
-        /**
-         * 组件挂载的 GameObject
-         */
-        readonly gameObject: GameObject;
-        /**
-         * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
-         */
-        extras?: ComponentExtras;
-        protected _enabled: boolean;
-        /**
-         * 禁止实例化组件。
-         * @protected
-         */
-        constructor();
-        /**
-         * 添加组件后，组件内部初始化。
-         * - 重载此方法时，必须调用 `super.initialize()`。
-         */
-        initialize(config?: any): void;
-        /**
-         * 移除组件后，组件内部卸载。
-         * - 重载此方法时，必须调用 `super.uninitialize()`。
-         */
-        uninitialize(): void;
-        /**
-         *
-         */
-        readonly isDestroyed: boolean;
-        /**
-         * 组件的激活状态。
-         */
-        enabled: boolean;
-        /**
-         * 组件在场景的激活状态。
-         */
-        readonly isActiveAndEnabled: boolean;
-    }
 }
 declare namespace paper {
     /**
-     *
+     * @internal
      */
-    class BaseObjectAsset extends Asset {
-        protected _raw: ISerializedData;
-        /**
-         * @internal
-         */
-        $parse(json: ISerializedData): void;
-        dispose(): void;
-        caclByteLength(): number;
-    }
+    function registerClass(baseClass: BaseClass): void;
     /**
-     * 预制体资源。
+     * 通过装饰器标记序列化属性。
      */
-    class Prefab extends BaseObjectAsset {
-        /**
-         *
-         */
-        static create(name: string, scene?: Scene | null): GameObject;
-        /**
-         * @deprecated
-         */
-        createInstance(scene?: Scene | null, keepUUID?: boolean): GameObject;
-    }
-}
-declare namespace egret3d {
-    class Matrix {
-        private static readonly _instances;
-        static create(): Matrix;
-        static release(value: Matrix): void;
-        readonly rawData: Float32Array;
-        constructor(rawData?: Float32Array | null);
-        copy(value: Readonly<Matrix>): this;
-        clone(): Matrix;
-        set(n11: number, n21: number, n31: number, n41: number, n12: number, n22: number, n32: number, n42: number, n13: number, n23: number, n33: number, n43: number, n14: number, n24: number, n34: number, n44: number): this;
-        set3x3(n11: number, n21: number, n31: number, n12: number, n22: number, n32: number, n13: number, n23: number, n33: number): this;
-        setTranslation(translation: Readonly<Vector3>): this;
-        identity(): this;
-        inverse(): this;
-        transformVector3(value: Vector3): Vector3;
-        transformNormal(value: Vector3): Vector3;
-        static set(n11: number, n21: number, n31: number, n41: number, n12: number, n22: number, n32: number, n42: number, n13: number, n23: number, n33: number, n43: number, n14: number, n24: number, n34: number, n44: number, result: Matrix): Matrix;
-        static getScale(m: Matrix, out: Vector3): Vector3;
-        static getTranslation(m: Matrix, out: Vector3): Vector3;
-        static getQuaternion(m: Matrix, out: Quaternion): Quaternion;
-        static add(left: Matrix, right: Matrix, out: Matrix): Matrix;
-        static multiply(lhs: Matrix, rhs: Matrix, out: Matrix): Matrix;
-        static scale(scaler: number, m: Matrix): Matrix;
-        static transpose(m: Matrix, out: Matrix): Matrix;
-        static inverse(src: Matrix, out: Matrix): Matrix;
-        static decompose(m: Matrix, scale: Vector3, rotation: Quaternion, translation: Vector3): boolean;
-        static copy(m: Matrix, out: Matrix): Matrix;
-        static identify(m: Matrix): Matrix;
-        static zero(m: Matrix): Matrix;
-        static formScale(xScale: number, yScale: number, zScale: number, out: Matrix): Matrix;
-        static fromTranslate(x: number, y: number, z: number, out: Matrix): Matrix;
-        static fromRTS(p: Vector3, s: Vector3, q: Quaternion, out: Matrix): Matrix;
-        static getVector3ByOffset(src: Matrix, offset: number, result: Vector3): Vector3;
-        static transformVector3(vector: Vector3, transformMatrix: Matrix, result: Vector3): Vector3;
-        static transformNormal(vector: Vector3, transformMatrix: Matrix, result: Vector3): Vector3;
-        static lerp(left: Matrix, right: Matrix, v: number, out: Matrix): Matrix;
-        static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix): Matrix;
-        static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix): Matrix;
-        static toEulerAngles(matrix: Matrix, out: Vector3): Vector3;
-        static determinant(matrix: Matrix): number;
-    }
-    const helpMatrixA: Matrix;
-    const helpMatrixB: Matrix;
-    const helpMatrixC: Matrix;
-    const helpMatrixD: Matrix;
+    function serializedField(classPrototype: any, key: string): void;
+    function serializedField(key: string): Function;
+    /**
+     * 通过装饰器标记反序列化时需要忽略的属性。
+     */
+    function deserializedIgnore(classPrototype: any, key: string): void;
+    /**
+     * 通过装饰器标记组件是否允许在同一实体上添加多个实例。
+     */
+    function allowMultiple(componentClass: ComponentClass<BaseComponent>): void;
+    /**
+     * 通过装饰器标记组件依赖的其他组件。
+     */
+    function requireComponent(requireComponentClass: ComponentClass<BaseComponent>): (componentClass: ComponentClass<BaseComponent>) => void;
+    /**
+     * 通过装饰器标记组件是否在编辑模式拥有生命周期。
+     */
+    function executeInEditMode(componentClass: ComponentClass<Behaviour>): void;
 }
 declare namespace paper.editor {
     /**属性信息 */
@@ -469,21 +236,27 @@ declare namespace paper.editor {
         MATERIAL_ARRAY = 11,
         /**游戏对象 */
         GAMEOBJECT = 12,
-        /**变换 */
+        /**变换 TODO 不需要*/
         TRANSFROM = 13,
+        /**组件 */
+        COMPONENT = 14,
         /**声音 */
-        SOUND = 14,
+        SOUND = 15,
         /**Mesh */
-        MESH = 15,
+        MESH = 16,
         /**shader */
-        SHADER = 16,
+        SHADER = 17,
         /**数组 */
-        ARRAY = 17,
+        ARRAY = 18,
     }
     /**
      * 装饰器:自定义
      */
     function custom(): (target: any) => void;
+    /**
+     * 从枚举中生成装饰器列表项。
+     */
+    function getItemsFromEnum(enumObject: any): any[];
     /**
      * 装饰器:属性
      * @param editType 编辑类型
@@ -495,10 +268,15 @@ declare namespace paper.editor {
      */
     function isCustom(classInstance: any): boolean;
     /**
+   * 获取一个实例对象的编辑信息
+   * @param classInstance 实例对象
+   */
+    function getEditInfo(classInstance: any): any[];
+    /**
      * 获取一个实例对象的编辑信息
      * @param classInstance 实例对象
      */
-    function getEditInfo(classInstance: any): PropertyInfo[];
+    function getEditInfo2(classInstance: any): PropertyInfo[];
     function getEditInfoByPrototype(classInstance: any): PropertyInfo[];
     /**
      * 装饰器:属性
@@ -511,527 +289,371 @@ declare namespace paper.editor {
      */
     function getExtraInfo(classInstance: any): PropertyInfo[];
 }
+declare namespace paper {
+    /**
+     * 生成 uuid 的方式。
+     * @internal
+     */
+    let createUUID: () => string;
+    /**
+     * 基础对象。
+     */
+    abstract class BaseObject implements IUUID {
+        /**
+         * @internal
+         */
+        static __deserializeIgnore?: string[];
+        /**
+         * @internal
+         */
+        static __serializeKeys?: {
+            [key: string]: string | null;
+        };
+        /**
+         * @internal
+         */
+        static __owner?: BaseClass;
+        /**
+         * @internal
+         */
+        static __onRegister(): boolean;
+        /**
+         *
+         */
+        uuid: string;
+    }
+}
 declare namespace egret3d {
+    interface IVector3 {
+        x: number;
+        y: number;
+        z: number;
+    }
     /**
      *
      */
-    interface IRectangle {
-        x: number;
-        y: number;
-        w: number;
-        h: number;
+    const enum EulerOrder {
+        XYZ = 0,
+        XZY = 1,
+        YXZ = 2,
+        YZX = 3,
+        ZXY = 4,
+        ZYX = 5,
     }
     /**
-     * 矩形可序列化对象
+     *
      */
-    class Rectangle implements IRectangle, paper.ISerializable {
-        /**
-         *
-         */
+    class Vector3 implements IVector3, paper.IRelease<Vector3>, paper.ISerializable {
+        static readonly ZERO: Readonly<Vector3>;
+        static readonly ONE: Readonly<Vector3>;
+        static readonly UP: Readonly<Vector3>;
+        static readonly DOWN: Readonly<Vector3>;
+        static readonly LEFT: Readonly<Vector3>;
+        static readonly RIGHT: Readonly<Vector3>;
+        static readonly FORWARD: Readonly<Vector3>;
+        static readonly BACK: Readonly<Vector3>;
+        private static readonly _instances;
+        static create(x?: number, y?: number, z?: number): Vector3;
+        release(): this;
         x: number;
-        /**
-         *
-         */
         y: number;
+        z: number;
         /**
-         *
+         * 请使用 `egret3d.Vector3.create()` 创建实例。
+         * @see egret3d.Vector3.create()
+         * @deprecated
+         * @private
          */
-        w: number;
-        /**
-         *
-         */
-        h: number;
-        /**
-         *
-         */
-        constructor(x?: number, y?: number, w?: number, h?: number);
+        constructor(x?: number, y?: number, z?: number);
         serialize(): number[];
-        deserialize(element: number[]): this;
+        deserialize(value: Readonly<[number, number, number]>): this;
+        copy(value: Readonly<IVector3>): this;
+        clone(): Vector3;
+        equal(value: Readonly<IVector3>, threshold?: number): boolean;
+        set(x: number, y: number, z: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>): this;
+        applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
+        applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
+        applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>): this;
+        normalize(source?: Readonly<IVector3>): this;
+        negate(source?: Readonly<IVector3>): void;
+        addScalar(add: number, source?: Readonly<IVector3>): this;
+        add(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        subtract(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        multiplyScalar(scale: number, source?: Readonly<IVector3>): this;
+        multiply(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        dot(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
+        cross(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        lerp(t: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>): this;
+        getSquaredDistance(value: Readonly<IVector3>): number;
+        getDistance(value: Readonly<IVector3>): number;
+        closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>): this;
+        readonly length: number;
+        readonly squaredLength: number;
+        /**
+         * @deprecated
+         */
+        static set(x: number, y: number, z: number, out: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        static normalize(v: IVector3): IVector3;
+        /**
+         * @deprecated
+         */
+        static copy(v: Vector3, out: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        static add(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        static multiply(v1: Vector3, v2: Vector3, out: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        static scale(v: Vector3, scale: number): Vector3;
+        /**
+         * @deprecated
+         */
+        static cross(lhs: IVector3, rhs: IVector3, out: IVector3): IVector3;
+        /**
+         * @deprecated
+         */
+        static dot(v1: Vector3, v2: Vector3): number;
+        /**
+         * @deprecated
+         */
+        static lerp(v1: Vector3, v2: Vector3, v: number, out: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        static equal(v1: Vector3, v2: Vector3, threshold?: number): boolean;
+        /**
+         * @deprecated
+         */
+        static subtract(v1: Readonly<IVector3>, v2: Readonly<IVector3>, out: IVector3): IVector3;
+        /**
+         * @deprecated
+         */
+        static getSqrLength(v: Readonly<IVector3>): number;
+        /**
+         * @deprecated
+         */
+        static getLength(v: Readonly<IVector3>): number;
+        /**
+         * @deprecated
+         */
+        static getDistance(a: Readonly<IVector3>, b: Readonly<IVector3>): number;
+    }
+    const helpVector3A: Vector3;
+    const helpVector3B: Vector3;
+    const helpVector3C: Vector3;
+    const helpVector3D: Vector3;
+    const helpVector3E: Vector3;
+    const helpVector3F: Vector3;
+    const helpVector3G: Vector3;
+    const helpVector3H: Vector3;
+}
+declare namespace paper {
+    /**
+     * 组件基类
+     */
+    abstract class BaseComponent extends BaseObject {
+        /**
+         * 是否在编辑模式拥有生命周期。
+         */
+        static executeInEditMode: boolean;
+        /**
+         * 是否允许在同一实体上添加多个实例。
+         */
+        static allowMultiple: boolean;
+        /**
+         * 依赖的其他组件。
+         */
+        static requireComponents: ComponentClass<BaseComponent>[] | null;
+        /**
+         * @internal
+         */
+        static readonly __isSingleton: boolean;
+        /**
+         * @internal
+         */
+        static __index: number;
+        private static readonly _componentClasses;
+        private static _createEnabled;
+        /**
+         * @internal
+         */
+        static __onRegister(): boolean;
+        /**
+         * @internal
+         */
+        static create<T extends BaseComponent>(componentClass: ComponentClass<T>, gameObject: GameObject): T;
+        /**
+         * 组件挂载的 GameObject
+         */
+        readonly gameObject: GameObject;
+        /**
+         * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
+         */
+        extras?: ComponentExtras;
+        protected _enabled: boolean;
+        /**
+         * 禁止实例化组件。
+         * @protected
+         */
+        constructor();
+        /**
+         * 添加组件后，组件内部初始化。
+         * - 重载此方法时，必须调用 `super.initialize()`。
+         */
+        initialize(config?: any): void;
+        /**
+         * 移除组件后，组件内部卸载。
+         * - 重载此方法时，必须调用 `super.uninitialize()`。
+         */
+        uninitialize(): void;
+        /**
+         *
+         */
+        readonly isDestroyed: boolean;
+        /**
+         * 组件的激活状态。
+         */
+        enabled: boolean;
+        /**
+         * 组件在场景的激活状态。
+         */
+        readonly isActiveAndEnabled: boolean;
+        /**
+         *
+         */
+        readonly transform: egret3d.Transform;
     }
 }
 declare namespace paper {
-    const enum RendererEventType {
-        Materials = "materials",
-    }
     /**
-     * renderer component interface
+     * Base Class for Asset
      * @version paper 1.0
      * @platform Web
      * @language en_US
      */
     /**
-     * 渲染器组件接口
+     * 资源基类，扩展资源类型需要继承此抽象类
      * @version paper 1.0
      * @platform Web
      * @language zh_CN
      */
-    abstract class BaseRenderer extends BaseComponent {
-        protected _receiveShadows: boolean;
-        protected _castShadows: boolean;
-        protected _lightmapIndex: number;
-        protected readonly _lightmapScaleOffset: Float32Array;
-        receiveShadows: boolean;
-        castShadows: boolean;
-        lightmapIndex: number;
-        readonly lightmapScaleOffset: Float32Array;
-        setLightmapScaleOffset(scaleX: number, scaleY: number, offsetX: number, offsetY: number): void;
-    }
-}
-declare namespace paper {
-    /**
-     * 脚本组件。
-     * 生命周期的顺序。
-     * - onAwake();
-     * - onReset();
-     * - onEnable();
-     * - onStart();
-     * - onFixedUpdate();
-     * - onUpdate();
-     * - onLateUpdate();
-     * - onDisable();
-     * - onDestroy();
-     */
-    abstract class Behaviour extends BaseComponent {
+    abstract class Asset extends BaseObject {
         /**
          * @internal
          */
-        _isReseted: boolean;
+        static readonly _assets: {
+            [key: string]: Asset;
+        };
         /**
          * @internal
          */
-        _isStarted: boolean;
-        initialize(config?: any): void;
-        uninitialize(): void;
-        /**
-         * 组件被初始化时调用。
-         * @see paper.GameObject#addComponent()
-         */
-        onAwake?(config: any): void;
+        static register(asset: Asset): void;
         /**
          *
          */
-        onReset?(): void;
+        static find<T extends Asset>(name: string): T;
         /**
-         * 组件被激活或实体被激活时调用。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
+         * @readonly
          */
-        onEnable?(): void;
-        /**
-         * 组件开始运行时调用。
-         * - 在整个生命周期中只执行一次。
-         */
-        onStart?(): void;
-        /**
-         *
-         */
-        onFixedUpdate?(currentTimes: number, totalTimes: number): void;
-        /**
-         *
-         */
-        onTriggerEnter?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerStay?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerExit?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionEnter?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionStay?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionExit?(collider: any): void;
-        /**
-         *
-         */
-        onUpdate?(deltaTime: number): void;
-        /**
-         *
-         */
-        onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
-        /**
-         *
-         */
-        onLateUpdate?(deltaTime: number): void;
-        /**
-         * 组件被禁用或实体被禁用时调用。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
-         */
-        onDisable?(): void;
-        /**
-         * 组件被移除或实体被销毁时调用。
-         * @see paper.GameObject#removeComponent()
-         * @see paper.GameObject#destroy()
-         */
-        onDestroy?(): void;
-        /**
-         * @deprecated
-         */
-        onCollide(collider: any): void;
-    }
-}
-declare namespace paper {
-    /**
-     * 系统基类。
-     */
-    abstract class BaseSystem {
-        private static _createEnabled;
+        name: string;
         /**
          * @internal
          */
-        static create(systemClass: {
-            new (): BaseSystem;
-        }): BaseSystem;
+        _isBuiltin: boolean;
+        constructor(name?: string);
         /**
-         * @internal
+         * asset byte length
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        _started: boolean;
-        private _locked;
-        protected _enabled: boolean;
         /**
-         *
+         * 计算资源字节大小。
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        protected readonly _interests: ReadonlyArray<InterestConfig> | ReadonlyArray<ReadonlyArray<InterestConfig>>;
+        abstract caclByteLength(): number;
         /**
-         *
+         * dispose asset
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        protected readonly _groups: Group[];
         /**
-         *
+         * 释放资源。
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
          */
-        protected readonly _globalGameObject: GameObject;
-        /**
-         *
-         */
-        protected readonly _clock: Clock;
-        /**
-         * 禁止实例化系统。
-         * @protected
-         */
-        constructor();
-        /**
-         * TODO 宏定义。
-         * @internal
-         */
-        protected _isEditorUpdate(): boolean;
-        /**
-         * 系统内部初始化。
-         * @internal
-         */
-        initialize(): void;
-        /**
-         * 系统内部卸载。
-         * @internal
-         */
-        uninitialize(): void;
-        /**
-         * 系统内部更新。
-         * @internal
-         */
-        update(): void;
-        /**
-         * 系统内部更新。
-         * @internal
-         */
-        lateUpdate(): void;
-        /**
-         * 系统初始化时调用。
-         */
-        onAwake?(): void;
-        /**
-         * 系统被激活时调用。
-         * @see paper.BaseSystem#enabled
-         */
-        onEnable?(): void;
-        /**
-         * 系统开始运行时调用。
-         */
-        onStart?(): void;
-        /**
-         * 实体被添加到组时调用。
-         * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
-         * @see paper.GameObject#addComponent()
-         */
-        onAddGameObject?(gameObject: GameObject, group: Group): void;
-        /**
-         * 充分非必要组件添加到实体时调用。
-         * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
-         * @see paper.GameObject#addComponent()
-         */
-        onAddComponent?(component: BaseComponent, group: Group): void;
-        /**
-         * 充分非必要组件从实体移除时调用。
-         * @see paper.GameObject#removeComponent()
-         */
-        onRemoveComponent?(component: BaseComponent, group: Group): void;
-        /**
-         * 实体从系统移除时调用。
-         * @see paper.GameObject#removeComponent()
-         */
-        onRemoveGameObject?(gameObject: GameObject, group: Group): void;
-        /**
-         * 系统更新时调用。
-         */
-        onUpdate?(deltaTime?: number): void;
-        /**
-         *
-         */
-        onLateUpdate?(deltaTime?: number): void;
-        /**
-         * 系统被禁用时调用。
-         * @see paper.BaseSystem#enabled
-         */
-        onDisable?(): void;
-        /**
-         * 系统被注销时调用。
-         * @see paper.SystemManager#unregister()
-         * @see paper.Application#systemManager
-         */
-        onDestroy?(): void;
-        /**
-         * 该系统是否被激活。
-         */
-        enabled: boolean;
-        /**
-         *
-         */
-        readonly groups: ReadonlyArray<Group>;
+        dispose(disposeChildren?: boolean): boolean;
     }
 }
 declare namespace egret3d {
-    interface IVector2 {
-        x: number;
-        y: number;
+    interface IVector4 extends IVector3 {
+        w: number;
     }
-    class Vector2 implements IVector2, paper.ISerializable {
-        static readonly ZERO: Readonly<Vector2>;
-        static readonly ONE: Readonly<Vector2>;
-        x: number;
-        y: number;
-        constructor(x?: number, y?: number);
-        serialize(): number[];
-        deserialize(element: [number, number]): this;
-        copy(value: Readonly<IVector2>): this;
-        clone(): Vector2;
-        set(x: number, y: number): this;
-        normalize(): this;
-        readonly length: number;
-        readonly sqrtLength: number;
-        static set(x: number, y: number, out: Vector2): Vector2;
-        static normalize(v: Vector2): Vector2;
-        static add(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static subtract(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static multiply(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
-        static dot(v1: Vector2, v2: Vector2): number;
-        static scale(v: Vector2, scaler: number): Vector2;
-        static getLength(v: Vector2): number;
-        static getDistance(v1: Vector2, v2: Vector2): number;
-        static copy(v: Vector2, out: Vector2): Vector2;
-        static equal(v1: Vector2, v2: Vector2, threshold?: number): boolean;
-        static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2;
-    }
-}
-declare namespace paper {
-    /**
-     * 场景管理器
-     */
-    class SceneManager {
-        private static _instance;
-        static getInstance(): SceneManager;
-        private constructor();
-        /**
-         *
-         */
-        camerasScene: Scene | null;
-        /**
-         *
-         */
-        lightsScene: Scene | null;
-        private readonly _scenes;
-        private _globalScene;
-        private _editorScene;
-        private _globalGameObject;
-        /**
-         * @internal
-         */
-        _addScene(scene: Scene, isActive: boolean): void;
-        /**
-         * @internal
-         */
-        _removeScene(scene: Scene): boolean;
-        /**
-         * 卸载所有场景。
-         */
-        unloadAllScene(excludes?: ReadonlyArray<Scene>): void;
-        /**
-         *
-         */
-        getSceneByName(name: string): Scene;
-        /**
-         *
-         */
-        readonly scenes: ReadonlyArray<Scene>;
-        /**
-         *
-         */
-        readonly globalScene: Scene;
-        /**
-         * 当前激活的场景。
-         */
-        activeScene: Scene;
-        /**
-         *
-         */
-        readonly editorScene: Scene;
-        /**
-         *
-         */
-        readonly globalGameObject: GameObject;
-        /**
-         * @deprecated
-         */
-        createScene(name: string, isActive?: boolean): Scene;
-        /**
-         * @deprecated
-         */
-        loadScene(resourceName: string, combineStaticObjects?: boolean): Scene;
-        /**
-         * @deprecated
-         */
-        unloadScene(scene: Scene): void;
-        /**
-         * @deprecated
-         */
-        getActiveScene(): Scene;
-    }
-}
-declare namespace egret3d {
-    class Quaternion implements IVector4, paper.ISerializable {
+    class Vector4 implements IVector4, paper.IRelease<Vector4>, paper.ISerializable {
         private static readonly _instances;
-        static create(x?: number, y?: number, z?: number, w?: number): Quaternion;
-        static release(value: Quaternion): void;
+        /**
+         *
+         */
+        static create(x?: number, y?: number, z?: number, w?: number): Vector4;
+        release(): this;
         x: number;
         y: number;
         z: number;
         w: number;
+        /**
+         * 请使用 `egret3d.Quaternion.create()` 创建实例。
+         * @see egret3d.Quaternion.create()
+         * @deprecated
+         * @private
+         */
         constructor(x?: number, y?: number, z?: number, w?: number);
         serialize(): number[];
-        deserialize(element: Readonly<[number, number, number, number]>): this;
+        deserialize(value: Readonly<[number, number, number, number]>): this;
         copy(value: Readonly<IVector4>): this;
-        clone(): Quaternion;
-        set(x?: number, y?: number, z?: number, w?: number): this;
-        normalize(): this;
-        inverse(): this;
-        multiply(value: Readonly<IVector4>): this;
-        transformVector3(value: IVector3): IVector3;
-        /**
-         * @deprecated
-         */
-        static set(x: number, y: number, z: number, w: number, out: Quaternion): Quaternion;
-        static getMagnitude(src: Quaternion): number;
-        static fromYawPitchRoll(yaw: number, pitch: number, roll: number, out: Quaternion): Quaternion;
-        static fromEulerAngles(ax: number, ay: number, az: number, out: Quaternion): Quaternion;
-        static fromAxisAngle(axis: Vector3, angle: number, out: Quaternion): Quaternion;
-        static fromMatrix(matrix: Matrix, out: Quaternion): Quaternion;
-        static lookAt(pos: Vector3, target: Vector3, out: Quaternion): Quaternion;
-        static lookAtWithUp(pos: Vector3, target: Vector3, up: Vector3, out: Quaternion): Quaternion;
-        static multiply(q1: Quaternion, q2: Quaternion, out: Quaternion): Quaternion;
-        static normalize(out: Quaternion): Quaternion;
-        static copy(q: Quaternion, out: Quaternion): Quaternion;
-        static inverse(q: Quaternion, out: Quaternion): Quaternion;
-        static toEulerAngles(q: Quaternion, out: Vector3): Vector3;
-        static toMatrix(q: Quaternion, out: Matrix): Matrix;
-        static toAxisAngle(q: Quaternion, axis: Vector3): number;
-        static transformVector3(src: Quaternion, vector: Vector3, out: Vector3): Vector3;
-        static transformVector3ByQuaternionData(src: Float32Array, srcseek: number, vector: Vector3, out: Vector3): Vector3;
-        static multiplyByQuaternionData(srca: Float32Array, srcaseek: number, srcb: Quaternion, out: Quaternion): Quaternion;
-        static lerp(srca: Quaternion, srcb: Quaternion, out: Quaternion, t: number): Quaternion;
+        clone(): Vector4;
+        set(x: number, y: number, z: number, w: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        normalize(source?: Readonly<IVector4>): this;
+        readonly length: number;
+        readonly squaredLength: number;
     }
+    const helpVector4A: Vector4;
+    const helpVector4B: Vector4;
+    const helpVector4C: Vector4;
+    const helpVector4D: Vector4;
+    const helpVector4E: Vector4;
+    const helpVector4F: Vector4;
 }
 declare namespace paper {
     /**
-     * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
+     *
      */
-    class SystemManager {
-        private static _instance;
-        static getInstance(): SystemManager;
-        private constructor();
-        private readonly _systems;
-        private _currentSystem;
-        private _preRegister(systemClass);
-        /**
-         * 注册一个系统到管理器中。
-         */
-        register(systemClass: {
-            new (): BaseSystem;
-        }, after?: {
-            new (): BaseSystem;
-        } | null): void;
-        /**
-         * 注册一个系统到管理器中。
-         */
-        registerBefore(systemClass: {
-            new (): BaseSystem;
-        }, before?: {
-            new (): BaseSystem;
-        } | null): void;
-        /**
-         *
-         */
-        enableSystem(systemClass: {
-            new (): BaseSystem;
-        }): void;
-        /**
-         *
-         */
-        disableSystem(systemClass: {
-            new (): BaseSystem;
-        }): void;
-        /**
-         * 获取一个管理器中指定的系统实例。
-         */
-        getSystem<T extends BaseSystem>(systemClass: {
-            new (): T;
-        }): T;
+    class BaseObjectAsset extends Asset {
+        protected _raw: ISerializedData;
         /**
          * @internal
          */
-        update(): void;
-        /**
-         *
-         */
-        readonly systems: ReadonlyArray<BaseSystem>;
+        $parse(json: ISerializedData): void;
+        dispose(): boolean;
+        caclByteLength(): number;
     }
-}
-declare namespace egret3d {
-    class Color implements paper.ISerializable {
-        static readonly WHITE: Readonly<Color>;
-        static readonly BLACK: Readonly<Color>;
-        r: number;
-        g: number;
-        b: number;
-        a: number;
-        constructor(r?: number, g?: number, b?: number, a?: number);
-        serialize(): number[];
-        deserialize(element: Readonly<[number, number, number, number]>): this;
-        set(r?: number, g?: number, b?: number, a?: number): this;
-        static multiply(c1: Color, c2: Color, out: Color): Color;
-        static scale(c: Color, scaler: number): Color;
-        static copy(c: Color, out: Color): Color;
-        static lerp(c1: Color, c2: Color, value: number, out: Color): Color;
-    }
-}
-declare namespace paper {
     /**
      * scene asset
      * @version paper 1.0
@@ -1052,85 +674,132 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
-    class EventDispatcher {
-        private _eventMap;
-        addEventListener(type: string, listener: Function, thisObject: any): void;
-        removeEventListener(type: string, listener: Function, thisObject: any): void;
-        dispatchEvent(event: any): void;
-        private notifyListener(event);
-    }
-}
-declare namespace egret3d {
     /**
-     * Light Type Enum
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     *
      */
-    /**
-     * 灯光类型的枚举。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    const enum LightType {
+    class Matrix4 implements paper.IRelease<Matrix4>, paper.ISerializable {
+        private static readonly _instances;
         /**
-         * direction light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
+         * @param rawData
+         * @param offset
          */
-        /**
-         * 直射光
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Direction = 1,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 点光源
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Point = 2,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Spot = 3,
-    }
-    /**
-     * light component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 灯光组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    abstract class BaseLight extends paper.BaseComponent {
+        static create(rawData?: Readonly<ArrayLike<number>> | null, offset?: number): Matrix4;
         /**
          *
          */
-        readonly type: LightType;
+        release(): this;
+        /**
+         *
+         */
+        readonly rawData: Float32Array;
+        /**
+         * 请使用 `egret3d.Matrix4.create()` 创建实例。
+         * @see egret3d.Matrix4.create()
+         * @deprecated
+         * @private
+         */
+        constructor();
+        serialize(): Float32Array;
+        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
+        copy(value: Readonly<Matrix4>): this;
+        clone(): Matrix4;
+        identity(): this;
+        set(n11: number, n12: number, n13: number, n14: number, n21: number, n22: number, n23: number, n24: number, n31: number, n32: number, n33: number, n34: number, n41: number, n42: number, n43: number, n44: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays?: boolean): this;
+        fromRotation(rotation: Quaternion, translateStays?: boolean): this;
+        fromEuler(value: Readonly<IVector3>, order?: EulerOrder, translateStays?: boolean): this;
+        fromScale(x: number, y: number, z: number, translateStays?: boolean): this;
+        fromAxis(axis: Readonly<IVector3>, radian?: number): this;
+        fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>): this;
+        fromRotationX(radian: number): this;
+        fromRotationY(radian: number): this;
+        fromRotationZ(theta: any): this;
+        determinant(): number;
+        compose(translation: Vector3, rotation: Quaternion, scale: Vector3): this;
+        decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): this;
+        transpose(source?: Readonly<Matrix4>): this;
+        inverse(source?: Readonly<Matrix4>): this;
+        multiplyScalar(value: number, source?: Readonly<Matrix4>): void;
+        multiply(valueA: Matrix4, valueB?: Matrix4): this;
+        premultiply(value: Readonly<Matrix4>): this;
+        lerp(t: number, value: Matrix4, source?: Matrix4): this;
+        /**
+         * - 两点位置不重合。
+         * @param eye
+         * @param target
+         * @param up
+         */
+        lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): this;
+        getMaxScaleOnAxis(): number;
+        toEuler(value: Vector3, order?: EulerOrder): Vector3;
+        /**
+         * @deprecated
+         */
+        transformVector3(value: Vector3, out?: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        transformNormal(value: Vector3, out?: Vector3): Vector3;
+        /**
+         * @deprecated
+         */
+        scale(scaler: number): this;
+        /**
+         * @deprecated
+         */
+        add(left: Matrix4, right?: Matrix4): this;
+        /**
+         * @deprecated
+         */
+        static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix4): Matrix4;
+        /**
+         * @deprecated
+         */
+        static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4;
+    }
+    const helpMatrixA: Matrix4;
+    const helpMatrixB: Matrix4;
+    const helpMatrixC: Matrix4;
+    const helpMatrixD: Matrix4;
+}
+declare namespace paper {
+    const enum RendererEventType {
+        Materials = "materials",
+    }
+    /**
+     * renderer component interface
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 渲染器组件接口
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    abstract class BaseRenderer extends BaseComponent {
+        /**
+         * @internal
+         */
+        _boundingSphereDirty: boolean;
+        protected _receiveShadows: boolean;
+        protected _castShadows: boolean;
+        protected _lightmapIndex: number;
+        protected readonly _boundingSphere: egret3d.Sphere;
+        protected readonly _aabb: egret3d.AABB;
+        protected readonly _lightmapScaleOffset: Float32Array;
+        protected _recalculateSphere(): void;
+        /**
+         * 重新计算 AABB。
+         */
+        abstract recalculateAABB(): void;
+        /**
+         *
+         */
+        receiveShadows: boolean;
         /**
          *
          */
@@ -1138,92 +807,139 @@ declare namespace egret3d {
         /**
          *
          */
-        intensity: number;
+        lightmapIndex: number;
         /**
          *
          */
-        distance: number;
+        readonly aabb: Readonly<egret3d.AABB>;
         /**
          *
          */
-        decay: number;
+        readonly boundingSphere: Readonly<egret3d.Sphere>;
         /**
-         *
+         * TODO
          */
-        angle: number;
-        /**
-         *
-         */
-        penumbra: number;
-        /**
-         * spot angel cos
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯的开合角度cos值
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        spotAngelCos: number;
-        /**
-         *
-         */
-        shadowBias: number;
-        /**
-         *
-         */
-        shadowRadius: number;
-        /**
-         *
-         */
-        shadowSize: number;
-        /**
-         *
-         */
-        shadowCameraNear: number;
-        /**
-         *
-         */
-        shadowCameraFar: number;
-        /**
-         *
-         */
-        readonly color: Color;
-        readonly matrix: Matrix;
-        renderTarget: IRenderTarget;
-        protected _updateMatrix(camera: Camera): void;
-        /**
-         * @internal
-         */
-        update(camera: Camera, faceIndex: number): void;
+        readonly lightmapScaleOffset: Float32Array;
     }
 }
 declare namespace egret3d {
-    interface GLTFMaterial extends gltf.Material {
+    /**
+     * 射线
+     */
+    class Ray implements paper.IRelease<Ray>, paper.ISerializable {
+        private static readonly _instances;
+        static create(origin?: Readonly<IVector3>, direction?: Readonly<IVector3>): Ray;
+        release(): this;
+        /**
+         * 射线起始点
+         */
+        readonly origin: Vector3;
+        /**
+         * 射线的方向向量
+         */
+        readonly direction: Vector3;
+        /**
+         * 请使用 `egret3d.Ray.create()` 创建实例。
+         * @see egret3d.Ray.create()
+         */
+        private constructor();
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number, number, number]>): this;
+        copy(value: Readonly<Ray>): this;
+        clone(): Ray;
+        set(origin: Readonly<IVector3>, direction: Readonly<IVector3>): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        getSquaredDistance(value: Readonly<IVector3>): number;
+        getDistance(value: Readonly<IVector3>): number;
+        /**
+         * 与三角形相交检测
+         */
+        intersectTriangle(p1: Vector3, p2: Vector3, p3: Vector3, backfaceCulling?: boolean): PickInfo | null;
+        /**
+         * 与aabb碰撞相交检测
+         */
+        intersectAABB(aabb: AABB): boolean;
+        intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3;
+        /**
+         * 与最大最小点表示的box相交检测
+         * @param minimum 最小点
+         * @param maximum 最大点
+         * @version paper 1.0
+         */
+        intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean;
+        /**
+         * 与球相交检测
+         */
+        intersectsSphere(center: Vector3, radius: number): boolean;
+        /**
+         * 获取射线拾取到的最近物体。
+         */
+        static raycast(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo | null;
+        /**
+         * 获取射线路径上的所有物体。
+         */
+        static raycastAll(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo[] | null;
+        private static _doPick(ray, maxDistance, layerMask, pickAll?, isPickMesh?);
+        private static _pickMesh(ray, transform, pickInfos);
+        private static _pickCollider(ray, transform, pickInfos);
+    }
+    /**
+     * 场景拣选信息
+     */
+    class PickInfo {
+        subMeshIndex: number;
+        triangleIndex: number;
+        distance: number;
+        readonly position: Vector3;
+        readonly textureCoordA: Vector2;
+        readonly textureCoordB: Vector2;
+        transform: Transform | null;
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    interface GLTFTexture extends gltf.Texture {
         extensions: {
-            KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper?: {
-                renderQueue?: number;
+                mipmap?: boolean;
+                format?: 6407 | 6408 | 6409;
+                pixelSize?: number;
+                width?: number;
+                height?: number;
             };
         };
     }
-    interface GLTFEgret extends gltf.GLTF {
+    /**
+     *
+     */
+    interface GLTFMaterial extends gltf.Material {
+        extensions: {
+            KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
+            paper: {
+                renderQueue: number;
+                defines?: string[];
+                states?: gltf.States;
+            };
+        };
+    }
+    /**
+     *
+     */
+    interface GLTF extends gltf.GLTF {
         version: string;
         extensions: {
             KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
             paper?: {
                 shaders?: gltf.Shader[];
-                renderQueue?: number;
             };
         };
         extensionsUsed: string[];
         extensionsRequired: string[];
     }
     /**
-     * @private
+     *
      */
     interface GLTFAnimation extends gltf.Animation {
         extensions: {
@@ -1332,22 +1048,22 @@ declare namespace egret3d {
          */
         private static _createConfig();
         /**
-         *
+         * @internal
          */
         static parseFromBinary(array: Uint32Array): {
-            config: GLTFEgret;
+            config: GLTF;
             buffers: (Float32Array | Uint16Array | Uint32Array)[];
         };
         /**
          *
          */
-        static createMeshConfig(): GLTFEgret;
+        static createMeshConfig(): GLTF;
         /**
          *
          */
-        static createGLTFExtensionsConfig(): GLTFEgret;
-        static createShaderAsset(name: string): GLTFAsset;
+        static createGLTFExtensionsConfig(): GLTF;
         static createTechnique(source: gltf.Technique): gltf.Technique;
+        static copyTechniqueStates(source: gltf.States, target?: gltf.States): gltf.States;
         /**
          * Buffer 列表。
          */
@@ -1355,16 +1071,8 @@ declare namespace egret3d {
         /**
          * 配置。
          */
-        config: GLTFEgret;
-        /**
-         * @internal
-         */
-        parse(config: GLTFEgret, buffers?: Uint32Array[]): void;
-        /**
-         * @internal
-         */
-        initialize(): void;
-        dispose(): void;
+        config: GLTF;
+        dispose(): boolean;
         caclByteLength(): number;
         /**
          * 根据指定 BufferView 创建二进制数组。
@@ -1429,14 +1137,6 @@ declare namespace gltf {
         ElementArrayBuffer = 34963,
     }
     /**
-     *
-     */
-    const enum DrawMode {
-        Stream = 35040,
-        Static = 35044,
-        Dynamic = 35048,
-    }
-    /**
      * Component type.
      */
     const enum ComponentType {
@@ -1461,7 +1161,7 @@ declare namespace gltf {
      * The uniform type.  All valid values correspond to WebGL enums.
      */
     const enum UniformType {
-        Int = 5124,
+        INT = 5124,
         FLOAT = 5126,
         FLOAT_VEC2 = 35664,
         FLOAT_VEC3 = 35665,
@@ -1480,6 +1180,22 @@ declare namespace gltf {
         SAMPLER_CUBE = 35680,
     }
     /**
+     *
+     */
+    const enum DrawMode {
+        Stream = 35040,
+        Static = 35044,
+        Dynamic = 35048,
+    }
+    /**
+     *
+     */
+    const enum TextureFormat {
+        RGB = 6407,
+        RGBA = 6408,
+        LUMINANCE = 6409,
+    }
+    /**
      * The shader stage.  All valid values correspond to WebGL enums.
      */
     const enum ShaderStage {
@@ -1492,6 +1208,13 @@ declare namespace gltf {
         DEPTH_TEST = 2929,
         POLYGON_OFFSET_FILL = 32823,
         SAMPLE_ALPHA_TO_COVERAGE = 32926,
+    }
+    const enum BlendMode {
+        None = 0,
+        Blend = 1,
+        Blend_PreMultiply = 2,
+        Add = 3,
+        Add_PreMultiply = 4,
     }
     const enum BlendEquation {
         FUNC_ADD = 32774,
@@ -1543,17 +1266,29 @@ declare namespace gltf {
         COLOR_1 = "COLOR_1",
         JOINTS_0 = "JOINTS_0",
         WEIGHTS_0 = "WEIGHTS_0",
-        _CORNER = "CORNER",
-        _START_POSITION = "START_POSITION",
-        _START_VELOCITY = "START_VELOCITY",
-        _START_COLOR = "START_COLOR",
-        _START_SIZE = "START_SIZE",
-        _START_ROTATION = "START_ROTATION",
-        _TIME = "TIME",
-        _RANDOM0 = "RANDOM0",
-        _RANDOM1 = "RANDOM1",
-        _WORLD_POSITION = "WORLD_POSITION",
-        _WORLD_ROTATION = "WORLD_ROTATION",
+        MORPHTARGET_0 = "WEIGHTS_0",
+        MORPHTARGET_1 = "WEIGHTS_1",
+        MORPHTARGET_2 = "WEIGHTS_2",
+        MORPHTARGET_3 = "WEIGHTS_3",
+        MORPHTARGET_4 = "WEIGHTS_4",
+        MORPHTARGET_5 = "WEIGHTS_5",
+        MORPHTARGET_6 = "WEIGHTS_6",
+        MORPHTARGET_7 = "WEIGHTS_7",
+        MORPHNORMAL_0 = "MORPHNORMAL_0",
+        MORPHNORMAL_1 = "MORPHNORMAL_1",
+        MORPHNORMAL_2 = "MORPHNORMAL_2",
+        MORPHNORMAL_3 = "MORPHNORMAL_3",
+        _CORNER = "_CORNER",
+        _START_POSITION = "_START_POSITION",
+        _START_VELOCITY = "_START_VELOCITY",
+        _START_COLOR = "_START_COLOR",
+        _START_SIZE = "_START_SIZE",
+        _START_ROTATION = "_START_ROTATION",
+        _TIME = "_TIME",
+        _RANDOM0 = "_RANDOM0",
+        _RANDOM1 = "_RANDOM1",
+        _WORLD_POSITION = "_WORLD_POSITION",
+        _WORLD_ROTATION = "_WORLD_ROTATION",
     }
     const enum UniformSemanticType {
         LOCAL = "LOCAL",
@@ -1571,6 +1306,10 @@ declare namespace gltf {
         MODELVIEWINVERSETRANSPOSE = "MODELVIEWINVERSETRANSPOSE",
         VIEWPORT = "VIEWPORT",
         JOINTMATRIX = "JOINTMATRIX",
+        _AMBIENTLIGHTCOLOR = "_AMBIENTLIGHTCOLOR",
+        _BINDMATRIX = "_BINDMATRIX",
+        _BINDMATRIXINVERSE = "_BINDMATRIXINVERSE",
+        _BONEMATRIX = "_BONEMATRIX",
         _VIEWPROJECTION = "_VIEWPROJECTION",
         _CAMERA_POS = "_CAMERA_POS",
         _CAMERA_UP = "CAMERA_UP",
@@ -1581,6 +1320,7 @@ declare namespace gltf {
         _LIGHTCOUNT = "_LIGHTCOUNT",
         _DIRECTIONSHADOWMAT = "_DIRECTIONSHADOWMAT",
         _SPOTSHADOWMAT = "_SPOTSHADOWMAT",
+        _POINTSHADOWMAT = "_POINTSHADOWMAT",
         _DIRECTIONSHADOWMAP = "_DIRECTIONSHADOWMAP",
         _POINTSHADOWMAP = "_POINTSHADOWMAP",
         _SPOTSHADOWMAP = "_SPOTSHADOWMAP",
@@ -2297,7 +2037,6 @@ declare namespace gltf {
         name: any;
         extensions?: any;
         extras?: any;
-        [k: string]: any;
     }
     /**
      * An attribute input to a technique and the corresponding semantic.
@@ -2339,7 +2078,6 @@ declare namespace gltf {
         name?: any;
         extensions?: any;
         extras?: any;
-        [k: string]: any;
     }
     /**
      * A template for material appearances.
@@ -2368,7 +2106,7 @@ declare namespace gltf {
             [k: string]: gltf.Uniform;
         };
         name: any;
-        states: States;
+        states?: States;
         extensions?: any;
         extras?: any;
         [k: string]: any;
@@ -2499,15 +2237,856 @@ declare namespace gltf {
         extras?: any;
     }
 }
+declare namespace paper {
+    /**
+     * 预制体资源。
+     */
+    class Prefab extends BaseObjectAsset {
+        /**
+         *
+         */
+        static create(name: string): GameObject | null;
+        static create(name: string, x: number, y: number, z: number): GameObject | null;
+        static create(name: string, scene: Scene): GameObject | null;
+        static create(name: string, x: number, y: number, z: number, scene: Scene): GameObject | null;
+        /**
+         * @deprecated
+         */
+        createInstance(scene?: Scene | null, keepUUID?: boolean): GameObject;
+    }
+}
+declare namespace paper {
+    /**
+     * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
+     */
+    class SystemManager {
+        private static _instance;
+        static getInstance(): SystemManager;
+        private constructor();
+        private readonly _systems;
+        private _currentSystem;
+        private _preRegister(systemClass);
+        /**
+         * 注册一个系统到管理器中。
+         */
+        register(systemClass: {
+            new (): BaseSystem;
+        }, after?: {
+            new (): BaseSystem;
+        } | null): void;
+        /**
+         * 注册一个系统到管理器中。
+         */
+        registerBefore(systemClass: {
+            new (): BaseSystem;
+        }, before?: {
+            new (): BaseSystem;
+        } | null): void;
+        /**
+         *
+         */
+        enableSystem(systemClass: {
+            new (): BaseSystem;
+        }): void;
+        /**
+         *
+         */
+        disableSystem(systemClass: {
+            new (): BaseSystem;
+        }): void;
+        /**
+         * 获取一个管理器中指定的系统实例。
+         */
+        getSystem<T extends BaseSystem>(systemClass: {
+            new (): T;
+        }): T;
+        /**
+         * @internal
+         */
+        update(): void;
+        /**
+         *
+         */
+        readonly systems: ReadonlyArray<BaseSystem>;
+    }
+}
+declare namespace paper {
+    /**
+     * 场景管理器
+     */
+    class SceneManager {
+        private static _instance;
+        static getInstance(): SceneManager;
+        private constructor();
+        /**
+         *
+         */
+        camerasScene: Scene | null;
+        /**
+         *
+         */
+        lightsScene: Scene | null;
+        private readonly _scenes;
+        private _globalScene;
+        private _editorScene;
+        private _globalGameObject;
+        /**
+         * @internal
+         */
+        _addScene(scene: Scene, isActive: boolean): void;
+        /**
+         * @internal
+         */
+        _removeScene(scene: Scene): boolean;
+        /**
+         * 卸载所有场景。
+         */
+        unloadAllScene(excludes?: ReadonlyArray<Scene>): void;
+        /**
+         *
+         */
+        getSceneByName(name: string): Scene;
+        /**
+         *
+         */
+        readonly scenes: ReadonlyArray<Scene>;
+        /**
+         *
+         */
+        readonly globalScene: Scene;
+        /**
+         * 当前激活的场景。
+         */
+        activeScene: Scene;
+        /**
+         *
+         */
+        readonly editorScene: Scene;
+        /**
+         *
+         */
+        readonly globalGameObject: GameObject;
+        /**
+         * @deprecated
+         */
+        createScene(name: string, isActive?: boolean): Scene;
+        /**
+         * @deprecated
+         */
+        loadScene(resourceName: string, combineStaticObjects?: boolean): Scene;
+        /**
+         * @deprecated
+         */
+        unloadScene(scene: Scene): void;
+        /**
+         * @deprecated
+         */
+        getActiveScene(): Scene;
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    class Quaternion extends Vector4 {
+        private static readonly _instancesQ;
+        /**
+         *
+         */
+        static create(x?: number, y?: number, z?: number, w?: number): Quaternion;
+        release(): this;
+        clone(): Quaternion;
+        fromMatrix(matrix: Readonly<Matrix4>): this;
+        fromEuler(value: Readonly<IVector3>, order?: EulerOrder): this;
+        /**
+         * - 向量必须已归一化。
+         */
+        fromAxis(axis: Readonly<IVector3>, radian: number): this;
+        inverse(source?: Readonly<IVector4>): this;
+        dot(value: Readonly<IVector4>): number;
+        multiply(valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
+        premultiply(value: Readonly<IVector4>): this;
+        lerp(t: number, valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
+        lookAt(eye: Vector3, target: Vector3): this;
+        toEuler(value: Vector3, order?: EulerOrder): Vector3;
+    }
+}
+declare namespace paper {
+    /**
+     * 单例组件基类。
+     */
+    abstract class SingletonComponent extends BaseComponent {
+        /**
+         * @internal
+         */
+        static readonly __isSingleton: boolean;
+        /**
+         * @internal
+         */
+        static __instance: SingletonComponent | null;
+        /**
+         *
+         */
+        static getInstance<T extends SingletonComponent>(componentClass: ComponentClass<T>): T;
+        initialize(): void;
+        uninitialize(): void;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    const enum HideFlags {
+        /**
+         *
+         */
+        None = 0,
+        /**
+         *
+         */
+        NotEditable = 1,
+        /**
+         *
+         */
+        Hide = 2,
+        /**
+         *
+         */
+        HideAndDontSave = 3,
+    }
+    /**
+     *
+     */
+    const enum DefaultNames {
+        NoName = "NoName",
+        Global = "Global",
+        MainCamera = "MainCamera",
+        EditorCamera = "EditorCamera",
+        Editor = "Editor",
+    }
+    /**
+     *
+     */
+    const enum DefaultTags {
+        Untagged = "",
+        Respawn = "Respawn",
+        Finish = "Finish",
+        EditorOnly = "EditorOnly",
+        MainCamera = "MainCamera",
+        Player = "Player",
+        GameController = "GameController",
+        Global = "Global",
+    }
+    /**
+     * 渲染排序
+     */
+    enum RenderQueue {
+        Background = 1000,
+        Geometry = 2000,
+        AlphaTest = 2450,
+        Transparent = 3000,
+        Overlay = 4000,
+    }
+    /**
+     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
+     * 这个属性可以实现相机的选择性剔除。
+     */
+    const enum Layer {
+        Default = 2,
+        UI = 4,
+        UserLayer1 = 8,
+        UserLayer2 = 16,
+        UserLayer3 = 32,
+        UserLayer4 = 64,
+        UserLayer5 = 128,
+        UserLayer6 = 240,
+        UserLayer7 = 256,
+        UserLayer8 = 512,
+        UserLayer9 = 1024,
+        UserLayer10 = 2048,
+        UserLayer11 = 3840,
+    }
+    /**
+     * culling mask
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * culling mask 枚举。
+     * 相机的cullingmask与renderer的renderLayer相匹配，才会执行渲染。否则将会被跳过。
+     * 这个属性可以实现相机的选择性剔除。
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    const enum CullingMask {
+        Everything = 16777215,
+        Nothing = 1,
+        Default = 2,
+        UI = 4,
+        UserLayer1 = 8,
+        UserLayer2 = 16,
+        UserLayer3 = 32,
+        UserLayer4 = 64,
+        UserLayer5 = 128,
+        UserLayer6 = 240,
+        UserLayer7 = 256,
+        UserLayer8 = 512,
+        UserLayer9 = 1024,
+        UserLayer10 = 2048,
+        UserLayer11 = 3840,
+    }
+    function layerTest(cullingMask: CullingMask, layer: Layer): boolean;
+}
+declare namespace paper {
+    /**
+     * 脚本组件。
+     * 生命周期的顺序。
+     * - onAwake();
+     * - onReset();
+     * - onEnable();
+     * - onStart();
+     * - onFixedUpdate();
+     * - onUpdate();
+     * - onLateUpdate();
+     * - onDisable();
+     * - onDestroy();
+     */
+    abstract class Behaviour extends BaseComponent {
+        /**
+         * @internal
+         */
+        _isReseted: boolean;
+        /**
+         * @internal
+         */
+        _isStarted: boolean;
+        initialize(config?: any): void;
+        uninitialize(): void;
+        /**
+         * 组件被初始化时调用。
+         * @see paper.GameObject#addComponent()
+         */
+        onAwake?(config: any): void;
+        /**
+         *
+         */
+        onReset?(): void;
+        /**
+         * 组件被激活或实体被激活时调用。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
+         */
+        onEnable?(): void;
+        /**
+         * 组件开始运行时调用。
+         * - 在整个生命周期中只执行一次。
+         */
+        onStart?(): void;
+        /**
+         *
+         */
+        onFixedUpdate?(currentTimes: number, totalTimes: number): void;
+        /**
+         *
+         */
+        onTriggerEnter?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerStay?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerExit?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionEnter?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionStay?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionExit?(collider: any): void;
+        /**
+         *
+         */
+        onUpdate?(deltaTime: number): void;
+        /**
+         *
+         */
+        onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
+        /**
+         *
+         */
+        onLateUpdate?(deltaTime: number): void;
+        /**
+         * 组件被禁用或实体被禁用时调用。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
+         */
+        onDisable?(): void;
+        /**
+         * 组件被移除或实体被销毁时调用。
+         * @see paper.GameObject#removeComponent()
+         * @see paper.GameObject#destroy()
+         */
+        onDestroy?(): void;
+        /**
+         * @deprecated
+         */
+        onCollide(collider: any): void;
+    }
+}
+declare namespace paper {
+    /**
+     * 系统基类。
+     */
+    abstract class BaseSystem {
+        private static _createEnabled;
+        /**
+         * @internal
+         */
+        static create(systemClass: {
+            new (): BaseSystem;
+        }): BaseSystem;
+        /**
+         * @internal
+         */
+        _started: boolean;
+        private _locked;
+        protected _enabled: boolean;
+        /**
+         *
+         */
+        protected readonly _interests: ReadonlyArray<InterestConfig> | ReadonlyArray<ReadonlyArray<InterestConfig>>;
+        /**
+         *
+         */
+        protected readonly _groups: Group[];
+        /**
+         *
+         */
+        protected readonly _globalGameObject: GameObject;
+        /**
+         *
+         */
+        protected readonly _clock: Clock;
+        /**
+         * 禁止实例化系统。
+         * @protected
+         */
+        constructor();
+        /**
+         * 系统内部初始化。
+         * @internal
+         */
+        initialize(): void;
+        /**
+         * 系统内部卸载。
+         * @internal
+         */
+        uninitialize(): void;
+        /**
+         * 系统内部更新。
+         * @internal
+         */
+        update(): void;
+        /**
+         * 系统内部更新。
+         * @internal
+         */
+        lateUpdate(): void;
+        /**
+         * 系统初始化时调用。
+         */
+        onAwake?(): void;
+        /**
+         * 系统被激活时调用。
+         * @see paper.BaseSystem#enabled
+         */
+        onEnable?(): void;
+        /**
+         * 系统开始运行时调用。
+         */
+        onStart?(): void;
+        /**
+         * 实体被添加到组时调用。
+         * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
+         * @see paper.GameObject#addComponent()
+         */
+        onAddGameObject?(gameObject: GameObject, group: Group): void;
+        /**
+         * 充分非必要组件添加到实体时调用。
+         * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
+         * @see paper.GameObject#addComponent()
+         */
+        onAddComponent?(component: BaseComponent, group: Group): void;
+        /**
+         * 充分非必要组件从实体移除时调用。
+         * @see paper.GameObject#removeComponent()
+         */
+        onRemoveComponent?(component: BaseComponent, group: Group): void;
+        /**
+         * 实体从系统移除时调用。
+         * @see paper.GameObject#removeComponent()
+         */
+        onRemoveGameObject?(gameObject: GameObject, group: Group): void;
+        /**
+         * 系统更新时调用。
+         */
+        onUpdate?(deltaTime?: number): void;
+        /**
+         *
+         */
+        onLateUpdate?(deltaTime?: number): void;
+        /**
+         * 系统被禁用时调用。
+         * @see paper.BaseSystem#enabled
+         */
+        onDisable?(): void;
+        /**
+         * 系统被注销时调用。
+         * @see paper.SystemManager#unregister()
+         * @see paper.Application#systemManager
+         */
+        onDestroy?(): void;
+        /**
+         * 该系统是否被激活。
+         */
+        enabled: boolean;
+        /**
+         *
+         */
+        readonly groups: ReadonlyArray<Group>;
+    }
+}
+declare namespace egret3d {
+    class EventDispatcher {
+        private _eventMap;
+        addEventListener(type: string, listener: Function, thisObject: any): void;
+        removeEventListener(type: string, listener: Function, thisObject: any): void;
+        dispatchEvent(event: any): void;
+        private notifyListener(event);
+    }
+}
+declare namespace egret3d {
+    /**
+     * light component
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 灯光组件
+     * @version paper 1.0
+     * @platform Web
+     * @language
+     */
+    abstract class BaseLight extends paper.BaseComponent {
+        /**
+         * TODO
+         */
+        cullingMask: paper.CullingMask;
+        /**
+         *
+         */
+        intensity: number;
+        /**
+         *
+         */
+        readonly color: Color;
+        /**
+         *
+         */
+        castShadows: boolean;
+        /**
+         *
+         */
+        shadowRadius: number;
+        /**
+         *
+         */
+        shadowBias: number;
+        /**
+         *
+         */
+        shadowSize: number;
+        /**
+         *
+         */
+        shadowCameraNear: number;
+        /**
+         *
+         */
+        shadowCameraFar: number;
+        /**
+         *
+         */
+        shadowCameraSize: number;
+        readonly viewPortPixel: IRectangle;
+        readonly matrix: Matrix4;
+        renderTarget: IRenderTarget;
+        protected _updateMatrix(camera: Camera): void;
+        /**
+         * @internal
+         */
+        update(camera: Camera, faceIndex: number): void;
+        /**
+         *
+         */
+        power: number;
+    }
+}
+declare namespace egret3d {
+    /**
+     * Mesh 渲染组件。
+     */
+    class MeshRenderer extends paper.BaseRenderer {
+        protected readonly _materials: Material[];
+        uninitialize(): void;
+        recalculateAABB(): void;
+        /**
+         * material list
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 材质数组
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        materials: ReadonlyArray<Material>;
+        /**
+         * 材质数组中的第一个材质。
+         */
+        material: Material | null;
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    interface IVector2 {
+        x: number;
+        y: number;
+    }
+    /**
+     *
+     */
+    class Vector2 implements IVector2, paper.ISerializable {
+        static readonly ZERO: Readonly<Vector2>;
+        static readonly ONE: Readonly<Vector2>;
+        private static readonly _instances;
+        static create(x?: number, y?: number): Vector2;
+        release(): this;
+        x: number;
+        y: number;
+        /**
+         * 请使用 `egret3d.Vector2.create()` 创建实例。
+         * @see egret3d.Vector2.create()
+         * @deprecated
+         * @private
+         */
+        constructor(x?: number, y?: number);
+        serialize(): number[];
+        deserialize(element: [number, number]): this;
+        copy(value: Readonly<IVector2>): this;
+        clone(): Vector2;
+        set(x: number, y: number): this;
+        normalize(): this;
+        readonly length: number;
+        readonly sqrtLength: number;
+        static add(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static subtract(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static multiply(v1: Vector2, v2: Vector2, out: Vector2): Vector2;
+        static dot(v1: Vector2, v2: Vector2): number;
+        static scale(v: Vector2, scaler: number): Vector2;
+        static getLength(v: Vector2): number;
+        static getDistance(v1: Vector2, v2: Vector2): number;
+        static equal(v1: Vector2, v2: Vector2, threshold?: number): boolean;
+        static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2;
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    interface IRectangle {
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+    }
+    /**
+     * 矩形可序列化对象
+     */
+    class Rectangle implements IRectangle, paper.ISerializable {
+        /**
+         *
+         */
+        x: number;
+        /**
+         *
+         */
+        y: number;
+        /**
+         *
+         */
+        w: number;
+        /**
+         *
+         */
+        h: number;
+        /**
+         *
+         */
+        constructor(x?: number, y?: number, w?: number, h?: number);
+        serialize(): number[];
+        deserialize(element: number[]): this;
+    }
+}
+declare namespace egret3d {
+    class Color implements paper.IRelease<Color>, paper.ISerializable {
+        static readonly WHITE: Readonly<Color>;
+        static readonly BLACK: Readonly<Color>;
+        private static readonly _instances;
+        static create(r?: number, g?: number, b?: number, a?: number): Color;
+        release(): this;
+        r: number;
+        g: number;
+        b: number;
+        a: number;
+        /**
+         * 请使用 `egret3d.Color.create()` 创建实例。
+         * @see egret3d.Color.create()
+         */
+        private constructor();
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number]>): this;
+        clone(): Color;
+        copy(value: Readonly<Color>): this;
+        set(r: number, g: number, b: number, a: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
+        scale(value: number, source?: Readonly<Color>): this;
+        lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    abstract class BaseMesh extends GLTFAsset {
+        protected _drawMode: gltf.DrawMode;
+        protected _vertexCount: number;
+        protected readonly _attributeNames: string[];
+        protected readonly _customAttributeTypes: {
+            [key: string]: gltf.AccessorType;
+        };
+        protected _glTFMesh: gltf.Mesh | null;
+        /**
+         * 请使用 `egret3d.Mesh.create()` 创建实例。
+         * @see egret3d.Mesh.create()
+         * @deprecated
+         */
+        constructor(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
+            [key: string]: gltf.AccessorType;
+        } | null, drawMode?: gltf.DrawMode);
+        constructor(config: GLTF, buffers: Uint32Array[], name: string);
+        /**
+         *
+         */
+        clone(): Mesh;
+        /**
+         * TODO
+         */
+        raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix4>): PickInfo;
+        /**
+         *
+         */
+        addSubMesh(indexCount: number, materialIndex?: number, randerMode?: gltf.MeshPrimitiveMode): number;
+        /**
+         *
+         */
+        getVertices(offset?: number, count?: number): Float32Array;
+        /**
+         *
+         */
+        getUVs(offset?: number, count?: number): Float32Array;
+        /**
+         *
+         */
+        getColors(offset?: number, count?: number): Float32Array;
+        /**
+         *
+         */
+        getNormals(offset?: number, count?: number): Float32Array;
+        /**
+         *
+         */
+        getTangents(offset?: number, count?: number): Float32Array;
+        /**
+         *
+         */
+        getAttributes(attributeType: gltf.MeshAttribute, offset?: number, count?: number): Uint8Array;
+        /**
+         *
+         */
+        setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset?: number, count?: number): Uint8Array;
+        /**
+         *
+         */
+        getIndices(subMeshIndex?: number): Uint16Array;
+        /**
+         *
+         */
+        setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex?: number): Uint16Array;
+        /**
+         * 绑定显存。
+         */
+        abstract _createBuffer(): void;
+        /**
+         *
+         */
+        abstract uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number): void;
+        /**
+         *
+         */
+        abstract uploadSubIndexBuffer(subMeshIndex: number): void;
+        /**
+         *
+         */
+        drawMode: gltf.DrawMode;
+        /**
+         * 获取子网格数量。
+         */
+        readonly subMeshCount: number;
+        /**
+         *
+         */
+        readonly vertexCount: number;
+        /**
+         *
+         */
+        readonly attributeNames: ReadonlyArray<string>;
+        /**
+         * 获取 glTFMesh 数据。
+         */
+        readonly glTFMesh: gltf.Mesh;
+    }
+}
 declare namespace egret3d {
     /**
      * 纹理资源。
      */
     class Texture extends paper.Asset {
-        dispose(): void;
-        /**
-         * @inheritDoc
-         */
         caclByteLength(): number;
     }
 }
@@ -2536,33 +3115,39 @@ declare namespace paper.editor {
         constructor(type: string, data?: any);
     }
 }
-declare namespace paper {
+declare namespace egret3d {
     /**
-     * 单例组件基类。
+     *
      */
-    abstract class SingletonComponent extends BaseComponent {
-        /**
-         * @internal
-         */
-        static readonly __isSingleton: boolean;
-        /**
-         * @internal
-         */
-        static __instance: SingletonComponent | null;
-        /**
-         *
-         */
-        static getInstance<T extends SingletonComponent>(componentClass: ComponentClass<T>): T;
-        initialize(): void;
-        uninitialize(): void;
-    }
+    const RAD_DEG: number;
+    /**
+     *
+     */
+    const DEG_RAD: number;
+    /**
+     *
+     */
+    const EPSILON = 2.220446049250313e-16;
+    function sign(value: number): number;
+    function floatClamp(v: number, min?: number, max?: number): number;
+    function numberLerp(fromV: number, toV: number, v: number): number;
+    function getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3): Vector3;
+    function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3;
+    function triangleIntersectsPlane(): void;
+    function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<AABB>): boolean;
+    function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<AABB>): boolean;
+    function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>): boolean;
+    function aabbIntersectsSphere(aabb: Readonly<AABB>, sphere: Readonly<Sphere>): boolean;
+    function aabbIntersectsAABB(valueA: Readonly<AABB>, valueB: Readonly<AABB>): boolean;
+    function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
 }
 declare namespace paper.editor {
     abstract class BaseGeo {
         editorModel: EditorModel;
         geo: GameObject;
         private baseColor;
-        canDrag: boolean;
+        greyColor: egret3d.Material;
+        yellowColor: egret3d.Material;
         protected helpVec3_1: egret3d.Vector3;
         protected helpVec3_2: egret3d.Vector3;
         protected helpVec3_3: egret3d.Vector3;
@@ -2575,35 +3160,23 @@ declare namespace paper.editor {
         protected _delta: egret3d.Vector3;
         protected _newPosition: egret3d.Vector3;
         protected _ctrlPos: egret3d.Vector3;
-        protected _ctrlRot: egret3d.Quaternion;
+        _ctrlRot: egret3d.Quaternion;
         protected _dragPlanePoint: egret3d.Vector3;
         protected _dragPlaneNormal: egret3d.Vector3;
         protected _initRotation: egret3d.Quaternion;
         protected _oldLocalScale: egret3d.Vector3;
         constructor();
         onSet(): void;
-        abstract isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): any;
-        abstract wasReleased(): any;
+        abstract isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract wasPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
+        abstract wasReleased(selectedGameObj: GameObject[]): any;
         _checkIntersect(ray: egret3d.Ray): this;
         changeColor(color: string): void;
         protected _createAxis(color: egret3d.Vector4, type: number): GameObject;
-    }
-    class GeoContainer extends BaseGeo {
-        private geos;
-        private selectedGeo;
-        constructor();
-        onSet(): void;
-        checkIntersect(ray: egret3d.Ray): BaseGeo;
-        private clear();
-        changeType(type: string): void;
-        wasPressed_local(ray: egret3d.Ray, selected: any): any;
-        isPressed_local(ray: egret3d.Ray, selected: any): void;
-        wasPressed_world(ray: egret3d.Ray, selected: any): any;
-        isPressed_world(ray: egret3d.Ray, selected: any): void;
-        wasReleased(): void;
+        protected _createCircleLine(): egret3d.Mesh;
+        protected createFan(maxAngle: number, _mesh?: egret3d.MeshFilter): any;
     }
 }
 declare namespace paper.editor {
@@ -2623,430 +3196,86 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
-     * @internal
+     *
      */
-    class DisableSystem extends BaseSystem {
-        protected readonly _interests: {
-            componentClass: any;
-            type: number;
-            isBehaviour: boolean;
-        }[];
-        private readonly _bufferedComponents;
-        private readonly _bufferedGameObjects;
-        private readonly _contactColliders;
-        onRemoveComponent(component: Behaviour): void;
-        onUpdate(): void;
+    class ContactColliders extends SingletonComponent {
+        /**
+         *
+         */
+        readonly begin: any[];
+        /**
+         *
+         */
+        readonly stay: any[];
+        /**
+         *
+         */
+        readonly end: any[];
         /**
          * @internal
          */
-        bufferComponent(component: BaseComponent): void;
-        /**
-         * @internal
-         */
-        bufferGameObject(gameObject: GameObject): void;
-    }
-}
-declare namespace paper {
-    /**
-     * @internal
-     */
-    const serializeClassMap: {
-        [key: string]: string;
-    };
-    /**
-     * @internal
-     */
-    class Compatible implements ISerializable {
-        serialize(): void;
-        deserialize(element: ISerializedStruct, data?: Deserializer): BaseComponent | Asset | GameObject;
+        clear(): void;
     }
 }
 declare namespace paper {
     /**
      *
      */
-    interface IUUID {
+    class DisposeCollecter extends SingletonComponent {
         /**
-         *
+         * 移除的场景数组。
          */
-        readonly uuid: string;
-    }
-    /**
-     *
-     */
-    interface IAssetReference {
+        readonly scenes: Scene[];
         /**
-         *
+         * 移除的实体数组。
          */
-        readonly asset: number;
-    }
-    /**
-     *
-     */
-    interface IClass {
+        readonly gameObjects: GameObject[];
         /**
-         *
+         * 移除的组件数组。
          */
-        readonly class: string;
-    }
-    /**
-     *
-     */
-    interface ISerializedObject extends IUUID, IClass {
-        [key: string]: any | IUUID | IAssetReference;
-    }
-    /**
-     *
-     */
-    interface ISerializedStruct extends IClass {
-        [key: string]: any | IUUID | IAssetReference;
-    }
-    /**
-     * 序列化数据接口。
-     */
-    interface ISerializedData {
-        /**
-         *
-         */
-        version?: number;
-        /**
-         *
-         */
-        compatibleVersion?: number;
-        /**
-         * 所有资源。
-         */
-        readonly assets?: string[];
-        /**
-         * 所有实体。（至多含一个场景）
-         */
-        readonly objects?: ISerializedObject[];
-        /**
-         * 所有组件。
-         */
-        readonly components?: ISerializedObject[];
-    }
-    /**
-     * 自定义序列化接口。
-     */
-    interface ISerializable {
-        /**
-         *
-         */
-        serialize(): any;
-        /**
-         *
-         */
-        deserialize(element: any, data?: Deserializer): any;
-    }
-}
-declare namespace paper {
-    /**
-     *
-     */
-    class Deserializer {
+        readonly components: BaseComponent[];
         /**
          * @internal
          */
-        static _lastDeserializer: Deserializer;
-        /**
-         *
-         */
-        readonly assets: string[];
-        /**
-         *
-         */
-        readonly objects: {
-            [key: string]: Scene | GameObject;
-        };
-        /**
-         *
-         */
-        readonly components: {
-            [key: string]: BaseComponent;
-        };
-        /**
-         *
-         */
-        root: Scene | GameObject | Comment | null;
-        private _keepUUID;
-        private _makeLink;
-        private readonly _deserializers;
-        private _scene;
-        private _getDeserializedIgnoreKeys(serializedClass, keys?);
-        private _deserializeObject(source, target);
-        private _deserializeChild(source, target?);
-        getAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent;
-        /**
-         * @internal
-         */
-        deserialize<T extends (Scene | GameObject | BaseComponent)>(data: ISerializedData, keepUUID?: boolean, makeLink?: boolean, scene?: Scene | null): T | null;
+        clear(): void;
     }
-}
-declare namespace paper {
-    /**
-     *
-     */
-    const DATA_VERSION: number;
-    /**
-     *
-     */
-    const DATA_VERSIONS: number[];
-    /**
-     *
-     */
-    function serialize(source: Scene | GameObject | BaseComponent, inline?: boolean): ISerializedData;
-    /**
-     *
-     */
-    function clone(object: GameObject): BaseComponent | GameObject | Scene;
-    /**
-     *
-     */
-    function equal(source: any, target: any): boolean;
-    /**
-     *
-     */
-    function serializeAsset(source: Asset): IAssetReference;
-    /**
-     * 创建指定对象的结构体。
-     */
-    function serializeStruct(source: BaseObject): ISerializedStruct;
-}
-declare namespace paper {
-    /**
-     *
-     */
-    type GameObjectExtras = {
-        linkedID?: string;
-        prefabRootId?: string;
-        prefab?: Prefab;
-    };
-    /**
-     * 可以挂载Component的实体类。
-     */
-    class GameObject extends BaseObject {
-        /**
-         * 创建 GameObject，并添加到当前场景中。
-         */
-        static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
-        /**
-         * 是否是静态，启用这个属性可以提升性能
-         */
-        isStatic: boolean;
-        /**
-         *
-         */
-        hideFlags: HideFlags;
-        /**
-         * 层级
-         */
-        layer: Layer;
-        /**
-         * 名称
-         */
-        name: string;
-        /**
-         * 标签
-         */
-        tag: string;
-        /**
-         * 变换组件
-         */
-        transform: egret3d.Transform;
-        /**
-         *
-         */
-        renderer: BaseRenderer | null;
-        /**
-         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
-         */
-        extras?: GameObjectExtras;
-        private _activeSelf;
-        /**
-         * @internal
-         */
-        _activeInHierarchy: boolean;
-        /**
-         * @internal
-         */
-        _activeDirty: boolean;
-        private readonly _components;
-        private readonly _cachedComponents;
-        private _scene;
-        /**
-         * @deprecated
-         */
-        constructor(name?: string, tag?: string, scene?: Scene | null);
-        private _destroy();
-        private _addToScene(value);
-        private _canRemoveComponent(value);
-        private _removeComponent(value, groupComponent);
-        private _getComponentsInChildren(componentClass, child, components, isExtends?);
-        private _getComponent(componentClass);
-        /**
-         * @internal
-         */
-        _activeInHierarchyDirty(prevActive: boolean): void;
-        /**
-         *
-         */
-        destroy(): void;
-        /**
-         * 添加组件。
-         */
-        addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T;
-        /**
-         * 移除组件。
-         */
-        removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends?: boolean): void;
-        /**
-         * 移除所有组件。
-         */
-        removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends?: boolean): void;
-        /**
-         * 获取组件。
-         */
-        getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
-        /**
-         *
-         */
-        getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
-        /**
-         * 搜索自己和父节点中所有特定类型的组件
-         */
-        getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
-        /**
-         * 搜索自己和子节点中所有特定类型的组件
-         */
-        getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
-        /**
-         * 获取组件，如果未添加该组件，则添加该组件。
-         */
-        getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
-        /**
-         * 针对同级的组件发送消息
-         * @param methodName
-         * @param parameter
-         */
-        sendMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
-        /**
-         * 针对直接父级发送消息
-         * @param methodName
-         * @param parameter
-         */
-        sendMessageUpwards(methodName: string, parameter?: any, requireReceiver?: boolean): void;
-        /**
-         * 群发消息
-         * @param methodName
-         * @param parameter
-         */
-        broadcastMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
-        /**
-         *
-         */
-        readonly isDestroyed: boolean;
-        /**
-         *
-         */
-        dontDestroy: boolean;
-        /**
-         * 当前GameObject对象自身激活状态
-         */
-        activeSelf: boolean;
-        /**
-         * 获取当前GameObject对象在场景中激活状态。
-         * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
-         */
-        readonly activeInHierarchy: boolean;
-        readonly path: string;
-        /**
-         *
-         */
-        readonly components: ReadonlyArray<BaseComponent>;
-        /**
-         *
-         */
-        parent: GameObject | null;
-        /**
-         * 获取物体所在场景实例。
-         */
-        readonly scene: Scene;
-        /**
-         * @deprecated
-         * @see paper.Scene#find()
-         */
-        static find(name: string, scene?: Scene | null): GameObject;
-        /**
-         * @deprecated
-         * @see paper.Scene#findWithTag()
-         */
-        static findWithTag(tag: string, scene?: Scene | null): GameObject;
-        /**
-         * @deprecated
-         * @see paper.Scene#findGameObjectsWithTag()
-         */
-        static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
-    }
-}
-declare namespace paper.editor {
-    const icon_frag: string;
-    const icon_vert: string;
-    const line_frag: string;
-    const line_vert: string;
 }
 declare namespace egret3d {
-    interface IVector4 {
-        x: number;
-        y: number;
-        z: number;
-        w: number;
-    }
-    class Vector4 implements IVector4, paper.ISerializable {
-        x: number;
-        y: number;
-        z: number;
-        w: number;
-        constructor(x?: number, y?: number, z?: number, w?: number);
-        serialize(): number[];
-        deserialize(element: [number, number, number, number]): this;
-        copy(value: Readonly<IVector4>): this;
-        clone(): Vector4;
-        set(x: number, y: number, z: number, w: number): this;
-        normalize(): this;
-    }
-    const helpVector4A: Vector4;
-    const helpVector4B: Vector4;
-    const helpVector4C: Vector4;
-    const helpVector4D: Vector4;
-    const helpVector4E: Vector4;
-    const helpVector4F: Vector4;
-}
-declare namespace paper {
-    /**
-     * @internal
-     */
-    class GroupComponent extends paper.BaseComponent {
-        componentIndex: number;
-        componentClass: ComponentClass<BaseComponent>;
-        private readonly _components;
-        /**
-         * @internal
-         */
-        _addComponent(component: BaseComponent): void;
-        /**
-         * @internal
-         */
-        _removeComponent(component: BaseComponent): void;
-        readonly components: ReadonlyArray<BaseComponent>;
-    }
-}
-declare namespace paper {
     /**
      *
      */
-    class MissingComponent extends BaseComponent {
-        missingObject: any | null;
+    class Sphere implements paper.IRelease<Sphere>, paper.ISerializable {
+        private static readonly _instances;
+        /**
+         *
+         * @param center
+         * @param radius
+         */
+        static create(center?: Readonly<IVector3>, radius?: number): Sphere;
+        release(): this;
+        /**
+         *
+         */
+        radius: number;
+        /**
+         *
+         */
+        readonly center: Vector3;
+        /**
+         * 请使用 `egret3d.Sphere.create()` 创建实例。
+         * @see egret3d.Sphere.create()
+         */
+        private constructor();
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number]>): this;
+        clone(): Sphere;
+        copy(value: Readonly<Sphere>): this;
+        set(center: Readonly<IVector3>, radius: number): this;
+        fromPoints(points: Readonly<ArrayLike<IVector3>>, center?: Readonly<IVector3>): this;
+        applyMatrix(matrix: Readonly<Matrix4>): this;
+        contains(value: Readonly<IVector3 | Sphere>): boolean;
+        getDistance(value: Readonly<IVector3>): number;
+        clampPoint(point: Readonly<IVector3>, out: Vector3): Vector3;
     }
 }
 declare namespace egret3d {
@@ -3062,136 +3291,78 @@ declare namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    class AABB {
-        /**
-         * min point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 最小点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly minimum: Vector3;
-        /**
-         * max point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 最大点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        readonly maximum: Vector3;
-        private _dirtyCenter;
+    class AABB implements paper.IRelease<AABB>, paper.ISerializable {
+        private static readonly _instances;
+        static create(minimum?: Readonly<IVector3> | null, maximum?: Readonly<IVector3> | null): AABB;
+        release(): this;
         private _dirtyRadius;
-        private srcmin;
-        private srcmax;
+        private _dirtyCenter;
+        private _boundingSphereRadius;
+        private readonly _minimum;
+        private readonly _maximum;
+        private readonly _center;
         /**
-         * build a aabb
-         * @param minimum min point
-         * @param maximum max point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * 请使用 `egret3d.AABB.create()` 创建实例。
+         * @see egret3d.AABB.create()
          */
+        private constructor();
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number, number, number]>): this;
+        clone(): AABB;
+        copy(value: Readonly<AABB>): this;
+        clear(): this;
         /**
-         * 构建轴对称包围盒
-         * @param minimum 最小点
-         * @param maximum 最大点
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         *
          */
-        constructor(minimum?: Vector3, maximum?: Vector3);
+        set(minimum?: Readonly<IVector3> | null, maximum?: Readonly<IVector3> | null): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         /**
-         * update
-         * @param worldmatrix world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
+        fromPoints(value: Readonly<ArrayLike<IVector3>>): this;
+        applyMatrix(value: Readonly<Matrix4>, source?: Readonly<AABB>): this;
         /**
-         * 刷新轴对称包围盒
-         * @param worldmatrix 物体的世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         *
          */
-        update(worldmatrix: Matrix): void;
+        add(value: Readonly<IVector3 | AABB>, source?: Readonly<AABB>): this;
         /**
-         * extend by a point
-         * @param vec a world point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
+        expand(value: Readonly<IVector3> | number, source?: Readonly<AABB>): this;
         /**
-         * 包含一个点
-         * @param vec 世界坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         *
          */
-        addVector3(vec: Vector3): void;
+        offset(value: number | Readonly<IVector3>, source?: Readonly<AABB>): this;
         /**
          * check contains vector
-         * @param vec a world point
+         * @param value a world point
          * @version paper 1.0
          * @platform Web
          * @language en_US
          */
         /**
          * 检查是否包含点
-         * @param vec 世界坐标
+         * @param value 世界坐标
          * @version paper 1.0
          * @platform Web
          * @language zh_CN
          */
-        containsVector3(vec: Vector3): boolean;
+        contains(value: Readonly<IVector3 | AABB>): boolean;
+        getDistance(value: Readonly<IVector3>): number;
+        clampPoints(value: Readonly<IVector3>, out: Vector3): Vector3;
+        readonly isEmpty: boolean;
         /**
-         * intersect with aabb
-         * @param aabb aabb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * Bounding sphere radius.
          */
-        /**
-         * 检查是否与aabb相交
-         * @param aabb 轴对称包围盒
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        intersectAABB(aabb: AABB): boolean;
+        readonly boundingSphereRadius: number;
         /**
          *
-         * 用于视锥检测的计算，引擎内部使用
-         * 这里采用包围球式计算以提高性能
          */
-        intersectPlane(v0: Vector3, v1: Vector3, v2: Vector3): boolean;
+        readonly minimum: Readonly<Vector3>;
         /**
-         * extend by aabb
-         * @param aabb aabb
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
-        /**
-         * 包含一个aabb
-         * @param aabb 轴对称包围盒
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        addAABB(aabb: egret3d.AABB): void;
-        private _center;
+        readonly maximum: Readonly<Vector3>;
         /**
          * get center
          * @version paper 1.0
@@ -3204,74 +3375,108 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        readonly center: Vector3;
+        readonly center: Readonly<Vector3>;
+    }
+    const helpAABBA: AABB;
+}
+declare namespace paper {
+    /**
+     *
+     */
+    const enum InterestType {
         /**
-         * get bounding sphere radius
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
+        Extends = 1,
         /**
-         * 获取包围球的半径
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         *
          */
-        readonly radius: number;
+        Exculde = 2,
         /**
-         * clear
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
+        Unessential = 4,
+    }
+    /**
+     * 关心组件的配置。
+     */
+    type InterestConfig = {
         /**
-         * 清空
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 关心的组件或组件列表。
          */
-        clear(): void;
+        componentClass: ComponentClass<BaseComponent>[] | ComponentClass<BaseComponent>;
         /**
-         * clone
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
+        type?: InterestType;
         /**
-         * 克隆
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 关心该组件的事件。
          */
-        clone(): AABB;
+        listeners?: {
+            /**
+             * 事件类型。
+             */
+            type: string;
+            /**
+             * 事件监听。
+             */
+            listener: (component: BaseComponent) => void;
+        }[];
+    };
+    /**
+     *
+     */
+    class Group {
+        private static readonly _groups;
         /**
-         * copy
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * @internal
          */
+        static create(interestConfig: ReadonlyArray<InterestConfig>): Group;
         /**
-         * 复制
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @internal
          */
-        copy(aabb: AABB): AABB;
+        static update(): void;
         /**
-         * get vectors
-         * @param vecs output vectors
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
+        locked: boolean;
+        readonly name: string;
+        private _isRemoved;
+        private readonly _isBehaviour;
+        private readonly _bufferedGameObjects;
         /**
-         * 获取包围盒顶点数据
-         * @param vecs 引用数组
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @internal
          */
-        getVec3(vecs: Vector3[]): void;
+        readonly _addedGameObjects: (GameObject | null)[];
+        private _gameObjects;
+        private readonly _bufferedComponents;
+        /**
+         * @internal
+         */
+        readonly _addedComponents: (BaseComponent | null)[];
+        private _components;
+        private readonly _interestConfig;
+        private readonly _globalGameObject;
+        private constructor();
+        private _onAddComponent(component);
+        private _onAddUnessentialComponent(component);
+        private _onRemoveUnessentialComponent(component);
+        private _onRemoveComponent(component);
+        private _addGameObject(gameObject);
+        private _removeGameObject(gameObject);
+        private _update();
+        /**
+         * 判断实体是否被收集。
+         */
+        hasGameObject(gameObject: GameObject): boolean;
+        /**
+         *
+         */
+        readonly gameObjects: ReadonlyArray<GameObject>;
+        /**
+         *
+         */
+        readonly components: ReadonlyArray<BaseComponent>;
     }
 }
 declare namespace egret3d {
@@ -3287,7 +3492,7 @@ declare namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    class OBB extends paper.BaseObject {
+    class OBB {
         /**
          * center
          * @version paper 1.0
@@ -3391,7 +3596,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        update(worldMatrix: Readonly<Matrix>): void;
+        update(matrix: Readonly<Matrix4>): void;
         /**
          * intersect width obb
          * @param value obb
@@ -3410,7 +3615,7 @@ declare namespace egret3d {
         /**
          * update vectors by world matrix
          * @param vectors vectors
-         * @param worldMatrix world matrix
+         * @param matrix world matrix
          * @version paper 1.0
          * @platform Web
          * @language en_US
@@ -3418,17 +3623,174 @@ declare namespace egret3d {
         /**
          * 计算世界空间下各点坐标
          * @param vectors 结果数组
-         * @param worldMatrix 物体的世界矩阵
+         * @param matrix 物体的世界矩阵
          * @version paper 1.0
          * @platform Web
          * @language zh_CN
          */
-        caclWorldVectors(vectors: ReadonlyArray<Vector3>, worldMatrix: Readonly<Matrix>): void;
+        caclWorldVectors(vectors: ReadonlyArray<Vector3>, matrix: Readonly<Matrix4>): void;
         deserialize(element: {
             center: [number, number, number];
             size: [number, number, number];
         }): this;
     }
+}
+declare namespace paper {
+    /**
+     * @internal
+     */
+    class EnableSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: any;
+            type: number;
+            isBehaviour: boolean;
+        }[];
+        onAddComponent(component: Behaviour): void;
+    }
+}
+declare namespace paper {
+    /**
+     * @internal
+     */
+    class StartSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: any;
+            type: number;
+            isBehaviour: boolean;
+        }[];
+        onAddComponent(component: Behaviour): void;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class UpdateSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: any;
+            type: number;
+            isBehaviour: boolean;
+        }[];
+        onUpdate(deltaTime: number): void;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class LateUpdateSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: any;
+            type: number;
+            isBehaviour: boolean;
+        }[];
+        private readonly _laterCalls;
+        onUpdate(deltaTime: number): void;
+        /**
+         *
+         */
+        callLater(callback: () => void): void;
+    }
+}
+declare namespace paper {
+    /**
+     * @internal
+     */
+    class DisableSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: any;
+            type: number;
+            isBehaviour: boolean;
+        }[];
+        private readonly _contactColliders;
+        private readonly _disposeCollecter;
+        onRemoveComponent(component: Behaviour): void;
+        onUpdate(): void;
+    }
+}
+declare namespace paper {
+    /**
+     * @internal
+     */
+    const serializeClassMap: {
+        [key: string]: string;
+    };
+    /**
+     * @internal
+     */
+    class Compatible implements ISerializable {
+        serialize(): void;
+        deserialize(element: ISerializedStruct, data?: Deserializer): BaseComponent | GameObject | Asset;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class Deserializer {
+        /**
+         * @internal
+         */
+        static _lastDeserializer: Deserializer;
+        /**
+         *
+         */
+        readonly assets: string[];
+        /**
+         *
+         */
+        readonly objects: {
+            [key: string]: Scene | GameObject;
+        };
+        /**
+         *
+         */
+        readonly components: {
+            [key: string]: BaseComponent;
+        };
+        private _keepUUID;
+        private _makeLink;
+        private readonly _deserializers;
+        private _target;
+        private _deserializeObject(source, target);
+        private _createComponent(componentSource, source?, target?);
+        private _deserializeChild(source, target?);
+        getAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent;
+        /**
+         * @internal
+         */
+        deserialize<T extends (Scene | GameObject | BaseComponent)>(data: ISerializedData, keepUUID?: boolean, makeLink?: boolean, target?: Scene | GameObject | null): T | null;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    const DATA_VERSION: number;
+    /**
+     *
+     */
+    const DATA_VERSIONS: number[];
+    /**
+     *
+     */
+    function serialize(source: Scene | GameObject | BaseComponent, inline?: boolean): ISerializedData;
+    /**
+     *
+     */
+    function clone(object: GameObject): BaseComponent | GameObject | Scene;
+    /**
+     *
+     */
+    function equal(source: any, target: any): boolean;
+    /**
+     *
+     */
+    function serializeAsset(source: Asset): IAssetReference;
+    /**
+     * 创建指定对象的结构体。
+     */
+    function serializeStruct(source: BaseObject): ISerializedStruct;
 }
 declare namespace egret3d {
     /**
@@ -3474,149 +3836,6 @@ declare namespace egret3d {
         getPoints(): Vector3[];
     }
 }
-declare namespace paper {
-    /**
-     *
-     */
-    class Clock extends SingletonComponent {
-        maxFixedSubSteps: number;
-        fixedDeltaTime: number;
-        timeScale: number;
-        private _frameCount;
-        private _beginTime;
-        private _lastTime;
-        private _delayTime;
-        private _unscaledTime;
-        private _unscaledDeltaTime;
-        /**
-         * @internal
-         */
-        _fixedTime: number;
-        initialize(): void;
-        /**
-         * @internal
-         */
-        update(time?: number): void;
-        readonly frameCount: number;
-        readonly time: number;
-        readonly deltaTime: number;
-        readonly unscaledTime: number;
-        readonly unscaledDeltaTime: number;
-    }
-}
-declare namespace paper {
-    /**
-     *
-     */
-    class ContactColliders extends SingletonComponent {
-        /**
-         *
-         */
-        readonly begin: any[];
-        /**
-         *
-         */
-        readonly stay: any[];
-        /**
-         *
-         */
-        readonly end: any[];
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    const RAD_DEG: number;
-    /**
-     *
-     */
-    const DEG_RAD: number;
-    function floatClamp(v: number, min?: number, max?: number): number;
-    function sign(value: number): number;
-    function numberLerp(fromV: number, toV: number, v: number): number;
-    function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3;
-    function getPointAlongCurve(curveStart: Vector3, curveStartHandle: Vector3, curveEnd: Vector3, curveEndHandle: Vector3, t: number, out: Vector3, crease?: number): void;
-}
-declare namespace paper {
-    /**
-     * 场景类
-     */
-    class Scene extends BaseObject {
-        /**
-         *
-         */
-        static createEmpty(name?: string, isActive?: boolean): Scene;
-        /**
-         *
-         */
-        static create(name: string, combineStaticObjects?: boolean): Scene;
-        /**
-         * 场景名称。
-         */
-        readonly name: string;
-        /**
-         * 场景的light map列表。
-         */
-        readonly lightmaps: egret3d.Texture[];
-        /**
-         * lightmap强度
-         */
-        lightmapIntensity: number;
-        /**
-         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
-         */
-        extras?: {
-            rawScene?: RawScene;
-        };
-        /**
-         * @internal
-         */
-        readonly _gameObjects: GameObject[];
-        private constructor();
-        /**
-         * @internal
-         */
-        _addGameObject(gameObject: GameObject): void;
-        /**
-         * @internal
-         */
-        _removeGameObject(gameObject: GameObject): void;
-        /**
-         *
-         */
-        destroy(): void;
-        /**
-         * 返回当前激活场景中查找对应名称的GameObject
-         * @param name
-         */
-        find(name: string): GameObject;
-        /**
-         * 返回一个在当前激活场景中查找对应tag的GameObject
-         * @param tag
-         */
-        findWithTag(tag: string): GameObject;
-        /**
-         * 返回一个在当前激活场景中查找对应 uuid 的GameObject
-         * @param uuid
-         */
-        findWithUUID(uuid: string): GameObject;
-        /**
-         * 返回所有在当前激活场景中查找对应tag的GameObject
-         * @param name
-         */
-        findGameObjectsWithTag(tag: string): GameObject[];
-        /**
-         * 获取所有根级GameObject对象
-         */
-        getRootGameObjects(): GameObject[];
-        readonly gameObjectCount: number;
-        /**
-         * 当前场景的所有GameObject对象池
-         */
-        readonly gameObjects: ReadonlyArray<GameObject>;
-    }
-}
 declare namespace egret3d {
     /**
      * @internal
@@ -3636,19 +3855,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     *
-     */
-    class Pool<T> {
-        private readonly _instances;
-        clear(): void;
-        add(instanceOrInstances: T | (T[])): void;
-        remove(instanceOrInstances: T | (T[])): void;
-        get(): T;
-        readonly instances: T[];
-    }
-}
-declare namespace egret3d {
-    /**
      * Transform Class
      * @version paper 1.0
      * @platform Web
@@ -3661,7 +3867,6 @@ declare namespace egret3d {
      * @language zh_CN
      */
     class Transform extends paper.BaseComponent {
-        private _dirtyAABB;
         private _dirtyLocal;
         private _dirtyWorld;
         /**
@@ -3669,29 +3874,26 @@ declare namespace egret3d {
          * @internal
          */
         _worldMatrixDeterminant: number;
-        private readonly localMatrix;
-        private readonly worldMatrix;
-        private readonly localPosition;
-        private readonly position;
-        private readonly localRotation;
-        private readonly rotation;
-        private readonly localEulerAngles;
-        private readonly eulerAngles;
-        private readonly localScale;
-        private readonly scale;
+        private readonly _localMatrix;
+        private readonly _worldMatrix;
+        private readonly _localPosition;
+        private readonly _localRotation;
+        private readonly _localEulerAngles;
+        private readonly _localScale;
+        private readonly _position;
+        private readonly _rotation;
+        private readonly _eulerAngles;
+        private readonly _scale;
         /**
          * @internal
          */
         readonly _children: Transform[];
-        private _aabb;
         /**
          * @internal
          */
         _parent: Transform | null;
         private _removeFromChildren(value);
-        private _buildAABB();
-        private _sync();
-        private _dirtify(local?);
+        private _dirtify(isLocalDirty);
         /**
          * 父节点发生改变的回调方法
          * 子类可通过重载此方法进行标脏状态传递
@@ -3705,7 +3907,7 @@ declare namespace egret3d {
         /**
          * 设置父节点
          */
-        setParent(newParent: Transform | null, worldPositionStays?: boolean): void;
+        setParent(newParent: Transform | null, worldPositionStays?: boolean): this;
         getChildIndex(value: Transform): number;
         setChildIndex(value: Transform, index: number): void;
         /**
@@ -3714,31 +3916,10 @@ declare namespace egret3d {
          */
         getChildAt(index: number): Transform;
         /**
-         * get local matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * Finds a child by name or path and returns it.
+         * @param nameOrPath
          */
-        /**
-         * 获得本地矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        getLocalMatrix(): Matrix;
-        /**
-         * get world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获得世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        getWorldMatrix(): Matrix;
+        find(nameOrPath: string): Transform;
         /**
          * get local position
          * @version paper 1.0
@@ -3751,7 +3932,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        getLocalPosition(): Vector3;
+        getLocalPosition(): Readonly<Vector3>;
         /**
          * set local position
          * @version paper 1.0
@@ -3764,35 +3945,12 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setLocalPosition(v: Vector3): void;
-        setLocalPosition(x: number, y: number, z: number): void;
+        setLocalPosition(position: Readonly<IVector3>): this;
+        setLocalPosition(x: number, y: number, z: number): this;
         /**
-         * get position
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
-        /**
-         * 获得位置
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        getPosition(): Readonly<Vector3>;
-        /**
-         * set rotation
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置位置
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        setPosition(v: Vector3): void;
-        setPosition(x: number, y: number, z: number): void;
+        localPosition: Readonly<Vector3>;
         /**
          * get local rotation
          * @version paper 1.0
@@ -3818,35 +3976,12 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setLocalRotation(v: Quaternion): void;
-        setLocalRotation(x: number, y: number, z: number, w: number): void;
+        setLocalRotation(rotation: Readonly<IVector4>): this;
+        setLocalRotation(x: number, y: number, z: number, w: number): this;
         /**
-         * get rotation
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
-        /**
-         * 获得旋转
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        getRotation(): Readonly<Quaternion>;
-        /**
-         * set rotation
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置旋转
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        setRotation(v: IVector4): void;
-        setRotation(x: number, y: number, z: number, w: number): void;
+        localRotation: Readonly<IVector4>;
         /**
          * get local euler angles
          * @version paper 1.0
@@ -3859,7 +3994,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        getLocalEulerAngles(): Readonly<Vector3>;
+        getLocalEulerAngles(order?: EulerOrder): Readonly<Vector3>;
         /**
          * set local euler angles
          * @version paper 1.0
@@ -3872,35 +4007,12 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setLocalEulerAngles(v: Vector3): void;
-        setLocalEulerAngles(x: number, y: number, z: number): void;
+        setLocalEulerAngles(euler: Readonly<IVector3>, order?: EulerOrder): this;
+        setLocalEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
-         * get euler angles
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
-        /**
-         * 获取欧拉角
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        getEulerAngles(): Readonly<Vector3>;
-        /**
-         * set euler angles
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置欧拉角
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        setEulerAngles(v: Vector3): void;
-        setEulerAngles(x: number, y: number, z: number): void;
+        localEulerAngles: Readonly<Vector3>;
         /**
          * get local scale
          * @version paper 1.0
@@ -3926,8 +4038,106 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setLocalScale(v: Vector3): void;
-        setLocalScale(x: number, y: number, z: number): void;
+        setLocalScale(v: Readonly<IVector3>): this;
+        setLocalScale(x: number, y: number, z: number): this;
+        /**
+         *
+         */
+        localScale: Readonly<Vector3>;
+        /**
+         * get local matrix
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获得本地矩阵
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        getLocalMatrix(): Readonly<Matrix4>;
+        /**
+         * get position
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获得位置
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        getPosition(): Readonly<Vector3>;
+        /**
+         * set rotation
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置位置
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        setPosition(position: IVector3): this;
+        setPosition(x: number, y: number, z: number): this;
+        /**
+         * get rotation
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获得旋转
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        getRotation(): Readonly<Quaternion>;
+        /**
+         * set rotation
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置旋转
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        setRotation(v: IVector4): this;
+        setRotation(x: number, y: number, z: number, w: number): this;
+        /**
+         * get euler angles
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 获取欧拉角
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        getEulerAngles(order?: EulerOrder): Readonly<Vector3>;
+        /**
+         * set euler angles
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置欧拉角
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        setEulerAngles(v: Readonly<IVector3>, order?: EulerOrder): this;
+        setEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
          * get scale
          * @version paper 1.0
@@ -3953,34 +4163,21 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        setScale(v: Vector3): void;
-        setScale(x: number, y: number, z: number): void;
+        setScale(v: IVector3): this;
+        setScale(x: number, y: number, z: number): this;
         /**
-         * look at a target
+         * get world matrix
          * @version paper 1.0
          * @platform Web
          * @language en_US
          */
         /**
-         * 旋转当前transform 到指定的目标
+         * 获得世界矩阵
          * @version paper 1.0
          * @platform Web
          * @language zh_CN
          */
-        lookAt(target: Transform | Vector3, up?: Vector3): void;
-        /**
-         * z-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前z轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        getForward(out: Vector3): Vector3;
+        getWorldMatrix(): Readonly<Matrix4>;
         /**
          * x-axis towards in world space
          * @version paper 1.0
@@ -3993,7 +4190,7 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        getRight(out: Vector3): void;
+        getRight(out?: Vector3): Vector3;
         /**
          * y-axis towards in world space
          * @version paper 1.0
@@ -4006,20 +4203,37 @@ declare namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        getUp(out: Vector3): void;
+        getUp(out?: Vector3): Vector3;
         /**
-         * Finds a child by name or path and returns it.
-         * @param nameOrPath
+         * z-axis towards in world space
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        find(nameOrPath: string): Transform;
+        /**
+         * 获取世界坐标系下当前z轴的朝向
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        getForward(out?: Vector3): Vector3;
+        /**
+         * look at a target
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 旋转当前transform 到指定的目标
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        lookAt(target: Readonly<Transform> | Readonly<IVector3>, up?: Readonly<IVector3>): this;
         /**
          * 当前子集对象的数量
          */
         readonly childCount: number;
-        /**
-         *
-         */
-        readonly aabb: AABB;
         /**
          * children list
          * @version paper 1.0
@@ -4047,13 +4261,13 @@ declare namespace egret3d {
          */
         parent: Transform | null;
     }
-    type ImmutableVector4 = Readonly<Float32Array>;
 }
 declare namespace egret3d {
     /**
      *
      */
     class DefaultMeshes extends paper.SingletonComponent {
+        static AXISES: Mesh;
         static QUAD: Mesh;
         static QUAD_PARTICLE: Mesh;
         static PLANE: Mesh;
@@ -4063,9 +4277,14 @@ declare namespace egret3d {
         static CYLINDER: Mesh;
         static SPHERE: Mesh;
         initialize(): void;
+        static createCylinderCCW(height?: number, radius?: number, segment?: number): Mesh;
+        static createSphereCCW(radius?: number, widthSegments?: number, heightSegments?: number): Mesh;
     }
 }
 declare namespace egret3d {
+    /**
+     *
+     */
     class DefaultTextures extends paper.SingletonComponent {
         /**
          *
@@ -4079,40 +4298,48 @@ declare namespace egret3d {
          *
          */
         static GRID: Texture;
+        /**
+         *
+         */
+        static MISSING: Texture;
         initialize(): void;
     }
 }
 declare namespace egret3d {
+    /**
+     *
+     */
     class DefaultShaders extends paper.SingletonComponent {
-        static SHADOW_DEPTH: GLTFAsset;
-        static SHADOW_DISTANCE: GLTFAsset;
-        static LINE: GLTFAsset;
-        static DIFFUSE: GLTFAsset;
-        static DIFFUSE_TINT_COLOR: GLTFAsset;
-        static DIFFUSE_BOTH_SIDE: GLTFAsset;
-        static TRANSPARENT: GLTFAsset;
-        static TRANSPARENT_ALPHACUT: GLTFAsset;
-        static TRANSPARENT_TINTCOLOR: GLTFAsset;
-        static TRANSPARENT_ADDITIVE: GLTFAsset;
-        static TRANSPARENT_BOTH_SIDE: GLTFAsset;
-        static TRANSPARENT_ADDITIVE_BOTH_SIDE: GLTFAsset;
-        static LAMBERT: GLTFAsset;
-        static GIZMOS_COLOR: GLTFAsset;
-        static MATERIAL_COLOR: GLTFAsset;
-        static VERT_COLOR: GLTFAsset;
-        static PARTICLE: GLTFAsset;
-        static PARTICLE_ADDITIVE: GLTFAsset;
-        static PARTICLE_ADDITIVE_PREMYLTIPLY: GLTFAsset;
-        static PARTICLE_BLEND: GLTFAsset;
-        static PARTICLE_BLEND_PREMYLTIPLY: GLTFAsset;
-        createBuildinShader(url: string, vertName: string, vertSource: string, fragName: string, fragSource: string, renderQueue: number): GLTFAsset;
-        private _setBlend(technique, blend);
-        private _setCullFace(technique, cull, frontFace?, cullFace?);
-        private _setDepth(technique, zTest, zWrite);
-        private _createColorShaderTemplate(url, renderQueue);
-        private _createDiffuseShaderTemplate(url, renderQueue);
-        private _createLambertShaderTemplate(url, renderQueue);
-        private _createParticleShaderTemplate(url, renderQueue);
+        static MESH_BASIC: Shader;
+        static MESH_BASIC_DOUBLESIDE: Shader;
+        static MESH_LAMBERT: Shader;
+        static MESH_LAMBERT_DOUBLESIDE: Shader;
+        static MESH_PHONG: Shader;
+        static MESH_PHONE_DOUBLESIDE: Shader;
+        static MESH_PHYSICAL: Shader;
+        static MESH_PHYSICAL_DOUBLESIDE: Shader;
+        static LINEDASHED: Shader;
+        static VERTEX_COLOR: Shader;
+        static MATERIAL_COLOR: Shader;
+        static TRANSPARENT: Shader;
+        static TRANSPARENT_DOUBLESIDE: Shader;
+        static TRANSPARENT_ADDITIVE: Shader;
+        static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
+        static PARTICLE: Shader;
+        static PARTICLE_BLEND: Shader;
+        static PARTICLE_BLEND1: Shader;
+        static PARTICLE_ADDITIVE: Shader;
+        static PARTICLE_BLEND_PREMULTIPLY: Shader;
+        static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
+        static CUBE: Shader;
+        static DEPTH: Shader;
+        static DISTANCE_RGBA: Shader;
+        static EQUIRECT: Shader;
+        static NORMAL: Shader;
+        static POINTS: Shader;
+        static SHADOW: Shader;
+        static SPRITE: Shader;
+        private _createShader(name, config, renderQueue?, states?, defines?);
         initialize(): void;
     }
 }
@@ -4121,11 +4348,27 @@ declare namespace egret3d {
      *
      */
     class DefaultMaterials extends paper.SingletonComponent {
-        static DefaultDiffuse: Material;
-        static Missing: Material;
-        static Line: Material;
-        static ShadowDepth: Material;
-        static ShadowDistance: Material;
+        /**
+         *
+         */
+        static MESH_BASIC: Material;
+        /**
+         *
+         */
+        static LINEDASHED_COLOR: Material;
+        /**
+         *
+         */
+        static MISSING: Material;
+        /**
+         * @internal
+         */
+        static SHADOW_DEPTH: Material;
+        /**
+         * @internal
+         */
+        static SHADOW_DISTANCE: Material;
+        private _createMaterial(name, shader, renderQueue?);
         initialize(): void;
     }
 }
@@ -4136,10 +4379,10 @@ declare namespace egret3d {
     class CamerasAndLights extends paper.SingletonComponent {
         readonly cameras: Camera[];
         readonly lights: BaseLight[];
-        private _sortCamera(a, b);
+        private _sortCameras(a, b);
         updateCamera(gameObjects: ReadonlyArray<paper.GameObject>): void;
         updateLight(gameObjects: ReadonlyArray<paper.GameObject>): void;
-        sort(): void;
+        sortCameras(): void;
     }
 }
 declare namespace egret3d {
@@ -4149,7 +4392,7 @@ declare namespace egret3d {
      */
     type DrawCall = {
         renderer: paper.BaseRenderer;
-        matrix?: Matrix;
+        matrix?: Matrix4;
         subMeshIndex: number;
         mesh: Mesh;
         material: Material;
@@ -4215,7 +4458,7 @@ declare namespace egret3d {
         protected readonly _interests: ({
             componentClass: typeof Camera;
         }[] | {
-            componentClass: typeof DirectLight[];
+            componentClass: typeof DirectionalLight[];
         }[])[];
         protected readonly _camerasAndLights: CamerasAndLights;
         onAddGameObject(_gameObject: paper.GameObject, group: paper.Group): void;
@@ -4229,9 +4472,15 @@ declare namespace egret3d {
      */
     class Camera extends paper.BaseComponent {
         /**
-         * 当前主相机。
+         * 当前场景的主相机。
+         * - 如果没有则创建一个。
          */
         static readonly main: Camera;
+        /**
+         * 编辑相机。
+         * - 如果没有则创建一个。
+         */
+        static readonly edit: Camera;
         /**
          * 是否清除颜色缓冲区
          */
@@ -4257,7 +4506,7 @@ declare namespace egret3d {
          */
         size: number;
         /**
-         * 0=正交， 1=透视 中间值可以在两种相机间过度
+         * 0=正交，1=透视 中间值可以在两种相机间过度
          */
         opvalue: number;
         /**
@@ -4282,29 +4531,22 @@ declare namespace egret3d {
         renderTarget: IRenderTarget | null;
         private _near;
         private _far;
-        private readonly matProjP;
-        private readonly matProjO;
-        private readonly frameVecs;
+        private readonly _matProjP;
+        private readonly _matProjO;
+        private readonly _frameVecs;
         /**
          * 计算相机视锥区域
          */
-        private calcCameraFrame();
-        /**
-         * @inheritDoc
-         */
+        private _calcCameraFrame();
         initialize(): void;
         /**
          *
          */
         update(_delta: number): void;
         /**
-         * 计算相机的 view matrix（视图矩阵）
-         */
-        calcViewMatrix(matrix: Matrix): Matrix;
-        /**
          * 计算相机的 project matrix（投影矩阵）
          */
-        calcProjectMatrix(asp: number, matrix: Matrix): Matrix;
+        calcProjectMatrix(asp: number, matrix: Matrix4): Matrix4;
         /**
          * 计算相机视口像素rect
          */
@@ -4322,7 +4564,8 @@ declare namespace egret3d {
          */
         calcScreenPosFromWorldPos(worldPos: Vector3, outScreenPos: Vector2): void;
         getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: number, out: Vector2): void;
-        testFrustumCulling(node: Transform): boolean;
+        private _intersectPlane(boundingSphere, v0, v1, v2);
+        testFrustumCulling(node: paper.BaseRenderer): boolean;
         /**
          * 相机到近裁剪面距离
          */
@@ -4363,6 +4606,9 @@ declare namespace egret3d {
      * 包括矩阵信息，灯光，光照贴图，viewport尺寸等等
      */
     class RenderContext {
+        readonly DIRECT_LIGHT_SIZE: number;
+        readonly POINT_LIGHT_SIZE: number;
+        readonly SPOT_LIGHT_SIZE: number;
         /**
          *
          */
@@ -4388,23 +4634,26 @@ declare namespace egret3d {
         spotLightArray: Float32Array;
         directShadowMatrix: Float32Array;
         spotShadowMatrix: Float32Array;
-        readonly matrix_m: Matrix;
-        readonly matrix_mvp: Matrix;
+        pointShadowMatrix: Float32Array;
+        readonly matrix_m: Matrix4;
+        readonly matrix_mvp: Matrix4;
         readonly directShadowMaps: (WebGLTexture | null)[];
         readonly pointShadowMaps: (WebGLTexture | null)[];
         readonly spotShadowMaps: (WebGLTexture | null)[];
+        readonly ambientLightColor: Float32Array;
         readonly viewPortPixel: IRectangle;
         readonly cameraPosition: Float32Array;
         readonly cameraForward: Float32Array;
         readonly cameraUp: Float32Array;
-        readonly matrix_v: Matrix;
-        readonly matrix_p: Matrix;
-        readonly matrix_mv: Matrix;
-        readonly matrix_vp: Matrix;
+        readonly matrix_v: Matrix4;
+        readonly matrix_p: Matrix4;
+        readonly matrix_mv: Matrix4;
+        readonly matrix_vp: Matrix4;
+        readonly matrix_mv_inverse: Matrix3;
         updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number): void;
-        updateCamera(camera: Camera, matrix: Matrix): void;
-        updateLights(lights: ReadonlyArray<BaseLight>): void;
-        updateModel(matrix: Matrix): void;
+        updateCamera(camera: Camera, matrix: Matrix4): void;
+        updateLights(lights: ReadonlyArray<BaseLight>, ambientLightColor: Color): void;
+        updateModel(matrix: Matrix4): void;
         updateBones(data: Float32Array | null): void;
         readonly lightPosition: Float32Array;
         lightShadowCameraNear: number;
@@ -4430,14 +4679,9 @@ declare namespace egret3d {
         private _screenAdapter;
         screenAdapter: IScreenAdapter;
         root: egret.DisplayObjectContainer;
-        /**
-         * @inheritDoc
-         */
         initialize(): void;
-        /**
-         * @inheritDoc
-         */
         uninitialize(): void;
+        recalculateAABB(): void;
         /**
          * 检查屏幕接触事件是否能够穿透此2D层
          */
@@ -4484,6 +4728,11 @@ declare namespace egret3d {
         protected readonly _interests: {
             componentClass: typeof Egret2DRenderer;
         }[];
+        /**
+         * @internal
+         */
+        readonly webInput: egret.web.HTMLInput;
+        onAwake(): void;
         onUpdate(deltaTime: number): void;
     }
 }
@@ -4505,9 +4754,9 @@ declare module egret.web {
         private constructor();
         beforeRender(): void;
         /**
-         *  执行目前缓存在命令列表里的命令并清空
+         * @internal
          */
-        activatedBuffer: WebGLRenderBuffer;
+        _activatedBuffer: WebGLRenderBuffer;
         $drawWebGL(): void;
         /**
          * 执行绘制命令
@@ -4724,46 +4973,85 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     * 组件事件。
+     * 场景类
      */
-    namespace EventPool {
+    class Scene extends BaseObject {
+        /**
+         *
+         */
+        static createEmpty(name?: string, isActive?: boolean): Scene;
+        /**
+         *
+         */
+        static create(name: string, combineStaticObjects?: boolean): Scene;
+        /**
+         * lightmap强度
+         */
+        lightmapIntensity: number;
+        /**
+         * 场景名称。
+         */
+        readonly name: string;
+        /**
+         * 场景的light map列表。
+         */
+        readonly lightmaps: egret3d.Texture[];
+        /**
+         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+         */
+        extras?: any;
         /**
          * @internal
          */
-        const enum EventType {
-            Enabled = "__enabled__",
-            Disabled = "__disabled__",
-        }
+        readonly _gameObjects: GameObject[];
         /**
-         * 事件回调类型
+         * 环境光
          */
-        type EventListener<T extends BaseComponent> = (component: T, extend?: any) => void;
+        readonly ambientColor: egret3d.Color;
+        private constructor();
         /**
-         * 添加事件监听
+         * @internal
          */
-        function addEventListener<T extends BaseComponent>(eventType: string, componentClass: ComponentClass<T>, callback: EventListener<T>): void;
+        _addGameObject(gameObject: GameObject): void;
         /**
-         * 移除事件监听
+         * @internal
          */
-        function removeEventListener<T extends BaseComponent>(eventType: string, componentClass: ComponentClass<T>, callback: EventListener<T>): void;
+        _removeGameObject(gameObject: GameObject): void;
         /**
-         * 移除所有该类型的事件监听
+         *
          */
-        function removeAllEventListener<T extends BaseComponent>(eventType: string, componentClass: ComponentClass<T>): void;
+        destroy(): void;
         /**
-         * 发送组件事件:
-         * @param type event type:
-         * @param component component
+         *
          */
-        function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any): void;
+        find(nameOrPath: string): GameObject;
+        /**
+         *
+         */
+        findWithTag(tag: string): GameObject;
+        /**
+         *
+         */
+        findGameObjectsWithTag(tag: string): GameObject[];
+        /**
+         * 所有根实体。
+         */
+        getRootGameObjects(): GameObject[];
+        /**
+         *
+         */
+        readonly gameObjectCount: number;
+        /**
+         * 所有实体。
+         */
+        readonly gameObjects: ReadonlyArray<GameObject>;
     }
 }
 declare namespace egret3d {
     /**
      *
      */
-    class DirectLight extends BaseLight {
-        readonly type: LightType;
+    class DirectionalLight extends BaseLight {
         renderTarget: IRenderTarget;
         update(camera: Camera, faceIndex: number): void;
     }
@@ -4773,7 +5061,14 @@ declare namespace egret3d {
      *
      */
     class PointLight extends BaseLight {
-        readonly type: LightType;
+        /**
+         *
+         */
+        decay: number;
+        /**
+         *
+         */
+        distance: number;
         renderTarget: IRenderTarget;
         update(camera: Camera, faceIndex: number): void;
     }
@@ -4783,7 +5078,22 @@ declare namespace egret3d {
      *
      */
     class SpotLight extends BaseLight {
-        readonly type: LightType;
+        /**
+         *
+         */
+        decay: number;
+        /**
+         *
+         */
+        distance: number;
+        /**
+         *
+         */
+        angle: number;
+        /**
+         *
+         */
+        penumbra: number;
         update(camera: Camera, faceIndex: number): void;
     }
 }
@@ -4806,26 +5116,180 @@ declare namespace egret3d {
         mesh: Mesh | null;
     }
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     * mesh的渲染组件
+     * 可以挂载Component的实体类。
      */
-    class MeshRenderer extends paper.BaseRenderer {
-        private readonly _materials;
-        uninitialize(): void;
+    class GameObject extends BaseObject {
         /**
-         * material list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * @internal
          */
+        static readonly _instances: GameObject[];
         /**
-         * 材质数组
-         * @version paper 1.0
-         * @platform Web
-         * @language
+         * 创建 GameObject，并添加到当前场景中。
          */
-        materials: ReadonlyArray<Material>;
+        static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
+        /**
+         * 是否是静态，启用这个属性可以提升性能
+         */
+        isStatic: boolean;
+        /**
+         *
+         */
+        hideFlags: HideFlags;
+        /**
+         * 层级
+         */
+        layer: Layer;
+        /**
+         * 名称
+         */
+        name: string;
+        /**
+         * 标签
+         */
+        tag: string;
+        /**
+         * 变换组件
+         */
+        transform: egret3d.Transform;
+        /**
+         *
+         */
+        renderer: BaseRenderer | null;
+        /**
+         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+         */
+        extras?: GameObjectExtras;
+        private _activeSelf;
+        /**
+         * @internal
+         */
+        _activeInHierarchy: boolean;
+        /**
+         * @internal
+         */
+        _activeDirty: boolean;
+        private readonly _components;
+        private readonly _cachedComponents;
+        private _scene;
+        /**
+         * @deprecated
+         */
+        constructor(name?: string, tag?: string, scene?: Scene | null);
+        private _destroy();
+        private _addToScene(value);
+        private _canRemoveComponent(value);
+        private _removeComponent(value, groupComponent);
+        private _getComponentsInChildren(componentClass, child, components, isExtends?);
+        private _getComponent(componentClass);
+        /**
+         * @internal
+         */
+        _activeInHierarchyDirty(prevActive: boolean): void;
+        /**
+         *
+         */
+        destroy(): void;
+        /**
+         * 添加组件。
+         */
+        addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T;
+        /**
+         * 移除组件。
+         */
+        removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends?: boolean): void;
+        /**
+         * 移除所有组件。
+         */
+        removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends?: boolean): void;
+        /**
+         * 获取组件。
+         */
+        getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
+        /**
+         *
+         */
+        getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
+        /**
+         * 搜索自己和父节点中所有特定类型的组件
+         */
+        getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
+        /**
+         * 搜索自己和子节点中所有特定类型的组件
+         */
+        getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
+        /**
+         * 获取组件，如果未添加该组件，则添加该组件。
+         */
+        getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
+        /**
+         * 针对同级的组件发送消息
+         * @param methodName
+         * @param parameter``
+         */
+        sendMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
+        /**
+         * 针对直接父级发送消息
+         * @param methodName
+         * @param parameter
+         */
+        sendMessageUpwards(methodName: string, parameter?: any, requireReceiver?: boolean): void;
+        /**
+         * 群发消息
+         * @param methodName
+         * @param parameter
+         */
+        broadcastMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
+        /**
+         *
+         */
+        readonly isDestroyed: boolean;
+        /**
+         *
+         */
+        dontDestroy: boolean;
+        /**
+         * 当前GameObject对象自身激活状态
+         */
+        activeSelf: boolean;
+        /**
+         * 获取当前GameObject对象在场景中激活状态。
+         * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
+         */
+        readonly activeInHierarchy: boolean;
+        readonly path: string;
+        /**
+         *
+         */
+        readonly components: ReadonlyArray<BaseComponent>;
+        /**
+         *
+         */
+        parent: GameObject | null;
+        /**
+         * 获取物体所在场景实例。
+         */
+        readonly scene: Scene;
+        /**
+         *
+         */
+        readonly globalGameObject: GameObject;
+        /**
+         * @deprecated
+         * @see paper.Scene#find()
+         */
+        static find(name: string, scene?: Scene | null): GameObject;
+        /**
+         * @deprecated
+         * @see paper.Scene#findWithTag()
+         */
+        static findWithTag(tag: string, scene?: Scene | null): GameObject;
+        /**
+         * @deprecated
+         * @see paper.Scene#findGameObjectsWithTag()
+         */
+        static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
     }
 }
 declare namespace egret3d {
@@ -4858,7 +5322,6 @@ declare namespace egret3d {
     const enum SkinnedMeshRendererEventType {
         Mesh = "mesh",
         Bones = "bones",
-        Materials = "materials",
     }
     /**
      * Skinned Mesh Renderer Component
@@ -4872,7 +5335,7 @@ declare namespace egret3d {
      * @platform Web
      * @language
      */
-    class SkinnedMeshRenderer extends paper.BaseRenderer {
+    class SkinnedMeshRenderer extends MeshRenderer {
         /**
          *
          */
@@ -4880,7 +5343,6 @@ declare namespace egret3d {
             key: string;
             data: Float32Array;
         }[];
-        private readonly _materials;
         private _mesh;
         /**
          * mesh instance
@@ -4924,6 +5386,7 @@ declare namespace egret3d {
         private _getMatByIndex(index, out);
         initialize(): void;
         uninitialize(): void;
+        recalculateAABB(): void;
         /**
          * ray intersects
          * @param ray ray
@@ -4939,19 +5402,6 @@ declare namespace egret3d {
          * @language
          */
         intersects(ray: Ray): any;
-        /**
-         * material list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 材质数组
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        materials: ReadonlyArray<Material>;
         /**
          * 骨骼列表
          *
@@ -4970,10 +5420,13 @@ declare namespace egret3d {
     class SkinnedMeshRendererSystem extends paper.BaseSystem {
         protected readonly _interests: {
             componentClass: typeof SkinnedMeshRenderer;
-            listeners: {
+            listeners: ({
                 type: SkinnedMeshRendererEventType;
                 listener: (component: SkinnedMeshRenderer) => void;
-            }[];
+            } | {
+                type: paper.RendererEventType;
+                listener: (component: SkinnedMeshRenderer) => void;
+            })[];
         }[];
         private readonly _drawCalls;
         private _updateDrawCalls(gameObject);
@@ -5197,6 +5650,7 @@ declare namespace egret3d {
         update(globalTime: number): void;
         fadeIn(animationName: string | null, fadeTime: number, playTimes?: number, layer?: number, additive?: boolean): AnimationState | null;
         play(animationNameOrNames?: string | string[] | null, playTimes?: number): AnimationState | null;
+        stop(): void;
         readonly lastAnimationnName: string;
         /**
          * 动画数据列表。
@@ -5311,8 +5765,8 @@ declare namespace egret3d.particle {
         clone(source: AnimationCurve): void;
     }
     class GradientColorKey extends paper.BaseObject {
-        color: Color;
         time: number;
+        readonly color: Color;
         deserialize(element: any): this;
     }
     class GradientAlphaKey extends paper.BaseObject {
@@ -5564,98 +6018,23 @@ declare namespace egret3d.particle {
         readonly floatValues: Readonly<Float32Array>;
     }
 }
-declare namespace paper {
-    /**
-     *
-     */
-    const enum HideFlags {
-        /**
-         *
-         */
-        None = 0,
-        /**
-         *
-         */
-        NotEditable = 1,
-        /**
-         *
-         */
-        Hide = 2,
+declare namespace egret3d {
+    class Matrix3 {
+        private static readonly _instances;
+        static create(): Matrix3;
+        static release(value: Matrix3): void;
+        readonly rawData: Float32Array;
+        constructor(rawData?: Float32Array | null);
+        copy(value: Readonly<Matrix3>): this;
+        clone(): Matrix3;
+        set(n11: number, n12: number, n13: number, n21: number, n22: number, n23: number, n31: number, n32: number, n33: number): this;
+        identity(): this;
+        inverse(matrix: Matrix3): this;
+        getNormalMatrix(matrix4: any): this;
+        transpose(): this;
+        setFromMatrix4(m: Matrix): this;
+        determinant(): number;
     }
-    /**
-     *
-     */
-    const enum DefaultNames {
-        NoName = "NoName",
-        Global = "Global",
-        MainCamera = "MainCamera",
-        EditorCamera = "EditorCamera",
-        Editor = "Editor",
-    }
-    /**
-     *
-     */
-    const enum DefaultTags {
-        Untagged = "",
-        Respawn = "Respawn",
-        Finish = "Finish",
-        EditorOnly = "EditorOnly",
-        MainCamera = "MainCamera",
-        Player = "Player",
-        GameController = "GameController",
-        Global = "Global",
-    }
-    /**
-     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
-     * 这个属性可以实现相机的选择性剔除。
-     */
-    const enum Layer {
-        Default = 2,
-        UI = 4,
-        UserLayer1 = 8,
-        UserLayer2 = 16,
-        UserLayer3 = 32,
-        UserLayer4 = 64,
-        UserLayer5 = 128,
-        UserLayer6 = 240,
-        UserLayer7 = 256,
-        UserLayer8 = 512,
-        UserLayer9 = 1024,
-        UserLayer10 = 2048,
-        UserLayer11 = 3840,
-    }
-    /**
-     * culling mask
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * culling mask 枚举。
-     * 相机的cullingmask与renderer的renderLayer相匹配，才会执行渲染。否则将会被跳过。
-     * 这个属性可以实现相机的选择性剔除。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    const enum CullingMask {
-        Everything = 16777215,
-        Nothing = 1,
-        Default = 2,
-        UI = 4,
-        UserLayer1 = 8,
-        UserLayer2 = 16,
-        UserLayer3 = 32,
-        UserLayer4 = 64,
-        UserLayer5 = 128,
-        UserLayer6 = 240,
-        UserLayer7 = 256,
-        UserLayer8 = 512,
-        UserLayer9 = 1024,
-        UserLayer10 = 2048,
-        UserLayer11 = 3840,
-    }
-    function layerTest(cullingMask: CullingMask, layer: Layer): boolean;
 }
 declare namespace egret3d.particle {
     const enum ParticleCompEventType {
@@ -5837,6 +6216,8 @@ declare namespace egret3d.particle {
          */
         batchMaterial: Material;
         uninitialize(): void;
+        recalculateAABB(): void;
+        renderMode: ParticleRenderMode;
         /**
          * mesh model
          * @version paper 1.0
@@ -5863,7 +6244,6 @@ declare namespace egret3d.particle {
          * @language
          */
         materials: ReadonlyArray<Material>;
-        renderMode: ParticleRenderMode;
     }
 }
 declare namespace egret3d.particle {
@@ -5960,6 +6340,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     class WebGLCapabilities extends paper.SingletonComponent {
+        static canvas: HTMLCanvasElement;
         static webgl: WebGLRenderingContext;
         static commonDefines: string;
         webgl: WebGLRenderingContext;
@@ -5995,7 +6376,7 @@ declare namespace egret3d {
         private _cacheState;
         private _getWebGLProgram(gl, vs, fs, defines);
         clearState(): void;
-        updateState(state: gltf.States): void;
+        updateState(state?: gltf.States): void;
         useProgram(program: GlProgram): boolean;
         getProgram(material: Material, technique: gltf.Technique, defines: string): GlProgram;
         /**
@@ -6013,269 +6394,87 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 射线
+     *
      */
-    class Ray {
+    class Plane implements paper.IRelease<Plane>, paper.ISerializable {
+        private static readonly _instances;
         /**
-         * 射线起始点
+         *
          */
-        origin: Vector3;
+        static create(normal?: Readonly<IVector3>, constant?: number): Plane;
+        release(): this;
         /**
-         * 射线的方向向量
+         *
          */
-        direction: Vector3;
+        constant: number;
         /**
-         * 构建一条射线
-         * @param origin 射线起点
-         * @param dir 射线方向
+         *
          */
-        constructor(origin: Vector3, direction: Vector3);
+        readonly normal: Vector3;
         /**
-         * 与aabb碰撞相交检测
+         * 请使用 `egret3d.Plane.create()` 创建实例。
+         * @see egret3d.Plane.create()
          */
-        intersectAABB(aabb: AABB): boolean;
-        /**
-         * 与transform表示的plane碰撞相交检测，主要用于2d检测
-         * @param transform transform实例
-         */
-        intersectPlaneTransform(transform: Transform): PickInfo;
-        intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3;
-        /**
-         * 与最大最小点表示的box相交检测
-         * @param minimum 最小点
-         * @param maximum 最大点
-         * @version paper 1.0
-         */
-        intersectBoxMinMax(minimum: Vector3, maximum: Vector3): boolean;
-        /**
-         * 与球相交检测
-         */
-        intersectsSphere(center: Vector3, radius: number): boolean;
-        /**
-         * 与三角形相交检测
-         */
-        intersectsTriangle(vertex0: Vector3, vertex1: Vector3, vertex2: Vector3): PickInfo;
-        /**
-         * 获取射线拾取到的最近物体。
-         */
-        static raycast(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo | null;
-        /**
-         * 获取射线路径上的所有物体。
-         */
-        static raycastAll(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo[] | null;
-        private static _doPick(ray, maxDistance, layerMask, pickAll?, isPickMesh?);
-        private static _pickMesh(ray, transform, pickInfos);
-        private static _pickCollider(ray, transform, pickInfos);
-    }
-    /**
-     * 场景拣选信息
-     */
-    class PickInfo {
-        subMeshIndex: number;
-        triangleIndex: number;
-        distance: number;
-        readonly position: Vector3;
-        readonly textureCoordA: Vector2;
-        readonly textureCoordB: Vector2;
-        transform: Transform | null;
+        private constructor();
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number]>): this;
+        clone(): Plane;
+        copy(value: Readonly<Plane>): this;
+        set(normal: Readonly<IVector3>, constant: number): this;
+        fromPoint(value: Readonly<IVector3>, normal?: Readonly<IVector3>): this;
+        fromPoints(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>, valueC: Readonly<IVector3>): this;
+        normalize(source?: Readonly<Plane>): this;
+        negate(source?: Readonly<Plane>): this;
+        getDistance(value: Readonly<IVector3>): number;
     }
 }
 declare namespace paper {
     /**
-     *
+     * 组件事件。
      */
-    const enum InterestType {
-        /**
-         *
-         */
-        Extends = 1,
-        /**
-         *
-         */
-        Exculde = 2,
-        /**
-         *
-         */
-        Unessential = 4,
-    }
-    /**
-     * 关心组件的配置。
-     */
-    type InterestConfig = {
-        /**
-         * 关心的组件或组件列表。
-         */
-        componentClass: ComponentClass<BaseComponent>[] | ComponentClass<BaseComponent>;
-        /**
-         *
-         */
-        type?: InterestType;
-        /**
-         * 关心该组件的事件。
-         */
-        listeners?: {
-            /**
-             * 事件类型。
-             */
-            type: string;
-            /**
-             * 事件监听。
-             */
-            listener: (component: BaseComponent) => void;
-        }[];
-    };
-    /**
-     *
-     */
-    class Group {
-        private static readonly _groups;
+    namespace EventPool {
         /**
          * @internal
          */
-        static create(interestConfig: ReadonlyArray<InterestConfig>): Group;
+        const enum EventType {
+            Enabled = "__enabled__",
+            Disabled = "__disabled__",
+        }
         /**
-         * @internal
+         * 事件回调类型
          */
-        static update(): void;
+        type EventListener<T extends BaseComponent> = (component: T, extend?: any) => void;
         /**
-         *
+         * 添加事件监听
          */
-        locked: boolean;
-        readonly name: string;
-        private _isRemoved;
-        private readonly _isBehaviour;
-        private readonly _bufferedGameObjects;
+        function addEventListener<T extends BaseComponent>(eventType: string, componentClass: ComponentClass<T>, callback: EventListener<T>): void;
         /**
-         * @internal
+         * 移除事件监听
          */
-        readonly _addedGameObjects: (GameObject | null)[];
-        private _gameObjects;
-        private readonly _bufferedComponents;
+        function removeEventListener<T extends BaseComponent>(eventType: string, componentClass: ComponentClass<T>, callback: EventListener<T>): void;
         /**
-         * @internal
+         * 移除所有该类型的事件监听
          */
-        readonly _addedComponents: (BaseComponent | null)[];
-        private _components;
-        private readonly _interestConfig;
-        private readonly _globalGameObject;
-        private constructor();
-        private _onAddComponent(component);
-        private _onAddUnessentialComponent(component);
-        private _onRemoveUnessentialComponent(component);
-        private _onRemoveComponent(component);
-        private _addGameObject(gameObject);
-        private _removeGameObject(gameObject);
-        private _update();
+        function removeAllEventListener<T extends BaseComponent>(eventType: string, componentClass: ComponentClass<T>): void;
         /**
-         * 判断实体是否被收集。
+         * 发送组件事件:
+         * @param type event type:
+         * @param component component
          */
-        hasGameObject(gameObject: GameObject): boolean;
-        /**
-         *
-         */
-        readonly gameObjects: ReadonlyArray<GameObject>;
-        /**
-         *
-         */
-        readonly components: ReadonlyArray<BaseComponent>;
-    }
-}
-declare namespace egret3d {
-    /**
-     * Mesh.
-     * @version egret3D 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 网格模型。
-     * - 所有子网格的 attributes 必须生成在连续的 buffer 上，并且保持一致。
-     * @version egret3D 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class Mesh extends GLTFAsset {
-        /**
-         * @internal
-         */
-        readonly ibos: WebGLBuffer[];
-        /**
-         * @internal
-         */
-        vbo: WebGLBuffer | null;
-        protected _drawMode: gltf.DrawMode;
-        protected _vertexCount: number;
-        protected readonly _attributeNames: string[];
-        protected readonly _customAttributeTypes: {
-            [key: string]: gltf.AccessorType;
-        };
-        protected _glTFMesh: gltf.Mesh | null;
-        constructor(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[], attributeTypes?: {
-            [key: string]: gltf.AccessorType;
-        } | null, drawMode?: gltf.DrawMode);
-        dispose(): void;
-        /**
-         *
-         */
-        clone(): Mesh;
-        initialize(): void;
-        /**
-         *
-         */
-        addSubMesh(indexCount: number, materialIndex?: number, randerMode?: gltf.MeshPrimitiveMode): number;
-        getVertices(offset?: number, count?: number): Float32Array;
-        getUVs(offset?: number, count?: number): Float32Array;
-        getColors(offset?: number, count?: number): Float32Array;
-        getNormals(offset?: number, count?: number): Float32Array;
-        getTangents(offset?: number, count?: number): Float32Array;
-        getAttributes(attributeType: gltf.MeshAttribute, offset?: number, count?: number): Uint8Array;
-        setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset?: number, count?: number): Uint8Array;
-        getIndices(subMeshIndex?: number): Uint16Array;
-        setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex?: number): Uint16Array;
-        /**
-         *
-         */
-        uploadSubVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number): void;
-        /**
-         *
-         */
-        uploadSubIndexBuffer(subMeshIndex?: number): void;
-        /**
-         * @internal
-         */
-        createVBOAndIBOs(): void;
-        /**
-         * 检测射线碰撞
-         * @param ray 射线
-         * @param matrix 所在transform的矩阵
-         *
-         */
-        intersects(ray: Ray, matrix: Matrix): PickInfo;
-        /**
-         *
-         */
-        drawMode: gltf.DrawMode;
-        /**
-         * 获取子网格数量。
-         */
-        readonly subMeshCount: number;
-        /**
-         *
-         */
-        readonly vertexCount: number;
-        /**
-         *
-         */
-        readonly attributeNames: ReadonlyArray<string>;
-        /**
-         * 获取 glTFMesh 数据。
-         */
-        readonly glTFMesh: gltf.Mesh;
+        function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any): void;
     }
 }
 declare type int = number;
 declare type uint = number;
 declare namespace paper {
+    /**
+     *
+     */
+    const enum PlayerMode {
+        Player = 0,
+        DebugPlayer = 1,
+        Editor = 2,
+    }
     /**
      *
      */
@@ -6306,18 +6505,16 @@ declare namespace paper {
          * 场景管理器。
          */
         readonly sceneManager: SceneManager;
-        private _isEditor;
         private _isFocused;
-        private _isPlaying;
         private _isRunning;
+        private _playerMode;
         private _bindUpdate;
         _option: egret3d.RequiredRuntimeOptions;
         _canvas: HTMLCanvasElement;
         _webgl: WebGLRenderingContext;
         private _update();
-        init({isEditor, isPlaying, systems, option, canvas, webgl}?: {
-            isEditor?: boolean;
-            isPlaying?: boolean;
+        init({playerMode, systems, option, canvas, webgl}?: {
+            playerMode?: PlayerMode;
             systems?: (new () => BaseSystem)[];
             option?: {};
             canvas?: {};
@@ -6329,31 +6526,75 @@ declare namespace paper {
         pause(): void;
         resume(): void;
         callLater(callback: () => void): void;
-        readonly isEditor: boolean;
         readonly isFocused: boolean;
-        readonly isPlaying: boolean;
         readonly isRunning: boolean;
+        readonly playerMode: PlayerMode;
     }
 }
 declare namespace egret3d {
     /**
-         * 渲染排序
+     *
+     */
+    class Triangle implements paper.IRelease<Triangle>, paper.ISerializable {
+        private static readonly _instances;
+        static create(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): Triangle;
+        release(): this;
+        readonly a: Vector3;
+        readonly b: Vector3;
+        readonly c: Vector3;
+        /**
+         * 请使用 `egret3d.Triangle.create()` 创建实例。
+         * @see egret3d.Triangle.create()
          */
-    enum RenderQueue {
-        Background = 1000,
-        Geometry = 2000,
-        AlphaTest = 2450,
-        Transparent = 3000,
-        Overlay = 4000,
+        private constructor();
+        serialize(): number[];
+        deserialize(element: Readonly<[number, number, number, number, number, number, number, number, number]>): void;
+        copy(value: Readonly<Triangle>): this;
+        clone(): Triangle;
+        set(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offsetA?: number, offsetB?: number, offsetC?: number): void;
+        getCenter(value: Vector3): Vector3;
+        getNormal(value: Vector3): Vector3;
+        getArea(): number;
     }
+}
+declare namespace egret3d {
     /**
-    * 材质资源
-    */
+     *
+     */
+    class Shader extends GLTFAsset {
+        /**
+         * @internal
+         */
+        _renderQueue?: number;
+        /**
+         * @internal
+         */
+        _defines?: string[];
+        /**
+         * @internal
+         */
+        _states?: gltf.States;
+        /**
+         * @internal
+         */
+        constructor(config: GLTF, name: string);
+    }
+}
+declare namespace egret3d {
+    /**
+     * 材质资源
+     */
     class Material extends GLTFAsset {
         /**
          *
          */
-        renderQueue: RenderQueue | number;
+        static create(shader?: Shader | string): Material;
+        static create(config: GLTF, name: string): Material;
+        /**
+         *
+         */
+        renderQueue: paper.RenderQueue | number;
         /**
           * @internal
           */
@@ -6363,111 +6604,2962 @@ declare namespace egret3d {
           */
         _version: number;
         private _cacheDefines;
-        private _textureRef;
         private readonly _defines;
+        private readonly _textures;
         /**
-        * @internal
-        */
-        _glTFMaterial: GLTFMaterial | null;
+         * @internal
+         */
+        _shader: Shader;
         /**
         * @internal
         */
         _glTFTechnique: gltf.Technique;
         /**
-         * @internal
+         * 请使用 `egret3d.Material.create()` 创建实例。
+         * @see egret3d.Material.create()
+         * @deprecated
          */
-        _glTFShader: GLTFAsset;
-        constructor(shader: GLTFAsset);
-        dispose(): void;
+        constructor(shader?: Shader | string);
+        constructor(config: GLTF, name: string);
+        private _reset(shaderOrConfig);
+        dispose(disposeChildren?: boolean): boolean;
+        copy(value: Material): this;
         /**
          * 克隆材质资源。
          */
         clone(): Material;
-        initialize(): void;
-        addDefine(key: string): void;
-        removeDefine(key: string): void;
-        setBoolean(id: string, value: boolean): void;
-        setInt(id: string, value: number): void;
-        setIntv(id: string, value: Float32Array): void;
-        setFloat(id: string, value: number): void;
-        setFloatv(id: string, value: Float32Array): void;
-        setVector2(id: string, value: Vector2): void;
-        setVector2v(id: string, value: Float32Array): void;
-        setVector3(id: string, value: Vector3): void;
-        setVector3v(id: string, value: Float32Array): void;
-        setVector4(id: string, value: Vector4): void;
-        setVector4v(id: string, value: Float32Array | [number, number, number, number]): void;
-        setMatrix(id: string, value: Matrix): void;
-        setMatrixv(id: string, value: Float32Array): void;
-        setTexture(id: string, value: egret3d.Texture): void;
+        addDefine(key: string): this;
+        removeDefine(key: string): this;
+        setBoolean(id: string, value: boolean): this;
+        setInt(id: string, value: number): this;
+        setIntv(id: string, value: Float32Array): this;
+        setFloat(id: string, value: number): this;
+        setFloatv(id: string, value: Float32Array): this;
+        setVector2(id: string, value: Vector2): this;
+        setVector2v(id: string, value: Float32Array): this;
+        setVector3(id: string, value: Vector3): this;
+        setVector3v(id: string, value: Float32Array): this;
+        setVector4(id: string, value: Vector4): this;
+        setVector4v(id: string, value: Float32Array | [number, number, number, number]): this;
+        setMatrix(id: string, value: Matrix4): this;
+        setMatrixv(id: string, value: Float32Array): this;
+        setTexture(id: string, value: egret3d.Texture): this;
         /**
+         *
+         * @param blend
+         */
+        setBlend(blend: gltf.BlendMode): this;
+        /**
+         *
+         */
+        setCullFace(cull: boolean, frontFace?: gltf.FrontFace, cullFace?: gltf.CullFace): this;
+        /**
+         *
+         */
+        setDepth(zTest: boolean, zWrite: boolean): this;
+        /**
+         *
+         */
+        clearStates(): this;
+        /**
+         * TODO
          * @internal
          */
         readonly shaderDefine: string;
+        shader: Shader;
+        readonly glTFTechnique: gltf.Technique;
     }
 }
+declare namespace egret3d.Primitive {
+    /**
+     *
+     */
+    const enum Type {
+        Axises = 0,
+        Quad = 1,
+        QuadParticle = 2,
+        Plane = 3,
+        Cube = 4,
+        Pyramid = 5,
+        Cylinder = 6,
+        Sphere = 7,
+    }
+    /**
+     *
+     */
+    function create(type: Type, name?: string, tag?: string, scene?: paper.Scene): paper.GameObject;
+}
 declare namespace egret3d.ShaderLib {
-    const alphaBlend_frag = "\n#include <common>\nuniform sampler2D _MainTex;\nuniform vec4 _TintColor;\nvarying highp vec2 xlv_TEXCOORD0;\n\nvoid main()\n{   \n gl_FragColor=texture2D(_MainTex,xlv_TEXCOORD0)*_TintColor*2.0;\n    gl_FragColor.a = clamp(gl_FragColor.a, 0.0, 1.0);\n}";
-    const bonelambert_vert = "#include <common>\nattribute vec4 _glesVertex;   \nattribute vec3 _glesNormal; \nattribute vec4 _glesBlendIndex4;\nattribute vec4 _glesBlendWeight4;             \nattribute vec4 _glesMultiTexCoord0;    \n\nuniform mat4 glstate_matrix_mvp;      \nuniform mat4 glstate_matrix_model;\n\nuniform highp vec4 glstate_vec4_bones[110];\nuniform highp vec4 _MainTex_ST; \n\n#include <shadowMap_pars_vert>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#include <transpose>\n#include <inverse>\n\nmat4 buildMat4(int index)\n{\n vec4 quat = glstate_vec4_bones[index * 2 + 0];\n vec4 translation = glstate_vec4_bones[index * 2 + 1];\n float xy2 = 2.0 * quat.x * quat.y;\n float xz2 = 2.0 * quat.x * quat.z;\n float xw2 = 2.0 * quat.x * quat.w;\n float yz2 = 2.0 * quat.y * quat.z;\n float yw2 = 2.0 * quat.y * quat.w;\n float zw2 = 2.0 * quat.z * quat.w;\n float xx = quat.x * quat.x;\n float yy = quat.y * quat.y;\n float zz = quat.z * quat.z;\n float ww = quat.w * quat.w;\n mat4 matrix = mat4(\n xx - yy - zz + ww, xy2 + zw2, xz2 - yw2, 0,\n xy2 - zw2, -xx + yy - zz + ww, yz2 + xw2, 0,\n xz2 + yw2, yz2 - xw2, -xx - yy + zz + ww, 0,\n translation.x, translation.y, translation.z, 1);\n return matrix;\n}\n\nhighp vec4 calcVertex(highp vec4 srcVertex,highp vec4 blendIndex,highp vec4 blendWeight)\n{\n int i = int(blendIndex.x);  \n    int i2 =int(blendIndex.y);\n int i3 =int(blendIndex.z);\n int i4 =int(blendIndex.w);\n \n    mat4 mat = buildMat4(i)*blendWeight.x \n    + buildMat4(i2)*blendWeight.y \n    + buildMat4(i3)*blendWeight.z \n    + buildMat4(i4)*blendWeight.w;\n return mat* srcVertex;\n}\n\nvoid main() {   \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz;                            \n\n    vec3 normal = (transpose(inverse(glstate_matrix_model)) * vec4(_glesNormal, 1.0)).xyz;\n    xlv_NORMAL = normal;\n    #ifdef FLIP_SIDED\n     xlv_NORMAL = - xlv_NORMAL;\n    #endif\n\n    vec3 worldpos = (glstate_matrix_model * tmpvar_1).xyz;\n    xlv_POS = worldpos; \n\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy;\n\n    #include <shadowMap_vert>\n     \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
-    const code2_frag = "#include <common>\nvoid main() {\n    gl_FragData[0] = vec4(1.0, 1.0, 1.0, 1.0);\n}";
-    const code_frag = "#include <common>\nuniform sampler2D _MainTex;                                                 \nvarying lowp vec4 xlv_COLOR;                                                 \nvarying highp vec2 xlv_TEXCOORD0;   \nvoid main() {\n    lowp vec4 col_1;    \n    mediump vec4 prev_2;\n    lowp vec4 tmpvar_3;\n    tmpvar_3 = (xlv_COLOR * texture2D(_MainTex, xlv_TEXCOORD0));\n    prev_2 = tmpvar_3;\n    mediump vec4 tmpvar_4;\n    tmpvar_4 = mix(vec4(1.0, 1.0, 1.0, 1.0), prev_2, prev_2.wwww);\n    col_1 = tmpvar_4;\n    col_1.x =xlv_TEXCOORD0.x;\n    col_1.y =xlv_TEXCOORD0.y;\n    gl_FragData[0] = col_1;\n}";
-    const code_vert = "#include <common>\nattribute vec4 _glesVertex;\nattribute vec4 _glesColor;             \nattribute vec4 _glesMultiTexCoord0;    \nuniform highp mat4 glstate_matrix_mvp; \nvarying lowp vec4 xlv_COLOR;           \nvarying highp vec2 xlv_TEXCOORD0;      \nvoid main() {                                          \n    highp vec4 tmpvar_1;                   \n    tmpvar_1.w = 1.0;                      \n    tmpvar_1.xyz = _glesVertex.xyz;        \n    xlv_COLOR = _glesColor;                \n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy;\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
-    const depthpackage_frag = "#include <common>\n#include <packing>\n\nvoid main() {\n gl_FragColor = packDepthToRGBA( gl_FragCoord.z );\n}";
-    const depthpackage_vert = "#include <common>\nattribute vec3 _glesVertex;\n\nuniform mat4 glstate_matrix_mvp;\n\nvoid main() { \n    gl_Position = glstate_matrix_mvp * vec4(_glesVertex, 1.0);\n}";
-    const diffuselightmap_frag = "#include <common>\nuniform sampler2D _MainTex;\nuniform sampler2D _LightmapTex;\nuniform lowp float _LightmapIntensity;\nuniform lowp float _AlphaCut;\nvarying highp vec2 xlv_TEXCOORD0;\nvarying highp vec2 xlv_TEXCOORD1;\nlowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n{\n    highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n    return data.rgb * power * intensity;\n}\nvoid main() \n{\n    lowp vec4 outColor = texture2D(_MainTex, xlv_TEXCOORD0);\n    if(outColor.a < _AlphaCut)\n        discard;\n    lowp vec4 lightmap = texture2D(_LightmapTex, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, _LightmapIntensity);\n    gl_FragData[0] = outColor;\n}";
-    const diffuselightmap_vert = "#include <common>\nattribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nattribute vec4 _glesMultiTexCoord1;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 glstate_lightmapOffset;\nuniform lowp float glstate_lightmapUV;\nuniform highp vec4 _MainTex_ST; \nvarying highp vec2 xlv_TEXCOORD0;\nvarying highp vec2 xlv_TEXCOORD1;\nvoid main()\n{\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;  \n\n    highp vec2 beforelightUV = _glesMultiTexCoord1.xy;\n    if(glstate_lightmapUV == 0.0)\n    {\n        beforelightUV = _glesMultiTexCoord0.xy;\n    }\n    highp float u = beforelightUV.x * glstate_lightmapOffset.x + glstate_lightmapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * glstate_lightmapOffset.y + glstate_lightmapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
-    const diffuse_frag = "#include <common>\n#include <lightmap_pars_frag>\nuniform vec4 _MainColor;\nuniform sampler2D _MainTex;\nuniform lowp float _AlphaCut;\nvarying highp vec2 xlv_TEXCOORD0;\nvoid main() {\n    lowp vec4 outColor = texture2D(_MainTex, xlv_TEXCOORD0) * _MainColor;\n    if(outColor.a < _AlphaCut)\n        discard;\n    #include <lightmap_frag>    \n}";
-    const diffuse_vert = "#include <common>\n#include <skinning_pars_vert>\n#include <lightmap_pars_vert> \nattribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0;\nuniform highp mat4 glstate_matrix_mvp;\nuniform highp vec4 _MainTex_ST;  \nvarying highp vec2 xlv_TEXCOORD0;\n\nvoid main() {\n    #include <skinning_base_vert>\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;\n    #include <lightmap_vert>\n    gl_Position = (glstate_matrix_mvp * tmpVertex);\n}";
-    const distancepackage_frag = "#include <common>\n#include <packing>\n\nvarying vec3 xlv_POS;\nuniform vec4 glstate_referencePosition;\nuniform float glstate_nearDistance;\nuniform float glstate_farDistance;\n\nvoid main() {\n    float dist = length( xlv_POS - glstate_referencePosition.xyz );\n dist = ( dist - glstate_nearDistance ) / ( glstate_farDistance - glstate_nearDistance );\n dist = saturate( dist ); // clamp to [ 0, 1 ]\n\n gl_FragColor = packDepthToRGBA( dist );\n}";
-    const distancepackage_vert = "#include <common>\nattribute vec3 _glesVertex;\n\nuniform mat4 glstate_matrix_mvp;\nuniform mat4 glstate_matrix_model;\n\nvarying vec3 xlv_POS;\n\nvoid main() {   \n    xlv_POS = (glstate_matrix_model * vec4(_glesVertex, 1.0)).xyz;\n    gl_Position = glstate_matrix_mvp * vec4(_glesVertex, 1.0);\n}";
-    const lambert_frag = "// #extension GL_OES_standard_derivatives : enable\n#include <common>\nuniform sampler2D _MainTex;\nuniform vec4 _Color;         \n\n#include <bsdfs>\n#include <light_pars_frag>\n#include <shadowMap_pars_frag>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;                \nvarying vec2 xlv_TEXCOORD0;\n\n#ifdef USE_NORMAL_MAP\n    #include <tbn>\n    #include <tsn>\n    uniform sampler2D _NormalTex;\n#endif\n\n#include <bumpMap_pars_frag>\n\nvoid main() {\n    vec4 outColor = vec4(0., 0., 0., 1.);\n\n    vec4 diffuseColor = _Color * texture2D(_MainTex, xlv_TEXCOORD0);\n    outColor.xyz = diffuseColor.xyz;\n\n    #include <normal_frag>\n    #include <light_frag>\n    \n    outColor.a = diffuseColor.a;\n\n    gl_FragColor = outColor;\n}";
-    const lambert_vert = "#include <common>\nattribute vec4 _glesVertex;   \nattribute vec3 _glesNormal;               \nattribute vec4 _glesMultiTexCoord0;\n#include <skinning_pars_vert>\n\nuniform mat4 glstate_matrix_mvp;      \nuniform mat4 glstate_matrix_model;\nuniform vec4 _MainTex_ST;  \n\n#include <shadowMap_pars_vert>\n\nvarying vec3 xlv_POS;\nvarying vec3 xlv_NORMAL;             \nvarying vec2 xlv_TEXCOORD0;\n\n#include <transpose>\n#include <inverse>\n\nvoid main() {   \n    #include <skinning_base_vert>\n\n    vec3 tmpNormal;      \n    #include <skinning_normal_vert>              \n\n    vec3 normal = (transpose(inverse(glstate_matrix_model)) * vec4(tmpNormal, 1.0)).xyz;\n    xlv_NORMAL = normal;\n    #ifdef FLIP_SIDED\n     xlv_NORMAL = - xlv_NORMAL;\n    #endif\n\n    vec3 worldpos = (glstate_matrix_model * tmpVertex).xyz;\n    xlv_POS = worldpos; \n\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;\n\n    #include <shadowMap_vert>\n     \n    gl_Position = (glstate_matrix_mvp * tmpVertex);\n}";
-    const line_frag = "#include <common>\nvarying lowp vec4 xlv_COLOR;\nvoid main() {\n    gl_FragData[0] = xlv_COLOR;\n}";
-    const line_vert = "#include <common>\nattribute vec4 _glesVertex;\nattribute vec4 _glesColor;\nuniform highp mat4 glstate_matrix_mvp;\nvarying lowp vec4 xlv_COLOR;\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_COLOR = _glesColor;\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
-    const materialcolor_vert = "#include <common>\nattribute vec4 _glesVertex;\nuniform vec4 _Color;\nuniform highp mat4 glstate_matrix_mvp;\nvarying lowp vec4 xlv_COLOR;\nvoid main() {\n    highp vec4 tmpvar_1;\n    tmpvar_1.w = 1.0;\n    tmpvar_1.xyz = _glesVertex.xyz;\n    xlv_COLOR = _Color;\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);\n}";
-    const particlesystem_frag = "//inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.ps\n#include <common>\nuniform sampler2D _MainTex;\nuniform vec4 _TintColor;\nvarying float v_discard;\nvarying vec4 v_color;\nvarying vec2 v_texcoord;\n\n#ifdef RENDERMODE_MESH\n varying vec4 v_mesh_color;\n#endif\n\nvoid main()\n{ \n #ifdef RENDERMODE_MESH\n  gl_FragColor=v_mesh_color;\n #else\n  gl_FragColor=vec4(1.0); \n #endif\n\n if(v_discard!=0.0)\n  discard;\n gl_FragColor*=texture2D(_MainTex,v_texcoord)*_TintColor*v_color*2.0;\n}";
-    const particlesystem_vert = "//inspired by layaair:https://github.com/layabox/layaair/blob/master/src/d3/src/laya/d3/shader/files/ParticleShuriKen.vs\n#include <common>\n#if defined(SPHERHBILLBOARD)||defined(STRETCHEDBILLBOARD)||defined(HORIZONTALBILLBOARD)||defined(VERTICALBILLBOARD)\n attribute vec2 _glesCorner;\n#endif\n#ifdef RENDERMESH\n attribute vec3 _glesVertex;\n attribute vec4 _glesColor;\n#endif\nattribute vec2 _glesMultiTexCoord0;\nattribute vec3 _startPosition;\nattribute vec3 _startVelocity;\nattribute vec4 _startColor;\nattribute vec3 _startSize;\nattribute vec3 _startRotation;\nattribute vec2 _time;\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)||defined(ROTATIONTWOCONSTANTS)||defined(ROTATIONTWOCURVES)\n  attribute vec4 _random0;\n#endif\n#if defined(TEXTURESHEETANIMATIONTWOCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n  attribute vec4 _random1;\n#endif\nattribute vec3 _startWorldPosition;\nattribute vec4 _startWorldRotation;\n\n#include <particle_common>\n\nvoid main()\n{\n float age = u_currentTime - _time.y;\n float t = age/_time.x;\n if(t>1.0){    \n   v_discard=1.0;\n   return;\n  }\n   \n #include <particle_affector>\n gl_Position=glstate_matrix_vp*vec4(center,1.0);\n v_color = computeColor(_startColor, t);\n v_texcoord =computeUV(_glesMultiTexCoord0 * _MainTex_ST.xy + _MainTex_ST.zw, t);\n v_discard=0.0;\n}\n\n";
-    const postdepth_frag = "#include <common>\n//varying highp vec3 xlv_Normal;   \n\nconst float PackUpscale = 256. / 255.; \n// fraction -> 0..1 (including 1)\nconst float UnpackDownscale = 255. / 256.; \n// 0..1 -> fraction (excluding 1)\nconst vec3 PackFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );\nconst vec4 UnpackFactors = UnpackDownscale / vec4( PackFactors, 1. );\nconst float ShiftRight8 = 1. / 256.;\nvec4 packDepthToRGBA( const in float v ) \n{\n    vec4 r = vec4( fract( v * PackFactors ), v );\n r.yzw -= r.xyz * ShiftRight8;\n // tidy overflow\n    return r * PackUpscale;\n}\nfloat unpackRGBAToDepth( const in vec4 v ) \n{\n    return dot( v, UnpackFactors );\n}\nvec2 packDepthToRG( const in float v ) \n{\n    vec2 r = vec2( fract( v * PackFactors.z ), v );\n r.y -= r.x * ShiftRight8;\n    return r * PackUpscale;\n}\nfloat unpackRGToDepth( const in vec2 v ) \n{\n    return dot( v.xy, UnpackFactors.zw );\n}\nvec3 packDepthToRGB( const in float v ) \n{\n    vec3 r = vec3( fract( v * PackFactors.yz ), v );\n r.yz -= r.xy * ShiftRight8;\n // tidy overflow\n    return r * PackUpscale;\n}\nfloat unpackRGBToDepth( const in vec3 v ) \n{\n    return dot( v.xyz, UnpackFactors.yzw );\n}\nvoid main() \n{\n    float z = gl_FragCoord.z;// fract(gl_FragCoord.z *256.*256.);\n    // highp vec2 normal =xlv_Normal.xy;\n    gl_FragColor=packDepthToRGBA(z);\n}";
-    const postdepth_vert = "#include <common>\nprecision highp float;\nattribute vec4 _glesVertex;    \n\nuniform highp mat4 glstate_matrix_mvp;      \n            \nvoid main()                                     \n{        \n    gl_Position = (glstate_matrix_mvp * _glesVertex);  \n}";
-    const postquaddepth_frag = "#include <common>\nprecision mediump float;\nvarying highp vec2 xlv_TEXCOORD0;       \nuniform sampler2D _DepthTex;   \nuniform sampler2D _MainTex;  \n\n\nconst float PackUpscale = 256. / 255.; \n// fraction -> 0..1 (including 1)\nconst float UnpackDownscale = 255. / 256.; \n// 0..1 -> fraction (excluding 1)\nconst vec3 PackFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );\nconst vec4 UnpackFactors = UnpackDownscale / vec4( PackFactors, 1. );\nconst float ShiftRight8 = 1. / 256.;\nvec4 packDepthToRGBA( const in float v ) \n{\n    vec4 r = vec4( fract( v * PackFactors ), v );\n r.yzw -= r.xyz * ShiftRight8;\n // tidy overflow\n    return r * PackUpscale;\n}\nfloat unpackRGBAToDepth( const in vec4 v ) \n{\n    return dot( v, UnpackFactors );\n}\n\n\nfloat planeDistance(const in vec3 positionA, const in vec3 normalA, \n                    const in vec3 positionB, const in vec3 normalB) \n{\n  vec3 positionDelta = positionB-positionA;\n  float planeDistanceDelta = max(abs(dot(positionDelta, normalA)), abs(dot(positionDelta, normalB)));\n  return planeDistanceDelta;\n}\n\nvoid main()         \n{\n    lowp vec4 c1=texture2D(_DepthTex, xlv_TEXCOORD0+vec2(0.001,0));\n    lowp vec4 c2=texture2D(_DepthTex, xlv_TEXCOORD0+vec2(-0.001,0));\n    lowp vec4 c3=texture2D(_DepthTex, xlv_TEXCOORD0+vec2(0,0.001));\n    lowp vec4 c4=texture2D(_DepthTex, xlv_TEXCOORD0+vec2(0,-0.001));\n    highp float z1 = unpackRGBAToDepth(c1);\n    highp float z2 = unpackRGBAToDepth(c2);\n    highp float z3 = unpackRGBAToDepth(c3);\n    highp float z4 = unpackRGBAToDepth(c4);\n    highp float d = clamp(  (abs(z2-z1)+abs(z4-z3))*10.0,0.0,1.0);\n    lowp vec4 c=texture2D(_MainTex, xlv_TEXCOORD0);\n    lowp float g = c.r*0.3+c.g*0.6+c.b*0.1;\n\n    gl_FragColor =mix(vec4(g,g,g,1.),vec4(1.0,1.0,0.0,1.0),d);// vec4(g*d,g*d,g*d,1.0);\n}";
-    const postquad_vert = "#include <common>\nattribute vec4 _glesVertex;\nattribute vec4 _glesMultiTexCoord0; \nuniform highp vec4 _MainTex_ST; \nvarying highp vec2 xlv_TEXCOORD0;   \nvoid main()                     \n{ \n    gl_Position = _glesVertex;\n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw; \n}   ";
-    const uifont_frag = "#include <common>\nprecision mediump float;\nuniform sampler2D _MainTex;\nvarying lowp vec4 xlv_COLOR;\nvarying lowp vec4 xlv_COLOREx;\nvarying highp vec2 xlv_TEXCOORD0;  \nvoid main() {\n    float scale = 10.0;\n    float d = (texture2D(_MainTex, xlv_TEXCOORD0).r - 0.5) * scale;  //0.5\n    float bd = (texture2D(_MainTex, xlv_TEXCOORD0).r - 0.34) * scale;  //0.34\n\n    float c=xlv_COLOR.a * clamp ( d,0.0,1.0);\n    float bc=xlv_COLOREx.a * clamp ( bd,0.0,1.0);\n    bc =min(1.0-c,bc);\n\n    gl_FragData[0] =xlv_COLOR*c + xlv_COLOREx*bc;\n}";
-    const uifont_vert = "#include <common>\nattribute vec4 _glesVertex;   \nattribute vec4 _glesColor;                  \nattribute vec4 _glesColorEx;                  \nattribute vec4 _glesMultiTexCoord0;         \nuniform highp mat4 glstate_matrix_mvp;      \nvarying lowp vec4 xlv_COLOR;                \nvarying lowp vec4 xlv_COLOREx;                                                 \nvarying highp vec2 xlv_TEXCOORD0;           \nvoid main() {                                               \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = _glesVertex.xyz;             \n    xlv_COLOR = _glesColor;                     \n    xlv_COLOREx = _glesColorEx;                     \n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy;     \n    gl_Position = (glstate_matrix_mvp * tmpvar_1);  \n}";
-    const ui_frag = "#include <common>\nuniform sampler2D _MainTex;\nvarying lowp vec4 xlv_COLOR;\nvarying highp vec2 xlv_TEXCOORD0;\nvoid main() {\n    lowp vec4 tmpvar_3;\n    tmpvar_3 = (xlv_COLOR * texture2D(_MainTex, xlv_TEXCOORD0));\n    gl_FragData[0] = tmpvar_3;\n}";
-    const vertcolor_frag = "#include <common>\nuniform sampler2D _MainTex;                                                 \nvarying lowp vec4 xlv_COLOR;                                                 \nvarying highp vec2 xlv_TEXCOORD0;   \nvoid main() \n{\n    lowp vec4 col_1;    \n    mediump vec4 prev_2;\n    lowp vec4 tmpvar_3;\n\n    tmpvar_3 = (texture2D(_MainTex, xlv_TEXCOORD0));\n    //prev_2 = tmpvar_3;\n    //mediump vec4 tmpvar_4;\n    //tmpvar_4 = mix(vec4(1.0, 1.0, 1.0, 1.0), prev_2, prev_2.wwww);\n    //col_1 = tmpvar_4;\n    //col_1.x = xlv_TEXCOORD0.x;\n    //col_1.y = xlv_TEXCOORD0.y;\n    gl_FragData[0] = tmpvar_3;\n}";
-    const vertcolor_vert = "#include <common>\nattribute vec4 _glesVertex;   \nattribute vec4 _glesNormal;   \nattribute vec4 _glesColor;                  \nattribute vec4 _glesMultiTexCoord0;        \nuniform highp mat4 glstate_matrix_mvp;   \nuniform highp vec4 _MainTex_ST;       \n\nvarying lowp vec4 xlv_COLOR;                \nvarying highp vec2 xlv_TEXCOORD0;   \n\nvoid main()                                     \n{                                               \n    highp vec4 tmpvar_1;                        \n    tmpvar_1.w = 1.0;                           \n    tmpvar_1.xyz = _glesVertex.xyz;             \n    xlv_COLOR = _glesColor;                     \n    xlv_TEXCOORD0 = _glesMultiTexCoord0.xy * _MainTex_ST.xy + _MainTex_ST.zw;   \n\n    //xlv_COLOR.xyz =pos.xyz;\n    gl_Position = (glstate_matrix_mvp * tmpvar_1);  \n}\n";
+    const cube: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "tCube": {
+                            "type": number;
+                        };
+                        "tFlip": {
+                            "type": number;
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const depth: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "displacementMap": {
+                            "type": number;
+                        };
+                        "displacementScale": {
+                            "type": number;
+                        };
+                        "displacementBias": {
+                            "type": number;
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                        "alphaMap": {
+                            "type": number;
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const diffuse: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "uv2": {
+                            "semantic": string;
+                        };
+                        "position": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "glstate_vec4_bones[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "lightMapOffset": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "lightMapUV": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewProjectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "lightMap": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "lightMapIntensity": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                        "_AlphaCut": {
+                            "type": number;
+                            "value": any[];
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const distanceRGBA: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "displacementMap": {
+                            "type": number;
+                        };
+                        "displacementScale": {
+                            "type": number;
+                        };
+                        "displacementBias": {
+                            "type": number;
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                        };
+                        "referencePosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "nearDistance": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "farDistance": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                        "alphaMap": {
+                            "type": number;
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const equirect: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "tEquirect": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const linedashed: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "lineDistance": {
+                            "semantic": string;
+                        };
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "scale": {
+                            "type": number;
+                        };
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "dashSize": {
+                            "type": number;
+                        };
+                        "totalSize": {
+                            "type": number;
+                        };
+                        "fogColor": {
+                            "type": number;
+                        };
+                        "fogDensity": {
+                            "type": number;
+                        };
+                        "fogNear": {
+                            "type": number;
+                        };
+                        "fogFar": {
+                            "type": number;
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const meshbasic: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "uv2": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "refractionRatio": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                        "alphaMap": {
+                            "type": number;
+                        };
+                        "aoMap": {
+                            "type": number;
+                        };
+                        "aoMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "lightMap": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "lightMapIntensity": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "reflectivity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "envMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "envMap": {
+                            "type": number;
+                        };
+                        "flipEnvMap": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "maxMipLevel": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogColor": {
+                            "type": number;
+                        };
+                        "fogDensity": {
+                            "type": number;
+                        };
+                        "fogNear": {
+                            "type": number;
+                        };
+                        "fogFar": {
+                            "type": number;
+                        };
+                        "specularMap": {
+                            "type": number;
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const meshlambert: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "uv2": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "refractionRatio": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "ambientLightColor": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "directionalLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "ltc_1": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "ltc_2": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "rectAreaLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "hemisphereLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                        };
+                        "directionalShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "emissive": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                        "alphaMap": {
+                            "type": number;
+                        };
+                        "aoMap": {
+                            "type": number;
+                        };
+                        "aoMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "lightMap": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "lightMapIntensity": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "emissiveMap": {
+                            "type": number;
+                        };
+                        "reflectivity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "envMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "envMap": {
+                            "type": number;
+                        };
+                        "flipEnvMap": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "maxMipLevel": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogColor": {
+                            "type": number;
+                        };
+                        "fogDensity": {
+                            "type": number;
+                        };
+                        "fogNear": {
+                            "type": number;
+                        };
+                        "fogFar": {
+                            "type": number;
+                        };
+                        "directionalShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "specularMap": {
+                            "type": number;
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const meshphong: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "uv2": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "displacementMap": {
+                            "type": number;
+                        };
+                        "displacementScale": {
+                            "type": number;
+                        };
+                        "displacementBias": {
+                            "type": number;
+                        };
+                        "refractionRatio": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                        };
+                        "directionalShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "emissive": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "specular": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "shininess": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                        "alphaMap": {
+                            "type": number;
+                        };
+                        "aoMap": {
+                            "type": number;
+                        };
+                        "aoMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "lightMap": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "lightMapIntensity": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "emissiveMap": {
+                            "type": number;
+                        };
+                        "reflectivity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "envMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "envMap": {
+                            "type": number;
+                        };
+                        "flipEnvMap": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "maxMipLevel": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "gradientMap": {
+                            "type": number;
+                        };
+                        "fogColor": {
+                            "type": number;
+                        };
+                        "fogDensity": {
+                            "type": number;
+                        };
+                        "fogNear": {
+                            "type": number;
+                        };
+                        "fogFar": {
+                            "type": number;
+                        };
+                        "ambientLightColor": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "directionalLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "ltc_1": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "ltc_2": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "rectAreaLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "hemisphereLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "directionalShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "bumpMap": {
+                            "type": number;
+                        };
+                        "bumpScale": {
+                            "type": number;
+                        };
+                        "normalMap": {
+                            "type": number;
+                        };
+                        "normalScale": {
+                            "type": number;
+                        };
+                        "specularMap": {
+                            "type": number;
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const meshphysical: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "uv2": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "displacementMap": {
+                            "type": number;
+                        };
+                        "displacementScale": {
+                            "type": number;
+                        };
+                        "displacementBias": {
+                            "type": number;
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                        };
+                        "directionalShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "emissive": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "roughness": {
+                            "type": number;
+                        };
+                        "metalness": {
+                            "type": number;
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "clearCoat": {
+                            "type": number;
+                        };
+                        "clearCoatRoughness": {
+                            "type": number;
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                        "alphaMap": {
+                            "type": number;
+                        };
+                        "aoMap": {
+                            "type": number;
+                        };
+                        "aoMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "lightMap": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "lightMapIntensity": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "emissiveMap": {
+                            "type": number;
+                        };
+                        "reflectivity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "envMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "envMap": {
+                            "type": number;
+                        };
+                        "flipEnvMap": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "maxMipLevel": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "refractionRatio": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogColor": {
+                            "type": number;
+                        };
+                        "fogDensity": {
+                            "type": number;
+                        };
+                        "fogNear": {
+                            "type": number;
+                        };
+                        "fogFar": {
+                            "type": number;
+                        };
+                        "ambientLightColor": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "directionalLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "ltc_1": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "ltc_2": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "rectAreaLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "hemisphereLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "directionalShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "bumpMap": {
+                            "type": number;
+                        };
+                        "bumpScale": {
+                            "type": number;
+                        };
+                        "normalMap": {
+                            "type": number;
+                        };
+                        "normalScale": {
+                            "type": number;
+                        };
+                        "roughnessMap": {
+                            "type": number;
+                        };
+                        "metalnessMap": {
+                            "type": number;
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const normal: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "displacementMap": {
+                            "type": number;
+                        };
+                        "displacementScale": {
+                            "type": number;
+                        };
+                        "displacementBias": {
+                            "type": number;
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                        };
+                        "bindMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "bindMatrixInverse": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "bumpMap": {
+                            "type": number;
+                        };
+                        "bumpScale": {
+                            "type": number;
+                        };
+                        "normalMap": {
+                            "type": number;
+                        };
+                        "normalScale": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const particle: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "corner": {
+                            "semantic": string;
+                        };
+                        "position": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "startPosition": {
+                            "semantic": string;
+                        };
+                        "startVelocity": {
+                            "semantic": string;
+                        };
+                        "startColor": {
+                            "semantic": string;
+                        };
+                        "startSize": {
+                            "semantic": string;
+                        };
+                        "startRotation": {
+                            "semantic": string;
+                        };
+                        "time": {
+                            "semantic": string;
+                        };
+                        "random0": {
+                            "semantic": string;
+                        };
+                        "random1": {
+                            "semantic": string;
+                        };
+                        "startWorldPosition": {
+                            "semantic": string;
+                        };
+                        "startWorldRotation": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "u_currentTime": {
+                            "type": number;
+                        };
+                        "u_gravity": {
+                            "type": number;
+                        };
+                        "u_worldPosition": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "u_worldRotation": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "u_startRotation3D": {
+                            "type": number;
+                        };
+                        "u_scalingMode": {
+                            "type": number;
+                        };
+                        "u_positionScale": {
+                            "type": number;
+                        };
+                        "u_sizeScale": {
+                            "type": number;
+                        };
+                        "viewProjectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraForward": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraUp": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "u_lengthScale": {
+                            "type": number;
+                        };
+                        "u_speeaScale": {
+                            "type": number;
+                        };
+                        "u_simulationSpace": {
+                            "type": number;
+                        };
+                        "u_spaceType": {
+                            "type": number;
+                        };
+                        "u_velocityConst": {
+                            "type": number;
+                        };
+                        "u_velocityCurveX[0]": {
+                            "type": number;
+                        };
+                        "u_velocityCurveY[0]": {
+                            "type": number;
+                        };
+                        "u_velocityCurveZ[0]": {
+                            "type": number;
+                        };
+                        "u_velocityConstMax": {
+                            "type": number;
+                        };
+                        "u_velocityCurveMaxX[0]": {
+                            "type": number;
+                        };
+                        "u_velocityCurveMaxY[0]": {
+                            "type": number;
+                        };
+                        "u_velocityCurveMaxZ[0]": {
+                            "type": number;
+                        };
+                        "u_colorGradient[0]": {
+                            "type": number;
+                        };
+                        "u_alphaGradient[0]": {
+                            "type": number;
+                        };
+                        "u_colorGradientMax[0]": {
+                            "type": number;
+                        };
+                        "u_alphaGradientMax[0]": {
+                            "type": number;
+                        };
+                        "u_sizeCurve[0]": {
+                            "type": number;
+                        };
+                        "u_sizeCurveMax[0]": {
+                            "type": number;
+                        };
+                        "u_sizeCurveX[0]": {
+                            "type": number;
+                        };
+                        "u_sizeCurveY[0]": {
+                            "type": number;
+                        };
+                        "u_sizeCurveZ[0]": {
+                            "type": number;
+                        };
+                        "u_sizeCurveMaxX[0]": {
+                            "type": number;
+                        };
+                        "u_sizeCurveMaxY[0]": {
+                            "type": number;
+                        };
+                        "u_sizeCurveMaxZ[0]": {
+                            "type": number;
+                        };
+                        "u_rotationConst": {
+                            "type": number;
+                        };
+                        "u_rotationConstMax": {
+                            "type": number;
+                        };
+                        "u_rotationCurve[0]": {
+                            "type": number;
+                        };
+                        "u_rotationCurveMax[0]": {
+                            "type": number;
+                        };
+                        "u_rotationConstSeprarate": {
+                            "type": number;
+                        };
+                        "u_rotationConstMaxSeprarate": {
+                            "type": number;
+                        };
+                        "u_rotationCurveX[0]": {
+                            "type": number;
+                        };
+                        "u_rotationCurveY[0]": {
+                            "type": number;
+                        };
+                        "u_rotationCurveZ[0]": {
+                            "type": number;
+                        };
+                        "u_rotationCurveW[0]": {
+                            "type": number;
+                        };
+                        "u_rotationCurveMaxX[0]": {
+                            "type": number;
+                        };
+                        "u_rotationCurveMaxY[0]": {
+                            "type": number;
+                        };
+                        "u_rotationCurveMaxZ[0]": {
+                            "type": number;
+                        };
+                        "u_rotationCurveMaxW[0]": {
+                            "type": number;
+                        };
+                        "u_cycles": {
+                            "type": number;
+                        };
+                        "u_subUV": {
+                            "type": number;
+                        };
+                        "u_uvCurve[0]": {
+                            "type": number;
+                        };
+                        "u_uvCurveMax[0]": {
+                            "type": number;
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const points: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "size": {
+                            "type": number;
+                        };
+                        "scale": {
+                            "type": number;
+                        };
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                        "fogColor": {
+                            "type": number;
+                        };
+                        "fogDensity": {
+                            "type": number;
+                        };
+                        "fogNear": {
+                            "type": number;
+                        };
+                        "fogFar": {
+                            "type": number;
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const shadow: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "directionalShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointShadowMatrix[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "color": {
+                            "type": number;
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "fogColor": {
+                            "type": number;
+                        };
+                        "fogDensity": {
+                            "type": number;
+                        };
+                        "fogNear": {
+                            "type": number;
+                        };
+                        "fogFar": {
+                            "type": number;
+                        };
+                        "ambientLightColor": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "directionalLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "ltc_1": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "ltc_2": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "rectAreaLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "hemisphereLights[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "directionalShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "spotShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "pointShadowMap[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
+    const sprite: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "rotation": {
+                            "type": number;
+                        };
+                        "center": {
+                            "type": number;
+                        };
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                        "fogColor": {
+                            "type": number;
+                        };
+                        "fogDensity": {
+                            "type": number;
+                        };
+                        "fogNear": {
+                            "type": number;
+                        };
+                        "fogFar": {
+                            "type": number;
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+        "materials": any[];
+    };
 }
 declare namespace egret3d.ShaderChunk {
-    const bsdfs = "// diffuse just use lambert\n\nvec3 BRDF_Diffuse_Lambert(vec3 diffuseColor) {\n    return RECIPROCAL_PI * diffuseColor;\n}\n\n// specular use Cook-Torrance microfacet model, http://ruh.li/GraphicsCookTorrance.html\n// About RECIPROCAL_PI: referenced by http://www.joshbarczak.com/blog/?p=272\n\nvec4 F_Schlick( const in vec4 specularColor, const in float dotLH ) {\n // Original approximation by Christophe Schlick '94\n float fresnel = pow( 1.0 - dotLH, 5.0 );\n\n // Optimized variant (presented by Epic at SIGGRAPH '13)\n // float fresnel = exp2( ( -5.55473 * dotLH - 6.98316 ) * dotLH );\n\n return ( 1.0 - specularColor ) * fresnel + specularColor;\n}\n\n// use blinn phong instead of phong\nfloat D_BlinnPhong( const in float shininess, const in float dotNH ) {\n    // ( shininess * 0.5 + 1.0 ), three.js do this, but why ???\n return RECIPROCAL_PI * ( shininess * 0.5 + 1.0 ) * pow( dotNH, shininess );\n}\n\nfloat G_BlinnPhong_Implicit( /* const in float dotNL, const in float dotNV */ ) {\n // geometry term is (n dot l)(n dot v) / 4(n dot l)(n dot v)\n return 0.25;\n}\n\nvec4 BRDF_Specular_BlinnPhong(vec4 specularColor, vec3 N, vec3 L, vec3 V, float shininess) {\n    vec3 H = normalize(L + V);\n\n    float dotNH = saturate(dot(N, H));\n    float dotLH = saturate(dot(L, H));\n\n    vec4 F = F_Schlick(specularColor, dotLH);\n\n    float G = G_BlinnPhong_Implicit( /* dotNL, dotNV */ );\n\n    float D = D_BlinnPhong(shininess, dotNH);\n\n    return F * G * D;\n}\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (33)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat D_GGX( const in float alpha, const in float dotNH ) {\n\n float a2 = pow2( alpha );\n\n float denom = pow2( dotNH ) * ( a2 - 1.0 ) + 1.0; // avoid alpha = 0 with dotNH = 1\n\n return RECIPROCAL_PI * a2 / pow2( denom );\n\n}\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (34)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat G_GGX_Smith( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n // geometry term = G(l)⋅G(v) / 4(n⋅l)(n⋅v)\n\n float a2 = pow2( alpha );\n\n float gl = dotNL + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n float gv = dotNV + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n\n return 1.0 / ( gl * gv );\n\n}\n\n// Moving Frostbite to Physically Based Rendering 2.0 - page 12, listing 2\n// http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr_v2.pdf\nfloat G_GGX_SmithCorrelated( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n float a2 = pow2( alpha );\n\n // dotNL and dotNV are explicitly swapped. This is not a mistake.\n float gv = dotNL * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n float gl = dotNV * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n\n return 0.5 / max( gv + gl, EPSILON );\n}\n\n// GGX Distribution, Schlick Fresnel, GGX-Smith Visibility\nvec4 BRDF_Specular_GGX(vec4 specularColor, vec3 N, vec3 L, vec3 V, float roughness) {\n\n float alpha = pow2( roughness ); // UE4's roughness\n\n vec3 H = normalize(L + V);\n\n float dotNL = saturate( dot(N, L) );\n float dotNV = saturate( dot(N, V) );\n float dotNH = saturate( dot(N, H) );\n float dotLH = saturate( dot(L, H) );\n\n vec4 F = F_Schlick( specularColor, dotLH );\n\n float G = G_GGX_SmithCorrelated( alpha, dotNL, dotNV );\n\n float D = D_GGX( alpha, dotNH );\n\n return F * G * D;\n\n}\n\n// ref: https://www.unrealengine.com/blog/physically-based-shading-on-mobile - environmentBRDF for GGX on mobile\nvec4 BRDF_Specular_GGX_Environment( const in vec3 N, const in vec3 V, const in vec4 specularColor, const in float roughness ) {\n\n float dotNV = saturate( dot( N, V ) );\n\n const vec4 c0 = vec4( - 1, - 0.0275, - 0.572, 0.022 );\n\n const vec4 c1 = vec4( 1, 0.0425, 1.04, - 0.04 );\n\n vec4 r = roughness * c0 + c1;\n\n float a004 = min( r.x * r.x, exp2( - 9.28 * dotNV ) ) * r.x + r.y;\n\n vec2 AB = vec2( -1.04, 1.04 ) * a004 + r.zw;\n\n return specularColor * AB.x + AB.y;\n\n}\n\n// source: http://simonstechblog.blogspot.ca/2011/12/microfacet-brdf.html\nfloat GGXRoughnessToBlinnExponent( const in float ggxRoughness ) {\n return ( 2.0 / pow2( ggxRoughness + 0.0001 ) - 2.0 );\n}\n\nfloat BlinnExponentToGGXRoughness( const in float blinnExponent ) {\n return sqrt( 2.0 / ( blinnExponent + 2.0 ) );\n}";
+    const alphamap_fragment = "#ifdef USE_ALPHAMAP\n\n diffuseColor.a *= texture2D( alphaMap, vUv ).g;\n\n#endif\n";
+    const alphamap_pars_fragment = "#ifdef USE_ALPHAMAP\n\n uniform sampler2D alphaMap;\n\n#endif\n";
+    const alphatest_fragment = "#ifdef ALPHATEST\n\n if ( diffuseColor.a < ALPHATEST ) discard;\n\n#endif\n";
+    const aomap_fragment = "#ifdef USE_AOMAP\n\n // reads channel R, compatible with a combined OcclusionRoughnessMetallic (RGB) texture\n float ambientOcclusion = ( texture2D( aoMap, vUv2 ).r - 1.0 ) * aoMapIntensity + 1.0;\n\n reflectedLight.indirectDiffuse *= ambientOcclusion;\n\n #if defined( USE_ENVMAP ) && defined( PHYSICAL )\n\n  float dotNV = saturate( dot( geometry.normal, geometry.viewDir ) );\n\n  reflectedLight.indirectSpecular *= computeSpecularOcclusion( dotNV, ambientOcclusion, material.specularRoughness );\n\n #endif\n\n#endif\n";
+    const aomap_pars_fragment = "#ifdef USE_AOMAP\n\n uniform sampler2D aoMap;\n uniform float aoMapIntensity;\n\n#endif";
+    const beginnormal_vertex = "\nvec3 objectNormal = vec3( normal );\n";
+    const begin_vertex = "\nvec3 transformed = vec3( position );\n";
+    const bsdfs = "float punctualLightIntensityToIrradianceFactor( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {\n\n if( decayExponent > 0.0 ) {\n\n#if defined ( PHYSICALLY_CORRECT_LIGHTS )\n\n  // based upon Frostbite 3 Moving to Physically-based Rendering\n  // page 32, equation 26: E[window1]\n  // https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf\n  // this is intended to be used on spot and point lights who are represented as luminous intensity\n  // but who must be converted to luminous irradiance for surface lighting calculation\n  float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );\n  float maxDistanceCutoffFactor = pow2( saturate( 1.0 - pow4( lightDistance / cutoffDistance ) ) );\n  return distanceFalloff * maxDistanceCutoffFactor;\n\n#else\n\n  return pow( saturate( -lightDistance / cutoffDistance + 1.0 ), decayExponent );\n\n#endif\n\n }\n\n return 1.0;\n\n}\n\nvec3 BRDF_Diffuse_Lambert( const in vec3 diffuseColor ) {\n\n return RECIPROCAL_PI * diffuseColor;\n\n} // validated\n\nvec3 F_Schlick( const in vec3 specularColor, const in float dotLH ) {\n\n // Original approximation by Christophe Schlick '94\n // float fresnel = pow( 1.0 - dotLH, 5.0 );\n\n // Optimized variant (presented by Epic at SIGGRAPH '13)\n // https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf\n float fresnel = exp2( ( -5.55473 * dotLH - 6.98316 ) * dotLH );\n\n return ( 1.0 - specularColor ) * fresnel + specularColor;\n\n} // validated\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (34)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat G_GGX_Smith( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n // geometry term (normalized) = G(l)⋅G(v) / 4(n⋅l)(n⋅v)\n // also see #12151\n\n float a2 = pow2( alpha );\n\n float gl = dotNL + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n float gv = dotNV + sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n\n return 1.0 / ( gl * gv );\n\n} // validated\n\n// Moving Frostbite to Physically Based Rendering 3.0 - page 12, listing 2\n// https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf\nfloat G_GGX_SmithCorrelated( const in float alpha, const in float dotNL, const in float dotNV ) {\n\n float a2 = pow2( alpha );\n\n // dotNL and dotNV are explicitly swapped. This is not a mistake.\n float gv = dotNL * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );\n float gl = dotNV * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );\n\n return 0.5 / max( gv + gl, EPSILON );\n\n}\n\n// Microfacet Models for Refraction through Rough Surfaces - equation (33)\n// http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html\n// alpha is \"roughness squared\" in Disney’s reparameterization\nfloat D_GGX( const in float alpha, const in float dotNH ) {\n\n float a2 = pow2( alpha );\n\n float denom = pow2( dotNH ) * ( a2 - 1.0 ) + 1.0; // avoid alpha = 0 with dotNH = 1\n\n return RECIPROCAL_PI * a2 / pow2( denom );\n\n}\n\n// GGX Distribution, Schlick Fresnel, GGX-Smith Visibility\nvec3 BRDF_Specular_GGX( const in IncidentLight incidentLight, const in GeometricContext geometry, const in vec3 specularColor, const in float roughness ) {\n\n float alpha = pow2( roughness ); // UE4's roughness\n\n vec3 halfDir = normalize( incidentLight.direction + geometry.viewDir );\n\n float dotNL = saturate( dot( geometry.normal, incidentLight.direction ) );\n float dotNV = saturate( dot( geometry.normal, geometry.viewDir ) );\n float dotNH = saturate( dot( geometry.normal, halfDir ) );\n float dotLH = saturate( dot( incidentLight.direction, halfDir ) );\n\n vec3 F = F_Schlick( specularColor, dotLH );\n\n float G = G_GGX_SmithCorrelated( alpha, dotNL, dotNV );\n\n float D = D_GGX( alpha, dotNH );\n\n return F * ( G * D );\n\n} // validated\n\n// Rect Area Light\n\n// Real-Time Polygonal-Light Shading with Linearly Transformed Cosines\n// by Eric Heitz, Jonathan Dupuy, Stephen Hill and David Neubelt\n// code: https://github.com/selfshadow/ltc_code/\n\nvec2 LTC_Uv( const in vec3 N, const in vec3 V, const in float roughness ) {\n\n const float LUT_SIZE  = 64.0;\n const float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;\n const float LUT_BIAS  = 0.5 / LUT_SIZE;\n\n float dotNV = saturate( dot( N, V ) );\n\n // texture parameterized by sqrt( GGX alpha ) and sqrt( 1 - cos( theta ) )\n vec2 uv = vec2( roughness, sqrt( 1.0 - dotNV ) );\n\n uv = uv * LUT_SCALE + LUT_BIAS;\n\n return uv;\n\n}\n\nfloat LTC_ClippedSphereFormFactor( const in vec3 f ) {\n\n // Real-Time Area Lighting: a Journey from Research to Production (p.102)\n // An approximation of the form factor of a horizon-clipped rectangle.\n\n float l = length( f );\n\n return max( ( l * l + f.z ) / ( l + 1.0 ), 0.0 );\n\n}\n\nvec3 LTC_EdgeVectorFormFactor( const in vec3 v1, const in vec3 v2 ) {\n\n float x = dot( v1, v2 );\n\n float y = abs( x );\n\n // rational polynomial approximation to theta / sin( theta ) / 2PI\n float a = 0.8543985 + ( 0.4965155 + 0.0145206 * y ) * y;\n float b = 3.4175940 + ( 4.1616724 + y ) * y;\n float v = a / b;\n\n float theta_sintheta = ( x > 0.0 ) ? v : 0.5 * inversesqrt( max( 1.0 - x * x, 1e-7 ) ) - v;\n\n return cross( v1, v2 ) * theta_sintheta;\n\n}\n\nvec3 LTC_Evaluate( const in vec3 N, const in vec3 V, const in vec3 P, const in mat3 mInv, const in vec3 rectCoords[ 4 ] ) {\n\n // bail if point is on back side of plane of light\n // assumes ccw winding order of light vertices\n vec3 v1 = rectCoords[ 1 ] - rectCoords[ 0 ];\n vec3 v2 = rectCoords[ 3 ] - rectCoords[ 0 ];\n vec3 lightNormal = cross( v1, v2 );\n\n if( dot( lightNormal, P - rectCoords[ 0 ] ) < 0.0 ) return vec3( 0.0 );\n\n // construct orthonormal basis around N\n vec3 T1, T2;\n T1 = normalize( V - N * dot( V, N ) );\n T2 = - cross( N, T1 ); // negated from paper; possibly due to a different handedness of world coordinate system\n\n // compute transform\n mat3 mat = mInv * transposeMat3( mat3( T1, T2, N ) );\n\n // transform rect\n vec3 coords[ 4 ];\n coords[ 0 ] = mat * ( rectCoords[ 0 ] - P );\n coords[ 1 ] = mat * ( rectCoords[ 1 ] - P );\n coords[ 2 ] = mat * ( rectCoords[ 2 ] - P );\n coords[ 3 ] = mat * ( rectCoords[ 3 ] - P );\n\n // project rect onto sphere\n coords[ 0 ] = normalize( coords[ 0 ] );\n coords[ 1 ] = normalize( coords[ 1 ] );\n coords[ 2 ] = normalize( coords[ 2 ] );\n coords[ 3 ] = normalize( coords[ 3 ] );\n\n // calculate vector form factor\n vec3 vectorFormFactor = vec3( 0.0 );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 0 ], coords[ 1 ] );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 1 ], coords[ 2 ] );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 2 ], coords[ 3 ] );\n vectorFormFactor += LTC_EdgeVectorFormFactor( coords[ 3 ], coords[ 0 ] );\n\n // adjust for horizon clipping\n float result = LTC_ClippedSphereFormFactor( vectorFormFactor );\n\n/*\n // alternate method of adjusting for horizon clipping (see referece)\n // refactoring required\n float len = length( vectorFormFactor );\n float z = vectorFormFactor.z / len;\n\n const float LUT_SIZE  = 64.0;\n const float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;\n const float LUT_BIAS  = 0.5 / LUT_SIZE;\n\n // tabulated horizon-clipped sphere, apparently...\n vec2 uv = vec2( z * 0.5 + 0.5, len );\n uv = uv * LUT_SCALE + LUT_BIAS;\n\n float scale = texture2D( ltc_2, uv ).w;\n\n float result = len * scale;\n*/\n\n return vec3( result );\n\n}\n\n// End Rect Area Light\n\n// ref: https://www.unrealengine.com/blog/physically-based-shading-on-mobile - environmentBRDF for GGX on mobile\nvec3 BRDF_Specular_GGX_Environment( const in GeometricContext geometry, const in vec3 specularColor, const in float roughness ) {\n\n float dotNV = saturate( dot( geometry.normal, geometry.viewDir ) );\n\n const vec4 c0 = vec4( - 1, - 0.0275, - 0.572, 0.022 );\n\n const vec4 c1 = vec4( 1, 0.0425, 1.04, - 0.04 );\n\n vec4 r = roughness * c0 + c1;\n\n float a004 = min( r.x * r.x, exp2( - 9.28 * dotNV ) ) * r.x + r.y;\n\n vec2 AB = vec2( -1.04, 1.04 ) * a004 + r.zw;\n\n return specularColor * AB.x + AB.y;\n\n} // validated\n\n\nfloat G_BlinnPhong_Implicit( /* const in float dotNL, const in float dotNV */ ) {\n\n // geometry term is (n dot l)(n dot v) / 4(n dot l)(n dot v)\n return 0.25;\n\n}\n\nfloat D_BlinnPhong( const in float shininess, const in float dotNH ) {\n\n return RECIPROCAL_PI * ( shininess * 0.5 + 1.0 ) * pow( dotNH, shininess );\n\n}\n\nvec3 BRDF_Specular_BlinnPhong( const in IncidentLight incidentLight, const in GeometricContext geometry, const in vec3 specularColor, const in float shininess ) {\n\n vec3 halfDir = normalize( incidentLight.direction + geometry.viewDir );\n\n //float dotNL = saturate( dot( geometry.normal, incidentLight.direction ) );\n //float dotNV = saturate( dot( geometry.normal, geometry.viewDir ) );\n float dotNH = saturate( dot( geometry.normal, halfDir ) );\n float dotLH = saturate( dot( incidentLight.direction, halfDir ) );\n\n vec3 F = F_Schlick( specularColor, dotLH );\n\n float G = G_BlinnPhong_Implicit( /* dotNL, dotNV */ );\n\n float D = D_BlinnPhong( shininess, dotNH );\n\n return F * ( G * D );\n\n} // validated\n\n// source: http://simonstechblog.blogspot.ca/2011/12/microfacet-brdf.html\nfloat GGXRoughnessToBlinnExponent( const in float ggxRoughness ) {\n return ( 2.0 / pow2( ggxRoughness + 0.0001 ) - 2.0 );\n}\n\nfloat BlinnExponentToGGXRoughness( const in float blinnExponent ) {\n return sqrt( 2.0 / ( blinnExponent + 2.0 ) );\n}\n";
     const bumpMap_pars_frag = "#ifdef USE_BUMPMAP\n\n uniform sampler2D bumpMap;\n uniform float bumpScale;\n\n // Derivative maps - bump mapping unparametrized surfaces by Morten Mikkelsen\n // http://mmikkelsen3d.blogspot.sk/2011/07/derivative-maps.html\n\n // Evaluate the derivative of the height w.r.t. screen-space using forward differencing (listing 2)\n\n vec2 dHdxy_fwd(vec2 uv) {\n\n  vec2 dSTdx = dFdx( uv );\n  vec2 dSTdy = dFdy( uv );\n\n  float Hll = bumpScale * texture2D( bumpMap, uv ).x;\n  float dBx = bumpScale * texture2D( bumpMap, uv + dSTdx ).x - Hll;\n  float dBy = bumpScale * texture2D( bumpMap, uv + dSTdy ).x - Hll;\n\n  return vec2( dBx, dBy );\n\n }\n\n vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy) {\n\n  vec3 vSigmaX = dFdx( surf_pos );\n  vec3 vSigmaY = dFdy( surf_pos );\n  vec3 vN = surf_norm;  // normalized\n\n  vec3 R1 = cross( vSigmaY, vN );\n  vec3 R2 = cross( vN, vSigmaX );\n\n  float fDet = dot( vSigmaX, R1 );\n\n  vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );\n  return normalize( abs( fDet ) * surf_norm - vGrad );\n\n }\n\n#endif\n";
-    const common = "#define PI 3.14159265359\n#define EPSILON 1e-6\n#define LOG2 1.442695\n#define RECIPROCAL_PI 0.31830988618\n#define saturate(a) clamp( a, 0.0, 1.0 )\n#define whiteCompliment(a) ( 1.0 - saturate( a ) )\n\nfloat pow2( const in float x ) { return x*x; } ";
-    const inverse = "mat4 inverse(mat4 m) {\n    float\n    a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],\n    a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],\n    a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3],\n    a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3],\n    b00 = a00 * a11 - a01 * a10,\n    b01 = a00 * a12 - a02 * a10,\n    b02 = a00 * a13 - a03 * a10,\n    b03 = a01 * a12 - a02 * a11,\n    b04 = a01 * a13 - a03 * a11,\n    b05 = a02 * a13 - a03 * a12,\n    b06 = a20 * a31 - a21 * a30,\n    b07 = a20 * a32 - a22 * a30,\n    b08 = a20 * a33 - a23 * a30,\n    b09 = a21 * a32 - a22 * a31,\n    b10 = a21 * a33 - a23 * a31,\n    b11 = a22 * a33 - a23 * a32,\n    det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n    return mat4(\n        a11 * b11 - a12 * b10 + a13 * b09,\n        a02 * b10 - a01 * b11 - a03 * b09,\n        a31 * b05 - a32 * b04 + a33 * b03,\n        a22 * b04 - a21 * b05 - a23 * b03,\n        a12 * b08 - a10 * b11 - a13 * b07,\n        a00 * b11 - a02 * b08 + a03 * b07,\n        a32 * b02 - a30 * b05 - a33 * b01,\n        a20 * b05 - a22 * b02 + a23 * b01,\n        a10 * b10 - a11 * b08 + a13 * b06,\n        a01 * b08 - a00 * b10 - a03 * b06,\n        a30 * b04 - a31 * b02 + a33 * b00,\n        a21 * b02 - a20 * b04 - a23 * b00,\n        a11 * b07 - a10 * b09 - a12 * b06,\n        a00 * b09 - a01 * b07 + a02 * b06,\n        a31 * b01 - a30 * b03 - a32 * b00,\n        a20 * b03 - a21 * b01 + a22 * b00) / det;\n}";
-    const lightmap_frag = "#ifdef LIGHTMAP\n    lowp vec4 lightmap = texture2D(_LightmapTex, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, _LightmapIntensity);\n    gl_FragData[0] = outColor;\n#else\n    gl_FragData[0] = outColor;\n#endif";
-    const lightmap_pars_frag = "#ifdef LIGHTMAP\n    uniform sampler2D _LightmapTex;\n    uniform lowp float _LightmapIntensity;\n    varying highp vec2 xlv_TEXCOORD1;\n\n    lowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n    {\n        highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n        return data.rgb * power * intensity;\n    }\n#endif";
-    const lightmap_pars_vert = "#ifdef LIGHTMAP\n    attribute vec4 _glesMultiTexCoord1;\n    uniform highp vec4 glstate_lightmapOffset;\n    uniform lowp float glstate_lightmapUV;\n    varying highp vec2 xlv_TEXCOORD1;\n#endif";
-    const lightmap_vert = "#ifdef LIGHTMAP\n    highp vec2 beforelightUV = _glesMultiTexCoord1.xy;\n    if(glstate_lightmapUV == 0.0)\n    {\n        beforelightUV = _glesMultiTexCoord0.xy;\n    }\n    highp float u = beforelightUV.x * glstate_lightmapOffset.x + glstate_lightmapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * glstate_lightmapOffset.y + glstate_lightmapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n#endif";
-    const light_frag = "#ifdef USE_LIGHT    \n    vec3 L;\n    vec3 light;\n    vec3 totalReflect = vec3(0., 0., 0.);\n\n    #ifdef USE_DIRECT_LIGHT\n        for(int i = 0; i < USE_DIRECT_LIGHT; i++) {\n            light = vec3(glstate_directLights[i * 15 + 6], glstate_directLights[i * 15 + 7], glstate_directLights[i * 15 + 8]) * glstate_directLights[i * 15 + 9];\n\n            L.x = glstate_directLights[i * 15 + 3];\n            L.y = glstate_directLights[i * 15 + 4];\n            L.z = glstate_directLights[i * 15 + 5];\n            L = normalize(-L);\n\n            float dotNL = saturate( dot(N, L) );\n            vec3 irradiance = light * dotNL;\n\n            #ifdef USE_PBR\n                irradiance *= PI;\n            #endif\n\n            #ifdef USE_SHADOW\n                irradiance *= bool( glstate_directLights[i * 15 + 10] ) ? getShadow( glstate_directionalShadowMap[ i ], vDirectionalShadowCoord[ i ], glstate_directLights[i * 15 + 11], glstate_directLights[i * 15 + 12], vec2(glstate_directLights[i * 15 + 13], glstate_directLights[i * 15 + 14]) ) : 1.0;\n            #endif\n\n            vec3 reflectLight = irradiance * BRDF_Diffuse_Lambert(diffuseColor.xyz);\n\n            totalReflect += reflectLight;\n        }\n    #endif\n\n    #ifdef USE_POINT_LIGHT\n        for(int i = 0; i < USE_POINT_LIGHT; i++) {\n            L = vec3(glstate_pointLights[i * 19 + 0], glstate_pointLights[i * 19 + 1], glstate_pointLights[i * 19 + 2]) - xlv_POS;\n            float dist = pow(clamp(1. - length(L) / glstate_pointLights[i * 19 + 10], 0.0, 1.0), glstate_pointLights[i * 19 + 11]);\n            light = vec3(glstate_pointLights[i * 19 + 6], glstate_pointLights[i * 19 + 7], glstate_pointLights[i * 19 + 8]) * glstate_pointLights[i * 19 + 9] * dist;\n            L = normalize(L);\n\n            float dotNL = saturate( dot(N, L) );\n            vec3 irradiance = light * dotNL;\n\n            #ifdef USE_PBR\n                irradiance *= PI;\n            #endif\n\n            #ifdef USE_SHADOW\n                vec3 worldV = xlv_POS - vec3(glstate_pointLights[i * 19 + 0], glstate_pointLights[i * 19 + 1], glstate_pointLights[i * 19 + 2]);\n                irradiance *= bool( glstate_pointLights[i * 19 + 12] ) ? getPointShadow( glstate_pointShadowMap[ i ], worldV, glstate_pointLights[i * 19 + 13], glstate_pointLights[i * 19 + 14], vec2(glstate_pointLights[i * 19 + 17], glstate_pointLights[i * 19 + 18]), glstate_pointLights[i * 19 + 15], glstate_pointLights[i * 19 + 16]) : 1.0;\n            #endif\n\n            vec3 reflectLight = irradiance * BRDF_Diffuse_Lambert(diffuseColor.xyz);\n\n            totalReflect += reflectLight;\n        }\n    #endif\n\n    #ifdef USE_SPOT_LIGHT\n        for(int i = 0; i < USE_SPOT_LIGHT; i++) {\n            L = vec3(glstate_spotLights[i * 19 + 0], glstate_spotLights[i * 19 + 1], glstate_spotLights[i * 19 + 2]) - xlv_POS;\n            float lightDistance = length(L);\n            L = normalize(L);\n            float angleCos = dot( L, -normalize(vec3(glstate_spotLights[i * 19 + 3], glstate_spotLights[i * 19 + 4], glstate_spotLights[i * 19 + 5])) );\n\n            if( all( bvec2(angleCos > glstate_spotLights[i * 19 + 12], lightDistance < glstate_spotLights[i * 19 + 10]) ) ) {\n\n                float spotEffect = smoothstep( glstate_spotLights[i * 19 + 12], glstate_spotLights[i * 19 + 13], angleCos );\n                float dist = pow(clamp(1. - lightDistance / glstate_spotLights[i * 19 + 10], 0.0, 1.0), glstate_spotLights[i * 19 + 11]);\n                light = vec3(glstate_spotLights[i * 19 + 6], glstate_spotLights[i * 19 + 7], glstate_spotLights[i * 19 + 8]) * glstate_spotLights[i * 19 + 9] * dist * spotEffect;\n\n                float dotNL = saturate( dot(N, L) );\n                vec3 irradiance = light * dotNL;\n\n                #ifdef USE_PBR\n                    irradiance *= PI;\n                #endif\n\n                #ifdef USE_SHADOW\n                    irradiance *= bool( glstate_spotLights[i * 17 + 14] ) ? getShadow( glstate_spotShadowMap[ i ], vSpotShadowCoord[ i ], glstate_spotLights[i * 17 + 15], glstate_spotLights[i * 17 + 16], vec2(glstate_spotLights[i * 17 + 17], glstate_spotLights[i * 17 + 18])) : 1.0;\n                #endif\n\n                vec3 reflectLight = irradiance * BRDF_Diffuse_Lambert(diffuseColor.xyz);\n\n                totalReflect += reflectLight;\n            }\n\n        }\n    #endif\n\n    outColor.xyz = totalReflect;\n#endif";
-    const light_pars_frag = "#ifdef USE_DIRECT_LIGHT\n    uniform float glstate_directLights[USE_DIRECT_LIGHT * 15];\n#endif\n\n#ifdef USE_POINT_LIGHT\n    uniform float glstate_pointLights[USE_POINT_LIGHT * 19];\n#endif\n\n#ifdef USE_SPOT_LIGHT\n    uniform float glstate_spotLights[USE_SPOT_LIGHT * 19];\n#endif";
-    const normal_frag = "#ifdef DOUBLE_SIDED\n    float flipNormal = ( float( gl_FrontFacing ) * 2.0 - 1.0 );\n#else\n    float flipNormal = 1.0;\n#endif\n#ifdef FLAT_SHADED\n    // Workaround for Adreno/Nexus5 not able able to do dFdx( vViewPosition ) ...\n    vec3 fdx = vec3( dFdx( xlv_POS.x ), dFdx( xlv_POS.y ), dFdx( xlv_POS.z ) );\n    vec3 fdy = vec3( dFdy( xlv_POS.x ), dFdy( xlv_POS.y ), dFdy( xlv_POS.z ) );\n    vec3 N = normalize( cross( fdx, fdy ) );\n#else\n    vec3 N = normalize(xlv_NORMAL) * flipNormal;\n#endif\n#ifdef USE_NORMAL_MAP\n    vec3 normalMapColor = texture2D(_NormalTex, xlv_TEXCOORD0).rgb;\n    // for now, uv coord is flip Y\n    mat3 tspace = tsn(N, -xlv_POS, vec2(xlv_TEXCOORD0.x, 1.0 - xlv_TEXCOORD0.y));\n    // mat3 tspace = tbn(normalize(v_Normal), v_ViewModelPos, vec2(xlv_TEXCOORD0.x, 1.0 - xlv_TEXCOORD0.y));\n    N = normalize(tspace * (normalMapColor * 2.0 - 1.0));\n#elif defined(USE_BUMPMAP)\n    N = perturbNormalArb(-xlv_POS, N, dHdxy_fwd(xlv_TEXCOORD0));\n#endif";
-    const packing = "const float PackUpscale = 256. / 255.; // fraction -> 0..1 (including 1)\nconst float UnpackDownscale = 255. / 256.; // 0..1 -> fraction (excluding 1)\n\nconst vec3 PackFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );\nconst vec4 UnpackFactors = UnpackDownscale / vec4( PackFactors, 1. );\n\nconst float ShiftRight8 = 1. / 256.;\n\nvec4 packDepthToRGBA( const in float v ) {\n\n    vec4 r = vec4( fract( v * PackFactors ), v );\n    r.yzw -= r.xyz * ShiftRight8; // tidy overflow\n    return r * PackUpscale;\n\n}\n\nfloat unpackRGBAToDepth( const in vec4 v ) {\n\n    return dot( v, UnpackFactors );\n\n}";
-    const particle_affector = "vec3 lifeVelocity = computeVelocity(t);\nvec4 worldRotation;\nif(u_simulationSpace==1)\n worldRotation=_startWorldRotation;\nelse\n worldRotation=u_worldRotation;\nvec3 gravity=u_gravity*age;\n\nvec3 center=computePosition(_startVelocity, lifeVelocity, age, t,gravity,worldRotation); \n#ifdef SPHERHBILLBOARD\n   vec2 corner=_glesCorner.xy;\n      vec3 cameraUpVector =normalize(glstate_cameraUp);\n      vec3 sideVector = normalize(cross(glstate_cameraForward,cameraUpVector));\n      vec3 upVector = normalize(cross(sideVector,glstate_cameraForward));\n     corner*=computeBillbardSize(_startSize.xy,t);\n  #if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)\n   if(u_startRotation3D){\n    vec3 rotation=vec3(_startRotation.xy,computeRotation(_startRotation.z,age,t));\n    center += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,rotation);\n   }\n   else{\n    float rot = computeRotation(_startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n    center += u_sizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n   }\n  #else\n   if(u_startRotation3D){\n    center += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,_startRotation);\n   }\n   else{\n    float c = cos(_startRotation.x);\n    float s = sin(_startRotation.x);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n    center += u_sizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n   }\n  #endif\n #endif\n #ifdef STRETCHEDBILLBOARD\n  vec2 corner=_glesCorner.xy;\n  vec3 velocity;\n  #if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n      if(u_spaceType==0)\n       velocity=rotation_quaternions(u_sizeScale*(_startVelocity+lifeVelocity),worldRotation)+gravity;\n      else\n       velocity=rotation_quaternions(u_sizeScale*_startVelocity,worldRotation)+lifeVelocity+gravity;\n   #else\n      velocity= rotation_quaternions(u_sizeScale*_startVelocity,worldRotation)+gravity;\n   #endif \n  vec3 cameraUpVector = normalize(velocity);\n  vec3 direction = normalize(center-glstate_cameraPos);\n    vec3 sideVector = normalize(cross(direction,normalize(velocity)));\n  sideVector=u_sizeScale.xzy*sideVector;\n  cameraUpVector=length(vec3(u_sizeScale.x,0.0,0.0))*cameraUpVector;\n    vec2 size=computeBillbardSize(_startSize.xy,t);\n    const mat2 rotaionZHalfPI=mat2(0.0, -1.0, 1.0, 0.0);\n    corner=rotaionZHalfPI*corner;\n    corner.y=corner.y-abs(corner.y);\n    float speed=length(velocity);\n    center +=sign(u_sizeScale.x)*(sign(u_lengthScale)*size.x*corner.x*sideVector+(speed*u_speeaScale+size.y*u_lengthScale)*corner.y*cameraUpVector);\n #endif\n #ifdef HORIZONTALBILLBOARD\n  vec2 corner=_glesCorner.xy;\n    const vec3 cameraUpVector=vec3(0.0,0.0,1.0);\n    const vec3 sideVector = vec3(-1.0,0.0,0.0);\n  float rot = computeRotation(_startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n  corner*=computeBillbardSize(_startSize.xy,t);\n    center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n #endif\n #ifdef VERTICALBILLBOARD\n  vec2 corner=_glesCorner.xy;\n    const vec3 cameraUpVector =vec3(0.0,1.0,0.0);\n    vec3 sideVector = normalize(cross(glstate_cameraForward,cameraUpVector));\n  float rot = computeRotation(_startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n  corner*=computeBillbardSize(_startSize.xy,t);\n    center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n #endif\n #ifdef RENDERMESH\n    vec3 size=computeMeshSize(_startSize,t);\n  #if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)\n    if(u_startRotation3D){\n     vec3 rotation=vec3(_startRotation.xy,-computeRotation(_startRotation.z, age,t));\n     center+= rotation_quaternions(u_sizeScale*rotation_euler(_glesVertex*size,rotation),worldRotation);\n    }\n    else{\n     #ifdef ROTATIONOVERLIFETIME\n      float angle=computeRotation(_startRotation.x, age,t);\n      if(_startPosition.x>0.1 || _startPosition.x < -0.1||_startPosition.y>0.1 || _startPosition.y < -0.1){\n       center+= (rotation_quaternions(rotation_axis(u_sizeScale*_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_startPosition.xy,0.0))),angle),worldRotation));//已验证\n      }\n      else{\n       #ifdef SHAPE\n        center+= u_sizeScale.xzy*(rotation_quaternions(rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),angle),worldRotation));\n       #else\n        if(u_simulationSpace==1)\n         center+=rotation_axis(u_sizeScale*_glesVertex*size,vec3(0.0,0.0,-1.0),angle);\n        else if(u_simulationSpace==0)\n         center+=rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,0.0,-1.0),angle),worldRotation);\n       #endif\n      }\n     #endif\n     #ifdef ROTATIONSEPERATE\n      vec3 angle=compute3DRotation(vec3(0.0,0.0,_startRotation.z), age,t);\n      center+= (rotation_quaternions(rotation_euler(u_sizeScale*_glesVertex*size,vec3(angle.x,angle.y,angle.z)),worldRotation));\n     #endif \n    }\n  #else\n  if(u_startRotation3D){\n   center+= rotation_quaternions(u_sizeScale*rotation_euler(_glesVertex*size,_startRotation),worldRotation);\n  }\n  else{\n   if(_startPosition.x>0.1 || _startPosition.x < -0.1||_startPosition.y>0.1 || _startPosition.y < -0.1){\n    if(u_simulationSpace==1)\n     center+= rotation_axis(u_sizeScale*_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_startPosition.xy,0.0))),_startRotation.x);\n    else if(u_simulationSpace==0)\n     center+= (rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(_startPosition.xy,0.0))),_startRotation.x),worldRotation));\n   }\n   else{\n    #ifdef SHAPE\n     if(u_simulationSpace==1)\n      center+= u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),_startRotation.x);\n     else if(u_simulationSpace==0)\n      center+= rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,-1.0,0.0),_startRotation.x),worldRotation); \n    #else\n     if(u_simulationSpace==1)\n      center+= rotation_axis(u_sizeScale*_glesVertex*size,vec3(0.0,0.0,-1.0),_startRotation.x);\n     else if(u_simulationSpace==0)\n      center+= rotation_quaternions(u_sizeScale*rotation_axis(_glesVertex*size,vec3(0.0,0.0,-1.0),_startRotation.x),worldRotation);\n    #endif\n   }\n  }\n  #endif\n  v_mesh_color=_glesColor;\n  #endif";
-    const particle_common = "\n\nuniform float u_currentTime;\nuniform vec3 u_gravity;\n\nuniform vec3 u_worldPosition;\nuniform vec4 u_worldRotation;\nuniform bool u_startRotation3D;\nuniform int u_scalingMode;\nuniform vec3 u_positionScale;\nuniform vec3 u_sizeScale;\nuniform mat4 glstate_matrix_vp;\nuniform vec4 _MainTex_ST;  \n\n#ifdef STRETCHEDBILLBOARD\n uniform vec3 glstate_cameraPos;\n#endif\nuniform vec3 glstate_cameraForward;\nuniform vec3 glstate_cameraUp;\n\nuniform float u_lengthScale;\nuniform float u_speeaScale;\nuniform int u_simulationSpace;\n\n#if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n  uniform int u_spaceType;\n#endif\n#if defined(VELOCITYCONSTANT)||defined(VELOCITYTWOCONSTANT)\n  uniform vec3 u_velocityConst;\n#endif\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)\n  uniform vec2 u_velocityCurveX[4];\n  uniform vec2 u_velocityCurveY[4];\n  uniform vec2 u_velocityCurveZ[4];\n#endif\n#ifdef VELOCITYTWOCONSTANT\n  uniform vec3 u_velocityConstMax;\n#endif\n#ifdef VELOCITYTWOCURVE\n  uniform vec2 u_velocityCurveMaxX[4];\n  uniform vec2 u_velocityCurveMaxY[4];\n  uniform vec2 u_velocityCurveMaxZ[4];\n#endif\n\n#ifdef COLOROGRADIENT\n  uniform vec4 u_colorGradient[4];\n  uniform vec2 u_alphaGradient[4];\n#endif\n#ifdef COLORTWOGRADIENTS\n  uniform vec4 u_colorGradient[4];\n  uniform vec2 u_alphaGradient[4];\n  uniform vec4 u_colorGradientMax[4];\n  uniform vec2 u_alphaGradientMax[4];\n#endif\n\n#if defined(SIZECURVE)||defined(SIZETWOCURVES)\n  uniform vec2 u_sizeCurve[4];\n#endif\n#ifdef SIZETWOCURVES\n  uniform vec2 u_sizeCurveMax[4];\n#endif\n#if defined(SIZECURVESEPERATE)||defined(SIZETWOCURVESSEPERATE)\n  uniform vec2 u_sizeCurveX[4];\n  uniform vec2 u_sizeCurveY[4];\n  uniform vec2 u_sizeCurveZ[4];\n#endif\n#ifdef SIZETWOCURVESSEPERATE\n  uniform vec2 u_sizeCurveMaxX[4];\n  uniform vec2 u_sizeCurveMaxY[4];\n  uniform vec2 u_sizeCurveMaxZ[4];\n#endif\n\n#ifdef ROTATIONOVERLIFETIME\n  #if defined(ROTATIONCONSTANT)||defined(ROTATIONTWOCONSTANTS)\n    uniform float u_rotationConst;\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n    uniform float u_rotationConstMax;\n  #endif\n  #if defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\n    uniform vec2 u_rotationCurve[4];\n  #endif\n  #ifdef ROTATIONTWOCURVES\n    uniform vec2 u_rotationCurveMax[4];\n  #endif\n#endif\n#ifdef ROTATIONSEPERATE\n  #if defined(ROTATIONCONSTANT)||defined(ROTATIONTWOCONSTANTS)\n    uniform vec3 u_rotationConstSeprarate;\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n    uniform vec3 u_rotationConstMaxSeprarate;\n  #endif\n  #if defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\n    uniform vec2 u_rotationCurveX[4];\n    uniform vec2 u_rotationCurveY[4];\n    uniform vec2 u_rotationCurveZ[4];\n  uniform vec2 u_rotationCurveW[4];\n  #endif\n  #ifdef ROTATIONTWOCURVES\n    uniform vec2 u_rotationCurveMaxX[4];\n    uniform vec2 u_rotationCurveMaxY[4];\n    uniform vec2 u_rotationCurveMaxZ[4];\n  uniform vec2 u_rotationCurveMaxW[4];\n  #endif\n#endif\n\n#if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONTWOCURVE)\n  uniform float u_cycles;\n  uniform vec4 u_subUV;\n  uniform vec2 u_uvCurve[4];\n#endif\n#ifdef TEXTURESHEETANIMATIONTWOCURVE\n  uniform vec2 u_uvCurveMax[4];\n#endif\n\nvarying float v_discard;\nvarying vec4 v_color;\nvarying vec2 v_texcoord;\n#ifdef RENDERMESH\n varying vec4 v_mesh_color;\n#endif\n\nvec3 rotation_euler(in vec3 vector,in vec3 euler)\n{\n  float halfPitch = euler.x * 0.5;\n float halfYaw = euler.y * 0.5;\n float halfRoll = euler.z * 0.5;\n\n float sinPitch = sin(halfPitch);\n float cosPitch = cos(halfPitch);\n float sinYaw = sin(halfYaw);\n float cosYaw = cos(halfYaw);\n float sinRoll = sin(halfRoll);\n float cosRoll = cos(halfRoll);\n\n float quaX = (cosYaw * sinPitch * cosRoll) + (sinYaw * cosPitch * sinRoll);\n float quaY = (sinYaw * cosPitch * cosRoll) - (cosYaw * sinPitch * sinRoll);\n float quaZ = (cosYaw * cosPitch * sinRoll) - (sinYaw * sinPitch * cosRoll);\n float quaW = (cosYaw * cosPitch * cosRoll) + (sinYaw * sinPitch * sinRoll);\n \n float x = quaX + quaX;\n  float y = quaY + quaY;\n  float z = quaZ + quaZ;\n  float wx = quaW * x;\n  float wy = quaW * y;\n  float wz = quaW * z;\n float xx = quaX * x;\n  float xy = quaX * y;\n float xz = quaX * z;\n  float yy = quaY * y;\n  float yz = quaY * z;\n  float zz = quaZ * z;\n\n  return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n              ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n              ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n \n}\n\nvec3 rotation_axis(in vec3 vector,in vec3 axis, in float angle)\n{\n float halfAngle = angle * 0.5;\n float sin = sin(halfAngle);\n \n float quaX = axis.x * sin;\n float quaY = axis.y * sin;\n float quaZ = axis.z * sin;\n float quaW = cos(halfAngle);\n \n float x = quaX + quaX;\n  float y = quaY + quaY;\n  float z = quaZ + quaZ;\n  float wx = quaW * x;\n  float wy = quaW * y;\n  float wz = quaW * z;\n float xx = quaX * x;\n  float xy = quaX * y;\n float xz = quaX * z;\n  float yy = quaY * y;\n  float yz = quaY * z;\n  float zz = quaZ * z;\n\n  return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n              ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n              ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n}\n\nvec3 rotation_quaternions(in vec3 v,in vec4 q) \n{\n return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);\n}\n\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)||defined(SIZECURVE)||defined(SIZECURVESEPERATE)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)\nfloat evaluate_curve_float(in vec2 curves[4],in float t)\n{\n float res;\n for(int i=1;i<4;i++)\n {\n  vec2 curve=curves[i];\n  float curTime=curve.x;\n  if(curTime>=t)\n  {\n   vec2 lastCurve=curves[i-1];\n   float lastTime=lastCurve.x;\n   float tt=(t-lastTime)/(curTime-lastTime);\n   res=mix(lastCurve.y,curve.y,tt);\n   break;\n  }\n }\n return res;\n}\n#endif\n\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)||defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\nfloat evaluate_curve_total(in vec2 curves[4],in float t)\n{\n float res=0.0;\n for(int i=1;i<4;i++)\n {\n  vec2 curve=curves[i];\n  float curTime=curve.x;\n  vec2 lastCurve=curves[i-1];\n  float lastValue=lastCurve.y;\n  \n  if(curTime>=t){\n   float lastTime=lastCurve.x;\n   float tt=(t-lastTime)/(curTime-lastTime);\n   res+=(lastValue+mix(lastValue,curve.y,tt))/2.0*_time.x*(t-lastTime);\n   break;\n  }\n  else{\n   res+=(lastValue+curve.y)/2.0*_time.x*(curTime-lastCurve.x);\n  }\n }\n return res;\n}\n#endif\n\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)\nvec4 evaluate_curve_color(in vec2 gradientAlphas[4],in vec4 gradientColors[4],in float t)\n{\n vec4 overTimeColor;\n for(int i=1;i<4;i++)\n {\n  vec2 gradientAlpha=gradientAlphas[i];\n  float alphaKey=gradientAlpha.x;\n  if(alphaKey>=t)\n  {\n   vec2 lastGradientAlpha=gradientAlphas[i-1];\n   float lastAlphaKey=lastGradientAlpha.x;\n   float age=(t-lastAlphaKey)/(alphaKey-lastAlphaKey);\n   overTimeColor.a=mix(lastGradientAlpha.y,gradientAlpha.y,age);\n   break;\n  }\n }\n \n for(int i=1;i<4;i++)\n {\n  vec4 gradientColor=gradientColors[i];\n  float colorKey=gradientColor.x;\n  if(colorKey>=t)\n  {\n   vec4 lastGradientColor=gradientColors[i-1];\n   float lastColorKey=lastGradientColor.x;\n   float age=(t-lastColorKey)/(colorKey-lastColorKey);\n   overTimeColor.rgb=mix(gradientColors[i-1].yzw,gradientColor.yzw,age);\n   break;\n  }\n }\n return overTimeColor;\n}\n#endif\n\n\n#if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONTWOCURVE)\nfloat evaluate_curve_frame(in vec2 gradientFrames[4],in float t)\n{\n float overTimeFrame;\n for(int i=1;i<4;i++)\n {\n  vec2 gradientFrame=gradientFrames[i];\n  float key=gradientFrame.x;\n  if(key>=t)\n  {\n   vec2 lastGradientFrame=gradientFrames[i-1];\n   float lastKey=lastGradientFrame.x;\n   float age=(t-lastKey)/(key-lastKey);\n   overTimeFrame=mix(lastGradientFrame.y,gradientFrame.y,age);\n   break;\n  }\n }\n return floor(overTimeFrame);\n}\n#endif\n\nvec3 computeVelocity(in float t)\n{\n  vec3 res;\n  #ifdef VELOCITYCONSTANT\n  res=u_velocityConst; \n  #endif\n  #ifdef VELOCITYCURVE\n     res= vec3(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveZ,t));\n  #endif\n  #ifdef VELOCITYTWOCONSTANT\n  res=mix(u_velocityConst,u_velocityConstMax,vec3(_random1.y,_random1.z,_random1.w)); \n  #endif\n  #ifdef VELOCITYTWOCURVE\n     res=vec3(mix(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveMaxX,t),_random1.y),\n             mix(evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveMaxY,t),_random1.z),\n        mix(evaluate_curve_float(u_velocityCurveZ,t),evaluate_curve_float(u_velocityCurveMaxZ,t),_random1.w));\n  #endif\n     \n  return res;\n} \n\nvec3 computePosition(in vec3 startVelocity, in vec3 lifeVelocity,in float age,in float t,vec3 gravityVelocity,vec4 worldRotation)\n{\n    vec3 startPosition;\n    vec3 lifePosition;\n  #if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n   #ifdef VELOCITYCONSTANT\n      startPosition=startVelocity*age;\n      lifePosition=lifeVelocity*age;\n   #endif\n   #ifdef VELOCITYCURVE\n      startPosition=startVelocity*age;\n      lifePosition=vec3(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveZ,t));\n   #endif\n   #ifdef VELOCITYTWOCONSTANT\n      startPosition=startVelocity*age;\n      lifePosition=lifeVelocity*age;\n   #endif\n   #ifdef VELOCITYTWOCURVE\n      startPosition=startVelocity*age;\n      lifePosition=vec3(mix(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveMaxX,t),_random1.y)\n                 ,mix(evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveMaxY,t),_random1.z)\n                 ,mix(evaluate_curve_total(u_velocityCurveZ,t),evaluate_curve_total(u_velocityCurveMaxZ,t),_random1.w));\n   #endif\n\n   vec3 finalPosition;\n   if(u_spaceType==0){\n     if(u_scalingMode!=2)\n      finalPosition =rotation_quaternions(u_positionScale*(_startPosition.xyz+startPosition+lifePosition),worldRotation);\n     else\n      finalPosition =rotation_quaternions(u_positionScale*_startPosition.xyz+startPosition+lifePosition,worldRotation);\n   }\n   else{\n     if(u_scalingMode!=2)\n       finalPosition = rotation_quaternions(u_positionScale*(_startPosition.xyz+startPosition),worldRotation)+lifePosition;\n     else\n       finalPosition = rotation_quaternions(u_positionScale*_startPosition.xyz+startPosition,worldRotation)+lifePosition;\n   }\n    #else\n    startPosition=startVelocity*age;\n    vec3 finalPosition;\n    if(u_scalingMode!=2)\n      finalPosition = rotation_quaternions(u_positionScale*(_startPosition.xyz+startPosition),worldRotation);\n    else\n      finalPosition = rotation_quaternions(u_positionScale*_startPosition.xyz+startPosition,worldRotation);\n  #endif\n  \n  if(u_simulationSpace==1)\n    finalPosition=finalPosition+_startWorldPosition;\n  else if(u_simulationSpace==0) \n    finalPosition=finalPosition+u_worldPosition;\n  \n  finalPosition+=0.5*gravityVelocity*age;\n \n  return finalPosition;\n}\n\n\nvec4 computeColor(in vec4 color,in float t)\n{\n #ifdef COLOROGRADIENT\n   color*=evaluate_curve_color(u_alphaGradient,u_colorGradient,t);\n #endif \n #ifdef COLORTWOGRADIENTS\n   color*=mix(evaluate_curve_color(u_alphaGradient,u_colorGradient,t),evaluate_curve_color(u_alphaGradientMax,u_colorGradientMax,t),_random0.y);\n #endif\n\n  return color;\n}\n\nvec2 computeBillbardSize(in vec2 size,in float t)\n{\n #ifdef SIZECURVE\n  size*=evaluate_curve_float(u_sizeCurve,t);\n #endif\n #ifdef SIZETWOCURVES\n   size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),_random0.z); \n #endif\n #ifdef SIZECURVESEPERATE\n  size*=vec2(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t));\n #endif\n #ifdef SIZETWOCURVESSEPERATE\n   size*=vec2(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),_random0.z)\n         ,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),_random0.z));\n #endif\n return size;\n}\n\n#ifdef RENDERMESH\nvec3 computeMeshSize(in vec3 size,in float t)\n{\n #ifdef SIZECURVE\n  size*=evaluate_curve_float(u_sizeCurve,t);\n #endif\n #ifdef SIZETWOCURVES\n   size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),_random0.z); \n #endif\n #ifdef SIZECURVESEPERATE\n  size*=vec3(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveZ,t));\n #endif\n #ifdef SIZETWOCURVESSEPERATE\n   size*=vec3(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),_random0.z)\n         ,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),_random0.z)\n       ,mix(evaluate_curve_float(u_sizeCurveZ,t),evaluate_curve_float(u_sizeCurveMaxZ,t),_random0.z));\n #endif\n return size;\n}\n#endif\n\nfloat computeRotation(in float rotation,in float age,in float t)\n{ \n #ifdef ROTATIONOVERLIFETIME\n  #ifdef ROTATIONCONSTANT\n   float ageRot=u_rotationConst*age;\n         rotation+=ageRot;\n  #endif\n  #ifdef ROTATIONCURVE\n   rotation+=evaluate_curve_total(u_rotationCurve,t);\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n   float ageRot=mix(u_rotationConst,u_rotationConstMax,_random0.w)*age;\n     rotation+=ageRot;\n   #endif\n  #ifdef ROTATIONTWOCURVES\n   rotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),_random0.w);\n  #endif\n #endif\n #ifdef ROTATIONSEPERATE\n  #ifdef ROTATIONCONSTANT\n   float ageRot=u_rotationConstSeprarate.z*age;\n         rotation+=ageRot;\n  #endif\n  #ifdef ROTATIONCURVE\n   rotation+=evaluate_curve_total(u_rotationCurveZ,t);\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n   float ageRot=mix(u_rotationConstSeprarate.z,u_rotationConstMaxSeprarate.z,_random0.w)*age;\n         rotation+=ageRot;\n     #endif\n  #ifdef ROTATIONTWOCURVES\n   rotation+=mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),_random0.w));\n  #endif\n #endif\n return rotation;\n}\n\n#if defined(RENDERMESH)&&(defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE))\nvec3 compute3DRotation(in vec3 rotation,in float age,in float t)\n{ \n #ifdef ROTATIONOVERLIFETIME\n   #ifdef ROTATIONCONSTANT\n     float ageRot=u_rotationConst*age;\n       rotation+=ageRot;\n   #endif\n   #ifdef ROTATIONCURVE\n     rotation+=evaluate_curve_total(u_rotationCurve,t);\n   #endif\n   #ifdef ROTATIONTWOCONSTANTS\n     float ageRot=mix(u_rotationConst,u_rotationConstMax,_random0.w)*age;\n       rotation+=ageRot;\n   #endif\n   #ifdef ROTATIONTWOCURVES\n     rotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),_random0.w);\n   #endif\n #endif\n #ifdef ROTATIONSEPERATE\n    #ifdef ROTATIONCONSTANT\n     vec3 ageRot=u_rotationConstSeprarate*age;\n           rotation+=ageRot;\n    #endif\n    #ifdef ROTATIONCURVE\n     rotation+=vec3(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveZ,t));\n    #endif\n    #ifdef ROTATIONTWOCONSTANTS\n     vec3 ageRot=mix(u_rotationConstSeprarate,u_rotationConstMaxSeprarate,_random0.w)*age;\n           rotation+=ageRot;\n     #endif\n    #ifdef ROTATIONTWOCURVES\n     rotation+=vec3(mix(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveMaxX,t),_random0.w)\n           ,mix(evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveMaxY,t),_random0.w)\n           ,mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),_random0.w));\n    #endif\n #endif\n return rotation;\n}\n#endif\n\nvec2 computeUV(in vec2 uv,in float t)\n{ \n #ifdef TEXTURESHEETANIMATIONCURVE\n  float cycleNormalizedAge=t*u_cycles;\n  float uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);\n  float frame=evaluate_curve_frame(u_uvCurve,uvNormalizedAge);\n  uv.x *= u_subUV.x + u_subUV.z;\n  uv.y *= u_subUV.y + u_subUV.w;\n  float totalULength=frame*u_subUV.x;\n  float floorTotalULength=floor(totalULength);\n   uv.x+=totalULength-floorTotalULength;\n  uv.y+=floorTotalULength*u_subUV.y;\n    #endif\n #ifdef TEXTURESHEETANIMATIONTWOCURVE\n  float cycleNormalizedAge=t*u_cycles;\n  float uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);\n   float frame=floor(mix(evaluate_curve_frame(u_uvCurve,uvNormalizedAge),evaluate_curve_frame(u_uvCurveMax,uvNormalizedAge),_random1.x));\n  uv.x *= u_subUV.x + u_subUV.z;\n  uv.y *= u_subUV.y + u_subUV.w;\n  float totalULength=frame*u_subUV.x;\n  float floorTotalULength=floor(totalULength);\n   uv.x+=totalULength-floorTotalULength;\n  uv.y+=floorTotalULength*u_subUV.y;\n    #endif\n return uv;\n}";
-    const shadowMap_pars_frag = "#ifdef USE_SHADOW\n\n    #include <packing>\n\n    #ifdef USE_DIRECT_LIGHT\n\n        uniform sampler2D glstate_directionalShadowMap[ USE_DIRECT_LIGHT ];\n        varying vec4 vDirectionalShadowCoord[ USE_DIRECT_LIGHT ];\n\n    #endif\n\n    #ifdef USE_POINT_LIGHT\n\n        uniform samplerCube glstate_pointShadowMap[ USE_POINT_LIGHT ];\n\n    #endif\n\n    #ifdef USE_SPOT_LIGHT\n\n        uniform sampler2D glstate_spotShadowMap[ USE_SPOT_LIGHT ];\n        varying vec4 vSpotShadowCoord[ USE_SPOT_LIGHT ];\n\n    #endif\n\n    float texture2DCompare( sampler2D depths, vec2 uv, float compare ) {\n\n        return step( compare, unpackRGBAToDepth( texture2D( depths, uv ) ) );\n\n    }\n\n    float textureCubeCompare( samplerCube depths, vec3 uv, float compare ) {\n\n        return step( compare, unpackRGBAToDepth( textureCube( depths, uv ) ) );\n\n    }\n\n    float getShadow( sampler2D shadowMap, vec4 shadowCoord, float shadowBias, float shadowRadius, vec2 shadowMapSize ) {\n        shadowCoord.xyz /= shadowCoord.w;\n\n        float depth = shadowCoord.z + shadowBias;\n\n        bvec4 inFrustumVec = bvec4 ( shadowCoord.x >= 0.0, shadowCoord.x <= 1.0, shadowCoord.y >= 0.0, shadowCoord.y <= 1.0 );\n        bool inFrustum = all( inFrustumVec );\n\n        bvec2 frustumTestVec = bvec2( inFrustum, depth <= 1.0 );\n\n        bool frustumTest = all( frustumTestVec );\n\n        if ( frustumTest ) {\n            #ifdef USE_PCF_SOFT_SHADOW\n                // TODO x, y not equal\n                float texelSize = shadowRadius / shadowMapSize.x;\n\n                vec2 poissonDisk[4];\n                poissonDisk[0] = vec2(-0.94201624, -0.39906216);\n                poissonDisk[1] = vec2(0.94558609, -0.76890725);\n                poissonDisk[2] = vec2(-0.094184101, -0.92938870);\n                poissonDisk[3] = vec2(0.34495938, 0.29387760);\n\n                return texture2DCompare( shadowMap, shadowCoord.xy + poissonDisk[0] * texelSize, depth ) * 0.25 +\n                    texture2DCompare( shadowMap, shadowCoord.xy + poissonDisk[1] * texelSize, depth ) * 0.25 +\n                    texture2DCompare( shadowMap, shadowCoord.xy + poissonDisk[2] * texelSize, depth ) * 0.25 +\n                    texture2DCompare( shadowMap, shadowCoord.xy + poissonDisk[3] * texelSize, depth ) * 0.25;\n            #else\n                return texture2DCompare( shadowMap, shadowCoord.xy, depth );\n            #endif\n        }\n\n        return 1.0;\n\n    }\n\n    float getPointShadow( samplerCube shadowMap, vec3 V, float shadowBias, float shadowRadius, vec2 shadowMapSize, float shadowCameraNear, float shadowCameraFar ) {\n\n        // depth = normalized distance from light to fragment position\n  float depth = ( length( V ) - shadowCameraNear ) / ( shadowCameraFar - shadowCameraNear ); // need to clamp?\n  depth += shadowBias;\n\n        V.x = -V.x; // for left-hand?\n\n        #ifdef USE_PCF_SOFT_SHADOW\n            // TODO x, y equal force\n            float texelSize = shadowRadius / shadowMapSize.x;\n\n            vec3 poissonDisk[4];\n      poissonDisk[0] = vec3(-1.0, 1.0, -1.0);\n      poissonDisk[1] = vec3(1.0, -1.0, -1.0);\n      poissonDisk[2] = vec3(-1.0, -1.0, -1.0);\n      poissonDisk[3] = vec3(1.0, -1.0, 1.0);\n\n            return textureCubeCompare( shadowMap, normalize(V) + poissonDisk[0] * texelSize, depth ) * 0.25 +\n                textureCubeCompare( shadowMap, normalize(V) + poissonDisk[1] * texelSize, depth ) * 0.25 +\n                textureCubeCompare( shadowMap, normalize(V) + poissonDisk[2] * texelSize, depth ) * 0.25 +\n                textureCubeCompare( shadowMap, normalize(V) + poissonDisk[3] * texelSize, depth ) * 0.25;\n        #else\n            return textureCubeCompare( shadowMap, normalize(V), depth);\n        #endif\n    }\n\n#endif";
-    const shadowMap_pars_vert = "#ifdef USE_SHADOW\n\n    #ifdef USE_DIRECT_LIGHT\n\n        uniform mat4 glstate_directionalShadowMatrix[ USE_DIRECT_LIGHT ];\n        varying vec4 vDirectionalShadowCoord[ USE_DIRECT_LIGHT ];\n\n    #endif\n\n    #ifdef USE_POINT_LIGHT\n\n        // nothing\n\n    #endif\n\n    #ifdef USE_SPOT_LIGHT\n\n        uniform mat4 glstate_spotShadowMatrix[ USE_SPOT_LIGHT ];\n        varying vec4 vSpotShadowCoord[ USE_SPOT_LIGHT ];\n\n    #endif\n\n#endif";
-    const shadowMap_vert = "#ifdef USE_SHADOW\n\n    vec4 worldPosition = glstate_matrix_model * tmpVertex;\n\n    #ifdef USE_DIRECT_LIGHT\n\n        for ( int i = 0; i < USE_DIRECT_LIGHT; i ++ ) {\n\n            vDirectionalShadowCoord[ i ] = glstate_directionalShadowMatrix[ i ] * worldPosition;\n\n        }\n\n    #endif\n\n    #ifdef USE_POINT_LIGHT\n\n        // nothing\n\n    #endif\n\n    #ifdef USE_SPOT_LIGHT\n\n        for ( int i = 0; i < USE_SPOT_LIGHT; i ++ ) {\n\n            vSpotShadowCoord[ i ] = glstate_spotShadowMatrix[ i ] * worldPosition;\n\n        }\n\n    #endif\n\n#endif";
-    const skinning_base_vert = "#ifdef SKINNING\n    mat4 boneMatX = buildMat4(int(_glesBlendIndex4.x));\n mat4 boneMatY = buildMat4(int(_glesBlendIndex4.y));\n mat4 boneMatZ = buildMat4(int(_glesBlendIndex4.z));\n mat4 boneMatW = buildMat4(int(_glesBlendIndex4.w));\n \n    mat4 mat = boneMatX*_glesBlendWeight4.x \n    + boneMatY*_glesBlendWeight4.y \n    + boneMatZ*_glesBlendWeight4.z \n    + boneMatW*_glesBlendWeight4.w;\n    \n    highp vec4 tmpVertex = vec4((mat* _glesVertex).xyz, 1.0);\n // highp vec4 tmpVertex = vec4(calcVertex(_glesVertex,_glesBlendIndex4,_glesBlendWeight4).xyz, 1.0);\n#else\n    // tmpVertex.xyz = _glesVertex.xyz;\n highp vec4 tmpVertex = vec4(_glesVertex.xyz, 1.0);\n#endif";
-    const skinning_normal_vert = "#ifdef SKINNING\n    tmpNormal = vec4((mat* vec4(_glesNormal, 0.0))).xyz;\n    // tmpNormal = _glesNormal; \n#else\n    tmpNormal = _glesNormal;    \n#endif";
-    const skinning_pars_vert = "#ifdef SKINNING\nattribute vec4 _glesBlendIndex4;\nattribute vec4 _glesBlendWeight4;\nuniform vec4 glstate_vec4_bones[110];\n\nmat4 buildMat4(int index)\n{\n vec4 quat = glstate_vec4_bones[index * 2 + 0];\n vec4 translation = glstate_vec4_bones[index * 2 + 1];\n float xy2 = 2.0 * quat.x * quat.y;\n float xz2 = 2.0 * quat.x * quat.z;\n float xw2 = 2.0 * quat.x * quat.w;\n float yz2 = 2.0 * quat.y * quat.z;\n float yw2 = 2.0 * quat.y * quat.w;\n float zw2 = 2.0 * quat.z * quat.w;\n float xx = quat.x * quat.x;\n float yy = quat.y * quat.y;\n float zz = quat.z * quat.z;\n float ww = quat.w * quat.w;\n mat4 matrix = mat4(\n xx - yy - zz + ww, xy2 + zw2, xz2 - yw2, 0,\n xy2 - zw2, -xx + yy - zz + ww, yz2 + xw2, 0,\n xz2 + yw2, yz2 - xw2, -xx - yy + zz + ww, 0,\n translation.x, translation.y, translation.z, 1);\n return matrix;\n}\n#endif";
+    const bumpmap_pars_fragment = "#ifdef USE_BUMPMAP\n\n uniform sampler2D bumpMap;\n uniform float bumpScale;\n\n // Bump Mapping Unparametrized Surfaces on the GPU by Morten S. Mikkelsen\n // http://api.unrealengine.com/attachments/Engine/Rendering/LightingAndShadows/BumpMappingWithoutTangentSpace/mm_sfgrad_bump.pdf\n\n // Evaluate the derivative of the height w.r.t. screen-space using forward differencing (listing 2)\n\n vec2 dHdxy_fwd() {\n\n  vec2 dSTdx = dFdx( vUv );\n  vec2 dSTdy = dFdy( vUv );\n\n  float Hll = bumpScale * texture2D( bumpMap, vUv ).x;\n  float dBx = bumpScale * texture2D( bumpMap, vUv + dSTdx ).x - Hll;\n  float dBy = bumpScale * texture2D( bumpMap, vUv + dSTdy ).x - Hll;\n\n  return vec2( dBx, dBy );\n\n }\n\n vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy ) {\n\n  // Workaround for Adreno 3XX dFd*( vec3 ) bug. See #9988\n\n  vec3 vSigmaX = vec3( dFdx( surf_pos.x ), dFdx( surf_pos.y ), dFdx( surf_pos.z ) );\n  vec3 vSigmaY = vec3( dFdy( surf_pos.x ), dFdy( surf_pos.y ), dFdy( surf_pos.z ) );\n  vec3 vN = surf_norm;  // normalized\n\n  vec3 R1 = cross( vSigmaY, vN );\n  vec3 R2 = cross( vN, vSigmaX );\n\n  float fDet = dot( vSigmaX, R1 );\n\n  fDet *= ( float( gl_FrontFacing ) * 2.0 - 1.0 );\n\n  vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );\n  return normalize( abs( fDet ) * surf_norm - vGrad );\n\n }\n\n#endif\n";
+    const clipping_planes_fragment = "#if defined(NUM_CLIPPING_PLANES) && NUM_CLIPPING_PLANES > 0\n\n vec4 plane;\n\n // #pragma unroll_loop\n for ( int i = 0; i < UNION_CLIPPING_PLANES; i ++ ) {\n\n  plane = clippingPlanes[ i ];\n  if ( dot( vViewPosition, plane.xyz ) > plane.w ) discard;\n\n }\n\n #if UNION_CLIPPING_PLANES < NUM_CLIPPING_PLANES\n\n  bool clipped = true;\n\n  // #pragma unroll_loop\n  for ( int i = UNION_CLIPPING_PLANES; i < NUM_CLIPPING_PLANES; i ++ ) {\n\n   plane = clippingPlanes[ i ];\n   clipped = ( dot( vViewPosition, plane.xyz ) > plane.w ) && clipped;\n\n  }\n\n  if ( clipped ) discard;\n\n #endif\n\n#endif\n";
+    const clipping_planes_pars_fragment = "#if defined(NUM_CLIPPING_PLANES) && NUM_CLIPPING_PLANES > 0\n\n #if ! defined( PHYSICAL ) && ! defined( PHONG )\n  varying vec3 vViewPosition;\n #endif\n\n uniform vec4 clippingPlanes[ NUM_CLIPPING_PLANES ];\n\n#endif\n";
+    const clipping_planes_pars_vertex = "#if defined(NUM_CLIPPING_PLANES) && NUM_CLIPPING_PLANES > 0 && ! defined( PHYSICAL ) && ! defined( PHONG )\n varying vec3 vViewPosition;\n#endif\n";
+    const clipping_planes_vertex = "#if defined(NUM_CLIPPING_PLANES) && NUM_CLIPPING_PLANES > 0 && ! defined( PHYSICAL ) && ! defined( PHONG )\n vViewPosition = - mvPosition.xyz;\n#endif\n\n";
+    const color_fragment = "#ifdef USE_COLOR\n\n diffuseColor.rgb *= vColor;\n\n#endif";
+    const color_pars_fragment = "#ifdef USE_COLOR\n\n varying vec3 vColor;\n\n#endif\n";
+    const color_pars_vertex = "#ifdef USE_COLOR\n\n varying vec3 vColor;\n\n#endif";
+    const color_vertex = "#ifdef USE_COLOR\n\n vColor.xyz = color.xyz;\n\n#endif";
+    const common = "#define PI 3.14159265359\n#define PI2 6.28318530718\n#define PI_HALF 1.5707963267949\n#define RECIPROCAL_PI 0.31830988618\n#define RECIPROCAL_PI2 0.15915494\n#define LOG2 1.442695\n#define EPSILON 1e-6\n\n#define saturate(a) clamp( a, 0.0, 1.0 )\n#define whiteCompliment(a) ( 1.0 - saturate( a ) )\n\nfloat pow2( const in float x ) { return x*x; }\nfloat pow3( const in float x ) { return x*x*x; }\nfloat pow4( const in float x ) { float x2 = x*x; return x2*x2; }\nfloat average( const in vec3 color ) { return dot( color, vec3( 0.3333 ) ); }\n// expects values in the range of [0,1]x[0,1], returns values in the [0,1] range.\n// do not collapse into a single function per: http://byteblacksmith.com/improvements-to-the-canonical-one-liner-glsl-rand-for-opengl-es-2-0/\nhighp float rand( const in vec2 uv ) {\n const highp float a = 12.9898, b = 78.233, c = 43758.5453;\n highp float dt = dot( uv.xy, vec2( a,b ) ), sn = mod( dt, PI );\n return fract(sin(sn) * c);\n}\n\nstruct IncidentLight {\n vec3 color;\n vec3 direction;\n bool visible;\n};\n\nstruct ReflectedLight {\n vec3 directDiffuse;\n vec3 directSpecular;\n vec3 indirectDiffuse;\n vec3 indirectSpecular;\n};\n\nstruct GeometricContext {\n vec3 position;\n vec3 normal;\n vec3 viewDir;\n};\n\nvec3 transformDirection( in vec3 dir, in mat4 matrix ) {\n\n return normalize( ( matrix * vec4( dir, 0.0 ) ).xyz );\n\n}\n\n// http://en.wikibooks.org/wiki/GLSL_Programming/Applying_Matrix_Transformations\nvec3 inverseTransformDirection( in vec3 dir, in mat4 matrix ) {\n\n return normalize( ( vec4( dir, 0.0 ) * matrix ).xyz );\n\n}\n\nvec3 projectOnPlane(in vec3 point, in vec3 pointOnPlane, in vec3 planeNormal ) {\n\n float distance = dot( planeNormal, point - pointOnPlane );\n\n return - distance * planeNormal + point;\n\n}\n\nfloat sideOfPlane( in vec3 point, in vec3 pointOnPlane, in vec3 planeNormal ) {\n\n return sign( dot( point - pointOnPlane, planeNormal ) );\n\n}\n\nvec3 linePlaneIntersect( in vec3 pointOnLine, in vec3 lineDirection, in vec3 pointOnPlane, in vec3 planeNormal ) {\n\n return lineDirection * ( dot( planeNormal, pointOnPlane - pointOnLine ) / dot( planeNormal, lineDirection ) ) + pointOnLine;\n\n}\n\nmat3 transposeMat3( const in mat3 m ) {\n\n mat3 tmp;\n\n tmp[ 0 ] = vec3( m[ 0 ].x, m[ 1 ].x, m[ 2 ].x );\n tmp[ 1 ] = vec3( m[ 0 ].y, m[ 1 ].y, m[ 2 ].y );\n tmp[ 2 ] = vec3( m[ 0 ].z, m[ 1 ].z, m[ 2 ].z );\n\n return tmp;\n\n}\n\n// https://en.wikipedia.org/wiki/Relative_luminance\nfloat linearToRelativeLuminance( const in vec3 color ) {\n\n vec3 weights = vec3( 0.2126, 0.7152, 0.0722 );\n\n return dot( weights, color.rgb );\n\n}\n";
+    const common2 = "//------------------------------------------------\nuniform mat4 modelMatrix;\nuniform mat4 modelViewMatrix;\nuniform mat4 projectionMatrix;\nuniform mat4 viewMatrix;\nuniform mat3 normalMatrix;\nuniform vec3 cameraPosition;\n\nattribute vec3 position;\nattribute vec3 normal;\nattribute vec2 uv;\n\n#ifdef USE_COLOR\n\n attribute vec3 color;\n#endif\n#ifdef USE_MORPHTARGETS\n attribute vec3 morphTarget0;\n attribute vec3 morphTarget1;\n attribute vec3 morphTarget2;\n attribute vec3 morphTarget3;\n #ifdef USE_MORPHNORMALS\n  attribute vec3 morphNormal0;\n  attribute vec3 morphNormal1;\n  attribute vec3 morphNormal2;\n  attribute vec3 morphNormal3;\n #else\n  attribute vec3 morphTarget4;\n  attribute vec3 morphTarget5;\n  attribute vec3 morphTarget6;\n  attribute vec3 morphTarget7;\n #endif\n#endif\n#ifdef USE_SKINNING\n attribute vec4 skinIndex;\n attribute vec4 skinWeight;\n#endif\n//------------------------------------------------";
+    const cube_uv_reflection_fragment = "#ifdef ENVMAP_TYPE_CUBE_UV\n\n#define cubeUV_textureSize (1024.0)\n\nint getFaceFromDirection(vec3 direction) {\n vec3 absDirection = abs(direction);\n int face = -1;\n if( absDirection.x > absDirection.z ) {\n  if(absDirection.x > absDirection.y )\n   face = direction.x > 0.0 ? 0 : 3;\n  else\n   face = direction.y > 0.0 ? 1 : 4;\n }\n else {\n  if(absDirection.z > absDirection.y )\n   face = direction.z > 0.0 ? 2 : 5;\n  else\n   face = direction.y > 0.0 ? 1 : 4;\n }\n return face;\n}\n#define cubeUV_maxLods1  (log2(cubeUV_textureSize*0.25) - 1.0)\n#define cubeUV_rangeClamp (exp2((6.0 - 1.0) * 2.0))\n\nvec2 MipLevelInfo( vec3 vec, float roughnessLevel, float roughness ) {\n float scale = exp2(cubeUV_maxLods1 - roughnessLevel);\n float dxRoughness = dFdx(roughness);\n float dyRoughness = dFdy(roughness);\n vec3 dx = dFdx( vec * scale * dxRoughness );\n vec3 dy = dFdy( vec * scale * dyRoughness );\n float d = max( dot( dx, dx ), dot( dy, dy ) );\n // Clamp the value to the max mip level counts. hard coded to 6 mips\n d = clamp(d, 1.0, cubeUV_rangeClamp);\n float mipLevel = 0.5 * log2(d);\n return vec2(floor(mipLevel), fract(mipLevel));\n}\n\n#define cubeUV_maxLods2 (log2(cubeUV_textureSize*0.25) - 2.0)\n#define cubeUV_rcpTextureSize (1.0 / cubeUV_textureSize)\n\nvec2 getCubeUV(vec3 direction, float roughnessLevel, float mipLevel) {\n mipLevel = roughnessLevel > cubeUV_maxLods2 - 3.0 ? 0.0 : mipLevel;\n float a = 16.0 * cubeUV_rcpTextureSize;\n\n vec2 exp2_packed = exp2( vec2( roughnessLevel, mipLevel ) );\n vec2 rcp_exp2_packed = vec2( 1.0 ) / exp2_packed;\n // float powScale = exp2(roughnessLevel + mipLevel);\n float powScale = exp2_packed.x * exp2_packed.y;\n // float scale =  1.0 / exp2(roughnessLevel + 2.0 + mipLevel);\n float scale = rcp_exp2_packed.x * rcp_exp2_packed.y * 0.25;\n // float mipOffset = 0.75*(1.0 - 1.0/exp2(mipLevel))/exp2(roughnessLevel);\n float mipOffset = 0.75*(1.0 - rcp_exp2_packed.y) * rcp_exp2_packed.x;\n\n bool bRes = mipLevel == 0.0;\n scale =  bRes && (scale < a) ? a : scale;\n\n vec3 r;\n vec2 offset;\n int face = getFaceFromDirection(direction);\n\n float rcpPowScale = 1.0 / powScale;\n\n if( face == 0) {\n  r = vec3(direction.x, -direction.z, direction.y);\n  offset = vec2(0.0+mipOffset,0.75 * rcpPowScale);\n  offset.y = bRes && (offset.y < 2.0*a) ? a : offset.y;\n }\n else if( face == 1) {\n  r = vec3(direction.y, direction.x, direction.z);\n  offset = vec2(scale+mipOffset, 0.75 * rcpPowScale);\n  offset.y = bRes && (offset.y < 2.0*a) ? a : offset.y;\n }\n else if( face == 2) {\n  r = vec3(direction.z, direction.x, direction.y);\n  offset = vec2(2.0*scale+mipOffset, 0.75 * rcpPowScale);\n  offset.y = bRes && (offset.y < 2.0*a) ? a : offset.y;\n }\n else if( face == 3) {\n  r = vec3(direction.x, direction.z, direction.y);\n  offset = vec2(0.0+mipOffset,0.5 * rcpPowScale);\n  offset.y = bRes && (offset.y < 2.0*a) ? 0.0 : offset.y;\n }\n else if( face == 4) {\n  r = vec3(direction.y, direction.x, -direction.z);\n  offset = vec2(scale+mipOffset, 0.5 * rcpPowScale);\n  offset.y = bRes && (offset.y < 2.0*a) ? 0.0 : offset.y;\n }\n else {\n  r = vec3(direction.z, -direction.x, direction.y);\n  offset = vec2(2.0*scale+mipOffset, 0.5 * rcpPowScale);\n  offset.y = bRes && (offset.y < 2.0*a) ? 0.0 : offset.y;\n }\n r = normalize(r);\n float texelOffset = 0.5 * cubeUV_rcpTextureSize;\n vec2 s = ( r.yz / abs( r.x ) + vec2( 1.0 ) ) * 0.5;\n vec2 base = offset + vec2( texelOffset );\n return base + s * ( scale - 2.0 * texelOffset );\n}\n\n#define cubeUV_maxLods3 (log2(cubeUV_textureSize*0.25) - 3.0)\n\nvec4 textureCubeUV( sampler2D envMap, vec3 reflectedDirection, float roughness ) {\n float roughnessVal = roughness* cubeUV_maxLods3;\n float r1 = floor(roughnessVal);\n float r2 = r1 + 1.0;\n float t = fract(roughnessVal);\n vec2 mipInfo = MipLevelInfo(reflectedDirection, r1, roughness);\n float s = mipInfo.y;\n float level0 = mipInfo.x;\n float level1 = level0 + 1.0;\n level1 = level1 > 5.0 ? 5.0 : level1;\n\n // round to nearest mipmap if we are not interpolating.\n level0 += min( floor( s + 0.5 ), 5.0 );\n\n // Tri linear interpolation.\n vec2 uv_10 = getCubeUV(reflectedDirection, r1, level0);\n vec4 color10 = envMapTexelToLinear(texture2D(envMap, uv_10));\n\n vec2 uv_20 = getCubeUV(reflectedDirection, r2, level0);\n vec4 color20 = envMapTexelToLinear(texture2D(envMap, uv_20));\n\n vec4 result = mix(color10, color20, t);\n\n return vec4(result.rgb, 1.0);\n}\n\n#endif\n";
+    const defaultnormal_vertex = "vec3 transformedNormal = normalMatrix * objectNormal;\n\n#ifdef FLIP_SIDED\n\n transformedNormal = - transformedNormal;\n\n#endif\n";
+    const displacementmap_pars_vertex = "#ifdef USE_DISPLACEMENTMAP\n\n uniform sampler2D displacementMap;\n uniform float displacementScale;\n uniform float displacementBias;\n\n#endif\n";
+    const displacementmap_vertex = "#ifdef USE_DISPLACEMENTMAP\n\n transformed += normalize( objectNormal ) * ( texture2D( displacementMap, uv ).x * displacementScale + displacementBias );\n\n#endif\n";
+    const dithering_fragment = "#if defined( DITHERING )\n\n  gl_FragColor.rgb = dithering( gl_FragColor.rgb );\n\n#endif\n";
+    const dithering_pars_fragment = "#if defined( DITHERING )\n\n // based on https://www.shadertoy.com/view/MslGR8\n vec3 dithering( vec3 color ) {\n  //Calculate grid position\n  float grid_position = rand( gl_FragCoord.xy );\n\n  //Shift the individual colors differently, thus making it even harder to see the dithering pattern\n  vec3 dither_shift_RGB = vec3( 0.25 / 255.0, -0.25 / 255.0, 0.25 / 255.0 );\n\n  //modify shift acording to grid position.\n  dither_shift_RGB = mix( 2.0 * dither_shift_RGB, -2.0 * dither_shift_RGB, grid_position );\n\n  //shift the color by dither_shift\n  return color + dither_shift_RGB;\n }\n\n#endif\n";
+    const emissivemap_fragment = "#ifdef USE_EMISSIVEMAP\n\n vec4 emissiveColor = texture2D( emissiveMap, vUv );\n\n emissiveColor.rgb = emissiveMapTexelToLinear( emissiveColor ).rgb;\n\n totalEmissiveRadiance *= emissiveColor.rgb;\n\n#endif\n";
+    const emissivemap_pars_fragment = "#ifdef USE_EMISSIVEMAP\n\n uniform sampler2D emissiveMap;\n\n#endif\n";
+    const encodings_fragment = "  // gl_FragColor = linearToOutputTexel( gl_FragColor );\n";
+    const encodings_pars_fragment = "// For a discussion of what this is, please read this: http://lousodrome.net/blog/light/2013/05/26/gamma-correct-and-hdr-rendering-in-a-32-bits-buffer/\n\nvec4 LinearToLinear( in vec4 value ) {\n return value;\n}\n\nvec4 GammaToLinear( in vec4 value, in float gammaFactor ) {\n return vec4( pow( value.xyz, vec3( gammaFactor ) ), value.w );\n}\nvec4 LinearToGamma( in vec4 value, in float gammaFactor ) {\n return vec4( pow( value.xyz, vec3( 1.0 / gammaFactor ) ), value.w );\n}\n\nvec4 sRGBToLinear( in vec4 value ) {\n return vec4( mix( pow( value.rgb * 0.9478672986 + vec3( 0.0521327014 ), vec3( 2.4 ) ), value.rgb * 0.0773993808, vec3( lessThanEqual( value.rgb, vec3( 0.04045 ) ) ) ), value.w );\n}\nvec4 LinearTosRGB( in vec4 value ) {\n return vec4( mix( pow( value.rgb, vec3( 0.41666 ) ) * 1.055 - vec3( 0.055 ), value.rgb * 12.92, vec3( lessThanEqual( value.rgb, vec3( 0.0031308 ) ) ) ), value.w );\n}\n\nvec4 RGBEToLinear( in vec4 value ) {\n return vec4( value.rgb * exp2( value.a * 255.0 - 128.0 ), 1.0 );\n}\nvec4 LinearToRGBE( in vec4 value ) {\n float maxComponent = max( max( value.r, value.g ), value.b );\n float fExp = clamp( ceil( log2( maxComponent ) ), -128.0, 127.0 );\n return vec4( value.rgb / exp2( fExp ), ( fExp + 128.0 ) / 255.0 );\n//  return vec4( value.brg, ( 3.0 + 128.0 ) / 256.0 );\n}\n\n// reference: http://iwasbeingirony.blogspot.ca/2010/06/difference-between-rgbm-and-rgbd.html\nvec4 RGBMToLinear( in vec4 value, in float maxRange ) {\n return vec4( value.xyz * value.w * maxRange, 1.0 );\n}\nvec4 LinearToRGBM( in vec4 value, in float maxRange ) {\n float maxRGB = max( value.x, max( value.g, value.b ) );\n float M      = clamp( maxRGB / maxRange, 0.0, 1.0 );\n M            = ceil( M * 255.0 ) / 255.0;\n return vec4( value.rgb / ( M * maxRange ), M );\n}\n\n// reference: http://iwasbeingirony.blogspot.ca/2010/06/difference-between-rgbm-and-rgbd.html\nvec4 RGBDToLinear( in vec4 value, in float maxRange ) {\n return vec4( value.rgb * ( ( maxRange / 255.0 ) / value.a ), 1.0 );\n}\nvec4 LinearToRGBD( in vec4 value, in float maxRange ) {\n float maxRGB = max( value.x, max( value.g, value.b ) );\n float D      = max( maxRange / maxRGB, 1.0 );\n D            = min( floor( D ) / 255.0, 1.0 );\n return vec4( value.rgb * ( D * ( 255.0 / maxRange ) ), D );\n}\n\n// LogLuv reference: http://graphicrants.blogspot.ca/2009/04/rgbm-color-encoding.html\n\n// M matrix, for encoding\nconst mat3 cLogLuvM = mat3( 0.2209, 0.3390, 0.4184, 0.1138, 0.6780, 0.7319, 0.0102, 0.1130, 0.2969 );\nvec4 LinearToLogLuv( in vec4 value )  {\n vec3 Xp_Y_XYZp = value.rgb * cLogLuvM;\n Xp_Y_XYZp = max(Xp_Y_XYZp, vec3(1e-6, 1e-6, 1e-6));\n vec4 vResult;\n vResult.xy = Xp_Y_XYZp.xy / Xp_Y_XYZp.z;\n float Le = 2.0 * log2(Xp_Y_XYZp.y) + 127.0;\n vResult.w = fract(Le);\n vResult.z = (Le - (floor(vResult.w*255.0))/255.0)/255.0;\n return vResult;\n}\n\n// Inverse M matrix, for decoding\nconst mat3 cLogLuvInverseM = mat3( 6.0014, -2.7008, -1.7996, -1.3320, 3.1029, -5.7721, 0.3008, -1.0882, 5.6268 );\nvec4 LogLuvToLinear( in vec4 value ) {\n float Le = value.z * 255.0 + value.w;\n vec3 Xp_Y_XYZp;\n Xp_Y_XYZp.y = exp2((Le - 127.0) / 2.0);\n Xp_Y_XYZp.z = Xp_Y_XYZp.y / value.y;\n Xp_Y_XYZp.x = value.x * Xp_Y_XYZp.z;\n vec3 vRGB = Xp_Y_XYZp.rgb * cLogLuvInverseM;\n return vec4( max(vRGB, 0.0), 1.0 );\n}\n";
+    const envmap_fragment = "#ifdef USE_ENVMAP\n\n #if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\n  vec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );\n\n  // Transforming Normal Vectors with the Inverse Transformation\n  vec3 worldNormal = inverseTransformDirection( normal, viewMatrix );\n\n  #ifdef ENVMAP_MODE_REFLECTION\n\n   vec3 reflectVec = reflect( cameraToVertex, worldNormal );\n\n  #else\n\n   vec3 reflectVec = refract( cameraToVertex, worldNormal, refractionRatio );\n\n  #endif\n\n #else\n\n  vec3 reflectVec = vReflect;\n\n #endif\n\n #ifdef ENVMAP_TYPE_CUBE\n\n  vec4 envColor = textureCube( envMap, vec3( flipEnvMap * reflectVec.x, reflectVec.yz ) );\n\n #elif defined( ENVMAP_TYPE_EQUIREC )\n\n  vec2 sampleUV;\n\n  reflectVec = normalize( reflectVec );\n\n  sampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\n  sampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\n  vec4 envColor = texture2D( envMap, sampleUV );\n\n #elif defined( ENVMAP_TYPE_SPHERE )\n\n  reflectVec = normalize( reflectVec );\n\n  vec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0, 0.0, 1.0 ) );\n\n  vec4 envColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5 );\n\n #else\n\n  vec4 envColor = vec4( 0.0 );\n\n #endif\n\n envColor = envMapTexelToLinear( envColor );\n\n #ifdef ENVMAP_BLENDING_MULTIPLY\n\n  outgoingLight = mix( outgoingLight, outgoingLight * envColor.xyz, specularStrength * reflectivity );\n\n #elif defined( ENVMAP_BLENDING_MIX )\n\n  outgoingLight = mix( outgoingLight, envColor.xyz, specularStrength * reflectivity );\n\n #elif defined( ENVMAP_BLENDING_ADD )\n\n  outgoingLight += envColor.xyz * specularStrength * reflectivity;\n\n #endif\n\n#endif\n";
+    const envmap_pars_fragment = "#if defined( USE_ENVMAP ) || defined( PHYSICAL )\n uniform float reflectivity;\n uniform float envMapIntensity;\n#endif\n\n#ifdef USE_ENVMAP\n\n #if ! defined( PHYSICAL ) && ( defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) )\n  varying vec3 vWorldPosition;\n #endif\n\n #ifdef ENVMAP_TYPE_CUBE\n  uniform samplerCube envMap;\n #else\n  uniform sampler2D envMap;\n #endif\n uniform float flipEnvMap;\n uniform int maxMipLevel;\n\n #if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) || defined( PHYSICAL )\n  uniform float refractionRatio;\n #else\n  varying vec3 vReflect;\n #endif\n\n#endif\n";
+    const envmap_pars_vertex = "#ifdef USE_ENVMAP\n\n #if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n  varying vec3 vWorldPosition;\n\n #else\n\n  varying vec3 vReflect;\n  uniform float refractionRatio;\n\n #endif\n\n#endif\n";
+    const envmap_physical_pars_fragment = "#if defined( USE_ENVMAP ) && defined( PHYSICAL )\n\n vec3 getLightProbeIndirectIrradiance( /*const in SpecularLightProbe specularLightProbe,*/ const in GeometricContext geometry, const in int maxMIPLevel ) {\n\n  vec3 worldNormal = inverseTransformDirection( geometry.normal, viewMatrix );\n\n  #ifdef ENVMAP_TYPE_CUBE\n\n   vec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n\n   // TODO: replace with properly filtered cubemaps and access the irradiance LOD level, be it the last LOD level\n   // of a specular cubemap, or just the default level of a specially created irradiance cubemap.\n\n   #ifdef TEXTURE_LOD_EXT\n\n    vec4 envMapColor = textureCubeLodEXT( envMap, queryVec, float( maxMIPLevel ) );\n\n   #else\n\n    // force the bias high to get the last LOD level as it is the most blurred.\n    vec4 envMapColor = textureCube( envMap, queryVec, float( maxMIPLevel ) );\n\n   #endif\n\n   envMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\n  #elif defined( ENVMAP_TYPE_CUBE_UV )\n\n   vec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n   vec4 envMapColor = textureCubeUV( envMap, queryVec, 1.0 );\n\n  #else\n\n   vec4 envMapColor = vec4( 0.0 );\n\n  #endif\n\n  return PI * envMapColor.rgb * envMapIntensity;\n\n }\n\n // taken from here: http://casual-effects.blogspot.ca/2011/08/plausible-environment-lighting-in-two.html\n float getSpecularMIPLevel( const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\n  //float envMapWidth = pow( 2.0, maxMIPLevelScalar );\n  //float desiredMIPLevel = log2( envMapWidth * sqrt( 3.0 ) ) - 0.5 * log2( pow2( blinnShininessExponent ) + 1.0 );\n\n  float maxMIPLevelScalar = float( maxMIPLevel );\n  float desiredMIPLevel = maxMIPLevelScalar + 0.79248 - 0.5 * log2( pow2( blinnShininessExponent ) + 1.0 );\n\n  // clamp to allowable LOD ranges.\n  return clamp( desiredMIPLevel, 0.0, maxMIPLevelScalar );\n\n }\n\n vec3 getLightProbeIndirectRadiance( /*const in SpecularLightProbe specularLightProbe,*/ const in GeometricContext geometry, const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\n  #ifdef ENVMAP_MODE_REFLECTION\n\n   vec3 reflectVec = reflect( -geometry.viewDir, geometry.normal );\n\n  #else\n\n   vec3 reflectVec = refract( -geometry.viewDir, geometry.normal, refractionRatio );\n\n  #endif\n\n  reflectVec = inverseTransformDirection( reflectVec, viewMatrix );\n\n  float specularMIPLevel = getSpecularMIPLevel( blinnShininessExponent, maxMIPLevel );\n\n  #ifdef ENVMAP_TYPE_CUBE\n\n   vec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n\n   #ifdef TEXTURE_LOD_EXT\n\n    vec4 envMapColor = textureCubeLodEXT( envMap, queryReflectVec, specularMIPLevel );\n\n   #else\n\n    vec4 envMapColor = textureCube( envMap, queryReflectVec, specularMIPLevel );\n\n   #endif\n\n   envMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\n  #elif defined( ENVMAP_TYPE_CUBE_UV )\n\n   vec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n   vec4 envMapColor = textureCubeUV( envMap, queryReflectVec, BlinnExponentToGGXRoughness(blinnShininessExponent ));\n\n  #elif defined( ENVMAP_TYPE_EQUIREC )\n\n   vec2 sampleUV;\n   sampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n   sampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\n   #ifdef TEXTURE_LOD_EXT\n\n    vec4 envMapColor = texture2DLodEXT( envMap, sampleUV, specularMIPLevel );\n\n   #else\n\n    vec4 envMapColor = texture2D( envMap, sampleUV, specularMIPLevel );\n\n   #endif\n\n   envMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\n  #elif defined( ENVMAP_TYPE_SPHERE )\n\n   vec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0,0.0,1.0 ) );\n\n   #ifdef TEXTURE_LOD_EXT\n\n    vec4 envMapColor = texture2DLodEXT( envMap, reflectView.xy * 0.5 + 0.5, specularMIPLevel );\n\n   #else\n\n    vec4 envMapColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5, specularMIPLevel );\n\n   #endif\n\n   envMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\n  #endif\n\n  return envMapColor.rgb * envMapIntensity;\n\n }\n\n#endif\n";
+    const envmap_vertex = "#ifdef USE_ENVMAP\n\n #if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\n  vWorldPosition = worldPosition.xyz;\n\n #else\n\n  vec3 cameraToVertex = normalize( worldPosition.xyz - cameraPosition );\n\n  vec3 worldNormal = inverseTransformDirection( transformedNormal, viewMatrix );\n\n  #ifdef ENVMAP_MODE_REFLECTION\n\n   vReflect = reflect( cameraToVertex, worldNormal );\n\n  #else\n\n   vReflect = refract( cameraToVertex, worldNormal, refractionRatio );\n\n  #endif\n\n #endif\n\n#endif\n";
+    const fog_fragment = "#ifdef USE_FOG\n\n float fogDepth = length( vFogPosition );\n\n #ifdef FOG_EXP2\n\n  float fogFactor = whiteCompliment( exp2( - fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );\n\n #else\n\n  float fogFactor = smoothstep( fogNear, fogFar, fogDepth );\n\n #endif\n\n gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );\n\n#endif\n";
+    const fog_pars_fragment = "#ifdef USE_FOG\n\n uniform vec3 fogColor;\n varying vec3 vFogPosition;\n\n #ifdef FOG_EXP2\n\n  uniform float fogDensity;\n\n #else\n\n  uniform float fogNear;\n  uniform float fogFar;\n\n #endif\n\n#endif\n";
+    const fog_pars_vertex = "#ifdef USE_FOG\n\n varying vec3 vFogPosition;\n\n#endif\n";
+    const fog_vertex = "#ifdef USE_FOG\n\n vFogPosition = mvPosition.xyz;\n\n#endif\n";
+    const gradientmap_pars_fragment = "#ifdef TOON\n\n uniform sampler2D gradientMap;\n\n vec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {\n\n  // dotNL will be from -1.0 to 1.0\n  float dotNL = dot( normal, lightDirection );\n  vec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );\n\n  #ifdef USE_GRADIENTMAP\n\n   return texture2D( gradientMap, coord ).rgb;\n\n  #else\n\n   return ( coord.x < 0.7 ) ? vec3( 0.7 ) : vec3( 1.0 );\n\n  #endif\n\n\n }\n\n#endif\n";
+    const lightmap_frag = "#ifdef USE_LIGHTMAP\n    lowp vec4 lightmap = texture2D(lightMap, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, lightMapIntensity);\n    gl_FragData[0] = outColor;\n#else\n    gl_FragData[0] = outColor;\n#endif";
+    const lightmap_fragment = "#ifdef USE_LIGHTMAP\n\n reflectedLight.indirectDiffuse += PI * texture2D( lightMap, vUv2 ).xyz * lightMapIntensity; // factor of PI should not be present; included here to prevent breakage\n\n#endif\n";
+    const lightmap_pars_frag = "#ifdef USE_LIGHTMAP\n    uniform sampler2D lightMap;\n    uniform lowp float lightMapIntensity;\n    varying highp vec2 xlv_TEXCOORD1;\n\n    lowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n    {\n        highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n        return data.rgb * power * intensity;\n    }\n#endif";
+    const lightmap_pars_fragment = "#ifdef USE_LIGHTMAP\n\n uniform sampler2D lightMap;\n uniform float lightMapIntensity;\n\n#endif";
+    const lightmap_pars_vert = "#ifdef USE_LIGHTMAP\n    attribute vec4 uv2;\n    uniform highp vec4 lightMapOffset;\n    uniform lowp float lightMapUV;\n    varying highp vec2 xlv_TEXCOORD1;\n#endif";
+    const lightmap_vert = "#ifdef USE_LIGHTMAP\n    highp vec2 beforelightUV = uv2.xy;\n    if(lightMapUV == 0.0)\n    {\n        beforelightUV = uv.xy;\n    }\n    highp float u = beforelightUV.x * lightMapOffset.x + lightMapOffset.z;\n    highp float v = 1.0 - ((1.0 - beforelightUV.y) * lightMapOffset.y + lightMapOffset.w);\n    xlv_TEXCOORD1 = vec2(u,v);\n#endif";
+    const lights_fragment_begin = "/**\n * This is a template that can be used to light a material, it uses pluggable\n * RenderEquations (RE)for specific lighting scenarios.\n *\n * Instructions for use:\n * - Ensure that both RE_Direct, RE_IndirectDiffuse and RE_IndirectSpecular are defined\n * - If you have defined an RE_IndirectSpecular, you need to also provide a Material_LightProbeLOD. <---- ???\n * - Create a material parameter that is to be passed as the third parameter to your lighting functions.\n *\n * TODO:\n * - Add area light support.\n * - Add sphere light support.\n * - Add diffuse light probe (irradiance cubemap) support.\n */\n\nGeometricContext geometry;\n\ngeometry.position = - vViewPosition;\ngeometry.normal = normal;\ngeometry.viewDir = normalize( vViewPosition );\n\nIncidentLight directLight;\n\n#if (defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0 ) && defined( RE_Direct )\n\n PointLight pointLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  // pointLight = pointLights[ i ];\n  pointLight.position = vec3(pointLights[i* 15 + 0], pointLights[i * 15 + 1], pointLights[i * 15 + 2]);\n  pointLight.color = vec3(pointLights[i* 15 + 3], pointLights[i * 15 + 4], pointLights[i * 15 + 5]);\n  pointLight.distance = pointLights[i * 15 + 6];\n  pointLight.decay = pointLights[i * 15 + 7];\n\n  getPointDirectLightIrradiance( pointLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( pointLight.shadow, directLight.visible ) ) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0 ) && defined( RE_Direct )\n\n SpotLight spotLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\n  // spotLight = spotLights[ i ];\n  spotLight.position = vec3(spotLights[i * 18 + 0], spotLights[i * 18 + 1], spotLights[i * 18 + 2]);\n  spotLight.direction = vec3(spotLights[i * 18 + 3], spotLights[i * 18 + 4], spotLights[i * 18 + 5]);\n  spotLight.color = vec3(spotLights[i * 18 + 6], spotLights[i * 18 + 7], spotLights[i * 18 + 8]);\n  spotLight.distance = spotLights[i * 18 + 9];\n  spotLight.decay = spotLights[i * 18 + 10];\n  spotLight.coneCos = spotLights[i * 18 + 11];\n  spotLight.penumbraCos = spotLights[i * 18 + 12];\n  getSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( spotLight.shadow, directLight.visible ) ) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )\n\n DirectionalLight directionalLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  // directionalLight = directionalLights[ i ];\n  directionalLight.direction = vec3(directionalLights[i * 12 + 0], directionalLights[i * 12 + 1], directionalLights[i * 12 + 2]);\n  directionalLight.color = vec3(directionalLights[i * 12 + 3], directionalLights[i * 12 + 4], directionalLights[i * 12 + 5]);\n  getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\n  #ifdef USE_SHADOWMAP\n  directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n  #endif\n\n  RE_Direct( directLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if (defined(NUM_RECT_AREA_LIGHTS) &&  NUM_RECT_AREA_LIGHTS > 0 ) && defined( RE_Direct_RectArea )\n\n RectAreaLight rectAreaLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\n  rectAreaLight = rectAreaLights[ i ];\n  RE_Direct_RectArea( rectAreaLight, geometry, material, reflectedLight );\n\n }\n\n#endif\n\n#if defined( RE_IndirectDiffuse )\n\n vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );\n\n #if (defined(NUM_HEMI_LIGHTS) &&  NUM_HEMI_LIGHTS > 0 )\n\n  // #pragma unroll_loop\n  for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\n   irradiance += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry );\n\n  }\n\n #endif\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n vec3 radiance = vec3( 0.0 );\n vec3 clearCoatRadiance = vec3( 0.0 );\n\n#endif\n";
+    const lights_fragment_end = "#if defined( RE_IndirectDiffuse )\n\n RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );\n\n#endif\n\n#if defined( RE_IndirectSpecular )\n\n RE_IndirectSpecular( radiance, clearCoatRadiance, geometry, material, reflectedLight );\n\n#endif\n";
+    const lights_fragment_maps = "#if defined( RE_IndirectDiffuse )\n\n #ifdef USE_LIGHTMAP\n\n  vec3 lightMapIrradiance = texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\n\n  #ifndef PHYSICALLY_CORRECT_LIGHTS\n\n   lightMapIrradiance *= PI; // factor of PI should not be present; included here to prevent breakage\n\n  #endif\n\n  irradiance += lightMapIrradiance;\n\n #endif\n\n #if defined( USE_ENVMAP ) && defined( PHYSICAL ) && defined( ENVMAP_TYPE_CUBE_UV )\n\n  irradiance += getLightProbeIndirectIrradiance( /*lightProbe,*/ geometry, maxMipLevel );\n\n #endif\n\n#endif\n\n#if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )\n\n radiance += getLightProbeIndirectRadiance( /*specularLightProbe,*/ geometry, Material_BlinnShininessExponent( material ), maxMipLevel );\n\n #ifndef STANDARD\n  clearCoatRadiance += getLightProbeIndirectRadiance( /*specularLightProbe,*/ geometry, Material_ClearCoat_BlinnShininessExponent( material ), maxMipLevel );\n #endif\n\n#endif\n";
+    const lights_lambert_vertex = "vec3 diffuse = vec3( 1.0 );\n\nGeometricContext geometry;\ngeometry.position = mvPosition.xyz;\ngeometry.normal = normalize( transformedNormal );\ngeometry.viewDir = normalize( -mvPosition.xyz );\n\nGeometricContext backGeometry;\nbackGeometry.position = geometry.position;\nbackGeometry.normal = -geometry.normal;\nbackGeometry.viewDir = geometry.viewDir;\n\nvLightFront = vec3( 0.0 );\n\n#ifdef DOUBLE_SIDED\n vLightBack = vec3( 0.0 );\n#endif\n\nIncidentLight directLight;\nfloat dotNL;\nvec3 directLightColor_Diffuse;\n\n#if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0\n PointLight pointLight;\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  pointLight.position = vec3(pointLights[i* 15 + 0], pointLights[i * 15 + 1], pointLights[i * 15 + 2]);\n  pointLight.color = vec3(pointLights[i* 15 + 3], pointLights[i * 15 + 4], pointLights[i * 15 + 5]);\n  pointLight.distance = pointLights[i * 15 + 6];\n  pointLight.decay = pointLights[i * 15 + 7];\n  getPointDirectLightIrradiance( pointLight, geometry, directLight );\n\n  dotNL = dot( geometry.normal, directLight.direction );\n  directLightColor_Diffuse = PI * directLight.color;\n\n  vLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\n  #endif\n\n }\n\n#endif\n\n#if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0\n SpotLight spotLight;\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n  spotLight.position = vec3(spotLights[i * 18 + 0], spotLights[i * 18 + 1], spotLights[i * 18 + 2]);\n  spotLight.direction = vec3(spotLights[i * 18 + 3], spotLights[i * 18 + 4], spotLights[i * 18 + 5]);\n  spotLight.color = vec3(spotLights[i * 18 + 6], spotLights[i * 18 + 7], spotLights[i * 18 + 8]);\n  spotLight.distance = spotLights[i * 18 + 9];\n  spotLight.decay = spotLights[i * 18 + 10];\n  spotLight.coneCos = spotLights[i * 18 + 11];\n  spotLight.penumbraCos = spotLights[i * 18 + 12];\n\n  getSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\n  dotNL = dot( geometry.normal, directLight.direction );\n  directLightColor_Diffuse = PI * directLight.color;\n\n  vLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\n  #endif\n }\n\n#endif\n\n/*\n#if NUM_RECT_AREA_LIGHTS > 0\n\n for ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\n  // TODO (abelnation): implement\n\n }\n\n#endif\n*/\n\n#if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0\n DirectionalLight directionalLight;\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  directionalLight.direction = vec3(directionalLights[i * 12 + 0], directionalLights[i * 12 + 1], directionalLights[i * 12 + 2]);\n  directionalLight.color = vec3(directionalLights[i * 12 + 3], directionalLights[i * 12 + 4], directionalLights[i * 12 + 5]);\n  getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\n  dotNL = dot( geometry.normal, directLight.direction );\n  directLightColor_Diffuse = PI * directLight.color;\n  // directLightColor_Diffuse = directLight.color;\n\n  vLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n  // vLightFront += directLightColor_Diffuse;\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\n  #endif\n\n }\n\n#endif\n\n#if defined(NUM_HEMI_LIGHTS) && NUM_HEMI_LIGHTS > 0\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\n  vLightFront += getHemisphereLightIrradiance( hemisphereLights[ i ], geometry );\n\n  #ifdef DOUBLE_SIDED\n\n   vLightBack += getHemisphereLightIrradiance( hemisphereLights[ i ], backGeometry );\n\n  #endif\n\n }\n\n#endif\n";
+    const lights_pars_begin = "uniform vec3 ambientLightColor;\n\nvec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {\n\n vec3 irradiance = ambientLightColor;\n\n #ifndef PHYSICALLY_CORRECT_LIGHTS\n\n  irradiance *= PI;\n\n #endif\n\n return irradiance;\n\n}\n\n#if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0\n\n struct DirectionalLight {\n  vec3 direction;\n  vec3 color;\n\n  int shadow;\n  float shadowBias;\n  float shadowRadius;\n  vec2 shadowMapSize;\n };\n\n uniform float directionalLights[NUM_DIR_LIGHTS * 12];\n\n void getDirectionalDirectLightIrradiance( const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight directLight ) {\n  directLight.direction = directionalLight.direction;\n  directLight.color = directionalLight.color;\n  directLight.visible = true;\n }\n\n#endif\n\n\n#if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0\n\n struct PointLight {\n  vec3 position;\n  vec3 color;\n  float distance;\n  float decay;\n\n  int shadow;\n  float shadowBias;\n  float shadowRadius;\n  vec2 shadowMapSize;\n  float shadowCameraNear;\n  float shadowCameraFar;\n };\n\n uniform float pointLights[NUM_POINT_LIGHTS * 15 ];\n\n // directLight is an out parameter as having it as a return value caused compiler errors on some devices\n void getPointDirectLightIrradiance( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight directLight ) {\n\n  vec3 lVector = pointLight.position - geometry.position;\n  directLight.direction = normalize( lVector );\n\n  float lightDistance = length( lVector );\n\n  directLight.color = pointLight.color;\n  directLight.color *= punctualLightIntensityToIrradianceFactor( lightDistance, pointLight.distance, pointLight.decay );\n  directLight.visible = ( directLight.color != vec3( 0.0 ) );\n\n }\n\n#endif\n\n\n#if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0\n\n struct SpotLight {\n  vec3 position;\n  vec3 direction;\n  vec3 color;\n  float distance;\n  float decay;\n  float coneCos;\n  float penumbraCos;\n\n  int shadow;\n  float shadowBias;\n  float shadowRadius;\n  vec2 shadowMapSize;\n };\n\n uniform float spotLights[NUM_SPOT_LIGHTS * 18];\n\n // directLight is an out parameter as having it as a return value caused compiler errors on some devices\n void getSpotDirectLightIrradiance( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight directLight  ) {\n\n  vec3 lVector = spotLight.position - geometry.position;\n  directLight.direction = normalize( lVector );\n\n  float lightDistance = length( lVector );\n  float angleCos = dot( directLight.direction, spotLight.direction );\n\n  if ( angleCos > spotLight.coneCos ) {\n\n   float spotEffect = smoothstep( spotLight.coneCos, spotLight.penumbraCos, angleCos );\n\n   directLight.color = spotLight.color;\n   directLight.color *= spotEffect * punctualLightIntensityToIrradianceFactor( lightDistance, spotLight.distance, spotLight.decay );\n   directLight.visible = true;\n\n  } else {\n\n   directLight.color = vec3( 0.0 );\n   directLight.visible = false;\n\n  }\n }\n\n#endif\n\n\n#if defined(NUM_RECT_AREA_LIGHTS) && NUM_RECT_AREA_LIGHTS > 0\n\n struct RectAreaLight {\n  vec3 color;\n  vec3 position;\n  vec3 halfWidth;\n  vec3 halfHeight;\n };\n\n // Pre-computed values of LinearTransformedCosine approximation of BRDF\n // BRDF approximation Texture is 64x64\n uniform sampler2D ltc_1; // RGBA Float\n uniform sampler2D ltc_2; // RGBA Float\n\n uniform RectAreaLight rectAreaLights[ NUM_RECT_AREA_LIGHTS ];\n\n#endif\n\n\n#if defined(NUM_HEMI_LIGHTS) && NUM_HEMI_LIGHTS > 0\n\n struct HemisphereLight {\n  vec3 direction;\n  vec3 skyColor;\n  vec3 groundColor;\n };\n\n uniform HemisphereLight hemisphereLights[ NUM_HEMI_LIGHTS ];\n\n vec3 getHemisphereLightIrradiance( const in HemisphereLight hemiLight, const in GeometricContext geometry ) {\n\n  float dotNL = dot( geometry.normal, hemiLight.direction );\n  float hemiDiffuseWeight = 0.5 * dotNL + 0.5;\n\n  vec3 irradiance = mix( hemiLight.groundColor, hemiLight.skyColor, hemiDiffuseWeight );\n\n  #ifndef PHYSICALLY_CORRECT_LIGHTS\n\n   irradiance *= PI;\n\n  #endif\n\n  return irradiance;\n\n }\n\n#endif\n";
+    const lights_pars_maps = "#if defined( USE_ENVMAP ) && defined( PHYSICAL )\n\n vec3 getLightProbeIndirectIrradiance( /*const in SpecularLightProbe specularLightProbe,*/ const in GeometricContext geometry, const in int maxMIPLevel ) {\n\n  vec3 worldNormal = inverseTransformDirection( geometry.normal, viewMatrix );\n\n  #ifdef ENVMAP_TYPE_CUBE\n\n   vec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n\n   // TODO: replace with properly filtered cubemaps and access the irradiance LOD level, be it the last LOD level\n   // of a specular cubemap, or just the default level of a specially created irradiance cubemap.\n\n   #ifdef TEXTURE_LOD_EXT\n\n    vec4 envMapColor = textureCubeLodEXT( envMap, queryVec, float( maxMIPLevel ) );\n\n   #else\n\n    // force the bias high to get the last LOD level as it is the most blurred.\n    vec4 envMapColor = textureCube( envMap, queryVec, float( maxMIPLevel ) );\n\n   #endif\n\n   envMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\n  #elif defined( ENVMAP_TYPE_CUBE_UV )\n\n   vec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n   vec4 envMapColor = textureCubeUV( queryVec, 1.0 );\n\n  #else\n\n   vec4 envMapColor = vec4( 0.0 );\n\n  #endif\n\n  return PI * envMapColor.rgb * envMapIntensity;\n\n }\n\n // taken from here: http://casual-effects.blogspot.ca/2011/08/plausible-environment-lighting-in-two.html\n float getSpecularMIPLevel( const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\n  //float envMapWidth = pow( 2.0, maxMIPLevelScalar );\n  //float desiredMIPLevel = log2( envMapWidth * sqrt( 3.0 ) ) - 0.5 * log2( pow2( blinnShininessExponent ) + 1.0 );\n\n  float maxMIPLevelScalar = float( maxMIPLevel );\n  float desiredMIPLevel = maxMIPLevelScalar + 0.79248 - 0.5 * log2( pow2( blinnShininessExponent ) + 1.0 );\n\n  // clamp to allowable LOD ranges.\n  return clamp( desiredMIPLevel, 0.0, maxMIPLevelScalar );\n\n }\n\n vec3 getLightProbeIndirectRadiance( /*const in SpecularLightProbe specularLightProbe,*/ const in GeometricContext geometry, const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\n  #ifdef ENVMAP_MODE_REFLECTION\n\n   vec3 reflectVec = reflect( -geometry.viewDir, geometry.normal );\n\n  #else\n\n   vec3 reflectVec = refract( -geometry.viewDir, geometry.normal, refractionRatio );\n\n  #endif\n\n  reflectVec = inverseTransformDirection( reflectVec, viewMatrix );\n\n  float specularMIPLevel = getSpecularMIPLevel( blinnShininessExponent, maxMIPLevel );\n\n  #ifdef ENVMAP_TYPE_CUBE\n\n   vec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n\n   #ifdef TEXTURE_LOD_EXT\n\n    vec4 envMapColor = textureCubeLodEXT( envMap, queryReflectVec, specularMIPLevel );\n\n   #else\n\n    vec4 envMapColor = textureCube( envMap, queryReflectVec, specularMIPLevel );\n\n   #endif\n\n   envMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\n  #elif defined( ENVMAP_TYPE_CUBE_UV )\n\n   vec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n   vec4 envMapColor = textureCubeUV(queryReflectVec, BlinnExponentToGGXRoughness(blinnShininessExponent));\n\n  #elif defined( ENVMAP_TYPE_EQUIREC )\n\n   vec2 sampleUV;\n   sampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n   sampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\n   #ifdef TEXTURE_LOD_EXT\n\n    vec4 envMapColor = texture2DLodEXT( envMap, sampleUV, specularMIPLevel );\n\n   #else\n\n    vec4 envMapColor = texture2D( envMap, sampleUV, specularMIPLevel );\n\n   #endif\n\n   envMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\n  #elif defined( ENVMAP_TYPE_SPHERE )\n\n   vec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0,0.0,1.0 ) );\n\n   #ifdef TEXTURE_LOD_EXT\n\n    vec4 envMapColor = texture2DLodEXT( envMap, reflectView.xy * 0.5 + 0.5, specularMIPLevel );\n\n   #else\n\n    vec4 envMapColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5, specularMIPLevel );\n\n   #endif\n\n   envMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\n  #endif\n\n  return envMapColor.rgb * envMapIntensity;\n\n }\n\n#endif\n";
+    const lights_phong_fragment = "BlinnPhongMaterial material;\nmaterial.diffuseColor = diffuseColor.rgb;\nmaterial.specularColor = specular;\nmaterial.specularShininess = shininess;\nmaterial.specularStrength = specularStrength;\n";
+    const lights_phong_pars_fragment = "varying vec3 vViewPosition;\n\n#ifndef FLAT_SHADED\n\n varying vec3 vNormal;\n\n#endif\n\n\nstruct BlinnPhongMaterial {\n\n vec3 diffuseColor;\n vec3 specularColor;\n float specularShininess;\n float specularStrength;\n\n};\n\nvoid RE_Direct_BlinnPhong( const in IncidentLight directLight, const in GeometricContext geometry, const in BlinnPhongMaterial material, inout ReflectedLight reflectedLight ) {\n\n #ifdef TOON\n\n  vec3 irradiance = getGradientIrradiance( geometry.normal, directLight.direction ) * directLight.color;\n\n #else\n\n  float dotNL = saturate( dot( geometry.normal, directLight.direction ) );\n  vec3 irradiance = dotNL * directLight.color;\n\n #endif\n\n #ifndef PHYSICALLY_CORRECT_LIGHTS\n\n  irradiance *= PI; // punctual light\n\n #endif\n\n reflectedLight.directDiffuse += irradiance * BRDF_Diffuse_Lambert( material.diffuseColor );\n\n reflectedLight.directSpecular += irradiance * BRDF_Specular_BlinnPhong( directLight, geometry, material.specularColor, material.specularShininess ) * material.specularStrength;\n\n}\n\nvoid RE_IndirectDiffuse_BlinnPhong( const in vec3 irradiance, const in GeometricContext geometry, const in BlinnPhongMaterial material, inout ReflectedLight reflectedLight ) {\n\n reflectedLight.indirectDiffuse += irradiance * BRDF_Diffuse_Lambert( material.diffuseColor );\n\n}\n\n#define RE_Direct    RE_Direct_BlinnPhong\n#define RE_IndirectDiffuse  RE_IndirectDiffuse_BlinnPhong\n\n#define Material_LightProbeLOD( material ) (0)\n";
+    const lights_physical_fragment = "PhysicalMaterial material;\nmaterial.diffuseColor = diffuseColor.rgb * ( 1.0 - metalnessFactor );\nmaterial.specularRoughness = clamp( roughnessFactor, 0.04, 1.0 );\n#ifdef STANDARD\n material.specularColor = mix( vec3( DEFAULT_SPECULAR_COEFFICIENT ), diffuseColor.rgb, metalnessFactor );\n#else\n material.specularColor = mix( vec3( MAXIMUM_SPECULAR_COEFFICIENT * pow2( reflectivity ) ), diffuseColor.rgb, metalnessFactor );\n material.clearCoat = saturate( clearCoat ); // Burley clearcoat model\n material.clearCoatRoughness = clamp( clearCoatRoughness, 0.04, 1.0 );\n#endif\n";
+    const lights_physical_pars_fragment = "struct PhysicalMaterial {\n\n vec3 diffuseColor;\n float specularRoughness;\n vec3 specularColor;\n\n #ifndef STANDARD\n  float clearCoat;\n  float clearCoatRoughness;\n #endif\n\n};\n\n#define MAXIMUM_SPECULAR_COEFFICIENT 0.16\n#define DEFAULT_SPECULAR_COEFFICIENT 0.04\n\n// Clear coat directional hemishperical reflectance (this approximation should be improved)\nfloat clearCoatDHRApprox( const in float roughness, const in float dotNL ) {\n\n return DEFAULT_SPECULAR_COEFFICIENT + ( 1.0 - DEFAULT_SPECULAR_COEFFICIENT ) * ( pow( 1.0 - dotNL, 5.0 ) * pow( 1.0 - roughness, 2.0 ) );\n\n}\n\n#if NUM_RECT_AREA_LIGHTS > 0\n\n void RE_Direct_RectArea_Physical( const in RectAreaLight rectAreaLight, const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight ) {\n\n  vec3 normal = geometry.normal;\n  vec3 viewDir = geometry.viewDir;\n  vec3 position = geometry.position;\n  vec3 lightPos = rectAreaLight.position;\n  vec3 halfWidth = rectAreaLight.halfWidth;\n  vec3 halfHeight = rectAreaLight.halfHeight;\n  vec3 lightColor = rectAreaLight.color;\n  float roughness = material.specularRoughness;\n\n  vec3 rectCoords[ 4 ];\n  rectCoords[ 0 ] = lightPos - halfWidth - halfHeight; // counterclockwise\n  rectCoords[ 1 ] = lightPos + halfWidth - halfHeight;\n  rectCoords[ 2 ] = lightPos + halfWidth + halfHeight;\n  rectCoords[ 3 ] = lightPos - halfWidth + halfHeight;\n\n  vec2 uv = LTC_Uv( normal, viewDir, roughness );\n\n  vec4 t1 = texture2D( ltc_1, uv );\n  vec4 t2 = texture2D( ltc_2, uv );\n\n  mat3 mInv = mat3(\n   vec3( t1.x, 0, t1.y ),\n   vec3(    0, 1,    0 ),\n   vec3( t1.z, 0, t1.w )\n  );\n\n  // LTC Fresnel Approximation by Stephen Hill\n  // http://blog.selfshadow.com/publications/s2016-advances/s2016_ltc_fresnel.pdf\n  vec3 fresnel = ( material.specularColor * t2.x + ( vec3( 1.0 ) - material.specularColor ) * t2.y );\n\n  reflectedLight.directSpecular += lightColor * fresnel * LTC_Evaluate( normal, viewDir, position, mInv, rectCoords );\n\n  reflectedLight.directDiffuse += lightColor * material.diffuseColor * LTC_Evaluate( normal, viewDir, position, mat3( 1.0 ), rectCoords );\n\n }\n\n#endif\n\nvoid RE_Direct_Physical( const in IncidentLight directLight, const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight ) {\n\n float dotNL = saturate( dot( geometry.normal, directLight.direction ) );\n\n vec3 irradiance = dotNL * directLight.color;\n\n #ifndef PHYSICALLY_CORRECT_LIGHTS\n\n  irradiance *= PI; // punctual light\n\n #endif\n\n #ifndef STANDARD\n  float clearCoatDHR = material.clearCoat * clearCoatDHRApprox( material.clearCoatRoughness, dotNL );\n #else\n  float clearCoatDHR = 0.0;\n #endif\n\n reflectedLight.directSpecular += ( 1.0 - clearCoatDHR ) * irradiance * BRDF_Specular_GGX( directLight, geometry, material.specularColor, material.specularRoughness );\n\n reflectedLight.directDiffuse += ( 1.0 - clearCoatDHR ) * irradiance * BRDF_Diffuse_Lambert( material.diffuseColor );\n\n #ifndef STANDARD\n\n  reflectedLight.directSpecular += irradiance * material.clearCoat * BRDF_Specular_GGX( directLight, geometry, vec3( DEFAULT_SPECULAR_COEFFICIENT ), material.clearCoatRoughness );\n\n #endif\n\n}\n\nvoid RE_IndirectDiffuse_Physical( const in vec3 irradiance, const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight ) {\n\n reflectedLight.indirectDiffuse += irradiance * BRDF_Diffuse_Lambert( material.diffuseColor );\n\n}\n\nvoid RE_IndirectSpecular_Physical( const in vec3 radiance, const in vec3 clearCoatRadiance, const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight ) {\n\n #ifndef STANDARD\n  float dotNV = saturate( dot( geometry.normal, geometry.viewDir ) );\n  float dotNL = dotNV;\n  float clearCoatDHR = material.clearCoat * clearCoatDHRApprox( material.clearCoatRoughness, dotNL );\n #else\n  float clearCoatDHR = 0.0;\n #endif\n\n reflectedLight.indirectSpecular += ( 1.0 - clearCoatDHR ) * radiance * BRDF_Specular_GGX_Environment( geometry, material.specularColor, material.specularRoughness );\n\n #ifndef STANDARD\n\n  reflectedLight.indirectSpecular += clearCoatRadiance * material.clearCoat * BRDF_Specular_GGX_Environment( geometry, vec3( DEFAULT_SPECULAR_COEFFICIENT ), material.clearCoatRoughness );\n\n #endif\n\n}\n\n#define RE_Direct    RE_Direct_Physical\n#define RE_Direct_RectArea  RE_Direct_RectArea_Physical\n#define RE_IndirectDiffuse  RE_IndirectDiffuse_Physical\n#define RE_IndirectSpecular  RE_IndirectSpecular_Physical\n\n#define Material_BlinnShininessExponent( material )   GGXRoughnessToBlinnExponent( material.specularRoughness )\n#define Material_ClearCoat_BlinnShininessExponent( material )   GGXRoughnessToBlinnExponent( material.clearCoatRoughness )\n\n// ref: https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf\nfloat computeSpecularOcclusion( const in float dotNV, const in float ambientOcclusion, const in float roughness ) {\n\n return saturate( pow( dotNV + ambientOcclusion, exp2( - 16.0 * roughness - 1.0 ) ) - 1.0 + ambientOcclusion );\n\n}\n";
+    const logdepthbuf_fragment = "#if defined( USE_LOGDEPTHBUF ) && defined( USE_LOGDEPTHBUF_EXT )\n\n gl_FragDepthEXT = log2( vFragDepth ) * logDepthBufFC * 0.5;\n\n#endif";
+    const logdepthbuf_pars_fragment = "#if defined( USE_LOGDEPTHBUF ) && defined( USE_LOGDEPTHBUF_EXT )\n\n uniform float logDepthBufFC;\n varying float vFragDepth;\n\n#endif\n";
+    const logdepthbuf_pars_vertex = "#ifdef USE_LOGDEPTHBUF\n\n #ifdef USE_LOGDEPTHBUF_EXT\n\n  varying float vFragDepth;\n\n #else\n\n  uniform float logDepthBufFC;\n\n #endif\n\n#endif\n";
+    const logdepthbuf_vertex = "#ifdef USE_LOGDEPTHBUF\n\n #ifdef USE_LOGDEPTHBUF_EXT\n\n  vFragDepth = 1.0 + gl_Position.w;\n\n #else\n\n  gl_Position.z = log2( max( EPSILON, gl_Position.w + 1.0 ) ) * logDepthBufFC - 1.0;\n\n  gl_Position.z *= gl_Position.w;\n\n #endif\n\n#endif\n";
+    const map_fragment = "#ifdef USE_MAP\n\n vec4 texelColor = texture2D( map, vUv );\n\n // texelColor = mapTexelToLinear( texelColor );TODO\n diffuseColor *= texelColor;\n\n#endif\n";
+    const map_pars_fragment = "#ifdef USE_MAP\n\n uniform sampler2D map;\n\n#endif\n";
+    const map_particle_fragment = "#ifdef USE_MAP\n\n vec2 uv = ( uvTransform * vec3( gl_PointCoord.x, 1.0 - gl_PointCoord.y, 1 ) ).xy;\n vec4 mapTexel = texture2D( map, uv );\n diffuseColor *= mapTexelToLinear( mapTexel );\n\n#endif\n";
+    const map_particle_pars_fragment = "#ifdef USE_MAP\n\n uniform mat3 uvTransform;\n uniform sampler2D map;\n\n#endif\n";
+    const metalnessmap_fragment = "float metalnessFactor = metalness;\n\n#ifdef USE_METALNESSMAP\n\n vec4 texelMetalness = texture2D( metalnessMap, vUv );\n\n // reads channel B, compatible with a combined OcclusionRoughnessMetallic (RGB) texture\n metalnessFactor *= texelMetalness.b;\n\n#endif\n";
+    const metalnessmap_pars_fragment = "#ifdef USE_METALNESSMAP\n\n uniform sampler2D metalnessMap;\n\n#endif";
+    const morphnormal_vertex = "#ifdef USE_MORPHNORMALS\n\n objectNormal += ( morphNormal0 - normal ) * morphTargetInfluences[ 0 ];\n objectNormal += ( morphNormal1 - normal ) * morphTargetInfluences[ 1 ];\n objectNormal += ( morphNormal2 - normal ) * morphTargetInfluences[ 2 ];\n objectNormal += ( morphNormal3 - normal ) * morphTargetInfluences[ 3 ];\n\n#endif\n";
+    const morphtarget_pars_vertex = "#ifdef USE_MORPHTARGETS\n\n #ifndef USE_MORPHNORMALS\n\n uniform float morphTargetInfluences[ 8 ];\n\n #else\n\n uniform float morphTargetInfluences[ 4 ];\n\n #endif\n\n#endif";
+    const morphtarget_vertex = "#ifdef USE_MORPHTARGETS\n\n transformed += ( morphTarget0 - position ) * morphTargetInfluences[ 0 ];\n transformed += ( morphTarget1 - position ) * morphTargetInfluences[ 1 ];\n transformed += ( morphTarget2 - position ) * morphTargetInfluences[ 2 ];\n transformed += ( morphTarget3 - position ) * morphTargetInfluences[ 3 ];\n\n #ifndef USE_MORPHNORMALS\n\n transformed += ( morphTarget4 - position ) * morphTargetInfluences[ 4 ];\n transformed += ( morphTarget5 - position ) * morphTargetInfluences[ 5 ];\n transformed += ( morphTarget6 - position ) * morphTargetInfluences[ 6 ];\n transformed += ( morphTarget7 - position ) * morphTargetInfluences[ 7 ];\n\n #endif\n\n#endif\n";
+    const normalmap_pars_fragment = "#ifdef USE_NORMALMAP\n\n uniform sampler2D normalMap;\n uniform vec2 normalScale;\n\n #ifdef OBJECTSPACE_NORMALMAP\n\n  uniform mat3 normalMatrix;\n\n #else\n\n  // Per-Pixel Tangent Space Normal Mapping\n  // http://hacksoflife.blogspot.ch/2009/11/per-pixel-tangent-space-normal-mapping.html\n\n  vec3 perturbNormal2Arb( vec3 eye_pos, vec3 surf_norm ) {\n\n   // Workaround for Adreno 3XX dFd*( vec3 ) bug. See #9988\n\n   vec3 q0 = vec3( dFdx( eye_pos.x ), dFdx( eye_pos.y ), dFdx( eye_pos.z ) );\n   vec3 q1 = vec3( dFdy( eye_pos.x ), dFdy( eye_pos.y ), dFdy( eye_pos.z ) );\n   vec2 st0 = dFdx( vUv.st );\n   vec2 st1 = dFdy( vUv.st );\n\n   float scale = sign( st1.t * st0.s - st0.t * st1.s ); // we do not care about the magnitude\n\n   vec3 S = normalize( ( q0 * st1.t - q1 * st0.t ) * scale );\n   vec3 T = normalize( ( - q0 * st1.s + q1 * st0.s ) * scale );\n   vec3 N = normalize( surf_norm );\n   mat3 tsn = mat3( S, T, N );\n\n   vec3 mapN = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;\n\n   mapN.xy *= normalScale;\n   mapN.xy *= ( float( gl_FrontFacing ) * 2.0 - 1.0 );\n\n   return normalize( tsn * mapN );\n\n  }\n\n #endif\n\n#endif\n";
+    const normal_fragment_begin = "#ifdef FLAT_SHADED\n\n // Workaround for Adreno/Nexus5 not able able to do dFdx( vViewPosition ) ...\n\n vec3 fdx = vec3( dFdx( vViewPosition.x ), dFdx( vViewPosition.y ), dFdx( vViewPosition.z ) );\n vec3 fdy = vec3( dFdy( vViewPosition.x ), dFdy( vViewPosition.y ), dFdy( vViewPosition.z ) );\n vec3 normal = normalize( cross( fdx, fdy ) );\n\n#else\n\n vec3 normal = normalize( vNormal );\n\n #ifdef DOUBLE_SIDED\n\n  normal = normal * ( float( gl_FrontFacing ) * 2.0 - 1.0 );\n\n #endif\n\n#endif\n";
+    const normal_fragment_maps = "#ifdef USE_NORMALMAP\n\n #ifdef OBJECTSPACE_NORMALMAP\n\n  normal = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0; // overrides both flatShading and attribute normals\n\n  #ifdef FLIP_SIDED\n\n   normal = - normal;\n\n  #endif\n\n  #ifdef DOUBLE_SIDED\n\n   normal = normal * ( float( gl_FrontFacing ) * 2.0 - 1.0 );\n\n  #endif\n\n  normal = normalize( normalMatrix * normal );\n\n #else // tangent-space normal map\n\n  normal = perturbNormal2Arb( -vViewPosition, normal );\n\n #endif\n\n#elif defined( USE_BUMPMAP )\n\n normal = perturbNormalArb( -vViewPosition, normal, dHdxy_fwd() );\n\n#endif\n";
+    const packing = "vec3 packNormalToRGB( const in vec3 normal ) {\n return normalize( normal ) * 0.5 + 0.5;\n}\n\nvec3 unpackRGBToNormal( const in vec3 rgb ) {\n return 2.0 * rgb.xyz - 1.0;\n}\n\nconst float PackUpscale = 256. / 255.; // fraction -> 0..1 (including 1)\nconst float UnpackDownscale = 255. / 256.; // 0..1 -> fraction (excluding 1)\n\nconst vec3 PackFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );\nconst vec4 UnpackFactors = UnpackDownscale / vec4( PackFactors, 1. );\n\nconst float ShiftRight8 = 1. / 256.;\n\nvec4 packDepthToRGBA( const in float v ) {\n vec4 r = vec4( fract( v * PackFactors ), v );\n r.yzw -= r.xyz * ShiftRight8; // tidy overflow\n return r * PackUpscale;\n}\n\nfloat unpackRGBAToDepth( const in vec4 v ) {\n return dot( v, UnpackFactors );\n}\n\n// NOTE: viewZ/eyeZ is < 0 when in front of the camera per OpenGL conventions\n\nfloat viewZToOrthographicDepth( const in float viewZ, const in float near, const in float far ) {\n return ( viewZ + near ) / ( near - far );\n}\nfloat orthographicDepthToViewZ( const in float linearClipZ, const in float near, const in float far ) {\n return linearClipZ * ( near - far ) - near;\n}\n\nfloat viewZToPerspectiveDepth( const in float viewZ, const in float near, const in float far ) {\n return (( near + viewZ ) * far ) / (( far - near ) * viewZ );\n}\nfloat perspectiveDepthToViewZ( const in float invClipZ, const in float near, const in float far ) {\n return ( near * far ) / ( ( far - near ) * invClipZ - far );\n}\n";
+    const particle_affector = "vec3 lifeVelocity = computeVelocity(t);\nvec4 worldRotation;\nif(u_simulationSpace==1)\n worldRotation=startWorldRotation;\nelse\n worldRotation=u_worldRotation;\nvec3 gravity=u_gravity*age;\n\nvec3 center=computePosition(startVelocity, lifeVelocity, age, t,gravity,worldRotation); \n#ifdef SPHERHBILLBOARD\n   vec2 corner=corner.xy;\n      vec3 cameraUpVector =normalize(cameraUp);\n      vec3 sideVector = normalize(cross(cameraForward,cameraUpVector));\n      vec3 upVector = normalize(cross(sideVector,cameraForward));\n     corner*=computeBillbardSize(startSize.xy,t);\n  #if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)\n   if(u_startRotation3D){\n    vec3 rotation=vec3(startRotation.xy,computeRotation(startRotation.z,age,t));\n    center += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,rotation);\n   }\n   else{\n    float rot = computeRotation(startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n    center += u_sizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n   }\n  #else\n   if(u_startRotation3D){\n    center += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,startRotation);\n   }\n   else{\n    float c = cos(startRotation.x);\n    float s = sin(startRotation.x);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n    center += u_sizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n   }\n  #endif\n #endif\n #ifdef STRETCHEDBILLBOARD\n  vec2 corner=corner.xy;\n  vec3 velocity;\n  #if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n      if(u_spaceType==0)\n       velocity=rotation_quaternions(u_sizeScale*(startVelocity+lifeVelocity),worldRotation)+gravity;\n      else\n       velocity=rotation_quaternions(u_sizeScale*startVelocity,worldRotation)+lifeVelocity+gravity;\n   #else\n      velocity= rotation_quaternions(u_sizeScale*startVelocity,worldRotation)+gravity;\n   #endif \n  vec3 cameraUpVector = normalize(velocity);\n  vec3 direction = normalize(center-cameraPosition);\n    vec3 sideVector = normalize(cross(direction,normalize(velocity)));\n  sideVector=u_sizeScale.xzy*sideVector;\n  cameraUpVector=length(vec3(u_sizeScale.x,0.0,0.0))*cameraUpVector;\n    vec2 size=computeBillbardSize(startSize.xy,t);\n    const mat2 rotaionZHalfPI=mat2(0.0, -1.0, 1.0, 0.0);\n    corner=rotaionZHalfPI*corner;\n    corner.y=corner.y-abs(corner.y);\n    float speed=length(velocity);\n    center +=sign(u_sizeScale.x)*(sign(u_lengthScale)*size.x*corner.x*sideVector+(speed*u_speeaScale+size.y*u_lengthScale)*corner.y*cameraUpVector);\n #endif\n #ifdef HORIZONTALBILLBOARD\n  vec2 corner=corner.xy;\n    const vec3 cameraUpVector=vec3(0.0,0.0,1.0);\n    const vec3 sideVector = vec3(-1.0,0.0,0.0);\n  float rot = computeRotation(startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n  corner*=computeBillbardSize(startSize.xy,t);\n    center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n #endif\n #ifdef VERTICALBILLBOARD\n  vec2 corner=corner.xy;\n    const vec3 cameraUpVector =vec3(0.0,1.0,0.0);\n    vec3 sideVector = normalize(cross(cameraForward,cameraUpVector));\n  float rot = computeRotation(startRotation.x, age,t);\n    float c = cos(rot);\n    float s = sin(rot);\n    mat2 rotation= mat2(c, -s, s, c);\n    corner=rotation*corner;\n  corner*=computeBillbardSize(startSize.xy,t);\n    center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n #endif\n #ifdef RENDERMESH\n    vec3 size=computeMeshSize(startSize,t);\n  #if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)\n    if(u_startRotation3D){\n     vec3 rotation=vec3(startRotation.xy,-computeRotation(startRotation.z, age,t));\n     center+= rotation_quaternions(u_sizeScale*rotation_euler(position*size,rotation),worldRotation);\n    }\n    else{\n     #ifdef ROTATIONOVERLIFETIME\n      float angle=computeRotation(startRotation.x, age,t);\n      if(startPosition.x>0.1 || startPosition.x < -0.1||startPosition.y>0.1 || startPosition.y < -0.1){\n       center+= (rotation_quaternions(rotation_axis(u_sizeScale*position*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(startPosition.xy,0.0))),angle),worldRotation));//已验证\n      }\n      else{\n       #ifdef SHAPE\n        center+= u_sizeScale.xzy*(rotation_quaternions(rotation_axis(position*size,vec3(0.0,-1.0,0.0),angle),worldRotation));\n       #else\n        if(u_simulationSpace==1)\n         center+=rotation_axis(u_sizeScale*position*size,vec3(0.0,0.0,-1.0),angle);\n        else if(u_simulationSpace==0)\n         center+=rotation_quaternions(u_sizeScale*rotation_axis(position*size,vec3(0.0,0.0,-1.0),angle),worldRotation);\n       #endif\n      }\n     #endif\n     #ifdef ROTATIONSEPERATE\n      vec3 angle=compute3DRotation(vec3(0.0,0.0,startRotation.z), age,t);\n      center+= (rotation_quaternions(rotation_euler(u_sizeScale*position*size,vec3(angle.x,angle.y,angle.z)),worldRotation));\n     #endif \n    }\n  #else\n  if(u_startRotation3D){\n   center+= rotation_quaternions(u_sizeScale*rotation_euler(position*size,startRotation),worldRotation);\n  }\n  else{\n   if(startPosition.x>0.1 || startPosition.x < -0.1||startPosition.y>0.1 || startPosition.y < -0.1){\n    if(u_simulationSpace==1)\n     center+= rotation_axis(u_sizeScale*position*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(startPosition.xy,0.0))),startRotation.x);\n    else if(u_simulationSpace==0)\n     center+= (rotation_quaternions(u_sizeScale*rotation_axis(position*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(startPosition.xy,0.0))),startRotation.x),worldRotation));\n   }\n   else{\n    #ifdef SHAPE\n     if(u_simulationSpace==1)\n      center+= u_sizeScale*rotation_axis(position*size,vec3(0.0,-1.0,0.0),startRotation.x);\n     else if(u_simulationSpace==0)\n      center+= rotation_quaternions(u_sizeScale*rotation_axis(position*size,vec3(0.0,-1.0,0.0),startRotation.x),worldRotation); \n    #else\n     if(u_simulationSpace==1)\n      center+= rotation_axis(u_sizeScale*position*size,vec3(0.0,0.0,-1.0),startRotation.x);\n     else if(u_simulationSpace==0)\n      center+= rotation_quaternions(u_sizeScale*rotation_axis(position*size,vec3(0.0,0.0,-1.0),startRotation.x),worldRotation);\n    #endif\n   }\n  }\n  #endif\n  v_mesh_color=color;\n  #endif";
+    const particle_common = "\n\nuniform float u_currentTime;\nuniform vec3 u_gravity;\n\nuniform vec3 u_worldPosition;\nuniform vec4 u_worldRotation;\nuniform bool u_startRotation3D;\nuniform int u_scalingMode;\nuniform vec3 u_positionScale;\nuniform vec3 u_sizeScale;\nuniform mat4 viewProjectionMatrix;\n\n#ifdef STRETCHEDBILLBOARD\n uniform vec3 cameraPosition;\n#endif\nuniform vec3 cameraForward;\nuniform vec3 cameraUp;\n\nuniform float u_lengthScale;\nuniform float u_speeaScale;\nuniform int u_simulationSpace;\n\n#if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n  uniform int u_spaceType;\n#endif\n#if defined(VELOCITYCONSTANT)||defined(VELOCITYTWOCONSTANT)\n  uniform vec3 u_velocityConst;\n#endif\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)\n  uniform vec2 u_velocityCurveX[4];\n  uniform vec2 u_velocityCurveY[4];\n  uniform vec2 u_velocityCurveZ[4];\n#endif\n#ifdef VELOCITYTWOCONSTANT\n  uniform vec3 u_velocityConstMax;\n#endif\n#ifdef VELOCITYTWOCURVE\n  uniform vec2 u_velocityCurveMaxX[4];\n  uniform vec2 u_velocityCurveMaxY[4];\n  uniform vec2 u_velocityCurveMaxZ[4];\n#endif\n\n#ifdef COLOROGRADIENT\n  uniform vec4 u_colorGradient[4];\n  uniform vec2 u_alphaGradient[4];\n#endif\n#ifdef COLORTWOGRADIENTS\n  uniform vec4 u_colorGradient[4];\n  uniform vec2 u_alphaGradient[4];\n  uniform vec4 u_colorGradientMax[4];\n  uniform vec2 u_alphaGradientMax[4];\n#endif\n\n#if defined(SIZECURVE)||defined(SIZETWOCURVES)\n  uniform vec2 u_sizeCurve[4];\n#endif\n#ifdef SIZETWOCURVES\n  uniform vec2 u_sizeCurveMax[4];\n#endif\n#if defined(SIZECURVESEPERATE)||defined(SIZETWOCURVESSEPERATE)\n  uniform vec2 u_sizeCurveX[4];\n  uniform vec2 u_sizeCurveY[4];\n  uniform vec2 u_sizeCurveZ[4];\n#endif\n#ifdef SIZETWOCURVESSEPERATE\n  uniform vec2 u_sizeCurveMaxX[4];\n  uniform vec2 u_sizeCurveMaxY[4];\n  uniform vec2 u_sizeCurveMaxZ[4];\n#endif\n\n#ifdef ROTATIONOVERLIFETIME\n  #if defined(ROTATIONCONSTANT)||defined(ROTATIONTWOCONSTANTS)\n    uniform float u_rotationConst;\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n    uniform float u_rotationConstMax;\n  #endif\n  #if defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\n    uniform vec2 u_rotationCurve[4];\n  #endif\n  #ifdef ROTATIONTWOCURVES\n    uniform vec2 u_rotationCurveMax[4];\n  #endif\n#endif\n#ifdef ROTATIONSEPERATE\n  #if defined(ROTATIONCONSTANT)||defined(ROTATIONTWOCONSTANTS)\n    uniform vec3 u_rotationConstSeprarate;\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n    uniform vec3 u_rotationConstMaxSeprarate;\n  #endif\n  #if defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\n    uniform vec2 u_rotationCurveX[4];\n    uniform vec2 u_rotationCurveY[4];\n    uniform vec2 u_rotationCurveZ[4];\n  uniform vec2 u_rotationCurveW[4];\n  #endif\n  #ifdef ROTATIONTWOCURVES\n    uniform vec2 u_rotationCurveMaxX[4];\n    uniform vec2 u_rotationCurveMaxY[4];\n    uniform vec2 u_rotationCurveMaxZ[4];\n  uniform vec2 u_rotationCurveMaxW[4];\n  #endif\n#endif\n\n#if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONTWOCURVE)\n  uniform float u_cycles;\n  uniform vec4 u_subUV;\n  uniform vec2 u_uvCurve[4];\n#endif\n#ifdef TEXTURESHEETANIMATIONTWOCURVE\n  uniform vec2 u_uvCurveMax[4];\n#endif\n\nvarying float v_discard;\nvarying vec4 v_color;\nvarying vec2 v_texcoord;\n#ifdef RENDERMESH\n varying vec4 v_mesh_color;\n#endif\n\nvec3 rotation_euler(in vec3 vector,in vec3 euler)\n{\n  float halfPitch = euler.x * 0.5;\n float halfYaw = euler.y * 0.5;\n float halfRoll = euler.z * 0.5;\n\n float sinPitch = sin(halfPitch);\n float cosPitch = cos(halfPitch);\n float sinYaw = sin(halfYaw);\n float cosYaw = cos(halfYaw);\n float sinRoll = sin(halfRoll);\n float cosRoll = cos(halfRoll);\n\n float quaX = (cosYaw * sinPitch * cosRoll) + (sinYaw * cosPitch * sinRoll);\n float quaY = (sinYaw * cosPitch * cosRoll) - (cosYaw * sinPitch * sinRoll);\n float quaZ = (cosYaw * cosPitch * sinRoll) - (sinYaw * sinPitch * cosRoll);\n float quaW = (cosYaw * cosPitch * cosRoll) + (sinYaw * sinPitch * sinRoll);\n \n float x = quaX + quaX;\n  float y = quaY + quaY;\n  float z = quaZ + quaZ;\n  float wx = quaW * x;\n  float wy = quaW * y;\n  float wz = quaW * z;\n float xx = quaX * x;\n  float xy = quaX * y;\n float xz = quaX * z;\n  float yy = quaY * y;\n  float yz = quaY * z;\n  float zz = quaZ * z;\n\n  return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n              ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n              ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n \n}\n\nvec3 rotation_axis(in vec3 vector,in vec3 axis, in float angle)\n{\n float halfAngle = angle * 0.5;\n float sin = sin(halfAngle);\n \n float quaX = axis.x * sin;\n float quaY = axis.y * sin;\n float quaZ = axis.z * sin;\n float quaW = cos(halfAngle);\n \n float x = quaX + quaX;\n  float y = quaY + quaY;\n  float z = quaZ + quaZ;\n  float wx = quaW * x;\n  float wy = quaW * y;\n  float wz = quaW * z;\n float xx = quaX * x;\n  float xy = quaX * y;\n float xz = quaX * z;\n  float yy = quaY * y;\n  float yz = quaY * z;\n  float zz = quaZ * z;\n\n  return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n              ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n              ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n}\n\nvec3 rotation_quaternions(in vec3 v,in vec4 q) \n{\n return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);\n}\n\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)||defined(SIZECURVE)||defined(SIZECURVESEPERATE)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)\nfloat evaluate_curve_float(in vec2 curves[4],in float t)\n{\n float res;\n for(int i=1;i<4;i++)\n {\n  vec2 curve=curves[i];\n  float curTime=curve.x;\n  if(curTime>=t)\n  {\n   vec2 lastCurve=curves[i-1];\n   float lastTime=lastCurve.x;\n   float tt=(t-lastTime)/(curTime-lastTime);\n   res=mix(lastCurve.y,curve.y,tt);\n   break;\n  }\n }\n return res;\n}\n#endif\n\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)||defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\nfloat evaluate_curve_total(in vec2 curves[4],in float t)\n{\n float res=0.0;\n for(int i=1;i<4;i++)\n {\n  vec2 curve=curves[i];\n  float curTime=curve.x;\n  vec2 lastCurve=curves[i-1];\n  float lastValue=lastCurve.y;\n  \n  if(curTime>=t){\n   float lastTime=lastCurve.x;\n   float tt=(t-lastTime)/(curTime-lastTime);\n   res+=(lastValue+mix(lastValue,curve.y,tt))/2.0*time.x*(t-lastTime);\n   break;\n  }\n  else{\n   res+=(lastValue+curve.y)/2.0*time.x*(curTime-lastCurve.x);\n  }\n }\n return res;\n}\n#endif\n\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)\nvec4 evaluate_curve_color(in vec2 gradientAlphas[4],in vec4 gradientColors[4],in float t)\n{\n vec4 overTimeColor;\n for(int i=1;i<4;i++)\n {\n  vec2 gradientAlpha=gradientAlphas[i];\n  float alphaKey=gradientAlpha.x;\n  if(alphaKey>=t)\n  {\n   vec2 lastGradientAlpha=gradientAlphas[i-1];\n   float lastAlphaKey=lastGradientAlpha.x;\n   float age=(t-lastAlphaKey)/(alphaKey-lastAlphaKey);\n   overTimeColor.a=mix(lastGradientAlpha.y,gradientAlpha.y,age);\n   break;\n  }\n }\n \n for(int i=1;i<4;i++)\n {\n  vec4 gradientColor=gradientColors[i];\n  float colorKey=gradientColor.x;\n  if(colorKey>=t)\n  {\n   vec4 lastGradientColor=gradientColors[i-1];\n   float lastColorKey=lastGradientColor.x;\n   float age=(t-lastColorKey)/(colorKey-lastColorKey);\n   overTimeColor.rgb=mix(gradientColors[i-1].yzw,gradientColor.yzw,age);\n   break;\n  }\n }\n return overTimeColor;\n}\n#endif\n\n\n#if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONTWOCURVE)\nfloat evaluate_curve_frame(in vec2 gradientFrames[4],in float t)\n{\n float overTimeFrame;\n for(int i=1;i<4;i++)\n {\n  vec2 gradientFrame=gradientFrames[i];\n  float key=gradientFrame.x;\n  if(key>=t)\n  {\n   vec2 lastGradientFrame=gradientFrames[i-1];\n   float lastKey=lastGradientFrame.x;\n   float age=(t-lastKey)/(key-lastKey);\n   overTimeFrame=mix(lastGradientFrame.y,gradientFrame.y,age);\n   break;\n  }\n }\n return floor(overTimeFrame);\n}\n#endif\n\nvec3 computeVelocity(in float t)\n{\n  vec3 res;\n  #ifdef VELOCITYCONSTANT\n  res=u_velocityConst; \n  #endif\n  #ifdef VELOCITYCURVE\n     res= vec3(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveZ,t));\n  #endif\n  #ifdef VELOCITYTWOCONSTANT\n  res=mix(u_velocityConst,u_velocityConstMax,vec3(random1.y,random1.z,random1.w)); \n  #endif\n  #ifdef VELOCITYTWOCURVE\n     res=vec3(mix(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveMaxX,t),random1.y),\n             mix(evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveMaxY,t),random1.z),\n        mix(evaluate_curve_float(u_velocityCurveZ,t),evaluate_curve_float(u_velocityCurveMaxZ,t),random1.w));\n  #endif\n     \n  return res;\n} \n\nvec3 computePosition(in vec3 startVelocity, in vec3 lifeVelocity,in float age,in float t,vec3 gravityVelocity,vec4 worldRotation)\n{\n    vec3 startPosition;\n    vec3 lifePosition;\n  #if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n   #ifdef VELOCITYCONSTANT\n      startPosition=startVelocity*age;\n      lifePosition=lifeVelocity*age;\n   #endif\n   #ifdef VELOCITYCURVE\n      startPosition=startVelocity*age;\n      lifePosition=vec3(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveZ,t));\n   #endif\n   #ifdef VELOCITYTWOCONSTANT\n      startPosition=startVelocity*age;\n      lifePosition=lifeVelocity*age;\n   #endif\n   #ifdef VELOCITYTWOCURVE\n      startPosition=startVelocity*age;\n      lifePosition=vec3(mix(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveMaxX,t),random1.y)\n                 ,mix(evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveMaxY,t),random1.z)\n                 ,mix(evaluate_curve_total(u_velocityCurveZ,t),evaluate_curve_total(u_velocityCurveMaxZ,t),random1.w));\n   #endif\n\n   vec3 finalPosition;\n   if(u_spaceType==0){\n     if(u_scalingMode!=2)\n      finalPosition =rotation_quaternions(u_positionScale*(startPosition.xyz+startPosition+lifePosition),worldRotation);\n     else\n      finalPosition =rotation_quaternions(u_positionScale*startPosition.xyz+startPosition+lifePosition,worldRotation);\n   }\n   else{\n     if(u_scalingMode!=2)\n       finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+startPosition),worldRotation)+lifePosition;\n     else\n       finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+startPosition,worldRotation)+lifePosition;\n   }\n    #else\n    startPosition=startVelocity*age;\n    vec3 finalPosition;\n    if(u_scalingMode!=2)\n      finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+startPosition),worldRotation);\n    else\n      finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+startPosition,worldRotation);\n  #endif\n  \n  if(u_simulationSpace==1)\n    finalPosition=finalPosition+startWorldPosition;\n  else if(u_simulationSpace==0) \n    finalPosition=finalPosition+u_worldPosition;\n  \n  finalPosition+=0.5*gravityVelocity*age;\n \n  return finalPosition;\n}\n\n\nvec4 computeColor(in vec4 color,in float t)\n{\n #ifdef COLOROGRADIENT\n   color*=evaluate_curve_color(u_alphaGradient,u_colorGradient,t);\n #endif \n #ifdef COLORTWOGRADIENTS\n   color*=mix(evaluate_curve_color(u_alphaGradient,u_colorGradient,t),evaluate_curve_color(u_alphaGradientMax,u_colorGradientMax,t),random0.y);\n #endif\n\n  return color;\n}\n\nvec2 computeBillbardSize(in vec2 size,in float t)\n{\n #ifdef SIZECURVE\n  size*=evaluate_curve_float(u_sizeCurve,t);\n #endif\n #ifdef SIZETWOCURVES\n   size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),random0.z); \n #endif\n #ifdef SIZECURVESEPERATE\n  size*=vec2(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t));\n #endif\n #ifdef SIZETWOCURVESSEPERATE\n   size*=vec2(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),random0.z)\n         ,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),random0.z));\n #endif\n return size;\n}\n\n#ifdef RENDERMESH\nvec3 computeMeshSize(in vec3 size,in float t)\n{\n #ifdef SIZECURVE\n  size*=evaluate_curve_float(u_sizeCurve,t);\n #endif\n #ifdef SIZETWOCURVES\n   size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),random0.z); \n #endif\n #ifdef SIZECURVESEPERATE\n  size*=vec3(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveZ,t));\n #endif\n #ifdef SIZETWOCURVESSEPERATE\n   size*=vec3(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),random0.z)\n         ,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),random0.z)\n       ,mix(evaluate_curve_float(u_sizeCurveZ,t),evaluate_curve_float(u_sizeCurveMaxZ,t),random0.z));\n #endif\n return size;\n}\n#endif\n\nfloat computeRotation(in float rotation,in float age,in float t)\n{ \n #ifdef ROTATIONOVERLIFETIME\n  #ifdef ROTATIONCONSTANT\n   float ageRot=u_rotationConst*age;\n         rotation+=ageRot;\n  #endif\n  #ifdef ROTATIONCURVE\n   rotation+=evaluate_curve_total(u_rotationCurve,t);\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n   float ageRot=mix(u_rotationConst,u_rotationConstMax,random0.w)*age;\n     rotation+=ageRot;\n   #endif\n  #ifdef ROTATIONTWOCURVES\n   rotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),random0.w);\n  #endif\n #endif\n #ifdef ROTATIONSEPERATE\n  #ifdef ROTATIONCONSTANT\n   float ageRot=u_rotationConstSeprarate.z*age;\n         rotation+=ageRot;\n  #endif\n  #ifdef ROTATIONCURVE\n   rotation+=evaluate_curve_total(u_rotationCurveZ,t);\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n   float ageRot=mix(u_rotationConstSeprarate.z,u_rotationConstMaxSeprarate.z,random0.w)*age;\n         rotation+=ageRot;\n     #endif\n  #ifdef ROTATIONTWOCURVES\n   rotation+=mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),random0.w));\n  #endif\n #endif\n return rotation;\n}\n\n#if defined(RENDERMESH)&&(defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE))\nvec3 compute3DRotation(in vec3 rotation,in float age,in float t)\n{ \n #ifdef ROTATIONOVERLIFETIME\n   #ifdef ROTATIONCONSTANT\n     float ageRot=u_rotationConst*age;\n       rotation+=ageRot;\n   #endif\n   #ifdef ROTATIONCURVE\n     rotation+=evaluate_curve_total(u_rotationCurve,t);\n   #endif\n   #ifdef ROTATIONTWOCONSTANTS\n     float ageRot=mix(u_rotationConst,u_rotationConstMax,random0.w)*age;\n       rotation+=ageRot;\n   #endif\n   #ifdef ROTATIONTWOCURVES\n     rotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),random0.w);\n   #endif\n #endif\n #ifdef ROTATIONSEPERATE\n    #ifdef ROTATIONCONSTANT\n     vec3 ageRot=u_rotationConstSeprarate*age;\n           rotation+=ageRot;\n    #endif\n    #ifdef ROTATIONCURVE\n     rotation+=vec3(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveZ,t));\n    #endif\n    #ifdef ROTATIONTWOCONSTANTS\n     vec3 ageRot=mix(u_rotationConstSeprarate,u_rotationConstMaxSeprarate,random0.w)*age;\n           rotation+=ageRot;\n     #endif\n    #ifdef ROTATIONTWOCURVES\n     rotation+=vec3(mix(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveMaxX,t),random0.w)\n           ,mix(evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveMaxY,t),random0.w)\n           ,mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),random0.w));\n    #endif\n #endif\n return rotation;\n}\n#endif\n\nvec2 computeUV(in vec2 uv,in float t)\n{ \n #ifdef TEXTURESHEETANIMATIONCURVE\n  float cycleNormalizedAge=t*u_cycles;\n  float uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);\n  float frame=evaluate_curve_frame(u_uvCurve,uvNormalizedAge);\n  uv.x *= u_subUV.x + u_subUV.z;\n  uv.y *= u_subUV.y + u_subUV.w;\n  float totalULength=frame*u_subUV.x;\n  float floorTotalULength=floor(totalULength);\n   uv.x+=totalULength-floorTotalULength;\n  uv.y+=floorTotalULength*u_subUV.y;\n    #endif\n #ifdef TEXTURESHEETANIMATIONTWOCURVE\n  float cycleNormalizedAge=t*u_cycles;\n  float uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);\n   float frame=floor(mix(evaluate_curve_frame(u_uvCurve,uvNormalizedAge),evaluate_curve_frame(u_uvCurveMax,uvNormalizedAge),random1.x));\n  uv.x *= u_subUV.x + u_subUV.z;\n  uv.y *= u_subUV.y + u_subUV.w;\n  float totalULength=frame*u_subUV.x;\n  float floorTotalULength=floor(totalULength);\n   uv.x+=totalULength-floorTotalULength;\n  uv.y+=floorTotalULength*u_subUV.y;\n    #endif\n return uv;\n}";
+    const premultiplied_alpha_fragment = "#ifdef PREMULTIPLIED_ALPHA\n\n // Get get normal blending with premultipled, use with CustomBlending, OneFactor, OneMinusSrcAlphaFactor, AddEquation.\n gl_FragColor.rgb *= gl_FragColor.a;\n\n#endif\n";
+    const project_vertex = "vec4 mvPosition = modelViewMatrix * vec4( transformed, 1.0 );\n\ngl_Position = projectionMatrix * mvPosition;\n";
+    const roughnessmap_fragment = "float roughnessFactor = roughness;\n\n#ifdef USE_ROUGHNESSMAP\n\n vec4 texelRoughness = texture2D( roughnessMap, vUv );\n\n // reads channel G, compatible with a combined OcclusionRoughnessMetallic (RGB) texture\n roughnessFactor *= texelRoughness.g;\n\n#endif\n";
+    const roughnessmap_pars_fragment = "#ifdef USE_ROUGHNESSMAP\n\n uniform sampler2D roughnessMap;\n\n#endif";
+    const shadowmap_pars_fragment = "#ifdef USE_SHADOWMAP\n\n #if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0//Egret\n\n  uniform sampler2D directionalShadowMap[ NUM_DIR_LIGHTS ];\n  varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHTS ];\n\n #endif\n\n #if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0//Egret\n\n  uniform sampler2D spotShadowMap[ NUM_SPOT_LIGHTS ];\n  varying vec4 vSpotShadowCoord[ NUM_SPOT_LIGHTS ];\n\n #endif\n\n #if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0//Egret\n\n  uniform sampler2D pointShadowMap[ NUM_POINT_LIGHTS ];\n  varying vec4 vPointShadowCoord[ NUM_POINT_LIGHTS ];\n\n #endif\n\n /*\n #if NUM_RECT_AREA_LIGHTS > 0\n\n  // TODO (abelnation): create uniforms for area light shadows\n\n #endif\n */\n\n float texture2DCompare( sampler2D depths, vec2 uv, float compare ) {\n\n  return step( compare, unpackRGBAToDepth( texture2D( depths, uv ) ) );\n\n }\n\n float texture2DShadowLerp( sampler2D depths, vec2 size, vec2 uv, float compare ) {\n\n  const vec2 offset = vec2( 0.0, 1.0 );\n\n  vec2 texelSize = vec2( 1.0 ) / size;\n  vec2 centroidUV = floor( uv * size + 0.5 ) / size;\n\n  float lb = texture2DCompare( depths, centroidUV + texelSize * offset.xx, compare );\n  float lt = texture2DCompare( depths, centroidUV + texelSize * offset.xy, compare );\n  float rb = texture2DCompare( depths, centroidUV + texelSize * offset.yx, compare );\n  float rt = texture2DCompare( depths, centroidUV + texelSize * offset.yy, compare );\n\n  vec2 f = fract( uv * size + 0.5 );\n\n  float a = mix( lb, lt, f.y );\n  float b = mix( rb, rt, f.y );\n  float c = mix( a, b, f.x );\n\n  return c;\n\n }\n\n float getShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowBias, float shadowRadius, vec4 shadowCoord ) {\n\n  float shadow = 1.0;\n\n  shadowCoord.xyz /= shadowCoord.w;\n  shadowCoord.z += shadowBias;//Egret Right-hand\n\n  // if ( something && something ) breaks ATI OpenGL shader compiler\n  // if ( all( something, something ) ) using this instead\n\n  bvec4 inFrustumVec = bvec4 ( shadowCoord.x >= 0.0, shadowCoord.x <= 1.0, shadowCoord.y >= 0.0, shadowCoord.y <= 1.0 );\n  bool inFrustum = all( inFrustumVec );\n\n  bvec2 frustumTestVec = bvec2( inFrustum, shadowCoord.z <= 1.0 );\n\n  bool frustumTest = all( frustumTestVec );\n\n  if ( frustumTest ) {\n\n  #if defined( SHADOWMAP_TYPE_PCF )\n\n   vec2 texelSize = vec2( 1.0 ) / shadowMapSize;\n\n   float dx0 = - texelSize.x * shadowRadius;\n   float dy0 = - texelSize.y * shadowRadius;\n   float dx1 = + texelSize.x * shadowRadius;\n   float dy1 = + texelSize.y * shadowRadius;\n\n   shadow = (\n    texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, dy0 ), shadowCoord.z ) +\n    texture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy0 ), shadowCoord.z ) +\n    texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, dy0 ), shadowCoord.z ) +\n    texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, 0.0 ), shadowCoord.z ) +\n    texture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z ) +\n    texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, 0.0 ), shadowCoord.z ) +\n    texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, dy1 ), shadowCoord.z ) +\n    texture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy1 ), shadowCoord.z ) +\n    texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, dy1 ), shadowCoord.z )\n   ) * ( 1.0 / 9.0 );\n\n  #elif defined( SHADOWMAP_TYPE_PCF_SOFT )\n\n   vec2 texelSize = vec2( 1.0 ) / shadowMapSize;\n\n   float dx0 = - texelSize.x * shadowRadius;\n   float dy0 = - texelSize.y * shadowRadius;\n   float dx1 = + texelSize.x * shadowRadius;\n   float dy1 = + texelSize.y * shadowRadius;\n\n   shadow = (\n    texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx0, dy0 ), shadowCoord.z ) +\n    texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( 0.0, dy0 ), shadowCoord.z ) +\n    texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx1, dy0 ), shadowCoord.z ) +\n    texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx0, 0.0 ), shadowCoord.z ) +\n    texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy, shadowCoord.z ) +\n    texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx1, 0.0 ), shadowCoord.z ) +\n    texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx0, dy1 ), shadowCoord.z ) +\n    texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( 0.0, dy1 ), shadowCoord.z ) +\n    texture2DShadowLerp( shadowMap, shadowMapSize, shadowCoord.xy + vec2( dx1, dy1 ), shadowCoord.z )\n   ) * ( 1.0 / 9.0 );\n\n  #else // no percentage-closer filtering:\n\n   shadow = texture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z );\n\n  #endif\n\n  }\n\n  return shadow;\n\n }\n\n // cubeToUV() maps a 3D direction vector suitable for cube texture mapping to a 2D\n // vector suitable for 2D texture mapping. This code uses the following layout for the\n // 2D texture:\n //\n // xzXZ\n //  y Y\n //\n // Y - Positive y direction\n // y - Negative y direction\n // X - Positive x direction\n // x - Negative x direction\n // Z - Positive z direction\n // z - Negative z direction\n //\n // Source and test bed:\n // https://gist.github.com/tschw/da10c43c467ce8afd0c4\n\n vec2 cubeToUV( vec3 v, float texelSizeY ) {\n\n  // Number of texels to avoid at the edge of each square\n\n  vec3 absV = abs( v );\n\n  // Intersect unit cube\n\n  float scaleToCube = 1.0 / max( absV.x, max( absV.y, absV.z ) );\n  absV *= scaleToCube;\n\n  // Apply scale to avoid seams\n\n  // two texels less per square (one texel will do for NEAREST)\n  v *= scaleToCube * ( 1.0 - 2.0 * texelSizeY );\n\n  // Unwrap\n\n  // space: -1 ... 1 range for each square\n  //\n  // #X##  dim    := ( 4 , 2 )\n  //  # #  center := ( 1 , 1 )\n\n  vec2 planar = v.xy;\n\n  float almostATexel = 1.5 * texelSizeY;\n  float almostOne = 1.0 - almostATexel;\n\n  if ( absV.z >= almostOne ) {\n\n   if ( v.z > 0.0 )\n    planar.x = 4.0 - v.x;\n\n  } else if ( absV.x >= almostOne ) {\n\n   float signX = sign( v.x );\n   planar.x = v.z * signX + 2.0 * signX;\n\n  } else if ( absV.y >= almostOne ) {\n\n   float signY = sign( v.y );\n   planar.x = v.x + 2.0 * signY + 2.0;\n   planar.y = v.z * signY - 2.0;\n\n  }\n\n  // Transform to UV space\n\n  // scale := 0.5 / dim\n  // translate := ( center + 0.5 ) / dim\n  return vec2( 0.125, 0.25 ) * planar + vec2( 0.375, 0.75 );\n\n }\n\n float getPointShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowBias, float shadowRadius, vec4 shadowCoord, float shadowCameraNear, float shadowCameraFar ) {\n\n  vec2 texelSize = vec2( 1.0 ) / ( shadowMapSize * vec2( 4.0, 2.0 ) );\n\n  // for point lights, the uniform @vShadowCoord is re-purposed to hold\n  // the vector from the light to the world-space position of the fragment.\n  vec3 lightToPosition = shadowCoord.xyz;\n\n  // dp = normalized distance from light to fragment position\n  float dp = ( length( lightToPosition ) - shadowCameraNear ) / ( shadowCameraFar - shadowCameraNear ); // need to clamp?\n  dp += shadowBias;\n\n  // bd3D = base direction 3D\n  vec3 bd3D = normalize( lightToPosition );\n\n  #if defined( SHADOWMAP_TYPE_PCF ) || defined( SHADOWMAP_TYPE_PCF_SOFT )\n\n   vec2 offset = vec2( - 1, 1 ) * shadowRadius * texelSize.y;\n\n   return (\n    texture2DCompare( shadowMap, cubeToUV( bd3D + offset.xyy, texelSize.y ), dp ) +\n    texture2DCompare( shadowMap, cubeToUV( bd3D + offset.yyy, texelSize.y ), dp ) +\n    texture2DCompare( shadowMap, cubeToUV( bd3D + offset.xyx, texelSize.y ), dp ) +\n    texture2DCompare( shadowMap, cubeToUV( bd3D + offset.yyx, texelSize.y ), dp ) +\n    texture2DCompare( shadowMap, cubeToUV( bd3D, texelSize.y ), dp ) +\n    texture2DCompare( shadowMap, cubeToUV( bd3D + offset.xxy, texelSize.y ), dp ) +\n    texture2DCompare( shadowMap, cubeToUV( bd3D + offset.yxy, texelSize.y ), dp ) +\n    texture2DCompare( shadowMap, cubeToUV( bd3D + offset.xxx, texelSize.y ), dp ) +\n    texture2DCompare( shadowMap, cubeToUV( bd3D + offset.yxx, texelSize.y ), dp )\n   ) * ( 1.0 / 9.0 );\n\n  #else // no percentage-closer filtering\n\n   return texture2DCompare( shadowMap, cubeToUV( bd3D, texelSize.y ), dp );\n\n  #endif\n\n }\n\n#endif\n";
+    const shadowmap_pars_vertex = "#ifdef USE_SHADOWMAP\n\n #if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0//Egret\n\n  uniform mat4 directionalShadowMatrix[ NUM_DIR_LIGHTS ];\n  varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHTS ];\n\n #endif\n\n #if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0//Egret\n\n  uniform mat4 spotShadowMatrix[ NUM_SPOT_LIGHTS ];\n  varying vec4 vSpotShadowCoord[ NUM_SPOT_LIGHTS ];\n\n #endif\n\n #if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0//Egret\n\n  uniform mat4 pointShadowMatrix[ NUM_POINT_LIGHTS ];\n  varying vec4 vPointShadowCoord[ NUM_POINT_LIGHTS ];\n\n #endif\n\n /*\n #if NUM_RECT_AREA_LIGHTS > 0\n\n  // TODO (abelnation): uniforms for area light shadows\n\n #endif\n */\n\n#endif\n";
+    const shadowmap_vertex = "#ifdef USE_SHADOWMAP\n\n #if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0//Egret\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  vDirectionalShadowCoord[ i ] = directionalShadowMatrix[ i ] * worldPosition;\n\n }\n\n #endif\n\n #if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0//Egret\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\n  vSpotShadowCoord[ i ] = spotShadowMatrix[ i ] * worldPosition;\n\n }\n\n #endif\n\n #if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0//Egret\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  vPointShadowCoord[ i ] = pointShadowMatrix[ i ] * worldPosition;\n\n }\n\n #endif\n\n /*\n #if NUM_RECT_AREA_LIGHTS > 0\n\n  // TODO (abelnation): update vAreaShadowCoord with area light info\n\n #endif\n */\n\n#endif\n";
+    const shadowmask_pars_fragment = "float getShadowMask() {\n\n float shadow = 1.0;\n\n #ifdef USE_SHADOWMAP\n\n #if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0//Egret\n\n DirectionalLight directionalLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\n  // directionalLight = directionalLights[ i ];\n  directionalLight.shadow = int(directionalLights[i * 12 + 6]);\n  directionalLight.shadowBias = directionalLights[i * 12 + 7];\n  directionalLight.shadowRadius = directionalLights[i * 12 + 8];\n  directionalLight.shadowMapSize = vec2(directionalLights[i * 12 + 9], directionalLights[i * 12 + 10]);\n  shadow *= bool( directionalLight.shadow ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n\n }\n\n #endif\n\n #if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0//Egret\n\n SpotLight spotLight;\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\n  // spotLight = spotLights[ i ];\n  spotLight.shadow = int(spotLights[i * 18 + 13]);\n  spotLight.shadowBias = spotLights[i * 18 + 14];\n  spotLight.shadowRadius = spotLights[i * 18 + 15];\n  spotLight.shadowMapSize = vec2(spotLights[i * 18 + 16], spotLights[i * 18 + 17]);\n  shadow *= bool(spotLight.shadow) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n\n }\n\n #endif\n\n #if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0//Egret\n\n PointLight pointLight;\n\n // #pragma unroll_loop\n for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\n  // pointLight = pointLights[ i ];\n  pointLight.shadow = int(pointLights[i * 15 + 8]);\n  pointLight.shadowBias = pointLights[i * 15 * 9];\n  pointLight.shadowRadius = pointLights[i * 15 * 10];\n  pointLight.shadowMapSize = vec2(pointLights[i * 15 * 11],pointLights[i * 15 * 12]);\n  pointLight.shadowCameraNear = pointLights[i * 15 * 13];\n  pointLight.shadowCameraFar = pointLights[i * 15 * 14];\n  shadow *= bool(pointLight.shadow) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n\n }\n\n #endif\n\n /*\n #if NUM_RECT_AREA_LIGHTS > 0\n\n  // TODO (abelnation): update shadow for Area light\n\n #endif\n */\n\n #endif\n\n return shadow;\n\n}\n";
+    const skinbase_vertex = "#ifdef USE_SKINNING\n\n mat4 boneMatX = getBoneMatrix( skinIndex.x );\n mat4 boneMatY = getBoneMatrix( skinIndex.y );\n mat4 boneMatZ = getBoneMatrix( skinIndex.z );\n mat4 boneMatW = getBoneMatrix( skinIndex.w );\n\n#endif";
+    const skinning_base_vert = "#ifdef SKINNING\n    mat4 boneMatX = buildMat4(int(skinIndex.x));\n mat4 boneMatY = buildMat4(int(skinIndex.y));\n mat4 boneMatZ = buildMat4(int(skinIndex.z));\n mat4 boneMatW = buildMat4(int(skinIndex.w));\n \n    mat4 mat = boneMatX*skinWeight.x \n    + boneMatY*skinWeight.y \n    + boneMatZ*skinWeight.z \n    + boneMatW*skinWeight.w;\n    \n    highp vec4 tmpVertex = vec4((mat* position).xyz, 1.0);\n // highp vec4 tmpVertex = vec4(calcVertex(position,skinIndex,skinWeight).xyz, 1.0);\n#else\n    // tmpVertex.xyz = position.xyz;\n highp vec4 tmpVertex = vec4(position.xyz, 1.0);\n#endif";
+    const skinning_pars_vert = "#ifdef SKINNING\nattribute vec4 skinIndex;\nattribute vec4 skinWeight;\nuniform vec4 glstate_vec4_bones[110];\n\nmat4 buildMat4(int index)\n{\n vec4 quat = glstate_vec4_bones[index * 2 + 0];\n vec4 translation = glstate_vec4_bones[index * 2 + 1];\n float xy2 = 2.0 * quat.x * quat.y;\n float xz2 = 2.0 * quat.x * quat.z;\n float xw2 = 2.0 * quat.x * quat.w;\n float yz2 = 2.0 * quat.y * quat.z;\n float yw2 = 2.0 * quat.y * quat.w;\n float zw2 = 2.0 * quat.z * quat.w;\n float xx = quat.x * quat.x;\n float yy = quat.y * quat.y;\n float zz = quat.z * quat.z;\n float ww = quat.w * quat.w;\n mat4 matrix = mat4(\n xx - yy - zz + ww, xy2 + zw2, xz2 - yw2, 0,\n xy2 - zw2, -xx + yy - zz + ww, yz2 + xw2, 0,\n xz2 + yw2, yz2 - xw2, -xx - yy + zz + ww, 0,\n translation.x, translation.y, translation.z, 1);\n return matrix;\n}\n#endif";
+    const skinning_pars_vertex = "#ifdef USE_SKINNING\n\n uniform mat4 bindMatrix;\n uniform mat4 bindMatrixInverse;\n\n #ifdef BONE_TEXTURE\n\n  uniform sampler2D boneTexture;\n  uniform int boneTextureSize;\n\n  mat4 getBoneMatrix( const in float i ) {\n\n   float j = i * 4.0;\n   float x = mod( j, float( boneTextureSize ) );\n   float y = floor( j / float( boneTextureSize ) );\n\n   float dx = 1.0 / float( boneTextureSize );\n   float dy = 1.0 / float( boneTextureSize );\n\n   y = dy * ( y + 0.5 );\n\n   vec4 v1 = texture2D( boneTexture, vec2( dx * ( x + 0.5 ), y ) );\n   vec4 v2 = texture2D( boneTexture, vec2( dx * ( x + 1.5 ), y ) );\n   vec4 v3 = texture2D( boneTexture, vec2( dx * ( x + 2.5 ), y ) );\n   vec4 v4 = texture2D( boneTexture, vec2( dx * ( x + 3.5 ), y ) );\n\n   mat4 bone = mat4( v1, v2, v3, v4 );\n\n   return bone;\n\n  }\n\n #else\n\n  uniform mat4 boneMatrices[ MAX_BONES ];\n\n  mat4 getBoneMatrix( const in float i ) {\n\n   mat4 bone = boneMatrices[ int(i) ];\n   return bone;\n\n  }\n\n #endif\n\n#endif\n";
+    const skinning_vertex = "#ifdef USE_SKINNING\n\n vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );\n\n vec4 skinned = vec4( 0.0 );\n skinned += boneMatX * skinVertex * skinWeight.x;\n skinned += boneMatY * skinVertex * skinWeight.y;\n skinned += boneMatZ * skinVertex * skinWeight.z;\n skinned += boneMatW * skinVertex * skinWeight.w;\n\n transformed = ( bindMatrixInverse * skinned ).xyz;\n\n#endif\n";
+    const skinnormal_vertex = "#ifdef USE_SKINNING\n\n mat4 skinMatrix = mat4( 0.0 );\n skinMatrix += skinWeight.x * boneMatX;\n skinMatrix += skinWeight.y * boneMatY;\n skinMatrix += skinWeight.z * boneMatZ;\n skinMatrix += skinWeight.w * boneMatW;\n skinMatrix  = bindMatrixInverse * skinMatrix * bindMatrix;\n\n objectNormal = vec4( skinMatrix * vec4( objectNormal, 0.0 ) ).xyz;\n\n#endif\n";
+    const specularmap_fragment = "float specularStrength;\n\n#ifdef USE_SPECULARMAP\n\n vec4 texelSpecular = texture2D( specularMap, vUv );\n specularStrength = texelSpecular.r;\n\n#else\n\n specularStrength = 1.0;\n\n#endif";
+    const specularmap_pars_fragment = "#ifdef USE_SPECULARMAP\n\n uniform sampler2D specularMap;\n\n#endif";
     const tbn = "mat3 tbn(vec3 N, vec3 p, vec2 uv) {\n    vec3 dp1 = dFdx(p.xyz);\n    vec3 dp2 = dFdy(p.xyz);\n    vec2 duv1 = dFdx(uv.st);\n    vec2 duv2 = dFdy(uv.st);\n    vec3 dp2perp = cross(dp2, N);\n    vec3 dp1perp = cross(N, dp1);\n    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;\n    vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;\n    float invmax = 1.0 / sqrt(max(dot(T,T), dot(B,B)));\n    return mat3(T * invmax, B * invmax, N);\n}";
+    const tonemapping_fragment = "#if defined( TONE_MAPPING )\n\n  gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );\n\n#endif\n";
+    const tonemapping_pars_fragment = "#ifndef saturate\n #define saturate(a) clamp( a, 0.0, 1.0 )\n#endif\n\nuniform float toneMappingExposure;\nuniform float toneMappingWhitePoint;\n\n// exposure only\nvec3 LinearToneMapping( vec3 color ) {\n\n return toneMappingExposure * color;\n\n}\n\n// source: https://www.cs.utah.edu/~reinhard/cdrom/\nvec3 ReinhardToneMapping( vec3 color ) {\n\n color *= toneMappingExposure;\n return saturate( color / ( vec3( 1.0 ) + color ) );\n\n}\n\n// source: http://filmicgames.com/archives/75\n#define Uncharted2Helper( x ) max( ( ( x * ( 0.15 * x + 0.10 * 0.50 ) + 0.20 * 0.02 ) / ( x * ( 0.15 * x + 0.50 ) + 0.20 * 0.30 ) ) - 0.02 / 0.30, vec3( 0.0 ) )\nvec3 Uncharted2ToneMapping( vec3 color ) {\n\n // John Hable's filmic operator from Uncharted 2 video game\n color *= toneMappingExposure;\n return saturate( Uncharted2Helper( color ) / Uncharted2Helper( vec3( toneMappingWhitePoint ) ) );\n\n}\n\n// source: http://filmicgames.com/archives/75\nvec3 OptimizedCineonToneMapping( vec3 color ) {\n\n // optimized filmic operator by Jim Hejl and Richard Burgess-Dawson\n color *= toneMappingExposure;\n color = max( vec3( 0.0 ), color - 0.004 );\n return pow( ( color * ( 6.2 * color + 0.5 ) ) / ( color * ( 6.2 * color + 1.7 ) + 0.06 ), vec3( 2.2 ) );\n\n}\n";
     const transpose = "mat4 transpose(mat4 inMatrix) {\n    vec4 i0 = inMatrix[0];\n    vec4 i1 = inMatrix[1];\n    vec4 i2 = inMatrix[2];\n    vec4 i3 = inMatrix[3];\n    mat4 outMatrix = mat4(\n        vec4(i0.x, i1.x, i2.x, i3.x),\n        vec4(i0.y, i1.y, i2.y, i3.y),\n        vec4(i0.z, i1.z, i2.z, i3.z),\n        vec4(i0.w, i1.w, i2.w, i3.w)\n    );\n    return outMatrix;\n}";
-    const tsn = "mat3 tsn(vec3 N, vec3 V, vec2 uv) {\n\n    vec3 q0 = dFdx( V.xyz );\n    vec3 q1 = dFdy( V.xyz );\n    vec2 st0 = dFdx( uv.st );\n    vec2 st1 = dFdy( uv.st );\n\n    vec3 S = normalize( q0 * st1.t - q1 * st0.t );\n    vec3 T = normalize( -q0 * st1.s + q1 * st0.s );\n    // vec3 N = normalize( N );\n\n    mat3 tsn = mat3( S, T, N );\n    return tsn;\n}";
+    const uv2_pars_fragment = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n varying vec2 vUv2;\n\n#endif";
+    const uv2_pars_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n attribute vec2 uv2;\n varying vec2 vUv2;\n\n#endif";
+    const uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n vUv2 = uv2;\n\n#endif";
+    const uv_pars_fragment = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n\n#endif";
+    const uv_pars_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n uniform mat3 uvTransform;\n\n#endif\n";
+    const uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n\n#endif";
+    const worldpos_vertex = "#if defined( USE_ENVMAP ) || defined( DISTANCE ) || defined ( USE_SHADOWMAP )\n\n vec4 worldPosition = modelMatrix * vec4( transformed, 1.0 );\n\n#endif\n";
 }
 declare namespace RES.processor {
+    const ShaderProcessor: RES.processor.Processor;
     const TextureDescProcessor: RES.processor.Processor;
     const TextureProcessor: RES.processor.Processor;
-    const GLTFBinaryProcessor: RES.processor.Processor;
-    const GLTFProcessor: RES.processor.Processor;
-    const GLTFShaderProcessor: RES.processor.Processor;
+    const MaterialProcessor: RES.processor.Processor;
+    const MeshProcessor: RES.processor.Processor;
+    const AnimationProcessor: RES.processor.Processor;
     const PrefabProcessor: RES.processor.Processor;
     const SceneProcessor: RES.processor.Processor;
 }
@@ -7127,32 +10219,160 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    type RunEgretOptions = {
-        antialias: boolean;
-        defaultScene?: string;
-        contentWidth?: number;
-        contentHeight?: number;
-        option?: RequiredRuntimeOptions;
-        canvas?: HTMLCanvasElement;
-        webgl?: WebGLRenderingContext;
-        isEditor?: boolean;
-        isPlaying?: boolean;
-        systems?: any[];
-    };
-    type RequiredRuntimeOptions = {
-        antialias: boolean;
-        contentWidth: number;
-        contentHeight: number;
-    };
     /**
-     * 引擎启动入口
+     *
      */
-    function runEgret(options?: RunEgretOptions): void;
+    class Mesh extends BaseMesh {
+        /**
+         *
+         */
+        static create(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
+            [key: string]: gltf.AccessorType;
+        } | null, drawMode?: gltf.DrawMode): any;
+        static create(config: GLTF, buffers: Uint32Array[], name: string): any;
+        /**
+         * @internal
+         */
+        readonly _ibos: WebGLBuffer[];
+        /**
+         * @internal
+         */
+        _vbo: WebGLBuffer | null;
+        dispose(): boolean;
+        _createBuffer(): void;
+        /**
+         *
+         */
+        uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number): void;
+        /**
+         *
+         */
+        uploadSubIndexBuffer(subMeshIndex?: number): void;
+    }
 }
-interface Window {
-    canvas: HTMLCanvasElement;
-    paper: any;
-    egret3d: any;
+declare namespace egret3d {
+    const enum TextureFormatEnum {
+        RGBA = 1,
+        RGB = 2,
+        Gray = 3,
+        PVRTC4_RGB = 4,
+        PVRTC4_RGBA = 4,
+        PVRTC2_RGB = 4,
+        PVRTC2_RGBA = 4,
+    }
+    interface ITexture {
+        texture: WebGLTexture;
+        width: number;
+        height: number;
+        dispose(): void;
+        caclByteLength(): number;
+    }
+    interface IRenderTarget extends ITexture {
+        use(): void;
+    }
+    abstract class GLTexture extends egret3d.Texture implements ITexture {
+        /**
+         * @internal
+         */
+        _texture: WebGLTexture;
+        protected _width: number;
+        protected _height: number;
+        constructor(name?: string, width?: number, height?: number);
+        readonly texture: WebGLTexture;
+        readonly width: number;
+        readonly height: number;
+    }
+    /**
+     *
+     */
+    class GLTexture2D extends GLTexture {
+        static createColorTexture(name: string, r: number, g: number, b: number): GLTexture2D;
+        static createGridTexture(name: string): GLTexture2D;
+        protected _mipmap: boolean;
+        protected _format: TextureFormatEnum;
+        protected _reader: TextureReader;
+        constructor(name?: string, width?: number, height?: number, format?: TextureFormatEnum);
+        uploadImage(img: HTMLImageElement | Uint8Array, mipmap: boolean, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
+        caclByteLength(): number;
+        dispose(): boolean;
+        getReader(redOnly?: boolean): TextureReader;
+    }
+    abstract class RenderTarget implements IRenderTarget {
+        /**
+         * @internal
+         */
+        _texture: WebGLTexture;
+        protected _width: number;
+        protected _height: number;
+        protected _fbo: WebGLFramebuffer;
+        protected _renderbuffer: WebGLRenderbuffer;
+        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
+        use(): void;
+        dispose(): void;
+        caclByteLength(): number;
+        readonly texture: WebGLTexture;
+        readonly width: number;
+        readonly height: number;
+    }
+    class GlRenderTarget extends RenderTarget {
+        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
+        use(): void;
+    }
+    class GlRenderTargetCube extends RenderTarget {
+        activeCubeFace: number;
+        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
+        use(): void;
+    }
+    class TextureReader {
+        readonly gray: boolean;
+        readonly width: number;
+        readonly height: number;
+        readonly data: Uint8Array;
+        constructor(texRGBA: WebGLTexture, width: number, height: number, gray?: boolean);
+        getPixel(u: number, v: number): any;
+    }
+    class WriteableTexture2D implements ITexture {
+        width: number;
+        height: number;
+        format: TextureFormatEnum;
+        texture: WebGLTexture;
+        constructor(format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
+        dispose(): void;
+        caclByteLength(): number;
+    }
+}
+declare namespace egret3d {
+    /**
+     * @internal
+     */
+    interface WebGLActiveAttribute {
+        name: string;
+        size: number;
+        type: number;
+        location: number;
+    }
+    /**
+     * @internal
+     */
+    interface WebGLActiveUniform {
+        name: string;
+        size: number;
+        type: number;
+        location: WebGLUniformLocation;
+        textureUnits?: number[];
+    }
+    /**
+     * @internal
+     * WebGLProgram的包装类
+     */
+    class GlProgram {
+        id: number;
+        program: WebGLProgram;
+        attributes: WebGLActiveAttribute[];
+        contextUniforms: WebGLActiveUniform[];
+        uniforms: WebGLActiveUniform[];
+        constructor(webglProgram: WebGLProgram);
+    }
 }
 declare namespace egret3d {
     /**
@@ -7164,7 +10384,7 @@ declare namespace egret3d {
         }[] | {
             componentClass: typeof Egret2DRenderer;
         }[] | {
-            componentClass: typeof DirectLight[];
+            componentClass: typeof DirectionalLight[];
         }[])[];
         private readonly _drawCalls;
         private readonly _renderState;
@@ -7172,10 +10392,11 @@ declare namespace egret3d {
         private readonly _lightCamera;
         private readonly _filteredLights;
         private _cacheContextVersion;
+        private _cacheSubMeshIndex;
         private _cacheMaterialVerision;
         private _cacheContext;
-        private _cacheMaterial;
         private _cacheMesh;
+        private _cacheMaterial;
         private _updateContextUniforms(program, context, technique, forceUpdate);
         private _updateUniforms(program, material, technique, forceUpdate);
         private _updateAttributes(program, mesh, subMeshIndex, technique, forceUpdate);
@@ -7264,161 +10485,32 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    type RunEgretOptions = {
+        antialias: boolean;
+        defaultScene?: string;
+        contentWidth?: number;
+        contentHeight?: number;
+        option?: RequiredRuntimeOptions;
+        canvas?: HTMLCanvasElement;
+        webgl?: WebGLRenderingContext;
+        playerMode?: paper.PlayerMode;
+        isPlaying?: boolean;
+        systems?: any[];
+    };
+    type RequiredRuntimeOptions = {
+        antialias: boolean;
+        contentWidth: number;
+        contentHeight: number;
+    };
     /**
-     * @internal
+     * 引擎启动入口
      */
-    interface WebGLActiveAttribute {
-        name: string;
-        size: number;
-        type: number;
-        location: number;
-    }
-    /**
-     * @internal
-     */
-    interface WebGLActiveUniform {
-        name: string;
-        size: number;
-        type: number;
-        location: WebGLUniformLocation;
-        textureUnits?: number[];
-    }
-    /**
-     * @internal
-     * WebGLProgram的包装类
-     */
-    class GlProgram {
-        id: number;
-        program: WebGLProgram;
-        attributes: WebGLActiveAttribute[];
-        uniforms: WebGLActiveUniform[];
-        constructor(webglProgram: WebGLProgram);
-    }
+    function runEgret(options?: RunEgretOptions): void;
 }
-declare namespace egret3d {
-    const enum TextureFormatEnum {
-        RGBA = 1,
-        RGB = 2,
-        Gray = 3,
-        PVRTC4_RGB = 4,
-        PVRTC4_RGBA = 4,
-        PVRTC2_RGB = 4,
-        PVRTC2_RGBA = 4,
-    }
-    interface ITexture {
-        texture: WebGLTexture;
-        width: number;
-        height: number;
-        dispose(): void;
-        caclByteLength(): number;
-    }
-    interface IRenderTarget extends ITexture {
-        use(): void;
-    }
-    abstract class GLTexture extends egret3d.Texture implements ITexture {
-        /**
-         * @internal
-         */
-        _texture: WebGLTexture;
-        protected _width: number;
-        protected _height: number;
-        constructor(name?: string, width?: number, height?: number);
-        dispose(): void;
-        caclByteLength(): number;
-        readonly texture: WebGLTexture;
-        readonly width: number;
-        readonly height: number;
-    }
-    /**
-     *
-     */
-    class GLTexture2D extends GLTexture {
-        static createColorTexture(name: string, r: number, g: number, b: number): GLTexture2D;
-        static createGridTexture(name: string): GLTexture2D;
-        protected _mipmap: boolean;
-        protected _format: TextureFormatEnum;
-        protected _reader: TextureReader;
-        constructor(name?: string, width?: number, height?: number, format?: TextureFormatEnum);
-        uploadImage(img: HTMLImageElement | Uint8Array, mipmap: boolean, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
-        caclByteLength(): number;
-        dispose(): void;
-        getReader(redOnly?: boolean): TextureReader;
-    }
-    abstract class RenderTarget implements IRenderTarget {
-        static useNull(): void;
-        /**
-         * @internal
-         */
-        _texture: WebGLTexture;
-        protected _width: number;
-        protected _height: number;
-        protected _fbo: WebGLFramebuffer;
-        protected _renderbuffer: WebGLRenderbuffer;
-        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
-        use(): void;
-        dispose(): void;
-        caclByteLength(): number;
-        readonly texture: WebGLTexture;
-        readonly width: number;
-        readonly height: number;
-    }
-    class GlRenderTarget extends RenderTarget {
-        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
-        use(): void;
-    }
-    class GlRenderTargetCube extends RenderTarget {
-        activeCubeFace: number;
-        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
-        use(): void;
-    }
-    class TextureReader {
-        readonly gray: boolean;
-        readonly width: number;
-        readonly height: number;
-        readonly data: Uint8Array;
-        constructor(texRGBA: WebGLTexture, width: number, height: number, gray?: boolean);
-        getPixel(u: number, v: number): any;
-    }
-    class WriteableTexture2D implements ITexture {
-        width: number;
-        height: number;
-        format: TextureFormatEnum;
-        texture: WebGLTexture;
-        constructor(format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
-        dispose(): void;
-        caclByteLength(): number;
-    }
-}
-declare namespace egret3d {
-    /**
-     * @deprecated
-     */
-    const Prefab: typeof paper.Prefab;
-    /**
-     * @deprecated
-     */
-    type Prefab = paper.Prefab;
-    /**
-     * @deprecated
-     */
-    const RawScene: typeof paper.RawScene;
-    /**
-     * @deprecated
-     */
-    type RawScene = paper.RawScene;
-}
-declare namespace paper {
-    /**
-     * @internal
-     */
-    class EnableSystem extends BaseSystem {
-        protected readonly _interests: {
-            componentClass: any;
-            type: number;
-            isBehaviour: boolean;
-        }[];
-        onAddComponent(component: Behaviour): void;
-    }
+interface Window {
+    canvas: HTMLCanvasElement;
+    paper: any;
+    egret3d: any;
 }
 declare namespace paper.editor {
     /**
@@ -7442,6 +10534,7 @@ declare namespace paper.editor {
         static readonly activeEditorModel: EditorModel;
         private static setActiveModel(model);
         private static activeScene(scene);
+        private static currentEditInfo;
         /**
          * 编辑场景
          * @param sceneUrl 场景资源URL
@@ -7452,6 +10545,10 @@ declare namespace paper.editor {
          * @param prefabUrl 预置体资源URL
          */
         static editPrefab(prefabUrl: string): Promise<void>;
+        /**
+         * 刷新
+         */
+        static refresh(): Promise<void>;
         /**
          * 撤销
          */
@@ -7473,13 +10570,19 @@ declare namespace paper {
     /**
      * @internal
      */
-    class StartSystem extends BaseSystem {
-        protected readonly _interests: {
-            componentClass: any;
-            type: number;
-            isBehaviour: boolean;
-        }[];
-        onAddComponent(component: Behaviour): void;
+    class GroupComponent extends paper.BaseComponent {
+        componentIndex: number;
+        componentClass: ComponentClass<BaseComponent>;
+        private readonly _components;
+        /**
+         * @internal
+         */
+        _addComponent(component: BaseComponent): void;
+        /**
+         * @internal
+         */
+        _removeComponent(component: BaseComponent): void;
+        readonly components: ReadonlyArray<BaseComponent>;
     }
 }
 declare namespace paper.editor {
@@ -7502,6 +10605,7 @@ declare namespace paper.editor {
         static ADD_COMPONENT: string;
         static REMOVE_COMPONENT: string;
         static UPDATE_GAMEOBJECTS_HIREARCHY: string;
+        static SAVE_ASSET: string;
         constructor(type: string, data?: any);
     }
     enum ModifyObjectType {
@@ -7532,22 +10636,12 @@ declare namespace paper.editor {
         setTransformProperty(propName: string, propValue: any, target: BaseComponent): void;
         createModifyGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): void;
         createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any;
-        createModifyPrefabGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): void;
-        createModifyPrefabComponentPropertyState(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): void;
-        createRemoveComponentFromPrefab(stateData: any): void;
-        createAddComponentToPrefab(sourceData: any, instanceDatas: any[]): void;
         createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]): void;
-        createPrefabState(prefab: any): void;
+        createPrefabState(prefab: Prefab, parent?: GameObject): void;
         serializeProperty(value: any, editType: editor.EditType): any;
-        deserializeProperty(serializeData: any, editType: editor.EditType): Promise<any>;
-        createGameObject(parentList: GameObject[], createType: string): void;
+        deserializeProperty(serializeData: any, editType: editor.EditType): any;
+        createGameObject(parentList: (GameObject | Scene)[], createType: string): void;
         addComponent(gameObjectUUid: string, compClzName: string): void;
-        /**
-        *  TODO:因gameobject未提供通过组件实例添加组件的方法，暂时这样处理
-        * @param gameObject
-        * @param component
-        */
-        addComponentToGameObject(gameObject: GameObject, component: BaseComponent): void;
         removeComponent(gameObjectUUid: string, componentUUid: string): void;
         getComponentById(gameObject: GameObject, componentId: string): BaseComponent | null;
         getComponentByAssetId(gameObject: GameObject, assetId: string): BaseComponent | null;
@@ -7615,103 +10709,29 @@ declare namespace paper.editor {
         /**将对象按照层级进行排序
          */
         sortGameObjectsForHierarchy(gameobjects: paper.GameObject[]): paper.GameObject[];
-        createApplyPrefabState(applyGameObjectPropertyList: any[], applyComponentPropertyList: any[]): void;
-        createRevertPrefabState(modifyGameObjectPropertyList: any[], modifyComponentPropertyList: any[]): void;
-        compareValue(a: any, b: any): boolean;
-        private equal(a, b);
+        createApplyPrefabState(applyData: editor.ApplyData, applyPrefabInstanceId: string, prefab: paper.Prefab): void;
+        createRevertPrefabState(revertData: editor.revertData, revertPrefabInstanceId: string): void;
+        deepClone<T>(obj: T): T;
+        updateAsset(asset: Asset, prefabInstance?: GameObject | null): void;
+        private _cacheIds;
+        private findAssetRefs(target, as, refs?);
+        private findFromChildren(source, as, refs, parent, key);
+        getAllGameObjectsFromPrefabInstance(gameObj: paper.GameObject, objs?: paper.GameObject[] | null): GameObject[];
+        private setMaterialTexture(target, url, propName);
+        modifyMaterialPropertyValues(target: egret3d.Material, valueList: any[]): Promise<void>;
     }
 }
 declare namespace paper.editor {
     class EditorSceneModel {
+        private viewCache;
         readonly editorScene: Scene;
+        private currentModel;
         editorModel: EditorModel;
         private editorCameraScript;
         private pickGameScript;
         private geoController;
         private cameraObject;
         init(): void;
-    }
-}
-declare namespace paper.editor {
-    class GeoController extends paper.Behaviour {
-        selectedGameObjs: GameObject[];
-        clearSelected(): void;
-        private _isEditing;
-        private _geoCtrlMode;
-        private _modeCanChange;
-        geoCtrlMode: string;
-        private _geoCtrlType;
-        geoCtrlType: string;
-        private _editorModel;
-        editorModel: EditorModel;
-        constructor();
-        private bindMouse;
-        private bindKeyboard;
-        onUpdate(): void;
-        private _oldTransform;
-        update(): void;
-        /**
-         * 鼠标射线 改变dragMode以及控制杆颜色
-         */
-        private _oldResult;
-        private mouseRayCastUpdate();
-        private checkIntersects(ray, target);
-        /**
-         * 几何操作逻辑
-         */
-        private _dragMode;
-        private _dragOffset;
-        private _delta;
-        private _newPosition;
-        private _ctrlPos;
-        private _ctrlRot;
-        private _dragPlanePoint;
-        private _dragPlaneNormal;
-        private _initRotation;
-        private _oldLocalScale;
-        private _cameraObject;
-        private updateInLocalMode();
-        private updateInWorldMode();
-        /**
-         * 输入监听
-         */
-        private inputUpdate();
-        /**
-         * 添加监听事件
-         */
-        private _addEventListener();
-        private selectGameObjects;
-        private _selectGameObjects(gameObjects);
-        private changeProperty;
-        private _changeProperty(data);
-        private changeEditMode;
-        private _changeEditMode(mode);
-        private changeEditType;
-        private _changeEditType(type);
-        /**
-         * 创建控制杆GameObjcet
-         */
-        private ball;
-        private xAxis;
-        private yAxis;
-        private zAxis;
-        private xRot;
-        private yRot;
-        private zRot;
-        private xScl;
-        private yScl;
-        private zScl;
-        private pCtrl;
-        private rCtrl;
-        private sCtrl;
-        private controller;
-        controllerPool: GameObject[];
-        _addGizmoController(): void;
-        /**
-         * type 0:控制位置 1:控制旋转
-         */
-        private _createAxis(color, type);
-        _removeGizmoController(): void;
     }
 }
 declare namespace paper.editor {
@@ -7722,12 +10742,14 @@ declare namespace paper.editor {
         private _cameraObject;
         private bindMouse;
         private bindKeyboard;
+        readonly onGeoControll: boolean;
         private mainGeo;
         private readonly controller;
         private _editorModel;
         editorModel: EditorModel;
         private geoCtrlMode;
         private geoCtrlType;
+        private coord;
         constructor();
         onUpdate(): void;
         private updateInLocalMode();
@@ -7741,43 +10763,76 @@ declare namespace paper.editor {
         private changeEditType(type);
         private addEventListener();
         private selectGameObjects(gameObjs);
+        private drawCoord();
     }
 }
 declare namespace paper {
     /**
      *
      */
-    class UpdateSystem extends BaseSystem {
-        protected readonly _interests: {
-            componentClass: any;
-            type: number;
-            isBehaviour: boolean;
-        }[];
-        onUpdate(deltaTime: number): void;
+    class MissingComponent extends BaseComponent {
+        missingObject: any | null;
+    }
+}
+declare namespace paper.editor {
+    class GeoContainer extends BaseGeo {
+        private geos;
+        private selectedGeo;
+        readonly onGeoControll: boolean;
+        constructor();
+        onSet(): void;
+        checkIntersect(ray: egret3d.Ray): BaseGeo;
+        private clear();
+        changeType(type: string): void;
+        wasPressed_local(ray: egret3d.Ray, selected: any): any;
+        isPressed_local(ray: egret3d.Ray, selected: any): void;
+        wasPressed_world(ray: egret3d.Ray, selected: any): any;
+        isPressed_world(ray: egret3d.Ray, selected: any): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
     class xAxis extends BaseGeo {
         constructor();
         onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
     class xyAxis extends BaseGeo {
         constructor();
-        private _dragPlaneNormal1;
-        private _dragOffset1;
         onSet(): void;
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
+    }
+}
+declare namespace paper.editor {
+    class xzAxis extends BaseGeo {
+        constructor();
+        onSet(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
+    }
+}
+declare namespace paper.editor {
+    class yzAxis extends BaseGeo {
+        constructor();
+        onSet(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -7788,7 +10843,7 @@ declare namespace paper.editor {
         isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
         isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
@@ -7796,20 +10851,21 @@ declare namespace paper.editor {
         constructor();
         onSet(): void;
         wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasReleased(selectedGameObjs: GameObject[]): void;
     }
 }
 declare namespace paper.editor {
     class xRot extends BaseGeo {
         constructor();
+        private fan;
         onSet(): void;
-        wasPressed_local(): void;
-        isPressed_local(): void;
-        wasPressed_world(): void;
-        isPressed_world(): void;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(): void;
     }
 }
@@ -7817,10 +10873,11 @@ declare namespace paper.editor {
     class yRot extends BaseGeo {
         constructor();
         onSet(): void;
-        wasPressed_local(): void;
-        isPressed_local(): void;
-        wasPressed_world(): void;
-        isPressed_world(): void;
+        private fan;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(): void;
     }
 }
@@ -7828,10 +10885,23 @@ declare namespace paper.editor {
     class zRot extends BaseGeo {
         constructor();
         onSet(): void;
-        wasPressed_local(): void;
-        isPressed_local(): void;
-        wasPressed_world(): void;
-        isPressed_world(): void;
+        private fan;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasReleased(): void;
+    }
+}
+declare namespace paper.editor {
+    class ballRot extends BaseGeo {
+        constructor();
+        onSet(): void;
+        drawBall(SPHERE_DIV: number): egret3d.Mesh;
+        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
+        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
+        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
         wasReleased(): void;
     }
 }
@@ -7872,6 +10942,55 @@ declare namespace paper.editor {
     type EventData = {
         isUndo: boolean;
     };
+    type ApplyData = {
+        [linkedId: string]: {
+            addGameObjects?: {
+                serializeData: any;
+                id: string;
+                cacheSerializeData?: {
+                    [key: string]: ISerializedData[];
+                };
+            }[];
+            addComponents?: {
+                serializeData: any;
+                id: string;
+                gameObjId: string;
+                cacheSerializeData?: {
+                    [key: string]: ISerializedData;
+                };
+            }[];
+            modifyGameObjectPropertyList?: {
+                newValueList: any[];
+                preValueCopylist: any[];
+            }[];
+            modifyComponentPropertyList?: {
+                componentId: string;
+                newValueList: any[];
+                preValueCopylist: any[];
+            }[];
+        };
+    };
+    type revertData = {
+        [linkedId: string]: {
+            revertGameObjects?: {
+                serializeData: any;
+                id: string;
+            }[];
+            revertComponents?: {
+                serializeData: any;
+                id?: string;
+            }[];
+            modifyGameObjectPropertyList?: {
+                newValueList: any[];
+                preValueCopylist: any[];
+            }[];
+            modifyComponentPropertyList?: {
+                componentId: string;
+                newValueList: any[];
+                preValueCopylist: any[];
+            }[];
+        };
+    };
     const EventType: {
         HistoryState: string;
         HistoryAdd: string;
@@ -7908,18 +11027,30 @@ declare namespace paper {
     /**
      *
      */
-    class LateUpdateSystem extends BaseSystem {
-        protected readonly _interests: {
-            componentClass: any;
-            type: number;
-            isBehaviour: boolean;
-        }[];
-        private readonly _laterCalls;
-        onUpdate(deltaTime: number): void;
+    class Clock extends SingletonComponent {
+        maxFixedSubSteps: number;
+        fixedDeltaTime: number;
+        timeScale: number;
+        private _frameCount;
+        private _beginTime;
+        private _lastTime;
+        private _delayTime;
+        private _unscaledTime;
+        private _unscaledDeltaTime;
         /**
-         *
+         * @internal
          */
-        callLater(callback: () => void): void;
+        _fixedTime: number;
+        initialize(): void;
+        /**
+         * @internal
+         */
+        update(time?: number): void;
+        readonly frameCount: number;
+        readonly time: number;
+        readonly deltaTime: number;
+        readonly unscaledTime: number;
+        readonly unscaledDeltaTime: number;
     }
 }
 declare namespace paper.editor {
@@ -7958,7 +11089,7 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class CreateGameObjectState extends BaseState {
         static toString(): string;
-        static create(parentList: GameObject[], createType: string): CreateGameObjectState | null;
+        static create(parentList: (GameObject | Scene)[], createType: string): CreateGameObjectState | null;
         infos: {
             parentUUID: string;
             serializeData: any;
@@ -8013,7 +11144,8 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class AddComponentState extends BaseState {
         static toString(): string;
-        static create(data?: any): AddComponentState | null;
+        static create(gameObjectUUid: string, compClzName: string): AddComponentState | null;
+        private readonly stateData;
         undo(): boolean;
         redo(): boolean;
     }
@@ -8021,7 +11153,8 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class RemoveComponentState extends BaseState {
         static toString(): string;
-        static create(data?: any): RemoveComponentState | null;
+        static create(gameObjectUUid: string, componentUUid: string, cacheSerializeData: any): RemoveComponentState | null;
+        private readonly stateData;
         undo(): boolean;
         redo(): boolean;
     }
@@ -8041,51 +11174,9 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
-    class ModifyPrefabGameObjectPropertyState extends BaseState {
-        static toString(): string;
-        static create(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyPrefabGameObjectPropertyState | null;
-        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
-        /**
-         * 修改预制体游戏对象属性,目前只支持修改根对象
-         * @param gameObjectId
-         * @param valueList
-         */
-        private modifyPrefabGameObjectPropertyValues(gameObjectUUid, valueList);
-        undo(): boolean;
-        redo(): boolean;
-    }
-}
-declare namespace paper.editor {
-    class ModifyPrefabComponentPropertyState extends BaseState {
-        static toString(): string;
-        static create(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyPrefabComponentPropertyState | null;
-        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
-        modifyPrefabComponentPropertyValues(gameObjUUid: string, componentUUid: string, valueList: any[]): Promise<void>;
-        undo(): boolean;
-        redo(): boolean;
-    }
-}
-declare namespace paper.editor {
-    class RemovePrefabComponentState extends BaseState {
-        static toString(): string;
-        static create(data?: any): RemovePrefabComponentState | null;
-        undo(): boolean;
-        redo(): boolean;
-    }
-}
-declare namespace paper.editor {
-    class AddPrefabComponentState extends BaseState {
-        static toString(): string;
-        static create(sourceData: any, instanceDatas: any[]): AddPrefabComponentState | null;
-        undo(): boolean;
-        private removeComponent(data);
-        redo(): boolean;
-    }
-}
-declare namespace paper.editor {
     class ModifyAssetPropertyState extends BaseState {
         static toString(): string;
-        static create(data?: any): ModifyAssetPropertyState | null;
+        static create(assetUrl: string, newValueList: any[], preValueCopylist: any[]): ModifyAssetPropertyState | null;
         modifyAssetPropertyValues(assetUrl: string, valueList: any[]): Promise<void>;
         undo(): boolean;
         redo(): boolean;
@@ -8094,7 +11185,8 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class CreatePrefabState extends BaseState {
         static toString(): string;
-        static create(data?: any): CreatePrefabState | null;
+        static create(prefab: Prefab, parent?: GameObject): CreatePrefabState | null;
+        private readonly stateData;
         undo(): boolean;
         redo(): boolean;
     }
@@ -8112,6 +11204,43 @@ declare namespace paper.editor {
         undo(): boolean;
         serialize(): any;
         deserialize(data: any): void;
+    }
+}
+declare namespace paper.editor {
+    class ApplyPrefabInstanceState extends BaseState {
+        private firstRedo;
+        static toString(): string;
+        static create(applyData: editor.ApplyData, applyPrefabRootId: string, prefab: paper.Prefab): ApplyPrefabInstanceState | null;
+        private readonly stateData;
+        undo(): boolean;
+        getAllUUidFromGameObject(gameObj: paper.GameObject, uuids?: string[] | null): string[];
+        setLinkedId(gameObj: GameObject, ids: string[]): void;
+        clearLinkedId(gameObj: GameObject): void;
+        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
+        private modifyPrefabGameObjectPropertyValues(linkedId, tempObj, valueList);
+        modifyPrefabComponentPropertyValues(linkedId: string, componentUUid: string, tempObj: GameObject, valueList: any[]): void;
+        setGameObjectPrefabRootId(gameObj: GameObject, rootID: string): void;
+        getGameObjectsByLinkedId(linkedId: string, filterApplyRootId: string): GameObject[];
+        getGameObjectByLinkedId(gameObj: paper.GameObject, linkedID: string): GameObject;
+        getGameObjectByUUid(gameObj: GameObject, uuid: string): GameObject;
+        redo(): boolean;
+        private clearGameObjectExtrasInfo(gameObj);
+        private clearExtrasFromSerilizeData(data);
+    }
+}
+declare namespace paper.editor {
+    class RevertPrefabInstanceState extends BaseState {
+        static toString(): string;
+        static create(revertData: editor.revertData, revertPrefabRootId: string): RevertPrefabInstanceState;
+        readonly stateData: {
+            revertPrefabRootId: string;
+            revertData: revertData;
+        };
+        undo(): boolean;
+        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
+        private modifyPrefabGameObjectPropertyValues(gameObj, valueList);
+        modifyPrefabComponentPropertyValues(gameObj: GameObject, componentUUid: string, valueList: any[]): void;
+        redo(): boolean;
     }
 }
 declare namespace paper.editor {
@@ -8166,12 +11295,24 @@ declare namespace paper.editor {
         private bindKeyboard;
         private cameraScript;
         private camera;
+        private lastX;
+        private lastY;
+        private selectBox;
+        private boundingBoxes;
+        private readonly onGeoControll;
         onStart(): any;
         private _tapStart;
         private selectedGameObjects;
         clearSelected(): void;
         onUpdate(delta: number): any;
+        private excludingChild();
+        private boxSelect();
         private setStroke(picked);
+        private setBoundingBox();
+        private drawBoundingBox(obj);
+        private initSelectBox();
+        private drawSelectBox(start, end);
+        private intersectWithCameraAndLight(ray);
     }
 }
 declare namespace paper.editor {
@@ -8181,10 +11322,12 @@ declare namespace paper.editor {
         private static camera;
         onStart(): void;
         static Enabled(): void;
+        static setGameObj(obj: GameObject): void;
+        private static gameObj;
+        static DrawStroke(): void;
         static DrawIcon(path: string, pos: egret3d.Vector3, size: number, color?: egret3d.Color): void;
         private static verticesLine;
         private static lineVertexBuffer;
-        static DrawLine(posStart: egret3d.Vector3, posEnd: egret3d.Vector3, size?: number, color?: number[]): void;
         private _oldTransform;
         private nrLine;
         static DrawCoord(): void;
@@ -8205,6 +11348,7 @@ declare namespace paper.editor {
         private static setMVPMatrix(m?);
         private static glProgram_line;
         private static glProgram_icon;
+        private static glProgram_stroke;
         private static initPrg();
         static DrawLights(): void;
         private static DrawCylinder(transform, color);
@@ -8218,13 +11362,8 @@ declare namespace paper.editor {
         private static helpVec36;
         private static verticesCameraSquare;
         private static getCameraSquare(obj);
-        static DrawArrow(m: egret3d.Matrix, color: number[], fixSize?: boolean): void;
-        private static xArrowMMatrix;
-        private static yArrowMMatrix;
-        private static zArrowMMatrix;
         private static helpMat;
         private static helpMat1;
-        static DrawArrowXYZ(transform: egret3d.Transform): void;
         private static getWorldMatrixWithoutScale(transform, fixScale, out);
         private static _imageLoadCount;
         private static textures;
@@ -8246,9 +11385,48 @@ declare namespace paper.editor {
         setVec3(name: string, value: egret3d.Vector3): void;
         setVec4(name: string, value: egret3d.Vector4): void;
         setColor(name: string, value: number[]): void;
-        setMatrix(name: string, value: egret3d.Matrix): void;
+        setMatrix(name: string, value: egret3d.Matrix4): void;
         setTexture(name: string, value: number): void;
     }
+}
+declare namespace paper.editor {
+    const icon_frag: string;
+    const icon_vert: string;
+    const line_frag: string;
+    const line_vert: string;
+    const stroke_vert: string;
+}
+declare namespace egret3d {
+    class GizmoRenderSystem extends paper.BaseSystem {
+        private readonly _renderState;
+        onUpdate(): void;
+    }
+}
+declare namespace egret3d {
+    /**
+     * @deprecated
+     */
+    type Matrix = Matrix4;
+    /**
+     * @deprecated
+     */
+    const Matrix: typeof Matrix4;
+    /**
+     * @deprecated
+     */
+    const Prefab: typeof paper.Prefab;
+    /**
+     * @deprecated
+     */
+    type Prefab = paper.Prefab;
+    /**
+     * @deprecated
+     */
+    const RawScene: typeof paper.RawScene;
+    /**
+     * @deprecated
+     */
+    type RawScene = paper.RawScene;
 }
 declare namespace egret3d.particle {
     /**

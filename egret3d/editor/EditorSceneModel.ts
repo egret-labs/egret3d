@@ -1,17 +1,30 @@
 namespace paper.editor {
     export class EditorSceneModel {
+        private viewCache={};
         public get editorScene(): Scene {
             return Application.sceneManager.editorScene;
         }
+        private currentModel:EditorModel;
         public set editorModel(v: EditorModel) {
+            if(this.currentModel){
+                this.viewCache[this.currentModel.contentUrl]={
+                    position:this.cameraObject.transform.getPosition().clone(),
+                    rotation:this.cameraObject.transform.getRotation().clone()}
+            }
             // this.pickGameScript.clearSelected();
             // this.geoController.clearSelected();//TODO:应在controller里新增清空状态函数
             this.editorCameraScript.editorModel = v;
             this.pickGameScript.editorModel = v;
             this.geoController.editorModel = v;
-
-            this.cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
-            this.cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
+            this.currentModel=v;
+            if(v&&this.viewCache[v.contentUrl]){
+                this.cameraObject.transform.setPosition(this.viewCache[v.contentUrl].position);
+                this.cameraObject.transform.setRotation(this.viewCache[v.contentUrl].rotation);
+            }
+            else{
+                this.cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
+                this.cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
+            }
         }
         private editorCameraScript: EditorCameraScript;
         private pickGameScript: PickGameObjectScript;

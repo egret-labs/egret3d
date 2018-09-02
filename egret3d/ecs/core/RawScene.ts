@@ -1,5 +1,32 @@
 namespace paper {
     /**
+     * 
+     */
+    export class BaseObjectAsset extends Asset {
+        protected _raw: ISerializedData = null as any;
+        /**
+         * @internal
+         */
+        $parse(json: ISerializedData) {
+            this._raw = json;
+        }
+
+        public dispose() {
+            if (!super.dispose()) {
+                return false;
+            }
+
+            this._raw = null!;
+
+            return true;
+        }
+
+        public caclByteLength() {
+            return 0;
+        }
+    }
+
+    /**
      * scene asset
      * @version paper 1.0
      * @platform Web
@@ -20,12 +47,12 @@ namespace paper {
                 return null;
             }
 
-            const isEditor = Application.isEditor && !Application.isPlaying;
+            const isEditor = Application.playerMode === PlayerMode.Editor;
             const deserializer = new paper.Deserializer();
             const scene = deserializer.deserialize(this._raw, keepUUID) as Scene | null;
 
             if (scene && isEditor) {
-                scene.extras!.rawScene = this;
+
             }
 
             return scene;

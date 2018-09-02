@@ -8,7 +8,7 @@ namespace egret3d {
                 componentClass: SkinnedMeshRenderer,
                 listeners: [
                     { type: SkinnedMeshRendererEventType.Mesh, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
-                    { type: SkinnedMeshRendererEventType.Materials, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
+                    { type: paper.RendererEventType.Materials, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
                 ]
             }
         ];
@@ -20,36 +20,31 @@ namespace egret3d {
             }
 
             const renderer = gameObject.renderer as SkinnedMeshRenderer;
+            this._drawCalls.removeDrawCalls(renderer);
+
             if (!renderer.mesh || renderer.materials.length === 0) {
                 return;
             }
-            //
-            this._drawCalls.removeDrawCalls(renderer);
-            //
+
+            renderer.mesh._createBuffer();
             this._drawCalls.renderers.push(renderer);
             //
             let subMeshIndex = 0;
             for (const primitive of renderer.mesh.glTFMesh.primitives) {
-                const material = renderer.materials[primitive.material || 0];
+                const material = renderer.materials[primitive.material];
                 const drawCall: DrawCall = {
                     renderer: renderer,
 
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
-                    material: renderer.materials[primitive.material || 0] || DefaultMaterials.Missing,
-					
+                    material: material || DefaultMaterials.MISSING,
+
                     frustumTest: false,
                     zdist: -1,
 
                     boneData: renderer.boneBuffer,
                 };
-
-                if (!renderer.mesh.vbo) {
-                    renderer.mesh.createVBOAndIBOs();
-                }
-
                 material.addDefine("SKINNING");
-
                 this._drawCalls.drawCalls.push(drawCall);
             }
         }
