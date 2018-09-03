@@ -22155,10 +22155,6 @@ var paper;
                 var state = editor.ModifyComponentPropertyState.create(gameObjectUUid, componentUUid, newValueList, preValueCopylist);
                 this.addState(state);
             };
-            EditorModel.prototype.createModifyAssetPropertyState = function (assetUrl, newValueList, preValueCopylist) {
-                var state = editor.ModifyAssetPropertyState.create(assetUrl, newValueList, preValueCopylist);
-                this.addState(state);
-            };
             EditorModel.prototype.createPrefabState = function (prefab, parent) {
                 var state = editor.CreatePrefabState.create(prefab, parent);
                 this.addState(state);
@@ -22225,7 +22221,7 @@ var paper;
                         return target;
                     case editor.EditType.SHADER:
                         var url = serializeData;
-                        var asset = RES.getRes(url);
+                        var asset = paper.Asset.find(url);
                         return asset;
                     case editor.EditType.LIST:
                         return serializeData;
@@ -22233,12 +22229,12 @@ var paper;
                         var materials = [];
                         for (var _i = 0, serializeData_1 = serializeData; _i < serializeData_1.length; _i++) {
                             var matrial = serializeData_1[_i];
-                            var asset_1 = RES.getRes(matrial.url);
+                            var asset_1 = paper.Asset.find(matrial.url);
                             materials.push(asset_1);
                         }
                         return materials;
                     case editor.EditType.MESH:
-                        var meshAsset = RES.getRes(serializeData);
+                        var meshAsset = paper.Asset.find(serializeData);
                         return meshAsset;
                     case editor.EditType.MATERIAL:
                     case editor.EditType.GAMEOBJECT:
@@ -22495,23 +22491,6 @@ var paper;
                 }
                 return null;
             };
-            EditorModel.prototype.getAssetByAssetUrl = function (url) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var asset;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                asset = RES.getRes(url);
-                                if (!!asset) return [3 /*break*/, 2];
-                                return [4 /*yield*/, RES.getResAsync(url)];
-                            case 1:
-                                asset = _a.sent();
-                                _a.label = 2;
-                            case 2: return [2 /*return*/, asset];
-                        }
-                    });
-                });
-            };
             EditorModel.prototype.getGameObjectsByUUids = function (uuids) {
                 var objects = paper.Application.sceneManager.activeScene.gameObjects;
                 var obj;
@@ -22745,116 +22724,74 @@ var paper;
                 }
                 return objs;
             };
-            EditorModel.prototype.setMaterialTexture = function (target, url, propName) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var asset;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                asset = paper.Asset.find(url);
-                                if (!!asset) return [3 /*break*/, 2];
-                                return [4 /*yield*/, this.getAssetByAssetUrl(url)];
-                            case 1:
-                                asset = _a.sent();
-                                _a.label = 2;
-                            case 2:
-                                if (!asset) {
-                                    console.error(url + " can't find");
-                                    return [2 /*return*/];
-                                }
-                                target._glTFTechnique.uniforms[propName].value = asset;
-                                return [2 /*return*/];
-                        }
-                    });
-                });
-            };
             EditorModel.prototype.modifyMaterialPropertyValues = function (target, valueList) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var _i, valueList_1, propertyValue, propName, copyValue, uniformType, _a, _glTFMaterial, gltfUnifromMap, uniformMap, key, value;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
-                            case 0:
-                                _i = 0, valueList_1 = valueList;
-                                _b.label = 1;
-                            case 1:
-                                if (!(_i < valueList_1.length)) return [3 /*break*/, 14];
-                                propertyValue = valueList_1[_i];
-                                propName = propertyValue.propName, copyValue = propertyValue.copyValue, uniformType = propertyValue.uniformType;
-                                _a = uniformType;
-                                switch (_a) {
-                                    case 35670 /* BOOL */: return [3 /*break*/, 2];
-                                    case 5124 /* INT */: return [3 /*break*/, 3];
-                                    case 5126 /* FLOAT */: return [3 /*break*/, 4];
-                                    case 35671 /* BOOL_VEC2 */: return [3 /*break*/, 5];
-                                    case 35667 /* INT_VEC2 */: return [3 /*break*/, 5];
-                                    case 35664 /* FLOAT_VEC2 */: return [3 /*break*/, 5];
-                                    case 35672 /* BOOL_VEC3 */: return [3 /*break*/, 6];
-                                    case 35668 /* INT_VEC3 */: return [3 /*break*/, 6];
-                                    case 35665 /* FLOAT_VEC3 */: return [3 /*break*/, 6];
-                                    case 35673 /* BOOL_VEC4 */: return [3 /*break*/, 7];
-                                    case 35669 /* INT_VEC4 */: return [3 /*break*/, 7];
-                                    case 35666 /* FLOAT_VEC4 */: return [3 /*break*/, 7];
-                                    case 35678 /* SAMPLER_2D */: return [3 /*break*/, 8];
-                                    case 35674 /* FLOAT_MAT2 */: return [3 /*break*/, 10];
-                                    case 35675 /* FLOAT_MAT3 */: return [3 /*break*/, 10];
-                                    case 35676 /* FLOAT_MAT4 */: return [3 /*break*/, 10];
-                                }
-                                return [3 /*break*/, 11];
-                            case 2:
-                                target.setBoolean(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 3:
-                                target.setInt(propName, copyValue);
-                                _b.label = 4;
-                            case 4:
-                                target.setFloat(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 5:
-                                target.setVector2v(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 6:
-                                target.setVector3v(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 7:
-                                target.setVector4v(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 8: return [4 /*yield*/, this.setMaterialTexture(target, copyValue.url, propName)];
-                            case 9:
-                                _b.sent();
-                                return [3 /*break*/, 12];
-                            case 10:
-                                target.setMatrixv(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 11: return [3 /*break*/, 12];
-                            case 12:
-                                if (propName === "renderQueue") {
-                                    target.config.materials[0].extensions.paper.renderQueue = copyValue;
-                                }
-                                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: copyValue }));
-                                _b.label = 13;
-                            case 13:
-                                _i++;
-                                return [3 /*break*/, 1];
-                            case 14:
-                                _glTFMaterial = target.config.materials[0];
-                                gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values;
-                                uniformMap = target._glTFTechnique.uniforms;
-                                for (key in uniformMap) {
-                                    if (uniformMap[key].semantic === undefined) {
-                                        value = uniformMap[key].value;
-                                        if (Array.isArray(value)) {
-                                            gltfUnifromMap[key] = value.concat();
-                                        }
-                                        else if (value instanceof egret3d.GLTexture2D) {
-                                            gltfUnifromMap[key] = value.name;
-                                        }
-                                        else {
-                                            gltfUnifromMap[key] = value;
-                                        }
-                                    }
-                                }
-                                return [2 /*return*/];
+                    var _i, valueList_1, propertyValue, propName, copyValue, uniformType, _glTFMaterial, gltfUnifromMap, uniformMap, key, value;
+                    return __generator(this, function (_a) {
+                        for (_i = 0, valueList_1 = valueList; _i < valueList_1.length; _i++) {
+                            propertyValue = valueList_1[_i];
+                            propName = propertyValue.propName, copyValue = propertyValue.copyValue, uniformType = propertyValue.uniformType;
+                            if (!copyValue) {
+                                continue;
+                            }
+                            switch (uniformType) {
+                                case 35670 /* BOOL */:
+                                    target.setBoolean(propName, copyValue);
+                                    break;
+                                case 5124 /* INT */:
+                                    target.setInt(propName, copyValue);
+                                case 5126 /* FLOAT */:
+                                    target.setFloat(propName, copyValue);
+                                    break;
+                                case 35671 /* BOOL_VEC2 */:
+                                case 35667 /* INT_VEC2 */:
+                                case 35664 /* FLOAT_VEC2 */:
+                                    target.setVector2v(propName, copyValue);
+                                    break;
+                                case 35672 /* BOOL_VEC3 */:
+                                case 35668 /* INT_VEC3 */:
+                                case 35665 /* FLOAT_VEC3 */:
+                                    target.setVector3v(propName, copyValue);
+                                    break;
+                                case 35673 /* BOOL_VEC4 */:
+                                case 35669 /* INT_VEC4 */:
+                                case 35666 /* FLOAT_VEC4 */:
+                                    target.setVector4v(propName, copyValue);
+                                    break;
+                                case 35678 /* SAMPLER_2D */:
+                                    target._glTFTechnique.uniforms[propName].value = copyValue;
+                                    break;
+                                case 35674 /* FLOAT_MAT2 */:
+                                case 35675 /* FLOAT_MAT3 */:
+                                case 35676 /* FLOAT_MAT4 */:
+                                    target.setMatrixv(propName, copyValue);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            if (propName === "renderQueue") {
+                                target.config.materials[0].extensions.paper.renderQueue = copyValue;
+                            }
+                            this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: copyValue }));
                         }
+                        _glTFMaterial = target.config.materials[0];
+                        gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values;
+                        uniformMap = target._glTFTechnique.uniforms;
+                        for (key in uniformMap) {
+                            if (uniformMap[key].semantic === undefined) {
+                                value = uniformMap[key].value;
+                                if (Array.isArray(value)) {
+                                    gltfUnifromMap[key] = value.concat();
+                                }
+                                else if (value instanceof egret3d.GLTexture2D) {
+                                    gltfUnifromMap[key] = value.name;
+                                }
+                                else {
+                                    gltfUnifromMap[key] = value;
+                                }
+                            }
+                        }
+                        return [2 /*return*/];
                     });
                 });
             };
@@ -25886,75 +25823,6 @@ var paper;
         }(editor.BaseState));
         editor.GameObjectHierarchyState = GameObjectHierarchyState;
         __reflect(GameObjectHierarchyState.prototype, "paper.editor.GameObjectHierarchyState");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        //修改asset
-        var ModifyAssetPropertyState = (function (_super) {
-            __extends(ModifyAssetPropertyState, _super);
-            function ModifyAssetPropertyState() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            ModifyAssetPropertyState.toString = function () {
-                return "[class common.ModifyAssetPropertyState]";
-            };
-            ModifyAssetPropertyState.create = function (assetUrl, newValueList, preValueCopylist) {
-                var state = new ModifyAssetPropertyState();
-                var data = {
-                    assetUrl: assetUrl,
-                    newValueList: newValueList,
-                    preValueCopylist: preValueCopylist
-                };
-                state.data = data;
-                return state;
-            };
-            ModifyAssetPropertyState.prototype.modifyAssetPropertyValues = function (assetUrl, valueList) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var _this = this;
-                    var target;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, this.editorModel.getAssetByAssetUrl(assetUrl)];
-                            case 1:
-                                target = _a.sent();
-                                valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                                    var propName, copyValue, valueEditType, newValue;
-                                    return __generator(this, function (_a) {
-                                        propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                        newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
-                                        this.editorModel.setTargetProperty(propName, target, newValue);
-                                        this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: newValue });
-                                        return [2 /*return*/];
-                                    });
-                                }); });
-                                return [2 /*return*/];
-                        }
-                    });
-                });
-            };
-            ModifyAssetPropertyState.prototype.undo = function () {
-                if (_super.prototype.undo.call(this)) {
-                    var _a = this.data, assetUrl = _a.assetUrl, preValueCopylist = _a.preValueCopylist;
-                    this.modifyAssetPropertyValues(assetUrl, preValueCopylist);
-                    return true;
-                }
-                return false;
-            };
-            ModifyAssetPropertyState.prototype.redo = function () {
-                if (_super.prototype.redo.call(this)) {
-                    var _a = this.data, newValueList = _a.newValueList, assetUrl = _a.assetUrl;
-                    this.modifyAssetPropertyValues(assetUrl, newValueList);
-                    return true;
-                }
-                return false;
-            };
-            return ModifyAssetPropertyState;
-        }(editor.BaseState));
-        editor.ModifyAssetPropertyState = ModifyAssetPropertyState;
-        __reflect(ModifyAssetPropertyState.prototype, "paper.editor.ModifyAssetPropertyState");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
