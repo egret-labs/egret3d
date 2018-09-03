@@ -10,12 +10,9 @@
   "scripts": {
     "build": "egret build && node script/report.js",
     "build-shader": "node script/shaderCompiler.js",
-    "generate-shader": "node script/shaderGenerate.js"
+    "generate-shader": "node script/shaderGenerate.js",
+    "docs": "typedoc --out docs/test --tsconfig tsconfig.json --json api.json"
   },
   "author": "egret",
-  "license": "ISC",
-  "devDependencies": {},
-  "dependencies": {
-    "fs-extra": "^7.0.0"
-  }
+  "license": "ISC"
 }
