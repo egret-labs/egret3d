@@ -195,12 +195,12 @@ namespace paper.editor {
 
                 objects.forEach(object => {
                     if (paper.equal((object as any)[propName], (prefabObj as any)[propName])) {
-                        this.editorModel.setTargetProperty(propName, object, newValue);
+                        this.editorModel.setTargetProperty(propName, object, newValue,valueEditType);
                         this.dispathPropertyEvent(object, propName, newValue);
                     }
                 });
 
-                this.editorModel.setTargetProperty(propName, prefabObj, newValue);
+                this.editorModel.setTargetProperty(propName, prefabObj, newValue,valueEditType);
             });
 
             this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
@@ -220,13 +220,13 @@ namespace paper.editor {
                             let objectComp = this.editorModel.getComponentByAssetId(object, prefabComp.extras!.linkedID!);
                             if (objectComp !== null) {
                                 if (paper.equal((objectComp as any)[propName], (prefabComp as any)[propName])) {
-                                    this.editorModel.setTargetProperty(propName, objectComp, newValue);
+                                    this.editorModel.setTargetProperty(propName, objectComp, newValue,valueEditType);
                                     this.dispathPropertyEvent(objectComp, propName, newValue);
                                 }
                             }
                         });
 
-                        this.editorModel.setTargetProperty(propName, prefabComp, newValue);
+                        this.editorModel.setTargetProperty(propName, prefabComp, newValue,valueEditType);
                     })
                 }
             }
