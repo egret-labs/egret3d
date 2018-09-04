@@ -8,7 +8,7 @@ namespace egret3d {
                 { componentClass: Camera }
             ],
             [
-                { componentClass: [DirectLight, PointLight, SpotLight] }
+                { componentClass: [DirectionalLight, PointLight, SpotLight] }
             ]
         ];
         protected readonly _camerasAndLights: CamerasAndLights = CamerasAndLights.getInstance(CamerasAndLights);
@@ -35,7 +35,7 @@ namespace egret3d {
             const cameras = this._camerasAndLights.cameras;
             if (cameras.length > 0) {
                 const camerasScene = paper.Application.sceneManager.camerasScene || paper.Application.sceneManager.activeScene;
-                this._camerasAndLights.sort();
+                this._camerasAndLights.sortCameras();
 
                 for (const component of cameras) {
                     if (component.gameObject.scene !== camerasScene) {

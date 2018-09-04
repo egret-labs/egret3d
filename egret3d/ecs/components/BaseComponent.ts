@@ -1,35 +1,5 @@
 namespace paper {
     /**
-     * 
-     */
-    export interface ComponentClass<T extends BaseComponent> extends BaseClass {
-        executeInEditMode: boolean;
-        allowMultiple: boolean;
-        requireComponents: ComponentClass<BaseComponent>[] | null;
-        /**
-         * @internal
-         */
-        readonly __isSingleton: boolean;
-        /**
-         * @internal
-         */
-        __index: number;
-
-        new(): T;
-    }
-    /**
-     * 
-     */
-    export type ComponentClassArray = (ComponentClass<BaseComponent> | undefined)[];
-    /**
-     * 
-     */
-    export type ComponentArray = (BaseComponent | undefined)[];
-    /**
-     * 
-     */
-    export type ComponentExtras = { linkedID?: string };
-    /**
      * 组件基类
      */
     export abstract class BaseComponent extends BaseObject {
@@ -58,12 +28,10 @@ namespace paper {
         /**
          * @internal
          */
-        public static __onRegister(componentClass: ComponentClass<BaseComponent>) {
-            if (componentClass === BaseComponent as any) { // Skip BaseComponent.
-                return;
+        public static __onRegister() {
+            if (!BaseObject.__onRegister.call(this)) { // Super.
+                return false;
             }
-
-            BaseObject.__onRegister(componentClass); // Super.
 
             if (this.requireComponents) {
                 this.requireComponents = this.requireComponents.concat();
@@ -72,10 +40,12 @@ namespace paper {
                 this.requireComponents = [];
             }
 
-            if (this._componentClasses.indexOf(componentClass) < 0) {
-                componentClass.__index = this._componentClasses.length;
-                this._componentClasses.push(componentClass);
+            if (this._componentClasses.indexOf(this as any) < 0) {
+                this.__index = this._componentClasses.length;
+                this._componentClasses.push(this as any);
             }
+
+            return true;
         }
         /**
          * @internal
@@ -93,7 +63,7 @@ namespace paper {
          * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
          */
         @paper.serializedField
-        public extras?: ComponentExtras = Application.isEditor && !Application.isPlaying ? {} : undefined;
+        public extras?: ComponentExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
         @serializedField
         protected _enabled: boolean = true;
@@ -134,12 +104,18 @@ namespace paper {
         /**
          * 组件的激活状态。
          */
+        @editor.property(editor.EditType.CHECKBOX)
         public get enabled() {
             return this._enabled;
         }
         public set enabled(value: boolean) {
             if (this._enabled === value) {
                 return;
+            }
+
+            if (!value && this.constructor === egret3d.Transform) {
+                console.log("Cannot disable transform compnent.");
+                return
             }
 
             const prevEnabled = this.isActiveAndEnabled;
@@ -156,6 +132,12 @@ namespace paper {
         public get isActiveAndEnabled() {
             // return this._enabled && this.gameObject.activeInHierarchy;
             return this._enabled && (this.gameObject._activeDirty ? this.gameObject.activeInHierarchy : this.gameObject._activeInHierarchy);
+        }
+        /**
+         * 
+         */
+        public get transform() {
+            return this.gameObject.transform;
         }
     }
 }

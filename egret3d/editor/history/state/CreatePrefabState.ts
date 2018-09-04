@@ -1,15 +1,17 @@
 namespace paper.editor{
-    type CreatePrefabStateData = {prefab:any,cacheSerializeData?:any,cachePrefabUUid?:string}
+    type CreatePrefabStateData = {prefab:paper.Prefab,parentUUID?:string,cacheSerializeData?:any,cachePrefabUUid?:string}
 
     export class CreatePrefabState extends BaseState {
         public static toString(): string {
             return "[class common.CreatePrefabState]";
         }
 
-        public static create(prefab:any): CreatePrefabState | null {
+        public static create(prefab:Prefab,parent?:GameObject): CreatePrefabState | null {
             const state = new CreatePrefabState();
+            let parentUUID=parent?parent.uuid:undefined;
             let data:CreatePrefabStateData = {
-                prefab
+                prefab,
+                parentUUID
             }
             state.data = data;
             return state;
@@ -25,10 +27,9 @@ namespace paper.editor{
                 let deleteUUid: string = this.stateData.cachePrefabUUid;
                 if (deleteUUid) {
                     let gameObj = this.editorModel.getGameObjectByUUid(deleteUUid);
-                    gameObj.destroy();
                     if (gameObj) {
+                        gameObj.destroy();
                         this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS);
-                        this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,[]);
                     }
                 }
                 return true;
@@ -40,13 +41,13 @@ namespace paper.editor{
             if (super.redo()) {
                 const prefab = this.stateData.prefab;
                 if (prefab) {
-                    let instance:GameObject = Prefab.create(this.stateData.prefab.prefab.name);
-
-                    if (instance) {
-                        this.stateData.cachePrefabUUid = instance.uuid
-                        this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS);
-                        this.dispatchEditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS,[this.data.cachePrefabUUid]);
+                    let instance:GameObject = this.stateData.prefab.createInstance();
+                    this.stateData.cachePrefabUUid = instance.uuid;
+                    let parent=this.editorModel.getGameObjectByUUid(this.stateData.parentUUID);
+                    if(parent){
+                        instance.transform.parent=parent.transform;
                     }
+                    this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS);
                 }
 
                 return true;

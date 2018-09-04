@@ -11,7 +11,19 @@ namespace egret3d {
      * 
      */
     export class PointLight extends BaseLight {
-        public readonly type: LightType = LightType.Point;
+        /**
+         * 
+         */
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.NUMBER)
+        public decay: number = 2.0;
+        /**
+         * 
+         */
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.NUMBER)
+        public distance: number = 0.0;
+
         public renderTarget: IRenderTarget = new GlRenderTarget(1024, 1024, true); // TODO
 
         public update(camera: Camera, faceIndex: number) {
@@ -24,8 +36,9 @@ namespace egret3d {
 
             camera.near = this.shadowCameraNear;
             camera.far = this.shadowCameraFar;
-            camera.size = this.shadowSize;
+            camera.size = this.shadowCameraSize;
             camera.fov = Math.PI * 0.5;
+            camera.opvalue = 1.0;
             camera.gameObject.transform.setPosition(position); // TODO support copy matrix.
             camera.gameObject.transform.setRotation(this.gameObject.transform.getRotation());
             camera.gameObject.transform.lookAt(helpVector3A, _ups[faceIndex]);

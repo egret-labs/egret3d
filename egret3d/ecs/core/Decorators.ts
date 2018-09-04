@@ -1,14 +1,27 @@
 namespace paper {
     /**
+     * @internal
+     */
+    export function registerClass(baseClass: BaseClass) {
+        baseClass.__onRegister();
+    }
+    /**
      * 通过装饰器标记序列化属性。
      */
-    export function serializedField(classPrototype: any, key: string) {
-        const baseClass = classPrototype.constructor as BaseClass;
-        registerClass(baseClass);
-
-        const keys = baseClass.__serializeKeys!;
-        if (keys.indexOf(key) < 0) {
-            keys.push(key);
+    export function serializedField(classPrototype: any, key: string): void;
+    export function serializedField(key: string): Function;
+    export function serializedField(classPrototypeOrKey: any, key?: string) {
+        if (key) {
+            const baseClass = classPrototypeOrKey.constructor as BaseClass;
+            registerClass(baseClass);
+            baseClass.__serializeKeys![key] = null;
+        }
+        else {
+            return function (classPrototype: any, key: string) {
+                const baseClass = classPrototype.constructor as BaseClass;
+                registerClass(baseClass);
+                baseClass.__serializeKeys![key] = classPrototypeOrKey as string;
+            }
         }
     }
     /**
@@ -30,6 +43,9 @@ namespace paper {
         registerClass(componentClass);
         if (!componentClass.__isSingleton) {
             componentClass.allowMultiple = true;
+        }
+        else {
+            console.warn("Singleton component cannot allow multiple.");
         }
     }
     /**

@@ -44,8 +44,6 @@ namespace paper {
         40: "egret3d.Animation",
         41: "egret3d.GLTFAsset",
         //
-        "egret3d.Light": "egret3d.DirectLight",
-        //
         13: "paper.Compatible",
         14: "paper.Compatible",
     };

@@ -117,7 +117,7 @@ namespace paper {
          * @internal
          */
         public readonly _addedComponents: (BaseComponent | null)[] = [];
-        private _components: BaseComponent[] = [];
+        private _behaviourcCmponents: BaseComponent[] = [];
         private readonly _interestConfig: ReadonlyArray<InterestConfig> = null as any;
         private readonly _globalGameObject: GameObject = Application.sceneManager.globalGameObject;
 
@@ -134,23 +134,25 @@ namespace paper {
 
                 if (Array.isArray(config.componentClass)) {
                     for (const componentClass of config.componentClass) {
-                        EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddUnessentialComponent);
                         EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveUnessentialComponent);
 
                         if (!isUnessential) {
                             EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddComponent);
                             EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveComponent);
                         }
+
+                        EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddUnessentialComponent);
                     }
                 }
                 else {
+                    EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveUnessentialComponent);
+
                     if (!isUnessential) {
                         EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddComponent);
                         EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveComponent);
                     }
 
                     EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddUnessentialComponent);
-                    EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveUnessentialComponent);
                 }
             }
 
@@ -178,7 +180,7 @@ namespace paper {
                 }
             }
 
-            if (this._bufferedComponents.indexOf(component) >= 0 || this._components.indexOf(component) >= 0) { // Buffered or added.
+            if (this._bufferedComponents.indexOf(component) >= 0 || this._behaviourcCmponents.indexOf(component) >= 0) { // Buffered or added.
                 return;
             }
 
@@ -195,13 +197,13 @@ namespace paper {
             }
 
             if (this._isBehaviour) {
-                index = this._components.indexOf(component);
+                index = this._behaviourcCmponents.indexOf(component);
                 if (index < 0) { // Uninclude.
                     return;
                 }
 
                 this._isRemoved = true;
-                this._components[index] = null as any;
+                this._behaviourcCmponents[index] = null as any;
 
                 index = this._addedComponents.indexOf(component);
                 if (index >= 0) {
@@ -325,11 +327,11 @@ namespace paper {
                 let removeCount = 0;
                 this._isRemoved = false;
 
-                for (const component of this._components) {
+                for (const component of this._behaviourcCmponents) {
                     if (component) {
                         if (removeCount > 0) {
-                            this._components[index - removeCount] = component;
-                            this._components[index] = null as any;
+                            this._behaviourcCmponents[index - removeCount] = component;
+                            this._behaviourcCmponents[index] = null as any;
                         }
                     }
                     else {
@@ -340,7 +342,7 @@ namespace paper {
                 }
 
                 if (removeCount > 0) {
-                    this._components.length -= removeCount;
+                    this._behaviourcCmponents.length -= removeCount;
                 }
             }
 
@@ -364,7 +366,9 @@ namespace paper {
                     }
 
                     this._addedComponents.push(component);
-                    this._components.push(component);
+                    if (component instanceof Behaviour) {
+                        this._behaviourcCmponents.push(component);
+                    }
                 }
 
                 this._bufferedComponents.length = 0;
@@ -386,7 +390,7 @@ namespace paper {
          * 
          */
         public get components(): ReadonlyArray<BaseComponent> {
-            return this._components;
+            return this._behaviourcCmponents;
         }
     }
 }

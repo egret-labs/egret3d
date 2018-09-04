@@ -9,14 +9,13 @@ uniform bool u_startRotation3D;
 uniform int u_scalingMode;
 uniform vec3 u_positionScale;
 uniform vec3 u_sizeScale;
-uniform mat4 glstate_matrix_vp;
-uniform vec4 _MainTex_ST;  
+uniform mat4 viewProjectionMatrix;
 
 #ifdef STRETCHEDBILLBOARD
-	uniform vec3 glstate_cameraPos;
+	uniform vec3 cameraPosition;
 #endif
-uniform vec3 glstate_cameraForward;
-uniform vec3 glstate_cameraUp;
+uniform vec3 cameraForward;
+uniform vec3 cameraUp;
 
 uniform float u_lengthScale;
 uniform float u_speeaScale;
@@ -226,11 +225,11 @@ float evaluate_curve_total(in vec2 curves[4],in float t)
 		if(curTime>=t){
 			float lastTime=lastCurve.x;
 			float tt=(t-lastTime)/(curTime-lastTime);
-			res+=(lastValue+mix(lastValue,curve.y,tt))/2.0*_time.x*(t-lastTime);
+			res+=(lastValue+mix(lastValue,curve.y,tt))/2.0*time.x*(t-lastTime);
 			break;
 		}
 		else{
-			res+=(lastValue+curve.y)/2.0*_time.x*(curTime-lastCurve.x);
+			res+=(lastValue+curve.y)/2.0*time.x*(curTime-lastCurve.x);
 		}
 	}
 	return res;
@@ -304,12 +303,12 @@ vec3 computeVelocity(in float t)
      res= vec3(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveZ,t));
   #endif
   #ifdef VELOCITYTWOCONSTANT
-	 res=mix(u_velocityConst,u_velocityConstMax,vec3(_random1.y,_random1.z,_random1.w)); 
+	 res=mix(u_velocityConst,u_velocityConstMax,vec3(random1.y,random1.z,random1.w)); 
   #endif
   #ifdef VELOCITYTWOCURVE
-     res=vec3(mix(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveMaxX,t),_random1.y),
-	            mix(evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveMaxY,t),_random1.z),
-					 		mix(evaluate_curve_float(u_velocityCurveZ,t),evaluate_curve_float(u_velocityCurveMaxZ,t),_random1.w));
+     res=vec3(mix(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveMaxX,t),random1.y),
+	            mix(evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveMaxY,t),random1.z),
+					 		mix(evaluate_curve_float(u_velocityCurveZ,t),evaluate_curve_float(u_velocityCurveMaxZ,t),random1.w));
   #endif
 					
   return res;
@@ -334,35 +333,35 @@ vec3 computePosition(in vec3 startVelocity, in vec3 lifeVelocity,in float age,in
 			#endif
 			#ifdef VELOCITYTWOCURVE
 				  startPosition=startVelocity*age;
-				  lifePosition=vec3(mix(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveMaxX,t),_random1.y)
-			      								,mix(evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveMaxY,t),_random1.z)
-			      								,mix(evaluate_curve_total(u_velocityCurveZ,t),evaluate_curve_total(u_velocityCurveMaxZ,t),_random1.w));
+				  lifePosition=vec3(mix(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveMaxX,t),random1.y)
+			      								,mix(evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveMaxY,t),random1.z)
+			      								,mix(evaluate_curve_total(u_velocityCurveZ,t),evaluate_curve_total(u_velocityCurveMaxZ,t),random1.w));
 			#endif
 
 			vec3 finalPosition;
 			if(u_spaceType==0){
 			  if(u_scalingMode!=2)
-			   finalPosition =rotation_quaternions(u_positionScale*(_startPosition.xyz+startPosition+lifePosition),worldRotation);
+			   finalPosition =rotation_quaternions(u_positionScale*(startPosition.xyz+startPosition+lifePosition),worldRotation);
 			  else
-			   finalPosition =rotation_quaternions(u_positionScale*_startPosition.xyz+startPosition+lifePosition,worldRotation);
+			   finalPosition =rotation_quaternions(u_positionScale*startPosition.xyz+startPosition+lifePosition,worldRotation);
 			}
 			else{
 			  if(u_scalingMode!=2)
-			    finalPosition = rotation_quaternions(u_positionScale*(_startPosition.xyz+startPosition),worldRotation)+lifePosition;
+			    finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+startPosition),worldRotation)+lifePosition;
 			  else
-			    finalPosition = rotation_quaternions(u_positionScale*_startPosition.xyz+startPosition,worldRotation)+lifePosition;
+			    finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+startPosition,worldRotation)+lifePosition;
 			}
 		  #else
 			 startPosition=startVelocity*age;
 			 vec3 finalPosition;
 			 if(u_scalingMode!=2)
-			   finalPosition = rotation_quaternions(u_positionScale*(_startPosition.xyz+startPosition),worldRotation);
+			   finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+startPosition),worldRotation);
 			 else
-			   finalPosition = rotation_quaternions(u_positionScale*_startPosition.xyz+startPosition,worldRotation);
+			   finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+startPosition,worldRotation);
 		#endif
   
   if(u_simulationSpace==1)
-    finalPosition=finalPosition+_startWorldPosition;
+    finalPosition=finalPosition+startWorldPosition;
   else if(u_simulationSpace==0) 
     finalPosition=finalPosition+u_worldPosition;
   
@@ -378,7 +377,7 @@ vec4 computeColor(in vec4 color,in float t)
 	  color*=evaluate_curve_color(u_alphaGradient,u_colorGradient,t);
 	#endif	
 	#ifdef COLORTWOGRADIENTS
-	  color*=mix(evaluate_curve_color(u_alphaGradient,u_colorGradient,t),evaluate_curve_color(u_alphaGradientMax,u_colorGradientMax,t),_random0.y);
+	  color*=mix(evaluate_curve_color(u_alphaGradient,u_colorGradient,t),evaluate_curve_color(u_alphaGradientMax,u_colorGradientMax,t),random0.y);
 	#endif
 
   return color;
@@ -390,14 +389,14 @@ vec2 computeBillbardSize(in vec2 size,in float t)
 		size*=evaluate_curve_float(u_sizeCurve,t);
 	#endif
 	#ifdef SIZETWOCURVES
-	  size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),_random0.z); 
+	  size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),random0.z); 
 	#endif
 	#ifdef SIZECURVESEPERATE
 		size*=vec2(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t));
 	#endif
 	#ifdef SIZETWOCURVESSEPERATE
-	  size*=vec2(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),_random0.z)
-	    				,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),_random0.z));
+	  size*=vec2(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),random0.z)
+	    				,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),random0.z));
 	#endif
 	return size;
 }
@@ -409,15 +408,15 @@ vec3 computeMeshSize(in vec3 size,in float t)
 		size*=evaluate_curve_float(u_sizeCurve,t);
 	#endif
 	#ifdef SIZETWOCURVES
-	  size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),_random0.z); 
+	  size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),random0.z); 
 	#endif
 	#ifdef SIZECURVESEPERATE
 		size*=vec3(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveZ,t));
 	#endif
 	#ifdef SIZETWOCURVESSEPERATE
-	  size*=vec3(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),_random0.z)
-	  			  	,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),_random0.z)
-							,mix(evaluate_curve_float(u_sizeCurveZ,t),evaluate_curve_float(u_sizeCurveMaxZ,t),_random0.z));
+	  size*=vec3(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),random0.z)
+	  			  	,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),random0.z)
+							,mix(evaluate_curve_float(u_sizeCurveZ,t),evaluate_curve_float(u_sizeCurveMaxZ,t),random0.z));
 	#endif
 	return size;
 }
@@ -434,11 +433,11 @@ float computeRotation(in float rotation,in float age,in float t)
 			rotation+=evaluate_curve_total(u_rotationCurve,t);
 		#endif
 		#ifdef ROTATIONTWOCONSTANTS
-			float ageRot=mix(u_rotationConst,u_rotationConstMax,_random0.w)*age;
+			float ageRot=mix(u_rotationConst,u_rotationConstMax,random0.w)*age;
 	    rotation+=ageRot;
 	  #endif
 		#ifdef ROTATIONTWOCURVES
-			rotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),_random0.w);
+			rotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),random0.w);
 		#endif
 	#endif
 	#ifdef ROTATIONSEPERATE
@@ -450,11 +449,11 @@ float computeRotation(in float rotation,in float age,in float t)
 			rotation+=evaluate_curve_total(u_rotationCurveZ,t);
 		#endif
 		#ifdef ROTATIONTWOCONSTANTS
-			float ageRot=mix(u_rotationConstSeprarate.z,u_rotationConstMaxSeprarate.z,_random0.w)*age;
+			float ageRot=mix(u_rotationConstSeprarate.z,u_rotationConstMaxSeprarate.z,random0.w)*age;
 	        rotation+=ageRot;
 	    #endif
 		#ifdef ROTATIONTWOCURVES
-			rotation+=mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),_random0.w));
+			rotation+=mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),random0.w));
 		#endif
 	#endif
 	return rotation;
@@ -472,11 +471,11 @@ vec3 compute3DRotation(in vec3 rotation,in float age,in float t)
 					rotation+=evaluate_curve_total(u_rotationCurve,t);
 			#endif
 			#ifdef ROTATIONTWOCONSTANTS
-					float ageRot=mix(u_rotationConst,u_rotationConstMax,_random0.w)*age;
+					float ageRot=mix(u_rotationConst,u_rotationConstMax,random0.w)*age;
 			    rotation+=ageRot;
 			#endif
 			#ifdef ROTATIONTWOCURVES
-					rotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),_random0.w);
+					rotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),random0.w);
 			#endif
 	#endif
 	#ifdef ROTATIONSEPERATE
@@ -488,13 +487,13 @@ vec3 compute3DRotation(in vec3 rotation,in float age,in float t)
 					rotation+=vec3(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveZ,t));
 				#endif
 				#ifdef ROTATIONTWOCONSTANTS
-					vec3 ageRot=mix(u_rotationConstSeprarate,u_rotationConstMaxSeprarate,_random0.w)*age;
+					vec3 ageRot=mix(u_rotationConstSeprarate,u_rotationConstMaxSeprarate,random0.w)*age;
 			        rotation+=ageRot;
 			  #endif
 				#ifdef ROTATIONTWOCURVES
-					rotation+=vec3(mix(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveMaxX,t),_random0.w)
-			        ,mix(evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveMaxY,t),_random0.w)
-			        ,mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),_random0.w));
+					rotation+=vec3(mix(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveMaxX,t),random0.w)
+			        ,mix(evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveMaxY,t),random0.w)
+			        ,mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),random0.w));
 				#endif
 	#endif
 	return rotation;
@@ -517,7 +516,7 @@ vec2 computeUV(in vec2 uv,in float t)
 	#ifdef TEXTURESHEETANIMATIONTWOCURVE
 		float cycleNormalizedAge=t*u_cycles;
 		float uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);
-	  float frame=floor(mix(evaluate_curve_frame(u_uvCurve,uvNormalizedAge),evaluate_curve_frame(u_uvCurveMax,uvNormalizedAge),_random1.x));
+	  float frame=floor(mix(evaluate_curve_frame(u_uvCurve,uvNormalizedAge),evaluate_curve_frame(u_uvCurveMax,uvNormalizedAge),random1.x));
 		uv.x *= u_subUV.x + u_subUV.z;
 		uv.y *= u_subUV.y + u_subUV.w;
 		float totalULength=frame*u_subUV.x;

@@ -21,6 +21,8 @@ namespace paper.editor {
             createUUID = generateUuid;
             //初始化编辑环境
             this.initEditEnvironment();
+            //允许重新加载
+            RES.FEATURE_FLAG.FIX_DUPLICATE_LOAD = 0;
             //初始化资源
             await RES.loadConfig("resource/default.res.json", "resource/");
             //初始化编辑场景
@@ -56,13 +58,13 @@ namespace paper.editor {
                 obj.activeSelf = true;
             });
         }
+        private static currentEditInfo: { url: string, type: string };
         /**
          * 编辑场景
          * @param sceneUrl 场景资源URL
          */
         public static async editScene(sceneUrl: string) {
-            await RES.getResAsync(sceneUrl);
-            const rawScene = RES.getRes(sceneUrl) as RawScene;
+            const rawScene = await RES.getResAsync(sceneUrl) as RawScene;
             if (rawScene) {
                 if (this.activeEditorModel) {
                     this.activeEditorModel.scene.destroy();
@@ -71,6 +73,7 @@ namespace paper.editor {
                 let sceneEditorModel = new EditorModel();
                 sceneEditorModel.init(scene, 'scene', sceneUrl);
                 this.setActiveModel(sceneEditorModel);
+                this.currentEditInfo = { url: sceneUrl, type: 'scene' }
             }
         }
         /**
@@ -78,8 +81,7 @@ namespace paper.editor {
          * @param prefabUrl 预置体资源URL
          */
         public static async editPrefab(prefabUrl: string) {
-            await RES.getResAsync(prefabUrl);
-            const prefab = RES.getRes(prefabUrl) as Prefab;
+            const prefab = await RES.getResAsync(prefabUrl) as Prefab;
             if (prefab) {
                 if (this.activeEditorModel) {
                     this.activeEditorModel.scene.destroy();
@@ -91,9 +93,10 @@ namespace paper.editor {
                 prefabEditorModel.init(scene, 'prefab', prefabUrl);
                 //清除自身的预置体信息
                 let clearPrefabInfo = (obj: GameObject): void => {
-                    obj.extras.linkedID = undefined;
-                    obj.extras.prefab = undefined;
-                    obj.extras.prefabRootId = undefined;
+                    obj.extras={};
+                    for(let comp of obj.components){
+                        comp.extras={};
+                    }
                     for (let i: number = 0; i < obj.transform.children.length; i++) {
                         let child = obj.transform.children[i].gameObject;
                         if (prefabEditorModel.isPrefabChild(child))
@@ -102,6 +105,23 @@ namespace paper.editor {
                 }
                 clearPrefabInfo(prefabInstance);
                 this.setActiveModel(prefabEditorModel);
+                this.currentEditInfo = { url: prefabUrl, type: 'prefab' }
+            }
+        }
+        /**
+         * 刷新
+         */
+        public static async refresh() {
+            if (this.activeEditorModel) {
+                this.activeEditorModel.scene.destroy();
+            }
+            //初始化资源
+            await RES.loadConfig("resource/default.res.json", "resource/");
+            if (this.currentEditInfo) {
+                switch (this.currentEditInfo.type) {
+                    case 'scene': this.editScene(this.currentEditInfo.url); break;
+                    case 'prefab': this.editPrefab(this.currentEditInfo.url); break;
+                }
             }
         }
         /**
@@ -138,8 +158,7 @@ namespace paper.editor {
         private static initEditEnvironment() {
             egret3d.runEgret({
                 antialias: false,
-                isEditor: true,
-                isPlaying: false,
+                playerMode: PlayerMode.Editor,
                 systems: [
                     egret3d.BeginSystem,
                     paper.EnableSystem,
@@ -158,6 +177,7 @@ namespace paper.editor {
                     //
                     egret3d.CameraSystem,
                     egret3d.WebGLRenderSystem,
+                    egret3d.GizmoRenderSystem,
                     //
                     paper.DisableSystem,
                     egret3d.EndSystem

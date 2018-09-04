@@ -45,13 +45,6 @@ namespace paper {
             BaseSystem._createEnabled = false;
         }
         /**
-         * TODO 宏定义。
-         * @internal
-         */
-        protected _isEditorUpdate() {
-            return Application.isEditor && !Application.isPlaying;
-        }
-        /**
          * 系统内部初始化。
          * @internal
          */

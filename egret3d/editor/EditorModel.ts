@@ -128,27 +128,8 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createRemoveComponentFromPrefab(stateData: any) {
-            const data = {
-                ...stateData
-            }
-
-            const state = RemovePrefabComponentState.create(data);
-            this.addState(state);
-        }
-
-        public createAddComponentToPrefab(serializeData: any, gameObjIds: string[]) {
-            // const state = AddPrefabComponentState.create(serializeData, gameObjIds);
-            // this.addState(state);
-        }
-
-        public createModifyAssetPropertyState(assetUrl: string, newValueList: any[], preValueCopylist: any[]) {
-            const state = ModifyAssetPropertyState.create(assetUrl, newValueList, preValueCopylist);
-            this.addState(state);
-        }
-
-        public createPrefabState(prefab: any) {
-            const state = CreatePrefabState.create({ prefab });
+        public createPrefabState(prefab: Prefab, parent?: GameObject) {
+            const state = CreatePrefabState.create(prefab, parent);
             this.addState(state);
         }
 
@@ -168,18 +149,18 @@ namespace paper.editor {
                     const serializeData = value.serialize(value);
                     return { className, serializeData };
                 case editor.EditType.SHADER:
-                    return value.url;
+                    return value.name;
                 case editor.EditType.LIST:
                     return value;
                 case editor.EditType.MATERIAL_ARRAY:
                     const data = value.map((item) => {
-                        let url = item.url.substr(RES.config.config.resourceRoot.length, item.url.length);
-                        return { name: url, url: url };
+                        return { name: item.name, url: item.name };
                     })
                     return data;
                 case editor.EditType.MESH:
-                    let url = value.glTFAsset.url;
-                    url = url.substr(RES.config.config.resourceRoot.length, url.length);
+                    if (!value)
+                        return '';
+                    let url = value.name;
                     return url;
                 case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
@@ -194,7 +175,7 @@ namespace paper.editor {
             }
         }
 
-        public async deserializeProperty(serializeData: any, editType: editor.EditType): Promise<any> {
+        public deserializeProperty(serializeData: any, editType: editor.EditType) {
             switch (editType) {
                 case editor.EditType.NUMBER:
                 case editor.EditType.TEXT:
@@ -215,21 +196,20 @@ namespace paper.editor {
                     return target;
                 case editor.EditType.SHADER:
                     const url = serializeData;
-                    const asset = await RES.getResAsync(url);
+                    const asset = paper.Asset.find(url);
                     return asset;
                 case editor.EditType.LIST:
                     return serializeData;
                 case editor.EditType.MATERIAL_ARRAY:
                     const materials: egret3d.Material[] = [];
                     for (const matrial of serializeData) {
-                        const asset = await RES.getResAsync(matrial.url);
-                        materials.push(asset);
+                        const asset = paper.Asset.find(matrial.url);
+                        materials.push(asset as egret3d.Material);
                     }
                     return materials;
                 case editor.EditType.MESH:
-                    let meshAsset = await RES.getResAsync(serializeData);
-                    let mesh: egret3d.Mesh = new egret3d.Mesh(meshAsset, 0); // TODO
-                    return mesh;
+                    let meshAsset = paper.Asset.find(serializeData);
+                    return meshAsset;
                 case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
                 case editor.EditType.TRANSFROM:
@@ -243,7 +223,7 @@ namespace paper.editor {
             }
         }
 
-        public createGameObject(parentList: GameObject[], createType: string) {
+        public createGameObject(parentList: (GameObject | Scene)[], createType: string) {
             let state = CreateGameObjectState.create(parentList, createType);
             this.addState(state);
         }
@@ -255,20 +235,6 @@ namespace paper.editor {
             }
             let state = AddComponentState.create(gameObjectUUid, compClzName);
             this.addState(state);
-        }
-
-        /**
-        *  TODO:因gameobject未提供通过组件实例添加组件的方法，暂时这样处理
-        * @param gameObject 
-        * @param component 
-        */
-        public addComponentToGameObject(gameObject: GameObject, component: BaseComponent) {
-            let components = gameObject.components;
-            (components as any).push(component);
-            component.initialize();
-            if (component.isActiveAndEnabled) {
-                paper.EventPool.dispatchEvent(paper.EventPool.EventType.Enabled, component);
-            }
         }
 
         public removeComponent(gameObjectUUid: string, componentUUid: string): void {
@@ -497,14 +463,6 @@ namespace paper.editor {
             return null;
         }
 
-        public async getAssetByAssetUrl(url: string): Promise<any> {
-            let asset = await RES.getResAsync(url);
-            if (asset) {
-                return asset;
-            }
-            return null;
-        }
-
         public getGameObjectsByUUids(uuids: string[]): GameObject[] {
             let objects = Application.sceneManager.activeScene.gameObjects;
             let obj: GameObject;
@@ -586,7 +544,7 @@ namespace paper.editor {
         }
 
         public isPrefabChild(gameObj: GameObject): boolean {
-            if (gameObj.extras.prefabRootId) {
+            if (gameObj.extras.rootID) {
                 return true;
             }
             return false;
@@ -659,8 +617,8 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createRevertPrefabState(revertData:editor.revertData,revertPrefabInstanceId:string) {
-            let state = RevertPrefabInstanceState.create(revertData,revertPrefabInstanceId);
+        public createRevertPrefabState(revertData: editor.revertData, revertPrefabInstanceId: string) {
+            let state = RevertPrefabInstanceState.create(revertData, revertPrefabInstanceId);
             this.addState(state);
         }
 
@@ -682,15 +640,14 @@ namespace paper.editor {
             return result;
         }
 
-        public updateAsset(asset:Asset,prefabInstance:GameObject | null = null)
-        {
-            const refs = this.findAssetRefs(Application.sceneManager.activeScene,asset);
+        public updateAsset(asset: Asset, prefabInstance: GameObject | null = null) {
+            const refs = this.findAssetRefs(Application.sceneManager.activeScene, asset);
 
-            let serializeData:ISerializedData;
+            let serializeData: ISerializedData;
             if (asset instanceof Prefab) {
                 serializeData = paper.serialize(prefabInstance!);
 
-            }else{
+            } else {
 
             }
 
@@ -698,32 +655,32 @@ namespace paper.editor {
 
             //destory asset,getRes
 
-            //update refrence
+            //update refrence (paper.assets[])
 
             this._cacheIds.length = 0;
         }
 
-        private _cacheIds:string[] = [];
+        private _cacheIds: string[] = [];
 
         private findAssetRefs(target: any, as: Asset, refs: any[] | null = null) {
             if (this._cacheIds.indexOf(target.uuid) >= 0) {
                 return;
             }
-        
+
             this._cacheIds.push(target.uuid);
-        
+
             refs = refs || [];
-        
+
             for (const key in target) {
                 const source = target[key];
                 if ((typeof source) === "object") {
                     this.findFromChildren(source, as, refs, target, key);
                 }
             }
-        
+
             return refs;
         }
-        
+
         private findFromChildren(source: any, as: Asset, refs: any[], parent: any, key: any) {
             if ((typeof source) !== "object") {
                 return;
@@ -735,20 +692,20 @@ namespace paper.editor {
                     this.findFromChildren(element, as, refs, source, index);
                 }
             }
-        
+
             if (source.constructor === Object) {
                 for (const key in source) {
                     const element = source[key];
                     this.findFromChildren(element, as, refs, source, key);
                 }
             }
-        
+
             if (source instanceof BaseObject) {
                 if (source instanceof Asset && source === as) {
                     refs.push({ p: parent, k: key });
                     return;
                 }
-        
+
                 this.findAssetRefs(source, as, refs);
             }
         }
@@ -759,15 +716,87 @@ namespace paper.editor {
                 if (gameObj.extras!.linkedID) {
                     objs.push(gameObj);
                 }
-            }
 
-            for (let index = 0; index < gameObj.transform.children.length; index++) {
-                const element = gameObj.transform.children[index];
-                const obj: paper.GameObject = element.gameObject;
-                this.getAllGameObjectsFromPrefabInstance(obj, objs);
+                for (let index = 0; index < gameObj.transform.children.length; index++) {
+                    const element = gameObj.transform.children[index];
+                    const obj: paper.GameObject = element.gameObject;
+                    this.getAllGameObjectsFromPrefabInstance(obj, objs);
+                }
             }
 
             return objs;
         }
+
+        public async modifyMaterialPropertyValues(target: egret3d.Material, valueList: any[]): Promise<void> {
+            for (const propertyValue of valueList) {
+                const { propName, copyValue, uniformType } = propertyValue;
+                
+                if (!copyValue) {
+                    continue;
+                }
+
+                switch (uniformType) {
+                    case gltf.UniformType.BOOL:
+                        target.setBoolean(propName, copyValue);
+                        break;
+                    case gltf.UniformType.INT:
+                        target.setInt(propName, copyValue);
+                    case gltf.UniformType.FLOAT:
+                        target.setFloat(propName, copyValue);
+                        break;
+                    case gltf.UniformType.BOOL_VEC2:
+                    case gltf.UniformType.INT_VEC2:
+                    case gltf.UniformType.FLOAT_VEC2:
+                        target.setVector2v(propName, copyValue);
+                        break;
+                    case gltf.UniformType.BOOL_VEC3:
+                    case gltf.UniformType.INT_VEC3:
+                    case gltf.UniformType.FLOAT_VEC3:
+                        target.setVector3v(propName, copyValue);
+                        break;
+                    case gltf.UniformType.BOOL_VEC4:
+                    case gltf.UniformType.INT_VEC4:
+                    case gltf.UniformType.FLOAT_VEC4:
+                        target.setVector4v(propName, copyValue);
+                        break;
+                    case gltf.UniformType.SAMPLER_2D:
+                        target._glTFTechnique.uniforms[propName].value = copyValue;
+                        break;
+                    case gltf.UniformType.FLOAT_MAT2:
+                    case gltf.UniformType.FLOAT_MAT3:
+                    case gltf.UniformType.FLOAT_MAT4:
+                        target.setMatrixv(propName, copyValue);
+                        break;
+                    default:
+                        break;
+                }
+
+                if (propName === "renderQueue") {
+                    (target.config.materials![0] as egret3d.GLTFMaterial).extensions.paper.renderQueue = copyValue;
+                }
+
+                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: copyValue }));
+            }
+
+            const _glTFMaterial = target.config.materials![0] as egret3d.GLTFMaterial;
+            const gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values!;
+            const uniformMap = target._glTFTechnique.uniforms;
+            for (const key in uniformMap) {
+                if (uniformMap[key].semantic === undefined) {
+                    const value = uniformMap[key].value;
+                    if (Array.isArray(value)) {
+                        gltfUnifromMap[key] = value.concat();
+                    }
+                    else if (value instanceof egret3d.GLTexture2D) {
+                        gltfUnifromMap[key] = value.name;
+                    }
+                    else {
+                        gltfUnifromMap[key] = value;
+                    }
+                }
+            }
+        }
+
+
     }
 }

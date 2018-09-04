@@ -70,7 +70,7 @@ namespace paper.editor {
             if (this.editorModel.isPrefabChild(obj)) {
                 obj.extras.linkedID=undefined;
                 obj.extras.prefab=undefined;
-                obj.extras.prefabRootId=undefined;
+                obj.extras.rootID=undefined;
                 for (let i: number = 0; i < obj.transform.children.length; i++) {
                     this.clearPrefabInfo(obj.transform.children[i].gameObject);
                 }

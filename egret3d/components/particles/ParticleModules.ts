@@ -1,7 +1,7 @@
 namespace egret3d.particle {
 
-    const colorHelper1: Color = new Color();
-    const colorHelper2: Color = new Color();
+    const colorHelper1: Color = Color.create();
+    const colorHelper2: Color = Color.create();
 
     export const enum CurveMode {
         Constant = 0,
@@ -159,9 +159,9 @@ namespace egret3d.particle {
 
     export class GradientColorKey extends paper.BaseObject {
         @paper.serializedField
-        public color: Color = new Color();
-        @paper.serializedField
         public time: number;
+        @paper.serializedField
+        public readonly color: Color = Color.create();
 
         public deserialize(element: any) {
             this.color.deserialize(element.color);
@@ -324,11 +324,11 @@ namespace egret3d.particle {
         @paper.serializedField
         public mode: ColorGradientMode = ColorGradientMode.Gradient;
         @paper.serializedField
-        public readonly color: Color = new Color();
+        public readonly color: Color = Color.create();
         @paper.serializedField
-        public readonly colorMin: Color = new Color();
+        public readonly colorMin: Color = Color.create();
         @paper.serializedField
-        public readonly colorMax: Color = new Color();
+        public readonly colorMax: Color = Color.create();
         @paper.serializedField
         public readonly gradient: Gradient = new Gradient();
         @paper.serializedField

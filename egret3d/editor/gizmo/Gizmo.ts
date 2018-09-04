@@ -28,7 +28,47 @@ namespace paper.editor {
             this.camera.gameObject.addComponent(Gizmo)
 
         }
+        public static setGameObj(obj: GameObject) {
+            this.gameObj = obj
+        }
+        private static gameObj: GameObject
+        public static DrawStroke() {
+            if (!this.enabled) return;
+            if (!this.gameObj) return;
+            let obj = this.gameObj
+            let gl = this.webgl
+            let prg = this.glProgram_stroke;
+            let mesh = obj.getComponent(egret3d.MeshFilter).mesh
+            let position = mesh.getAttributes('POSITION')
+            let normal = mesh.getAttributes('NORMAL')
+            let indices = mesh.getIndices()
+            let vertexCount = position.length / 3
 
+            let vertexBuffer = gl.createBuffer();
+            let normalBuffer = gl.createBuffer();
+            let indiceBuffer = gl.createBuffer();
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
+            gl.bufferData(gl.ARRAY_BUFFER, position, gl.STATIC_DRAW)
+            gl.vertexAttribPointer(gl.getAttribLocation(prg.prg, 'aPosition'), 3, gl.FLOAT, false, 0, 0)
+            gl.enableVertexAttribArray(gl.getAttribLocation(prg.prg, 'aPosition'))
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer)
+            gl.bufferData(gl.ARRAY_BUFFER, normal, gl.STATIC_DRAW)
+            gl.vertexAttribPointer(gl.getAttribLocation(prg.prg, 'aNormal'), 3, gl.FLOAT, false, 0, 0)
+            gl.enableVertexAttribArray(gl.getAttribLocation(prg.prg, 'aNormal'))
+
+            this.setMVPMatrix();
+            prg.setMatrix("mvpMat", this.mvpMatrix);
+            prg.setColor("lineColor", [1, 1, 1, 1]);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indiceBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+
+            gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
+            console.log(position, normal)
+        }
         public static DrawIcon(path: string, pos: egret3d.Vector3, size: number, color?: egret3d.Color) {
             if (!this.enabled) return;
 
@@ -53,7 +93,7 @@ namespace paper.editor {
                 prg.setColor("iconColor", [color.r, color.g, color.b, color.a]);
             } else {
                 prg.setBool("hasColor", false);
-                prg.setColor("iconColor", [0, 0, 0, 1]);
+                prg.setColor("iconColor", [1, 0, 0, 1]);
             }
 
             prg.setTexture("PointTexture", 0);
@@ -67,31 +107,31 @@ namespace paper.editor {
         private static verticesLine: number[];
         private static lineVertexBuffer;
 
-        public static DrawLine(posStart: egret3d.Vector3, posEnd: egret3d.Vector3, size?: number, color?: number[]) {
-            if (!this.enabled) return;
+        // public static DrawLine(posStart: egret3d.Vector3, posEnd: egret3d.Vector3, size?: number, color?: number[]) {
+        //     if (!this.enabled) return;
 
-            let gl = this.webgl;
-            let prg = this.glProgram_line;
-            gl.enable(gl.DEPTH_TEST);
+        //     let gl = this.webgl;
+        //     let prg = this.glProgram_line;
+        //     gl.enable(gl.DEPTH_TEST);
 
-            this.verticesLine = [
-                posStart.x, posStart.y, posStart.z,
-                posEnd.x, posEnd.y, posEnd.z
-            ];
-            gl.lineWidth(size || 1);
-            prg.use();
-            let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
+        //     this.verticesLine = [
+        //         posStart.x, posStart.y, posStart.z,
+        //         posEnd.x, posEnd.y, posEnd.z
+        //     ];
+        //     gl.lineWidth(size || 1);
+        //     prg.use();
+        //     let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.lineVertexBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.verticesLine), gl.STATIC_DRAW);
-            gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(prgVertexPosition);
-            this.setMVPMatrix();
-            prg.setMatrix("mvpMat", this.mvpMatrix);
-            prg.setColor("lineColor", color);
+        //     gl.bindBuffer(gl.ARRAY_BUFFER, this.lineVertexBuffer);
+        //     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.verticesLine), gl.STATIC_DRAW);
+        //     gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
+        //     gl.enableVertexAttribArray(prgVertexPosition);
+        //     this.setMVPMatrix();
+        //     prg.setMatrix("mvpMat", this.mvpMatrix);
+        //     prg.setColor("lineColor", color);
 
-            gl.drawArrays(gl.LINES, 0, 2);
-        }
+        //     gl.drawArrays(gl.LINES, 0, 2);
+        // }
 
         private _oldTransform
         private nrLine
@@ -99,42 +139,7 @@ namespace paper.editor {
             let gl = Gizmo.webgl;
             let prg = Gizmo.glProgram_line;
 
-            // var dis1;
-            // var delta;
-            // dis1 = egret3d.Vector3.getLength(this.gameObject.transform.getLocalPosition());
-            // delta = (dis1 - this._oldTransform) / 20;
-            // this._oldTransform = egret3d.Vector3.getLength(this.gameObject.transform.getLocalPosition());
-
-            // Gizmo.coordVertexBuffer = gl.createBuffer();
-            // let bia = -0.05;
-
-            // this.nrLine = this.nrLine + delta
             let nrLine = this.nrLine
-            // console.log(nrLine)
-            // for (let i = 0, len = 2 * nrLine + 1; i < len; i++) {
-            //     i = i + dis1;
-            //     Gizmo.verticesCoord[6 * i] = -nrLine + i;
-            //     Gizmo.verticesCoord[6 * i + 1] = bia;
-            //     Gizmo.verticesCoord[6 * i + 2] = -nrLine;
-            //     Gizmo.verticesCoord[6 * i + 3] = -nrLine + i;
-            //     Gizmo.verticesCoord[6 * i + 4] = bia;
-            //     Gizmo.verticesCoord[6 * i + 5] = nrLine;
-
-            //     Gizmo.verticesCoord[6 * len + 6 * i] = -nrLine;
-            //     Gizmo.verticesCoord[6 * len + 6 * i + 1] = bia;
-            //     Gizmo.verticesCoord[6 * len + 6 * i + 2] = -nrLine + i;
-            //     Gizmo.verticesCoord[6 * len + 6 * i + 3] = nrLine;
-            //     Gizmo.verticesCoord[6 * len + 6 * i + 4] = bia;
-            //     Gizmo.verticesCoord[6 * len + 6 * i + 5] = -nrLine + i;
-            //     i = i - dis1
-            // }
-            // Gizmo.verticesCoord = Gizmo.verticesCoord.concat([0, -nrLine, 0, 0, nrLine, 0]);
-            // gl.bindBuffer(gl.ARRAY_BUFFER, Gizmo.coordVertexBuffer);
-            // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(Gizmo.verticesCoord), gl.STATIC_DRAW);
-
-
-
-
             if (!this.enabled) return;
             gl.enable(gl.DEPTH_TEST);
 
@@ -226,27 +231,29 @@ namespace paper.editor {
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
         }
 
-        private static mvpMatrix: egret3d.Matrix = new egret3d.Matrix();
-        private static mMatrix: egret3d.Matrix = new egret3d.Matrix();
-        private static vMatrix: egret3d.Matrix = new egret3d.Matrix();
-        private static pMatrix: egret3d.Matrix = new egret3d.Matrix();
+        private static mvpMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static mMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static vMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static pMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
 
-        private static setMVPMatrix(m?: egret3d.Matrix) {
+        private static setMVPMatrix(m?: egret3d.Matrix4) {
             var asp = this.camera.context.viewPortPixel.w / this.camera.context.viewPortPixel.h;
-            this.camera.calcViewMatrix(this.vMatrix);
+            this.vMatrix.inverse(this.camera.gameObject.transform.getWorldMatrix());
             this.camera.calcProjectMatrix(asp, this.pMatrix);
-            egret3d.Matrix.multiply(this.pMatrix, this.vMatrix, this.mvpMatrix);
-            m = m || new egret3d.Matrix();
-            egret3d.Matrix.copy(m, this.mMatrix);
-            egret3d.Matrix.multiply(this.mvpMatrix, this.mMatrix, this.mvpMatrix);
+            this.mvpMatrix.multiply(this.pMatrix, this.vMatrix);
+            m = m || new egret3d.Matrix4();
+            this.mMatrix.copy(m);
+            this.mvpMatrix.multiply(this.mMatrix);
         }
 
         private static glProgram_line: editor.GizmoShader;
         private static glProgram_icon: editor.GizmoShader;
+        private static glProgram_stroke: editor.GizmoShader;
 
         private static initPrg() {
             this.glProgram_line = new GizmoShader(this.webgl, editor.line_vert, editor.line_frag);
             this.glProgram_icon = new GizmoShader(this.webgl, editor.icon_vert, editor.icon_frag);
+            this.glProgram_stroke = new GizmoShader(this.webgl, editor.stroke_vert, editor.line_frag);
         }
 
         // const cameras = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
@@ -288,6 +295,17 @@ namespace paper.editor {
             const camerasAndLights = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
 
             for (const camera of camerasAndLights.cameras) {
+                // if (!camera.gameObject.getComponent(egret3d.MeshFilter) && camera.gameObject.name != "EditorCamera") {
+                //     let obj = camera.gameObject
+                //     let mesh = obj.addComponent(egret3d.MeshFilter)
+                //     mesh.mesh = egret3d.DefaultMeshes.CUBE
+                //     // let renderer = obj.addComponent(egret3d.MeshRenderer);
+                //     // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                //     // mat.setVector4v("_Color", [1, 0, 0, 1]);
+                //     // renderer.materials = [mat];
+                //     // obj.transform.setScale(0.6, 0.4, 0.4)
+                // }
+
                 Gizmo.DrawIcon("camera", camera.gameObject.transform.getPosition(), 30);
                 Gizmo.DrawCameraSquare(camera.gameObject, [1, 0, 0, 1])
                 //Gizmo.DrawCameraSquare(this.cameraPool[i], [1.0, 0.0, 1.0, 1.0]);
@@ -407,54 +425,54 @@ namespace paper.editor {
             this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
         }
 
-        public static DrawArrow(m: egret3d.Matrix, color: number[], fixSize?: boolean) {
-            if (!this.enabled) return;
+        // public static DrawArrow(m: egret3d.Matrix4, color: number[], fixSize?: boolean) {
+        //     if (!this.enabled) return;
 
-            let gl = this.webgl;
-            let prg = this.glProgram_line;
-            gl.disable(gl.DEPTH_TEST);
+        //     let gl = this.webgl;
+        //     let prg = this.glProgram_line;
+        //     gl.disable(gl.DEPTH_TEST);
 
-            prg.use();
-            let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.arrowVertexBuffer);
-            gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(prgVertexPosition);
-            this.setMVPMatrix(m);
-            prg.setMatrix("mvpMat", this.mvpMatrix);
-            prg.setColor("lineColor", color);
-            gl.drawArrays(gl.LINES, 0, 2);
-            gl.drawArrays(gl.TRIANGLES, 2, 24);
-        }
+        //     prg.use();
+        //     let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
+        //     gl.bindBuffer(gl.ARRAY_BUFFER, this.arrowVertexBuffer);
+        //     gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
+        //     gl.enableVertexAttribArray(prgVertexPosition);
+        //     this.setMVPMatrix(m);
+        //     prg.setMatrix("mvpMat", this.mvpMatrix);
+        //     prg.setColor("lineColor", color);
+        //     gl.drawArrays(gl.LINES, 0, 2);
+        //     gl.drawArrays(gl.TRIANGLES, 2, 24);
+        // }
 
-        private static xArrowMMatrix = new egret3d.Matrix();
-        private static yArrowMMatrix = new egret3d.Matrix(new Float32Array([
-            0, 1, 0, 0,
-            -1, 0, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        ]));
-        private static zArrowMMatrix = new egret3d.Matrix(new Float32Array([
-            0, 0, 1, 0,
-            0, 1, 0, 0,
-            -1, 0, 0, 0,
-            0, 0, 0, 1
-        ]));
+        // private static xArrowMMatrix = new egret3d.Matrix4();
+        // private static yArrowMMatrix = egret3d.Matrix4.create([
+        //     0, 1, 0, 0,
+        //     -1, 0, 0, 0,
+        //     0, 0, 1, 0,
+        //     0, 0, 0, 1
+        // ]);
+        // private static zArrowMMatrix = egret3d.Matrix4.create([
+        //     0, 0, 1, 0,
+        //     0, 1, 0, 0,
+        //     -1, 0, 0, 0,
+        //     0, 0, 0, 1
+        // ]);
 
-        private static helpMat: egret3d.Matrix = new egret3d.Matrix();
-        private static helpMat1: egret3d.Matrix = new egret3d.Matrix();
-        public static DrawArrowXYZ(transform: egret3d.Transform) {
-            console.log("now drawXYZ", transform)
-            let worldMat = Gizmo.helpMat;
-            Gizmo.getWorldMatrixWithoutScale(transform, 10, worldMat);
-            egret3d.Matrix.multiply(worldMat, this.xArrowMMatrix, worldMat);
-            Gizmo.DrawArrow(worldMat, [1.0, 0.0, 0.0, 1.0], true);
-            egret3d.Matrix.multiply(worldMat, this.yArrowMMatrix, worldMat);
-            Gizmo.DrawArrow(worldMat, [0.0, 1.0, 0.0, 1.0], true);
-            egret3d.Matrix.multiply(worldMat, this.zArrowMMatrix, worldMat);
-            Gizmo.DrawArrow(worldMat, [0.0, 0.0, 1.0, 1.0], true);
-        }
-        private static getWorldMatrixWithoutScale(transform: egret3d.Transform, fixScale: number, out: egret3d.Matrix) {
-            egret3d.Matrix.identify(out);
+        private static helpMat: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static helpMat1: egret3d.Matrix4 = new egret3d.Matrix4();
+        // public static DrawArrowXYZ(transform: egret3d.Transform) {
+        //     console.log("now drawXYZ", transform)
+        //     let worldMat = Gizmo.helpMat;
+        //     Gizmo.getWorldMatrixWithoutScale(transform, 10, worldMat);
+        //     worldMat.multiply(this.xArrowMMatrix);
+        //     Gizmo.DrawArrow(worldMat, [1.0, 0.0, 0.0, 1.0], true);
+        //     worldMat.multiply(this.yArrowMMatrix);
+        //     Gizmo.DrawArrow(worldMat, [0.0, 1.0, 0.0, 1.0], true);
+        //     worldMat.multiply(this.zArrowMMatrix);
+        //     Gizmo.DrawArrow(worldMat, [0.0, 0.0, 1.0, 1.0], true);
+        // }
+        private static getWorldMatrixWithoutScale(transform: egret3d.Transform, fixScale: number, out: egret3d.Matrix4) {
+            out.identity();
             let p = transform.getPosition();
             let r = transform.getRotation();
             let p_c = this.camera.gameObject.transform.getPosition();
@@ -462,10 +480,11 @@ namespace paper.editor {
             let sca = egret3d.Vector3.getLength(p_c) / fixScale;
 
             let matS = this.helpMat1;
-            egret3d.Matrix.formScale(sca, sca, sca, matS);
+            // egret3d.Quaternion.toMatrix(r, out);
+            out.fromRotation(r);
+            matS.fromScale(sca, sca, sca);
 
-            egret3d.Quaternion.toMatrix(r, out);
-            egret3d.Matrix.multiply(out, matS, out);
+            out.multiply(matS);
             out.rawData[12] = p.x;
             out.rawData[13] = p.y;
             out.rawData[14] = p.z;

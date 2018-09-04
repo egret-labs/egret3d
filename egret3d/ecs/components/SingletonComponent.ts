@@ -21,23 +21,31 @@ namespace paper {
          * 
          */
         public static getInstance<T extends SingletonComponent>(componentClass: ComponentClass<T>): T {
+            if (this.__instance) {
+                return this.__instance as T;
+            }
+
             return paper.Application.sceneManager.globalGameObject.getOrAddComponent<T>(componentClass) as T;
         }
 
         public initialize() {
             super.initialize();
 
-            if (!(this.constructor as SingletonComponentClass<SingletonComponent>).__instance) {
-                (this.constructor as SingletonComponentClass<SingletonComponent>).__instance = this;
+            if ((this.constructor as SingletonComponentClass<SingletonComponent>).__instance) {
+                console.debug("Initialize singleton component error.", egret.getQualifiedClassName(this));
             }
+
+            (this.constructor as SingletonComponentClass<SingletonComponent>).__instance = this;
         }
 
         public uninitialize() {
             super.uninitialize();
 
-            if ((this.constructor as SingletonComponentClass<SingletonComponent>).__instance === this) {
-                (this.constructor as SingletonComponentClass<SingletonComponent>).__instance = null;
+            if ((this.constructor as SingletonComponentClass<SingletonComponent>).__instance !== this) {
+                console.debug("Uninitialize singleton component error.", egret.getQualifiedClassName(this));
             }
+
+            (this.constructor as SingletonComponentClass<SingletonComponent>).__instance = null;
         }
     }
 }

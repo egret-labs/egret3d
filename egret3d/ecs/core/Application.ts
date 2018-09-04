@@ -5,6 +5,14 @@ namespace paper {
     /**
      * 
      */
+    export const enum PlayerMode {
+        Player,
+        DebugPlayer,
+        Editor,
+    }
+    /**
+     * 
+     */
     export let Time: Clock;
     /**
      * 
@@ -41,11 +49,9 @@ namespace paper {
          * 场景管理器。
          */
         public readonly sceneManager: SceneManager = SceneManager.getInstance();
-
-        private _isEditor = false;
         private _isFocused = false;
-        private _isPlaying = false;
         private _isRunning = false;
+        private _playerMode: PlayerMode = PlayerMode.Player;
         private _bindUpdate: FrameRequestCallback | null = null;
 
         public _option: egret3d.RequiredRuntimeOptions;//TODO临时
@@ -63,15 +69,14 @@ namespace paper {
             this.systemManager.update();
         }
 
-        public init({ isEditor = false, isPlaying = true, systems = [] as { new(): BaseSystem }[], option = {}, canvas = {}, webgl = {} } = {}) {
-            this._isEditor = isEditor;
-            this._isPlaying = isPlaying;
+        public init({ playerMode = PlayerMode.Player, systems = [] as { new(): BaseSystem }[], option = {}, canvas = {}, webgl = {} } = {}) {
+            this._playerMode = playerMode;
             this._option = option as egret3d.RequiredRuntimeOptions;
             this._canvas = canvas as HTMLCanvasElement;
             this._webgl = webgl as WebGLRenderingContext;
 
             for (const systemClass of systems) {
-                this.systemManager.register(systemClass);
+                this.systemManager.register(systemClass, null);
             }
 
             this.resume();
@@ -102,20 +107,16 @@ namespace paper {
             (this.systemManager.getSystem(paper.LateUpdateSystem)!).callLater(callback);
         }
 
-        public get isEditor() {
-            return this._isEditor;
-        }
-
         public get isFocused() {
             return this._isFocused;
         }
 
-        public get isPlaying() {
-            return this._isPlaying;
-        }
-
         public get isRunning() {
             return this._isRunning;
+        }
+
+        public get playerMode() {
+            return this._playerMode;
         }
     }
 

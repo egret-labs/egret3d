@@ -14,17 +14,23 @@ namespace paper {
      */
     export abstract class Asset extends BaseObject {
         /**
-         * @deprecated
+         * @internal
          */
-        private static readonly _assets: { [key: string]: Asset } = {};
+        public static readonly _assets: { [key: string]: Asset } = {};
         /**
-         * @deprecated
+         * @internal
          */
         public static register(asset: Asset) {
-            this._assets[asset.name] = asset;
+            if (!this._assets[asset.name]) {
+                this._assets[asset.name] = asset;
+            }
+            else if (this._assets[asset.name] !== asset) {
+                console.debug("Replace asset.", asset.name);
+                this._assets[asset.name] = asset;
+            }
         }
         /**
-         * @deprecated
+         * 
          */
         public static find<T extends Asset>(name: string) {
             const result = this._assets[name]
@@ -34,9 +40,8 @@ namespace paper {
 
             return result as T;
         }
-
         /**
-         * 
+         * @readonly
          */
         public name: string = "";
         /**
@@ -74,6 +79,16 @@ namespace paper {
          * @platform Web
          * @language zh_CN
          */
-        public abstract dispose(): void;
+        public dispose(disposeChildren?: boolean) {
+            if (this._isBuiltin) {
+                console.warn("Can not dispose builtin asset.", this.name);
+                return false;
+            }
+
+            delete Asset._assets[this.name];
+            this.name = "";
+
+            return true;
+        }
     }
 }

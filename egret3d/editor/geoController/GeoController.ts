@@ -15,7 +15,9 @@ namespace paper.editor {
         private _cameraObject: paper.GameObject
         private bindMouse: egret3d.MouseDevice;
         private bindKeyboard: egret3d.KeyboardDevice;
-
+        public get onGeoControll() {
+            return this.mainGeo.onGeoControll
+        }
         private mainGeo: GeoContainer;
         private get controller() {
             return this.mainGeo.geo;
@@ -35,29 +37,31 @@ namespace paper.editor {
 
         private geoCtrlMode: string = 'world';
         private geoCtrlType: string;
+        private coord: GameObject
         constructor() {
             super();
             this.mainGeo = new GeoContainer();
+            this.coord = new GameObject()
             this.bindMouse = egret3d.InputManager.mouse;
             this.bindKeyboard = egret3d.InputManager.keyboard;
             this._cameraObject = Application.sceneManager.editorScene.find("EditorCamera");
             this._oldTransform = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
 
         }
+
         public onUpdate() {
             if (!this.editorModel) {
                 return;
             }
+            this.drawCoord();
             this.geoChangeByCamera();
             this.inputUpdate();
-            this.mouseRayCastUpdate();
             if (this._isEditing) {
                 (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
             }
             if (this.bindMouse.wasReleased(0)) {
-                this.mainGeo.wasReleased();
+                this.mainGeo.wasReleased(this.selectedGameObjs);
             }
-
         }
 
         private updateInLocalMode() {
@@ -70,9 +74,12 @@ namespace paper.editor {
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.wasPressed_local(ray, this.selectedGameObjs)
             }
-            if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+            else if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.isPressed_local(ray, this.selectedGameObjs)
+            }
+            else {
+                this.mouseRayCastUpdate();
             }
 
         }
@@ -84,31 +91,33 @@ namespace paper.editor {
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.wasPressed_world(ray, this.selectedGameObjs)
             }
-            if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
+            else if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
                 let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
                 this.mainGeo.isPressed_world(ray, this.selectedGameObjs)
+            }
+            else {
+                this.mouseRayCastUpdate();
             }
 
         }
 
         private _oldResult: BaseGeo
         private mouseRayCastUpdate() {
+            //变色逻辑
             let camera = this._cameraObject.getComponent(egret3d.Camera);
             let ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-
-            //变色逻辑
             const result = this.mainGeo.checkIntersect(ray)
             if (this._oldResult != result) {
                 if (this._oldResult) {
-                    this._oldResult.changeColor("origin")
+                    if (this._oldResult.geo) {
+                        this._oldResult.changeColor("origin")
+                    }
                 }
                 this._oldResult = result
                 if (result) {
                     result.changeColor("yellow")
                 }
             }
-
-            //控制杆移动逻辑初始化
         }
 
         private _oldTransform: any//TODO
@@ -180,13 +189,13 @@ namespace paper.editor {
             this.geoCtrlType = type;
 
             this.editorModel.changeEditType(type)
+            if (type == 'scale') {
+                this.mainGeo.geo.transform.setRotation(this.selectedGameObjs[0].transform.getRotation())
+            }
+            if (this.geoCtrlMode == 'world') {
+                this.controller.transform.setRotation(0, 0, 0, 1);
+            }
             this.mainGeo.changeType(type)
-            // switch (type) {
-            //     case 'position':
-            //         this.mainGeo = new positionCtrlGeo();
-            //         break;
-
-            // }
         }
         private addEventListener() {
             this.editorModel.addEventListener(EditorModelEvent.SELECT_GAMEOBJECTS, e => this.selectGameObjects(e.data), this);
@@ -229,6 +238,51 @@ namespace paper.editor {
                 this.controller.activeSelf = false;
             }
 
+        }
+        private drawCoord() {
+            let nrLine = 100;
+            let bia = -0.05;
+            let verticesCoord = [];
+            let indices = [];
+            var dis1;
+            var delta;
+            dis1 = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
+            delta = (dis1 - this._oldTransform) / 20;
+            for (let i = 0, len = 2 * nrLine + 1; i < len; i++) {
+                verticesCoord[6 * i] = -nrLine + i;
+                verticesCoord[6 * i + 1] = bia;
+                verticesCoord[6 * i + 2] = -nrLine;
+                verticesCoord[6 * i + 3] = -nrLine + i;
+                verticesCoord[6 * i + 4] = bia;
+                verticesCoord[6 * i + 5] = nrLine;
+
+                verticesCoord[6 * len + 6 * i] = -nrLine;
+                verticesCoord[6 * len + 6 * i + 1] = bia;
+                verticesCoord[6 * len + 6 * i + 2] = -nrLine + i;
+                verticesCoord[6 * len + 6 * i + 3] = nrLine;
+                verticesCoord[6 * len + 6 * i + 4] = bia;
+                verticesCoord[6 * len + 6 * i + 5] = -nrLine + i;
+            }
+            for (let i = 0; i < 8 * nrLine + 1; i++) {
+                indices.push(i)
+            }
+            var mesh = new egret3d.Mesh(nrLine * 8, 8 * nrLine)
+            var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
+            let color1 = new Float32Array([0.3, 0.3, 0.5])
+            const funs = mat.glTFTechnique.states.functions;
+            const enables = mat.glTFTechnique.states.enable;
+            const index = enables.indexOf(gltf.EnableState.DEPTH_TEST);
+            if (index < 0) {
+                enables.push(gltf.EnableState.DEPTH_TEST);
+            }
+            funs.depthMask = [true];
+            funs.depthFunc = [gltf.DepthFunc.LEQUAL];
+            mat.setVector3v("diffuse", color1);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, verticesCoord)
+            mesh.setIndices(indices);
+            mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines
+            this.coord.getOrAddComponent(egret3d.MeshFilter).mesh = mesh
+            this.coord.getOrAddComponent(egret3d.MeshRenderer).materials = [mat]
         }
     }
 }

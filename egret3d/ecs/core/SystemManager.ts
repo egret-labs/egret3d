@@ -30,7 +30,7 @@ namespace paper {
         /**
          * 注册一个系统到管理器中。
          */
-        public register(systemClass: { new(): BaseSystem }, after: { new(): BaseSystem } | null = null) {
+        public register(systemClass: { new(): BaseSystem }, after: { new(): BaseSystem } | null = paper.UpdateSystem) {
             if (this._preRegister(systemClass)) {
                 return;
             }

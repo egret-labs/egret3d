@@ -90,12 +90,10 @@ module egret.web {
             gl.activeTexture(gl.TEXTURE0);
             this.currentProgram = null;
         }
-
-
         /**
-         *  执行目前缓存在命令列表里的命令并清空
+         * @internal
          */
-        public activatedBuffer: WebGLRenderBuffer;
+        public _activatedBuffer: WebGLRenderBuffer;
         public $drawWebGL() {
             if (this.drawCmdManager.drawDataLen == 0) {
                 return;
@@ -118,12 +116,12 @@ module egret.web {
                 offset = this.drawData(data, offset);
                 // 计算draw call
                 if (data.type == DRAWABLE_TYPE.ACT_BUFFER) {
-                    this.activatedBuffer = data.buffer;
+                    this._activatedBuffer = data.buffer;
                     this.egretWebGLRenderContext.activatedBuffer = data.buffer;
                 }
                 if (data.type == DRAWABLE_TYPE.TEXTURE || data.type == DRAWABLE_TYPE.PUSH_MASK || data.type == DRAWABLE_TYPE.POP_MASK) {
-                    if (this.activatedBuffer && this.activatedBuffer.$computeDrawCall) {
-                        this.activatedBuffer.$drawCalls++;
+                    if (this._activatedBuffer && this._activatedBuffer.$computeDrawCall) {
+                        this._activatedBuffer.$drawCalls++;
                     }
                 }
             }
@@ -197,8 +195,8 @@ module egret.web {
                     this.onResize(data.width, data.height);
                     break;
                 case DRAWABLE_TYPE.CLEAR_COLOR:
-                    if (this.activatedBuffer) {
-                        let target = this.activatedBuffer.rootRenderTarget;
+                    if (this._activatedBuffer) {
+                        let target = this._activatedBuffer.rootRenderTarget;
                         if (target.width != 0 || target.height != 0) {
                             target.clear(true);
                         }
@@ -208,7 +206,7 @@ module egret.web {
                     this.activateBuffer(data.buffer, data.width, data.height);
                     break;
                 case DRAWABLE_TYPE.ENABLE_SCISSOR:
-                    let buffer = this.activatedBuffer;
+                    let buffer = this._activatedBuffer;
                     if (buffer) {
                         if (buffer.rootRenderTarget) {
                             buffer.rootRenderTarget.enabledStencil();
@@ -217,7 +215,7 @@ module egret.web {
                     }
                     break;
                 case DRAWABLE_TYPE.DISABLE_SCISSOR:
-                    buffer = this.activatedBuffer;
+                    buffer = this._activatedBuffer;
                     if (buffer) {
                         buffer.disableScissor();
                     }
@@ -394,7 +392,7 @@ module egret.web {
 
             let size = data.count * 3;
 
-            let buffer = this.activatedBuffer;
+            let buffer = this._activatedBuffer;
             if (buffer) {
                 if (buffer.rootRenderTarget) {
                     buffer.rootRenderTarget.enabledStencil();
@@ -430,7 +428,7 @@ module egret.web {
 
             let size = data.count * 3;
 
-            let buffer = this.activatedBuffer;
+            let buffer = this._activatedBuffer;
             if (buffer) {
                 buffer.stencilHandleCount--;
 

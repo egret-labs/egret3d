@@ -38,9 +38,6 @@ namespace egret3d {
             this._texture = WebGLCapabilities.webgl.createTexture()!;
         }
 
-        dispose() { }
-        caclByteLength() { return 0; };
-
         public get texture() {
             return this._texture;
         }
@@ -164,13 +161,17 @@ namespace egret3d {
         }
 
         dispose() {
-            if (this._isBuiltin) {
-                return;
+
+            if (!super.dispose()) {
+                return false;
             }
+
             if (this._texture != null) {
                 WebGLCapabilities.webgl.deleteTexture(this._texture);
                 this._texture = null!;
             }
+
+            return true;
         }
 
         getReader(redOnly: boolean = false): TextureReader {
@@ -194,10 +195,6 @@ namespace egret3d {
     }
 
     export abstract class RenderTarget implements IRenderTarget {
-        static useNull() {
-            const webgl = WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-        }
         /**
          * @internal
          */
@@ -353,7 +350,7 @@ namespace egret3d {
             }
             else {
                 const i = (y * this.width + x) * 4;
-                return new Color(this.data[i], this.data[i + 1], this.data[i + 2], this.data[i + 3]);
+                return Color.create(this.data[i], this.data[i + 1], this.data[i + 2], this.data[i + 3]);
             }
         }
     }

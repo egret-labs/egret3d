@@ -32,16 +32,15 @@ namespace paper {
          * @internal
          */
         public _addScene(scene: Scene, isActive: boolean) {
-            if (this._scenes.indexOf(scene) < 0) {
-                if (isActive) {
-                    this._scenes.unshift(scene);
-                }
-                else {
-                    this._scenes.push(scene);
-                }
+            if (this._scenes.indexOf(scene) >= 0) {
+                console.debug("Add the scene again.", scene.name);
+            }
+
+            if (isActive) {
+                this._scenes.unshift(scene);
             }
             else {
-                console.debug("Add the scene again.", scene.name);
+                this._scenes.push(scene);
             }
         }
         /**
@@ -52,18 +51,19 @@ namespace paper {
                 scene === this._globalScene ||
                 scene === this._editorScene
             ) {
-                console.warn("Cannot unload global scene.");
+                console.warn("Cannot dispose global scene.");
                 return false;
             }
 
             const index = this._scenes.indexOf(scene);
-            if (index >= 0) {
-                this._scenes.splice(index, 1);
 
-                return true;
+            if (index < 0) {
+                console.debug("Remove scene error.", scene.name);
+                return false;
             }
 
-            return false;
+            this._scenes.splice(index, 1);
+            return true;
         }
         /**
          * 卸载所有场景。
@@ -79,7 +79,6 @@ namespace paper {
 
                 scene.destroy();
             }
-
         }
         /**
          * 
@@ -125,20 +124,19 @@ namespace paper {
                 this._scenes.length <= 1 ||
                 this._scenes[0] === value ||
                 this._globalScene === value //|| // Cannot active global scene.
-                // this._editorScene === value // Cannot active editor scene.
-
+                // this._editorScene === value // Cannot active editor scene. TODO
             ) {
                 return;
             }
 
             const index = this._scenes.indexOf(value);
-            if (index >= 0) {
-                this._scenes.splice(index, 1);
-                this._scenes.unshift(value);
-            }
-            else {
+
+            if (index < 0) {
                 console.debug("Active scene error.", value.name);
             }
+
+            this._scenes.splice(index, 1);
+            this._scenes.unshift(value);
         }
         /**
          * 
