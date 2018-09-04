@@ -9,7 +9,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public readonly webInput = new egret.web.HTMLInput();
+        public readonly webInput = new (egret as any)["web"].HTMLInput();
 
         public onAwake() {
             this.webInput._initStageDelegateDiv(WebGLCapabilities.canvas.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
