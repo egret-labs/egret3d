@@ -194,7 +194,7 @@ namespace egret3d {
         }
     }
 
-    export abstract class RenderTarget implements IRenderTarget {
+    export abstract class RenderTarget extends egret3d.Texture implements IRenderTarget {
         /**
          * @internal
          */
@@ -205,6 +205,7 @@ namespace egret3d {
         protected _renderbuffer: WebGLRenderbuffer;
 
         public constructor(width: number, height: number, depth: boolean = false, stencil: boolean = false) {
+            super("");
             const webgl = WebGLCapabilities.webgl;
             this._width = width;
             this._height = height;
@@ -233,6 +234,9 @@ namespace egret3d {
         use() { }
 
         dispose() {
+            if (!super.dispose()) {
+                return false;
+            }
             if (this._texture != null) {
                 const webgl = WebGLCapabilities.webgl;
                 webgl.deleteFramebuffer(this._renderbuffer);

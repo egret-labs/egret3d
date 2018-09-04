@@ -6025,7 +6025,7 @@ var paper;
              * @internal
              */
             this._addedComponents = [];
-            this._components = [];
+            this._behaviourcCmponents = [];
             this._interestConfig = null;
             this._globalGameObject = paper.Application.sceneManager.globalGameObject;
             this._isBehaviour = interestConfig.length === 1 && interestConfig[0].type !== undefined && interestConfig[0].type !== 0;
@@ -6124,7 +6124,7 @@ var paper;
                     return;
                 }
             }
-            if (this._bufferedComponents.indexOf(component) >= 0 || this._components.indexOf(component) >= 0) {
+            if (this._bufferedComponents.indexOf(component) >= 0 || this._behaviourcCmponents.indexOf(component) >= 0) {
                 return;
             }
             this._bufferedComponents.push(component);
@@ -6137,12 +6137,12 @@ var paper;
                 return;
             }
             if (this._isBehaviour) {
-                index = this._components.indexOf(component);
+                index = this._behaviourcCmponents.indexOf(component);
                 if (index < 0) {
                     return;
                 }
                 this._isRemoved = true;
-                this._components[index] = null;
+                this._behaviourcCmponents[index] = null;
                 index = this._addedComponents.indexOf(component);
                 if (index >= 0) {
                     this._addedComponents[index] = null;
@@ -6244,12 +6244,12 @@ var paper;
                 var index = 0;
                 var removeCount = 0;
                 this._isRemoved = false;
-                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                for (var _i = 0, _a = this._behaviourcCmponents; _i < _a.length; _i++) {
                     var component = _a[_i];
                     if (component) {
                         if (removeCount > 0) {
-                            this._components[index - removeCount] = component;
-                            this._components[index] = null;
+                            this._behaviourcCmponents[index - removeCount] = component;
+                            this._behaviourcCmponents[index] = null;
                         }
                     }
                     else {
@@ -6258,7 +6258,7 @@ var paper;
                     index++;
                 }
                 if (removeCount > 0) {
-                    this._components.length -= removeCount;
+                    this._behaviourcCmponents.length -= removeCount;
                 }
             }
             if (this._bufferedGameObjects.length > 0) {
@@ -6279,7 +6279,9 @@ var paper;
                         continue;
                     }
                     this._addedComponents.push(component);
-                    this._components.push(component);
+                    if (component instanceof paper.Behaviour) {
+                        this._behaviourcCmponents.push(component);
+                    }
                 }
                 this._bufferedComponents.length = 0;
             }
@@ -6305,7 +6307,7 @@ var paper;
              *
              */
             get: function () {
-                return this._components;
+                return this._behaviourcCmponents;
             },
             enumerable: true,
             configurable: true
@@ -20311,38 +20313,44 @@ var egret3d;
     }(GLTexture));
     egret3d.GLTexture2D = GLTexture2D;
     __reflect(GLTexture2D.prototype, "egret3d.GLTexture2D");
-    var RenderTarget = (function () {
+    var RenderTarget = (function (_super) {
+        __extends(RenderTarget, _super);
         function RenderTarget(width, height, depth, stencil) {
             if (depth === void 0) { depth = false; }
             if (stencil === void 0) { stencil = false; }
+            var _this = _super.call(this, "") || this;
             var webgl = egret3d.WebGLCapabilities.webgl;
-            this._width = width;
-            this._height = height;
-            this._texture = webgl.createTexture();
-            this._fbo = webgl.createFramebuffer();
-            this._fbo["width"] = width;
-            this._fbo["height"] = height;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
+            _this._width = width;
+            _this._height = height;
+            _this._texture = webgl.createTexture();
+            _this._fbo = webgl.createFramebuffer();
+            _this._fbo["width"] = width;
+            _this._fbo["height"] = height;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, _this._fbo);
             if (depth || stencil) {
-                this._renderbuffer = webgl.createRenderbuffer();
-                webgl.bindRenderbuffer(webgl.RENDERBUFFER, this._renderbuffer);
+                _this._renderbuffer = webgl.createRenderbuffer();
+                webgl.bindRenderbuffer(webgl.RENDERBUFFER, _this._renderbuffer);
                 if (depth && stencil) {
                     webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_STENCIL, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
+                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_STENCIL_ATTACHMENT, webgl.RENDERBUFFER, _this._renderbuffer);
                 }
                 else if (depth) {
                     webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
+                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, _this._renderbuffer);
                 }
                 else {
                     webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.STENCIL_INDEX8, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
+                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.STENCIL_ATTACHMENT, webgl.RENDERBUFFER, _this._renderbuffer);
                 }
                 webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
             }
+            return _this;
         }
         RenderTarget.prototype.use = function () { };
         RenderTarget.prototype.dispose = function () {
+            if (!_super.prototype.dispose.call(this)) {
+                return false;
+            }
             if (this._texture != null) {
                 var webgl = egret3d.WebGLCapabilities.webgl;
                 webgl.deleteFramebuffer(this._renderbuffer);
@@ -20376,7 +20384,7 @@ var egret3d;
             configurable: true
         });
         return RenderTarget;
-    }());
+    }(egret3d.Texture));
     egret3d.RenderTarget = RenderTarget;
     __reflect(RenderTarget.prototype, "egret3d.RenderTarget", ["egret3d.IRenderTarget", "egret3d.ITexture"]);
     var GlRenderTarget = (function (_super) {

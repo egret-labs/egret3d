@@ -3266,7 +3266,7 @@ declare namespace paper {
         private readonly _bufferedGameObjects;
         private _gameObjects;
         private readonly _bufferedComponents;
-        private _components;
+        private _behaviourcCmponents;
         private readonly _interestConfig;
         private readonly _globalGameObject;
         private constructor();
@@ -9636,14 +9636,14 @@ declare namespace egret3d {
         dispose(): boolean;
         getReader(redOnly?: boolean): TextureReader;
     }
-    abstract class RenderTarget implements IRenderTarget {
+    abstract class RenderTarget extends egret3d.Texture implements IRenderTarget {
         protected _width: number;
         protected _height: number;
         protected _fbo: WebGLFramebuffer;
         protected _renderbuffer: WebGLRenderbuffer;
         constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
         use(): void;
-        dispose(): void;
+        dispose(): boolean;
         caclByteLength(): number;
         readonly texture: WebGLTexture;
         readonly width: number;
