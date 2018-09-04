@@ -39,4 +39,13 @@ namespace paper.editor {
         void main(void) {
             gl_Position = mvpMat * vec4(aVertexPosition,1.0);
         }`;
+    export const stroke_vert = `
+        uniform mat4 uMVPMatrix;                            //总变换矩阵
+        attribute  vec3 aPosition;                                   //顶点位置
+        attribute vec3 aNormal;                                   //顶点法向量
+        void main(){
+            vec3 position=aPosition;                     //获取此顶点位置
+            position.xyz+=aNormal*0.4;                //将顶点位置沿法线方向挤出
+            gl_Position = uMVPMatrix * vec4(position.xyz,1);//根据总变换矩阵计算此次绘制此顶点位置
+        }`;
 }

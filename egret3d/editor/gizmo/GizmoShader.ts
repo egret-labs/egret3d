@@ -66,10 +66,10 @@ namespace paper.editor {
             let gl = this.gl;
             gl.uniform4f(gl.getUniformLocation(this.prg, name), value[0], value[1], value[2], value[3]);
         }
-        //public setColor (name: string, value: egret3d.Color) {
-        //let gl = this.gl;
-        //gl.uniform4f(gl.getUniformLocation(this.prg, name), value.r, value.g, value.b, value.a);
-        //}
+        // public setColor(name: string, value: egret3d.Color) {
+        //     let gl = this.gl;
+        //     gl.uniform4f(gl.getUniformLocation(this.prg, name), value.r, value.g, value.b, value.a);
+        // }
         public setMatrix(name: string, value: egret3d.Matrix4) {
             let gl = this.gl;
             gl.uniformMatrix4fv(gl.getUniformLocation(this.prg, name), false, value.rawData);
