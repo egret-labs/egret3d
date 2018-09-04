@@ -34,8 +34,13 @@ namespace egret3d {
         for (const key in allCombines) {
             const combines = allCombines[key];
             for (const combine of combines) {
-                _combineInstance(combine);
-                afterCombineCount++;
+                if (combine.instances.length > 1) {
+                    _combineInstance(combine);
+                    afterCombineCount++;
+                }
+                else {
+                    afterCombineCount += combine.instances.length;
+                }
             }
         }
 
@@ -261,12 +266,12 @@ namespace egret3d {
 
                             //     tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
                             // }
-                            if (orginAttributes.TEXCOORD_1){
+                            if (orginAttributes.TEXCOORD_1) {
                                 _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
                             }
-                            else{
+                            else {
                                 _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
-                            }                            
+                            }
                         }
                         else {
                             if (orginAttributes.TEXCOORD_1) {
