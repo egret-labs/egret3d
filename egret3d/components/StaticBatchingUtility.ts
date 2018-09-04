@@ -33,10 +33,13 @@ namespace egret3d {
         //2.相同材质的合并
         for (const key in allCombines) {
             const combines = allCombines[key];
-            if (combines.length > 1) {
-                for (const combine of combines) {
+            for (const combine of combines) {
+                if (combine.instances.length > 1) {
                     _combineInstance(combine);
                     afterCombineCount++;
+                }
+                else {
+                    afterCombineCount += combine.instances.length;
                 }
             }
         }
