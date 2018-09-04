@@ -46,7 +46,7 @@ namespace paper {
     /**
      * 渲染排序
      */
-    export enum RenderQueue {
+    export const enum RenderQueue {
         Background = 1000,
         Geometry = 2000,
         AlphaTest = 2450,

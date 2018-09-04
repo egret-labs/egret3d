@@ -18,7 +18,7 @@ namespace paper {
          */
         public static readonly _assets: { [key: string]: Asset } = {};
         /**
-         * @internal
+         * @private
          */
         public static register(asset: Asset) {
             if (!this._assets[asset.name]) {

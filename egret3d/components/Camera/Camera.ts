@@ -91,6 +91,7 @@ namespace egret3d {
         public readonly postQueues: ICameraPostQueue[] = [];
         /**
          * 相机渲染上下文
+         * @internal
          */
         public context: RenderContext = null as any;
         /**

@@ -171,7 +171,7 @@ namespace egret3d {
         }
 
         /**
-         * 
+         * @internal
          */
         public render(context: RenderContext, camera: egret3d.Camera) {
             this.renderer.beforeRender();

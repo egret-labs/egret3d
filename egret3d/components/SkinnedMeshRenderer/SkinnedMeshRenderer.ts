@@ -1,6 +1,5 @@
 namespace egret3d {
     const _helpMatrix = Matrix4.create();
-    const _helpMatrixB = Matrix4.create();
     /**
      * Skinned Mesh Renderer Component
      * @version paper 1.0
@@ -108,6 +107,8 @@ namespace egret3d {
                         }
                     }
                 }
+
+                // this._update(); TODO
             }
         }
 
@@ -140,6 +141,10 @@ namespace egret3d {
                     this.aabb.add(position);
                 }
             }
+        }
+
+        public get bones(): ReadonlyArray<Transform | null> {
+            return this._bones;
         }
 
         public get rootBone() {

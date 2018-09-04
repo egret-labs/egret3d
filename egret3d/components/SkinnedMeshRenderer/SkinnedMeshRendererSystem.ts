@@ -3,6 +3,11 @@ namespace egret3d {
      * TODO 需要完善
      */
     export class SkinnedMeshRendererSystem extends paper.BaseSystem {
+        /**
+         * 
+         */
+        public static maxBoneCount: number = 55;
+
         protected readonly _interests = [
             {
                 componentClass: SkinnedMeshRenderer,
@@ -43,7 +48,7 @@ namespace egret3d {
                     frustumTest: false,
                     zdist: -1,
                 };
-                material.addDefine("SKINNING");
+                material.addDefine("USE_SKINNING").addDefine(`MAX_BONES ${SkinnedMeshRendererSystem.maxBoneCount}`);
                 this._drawCalls.drawCalls.push(drawCall);
             }
         }
@@ -55,6 +60,11 @@ namespace egret3d {
         }
 
         public onAddGameObject(gameObject: paper.GameObject) {
+            const renderer = gameObject.renderer as SkinnedMeshRenderer;
+            if (renderer.mesh && !renderer._boneMatrices) {
+                renderer.initialize(true);
+            }
+
             this._updateDrawCalls(gameObject);
         }
 
@@ -63,7 +73,9 @@ namespace egret3d {
         }
 
         public onUpdate() {
-            // TODO
+            for (const gameObject of this._groups[0].gameObjects) {
+                (gameObject.renderer as SkinnedMeshRenderer)._update();
+            }
         }
 
         public onDisable() {

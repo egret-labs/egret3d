@@ -293,10 +293,14 @@ namespace egret3d {
         public setLocalPosition(x: number, y: number, z: number): this;
         public setLocalPosition(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
-                this._localPosition.copy(p1 as Readonly<IVector3>);
+                this._localPosition.x = (p1 as Readonly<IVector3>).x;
+                this._localPosition.y = (p1 as Readonly<IVector3>).y;
+                this._localPosition.z = (p1 as Readonly<IVector3>).z;
             }
             else {
-                this._localPosition.set(p1 as number, p2 || 0.0, p3 || 0.0);
+                this._localPosition.x = p1 as number;
+                this._localPosition.y = p2 || 0.0;
+                this._localPosition.z = p3 || 0.0;
             }
 
             // if (!this._dirtyLocalT) {
@@ -317,7 +321,9 @@ namespace egret3d {
             return this._localPosition;
         }
         public set localPosition(value: Readonly<Vector3>) {
-            this._localPosition.copy(value);
+            this._localPosition.x = value.x;
+            this._localPosition.y = value.y;
+            this._localPosition.z = value.z;
 
             if (!this._dirtyLocal) {
                 this._dirtify(true);
@@ -354,10 +360,16 @@ namespace egret3d {
         public setLocalRotation(x: number, y: number, z: number, w: number): this;
         public setLocalRotation(p1: Readonly<IVector4> | number, p2?: number, p3?: number, p4?: number) {
             if (p1.hasOwnProperty("x")) {
-                this._localRotation.copy(p1 as Readonly<IVector4>);
+                this._localRotation.x = (p1 as Readonly<IVector3>).x;
+                this._localRotation.y = (p1 as Readonly<IVector3>).y;
+                this._localRotation.z = (p1 as Readonly<IVector3>).z;
+                this._localRotation.w = (p1 as Readonly<IVector4>).w;
             }
             else {
-                this._localRotation.set(p1 as number, p2 || 0.0, p3 || 0.0, p4 !== undefined ? p4 : 1.0);
+                this._localRotation.x = p1 as number;
+                this._localRotation.y = p2 || 0.0;
+                this._localRotation.z = p3 || 0.0;
+                this._localRotation.w = p4 !== undefined ? p4 : 1.0;
             }
 
             // if (!this._dirtyLocalRS) {
@@ -378,7 +390,10 @@ namespace egret3d {
             return this._localRotation;
         }
         public set localRotation(value: Readonly<Quaternion>) {
-            this._localRotation.copy(value);
+            this._localRotation.x = value.x;
+            this._localRotation.y = value.y;
+            this._localRotation.z = value.z;
+            this._localRotation.w = value.w;
 
             if (!this._dirtyLocal) {
                 this._dirtify(true);
@@ -484,10 +499,14 @@ namespace egret3d {
         public setLocalScale(x: number, y: number, z: number): this;
         public setLocalScale(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
-                this._localScale.copy(p1 as Readonly<IVector3>);
+                this._localScale.x = (p1 as Readonly<IVector3>).x;
+                this._localScale.y = (p1 as Readonly<IVector3>).y;
+                this._localScale.z = (p1 as Readonly<IVector3>).z;
             }
             else {
-                this._localScale.set(p1 as number, p2 !== undefined ? p2 : 1.0, p3 !== undefined ? p3 : 1.0);
+                this._localScale.x = p1 as number;
+                this._localScale.y = p2 !== undefined ? p2 : 1.0;
+                this._localScale.z = p3 !== undefined ? p3 : 1.;
             }
 
             // if (!this._dirtyLocalRS) {
@@ -508,7 +527,9 @@ namespace egret3d {
             return this._localScale;
         }
         public set localScale(value: Readonly<Vector3>) {
-            this._localScale.copy(value);
+            this._localScale.x = value.x;
+            this._localScale.y = value.y;
+            this._localScale.z = value.x;
 
             if (!this._dirtyLocal) {
                 this._dirtify(true);
@@ -593,10 +614,14 @@ namespace egret3d {
         public setPosition(x: number, y: number, z: number): this;
         public setPosition(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
-                this._localPosition.copy(p1 as IVector3);
+                this._localPosition.x = (p1 as Readonly<IVector3>).x;
+                this._localPosition.y = (p1 as Readonly<IVector3>).y;
+                this._localPosition.z = (p1 as Readonly<IVector3>).z;
             }
             else {
-                this._localPosition.set(p1 as number, p2 || 0.0, p3 || 0.0);
+                this._localPosition.x = p1 as number;
+                this._localPosition.y = p2 || 0.0;
+                this._localPosition.z = p3 || 0.0;
             }
 
             if (this._parent) {
@@ -627,7 +652,9 @@ namespace egret3d {
             return this._position;
         }
         public set position(value: Readonly<Vector3>) {
-            this._localPosition.copy(value);
+            this._localPosition.x = value.x;
+            this._localPosition.y = value.y;
+            this._localPosition.z = value.z;
 
             if (this._parent) {
                 this._localPosition.applyMatrix(_helpMatrix.inverse(this._parent.getWorldMatrix()));
@@ -677,12 +704,18 @@ namespace egret3d {
          */
         public setRotation(v: Readonly<IVector4>): this;
         public setRotation(x: number, y: number, z: number, w: number): this;
-        public setRotation(q1: Readonly<IVector4> | number, q2?: number, q3?: number, q4?: number) {
-            if (q1.hasOwnProperty("x")) {
-                this._localRotation.copy(q1 as Readonly<IVector4>);
+        public setRotation(p1: Readonly<IVector4> | number, p2?: number, p3?: number, p4?: number) {
+            if (p1.hasOwnProperty("x")) {
+                this._localRotation.x = (p1 as Readonly<IVector3>).x;
+                this._localRotation.y = (p1 as Readonly<IVector3>).y;
+                this._localRotation.z = (p1 as Readonly<IVector3>).z;
+                this._localRotation.w = (p1 as Readonly<IVector4>).w;
             }
             else {
-                this._localRotation.set(q1 as number, q2 || 0.0, q3 || 0.0, q4 !== undefined ? q4 : 1.0);
+                this._localRotation.x = p1 as number;
+                this._localRotation.y = p2 || 0.0;
+                this._localRotation.z = p3 || 0.0;
+                this._localRotation.w = p4 !== undefined ? p4 : 1.0;
             }
 
             if (this._parent) {
@@ -713,7 +746,10 @@ namespace egret3d {
             return this._rotation;
         }
         public set rotation(value: Readonly<Quaternion>) {
-            this._localRotation.copy(value);
+            this._localRotation.x = value.x;
+            this._localRotation.y = value.y;
+            this._localRotation.z = value.z;
+            this._localRotation.w = value.w;
 
             if (this._parent) {
                 this._localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
@@ -854,10 +890,14 @@ namespace egret3d {
         public setScale(x: number, y: number, z: number): this;
         public setScale(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
-                this._localScale.copy(p1 as Readonly<IVector3>);
+                this._localScale.x = (p1 as Readonly<IVector3>).x;
+                this._localScale.y = (p1 as Readonly<IVector3>).y;
+                this._localScale.z = (p1 as Readonly<IVector3>).z;
             }
             else {
-                this._localScale.set(p1 as number, p2 !== undefined ? p2 : 1.0, p3 !== undefined ? p3 : 1.0);
+                this._localScale.x = p1 as number;
+                this._localScale.y = p2 !== undefined ? p2 : 1.0;
+                this._localScale.z = p3 !== undefined ? p3 : 1.;
             }
 
             if (this._parent) {
@@ -888,7 +928,9 @@ namespace egret3d {
             return this._scale;
         }
         public set scale(value: Readonly<Vector3>) {
-            this._localScale.copy(value);
+            this._localScale.x = value.x;
+            this._localScale.y = value.y;
+            this._localScale.z = value.z;
 
             if (this._parent) {
                 this._localScale.applyDirection(_helpMatrix.inverse(this._parent.getWorldMatrix()));

@@ -121,7 +121,9 @@ namespace egret3d {
                 this._glTFTechnique.states = GLTFAsset.copyTechniqueStates(this._shader._states);
             }
 
-            if (glTFMaterial.extensions.paper.defines) {
+            const materialDefines = glTFMaterial.extensions.paper.defines;
+
+            if (materialDefines && materialDefines.length > 0) {
                 for (const define of glTFMaterial.extensions.paper.defines) {
                     this.addDefine(define);
                 }
