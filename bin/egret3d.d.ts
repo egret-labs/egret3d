@@ -153,7 +153,7 @@ declare namespace paper {
      */
     function requireComponent(requireComponentClass: ComponentClass<BaseComponent>): (componentClass: ComponentClass<BaseComponent>) => void;
     /**
-     * 通过装饰器标记组件是否在编辑模式拥有生命周期。
+     * 通过装饰器标记脚本组件是否在编辑模式也拥有生命周期。
      */
     function executeInEditMode(componentClass: ComponentClass<Behaviour>): void;
 }
@@ -3266,7 +3266,7 @@ declare namespace paper {
         private readonly _bufferedGameObjects;
         private _gameObjects;
         private readonly _bufferedComponents;
-        private _components;
+        private _behaviourComponents;
         private readonly _interestConfig;
         private readonly _globalGameObject;
         private constructor();
@@ -4960,13 +4960,6 @@ declare namespace egret3d {
      * @language
      */
     class SkinnedMeshRenderer extends MeshRenderer {
-        /**
-         *
-         */
-        static dataCaches: {
-            key: string;
-            data: Float32Array;
-        }[];
         private _mesh;
         /**
          * mesh instance
@@ -6383,7 +6376,7 @@ declare namespace egret3d.ShaderLib {
                         "map": {
                             "type": number;
                         };
-                        "_AlphaCut": {
+                        "alphaTest": {
                             "type": number;
                             "value": any[];
                         };
