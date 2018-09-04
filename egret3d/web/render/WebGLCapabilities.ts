@@ -58,7 +58,7 @@ namespace egret3d {
             const uniformData = gl.getActiveUniform(webglProgram, i)!;
             const tUniform = technique.uniforms[uniformData.name];
             if (!tUniform) {
-                console.warn("缺少Uniform定义：" + uniformData.name);
+                console.error("缺少Uniform定义：" + uniformData.name);
             }
             const location = gl.getUniformLocation(webglProgram, uniformData!.name)!;
 
