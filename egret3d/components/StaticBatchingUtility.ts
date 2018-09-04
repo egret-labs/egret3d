@@ -33,9 +33,11 @@ namespace egret3d {
         //2.相同材质的合并
         for (const key in allCombines) {
             const combines = allCombines[key];
-            for (const combine of combines) {
-                _combineInstance(combine);
-                afterCombineCount++;
+            if (combines.length > 1) {
+                for (const combine of combines) {
+                    _combineInstance(combine);
+                    afterCombineCount++;
+                }
             }
         }
 
@@ -261,12 +263,12 @@ namespace egret3d {
 
                             //     tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
                             // }
-                            if (orginAttributes.TEXCOORD_1){
+                            if (orginAttributes.TEXCOORD_1) {
                                 _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
                             }
-                            else{
+                            else {
                                 _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
-                            }                            
+                            }
                         }
                         else {
                             if (orginAttributes.TEXCOORD_1) {
