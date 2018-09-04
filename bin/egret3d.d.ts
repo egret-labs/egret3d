@@ -4376,7 +4376,7 @@ declare namespace egret3d {
         lightShadowCameraNear: number;
         lightShadowCameraFar: number;
         updateLightDepth(light: BaseLight): void;
-        update(drawCall: DrawCall): void;
+        update(drawCall: DrawCall, flipV?: boolean): void;
     }
 }
 declare namespace egret3d {
@@ -6383,7 +6383,7 @@ declare namespace egret3d.ShaderLib {
                         "map": {
                             "type": number;
                         };
-                        "_AlphaCut": {
+                        "alphaTest": {
                             "type": number;
                             "value": any[];
                         };
@@ -8901,7 +8901,7 @@ declare namespace egret3d.ShaderChunk {
     const uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n vUv2 = uv2;\n\n#endif";
     const uv_pars_fragment = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n\n#endif";
     const uv_pars_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n uniform mat3 uvTransform;\n\n#endif\n";
-    const uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n\n#endif";
+    const uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n #if defined FLIP_V\n vUv = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1 ) ).xy;\n #else\n vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n #endif \n\n#endif";
     const worldpos_vertex = "#if defined( USE_ENVMAP ) || defined( DISTANCE ) || defined ( USE_SHADOWMAP )\n\n vec4 worldPosition = modelMatrix * vec4( transformed, 1.0 );\n\n#endif\n";
 }
 declare namespace RES.processor {
@@ -9639,9 +9639,15 @@ declare namespace egret3d {
     abstract class RenderTarget extends egret3d.Texture implements IRenderTarget {
         protected _width: number;
         protected _height: number;
+        protected _depth: boolean;
+        protected _stencil: boolean;
+        protected _mipmap: boolean;
+        protected _linear: boolean;
         protected _fbo: WebGLFramebuffer;
         protected _renderbuffer: WebGLRenderbuffer;
-        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
+        protected _dirty: boolean;
+        constructor(width: number, height: number, depth?: boolean, stencil?: boolean, mipmap?: boolean, linear?: boolean);
+        protected uploadTexture(): void;
         use(): void;
         dispose(): boolean;
         caclByteLength(): number;
@@ -9650,7 +9656,8 @@ declare namespace egret3d {
         readonly height: number;
     }
     class GlRenderTarget extends RenderTarget {
-        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
+        constructor(width: number, height: number, depth?: boolean, stencil?: boolean, mipmap?: boolean, linear?: boolean);
+        protected uploadTexture(): void;
         use(): void;
     }
     class GlRenderTargetCube extends RenderTarget {
@@ -9701,11 +9708,12 @@ declare namespace egret3d {
         private _cacheContext;
         private _cacheMesh;
         private _cacheMaterial;
+        private _test;
         private _updateContextUniforms(program, context, technique, forceUpdate);
         private _updateUniforms(program, material, technique, forceUpdate);
         private _updateAttributes(program, mesh, subMeshIndex, technique, forceUpdate);
         private _drawCall(drawCall);
-        private _renderCall(context, drawCall, material);
+        private _renderCall(context, drawCall, material, flipY?);
         onUpdate(): void;
     }
 }

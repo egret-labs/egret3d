@@ -27,6 +27,8 @@ namespace egret3d {
         private _cacheMesh: Mesh | null = null;
         private _cacheMaterial: Material | null = null;
 
+        private _test: boolean = false;
+
         private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique, forceUpdate: boolean) {
             const needUpdate = this._cacheContext !== context || this._cacheContextVersion !== context.version || forceUpdate;
             if (!needUpdate) {
@@ -264,6 +266,14 @@ namespace egret3d {
                             const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
                             webgl.activeTexture(webgl.TEXTURE0 + unit);
+
+                            //
+                            if (this._test) {
+                                webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 1);
+                            }
+                            else {
+                                webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
+                            }
                             webgl.bindTexture(webgl.TEXTURE_2D, (value as GLTexture)._texture);
                         }
                         else {
@@ -353,8 +363,8 @@ namespace egret3d {
                 }
             }
         }
-        private _renderCall(context: RenderContext, drawCall: DrawCall, material: Material) {
-            context.update(drawCall);
+        private _renderCall(context: RenderContext, drawCall: DrawCall, material: Material, flipY: boolean = false) {
+            context.update(drawCall, flipY);
             //
             const technique = material._glTFTechnique;
             const renderState = this._renderState;
@@ -386,11 +396,11 @@ namespace egret3d {
             const transparentCalls = drawCalls.transparentCalls;
             //Step1 draw opaque
             for (const drawCall of opaqueCalls) {
-                this._renderCall(camera.context, drawCall, drawCall.material);
+                this._renderCall(camera.context, drawCall, drawCall.material, camera.renderTarget ? true : false);
             }
             //Step2 draw transparent
             for (const drawCall of transparentCalls) {
-                this._renderCall(camera.context, drawCall, drawCall.material);
+                this._renderCall(camera.context, drawCall, drawCall.material, camera.renderTarget ? true : false);
             }
             // Egret2D渲染不加入DrawCallList的排序
             for (const gameObject of this._groups[1].gameObjects) {

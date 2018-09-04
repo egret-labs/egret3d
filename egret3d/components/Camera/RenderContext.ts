@@ -332,7 +332,7 @@ namespace egret3d {
             }
         }
 
-        public update(drawCall: DrawCall) {
+        public update(drawCall: DrawCall, flipV: boolean = false) {
             this.shaderContextDefine = "";
             const renderer = drawCall.renderer;
             this.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
@@ -370,6 +370,10 @@ namespace egret3d {
                     this.shaderContextDefine += "#define USE_SHADOWMAP \n";
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
+            }
+
+            if (flipV) {
+                this.shaderContextDefine += "#define FLIP_V \n";
             }
         }
     }
