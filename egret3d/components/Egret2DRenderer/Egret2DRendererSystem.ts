@@ -7,12 +7,15 @@ namespace egret3d {
             { componentClass: Egret2DRenderer }
         ];
         /**
+         * TODO
          * @internal
          */
-        public readonly webInput = new (egret as any)["web"].HTMLInput();
+        public readonly webInput = egret.Capabilities.runtimeType === egret.RuntimeType.WEB ? new (egret as any)["web"].HTMLInput() : null;
 
         public onAwake() {
-            this.webInput._initStageDelegateDiv(WebGLCapabilities.canvas.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
+            if (this.webInput) {
+                this.webInput._initStageDelegateDiv(WebGLCapabilities.canvas.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
+            }
         }
 
         public onUpdate(deltaTime: number) {
